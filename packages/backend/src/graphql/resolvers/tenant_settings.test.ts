@@ -15,10 +15,17 @@ import {
   createHttpLink,
   ApolloLink,
   InMemoryCache,
-  gql
+  gql,
+  ApolloError
 } from '@apollo/client'
 import { setContext } from '@apollo/client/link/context'
 import { TenantSettingKeys } from '../../tenants/settings/model'
+import { faker } from '@faker-js/faker'
+import {
+  errorToCode,
+  errorToMessage,
+  TenantSettingError
+} from '../../tenants/settings/errors'
 
 function createTenantedApolloClient(
   appContainer: TestContainer,
@@ -93,7 +100,10 @@ describe('Tenant Settings Resolvers', (): void => {
     test('can create tenant setting', async (): Promise<void> => {
       const input: CreateTenantSettingsInput = {
         settings: [
-          { key: TenantSettingKeys.EXCHANGE_RATES_URL.name, value: 'MY_VALUE' }
+          {
+            key: TenantSettingKeys.EXCHANGE_RATES_URL.name,
+            value: faker.internet.url()
+          }
         ]
       }
 
@@ -121,6 +131,56 @@ describe('Tenant Settings Resolvers', (): void => {
         })
 
       expect(response.settings.length).toBeGreaterThan(0)
+    })
+
+    test('errors when invalid input is provided', async (): Promise<void> => {
+      const input: CreateTenantSettingsInput = {
+        settings: [
+          {
+            key: TenantSettingKeys.WEBHOOK_MAX_RETRY.name,
+            value: '-1'
+          }
+        ]
+      }
+
+      const tenant = await createTenant(deps)
+      const client = createTenantedApolloClient(appContainer, tenant.id)
+      expect.assertions(2)
+
+      try {
+        await client
+          .mutate({
+            mutation: gql`
+              mutation CreateTenantSettings(
+                $input: CreateTenantSettingsInput!
+              ) {
+                createTenantSettings(input: $input) {
+                  settings {
+                    key
+                    value
+                  }
+                }
+              }
+            `,
+            variables: { input }
+          })
+          .then((query): CreateTenantSettingsMutationResponse => {
+            if (query.data) {
+              return query.data.createTenantSettings
+            }
+            throw new Error('Data was empty')
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[TenantSettingError.InvalidSetting],
+            extensions: expect.objectContaining({
+              code: errorToCode[TenantSettingError.InvalidSetting]
+            })
+          })
+        )
+      }
     })
   })
 

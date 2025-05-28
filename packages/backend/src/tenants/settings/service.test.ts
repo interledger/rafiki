@@ -1,4 +1,5 @@
 import { IocContract } from '@adonisjs/fold'
+import assert from 'assert'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
@@ -19,6 +20,7 @@ import {
 import { AuthServiceClient } from '../../auth-service-client/client'
 import { v4 as uuid } from 'uuid'
 import { createTenant } from '../../tests/tenant'
+import { isTenantSettingError, TenantSettingError } from './errors'
 
 describe('TenantSetting Service', (): void => {
   let deps: IocContract<AppServices>
@@ -123,18 +125,76 @@ describe('TenantSetting Service', (): void => {
       expect(result[0].key).toEqual(initialOptions.setting[0].key)
       expect(result[0].value).toEqual(newValue)
     })
+
+    test.each`
+      key
+      ${TenantSettingKeys.EXCHANGE_RATES_URL.name}
+      ${TenantSettingKeys.WEBHOOK_MAX_RETRY.name}
+      ${TenantSettingKeys.WEBHOOK_TIMEOUT.name}
+      ${TenantSettingKeys.WEBHOOK_URL.name}
+      ${TenantSettingKeys.WALLET_ADDRESS_URL.name}
+    `(
+      'cannot use invalid setting value for $key',
+      async ({ key }): Promise<void> => {
+        const invalidSettingOption: CreateOptions = {
+          tenantId: tenant.id,
+          setting: [
+            {
+              key,
+              value: 'invalid_value'
+            }
+          ]
+        }
+
+        await expect(
+          tenantSettingService.create(invalidSettingOption)
+        ).resolves.toEqual(TenantSettingError.InvalidSetting)
+      }
+    )
+
+    test('cannot use invalid numeric values for numeric tenant settings', async (): Promise<void> => {
+      const infiniteOption: CreateOptions = {
+        tenantId: tenant.id,
+        setting: [
+          {
+            key: TenantSettingKeys.WEBHOOK_TIMEOUT.name,
+            value: 'Infinity'
+          }
+        ]
+      }
+
+      await expect(
+        tenantSettingService.create(infiniteOption)
+      ).resolves.toEqual(TenantSettingError.InvalidSetting)
+
+      const negativeOption: CreateOptions = {
+        tenantId: tenant.id,
+        setting: [
+          {
+            key: TenantSettingKeys.WEBHOOK_TIMEOUT.name,
+            value: '-1'
+          }
+        ]
+      }
+
+      await expect(
+        tenantSettingService.create(negativeOption)
+      ).resolves.toEqual(TenantSettingError.InvalidSetting)
+    })
   })
 
   describe('get', () => {
     let tenantSetting: TenantSetting[]
 
-    function createTenantSetting() {
+    async function createTenantSetting(): Promise<TenantSetting[]> {
       const options: CreateOptions = {
         tenantId: tenant.id,
         setting: [randomSetting()]
       }
 
-      return tenantSettingService.create(options)
+      const createdTenantSetting = await tenantSettingService.create(options)
+      assert(!isTenantSettingError(createdTenantSetting))
+      return createdTenantSetting
     }
 
     beforeEach(async (): Promise<void> => {
@@ -201,7 +261,7 @@ describe('TenantSetting Service', (): void => {
     test('can update own setting', async () => {
       const newValues = {
         ...updateOptions,
-        value: 'test'
+        value: faker.internet.url()
       }
       await tenantSettingService.update(newValues)
 
@@ -214,6 +274,28 @@ describe('TenantSetting Service', (): void => {
         expect.arrayContaining([expect.objectContaining(newValues)])
       )
     })
+
+    test.each`
+      key
+      ${TenantSettingKeys.EXCHANGE_RATES_URL.name}
+      ${TenantSettingKeys.WEBHOOK_MAX_RETRY.name}
+      ${TenantSettingKeys.WEBHOOK_TIMEOUT.name}
+      ${TenantSettingKeys.WEBHOOK_URL.name}
+      ${TenantSettingKeys.WALLET_ADDRESS_URL.name}
+    `(
+      'cannot use invalid setting value for $key',
+      async ({ key }): Promise<void> => {
+        const invalidSettingOption: UpdateOptions = {
+          tenantId: tenant.id,
+          key,
+          value: 'invalid_value'
+        }
+
+        await expect(
+          tenantSettingService.update(invalidSettingOption)
+        ).resolves.toEqual(TenantSettingError.InvalidSetting)
+      }
+    )
   })
 
   describe('delete', (): void => {
@@ -235,14 +317,16 @@ describe('TenantSetting Service', (): void => {
         setting: [exchangeRatesSetting()]
       }
 
-      const tenantSetting = await tenantSettingService.create(createOptions)
+      const tenantSettingsOrError =
+        await tenantSettingService.create(createOptions)
+      assert(!isTenantSettingError(tenantSettingsOrError))
       await tenantSettingService.delete({
-        tenantId: tenantSetting[0].tenantId,
+        tenantId: tenantSettingsOrError[0].tenantId,
         key: createOptions.setting[0].key
       })
 
       const dbTenantSetting = await TenantSetting.query().findById(
-        tenantSetting[0].id
+        tenantSettingsOrError[0].id
       )
       expect(dbTenantSetting?.deletedAt).toBeDefined()
       expect(dbTenantSetting?.deletedAt?.getTime()).toBeLessThanOrEqual(
@@ -257,6 +341,7 @@ describe('TenantSetting Service', (): void => {
       }
 
       const tenantSetting = await tenantSettingService.create(createOptions)
+      assert(!isTenantSettingError(tenantSetting))
       await tenantSettingService.delete({
         tenantId: tenantSetting[0].tenantId,
         key: createOptions.setting[0].key
@@ -312,7 +397,10 @@ describe('TenantSetting Service', (): void => {
         setting: [exchangeRatesSetting()]
       }
 
-      tenantSetting = await tenantSettingService.create(createOptions)
+      const createdTenantSetting =
+        await tenantSettingService.create(createOptions)
+      assert(!isTenantSettingError(createdTenantSetting))
+      tenantSetting = createdTenantSetting
     })
 
     afterEach(async (): Promise<void> => {

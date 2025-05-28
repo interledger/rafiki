@@ -1,8 +1,13 @@
 import { TransactionOrKnex } from 'objection'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { BaseService } from '../../shared/baseService'
-import { TenantSetting, TenantSettingKeys } from './model'
+import {
+  TENANT_SETTING_VALIDATORS,
+  TenantSetting,
+  TenantSettingKeys
+} from './model'
 import { Knex } from 'knex'
+import { TenantSettingError } from './errors'
 
 export interface KeyValuePair {
   key: string
@@ -35,8 +40,10 @@ export interface TenantSettingService {
   create: (
     options: CreateOptions,
     extra?: ExtraOptions
-  ) => Promise<TenantSetting[]>
-  update: (options: UpdateOptions) => Promise<void>
+  ) => Promise<TenantSetting[] | TenantSettingError>
+  update: (
+    options: UpdateOptions
+  ) => Promise<TenantSetting[] | TenantSettingError>
   delete: (options: GetOptions, extra?: ExtraOptions) => Promise<void>
   getPage: (
     tenantId: string,
@@ -106,8 +113,14 @@ async function deleteTenantSetting(
 async function updateTenantSetting(
   deps: ServiceDependencies,
   options: UpdateOptions
-): Promise<void> {
-  await TenantSetting.query(deps.knex)
+): Promise<TenantSetting[] | TenantSettingError> {
+  if (
+    Object.keys(TENANT_SETTING_VALIDATORS).includes(options.key) &&
+    !TENANT_SETTING_VALIDATORS[options.key](options.value)
+  ) {
+    return TenantSettingError.InvalidSetting
+  }
+  return TenantSetting.query(deps.knex)
     .patch({ value: options.value })
     .whereNull('deletedAt')
     .andWhere('tenantId', options.tenantId)
@@ -120,7 +133,16 @@ async function createTenantSetting(
   deps: ServiceDependencies,
   options: CreateOptions,
   extra?: ExtraOptions
-) {
+): Promise<TenantSetting[] | TenantSettingError> {
+  for (const setting of options.setting) {
+    if (
+      Object.keys(TENANT_SETTING_VALIDATORS).includes(setting.key) &&
+      !TENANT_SETTING_VALIDATORS[setting.key](setting.value)
+    ) {
+      return TenantSettingError.InvalidSetting
+    }
+  }
+
   const dataToUpsert = options.setting
     .filter((setting) => Object.keys(TenantSettingKeys).includes(setting.key))
     .map((s) => ({
