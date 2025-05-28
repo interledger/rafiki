@@ -106,7 +106,7 @@ const scripts = {
     return `t=${timestamp}, v${version}=${digest}`
   },
 
-  addApiSignatureHeader: function (packageName) {
+  addApiSignatureHeader: function (packageName, instance) {
     const body = this.sanitizeBody()
     const { variables } = body
     const formattedBody = {
@@ -127,7 +127,16 @@ const scripts = {
         signature = this.generateBackendApiSignature(formattedBody)
     }
     req.setHeader('signature', signature)
-    req.setHeader('tenant-id', bru.getEnvVar('senderTenantId'))
+    switch (instance) {
+      case 'sender':
+        req.setHeader('tenant-id', bru.getEnvVar('senderTenantId'))
+        break
+      case 'receiver':
+        req.setHeader('tenant-id', bru.getEnvVar('receiverTenantId'))
+        break
+      default:
+        req.setHeader('tenant-id', bru.getEnvVar('senderTenantId'))
+    }
   },
 
   addHostHeader: function (hostVarName) {
@@ -182,7 +191,8 @@ const scripts = {
       method: 'post',
       headers: {
         signature: this.generateBackendApiSignature(postBody),
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'tenant-id': bru.getEnvVar('senderTenantId')
       },
       body: JSON.stringify(postBody)
     }

@@ -11,29 +11,21 @@ post {
 }
 
 body:graphql {
-  mutation UpdateTenant($input: UpdateTenantInput!) {
-    updateTenant(input:$input) {
-      tenant {
-        id
-        email
-        apiSecret
-        idpConsentUrl
-        idpSecret
+  query GetTenants {
+    tenants {
+      edges {
+        cursor
+        node {
+          id
+          email
+          apiSecret
+          idpConsentUrl
+          idpSecret
+        }
       }
     }
   }
-}
-
-body:graphql:vars {
-  {
-    "input": {
-      "id": "{{tenantId}}",
-      "email": "updated@example.com",
-      "apiSecret": "updated-test-secret",
-      "idpConsentUrl": "https://example.com/consent-updated",
-      "idpSecret": "updated-test-idp-secret"
-    }
-  }
+  
 }
 
 script:pre-request {

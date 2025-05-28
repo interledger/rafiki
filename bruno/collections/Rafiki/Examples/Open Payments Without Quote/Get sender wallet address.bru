@@ -42,6 +42,14 @@ script:post-response {
   } else {
       bru.setEnvVar("senderOpenPaymentsAuthHost", body?.authServer);
   }
+  
+  const resourceUrl = url.parse(body?.resourceServer)
+  if (resourceUrl.hostname.includes('cloud-nine-wallet') || resourceUrl.hostname.includes('happy-life-bank')) {
+    const port = resourceUrl.hostname.includes('cloud-nine-wallet') ? bru.getEnvVar('senderOpenPaymentsPort') : bru.getEnvVar('receiverOpenPaymentsPort')
+      bru.setEnvVar("senderOpenPaymentsHost", 'http://localhost:' + port + resourceUrl.path);
+  } else {
+      bru.setEnvVar("senderOpenPaymentsHost", body?.resourceServer);
+  }
 }
 
 tests {
