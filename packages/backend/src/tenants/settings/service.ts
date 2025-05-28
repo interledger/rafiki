@@ -7,6 +7,7 @@ import {
   TenantSettingKeys
 } from './model'
 import { Knex } from 'knex'
+import { TenantSettingError } from './errors'
 
 export interface KeyValuePair {
   key: string
@@ -39,8 +40,10 @@ export interface TenantSettingService {
   create: (
     options: CreateOptions,
     extra?: ExtraOptions
-  ) => Promise<TenantSetting[]>
-  update: (options: UpdateOptions) => Promise<void>
+  ) => Promise<TenantSetting[] | TenantSettingError>
+  update: (
+    options: UpdateOptions
+  ) => Promise<TenantSetting[] | TenantSettingError>
   delete: (options: GetOptions, extra?: ExtraOptions) => Promise<void>
   getPage: (
     tenantId: string,
@@ -110,14 +113,14 @@ async function deleteTenantSetting(
 async function updateTenantSetting(
   deps: ServiceDependencies,
   options: UpdateOptions
-): Promise<void> {
+): Promise<TenantSetting[] | TenantSettingError> {
   if (
     Object.keys(TENANT_SETTING_VALIDATORS).includes(options.key) &&
     !TENANT_SETTING_VALIDATORS[options.key](options.value)
   ) {
-    throw new Error('Invalid value for tenant setting')
+    return TenantSettingError.InvalidSetting
   }
-  await TenantSetting.query(deps.knex)
+  return TenantSetting.query(deps.knex)
     .patch({ value: options.value })
     .whereNull('deletedAt')
     .andWhere('tenantId', options.tenantId)
@@ -130,15 +133,15 @@ async function createTenantSetting(
   deps: ServiceDependencies,
   options: CreateOptions,
   extra?: ExtraOptions
-) {
-  options.setting.map((setting) => {
+): Promise<TenantSetting[] | TenantSettingError> {
+  for (const setting of options.setting) {
     if (
       Object.keys(TENANT_SETTING_VALIDATORS).includes(setting.key) &&
       !TENANT_SETTING_VALIDATORS[setting.key](setting.value)
     ) {
-      throw new Error('Invalid value for one or more tenant settings')
+      return TenantSettingError.InvalidSetting
     }
-  })
+  }
 
   const dataToUpsert = options.setting
     .filter((setting) => Object.keys(TenantSettingKeys).includes(setting.key))

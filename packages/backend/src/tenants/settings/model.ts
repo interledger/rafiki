@@ -85,7 +85,7 @@ const validateUrlTenantSetting = (url: string): boolean => {
 }
 
 const validateNumberTenantSetting = (numberString: string): boolean => {
-  return !!(Number(numberString) && Number(numberString) > 0)
+  return !!(Number.isFinite(Number(numberString)) && Number(numberString) > 0)
 }
 
 export const TENANT_SETTING_VALIDATORS = {
