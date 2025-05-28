@@ -78,7 +78,9 @@ describe('Auth Middleware', (): void => {
           Authorization: `GNAP ${token}`
         }
       },
-      walletAddress: await createWalletAddress(deps)
+      walletAddress: await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
     })
     ctx.container = deps
   })

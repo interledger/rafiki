@@ -129,7 +129,7 @@ export class WebhookEventHandler {
     const response = await this.adminClient.createWalletAddress({
       assetId,
       publicName,
-      url,
+      address: url,
       additionalProperties: []
     })
     const { walletAddress } = response
@@ -141,7 +141,7 @@ export class WebhookEventHandler {
     await this.accounts.setWalletAddress(
       account.id,
       walletAddress.id,
-      walletAddress.url
+      walletAddress.address
     )
   }
 

@@ -22,6 +22,7 @@ interface CreateReceiverArgs {
   expiresAt?: Date
   incomingAmount?: Amount
   metadata?: Record<string, unknown>
+  tenantId: string
 }
 
 // A receiver is resolved from an incoming payment
@@ -105,13 +106,14 @@ async function createLocalIncomingPayment(
   args: CreateReceiverArgs,
   walletAddress: WalletAddress
 ): Promise<OpenPaymentsIncomingPaymentWithPaymentMethods | ReceiverError> {
-  const { expiresAt, incomingAmount, metadata } = args
+  const { expiresAt, incomingAmount, metadata, tenantId } = args
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
     walletAddressId: walletAddress.id,
     expiresAt,
     incomingAmount,
-    metadata
+    metadata,
+    tenantId
   })
 
   if (isIncomingPaymentError(incomingPaymentOrError)) {

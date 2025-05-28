@@ -18,7 +18,7 @@ body:graphql {
               node {
                   id
                   publicName
-                  url
+                  address
                   walletAddressKeys {
                     edges {
                       cursor
@@ -40,4 +40,10 @@ body:graphql {
           }
       }
   }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
 }

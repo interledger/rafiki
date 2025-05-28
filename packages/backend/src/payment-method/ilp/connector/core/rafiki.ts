@@ -36,6 +36,7 @@ import {
 //   ../../peer/model
 export interface ConnectorAccount extends LiquidityAccount {
   asset: LiquidityAccount['asset'] & AssetOptions
+  tenantId: string
 }
 
 export interface IncomingAccount extends ConnectorAccount {
@@ -205,7 +206,8 @@ export class Rafiki<T = any> {
       response,
       code,
       scale,
-      telemetry
+      telemetry,
+      sourceAccount.tenantId
     )
     return response.rawReply
   }

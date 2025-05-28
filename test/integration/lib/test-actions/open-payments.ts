@@ -117,6 +117,7 @@ async function grantRequestIncomingPayment(
 
 type CreateIncomingPaymentOpts = {
   amountValueToSend?: string
+  tenantId?: string
 }
 
 async function createIncomingPayment(

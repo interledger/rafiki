@@ -1,5 +1,6 @@
 import { knex } from 'knex'
 import { GenericContainer, Wait } from 'testcontainers'
+require('./jest.env') // set environment variables
 
 const POSTGRES_PORT = 5432
 const REDIS_PORT = 6379

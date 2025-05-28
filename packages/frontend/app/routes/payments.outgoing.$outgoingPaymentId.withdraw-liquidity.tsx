@@ -45,7 +45,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     })
   }
 
-  const response = await createOutgoingPaymentWithdrawal({
+  const response = await createOutgoingPaymentWithdrawal(request, {
     outgoingPaymentId,
     idempotencyKey: v4(),
     timeoutSeconds: BigInt(0)

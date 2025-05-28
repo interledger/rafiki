@@ -34,7 +34,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     throw json(null, { status: 400, statusText: 'Invalid wallet address ID.' })
   }
 
-  const walletAddress = await getWalletAddress({ id: result.data })
+  const walletAddress = await getWalletAddress(request, { id: result.data })
 
   if (!walletAddress) {
     throw json(null, { status: 404, statusText: 'Wallet address not found.' })
@@ -43,7 +43,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   return json({ walletAddress })
 }
 
-export default function ViewAssetPage() {
+export default function ViewWalletAddressPage() {
   const { walletAddress } = useLoaderData<typeof loader>()
   const response = useActionData<typeof action>()
   const navigation = useNavigation()
@@ -86,7 +86,7 @@ export default function ViewAssetPage() {
                   />
                   <Input
                     label='URL'
-                    value={walletAddress.url}
+                    value={walletAddress.address}
                     disabled
                     readOnly
                   />
@@ -142,7 +142,7 @@ export default function ViewAssetPage() {
                 <p className='font-medium'>Withdrawal threshold</p>
                 <p className='mt-1'>
                   {walletAddress.asset.withdrawalThreshold ??
-                    'No withdrawal threshhold'}
+                    'No withdrawal threshold'}
                 </p>
               </div>
             </div>
@@ -235,7 +235,7 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ ...actionResponse }, { status: 400 })
   }
 
-  const response = await updateWalletAddress({
+  const response = await updateWalletAddress(request, {
     ...result.data
   })
 

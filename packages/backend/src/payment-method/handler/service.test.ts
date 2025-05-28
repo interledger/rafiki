@@ -36,7 +36,7 @@ describe('PaymentMethodHandlerService', (): void => {
 
   afterEach(async (): Promise<void> => {
     jest.restoreAllMocks()
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -45,8 +45,10 @@ describe('PaymentMethodHandlerService', (): void => {
 
   describe('getQuote', (): void => {
     test('calls ilpPaymentService for ILP payment type', async (): Promise<void> => {
+      const tenantId = Config.operatorTenantId
       const asset = await createAsset(deps)
       const walletAddress = await createWalletAddress(deps, {
+        tenantId,
         assetId: asset.id
       })
 
@@ -73,8 +75,10 @@ describe('PaymentMethodHandlerService', (): void => {
       )
     })
     test('calls localPaymentService for local payment type', async (): Promise<void> => {
+      const tenantId = Config.operatorTenantId
       const asset = await createAsset(deps)
       const walletAddress = await createWalletAddress(deps, {
+        tenantId,
         assetId: asset.id
       })
 
@@ -103,8 +107,10 @@ describe('PaymentMethodHandlerService', (): void => {
 
   describe('pay', (): void => {
     test('calls ilpPaymentService for ILP payment type', async (): Promise<void> => {
+      const tenantId = Config.operatorTenantId
       const asset = await createAsset(deps)
       const walletAddress = await createWalletAddress(deps, {
+        tenantId,
         assetId: asset.id
       })
       const { receiver, outgoingPayment } =
@@ -113,6 +119,7 @@ describe('PaymentMethodHandlerService', (): void => {
           receivingWalletAddress: walletAddress,
           method: 'ilp',
           quoteOptions: {
+            tenantId,
             debitAmount: {
               assetCode: walletAddress.asset.code,
               assetScale: walletAddress.asset.scale,
@@ -137,8 +144,10 @@ describe('PaymentMethodHandlerService', (): void => {
       expect(ilpPaymentServicePaySpy).toHaveBeenCalledWith(options)
     })
     test('calls localPaymentService for local payment type', async (): Promise<void> => {
+      const tenantId = Config.operatorTenantId
       const asset = await createAsset(deps)
       const walletAddress = await createWalletAddress(deps, {
+        tenantId,
         assetId: asset.id
       })
       const { receiver, outgoingPayment } =
@@ -147,6 +156,7 @@ describe('PaymentMethodHandlerService', (): void => {
           receivingWalletAddress: walletAddress,
           method: 'ilp',
           quoteOptions: {
+            tenantId,
             debitAmount: {
               assetCode: walletAddress.asset.code,
               assetScale: walletAddress.asset.scale,

@@ -122,6 +122,7 @@ export async function handleSending(
       'transaction_fee_amounts',
       payment.sentAmount,
       payment.receiveAmount,
+      payment.tenantId,
       {
         description: 'Amount sent through the network as fees',
         valueType: ValueType.DOUBLE
@@ -234,11 +235,17 @@ export async function sendWebhookEvent(
       }
     : undefined
 
-  await OutgoingPaymentEvent.query(trx || deps.knex).insert({
+  const webhooks = [{ recipientTenantId: payment.tenantId }]
+  if (payment.tenantId !== deps.config.operatorTenantId) {
+    webhooks.push({ recipientTenantId: deps.config.operatorTenantId })
+  }
+  await OutgoingPaymentEvent.query(trx || deps.knex).insertGraph({
     outgoingPaymentId: payment.id,
     type,
     data: payment.toData({ amountSent, balance }),
-    withdrawal
+    withdrawal,
+    tenantId: payment.tenantId,
+    webhooks
   })
   stopTimer()
 }

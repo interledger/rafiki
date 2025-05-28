@@ -27,6 +27,11 @@ import { truncateTables } from '../../tests/tableManager'
 import { createOutgoingPaymentWithReceiver } from '../../tests/outgoingPayment'
 import { v4 as uuid } from 'uuid'
 import { IlpQuoteDetails } from './quote-details/model'
+import { CreateOptions } from '../../tenants/settings/service'
+import {
+  createTenantSettings,
+  exchangeRatesSetting
+} from '../../tests/tenantSettings'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -36,8 +41,9 @@ describe('IlpPaymentService', (): void => {
   let ilpPaymentService: IlpPaymentService
   let accountingService: AccountingService
   let config: IAppConfig
+  let tenantId: string
 
-  const exchangeRatesUrl = 'https://example-rates.com'
+  let tenantExchangeRatesUrl: string
 
   const assetMap: Record<string, Asset> = {}
   const walletAddressMap: Record<string, WalletAddress> = {}
@@ -45,7 +51,6 @@ describe('IlpPaymentService', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
       ...Config,
-      exchangeRatesUrl,
       exchangeRatesLifetime: 0
     })
     appContainer = await createTestApp(deps)
@@ -56,27 +61,42 @@ describe('IlpPaymentService', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
+    tenantId = Config.operatorTenantId
     assetMap['USD'] = await createAsset(deps, {
-      code: 'USD',
-      scale: 2
+      assetOptions: {
+        code: 'USD',
+        scale: 2
+      }
     })
 
     assetMap['EUR'] = await createAsset(deps, {
-      code: 'EUR',
-      scale: 2
+      assetOptions: {
+        code: 'EUR',
+        scale: 2
+      }
     })
 
     walletAddressMap['USD'] = await createWalletAddress(deps, {
+      tenantId,
       assetId: assetMap['USD'].id
     })
 
     walletAddressMap['EUR'] = await createWalletAddress(deps, {
+      tenantId,
       assetId: assetMap['EUR'].id
     })
+
+    const createOptions: CreateOptions = {
+      tenantId,
+      setting: [exchangeRatesSetting()]
+    }
+
+    const tenantSetting = createTenantSettings(deps, createOptions)
+    tenantExchangeRatesUrl = (await tenantSetting).value
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
     jest.restoreAllMocks()
 
     nock.cleanAll()
@@ -91,7 +111,7 @@ describe('IlpPaymentService', (): void => {
 
   describe('getQuote', (): void => {
     test('calls rates service with correct base asset', async (): Promise<void> => {
-      const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
+      const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({}))
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
@@ -109,12 +129,12 @@ describe('IlpPaymentService', (): void => {
 
       await ilpPaymentService.getQuote(options)
 
-      expect(ratesServiceSpy).toHaveBeenCalledWith('USD')
+      expect(ratesServiceSpy).toHaveBeenCalledWith('USD', tenantId)
       ratesScope.done()
     })
 
     test('inserts ilpQuoteDetails', async (): Promise<void> => {
-      const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
+      const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({}))
       const quoteId = uuid()
       const options: StartQuoteOptions = {
         quoteId,
@@ -176,7 +196,7 @@ describe('IlpPaymentService', (): void => {
     })
 
     test('creates a quote with large exchange rate amounts', async (): Promise<void> => {
-      const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
+      const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({}))
       const quoteId = uuid()
       const options: StartQuoteOptions = {
         quoteId,
@@ -294,7 +314,7 @@ describe('IlpPaymentService', (): void => {
     })
 
     test('returns all fields correctly', async (): Promise<void> => {
-      const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
+      const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({}))
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
@@ -326,7 +346,7 @@ describe('IlpPaymentService', (): void => {
     })
 
     test('uses receiver.incomingAmount if receiveAmount is not provided', async (): Promise<void> => {
-      const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
+      const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({}))
 
       const incomingAmount = {
         assetCode: 'USD',
@@ -338,7 +358,8 @@ describe('IlpPaymentService', (): void => {
         quoteId: uuid(),
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD'], {
-          incomingAmount
+          incomingAmount,
+          tenantId: Config.operatorTenantId
         })
       }
 
@@ -365,7 +386,7 @@ describe('IlpPaymentService', (): void => {
         () => config,
         { slippage: 101 },
         async () => {
-          mockRatesApi(exchangeRatesUrl, () => ({}))
+          mockRatesApi(tenantExchangeRatesUrl, () => ({}))
 
           expect.assertions(4)
           try {
@@ -393,7 +414,7 @@ describe('IlpPaymentService', (): void => {
       )())
 
     test('throws if quote returns invalid maxSourceAmount', async (): Promise<void> => {
-      const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
+      const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({}))
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
@@ -423,7 +444,7 @@ describe('IlpPaymentService', (): void => {
     })
 
     test('throws if quote returns invalid minDeliveryAmount', async (): Promise<void> => {
-      const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
+      const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({}))
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
@@ -433,7 +454,8 @@ describe('IlpPaymentService', (): void => {
             assetCode: 'USD',
             assetScale: 2,
             value: 100n
-          }
+          },
+          tenantId: Config.operatorTenantId
         })
       }
 
@@ -463,7 +485,7 @@ describe('IlpPaymentService', (): void => {
     })
 
     test('throws if quote returns with a non-positive estimated delivery amount', async (): Promise<void> => {
-      const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
+      const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({}))
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
@@ -474,7 +496,7 @@ describe('IlpPaymentService', (): void => {
       jest.spyOn(Pay, 'startQuote').mockResolvedValueOnce({
         maxSourceAmount: 10n,
         highEstimatedExchangeRate: Pay.Ratio.from(0.099)
-      } as Pay.Quote)
+      } as unknown as Pay.Quote)
 
       expect.assertions(5)
       try {
@@ -518,7 +540,7 @@ describe('IlpPaymentService', (): void => {
               () => config,
               { slippage },
               async () => {
-                const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({
+                const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({
                   [incomingAssetCode]: exchangeRate
                 }))
 
@@ -578,7 +600,7 @@ describe('IlpPaymentService', (): void => {
               () => config,
               { slippage },
               async () => {
-                const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({
+                const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({
                   [incomingAssetCode]: exchangeRate
                 }))
 
@@ -665,6 +687,7 @@ describe('IlpPaymentService', (): void => {
           receivingWalletAddress: walletAddressMap['USD'],
           method: 'ilp',
           quoteOptions: {
+            tenantId,
             debitAmount: {
               value: 100n,
               assetScale: walletAddressMap['USD'].asset.scale,
@@ -695,6 +718,7 @@ describe('IlpPaymentService', (): void => {
           receivingWalletAddress: walletAddressMap['USD'],
           method: 'ilp',
           quoteOptions: {
+            tenantId,
             exchangeRate: 1,
             debitAmount: {
               value: 100n,
@@ -745,6 +769,7 @@ describe('IlpPaymentService', (): void => {
           receivingWalletAddress: walletAddressMap['USD'],
           method: 'ilp',
           quoteOptions: {
+            tenantId,
             debitAmount: {
               value: 100n,
               assetScale: walletAddressMap['USD'].asset.scale,
@@ -785,6 +810,7 @@ describe('IlpPaymentService', (): void => {
           receivingWalletAddress: walletAddressMap['USD'],
           method: 'ilp',
           quoteOptions: {
+            tenantId,
             debitAmount: {
               value: 100n,
               assetScale: walletAddressMap['USD'].asset.scale,
@@ -825,6 +851,7 @@ describe('IlpPaymentService', (): void => {
           receivingWalletAddress: walletAddressMap['USD'],
           method: 'ilp',
           quoteOptions: {
+            tenantId,
             debitAmount: {
               value: 100n,
               assetScale: walletAddressMap['USD'].asset.scale,
@@ -862,6 +889,7 @@ describe('IlpPaymentService', (): void => {
           receivingWalletAddress: walletAddressMap['USD'],
           method: 'ilp',
           quoteOptions: {
+            tenantId,
             debitAmount: {
               value: 100n,
               assetScale: walletAddressMap['USD'].asset.scale,

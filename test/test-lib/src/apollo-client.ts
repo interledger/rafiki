@@ -12,6 +12,7 @@ import { canonicalize } from 'json-canonicalize'
 
 interface CreateApolloClientArgs {
   graphqlUrl: string
+  operatorTenantId: string
   signatureSecret?: string
   signatureVersion?: string
 }
@@ -41,7 +42,8 @@ export function createApolloClient(
     return {
       headers: {
         ...headers,
-        signature: `t=${timestamp}, v${args.signatureVersion}=${digest}`
+        signature: `t=${timestamp}, v${args.signatureVersion}=${digest}`,
+        'tenant-id': args.operatorTenantId
       }
     }
   })

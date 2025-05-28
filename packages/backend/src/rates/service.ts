@@ -9,6 +9,8 @@ import {
 } from './util'
 import { createInMemoryDataStore } from '../middleware/cache/data-stores/in-memory'
 import { CacheDataStore } from '../middleware/cache/data-stores'
+import { TenantSettingService } from '../tenants/settings/service'
+import { TenantSettingKeys } from '../tenants/settings/model'
 
 const REQUEST_TIMEOUT = 5_000 // millseconds
 
@@ -24,20 +26,27 @@ export type RateConvertDestinationOpts = Omit<
 >
 
 export interface RatesService {
-  rates(baseAssetCode: string): Promise<Rates>
+  rates(baseAssetCode: string, tenantId?: string): Promise<Rates>
   convertSource(
-    opts: RateConvertSourceOpts
+    opts: RateConvertSourceOpts,
+    tenantId?: string
   ): Promise<ConvertResults | ConvertError>
   convertDestination(
-    opts: RateConvertDestinationOpts
+    opts: RateConvertDestinationOpts,
+    tenantId?: string
   ): Promise<ConvertResults | ConvertError>
 }
 
 interface ServiceDependencies extends BaseService {
-  // If `url` is not set, the connector cannot convert between currencies.
-  exchangeRatesUrl?: string
+  readonly operatorTenantId: string
+  // Default exchange rates `url` of the operator.
+  // If tenant doesn't set a specific url in the db, this one will be used.
+  // In case neither tenant nor operator doesn't set an exchange url, the connector cannot convert between currencies.
+  operatorExchangeRatesUrl?: string
   // Duration (milliseconds) that the fetched rates are valid.
   exchangeRatesLifetime: number
+  // Used for getting the exchange rates URL from db.
+  tenantSettingService: TenantSettingService
 }
 
 export enum ConvertError {
@@ -54,8 +63,9 @@ export function createRatesService(deps: ServiceDependencies): RatesService {
 
 class RatesServiceImpl implements RatesService {
   private axios: AxiosInstance
-  private cachedRates: CacheDataStore<string>
+  private cache: CacheDataStore<string>
   private inProgressRequests: Record<string, Promise<Rates>> = {}
+  private readonly URL_CACHE_PREFIX = 'url:'
 
   constructor(private deps: ServiceDependencies) {
     this.axios = Axios.create({
@@ -63,14 +73,15 @@ class RatesServiceImpl implements RatesService {
       validateStatus: (status) => status === 200
     })
 
-    this.cachedRates = createInMemoryDataStore(deps.exchangeRatesLifetime)
+    this.cache = createInMemoryDataStore(deps.exchangeRatesLifetime)
   }
 
   async convert<T extends RateConvertSourceOpts | RateConvertDestinationOpts>(
     opts: T,
     convertFn: (
       opts: T & { exchangeRate: number }
-    ) => ConvertResults | ConvertError
+    ) => ConvertResults | ConvertError,
+    tenantId: string
   ): Promise<ConvertResults | ConvertError> {
     const { sourceAsset, destinationAsset } = opts
     const sameCode = sourceAsset.code === destinationAsset.code
@@ -89,7 +100,7 @@ class RatesServiceImpl implements RatesService {
       return convertFn({ ...opts, exchangeRate: 1.0 })
     }
 
-    const { rates } = await this.getRates(sourceAsset.code)
+    const { rates } = await this.getRates(sourceAsset.code, tenantId)
     const destinationExchangeRate = rates[destinationAsset.code]
     if (!destinationExchangeRate || !isValidPrice(destinationExchangeRate)) {
       return ConvertError.InvalidDestinationPrice
@@ -99,42 +110,59 @@ class RatesServiceImpl implements RatesService {
   }
 
   async convertSource(
-    opts: RateConvertSourceOpts
+    opts: RateConvertSourceOpts,
+    tenantId?: string
   ): Promise<ConvertResults | ConvertError> {
-    return this.convert(opts, convertSource)
+    return this.convert(
+      opts,
+      convertSource,
+      tenantId ?? this.deps.operatorTenantId
+    )
   }
 
   async convertDestination(
-    opts: RateConvertDestinationOpts
+    opts: RateConvertDestinationOpts,
+    tenantId?: string
   ): Promise<ConvertResults | ConvertError> {
-    return this.convert(opts, convertDestination)
+    return this.convert(
+      opts,
+      convertDestination,
+      tenantId ?? this.deps.operatorTenantId
+    )
   }
 
-  async rates(baseAssetCode: string): Promise<Rates> {
-    return this.getRates(baseAssetCode)
+  async rates(baseAssetCode: string, tenantId?: string): Promise<Rates> {
+    return this.getRates(baseAssetCode, tenantId ?? this.deps.operatorTenantId)
   }
 
-  private async getRates(baseAssetCode: string): Promise<Rates> {
-    const cachedRate = await this.cachedRates.get(baseAssetCode)
+  private async getRates(
+    baseAssetCode: string,
+    tenantId: string
+  ): Promise<Rates> {
+    const ratesCacheKey = `${tenantId}:${baseAssetCode}`
+    const cachedRate = await this.cache.get(ratesCacheKey)
 
     if (cachedRate) {
       return JSON.parse(cachedRate)
     }
 
-    return await this.fetchNewRatesAndCache(baseAssetCode)
+    return await this.fetchNewRatesAndCache(baseAssetCode, tenantId)
   }
 
-  private async fetchNewRatesAndCache(baseAssetCode: string): Promise<Rates> {
-    const inProgressRequest = this.inProgressRequests[baseAssetCode]
-
-    if (!inProgressRequest) {
-      this.inProgressRequests[baseAssetCode] = this.fetchNewRates(baseAssetCode)
+  private async fetchNewRatesAndCache(
+    baseAssetCode: string,
+    tenantId: string
+  ): Promise<Rates> {
+    const ratesCacheKey = `${tenantId}:${baseAssetCode}`
+    if (this.inProgressRequests[ratesCacheKey] === undefined) {
+      this.inProgressRequests[ratesCacheKey] = this.fetchNewRates(
+        baseAssetCode,
+        tenantId
+      )
     }
-
     try {
-      const rates = await this.inProgressRequests[baseAssetCode]
-
-      await this.cachedRates.set(baseAssetCode, JSON.stringify(rates))
+      const rates = await this.inProgressRequests[ratesCacheKey]
+      await this.cache.set(ratesCacheKey, JSON.stringify(rates))
       return rates
     } catch (err) {
       const errorMessage = 'Could not fetch rates'
@@ -148,19 +176,23 @@ class RatesServiceImpl implements RatesService {
                 errorStatus: err.status
               }
             : { err }),
-          url: this.deps.exchangeRatesUrl
+          baseAssetCode
         },
         errorMessage
       )
 
       throw new Error(errorMessage)
     } finally {
-      delete this.inProgressRequests[baseAssetCode]
+      delete this.inProgressRequests[ratesCacheKey]
     }
   }
 
-  private async fetchNewRates(baseAssetCode: string): Promise<Rates> {
-    const url = this.deps.exchangeRatesUrl
+  private async fetchNewRates(
+    baseAssetCode: string,
+    tenantId: string
+  ): Promise<Rates> {
+    const url = await this.getExchangeRatesUrl(tenantId)
+
     if (!url) {
       return { base: baseAssetCode, rates: {} }
     }
@@ -173,6 +205,37 @@ class RatesServiceImpl implements RatesService {
     this.checkBaseAsset(base)
 
     return { base, rates }
+  }
+
+  private async getExchangeRatesUrl(
+    tenantId: string
+  ): Promise<string | undefined> {
+    const urlCacheKey = `${this.URL_CACHE_PREFIX}${tenantId}`
+    const cachedUrl = await this.cache.get(urlCacheKey)
+    if (cachedUrl) {
+      return cachedUrl
+    }
+
+    try {
+      const exchangeUrlSetting = await this.deps.tenantSettingService.get({
+        tenantId,
+        key: TenantSettingKeys.EXCHANGE_RATES_URL.name
+      })
+
+      const tenantExchangeRatesUrl = exchangeUrlSetting[0]?.value
+      if (!tenantExchangeRatesUrl) {
+        return this.deps.operatorExchangeRatesUrl
+      }
+
+      await this.cache.set(urlCacheKey, tenantExchangeRatesUrl)
+
+      return tenantExchangeRatesUrl
+    } catch (error) {
+      this.deps.logger.error(
+        { error },
+        'Failed to get exchange rates URL from database'
+      )
+    }
   }
 
   private checkBaseAsset(asset: unknown): void {

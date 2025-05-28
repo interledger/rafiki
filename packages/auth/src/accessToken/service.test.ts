@@ -20,6 +20,8 @@ import {
   AccessItem
 } from '@interledger/open-payments'
 import { generateBaseGrant } from '../tests/grant'
+import { Tenant } from '../tenant/model'
+import { generateTenant } from '../tests/tenant'
 
 describe('Access Token Service', (): void => {
   let deps: IocContract<AppServices>
@@ -63,8 +65,9 @@ describe('Access Token Service', (): void => {
 
   let grant: Grant
   beforeEach(async (): Promise<void> => {
+    const tenant = await Tenant.query(trx).insertAndFetch(generateTenant())
     grant = await Grant.query(trx).insertAndFetch(
-      generateBaseGrant({ state: GrantState.Approved })
+      generateBaseGrant({ state: GrantState.Approved, tenantId: tenant.id })
     )
     grant.access = [
       await Access.query(trx).insertAndFetch({
@@ -186,8 +189,9 @@ describe('Access Token Service', (): void => {
     })
 
     test('Introspection only returns requested access', async (): Promise<void> => {
+      const tenant = await Tenant.query(trx).insertAndFetch(generateTenant())
       const grantWithTwoAccesses = await Grant.query(trx).insertAndFetch(
-        generateBaseGrant({ state: GrantState.Approved })
+        generateBaseGrant({ state: GrantState.Approved, tenantId: tenant.id })
       )
       grantWithTwoAccesses.access = [
         await Access.query(trx).insertAndFetch({
@@ -247,11 +251,14 @@ describe('Access Token Service', (): void => {
   })
 
   describe('Revoke', (): void => {
+    let tenant: Tenant
     let grant: Grant
     let token: AccessToken
     beforeEach(async (): Promise<void> => {
+      tenant = await Tenant.query(trx).insertAndFetch(generateTenant())
       grant = await Grant.query(trx).insertAndFetch(
         generateBaseGrant({
+          tenantId: tenant.id,
           state: GrantState.Finalized,
           finalizationReason: GrantFinalization.Issued
         })
@@ -352,8 +359,10 @@ describe('Access Token Service', (): void => {
     let token: AccessToken
     let originalTokenValue: string
     beforeEach(async (): Promise<void> => {
+      const tenant = await Tenant.query(trx).insertAndFetch(generateTenant())
       grant = await Grant.query(trx).insertAndFetch(
         generateBaseGrant({
+          tenantId: tenant.id,
           state: GrantState.Finalized,
           finalizationReason: GrantFinalization.Issued
         })
