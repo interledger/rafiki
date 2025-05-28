@@ -21,6 +21,7 @@ export const options = {
 //TODO const SIGNATURE_VERSION = '1'
 
 const HTTP_SIGN_SERVER = 'http://localhost:5001/http-sign'
+const HTTP_CONSENT_SERVER = 'http://localhost:5001/consent-interaction'
 
 // Sender:
 const SENDER_WALLET_ADDRESS = 'http://localhost:3000/accounts/gfranklin'
@@ -39,20 +40,6 @@ const CLIENT_PRIVATE_KEY_B64 =
   'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1DNENBUUF3QlFZREsyVndCQ0lFSUVxZXptY1BoT0U4Ymt3TitqUXJwcGZSWXpHSWRGVFZXUUdUSEpJS3B6ODgKLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo='
 const CLIENT_KEY_ID = 'keyid-97a3a431-8ee1-48fc-ac85-70e2f5eba8e5'
 const CLIENT_WALLET_ADDRESS = 'https://happy-life-bank-backend/accounts/pfry'
-
-/*
-function generateSignedHeaders(requestPayload) {
-  const timestamp = Date.now()
-  const payload = `${timestamp}.${canonicalize(requestPayload)}`
-  const hmac = createHMAC('sha256', SIGNATURE_SECRET)
-  hmac.update(payload)
-  const digest = hmac.digest('hex')
-
-  return {
-    'Content-Type': 'application/json',
-    signature: `t=${timestamp}, v${SIGNATURE_VERSION}=${digest}, n=${uuidv4()}`
-  }
-}*/
 
 function requestSigHeadersOpenPayments(key, keyId, url, method, headers, body) {
   headers['Content-Type'] = 'application/json'
@@ -92,8 +79,6 @@ function requestGet(url, host) {
 
 function postWithSignatureHeaders(key, keyId, url, data, headers) {
   const body = JSON.stringify(data)
-  //const body = JSON.stringify(data)
-  //console.log('!!!!!!!! body: ' + body)
   const signatureHeaders = requestSigHeadersOpenPayments(
     key,
     keyId,
@@ -294,11 +279,25 @@ export default function (data) {
     `grant outgoing payment: ${JSON.stringify(rspGrantReqOutPaymentData, null, 2)}`
   )
 
+  // 8. Consent:
   const redirectUrl = rspGrantReqOutPaymentData.interact.redirect
   console.log(`The redirect url is: ${redirectUrl}`)
-  //TODO accept
 
-  //TODO Continuation request.
+  const consentResponse = http.post(
+    HTTP_CONSENT_SERVER,
+    JSON.stringify({
+      startInteractionUrl: redirectUrl,
+      interactionFinish: '',
+      interactionServer: '',
+      idpSecret: ''
+    }),
+    {}
+  )
+  check(consentResponse, {
+    consent: (r) => r.status === 200
+  })
+
+  // 9.
 }
 
 export function handleSummary(data) {

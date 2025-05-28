@@ -2,7 +2,8 @@ import fastify from 'fastify'
 import {
   createHeaders,
   loadBase64Key,
-  validateSignatureHeaders
+  validateSignatureHeaders,
+  validateSignature
 } from '@interledger/http-signature-utils'
 import logger from './logger'
 import crypto from 'crypto'
@@ -19,6 +20,13 @@ interface RequestBody extends RequestBodySignatureVerify {
   keyId?: string
 }
 
+interface RequestConsent {
+  startInteractionUrl?: string
+  interactionFinish?: string
+  interactionServer?: string
+  idpSecret?: string
+}
+
 const KEY_CACHE = new Map<string, crypto.KeyObject>()
 
 const validateBody = (req: RequestBody) =>
@@ -31,6 +39,12 @@ const validateBody = (req: RequestBody) =>
 
 const validateBodyVerifySignature = (req: RequestBodySignatureVerify) =>
   !!req.method && !!req.url && !!req.headers && !!req.body
+
+const validateBodyConsent = (req: RequestConsent) =>
+  !!req.startInteractionUrl &&
+  !!req.interactionFinish &&
+  !!req.interactionServer &&
+  !!req.idpSecret
 
 export function createApp(port: number) {
   const app = fastify()
@@ -61,28 +75,28 @@ export function createApp(port: number) {
     }
 
     const manualHash = crypto.createHash('sha512').update(body).digest('base64')
-    console.info('manualHash when signing: ' + manualHash)
+    //TODO console.info('manualHash when signing: ' + manualHash)
     const manualHashDirectBody = crypto
       .createHash('sha512')
       .update(body)
       .digest('base64')
-    console.info(
+    /*TODO console.info(
       'manualHash when signing (direct body): ' + manualHashDirectBody
-    )
+    )*/
     const manualHashStringify = crypto
       .createHash('sha512')
       .update(JSON.stringify(JSON.parse(body)))
       .digest('base64')
-    console.info('manualHash when signing (stringify): ' + manualHashStringify)
+    //TODO console.info('manualHash when signing (stringify): ' + manualHashStringify)
 
-    const bodyFormatted = JSON.stringify(JSON.parse(body))
+    const bodyFormatted = JSON.stringify(body)
     const manualHashBodyFormatted = crypto
       .createHash('sha512')
       .update(bodyFormatted)
       .digest('base64')
-    console.info(
+    /* TODO console.info(
       'manualHash when signing (bodyFormatted): ' + manualHashBodyFormatted
-    )
+    )*/
 
     const request = { method, headers, url, body: bodyFormatted }
     const createdHeaders = await createHeaders({
@@ -93,7 +107,7 @@ export function createApp(port: number) {
     delete createdHeaders['Content-Length']
     delete createdHeaders['Content-Type']
 
-    console.info('from the OpenPayments: ' + createdHeaders['Content-Digest'])
+    //TODO console.info('from the OpenPayments: ' + createdHeaders['Content-Digest'])
 
     ffReply.code(200).send({
       contentDigest: createdHeaders['Content-Digest'],
@@ -113,7 +127,7 @@ export function createApp(port: number) {
         body: 'Insufficient data in request body'
       }
     }
-    const { method, url, headers, body } = requestBody
+    const { keyId, base64Key, method, url, headers, body } = requestBody
     if (!headers['signature'] && ffReq.headers['signature']) {
       headers['signature'] = ffReq.headers['signature']
     }
@@ -145,16 +159,16 @@ export function createApp(port: number) {
     const request = { method, headers, url, body: bodyFormatted }
     const sigHeadersVerified = validateSignatureHeaders(request)
     const sigVerified = sigHeadersVerified
-      ? /*validateSignature(
-      {
-        kid: '',
-        alg: 'EdDSA',
-        kty: 'OKP',
-        crv: 'Ed25519',
-        x: ''
-      },
-      request
-    )*/ true
+      ? await validateSignature(
+          {
+            kid: keyId,
+            alg: 'EdDSA',
+            kty: 'OKP',
+            crv: 'Ed25519',
+            x: base64Key
+          },
+          request
+        )
       : false
 
     ffReply.code(200).send({
@@ -164,10 +178,70 @@ export function createApp(port: number) {
   })
 
   app.post('/consent-interaction', async function handler(ffReq, ffReply) {
+    const requestBody = JSON.parse(JSON.stringify(ffReq.body))
+    if (!validateBodyConsent(requestBody as RequestConsent)) {
+      return {
+        statusCode: '400',
+        body: 'Insufficient data in request body'
+      }
+    }
+
+    const {
+      startInteractionUrl,
+      interactionFinish,
+      interactionServer,
+      idpSecret
+    } = requestBody
+
+    // Start interaction
+    const interactResponse = await fetch(startInteractionUrl, {
+      redirect: 'manual' // dont follow redirects
+    })
+    if (interactResponse.status !== 302) {
+      return {
+        statusCode: '400',
+        body: `Status '${interactResponse.status}' invalid for '${startInteractionUrl}'`
+      }
+    }
+    const cookie = parseCookies(interactResponse)
+
+    const nonce = interactionFinish
+    const tokens = startInteractionUrl.split('/interact/')
+    const interactId = tokens[1] ? tokens[1].split('/')[0] : null
+
+    // Accept
+    const acceptUrl = `${interactionServer}/grant/${interactId}/${nonce}/accept`
+    const acceptResponse = await fetch(acceptUrl, {
+      method: 'POST',
+      headers: {
+        'x-idp-secret': idpSecret,
+        cookie
+      }
+    })
+
+    if (acceptResponse.status !== 202) {
+      return {
+        statusCode: '400',
+        body: `Accept Status '${acceptResponse.status}' invalid for '${startInteractionUrl}'`
+      }
+    }
+
     ffReply.code(200).send({
-      signatureVerified: true
+      nonce,
+      interactId,
+      cookie
     })
   })
+
+  function parseCookies(response: Response) {
+    return response.headers
+      .getSetCookie()
+      .map((header) => {
+        const parts = header.split(';')
+        return parts[0]
+      })
+      .join(';')
+  }
 
   return async () => {
     await app.listen({ port, host: '0.0.0.0' })
