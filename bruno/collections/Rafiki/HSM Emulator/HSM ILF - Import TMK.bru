@@ -1,0 +1,37 @@
+meta {
+  name: HSM ILF - Import TMK
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{hsmEmulatorHost}}/hsm-ilf/import-tmk
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "tr31TmkUnderZmk": "{{tmk_tr31_zmk}}",
+    "tr31ZmkUnderLmk": "{{zmk_tr31_lmk_ilf}}",
+    "kcv": "{{tmk_kcv}}"
+  }
+}
+
+script:post-response {
+  const body = res.getBody();
+  
+  if (body?.tr31TmkUnderLmk) bru.setEnvVar("tmk_tr31_lmk_ilf", body.tr31TmkUnderLmk);
+  
+  
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
