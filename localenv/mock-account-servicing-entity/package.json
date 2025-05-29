@@ -12,9 +12,9 @@
     "@apollo/client": "^3.11.8",
     "@headlessui/react": "^1.7.19",
     "@interledger/http-signature-utils": "2.0.2",
-    "@remix-run/node": "^2.16.4",
-    "@remix-run/react": "^2.16.4",
-    "@remix-run/serve": "^2.16.4",
+    "@remix-run/node": "^2.16.8",
+    "@remix-run/react": "^2.16.8",
+    "@remix-run/serve": "^2.16.8",
     "@types/node": "^18.7.12",
     "@types/uuid": "^9.0.8",
     "axios": "^1.8.2",
@@ -29,7 +29,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@remix-run/dev": "^2.16.4",
+    "@remix-run/dev": "^2.16.8",
     "@tailwindcss/forms": "^0.5.10",
     "@types/react": "^18.2.73",
     "@types/react-dom": "^18.2.22",
