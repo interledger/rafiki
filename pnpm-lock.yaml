@@ -180,8 +180,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/open-payments':
-        specifier: 6.14.0
-        version: 6.14.0
+        specifier: 7.0.0
+        version: 7.0.0
       '@interledger/openapi':
         specifier: 2.0.2
         version: 2.0.2
@@ -331,8 +331,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/open-payments':
-        specifier: 6.13.2
-        version: 6.13.2
+        specifier: 7.0.0
+        version: 7.0.0
       '@interledger/openapi':
         specifier: 2.0.2
         version: 2.0.2
@@ -749,8 +749,8 @@ importers:
   test/integration:
     devDependencies:
       '@interledger/open-payments':
-        specifier: 6.13.2
-        version: 6.13.2
+        specifier: 7.0.0
+        version: 7.0.0
       '@types/node':
         specifier: ^20.14.15
         version: 20.14.15
@@ -807,8 +807,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/open-payments':
-        specifier: 6.13.2
-        version: 6.13.2
+        specifier: 7.0.0
+        version: 7.0.0
       '@koa/bodyparser':
         specifier: ^5.1.1
         version: 5.1.1(koa@2.15.3)
@@ -4989,6 +4989,14 @@ packages:
       jose: 5.4.0
       uuid: 9.0.1
 
+  /@interledger/http-signature-utils@2.0.3:
+    resolution: {integrity: sha512-/vn6+FxZ3g1A5ZC3vOVivjFns5A6F4lhEmdAGg3W9mD2uADXI575rIBcMdqI3wTOJo7qOXRutPXOG/jXONFs/Q==}
+    dependencies:
+      http-message-signatures: 1.0.4
+      httpbis-digest-headers: 1.0.0
+      jose: 5.4.0
+      uuid: 9.0.1
+
   /@interledger/open-payments@6.13.2:
     resolution: {integrity: sha512-siAnS+Rp+SEZtm+YSWVHWCA4EJB7a6pKBZ9SR61UV1kgrzVzVHAZ8HA0cNTteLEEdFuW1xqVv8zqz27lxdvLgA==}
     dependencies:
@@ -5001,12 +5009,13 @@ packages:
       uuid: 9.0.1
     transitivePeerDependencies:
       - supports-color
+    dev: false
 
-  /@interledger/open-payments@6.14.0:
-    resolution: {integrity: sha512-8eAcpGfOS3knmi5pmiXsJovrOHVMR4rOW4L2nhqEDBxWkPZdVBOn77Rb5WfOAaJgQUTKE2G+sg+UvNJWHy09Ag==}
+  /@interledger/open-payments@7.0.0:
+    resolution: {integrity: sha512-6xPR5d1lStKvOFoQHatchoh5mYSmrbHE2dZotoTq/jhmxU+/Zk56hCJx7VvNcAz4F8Zqkgne/hM8ppcCEDKgtg==}
     dependencies:
-      '@interledger/http-signature-utils': 2.0.2
-      '@interledger/openapi': 2.0.2
+      '@interledger/http-signature-utils': 2.0.3
+      '@interledger/openapi': 2.0.3
       base64url: 3.0.1
       http-message-signatures: 0.1.2
       ky: 1.3.0
@@ -5014,10 +5023,25 @@ packages:
       uuid: 9.0.1
     transitivePeerDependencies:
       - supports-color
-    dev: false
 
   /@interledger/openapi@2.0.2:
     resolution: {integrity: sha512-HOQnALmRtRkGkh63OnFhoCVsK4BKhQosJyoBCe6Cuu+jp8Oj2fAqTNz8ys+h6s30cJcIpk2UBlsj4wZ3pj26Ug==}
+    dependencies:
+      '@apidevtools/json-schema-ref-parser': 11.7.2
+      ajv: 8.17.1
+      ajv-formats: 2.1.1(ajv@8.17.1)
+      koa: 2.16.0
+      openapi-default-setter: 12.1.3
+      openapi-request-coercer: 12.1.3
+      openapi-request-validator: 12.1.3
+      openapi-response-validator: 12.1.3
+      openapi-types: 12.1.3
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
+  /@interledger/openapi@2.0.3:
+    resolution: {integrity: sha512-5wGncgpc/WVHd+RNE9oZHzdNdZK8UjaOqLmMnPm6kyNfXBtcZmDOumE00jEYa4BOXbaIm82qB4zD/dLc46AjRA==}
     dependencies:
       '@apidevtools/json-schema-ref-parser': 11.7.2
       ajv: 8.17.1
@@ -7739,7 +7763,6 @@ packages:
     resolution: {integrity: sha512-wq0cICSkRLVaf3UGLMGItu/PtdY7oaXaI/RVU+xliKVOtRna3PRY57ZDfztpDL0n11vfymMUnXv8QwYCO7L1wg==}
     dependencies:
       undici-types: 5.26.5
-    dev: true
 
   /@types/node@20.14.15:
     resolution: {integrity: sha512-Fz1xDMCF/B00/tYSVMlmK7hVeLh7jE5f3B7X1/hmV0MJBwE27KlS7EvD/Yp+z1lm8mVhwV5w+n8jOZG8AfTlKw==}
@@ -9055,7 +9078,7 @@ packages:
       unist-util-visit: 5.0.0
       unstorage: 1.15.0
       vfile: 6.0.3
-      vite: 6.2.5(@types/node@18.11.9)(yaml@2.7.0)
+      vite: 6.2.5(@types/node@20.12.7)(yaml@2.7.0)
       vitefu: 1.0.6(vite@6.2.5)
       xxhash-wasm: 1.1.0
       yargs-parser: 21.1.1
@@ -9154,7 +9177,7 @@ packages:
       unist-util-visit: 5.0.0
       unstorage: 1.15.0
       vfile: 6.0.3
-      vite: 6.2.5(@types/node@18.11.9)(yaml@2.7.0)
+      vite: 6.2.5(@types/node@20.12.7)(yaml@2.7.0)
       vitefu: 1.0.6(vite@6.2.5)
       xxhash-wasm: 1.1.0
       yargs-parser: 21.1.1
@@ -21149,6 +21172,7 @@ packages:
       yaml: 2.7.0
     optionalDependencies:
       fsevents: 2.3.3
+    dev: true
 
   /vite@6.2.5(@types/node@20.12.7)(yaml@2.7.0):
     resolution: {integrity: sha512-j023J/hCAa4pRIUH6J9HemwYfjB5llR2Ps0CWeikOtdR8+pAURAk0DoJC5/mm9kd+UgdnIy7d6HE4EAvlYhPhA==}
@@ -21197,7 +21221,6 @@ packages:
       yaml: 2.7.0
     optionalDependencies:
       fsevents: 2.3.3
-    dev: true
 
   /vitefu@1.0.6(vite@6.2.5):
     resolution: {integrity: sha512-+Rex1GlappUyNN6UfwbVZne/9cYC4+R2XDk9xkNXBKMw6HQagdX9PgZ8V2v1WUSK1wfBLp7qbI1+XSNIlB1xmA==}
@@ -21207,7 +21230,7 @@ packages:
       vite:
         optional: true
     dependencies:
-      vite: 6.2.5(@types/node@18.11.9)(yaml@2.7.0)
+      vite: 6.2.5(@types/node@20.12.7)(yaml@2.7.0)
     dev: false
 
   /vscode-jsonrpc@8.2.0:
