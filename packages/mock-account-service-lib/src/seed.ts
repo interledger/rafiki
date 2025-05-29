@@ -81,7 +81,9 @@ export async function setupFromSeed(
           assets[peeringAsset].id,
           assets[peeringAsset].code,
           peer.name,
-          peer.liquidityThreshold
+          peer.liquidityThreshold,
+          peer.incomingToken,
+          peer.outgoingToken
         ).then((response) => response.peer || null)
       }
       if (!peerResponse) {

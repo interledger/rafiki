@@ -61,6 +61,7 @@ import {
 } from './telemetry/service'
 import { createWebhookService } from './webhook/service'
 import { createInMemoryDataStore } from './middleware/cache/data-stores/in-memory'
+import { createRouterService } from './payment-method/ilp/connector/ilp-routing/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -376,6 +377,20 @@ export function initIocContainer(
       knex: await deps.use('knex')
     })
   })
+  container.singleton('staticRoutesStore', async () => {
+    return createInMemoryDataStore(Number.MAX_SAFE_INTEGER)
+  })
+
+  container.singleton('routerService', async (deps) => {
+    const config = await deps.use('config')
+    return await createRouterService({
+      logger: await deps.use('logger'),
+      staticIlpAddress: config.ilpAddress,
+      staticRoutes: await deps.use('staticRoutesStore'),
+      config,
+      peerService: await deps.use('peerService')
+    })
+  })
 
   container.singleton('connectorApp', async (deps) => {
     const config = await deps.use('config')
@@ -389,7 +404,8 @@ export function initIocContainer(
       ratesService: await deps.use('ratesService'),
       streamServer: await deps.use('streamServer'),
       ilpAddress: config.ilpAddress,
-      telemetry: await deps.use('telemetry')
+      telemetry: await deps.use('telemetry'),
+      routerService: await deps.use('routerService')
     })
   })
 

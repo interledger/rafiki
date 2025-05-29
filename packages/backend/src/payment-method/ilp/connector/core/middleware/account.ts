@@ -103,6 +103,16 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
           return walletAddress
         }
       }
+
+      // If we have a next hop from routing, use that peer
+      if (ctx.request.nextHop) {
+        const peer = await peers.get(ctx.request.nextHop)
+        if (peer) {
+          return peer
+        }
+        //TODO throw error?
+      }
+
       const address = ctx.request.prepare.destination
       const peer = await peers.getByDestinationAddress(address)
       if (peer) {

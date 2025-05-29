@@ -102,6 +102,7 @@ import { LoggingPlugin } from './graphql/plugin'
 import { LocalPaymentService } from './payment-method/local/service'
 import { GrantService } from './open_payments/grant/service'
 import { AuthServerService } from './open_payments/authServer/service'
+import { RouterService } from './payment-method/ilp/connector/ilp-routing/service'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -226,6 +227,7 @@ export interface AppServices {
   assetService: Promise<AssetService>
   accountingService: Promise<AccountingService>
   peerService: Promise<PeerService>
+  routerService: Promise<RouterService>
   walletAddressService: Promise<WalletAddressService>
   spspRoutes: Promise<SPSPRoutes>
   incomingPaymentRoutes: Promise<IncomingPaymentRoutes>
