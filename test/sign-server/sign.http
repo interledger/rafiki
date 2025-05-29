@@ -1,0 +1,40 @@
+### Sign request:
+### old: {\"access_token\": {\"access\": [{\"type\": \"incoming-payment\", \"actions\": [\"create\", \"read\", \"list\", \"complete\"]}]},\"client\": \"http://localhost:4000/accounts/pfry\"}
+POST http://localhost:5001/http-sign
+Content-Type: application/json
+
+{
+  "keyId": "keyid-97a3a431-8ee1-48fc-ac85-70e2f5eba8e5",
+  "base64Key": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1DNENBUUF3QlFZREsyVndCQ0lFSUVxZXptY1BoT0U4Ymt3TitqUXJwcGZSWXpHSWRGVFZXUUdUSEpJS3B6ODgKLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo=",
+  "url": "http://localhost:4006/",
+  "method": "POST",
+  "headers": [],
+  "body": "{\"name\": \"zool\"}"
+}
+
+
+> {%
+  client.global.set("sign_resp_content_digest", response.body.contentDigest);
+  client.global.set("sign_resp_signature_input", response.body.signatureInput);
+  client.global.set("sign_resp_signature", response.body.signature);
+%}
+
+
+### Verify signature request:
+POST http://localhost:5001/http-signature-verify
+content-type: application/json
+content-digest: {{sign_resp_content_digest}}
+#content-digest: sha-512=:dthUQYaOCzulCnwGSYaVJH0vS6MwfMhD70,+SirWEmqj1uKV/GvQctXMvXrI4e/volwjnbKNrW9c6YnijSdxsA==":
+signature-input: {{sign_resp_signature_input}}
+signature: {{sign_resp_signature}}
+
+{
+  "keyId": "keyid-97a3a431-8ee1-48fc-ac85-70e2f5eba8e5",
+  "base64Key": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1DNENBUUF3QlFZREsyVndCQ0lFSUVxZXptY1BoT0U4Ymt3TitqUXJwcGZSWXpHSWRGVFZXUUdUSEpJS3B6ODgKLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo=",
+  "url": "http://localhost:4000/",
+  "method": "POST",
+  "headers": {
+    "content-digest": "{{sign_resp_content_digest}}"
+  },
+  "body": "{\"name\": \"zool\"}"
+}
