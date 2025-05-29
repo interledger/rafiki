@@ -9,6 +9,7 @@ import {
 } from '@interledger/open-payments'
 import { AccessToken, toOpenPaymentsAccessToken } from '../accessToken/model'
 import { Interaction } from '../interaction/model'
+import { Subject, toOpenPaymentsSubject } from '../subject/model'
 
 export enum StartMethod {
   Redirect = 'redirect'
@@ -54,6 +55,14 @@ export class Grant extends BaseModel {
         to: 'accesses.grantId'
       }
     },
+    subjects: {
+      relation: Model.HasManyRelation,
+      modelClass: join(__dirname, '../subject/model'),
+      join: {
+        from: 'grants.id',
+        to: 'subjects.grantId'
+      }
+    },
     interaction: {
       relation: Model.HasManyRelation,
       modelClass: join(__dirname, '../interaction/model'),
@@ -63,7 +72,8 @@ export class Grant extends BaseModel {
       }
     }
   })
-  public access!: Access[]
+  public access?: Access[]
+  public subjects?: Subject[]
   public state!: GrantState
   public finalizationReason?: GrantFinalization
   public startMethod!: StartMethod[]
@@ -155,7 +165,8 @@ export function toOpenPaymentsGrant(
   grant: Grant,
   args: ToOpenPaymentsGrantArgs,
   accessToken: AccessToken,
-  accessItems: Access[]
+  accessItems: Access[],
+  subjectItems: Subject[]
 ): OpenPaymentsGrant {
   return {
     access_token: toOpenPaymentsAccessToken(accessToken, accessItems, {
@@ -166,8 +177,13 @@ export function toOpenPaymentsGrant(
         value: grant.continueToken
       },
       uri: `${args.authServerUrl}/continue/${grant.continueId}`
-    }
-  }
+    },
+    subject: subjectItems?.length
+      ? {
+          sub_ids: subjectItems.map(toOpenPaymentsSubject)
+        }
+      : null
+  } as OpenPaymentsGrant
 }
 
 export interface FinishableGrant extends Grant {

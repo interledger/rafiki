@@ -13,6 +13,8 @@ import { GrantService } from '../grant/service'
 import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
 import { generateRouteLogs } from '../shared/utils'
 import { AccessItem } from '@interledger/open-payments'
+import { SubjectItem } from '../subject/types'
+import { Subject, toOpenPaymentsSubject } from '../subject/model'
 
 export type TokenHttpSigContext = AppContext & {
   accessToken: AccessToken & {
@@ -39,6 +41,7 @@ type ManagementContext = Exclude<TokenHttpSigContext, 'request'> & {
 interface IntrospectBody {
   access_token: string
   access?: AccessItem[]
+  subjects?: SubjectItem[]
 }
 export type IntrospectContext = TokenContext<IntrospectBody>
 export type RevokeContext = ManagementContext
@@ -91,10 +94,12 @@ async function introspectToken(
   const { body } = ctx.request
   const accessToken = body['access_token']
   const access = body['access']
+  const subjects = body['subjects']
   const tokenInfo = await deps.accessTokenService.introspect(
     // body.access_token exists since it is checked for by the request validation
     accessToken,
-    access
+    access,
+    subjects
   )
 
   deps.logger.debug(
@@ -105,10 +110,18 @@ async function introspectToken(
     'introspected access token'
   )
 
-  ctx.body = grantToTokenInfo(tokenInfo?.grant, tokenInfo?.access)
+  ctx.body = grantToTokenInfo(
+    tokenInfo?.grant,
+    tokenInfo?.access,
+    tokenInfo?.subjects
+  )
 }
 
-function grantToTokenInfo(grant?: Grant, access?: Access[]): TokenInfo {
+function grantToTokenInfo(
+  grant?: Grant,
+  access?: Access[],
+  subjects?: Subject[]
+): TokenInfo {
   if (!grant) {
     return {
       active: false
@@ -118,8 +131,9 @@ function grantToTokenInfo(grant?: Grant, access?: Access[]): TokenInfo {
     active: true,
     grant: grant.id,
     access: access?.map(toOpenPaymentsAccess) ?? [],
+    subject: subjects?.map(toOpenPaymentsSubject) ?? [],
     client: grant.client
-  }
+  } as TokenInfo
 }
 
 async function revokeToken(
