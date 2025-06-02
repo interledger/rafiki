@@ -84,14 +84,18 @@ const validateUrlTenantSetting = (url: string): boolean => {
   }
 }
 
-const validateNumberTenantSetting = (numberString: string): boolean => {
+const validateNonNegativeTenantSetting = (numberString: string): boolean => {
+  return !!(Number.isFinite(Number(numberString)) && Number(numberString) > -1)
+}
+
+const validatePositiveTenantSetting = (numberString: string): boolean => {
   return !!(Number.isFinite(Number(numberString)) && Number(numberString) > 0)
 }
 
 export const TENANT_SETTING_VALIDATORS = {
   [TenantSettingKeys.EXCHANGE_RATES_URL.name]: validateUrlTenantSetting,
-  [TenantSettingKeys.WEBHOOK_MAX_RETRY.name]: validateNumberTenantSetting,
-  [TenantSettingKeys.WEBHOOK_TIMEOUT.name]: validateNumberTenantSetting,
+  [TenantSettingKeys.WEBHOOK_MAX_RETRY.name]: validateNonNegativeTenantSetting,
+  [TenantSettingKeys.WEBHOOK_TIMEOUT.name]: validatePositiveTenantSetting,
   [TenantSettingKeys.WEBHOOK_URL.name]: validateUrlTenantSetting,
   [TenantSettingKeys.WALLET_ADDRESS_URL.name]: validateUrlTenantSetting
 }

@@ -152,7 +152,37 @@ describe('TenantSetting Service', (): void => {
       }
     )
 
-    test('cannot use invalid numeric values for numeric tenant settings', async (): Promise<void> => {
+    test.each`
+      key
+      ${TenantSettingKeys.EXCHANGE_RATES_URL.name}
+      ${TenantSettingKeys.WEBHOOK_URL.name}
+      ${TenantSettingKeys.WALLET_ADDRESS_URL.name}
+    `(
+      'accepts URL string for $key tenant setting',
+      async ({ key }): Promise<void> => {
+        const url = faker.internet.url()
+        const createOption: CreateOptions = {
+          tenantId: tenant.id,
+          setting: [
+            {
+              key,
+              value: url
+            }
+          ]
+        }
+
+        const tenantSetting = await tenantSettingService.create(createOption)
+        expect(tenantSetting).toEqual([
+          expect.objectContaining({
+            tenantId: tenant.id,
+            key,
+            value: url
+          })
+        ])
+      }
+    )
+
+    test('cannot use invalid numeric values for positive tenant settings', async (): Promise<void> => {
       const infiniteOption: CreateOptions = {
         tenantId: tenant.id,
         setting: [
@@ -167,11 +197,41 @@ describe('TenantSetting Service', (): void => {
         tenantSettingService.create(infiniteOption)
       ).resolves.toEqual(TenantSettingError.InvalidSetting)
 
-      const negativeOption: CreateOptions = {
+      const zeroOption: CreateOptions = {
         tenantId: tenant.id,
         setting: [
           {
             key: TenantSettingKeys.WEBHOOK_TIMEOUT.name,
+            value: '0'
+          }
+        ]
+      }
+
+      await expect(tenantSettingService.create(zeroOption)).resolves.toEqual(
+        TenantSettingError.InvalidSetting
+      )
+    })
+
+    test('cannot use invalid numeric values for non-negative numeric tenant settings', async (): Promise<void> => {
+      const infiniteOption: CreateOptions = {
+        tenantId: tenant.id,
+        setting: [
+          {
+            key: TenantSettingKeys.WEBHOOK_MAX_RETRY.name,
+            value: 'Infinity'
+          }
+        ]
+      }
+
+      await expect(
+        tenantSettingService.create(infiniteOption)
+      ).resolves.toEqual(TenantSettingError.InvalidSetting)
+
+      const negativeOption: CreateOptions = {
+        tenantId: tenant.id,
+        setting: [
+          {
+            key: TenantSettingKeys.WEBHOOK_MAX_RETRY.name,
             value: '-1'
           }
         ]
@@ -296,6 +356,110 @@ describe('TenantSetting Service', (): void => {
         ).resolves.toEqual(TenantSettingError.InvalidSetting)
       }
     )
+
+    test.each`
+      key
+      ${TenantSettingKeys.EXCHANGE_RATES_URL.name}
+      ${TenantSettingKeys.WEBHOOK_URL.name}
+      ${TenantSettingKeys.WALLET_ADDRESS_URL.name}
+    `(
+      'accepts URL string for $key tenant setting',
+      async ({ key }): Promise<void> => {
+        const createOption: CreateOptions = {
+          tenantId: tenant.id,
+          setting: [
+            {
+              key,
+              value: faker.internet.url()
+            }
+          ]
+        }
+        await tenantSettingService.create(createOption)
+
+        const url = faker.internet.url()
+        const updateOption: UpdateOptions = {
+          tenantId: tenant.id,
+          key,
+          value: url
+        }
+
+        const updatedTenantSetting =
+          await tenantSettingService.update(updateOption)
+        expect(updatedTenantSetting).toEqual([
+          expect.objectContaining({
+            tenantId: tenant.id,
+            key,
+            value: url
+          })
+        ])
+      }
+    )
+
+    test('cannot use invalid numeric values for positive numeric tenant settings', async (): Promise<void> => {
+      const createOption: CreateOptions = {
+        tenantId: tenant.id,
+        setting: [
+          {
+            key: TenantSettingKeys.WEBHOOK_TIMEOUT.name,
+            value: '5000'
+          }
+        ]
+      }
+      await tenantSettingService.create(createOption)
+      const infiniteOption: UpdateOptions = {
+        tenantId: tenant.id,
+        key: TenantSettingKeys.WEBHOOK_TIMEOUT.name,
+        value: 'Infinity'
+      }
+
+      await expect(
+        tenantSettingService.update(infiniteOption)
+      ).resolves.toEqual(TenantSettingError.InvalidSetting)
+
+      const zeroOption: UpdateOptions = {
+        tenantId: tenant.id,
+        key: TenantSettingKeys.WEBHOOK_TIMEOUT.name,
+        value: '0'
+      }
+
+      await expect(tenantSettingService.update(zeroOption)).resolves.toEqual(
+        TenantSettingError.InvalidSetting
+      )
+    })
+
+    test('cannot use invalid numeric values for non-negative numeric tenant settings', async (): Promise<void> => {
+      const createOption: CreateOptions = {
+        tenantId: tenant.id,
+        setting: [
+          {
+            key: TenantSettingKeys.WEBHOOK_MAX_RETRY.name,
+            value: '10'
+          }
+        ]
+      }
+
+      await tenantSettingService.create(createOption)
+
+      const infiniteOption: UpdateOptions = {
+        tenantId: tenant.id,
+        key: TenantSettingKeys.WEBHOOK_MAX_RETRY.name,
+        value: 'Infinity'
+      }
+
+      await expect(
+        tenantSettingService.update(infiniteOption)
+      ).resolves.toEqual(TenantSettingError.InvalidSetting)
+
+      const negativeOption: UpdateOptions = {
+        tenantId: tenant.id,
+        key: TenantSettingKeys.WEBHOOK_MAX_RETRY.name,
+        value: '-1'
+      }
+
+      await expect(
+        tenantSettingService.update(negativeOption)
+      ).resolves.toEqual(TenantSettingError.InvalidSetting)
+    })
   })
 
   describe('delete', (): void => {
