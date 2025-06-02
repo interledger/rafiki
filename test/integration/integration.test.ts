@@ -435,7 +435,7 @@ describe('Integration tests', (): void => {
         expect(incomingPayment.receivedAmount).toMatchObject({
           assetCode: 'EUR',
           assetScale: 2,
-          value: 501n
+          value: 500n
         })
         expect(incomingPayment.state).toBe(IncomingPaymentState.Completed)
       })
