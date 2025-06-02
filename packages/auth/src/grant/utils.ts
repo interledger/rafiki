@@ -30,7 +30,7 @@ export function canSkipInteraction(
             !config.listAllInteraction))
 
       if (!canSkip && (!access.identifier || access.identifier === '')) {
-        throw new Error('identifier required')
+        throw new Error('access identifier required')
       }
 
       return canSkip

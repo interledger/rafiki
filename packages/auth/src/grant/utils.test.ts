@@ -1,18 +1,8 @@
-import {
-  AccessRequest,
-  IncomingPaymentRequest,
-  OutgoingPaymentRequest,
-  QuoteRequest
-} from '../access/types'
+import { AccessRequest } from '../access/types'
 import { IAppConfig } from '../config/app'
 import { GrantRequest } from './service'
 import { canSkipInteraction } from './utils'
-import {
-  AccessAction,
-  IncomingPayment,
-  OutgoingPayment,
-  Quote
-} from '@interledger/open-payments'
+import { AccessAction } from '@interledger/open-payments'
 
 const mockConfig = {
   incomingPaymentInteraction: false,
@@ -56,10 +46,19 @@ describe('canSkipInteraction', () => {
   it('returns true if all access can be skipped', () => {
     const body: GrantRequest = {
       subject: { sub_ids: [] },
-      access_token: { access: [incomingPaymentAccess] },
+      access_token: { access: [incomingPaymentAccess, quoteAccess] },
       client: 'foo'
     }
     expect(canSkipInteraction(mockConfig, body)).toBe(true)
+  })
+
+  it('returns false if some access cannot be skipped', () => {
+    const body: GrantRequest = {
+      subject: { sub_ids: [] },
+      access_token: { access: [incomingPaymentAccess, outgoingPaymentAccess] },
+      client: 'foo'
+    }
+    expect(canSkipInteraction(mockConfig, body)).toBe(false)
   })
 
   it('throws if identifier is missing for non-skippable access', () => {

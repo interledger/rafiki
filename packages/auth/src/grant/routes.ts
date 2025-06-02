@@ -119,7 +119,7 @@ async function createGrant(
     throw new GNAPServerRouteError(
       400,
       GNAPErrorCode.InvalidRequest,
-      'access identifier required'
+      err instanceof Error ? err.message : ''
     )
   }
   if (noInteractionRequired) {

@@ -182,7 +182,7 @@ export function toOpenPaymentsGrant(
       ? {
           sub_ids: subjectItems.map(toOpenPaymentsSubject)
         }
-      : null
+      : undefined
   } as OpenPaymentsGrant
 }
 

@@ -9,18 +9,13 @@ import { ClientService } from '../client/service'
 import { AccessToken } from './model'
 import { compareRequestAndGrantAccessItems } from '../access/utils'
 import { Access, toOpenPaymentsAccess } from '../access/model'
-import { SubjectItem } from '../subject/types'
-import { Subject } from '../subject/model'
 
 export interface AccessTokenService {
   getByManagementId(managementId: string): Promise<AccessToken | undefined>
   introspect(
     tokenValue: string,
-    access?: AccessItem[],
-    subjects?: SubjectItem[]
-  ): Promise<
-    { grant: Grant; access: Access[]; subjects: Subject[] } | undefined
-  >
+    access?: AccessItem[]
+  ): Promise<{ grant: Grant; access: Access[] } | undefined>
   create(grantId: string, trx?: TransactionOrKnex): Promise<AccessToken>
   revoke(id: string, trx?: TransactionOrKnex): Promise<AccessToken | undefined>
   revokeByGrantId(grantId: string, trx?: TransactionOrKnex): Promise<number>
@@ -53,11 +48,8 @@ export async function createAccessTokenService({
   return {
     getByManagementId: (managementId: string) =>
       getByManagementId(managementId),
-    introspect: (
-      tokenValue: string,
-      access?: AccessItem[],
-      subjects?: SubjectItem[]
-    ) => introspect(deps, tokenValue, access, subjects),
+    introspect: (tokenValue: string, access?: AccessItem[]) =>
+      introspect(deps, tokenValue, access),
     revoke: (id: string, trx?: TransactionOrKnex) => revoke(deps, id, trx),
     revokeByGrantId: (grantId: string, trx?: TransactionOrKnex) =>
       revokeByGrantId(deps, grantId, trx),
@@ -85,16 +77,12 @@ async function getByManagementId(
 async function introspect(
   deps: ServiceDependencies,
   tokenValue: string,
-  access?: AccessItem[],
-  subjects?: SubjectItem[]
-): Promise<
-  { grant: Grant; access: Access[]; subjects: Subject[] } | undefined
-> {
+  access?: AccessItem[]
+): Promise<{ grant: Grant; access: Access[] } | undefined> {
   const token = await AccessToken.query(deps.knex)
     .findOne({ value: tokenValue })
     .whereNull('revokedAt')
     .withGraphFetched('grant.access')
-    .withGraphFetched('grant.subjects')
 
   if (!token) return
   if (isTokenExpired(token)) return
@@ -117,22 +105,7 @@ async function introspect(
     }
   }
 
-  const foundSubjects: Subject[] = []
-
-  if (subjects) {
-    for (const subjectItem of subjects) {
-      const { subjects: grantSubjects } = token.grant
-      const foundSubjectItem = grantSubjects?.find((grantSubjectItem) => {
-        if (!grantSubjectItem) return false
-        return grantSubjectItem.id === subjectItem.id
-      })
-      if (foundSubjectItem) {
-        foundSubjects.push(foundSubjectItem)
-      }
-    }
-  }
-
-  return { grant: token.grant, access: foundAccess, subjects: foundSubjects }
+  return { grant: token.grant, access: foundAccess }
 }
 
 async function revoke(
