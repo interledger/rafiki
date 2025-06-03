@@ -126,8 +126,8 @@ async function getQuote(
         retryable: false,
         code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount,
         details: {
-          minSendAmount: Math.ceil(
-            ilpQuote.highEstimatedExchangeRate.reciprocal().valueOf()
+          minSendAmount: BigInt(
+            Math.ceil(ilpQuote.highEstimatedExchangeRate.reciprocal().valueOf())
           )
         }
       })
