@@ -52,7 +52,8 @@ export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
     if (isQuoteError(quoteOrError)) {
       throw new GraphQLError(errorToMessage[quoteOrError.type], {
         extensions: {
-          code: errorToCode[quoteOrError.type]
+          code: errorToCode[quoteOrError.type],
+          details: quoteOrError.details
         }
       })
     } else
