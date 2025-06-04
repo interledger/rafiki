@@ -1,0 +1,17 @@
+# Helm-related files
+*.tgz
+*.lock
+charts/
+tmpcharts/
+manifests/
+release/
+
+# Kubernetes secrets and config
+secrets.yaml
+values.yaml
+values-*.yaml
+
+# Logs and temporary files
+*.log
+*.tmp
+.DS_Store

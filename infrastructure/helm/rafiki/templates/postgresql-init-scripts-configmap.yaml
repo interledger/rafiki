@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rafik-umbrella-postgres-init
+  labels:
+    app.kubernetes.io/component: postgresql
+data:
+  init-create-databases.sql: | 
+    CREATE USER rafiki_auth WITH ENCRYPTED PASSWORD 'rafiki_auth_password';
+    CREATE DATABASE rafiki_auth OWNER rafiki_auth;
+    GRANT ALL PRIVILEGES ON DATABASE rafiki_auth TO rafiki_auth;
+
+    CREATE USER rafiki_backend WITH ENCRYPTED PASSWORD 'rafiki_backend_password';
+    CREATE DATABASE rafiki_backend OWNER rafiki_backend;
+    GRANT ALL PRIVILEGES ON DATABASE rafiki_backend TO rafiki_backend;
+
+

@@ -1,107 +1,535 @@
-rafiki-backend:
-  nodeEnv: development
-  logLevel: debug
-  serviceUrls:
-    OPEN_PAYMENTS_URL: http://rafiki-rafiki-backend
-    WALLET_ADDRESS_URL: http://rafiki-rafiki-backend/.well-known/pay
-    WEBHOOK_URL: http://cloud-nine-wallet/webhooks
-    EXCHANGE_RATES_URL: http://cloud-nine-wallet/prices
-    AUTH_SERVER_GRANT_URL: http://rafiki-rafiki-auth:3006
-    AUTH_SERVER_INTROSPECTION_URL: http://rafiki-rafiki-auth:3007
-  redis:
-    host: "rafiki-redis-master"
-    port: 6379
-    tlsCaFile: ''
-    tlsCertFile: ''
-    tlsKeyFile: ''
-  postgresql:
-    host: "rafiki-postgresql"
-    port: 5432
-    username: "backend"
-    database: "backend"
-    password: "changeme"
-  port:
-    admin: 3001
-    connector: 3002
-    openPayments: 80
-  ilp:
-    address: test.cloud-nine-wallet # override this value
-    streamSecret: "BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=" # override this value
-    slippage: 0.01
-  key:
-    id: rafiki
-    file: ''
-  quoteSignatureSecret: "overridethisValue"
-  withdrawalThrottleDelay: ''
-  lifetime: 
-    exchangeRate: 15000
-    quote: 300000
-    webhook: 200
-  workers:
-    incomingPayment: 1
-    outgoingPayment: 4
-    walletAddress: 1
-    webhook: 1
-  workerIdle: 200
-  idempotency:
-    keyTTL: 86400000
-    keyLock: 2000
 
-rafiki-auth:
-  redis:
-    host: "rafiki-redis-master"
-    port: 6379
-    tlsCaFile: ''
-    tlsCertFile: ''
-    tlsKeyFile: ''
-  postgresql:
-    host: "rafiki-postgresql"
-    port: 5432
-    username: "auth"
-    database: "auth"
-    password: "changeme"
-  port:
-    admin: 3003
-    auth: 3006
-    introspection: 3007
-  identityServer:
-    domain: "http://cloud-nine-wallet/idp"
-    secret: "changeme"
-  interaction:
-    incomingPayment: "false"
-    quote: "false"
-  grant:
-    waitSeconds: 5
-  accessToken:
-    deletionDays: 30
-    expirySeconds: 600
-  cookieKey: ''
-  workers: 
-    cleanup: 1
+# See the ingress definition in the template/ingress.yaml file for more details.
+ingress:
+  enabled: true
+  ingressClassName: traefik 
 
-rafiki-frontend:
-  serviceUrls:
-    GRAPHQL_URL: http://rafiki-rafiki-backend:3001/graphql
-    OPEN_PAYMENTS_URL: https://rafiki-rafiki-backend/
-  port: 3010
-
+# POSTGRES DATABASE CONFIGURATION - See the PostgreSQL bitnami chart documentation for more details
 postgresql:
-  replication:
-    enabled: false
-  metrics:
-    enabled: false
+  enabled: true
+  fullnameOverride: rafiki-postgresql
+
+  auth:
+    postgresPassword: "a_very_insecure_password"
+
   primary:
     initdb:
-      scripts:
-        initialize_backend.sql: |
-          CREATE USER backend PASSWORD 'changeme';
-          CREATE DATABASE backend OWNER backend;
-        initialize_auth.sql: |
-          CREATE USER auth PASSWORD 'changeme';
-          CREATE DATABASE auth OWNER auth;
-    persistence:
-      enabled: true
+      scriptsConfigMap: rafik-umbrella-postgres-init
 
+# REDIS CONFIGURATION - See redis bitnami chart documentation for more details
 redis:
+  fullnameOverride: rafiki-redis
+  # When installing the chart with architecture=standalone, it will deploy a standalone Redis® StatefulSet. A single service will be exposed:
+  # Redis Master service: Points to the master, where read-write operations can be performed
+  architecture: "standalone"
+
+  # We are disabling redis auth for simplicity.
   auth:
     enabled: false
+
+# RAFIKI AUTH CONFIGURATION - See the Rafiki Auth service documentation for more details
+rafiki-auth:
+  # Forces a deterministic name for the Helm release, which is useful for when using umbrella charts
+  fullnameOverride: rafiki-auth
+
+  # The type of node environment: development, test, or production.
+  # nodeEnv: production
+
+  # See Log levels defined at https://getpino.io/#/docs/api?id=levels
+  logLevel: info
+
+  # This file is used to set default values for the Rafiki Auth Helm chart.
+  # You can override these values by providing a custom values file or using the --set flag during installation.
+  # Specifies where the application will look for a Redis instance to be used for caching
+  # and other purposes. This chart will not attempt to create a Redis instance.      
+  redis:
+    host: rafiki-redis-master
+    port: "6379"
+
+  # Configuration for the PostgreSQL database used by Rafiki Auth.
+  postgresql:
+    host: "rafiki-postgresql"
+    port: "5432"
+    auth:
+      username: rafiki_auth
+      password: rafiki_auth_password
+      database: rafiki_auth
+
+  # The public endpoint for your Rafiki instance’s auth server
+  authServerUrl: "http://YOUR_INGRESS_HOST/auth-server"
+
+  # You either need to start up a separate identity server or for development purposes
+  # you can use the Mock Account Servicing Entity (MASE) provided by Rafiki, 
+  # see https://github.com/interledger/rafiki/tree/main/localenv/mock-account-servicing-entity
+  identityServer:
+    # The URL of your IdP’s server, used by the authorization server to inform 
+    # an Open Payments client of where to redirect the end-user to start interactions.
+    domain: "http://YOUR_ACCOUNT_SERVICING_ENTITY.com/idp"
+    # A shared secret between the authorization server and the IdP server; the authorization 
+    # server will use the secret to secure its IdP-related endpoints. When the IdP server sends
+    # requests to the authorization server, the IdP server must provide the secret via an x-idp-secret header.
+    secret: "changeme"
+
+  # The number of pods to run across the cluster.
+  # This value is used to set the replica count for the deployment.
+  # replicaCount: 1
+
+  # NodeSelector can be used to specify the nodes on which the pods should run on your cluster.
+  # nodeSelector: {}
+
+  # Using this section you can define a ServiceAccount which will be used by the pods. This is useful
+  # if you want to give the pods specific permissions in your cluster.
+  # serviceAccount:
+  #   create: false
+  #   annotations: {}
+  #   name: ""
+
+  # Autoscaling configuration for the deployment.
+  # autoscaling:
+  #   enabled: false
+  #   minReplicas: 2
+  #   maxReplicas: 1
+  #   cpuUtilizationPercentage: 80
+  #   memoryUtilizationPercentage: 80
+
+  # Default configuration for the Services to create. If you have specific
+  # requirements you can use this section to redefine the service as you wish
+  # service:
+  #   - name: service
+  #     type: ClusterIP
+  #     annotations: {}
+  #     ports:
+  #       - port: 3006
+  #         targetPort: 3006
+  #         protocol: TCP
+  #         name: auth
+  #       - port: 3003
+  #         targetPort: 3003
+  #         protocol: TCP
+  #         name: admin
+  #       - port: 3007
+  #         targetPort: 3007
+  #         protocol: TCP
+  #         name: introspection
+  #       - port: 3009
+  #         targetPort: 3009
+  #         protocol: TCP
+  #         name: interaction
+
+  # In many cases you don't want to redefine all the running containers, but rather you would
+  # like to add just a single container to run as a sidecar. The following section allows you to
+  # define sidecars that will be added to the deployment. You can add multiple sidecars by
+  # adding more entries to the list.
+  #
+  # sidecars:
+  #   - name: debugbox
+  #     image:
+  #       name: busybox
+  #       tag: latest
+  #       repository: docker.io
+  #     args:
+  #       - sleep
+  #       - "3600"
+
+  # Defines the location of the template that will be used to generate the ConfigMap
+  # you can add additional files here to extend the configuration for your own purposes
+  # configmap:
+  #   - files/config.yaml
+
+  # Defines the location of the templat ethat will be used to generate the default secret
+  # used for this chart. You can add additional files here to extend the configuration for 
+  # your own purposes
+  # secrets:
+  #   - files/secret.yaml
+
+  # The containers that will be created as part of the deployment. It is recommended that
+  # you do not change this but rather use the sidecar and initContainers sections to extend
+  # this chart for your purposes.
+  # containers:
+  #   - name: server
+  #     envFrom:
+  #       - configMapRef:
+  #           name: "{{ .Release.Name }}"
+  #       - secretRef:
+  #           name: "{{ .Release.Name }}"
+  #     resources:
+  #       requests:
+  #         memory: 128Mi
+  #         cpu: 200m
+  #       limits:
+  #         memory: 512Mi
+  #         cpu: 400m
+  #     ports:
+  #       - name: auth
+  #         containerPort: 3006
+  #         protocol: TCP
+  #       - name: admin
+  #         containerPort: 3003
+  #         protocol: TCP
+  #       - name: introspection
+  #         containerPort: 3007
+  #         protocol: TCP
+  #       - name: interaction
+  #         containerPort: 3009
+  #         protocol: TCP
+
+  # interaction:
+  #   # When true, quote grants are interactive.
+  #   quote: "false"
+  #   # TODO: DOCUMENT THIS
+  #   cookieSameSite: lax
+  #   # When true, incoming Open Payments grant requests are interactive  
+  #   # Note that this is a string
+  #   incomingPayment: "false"
+
+
+  # Defines the ports on which the container will listen for incoming requests. It
+  # is recommended that you do not change these values, but rather use the service 
+  # section to expose the ports as needed.
+  # port:
+  #   admin: 3003
+  #   auth: 3006
+  #   introspection: 3007
+
+
+  # grant:
+  #   # The wait time, in seconds, included in a grant request response (grant.continue).
+  #   waitSeconds: 5
+
+  # accessToken:
+  #   # The days until expired and/or revoked access tokens are deleted.
+  #   deletionDays: 30
+  #   # The expiry time, in seconds, for access tokens.
+  #   expirySeconds: 600
+
+  # # The koa KeyGrip key that is used to sign cookies for an interaction session.
+  # cookieKey: 'changeme'
+
+
+  # workers:
+  #   # The number of workers processing expired or revoked access tokens.
+  #   cleanup: 1
+
+  # If you want to instruct the Rafiki Auth helm chart to create its own Ingress resource
+  # you can uncomment the following section and adjust it to your needs.
+  # ingress:
+  #   enabled: false
+  #   className: nginx
+  #   tls:
+  #     - secretName: interledger-test-dev-tls
+  #       hosts:
+  #         - auth.interledger-test.dev
+  #   hosts:
+  #     - host: auth.interledger-test.dev
+  #       paths:
+  #         - path: /
+  #           pathType: Prefix
+  #           service:
+  #             name: rafiki-auth-service
+  #             port: 3006
+      
+  # This container section is here because of legacy reasons and will soon not be required anymore
+  # keep it here for now. This will be fixed in the next release of the chart.
+  containers:
+    - name: server
+      envFrom:
+        - configMapRef:
+            name: rafiki-auth
+        - secretRef:
+            name: rafiki-auth
+      resources:
+        requests:
+          memory: 128Mi
+          cpu: 200m
+        limits:
+          memory: 512Mi
+          cpu: 400m
+      ports:
+        - name: auth
+          containerPort: 3006
+          protocol: TCP
+        - name: admin
+          containerPort: 3003
+          protocol: TCP
+        - name: introspection
+          containerPort: 3007
+          protocol: TCP
+        - name: interaction
+          containerPort: 3009
+          protocol: TCP
+
+# RAFIKI BACKEND CONFIGURATION - See the Rafiki Backend service documentation for more details
+rafiki-backend:
+  fullnameOverride: rafiki-backend
+
+  # nodeEnv: production
+  
+  logLevel: info
+
+  # # Your Rafiki instance’s name used to communicate for auto-peering and/or 
+  # # telemetry. Required when auto-peering and/or telemetry is enabled
+  # instanceName: rafiki-backend-changeme
+
+  auth:
+    # The endpoint on your Open Payments authorization server to grant a request.
+      grantUrl: "http://YOUR_INGRESS_HOST/auth-server"
+    # The endpoint on your Open Payments authorization server to introspect an access 
+    # token.
+    # introspectionUrl: http://rafiki-auth-service:3007
+
+  rates:
+    # The endpoint your Rafiki instance uses to request exchange rates.
+    url: http://YOUR_ACCOUNT_SERVICING_ENTITY/prices
+
+  webhook:
+    # Where Rafiki is going to send webhooks
+    url: http://YOUR_ACCOUNT_SERVICING_ENTITY/webhooks/rafiki
+    # The time, in milliseconds, that WALLET_ADDRESS_WORKERS wait until checking the 
+    # empty wallet address request queue again.
+    timeout: 200
+
+  # Redis configuration, used for caching and session state
+  redis:
+    host: 'rafiki-redis-master'
+    port: "6379"
+    # The Redis key used to store the nonce for the Rafiki Backend.
+    # nonce: ''
+
+  # PostgreSQL, provide configuration
+  postgresql:
+    host: rafiki-postgresql
+    auth:
+      username: rafiki_backend
+      password: rafiki_backend_password
+      database: rafiki_backend
+
+  # # This feature is experimental and may change in future versions.
+  # walletAddressRedirectHtmlPage: ''
+
+  # # Must be set to true when running Rafiki behind a proxy. When true, the 
+  # # X-Forwarded-Proto header is used to determine if connections are secure.
+  # trustProxy: true
+
+  ilp:
+    # ILP host
+    host: YOUR_INGRESS_HOST
+    # The ILP address of your Rafiki instance. Override this value.
+    address: test.rafiki-backend
+    # The ILP connector address where ILP packets are received.
+    connectorUrl: 'http://YOUR_INGRESS_HOST/connector'
+    # The seed secret to generate shared STREAM secrets.
+    streamSecret: "BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU="  # override this value
+    # The accepted ILP rate fluctuation.
+    slippage: 0.01
+
+  key:
+    # Your Rafiki instance’s client key ID.
+    id: rafiki
+    # The path to your Rafiki instance’s client private key.
+    # You will have to mount this file into the container by customising the container section
+    file: ''
+
+  # The secret to generate request header signatures for webhook event requests.
+  quoteSignatureSecret: 3eSLNoBubCYQZprCAhOaNZ7yZIoe1LrqAzf4cCgy5w4= # OVERRIDE THIS VALUE
+
+  # # The delay in liquidity withdrawal processing.
+  # # Unit ms
+  # withdrawalThrottleDelay: ''
+
+  # lifetime:
+  #   # The time, in milliseconds, the exchange rates you provide via the EXCHANGE_RATES_URL 
+  #   # are valid.
+  #   exchangeRate: 15000
+  #   # The time, in milliseconds, an Open Payments quote is valid for.
+  #   quote: 300000
+  #   # The time, in milliseconds, that your Rafiki instance will wait for a 200 response 
+  #   # from your webhook endpoint. If a 200 response is not received, Rafiki will time out
+  #   # and try to send the webhook event again.
+  #   webhook: 200
+
+  # workers:
+  #   # The number of workers processing incoming payment requests.
+  #   incomingPayment: 1
+  #   # The number of workers processing outgoing payment requests.
+  #   outgoingPayment: 1
+  #   paymentPointer: 1
+  #   webhook: 1
+
+  # # The time, in milliseconds, that WEBHOOK_WORKERS will wait until they check the 
+  # # empty webhook event queue again.
+  # workerIdle: 200
+
+  # idempotency:
+  #   # The TTL, in milliseconds, for idempotencyKey on GraphQL mutations on the Backend Admin API.
+  #   keyTTL: 86400000
+  #   # The TTL, in milliseconds, for idempotencyKey concurrency lock on GraphQL 
+  #   # mutations on the Backend Admin API.
+  #   keyLock: 2000
+
+  # telemetry:
+  #   # Enables the telemetry service on Rafiki.
+  #   enabled: false
+
+  # ==========================================================
+  # Chart customization
+  # ==========================================================
+  # Everything below this point is used to configure the Rafiki Backend Helm 
+  # chart framework and is not typically used by the Rafiki Backend itself. It is used to
+  # customize the deployment, service, and other Kubernetes resources created by the Helm chart.
+  # 
+  # We recommend not changing these values unless you know what you are doing.
+
+  # This chart does support the generation of init containers using the convention
+  # below. In future versions migrations will be performed in a init container.
+  # initContainers:
+  # - name: backend-migrations
+  #   image:
+  #     repository: repository/org/some-image
+  #     name: SomeImageContainer
+  #     tag: v1.0
+  #     pullPolicy: Always
+  #   args:
+  #     - "run"
+  #   envFrom:
+  #     - configMapRef:
+  #         name: "{{ .Release.Name }}"
+  #     - secretRef:
+  #         name: "{{ .Release.Name }}"
+  #   resources:
+  #     requests:
+  #       memory: 128Mi
+  #       cpu: 200m
+  #     limits:
+  #       memory: 512Mi
+  #       cpu: 400m
+
+  # Sidecars can be used to add additional containers to the Rafiki Backend deployment. This
+  # container definition will be added to the Rafiki Backend deployment as a sidecar container.
+  # sidecars:
+  #   - name: debugbox
+  #     image:
+  #       name: busybox
+  #       tag: latest
+  #       repository: docker.io
+  #     args:
+  #       - sleep
+  #       - "3600"
+
+  # # Configures the ports on which the containers will listen. It is recommended to
+  # # not change these values unless you know what you are doing. Rather use the 
+  # # service configuration to change the exposed ports.
+  # port:
+  #   admin: 3001
+  #   connector: 3002
+  #   openPayments: 3000
+
+
+  # Default replica count for the Rafiki Backend deployment.
+  # This value is used only when autoscaling is disabled. If autoscaling is enabled,
+  # the number of replicas will be managed dynamically based on resource utilization.
+  # replicaCount: 1
+
+  # Can be used to ensure rafiki-backend is deployed on a specific node or set of nodes.
+  # nodeSelector: {}
+
+  # Optionally configure or/and create a Kubernetes Service Account to be used by the
+  # Rafiki Backend deployment.
+  # If `create` is set to `true`, a Service Account will be created with the specified
+  # `name` and `annotations`. If `create` is set to `false`, the specified `name` will
+  # be used for the Service Account, and it is expected that the Service Account already
+  # exists in the cluster.
+  # serviceAccount:
+  #   create: false
+  #   annotations: {}
+  #   name: ""
+
+  # Autoscaling configuration for the Rafiki Backend deployment.
+  # autoscaling:
+  #   enabled: false
+  #   minReplicas: 1
+  #   maxReplicas: 2
+  #   cpuUtilizationPercentage: 80
+  #   memoryUtilizationPercentage: 80
+
+  # Template for creating the Rafiki Backend deployment services. If you need
+  # to customize the service (for example to add annotations), or add additional
+  # services then you will have to copy this block into your custom values file
+  # and modify it as needed. It will override this configuration.
+  # service:
+  #   - name: service
+  #     annotations: {}
+  #     type: ClusterIP
+  #     ports:
+  #       - port: 3000
+  #         targetPort: 3000
+  #         protocol: TCP
+  #         name: open-payments
+  #       - port: 3001
+  #         targetPort: 3001
+  #         protocol: TCP
+  #         name: admin
+  #       - port: 3002
+  #         targetPort: 3002
+  #         protocol: TCP
+  #         name: connector
+
+  # The template for generating the default env configmap. The generated configmap
+  # will have the same name as the full name of the release.
+  # configmap:
+  #   - files/config.yaml
+
+  # The template for generating the env secrets. The generated secret will have
+  # the same name as the full name of the release.
+  # secrets:
+  #   - files/secret.yaml
+
+  # containers:
+  #   - name: server
+  #     # Note that envFrom will automatically be populated by chart magic
+  #     # unless it is explicitly configured otherwise here.
+  #     resources:
+  #       requests:
+  #         memory: 256Mi
+  #         cpu: 1
+  #       limits:
+  #         memory: 2048Mi
+  #         cpu: 4
+  #     ports:
+  #       - name: open-payments
+  #         containerPort: 3000
+  #         protocol: TCP
+  #       - name: admin
+  #         containerPort: 3001
+  #         protocol: TCP
+  #       - name: connector
+  #         containerPort: 3002
+  #         protocol: TCP
+
+
+rafiki-frontend:
+  fullnameOverride: rafiki-frontend
+
+  serviceUrls:
+    # Reference the internal services directly without going through the ingress
+    GRAPHQL_URL: http://rafiki-backend-service:3001/graphql
+    OPEN_PAYMENTS_URL: http://rafiki-backend-service:3000
+
+  # This container section is here because of legacy reasons and will soon not be required anymore
+  # keep it here for now. This will be fixed in the next release of the chart.
+  containers:
+    - name: server
+      envFrom:
+        - configMapRef:
+            name: rafiki-frontend
+      resources:
+        requests:
+          memory: 128Mi
+          cpu: 100m
+        limits:
+          memory: 512Mi
+          cpu: 1
+      ports:
+        - name: http
+          containerPort: 3010
+          protocol: TCP
+

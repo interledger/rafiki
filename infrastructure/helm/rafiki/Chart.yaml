@@ -1,41 +1,29 @@
 apiVersion: v2
-name: rafiki
-description: Rafiki Example Helm chart
+name: rafiki-umbrella
+description: A sample umbrella chart demonstrating a Rafiki Deployment
 
-# A chart can be either an 'application' or a 'library' chart.
-#
-# Application charts are a collection of templates that can be packaged into versioned archives
-# to be deployed.
-#
-# Library charts provide useful utilities or functions for the chart developer. They're included as
-# a dependency of application charts to inject those utilities and functions into the rendering
-# pipeline. Library charts do not define any templates and therefore cannot be deployed.
 type: application
 
-# This is the chart version. This version number should be incremented each time you make changes
-# to the chart and its templates, including the app version.
-# Versions are expected to follow Semantic Versioning (https://semver.org/)
 version: 0.1.0
 
-# This is the version number of the application being deployed. This version number should be
-# incremented each time you make changes to the application. Versions are not expected to
-# follow Semantic Versioning. They should reflect the version the application is using.
-# It is recommended to use it with quotes.
-appVersion: 'v1.0.0-alpha.1'
+appVersion: "1.0.0"
+
+namespace: umbrella
 
 dependencies:
-  - name: redis
-    version: "19.0.1"
-    repository: "https://charts.bitnami.com/bitnami"
+  # See https://artifacthub.io/packages/helm/bitnami/postgresql
   - name: postgresql
-    version: '15.1.4'
-    repository: 'https://charts.bitnami.com/bitnami'
-  - name: rafiki-auth
-    version: '0.4.0'
-    repository: 'https://interledger.github.io/helm-charts'
+    version: 16.7.5
+    repository: oci://registry-1.docker.io/bitnamicharts
   - name: rafiki-backend
-    version: '0.4.0'
-    repository: 'https://interledger.github.io/helm-charts'
+    version: 0.9.0
+    repository: https://interledger.github.io/charts/interledger
+  - name: rafiki-auth
+    version: 0.9.0
+    repository: https://interledger.github.io/charts/interledger
   - name: rafiki-frontend
-    version: '0.4.0'
-    repository: 'https://interledger.github.io/helm-charts'
+    version: 0.6.2
+    repository: https://interledger.github.io/charts/interledger
+  - name: redis
+    version: 20.1.3
+    repository: oci://registry-1.docker.io/bitnamicharts

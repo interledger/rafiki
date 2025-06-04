@@ -1,0 +1,43 @@
+{{- /*
+    Minimalistic Ingress template for our umbrella chart. Magic was kept to a minium to
+    help developers understand the ingress configuration.
+
+    Note 
+    - The hardcoded service names are directly referenced
+    - The ingressClassName is set to "traefik" by default, because k3s defaults
+
+
+    */ -}}
+    
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: entrypoint-ingress
+spec:
+  ingressClassName: {{ .Values.ingress.ingressClassName | default "traefik" }}
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: rafiki-frontend-service
+                port:
+                  number: 3010
+          - path: /auth-server
+            pathType: Prefix
+            backend:
+              service:
+                name: rafiki-auth-service
+                port:
+                  number: 3006
+          - path: /open-payments
+            pathType: Prefix
+            backend:
+              service:
+                name: rafiki-backend-service
+                port:
+                  number: 3000
+{{- end }}
