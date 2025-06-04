@@ -1,4 +1,10 @@
+import { GraphQLError } from 'graphql'
 import { TenantedApolloContext } from '../../app'
+import {
+  isTenantSettingError,
+  errorToCode,
+  errorToMessage
+} from '../../tenants/settings/errors'
 import { TenantSetting } from '../../tenants/settings/model'
 import {
   ResolversTypes,
@@ -32,13 +38,21 @@ export const createTenantSettings: MutationResolvers<TenantedApolloContext>['cre
   ): Promise<ResolversTypes['CreateTenantSettingsMutationResponse']> => {
     const tenantSettingService = await ctx.container.use('tenantSettingService')
 
-    const tenantSettings = await tenantSettingService.create({
+    const tenantSettingsOrError = await tenantSettingService.create({
       tenantId: ctx.tenant.id,
       setting: args.input.settings
     })
 
+    if (isTenantSettingError(tenantSettingsOrError)) {
+      throw new GraphQLError(errorToMessage[tenantSettingsOrError], {
+        extensions: {
+          code: errorToCode[tenantSettingsOrError]
+        }
+      })
+    }
+
     return {
-      settings: tenantSettingsToGraphql(tenantSettings)
+      settings: tenantSettingsToGraphql(tenantSettingsOrError)
     }
   }
 
