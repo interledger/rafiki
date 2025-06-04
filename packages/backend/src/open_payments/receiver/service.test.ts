@@ -45,6 +45,7 @@ describe('Receiver Service', (): void => {
   let streamCredentialsService: StreamCredentialsService
   let remoteIncomingPaymentService: RemoteIncomingPaymentService
   let serviceDeps: ServiceDependencies
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
@@ -68,11 +69,12 @@ describe('Receiver Service', (): void => {
       streamCredentialsService,
       telemetry: await deps.use('telemetry')
     }
+    tenantId = Config.operatorTenantId
   })
 
   afterEach(async (): Promise<void> => {
     jest.restoreAllMocks()
-    await truncateTables(knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -83,6 +85,7 @@ describe('Receiver Service', (): void => {
     describe('local incoming payment', () => {
       test('resolves local incoming payment', async () => {
         const walletAddress = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           mockServerPort: Config.openPaymentsPort
         })
         const incomingPayment = await createIncomingPayment(deps, {
@@ -91,7 +94,8 @@ describe('Receiver Service', (): void => {
             value: BigInt(5),
             assetCode: walletAddress.asset.code,
             assetScale: walletAddress.asset.scale
-          }
+          },
+          tenantId: Config.operatorTenantId
         })
 
         await expect(
@@ -103,7 +107,7 @@ describe('Receiver Service', (): void => {
           sharedSecret: expect.any(Buffer),
           incomingPayment: {
             id: incomingPayment.getUrl(config.openPaymentsUrl),
-            walletAddress: walletAddress.url,
+            walletAddress: walletAddress.address,
             incomingAmount: incomingPayment.incomingAmount,
             receivedAmount: incomingPayment.receivedAmount,
             completed: false,
@@ -169,7 +173,8 @@ describe('Receiver Service', (): void => {
         test('returns object without methods if stream credentials could not be generated', async () => {
           const walletAddress = await createWalletAddress(deps)
           const incomingPayment = await createIncomingPayment(deps, {
-            walletAddressId: walletAddress.id
+            walletAddressId: walletAddress.id,
+            tenantId: walletAddress.tenantId
           })
 
           jest
@@ -317,11 +322,14 @@ describe('Receiver Service', (): void => {
 
       beforeEach(async () => {
         const asset = await createAsset(deps, {
-          code: 'USD',
-          scale: 2
+          assetOptions: {
+            code: 'USD',
+            scale: 2
+          }
         })
 
         walletAddress = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           mockServerPort: Config.openPaymentsPort,
           assetId: asset.id
         })
@@ -343,10 +351,11 @@ describe('Receiver Service', (): void => {
             'create'
           )
           const receiver = await receiverService.create({
-            walletAddressUrl: walletAddress.url,
+            walletAddressUrl: walletAddress.address,
             incomingAmount,
             expiresAt,
-            metadata
+            metadata,
+            tenantId
           })
 
           assert(receiver instanceof Receiver)
@@ -380,7 +389,8 @@ describe('Receiver Service', (): void => {
             walletAddressId: walletAddress.id,
             incomingAmount,
             expiresAt,
-            metadata
+            metadata,
+            tenantId: Config.operatorTenantId
           })
           expect(remoteIncomingPaymentCreateSpy).not.toHaveBeenCalled()
         }
@@ -393,7 +403,8 @@ describe('Receiver Service', (): void => {
 
         await expect(
           receiverService.create({
-            walletAddressUrl: walletAddress.url
+            walletAddressUrl: walletAddress.address,
+            tenantId
           })
         ).resolves.toEqual(ReceiverError.InvalidAmount)
       })
@@ -405,7 +416,8 @@ describe('Receiver Service', (): void => {
 
         await expect(
           receiverService.create({
-            walletAddressUrl: walletAddress.url
+            walletAddressUrl: walletAddress.address,
+            tenantId
           })
         ).rejects.toThrow(
           'Could not get stream credentials for local incoming payment'
@@ -448,12 +460,12 @@ describe('Receiver Service', (): void => {
             incomingPaymentService,
             'create'
           )
-
           const receiver = await receiverService.create({
             walletAddressUrl: walletAddress.id,
             incomingAmount,
             expiresAt,
-            metadata
+            metadata,
+            tenantId
           })
 
           expect(receiver).toEqual({
@@ -489,7 +501,8 @@ describe('Receiver Service', (): void => {
             walletAddressUrl: walletAddress.id,
             incomingAmount,
             expiresAt,
-            metadata
+            metadata,
+            tenantId
           })
           expect(localIncomingPaymentCreateSpy).not.toHaveBeenCalled()
         }
@@ -504,7 +517,8 @@ describe('Receiver Service', (): void => {
 
         await expect(
           receiverService.create({
-            walletAddressUrl: walletAddress.id
+            walletAddressUrl: walletAddress.id,
+            tenantId
           })
         ).resolves.toEqual(ReceiverError.UnknownWalletAddress)
       })
@@ -524,7 +538,8 @@ describe('Receiver Service', (): void => {
 
         await expect(
           receiverService.create({
-            walletAddressUrl: mockedIncomingPayment.walletAddress
+            walletAddressUrl: mockedIncomingPayment.walletAddress,
+            tenantId
           })
         ).rejects.toThrow('Could not create receiver from incoming payment')
         expect(remoteIncomingPaymentServiceCreateSpy).toHaveBeenCalledTimes(1)

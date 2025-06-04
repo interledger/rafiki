@@ -32,7 +32,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     })
   }
 
-  const outgoingPayment = await getOutgoingPayment({ id: result.data })
+  const outgoingPayment = await getOutgoingPayment(request, { id: result.data })
 
   if (!outgoingPayment) {
     throw json(null, { status: 400, statusText: 'Outgoing payment not found.' })

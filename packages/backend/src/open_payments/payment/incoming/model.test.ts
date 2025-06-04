@@ -31,7 +31,7 @@ describe('Models', (): void => {
 
   afterEach(async (): Promise<void> => {
     jest.useRealTimers()
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -44,11 +44,14 @@ describe('Models', (): void => {
     let incomingPayment: IncomingPayment
 
     beforeEach(async (): Promise<void> => {
-      walletAddress = await createWalletAddress(deps)
+      walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
       baseUrl = config.openPaymentsUrl
       incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
-        metadata: { description: 'my payment' }
+        metadata: { description: 'my payment' },
+        tenantId: walletAddress.tenantId
       })
     })
 
@@ -60,8 +63,8 @@ describe('Models', (): void => {
             walletAddress
           )
         ).toEqual({
-          id: `${baseUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`,
-          walletAddress: walletAddress.url,
+          id: `${baseUrl}/${Config.operatorTenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+          walletAddress: walletAddress.address,
           completed: incomingPayment.completed,
           receivedAmount: serializeAmount(incomingPayment.receivedAmount),
           incomingAmount: incomingPayment.incomingAmount
@@ -89,8 +92,8 @@ describe('Models', (): void => {
             streamCredentials
           )
         ).toEqual({
-          id: `${baseUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`,
-          walletAddress: walletAddress.url,
+          id: `${baseUrl}/${Config.operatorTenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+          walletAddress: walletAddress.address,
           completed: incomingPayment.completed,
           receivedAmount: serializeAmount(incomingPayment.receivedAmount),
           incomingAmount: incomingPayment.incomingAmount
@@ -117,8 +120,8 @@ describe('Models', (): void => {
             walletAddress
           )
         ).toEqual({
-          id: `${baseUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`,
-          walletAddress: walletAddress.url,
+          id: `${baseUrl}/${Config.operatorTenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+          walletAddress: walletAddress.address,
           completed: incomingPayment.completed,
           receivedAmount: serializeAmount(incomingPayment.receivedAmount),
           incomingAmount: incomingPayment.incomingAmount
@@ -149,8 +152,8 @@ describe('Models', (): void => {
               streamCredentials
             )
           ).toMatchObject({
-            id: `${baseUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`,
-            walletAddress: walletAddress.url,
+            id: `${baseUrl}/${Config.operatorTenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+            walletAddress: walletAddress.address,
             completed: incomingPayment.completed,
             receivedAmount: serializeAmount(incomingPayment.receivedAmount),
             incomingAmount: incomingPayment.incomingAmount

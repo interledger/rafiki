@@ -1,7 +1,5 @@
-import { faker } from '@faker-js/faker'
 import nock from 'nock'
 import { Knex } from 'knex'
-import { v4 } from 'uuid'
 import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
 import { Config } from '../config/app'
@@ -9,11 +7,13 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { AccessService } from './service'
-import { Grant, GrantState, StartMethod, FinishMethod } from '../grant/model'
+import { Grant } from '../grant/model'
 import { IncomingPaymentRequest, OutgoingPaymentRequest } from './types'
-import { generateNonce, generateToken } from '../shared/utils'
+import { generateBaseGrant } from '../tests/grant'
 import { AccessType, AccessAction } from '@interledger/open-payments'
 import { Access } from './model'
+import { Tenant } from '../tenant/model'
+import { generateTenant } from '../tests/tenant'
 
 describe('Access Service', (): void => {
   let deps: IocContract<AppServices>
@@ -22,19 +22,11 @@ describe('Access Service', (): void => {
   let trx: Knex.Transaction
   let grant: Grant
 
-  const generateBaseGrant = () => ({
-    state: GrantState.Pending,
-    startMethod: [StartMethod.Redirect],
-    continueToken: generateToken(),
-    continueId: v4(),
-    finishMethod: FinishMethod.Redirect,
-    finishUri: 'https://example.com/finish',
-    clientNonce: generateNonce(),
-    client: faker.internet.url({ appendSlash: false })
-  })
-
   beforeEach(async (): Promise<void> => {
-    grant = await Grant.query(trx).insertAndFetch(generateBaseGrant())
+    const tenant = await Tenant.query(trx).insertAndFetch(generateTenant())
+    grant = await Grant.query(trx).insertAndFetch(
+      generateBaseGrant({ tenantId: tenant.id })
+    )
   })
 
   beforeAll(async (): Promise<void> => {

@@ -11,13 +11,14 @@ export async function createReceiver(
   walletAddress: WalletAddress,
   options?: Omit<CreateIncomingPaymentOptions, 'walletAddressId'>
 ): Promise<Receiver> {
+  const config = await deps.use('config')
   const incomingPayment = await createIncomingPayment(deps, {
     ...options,
-    walletAddressId: walletAddress.id
+    walletAddressId: walletAddress.id,
+    tenantId: options?.tenantId ?? config.operatorTenantId
   })
 
   const streamCredentialsService = await deps.use('streamCredentialsService')
-  const config = await deps.use('config')
 
   return new Receiver(
     incomingPayment.toOpenPaymentsTypeWithMethods(

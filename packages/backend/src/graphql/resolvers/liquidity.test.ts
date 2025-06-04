@@ -38,7 +38,7 @@ import { createOutgoingPayment } from '../../tests/outgoingPayment'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { createPeer } from '../../tests/peer'
 import { truncateTables } from '../../tests/tableManager'
-import { WebhookEvent } from '../../webhook/model'
+import { WebhookEvent } from '../../webhook/event/model'
 import {
   LiquidityMutationResponse,
   WalletAddressWithdrawalMutationResponse
@@ -60,7 +60,7 @@ describe('Liquidity Resolvers', (): void => {
   })
 
   afterAll(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(deps)
     await appContainer.apolloClient.stop()
     await appContainer.shutdown()
   })
@@ -1015,6 +1015,7 @@ describe('Liquidity Resolvers', (): void => {
 
     beforeEach(async (): Promise<void> => {
       walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
         createLiquidityAccount: true
       })
 
@@ -1742,12 +1743,16 @@ describe('Liquidity Resolvers', (): void => {
   )
 
   describe('Event Liquidity', (): void => {
+    let tenantId: string
     let walletAddress: WalletAddress
     let incomingPayment: IncomingPayment
     let payment: OutgoingPayment
 
     beforeEach(async (): Promise<void> => {
-      walletAddress = await createWalletAddress(deps)
+      tenantId = Config.operatorTenantId
+      walletAddress = await createWalletAddress(deps, {
+        tenantId
+      })
       const walletAddressId = walletAddress.id
       incomingPayment = await createIncomingPayment(deps, {
         walletAddressId,
@@ -1756,9 +1761,11 @@ describe('Liquidity Resolvers', (): void => {
           assetCode: walletAddress.asset.code,
           assetScale: walletAddress.asset.scale
         },
-        expiresAt: new Date(Date.now() + 60 * 1000)
+        expiresAt: new Date(Date.now() + 60 * 1000),
+        tenantId: Config.operatorTenantId
       })
       payment = await createOutgoingPayment(deps, {
+        tenantId,
         walletAddressId,
         method: 'ilp',
         receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
@@ -1789,7 +1796,8 @@ describe('Liquidity Resolvers', (): void => {
               data: payment.toData({
                 amountSent: BigInt(0),
                 balance: BigInt(0)
-              })
+              }),
+              tenantId: Config.operatorTenantId
             })
           })
 
@@ -1949,6 +1957,7 @@ describe('Liquidity Resolvers', (): void => {
       incomingPaymentId?: string
       outgoingPaymentId?: string
       walletAddressId?: string
+      tenantId?: string
     }
 
     const isIncomingPaymentEventType = (
@@ -2004,7 +2013,8 @@ describe('Liquidity Resolvers', (): void => {
                 accountId: liquidityAccount.id,
                 assetId: liquidityAccount.asset.id,
                 amount
-              }
+              },
+              tenantId: Config.operatorTenantId
             }
 
             if (resourceId) {
@@ -2157,7 +2167,9 @@ describe('Liquidity Resolvers', (): void => {
     let outgoingPayment: OutgoingPayment
 
     beforeEach(async (): Promise<void> => {
-      walletAddress = await createWalletAddress(deps)
+      walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
       const walletAddressId = walletAddress.id
       incomingPayment = await createIncomingPayment(deps, {
         walletAddressId,
@@ -2166,9 +2178,11 @@ describe('Liquidity Resolvers', (): void => {
           assetCode: walletAddress.asset.code,
           assetScale: walletAddress.asset.scale
         },
-        expiresAt: new Date(Date.now() + 60 * 1000)
+        expiresAt: new Date(Date.now() + 60 * 1000),
+        tenantId: Config.operatorTenantId
       })
       outgoingPayment = await createOutgoingPayment(deps, {
+        tenantId: Config.operatorTenantId,
         walletAddressId,
         method: 'ilp',
         receiver: `${
@@ -2219,7 +2233,8 @@ describe('Liquidity Resolvers', (): void => {
               accountId: incomingPayment.id,
               assetId: incomingPayment.asset.id,
               amount
-            }
+            },
+            tenantId: Config.operatorTenantId
           })
 
           const response = await appContainer.apolloClient
@@ -2267,7 +2282,8 @@ describe('Liquidity Resolvers', (): void => {
               accountId: incomingPayment.id,
               assetId: incomingPayment.asset.id,
               amount
-            }
+            },
+            tenantId: Config.operatorTenantId
           })
           let error
           try {
@@ -2365,7 +2381,8 @@ describe('Liquidity Resolvers', (): void => {
               accountId: incomingPayment.id,
               assetId: incomingPayment.asset.id,
               amount
-            }
+            },
+            tenantId: Config.operatorTenantId
           })
           await expect(
             accountingService.createWithdrawal({
@@ -2452,7 +2469,8 @@ describe('Liquidity Resolvers', (): void => {
               accountId: outgoingPayment.id,
               assetId: outgoingPayment.asset.id,
               amount
-            }
+            },
+            tenantId: Config.operatorTenantId
           })
 
           const response = await appContainer.apolloClient
@@ -2593,7 +2611,8 @@ describe('Liquidity Resolvers', (): void => {
               accountId: outgoingPayment.id,
               assetId: outgoingPayment.asset.id,
               amount
-            }
+            },
+            tenantId: Config.operatorTenantId
           })
           await expect(
             accountingService.createWithdrawal({
@@ -2662,7 +2681,8 @@ describe('Liquidity Resolvers', (): void => {
               data: outgoingPayment.toData({
                 amountSent: BigInt(0),
                 balance: BigInt(0)
-              })
+              }),
+              tenantId: Config.operatorTenantId
             })
           })
 

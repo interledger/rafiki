@@ -4,7 +4,8 @@ import { URL } from 'url'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
-import { WebhookEvent } from './model'
+import { WebhookEvent } from './event/model'
+import { Webhook } from './model'
 import {
   WebhookService,
   generateWebhookSignature,
@@ -31,6 +32,8 @@ import {
   WalletAddressEventType
 } from '../open_payments/wallet_address/model'
 import { createOutgoingPayment } from '../tests/outgoingPayment'
+import { TenantSetting, TenantSettingKeys } from '../tenants/settings/model'
+import { faker } from '@faker-js/faker'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -74,7 +77,7 @@ describe('Webhook Service', (): void => {
 
   afterEach(async (): Promise<void> => {
     jest.useRealTimers()
-    await truncateTables(knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -90,7 +93,8 @@ describe('Webhook Service', (): void => {
           account: {
             id: uuid()
           }
-        }
+        },
+        tenantId: Config.operatorTenantId
       })
     })
 
@@ -110,6 +114,7 @@ describe('Webhook Service', (): void => {
   })
 
   describe('Get Webhook Event by account id and types', (): void => {
+    let tenantId: string
     let walletAddressIn: WalletAddress
     let walletAddressOut: WalletAddress
     let incomingPaymentIds: string[]
@@ -117,17 +122,24 @@ describe('Webhook Service', (): void => {
     let events: WebhookEvent[] = []
 
     beforeEach(async (): Promise<void> => {
-      walletAddressIn = await createWalletAddress(deps)
-      walletAddressOut = await createWalletAddress(deps)
+      tenantId = Config.operatorTenantId
+      walletAddressIn = await createWalletAddress(deps, {
+        tenantId
+      })
+      walletAddressOut = await createWalletAddress(deps, {
+        tenantId
+      })
       incomingPaymentIds = [
         (
           await createIncomingPayment(deps, {
-            walletAddressId: walletAddressIn.id
+            walletAddressId: walletAddressIn.id,
+            tenantId: Config.operatorTenantId
           })
         ).id,
         (
           await createIncomingPayment(deps, {
-            walletAddressId: walletAddressIn.id
+            walletAddressId: walletAddressIn.id,
+            tenantId: Config.operatorTenantId
           })
         ).id
       ]
@@ -135,6 +147,7 @@ describe('Webhook Service', (): void => {
         (
           await createOutgoingPayment(deps, {
             method: 'ilp',
+            tenantId,
             walletAddressId: walletAddressOut.id,
             receiver: '',
             validDestination: false
@@ -143,6 +156,7 @@ describe('Webhook Service', (): void => {
         (
           await createOutgoingPayment(deps, {
             method: 'ilp',
+            tenantId,
             walletAddressId: walletAddressOut.id,
             receiver: '',
             validDestination: false
@@ -155,25 +169,29 @@ describe('Webhook Service', (): void => {
           id: uuid(),
           type: IncomingPaymentEventType.IncomingPaymentCompleted,
           data: { id: uuid() },
-          incomingPaymentId: incomingPaymentIds[0]
+          incomingPaymentId: incomingPaymentIds[0],
+          tenantId: Config.operatorTenantId
         }),
         await WebhookEvent.query(knex).insertAndFetch({
           id: uuid(),
           type: IncomingPaymentEventType.IncomingPaymentExpired,
           data: { id: uuid() },
-          incomingPaymentId: incomingPaymentIds[0]
+          incomingPaymentId: incomingPaymentIds[0],
+          tenantId: Config.operatorTenantId
         }),
         await WebhookEvent.query(knex).insertAndFetch({
           id: uuid(),
           type: IncomingPaymentEventType.IncomingPaymentCompleted,
           data: { id: uuid() },
-          incomingPaymentId: incomingPaymentIds[1]
+          incomingPaymentId: incomingPaymentIds[1],
+          tenantId: Config.operatorTenantId
         }),
         await WebhookEvent.query(knex).insertAndFetch({
           id: uuid(),
           type: OutgoingPaymentEventType.PaymentCreated,
           data: { id: uuid() },
-          outgoingPaymentId: outgoingPaymentIds[0]
+          outgoingPaymentId: outgoingPaymentIds[0],
+          tenantId: Config.operatorTenantId
         })
       ]
     })
@@ -201,7 +219,8 @@ describe('Webhook Service', (): void => {
         id: uuid(),
         type: 'some_new_type',
         data: { id: uuid() },
-        incomingPaymentId: incomingPaymentIds[0]
+        incomingPaymentId: incomingPaymentIds[0],
+        tenantId: Config.operatorTenantId
       })
       await expect(
         webhookService.getLatestByResourceId({
@@ -300,6 +319,7 @@ describe('Webhook Service', (): void => {
   })
 
   describe('processNext', (): void => {
+    let webhook: Webhook
     beforeEach(async (): Promise<void> => {
       event = await WebhookEvent.query(knex).insertAndFetch({
         id: uuid(),
@@ -308,44 +328,78 @@ describe('Webhook Service', (): void => {
           account: {
             id: uuid()
           }
-        }
+        },
+        tenantId: Config.operatorTenantId
       })
+
+      webhook = await Webhook.query(knex)
+        .insertAndFetch({
+          recipientTenantId: Config.operatorTenantId,
+          eventId: event.id
+        })
+        .withGraphFetched('event')
     })
 
     function mockWebhookServer(
       status = 200,
-      expectedEvent: WebhookEvent = event
+      expectedEvent: WebhookEvent = event,
+      url?: URL
     ): Scope {
-      return nock(webhookUrl.origin)
-        .post(webhookUrl.pathname, function (this: Definition, body) {
-          expect(body).toMatchObject({
-            id: expectedEvent.id,
-            type: expectedEvent.type,
-            data: expectedEvent.data
-          })
-          return true
-        })
+      return nock(url?.origin ?? webhookUrl.origin)
+        .post(
+          url?.pathname ?? webhookUrl.pathname,
+          function (this: Definition, body) {
+            expect(body).toMatchObject({
+              id: expectedEvent.id,
+              type: expectedEvent.type,
+              data: expectedEvent.data
+            })
+            return true
+          }
+        )
         .reply(status)
     }
 
     test('Does not process events not scheduled to be sent', async (): Promise<void> => {
-      await event.$query(knex).patch({
+      await webhook.$query(knex).patch({
         processAt: new Date(Date.now() + 30_000)
       })
       await expect(webhookService.getEvent(event.id)).resolves.toEqual(event)
       await expect(webhookService.processNext()).resolves.toBeUndefined()
     })
 
-    test('Sends webhook event', async (): Promise<void> => {
-      const scope = mockWebhookServer()
-      await expect(webhookService.processNext()).resolves.toEqual(event.id)
-      scope.done()
-      await expect(webhookService.getEvent(event.id)).resolves.toMatchObject({
-        attempts: 1,
-        statusCode: 200,
-        processAt: null
-      })
-    })
+    test.each`
+      isTenanted | description
+      ${false}   | ${''}
+      ${true}    | ${' to tenant URL'}
+    `(
+      'Sends webhook event$description',
+      async ({ isTenanted }): Promise<void> => {
+        let setting
+        if (isTenanted) {
+          setting = await TenantSetting.query(knex).insertAndFetch({
+            tenantId: Config.operatorTenantId,
+            key: TenantSettingKeys.WEBHOOK_URL.name,
+            value: faker.internet.url()
+          })
+        }
+        const scope = mockWebhookServer(
+          200,
+          event,
+          setting ? new URL(setting.value) : undefined
+        )
+        await expect(webhookService.processNext()).resolves.toEqual(webhook.id)
+        scope.done()
+        const dbWebhook = await Webhook.query().findById(webhook.id)
+        await expect(dbWebhook).toMatchObject(
+          expect.objectContaining({
+            attempts: 1,
+            statusCode: 200,
+            processAt: null
+          })
+        )
+      }
+    )
 
     test('Signs webhook event', async (): Promise<void> => {
       jest.useFakeTimers({
@@ -369,7 +423,7 @@ describe('Webhook Service', (): void => {
         })
         .reply(200)
 
-      await expect(webhookService.processNext()).resolves.toEqual(event.id)
+      await expect(webhookService.processNext()).resolves.toEqual(webhook.id)
       scope.done()
     })
 
@@ -377,83 +431,167 @@ describe('Webhook Service', (): void => {
       'Schedules retry if request fails (%i)',
       async (status): Promise<void> => {
         const scope = mockWebhookServer(status)
-        await expect(webhookService.processNext()).resolves.toEqual(event.id)
+        await expect(webhookService.processNext()).resolves.toEqual(webhook.id)
         scope.done()
-        const updatedEvent = await webhookService.getEvent(event.id)
-        assert.ok(updatedEvent?.processAt)
-        expect(updatedEvent).toMatchObject({
+        const updatedWebhook = await Webhook.query(knex).findById(webhook.id)
+        assert.ok(updatedWebhook?.processAt)
+        expect(updatedWebhook).toMatchObject({
           attempts: 1,
           statusCode: status
         })
-        expect(updatedEvent.processAt.getTime()).toBeGreaterThanOrEqual(
+        expect(updatedWebhook.processAt.getTime()).toBeGreaterThanOrEqual(
           event.createdAt.getTime() + RETRY_BACKOFF_MS
         )
       }
     )
 
-    test('Schedules retry if request times out', async (): Promise<void> => {
-      const scope = nock(webhookUrl.origin)
-        .post(webhookUrl.pathname)
-        .delayConnection(Config.webhookTimeout + 1)
-        .reply(200)
-      await expect(webhookService.processNext()).resolves.toEqual(event.id)
-      scope.done()
-      const updatedEvent = await webhookService.getEvent(event.id)
-      assert.ok(updatedEvent?.processAt)
-      expect(updatedEvent).toMatchObject({
-        attempts: 1,
-        statusCode: null
-      })
-      expect(updatedEvent.processAt.getTime()).toBeGreaterThanOrEqual(
-        event.createdAt.getTime() + RETRY_BACKOFF_MS
-      )
-    })
-
-    test('Does not send event if webhookMaxAttempts is reached', async (): Promise<void> => {
-      let requests = 0
-      nock(webhookUrl.origin)
-        .post('/')
-        .reply(200, () => {
-          requests++
-        })
-      await event.$query(knex).patch({
-        attempts: Config.webhookMaxRetry
-      })
-      await expect(webhookService.getEvent(event.id)).resolves.toEqual(event)
-      await expect(webhookService.processNext()).resolves.toBeUndefined()
-      expect(requests).toBe(0)
-    })
-
-    test('Skips the event if webhookMaxAttempts is reached (processes the next one)', async (): Promise<void> => {
-      await event.$query(knex).patch({
-        attempts: Config.webhookMaxRetry
-      })
-
-      const nextEvent = await WebhookEvent.query(knex).insertAndFetch({
-        id: uuid(),
-        type: WalletAddressEventType.WalletAddressNotFound,
-        data: {
-          account: {
-            id: uuid()
-          }
+    test.each`
+      isTenanted | description
+      ${false}   | ${''}
+      ${true}    | ${' in tenant settings'}
+    `(
+      'Schedule retry if request reaches timeout$description',
+      async ({ isTenanted }): Promise<void> => {
+        let setting
+        if (isTenanted) {
+          setting = await TenantSetting.query(knex).insertAndFetch({
+            tenantId: Config.operatorTenantId,
+            key: TenantSettingKeys.WEBHOOK_TIMEOUT.name,
+            value: '1000'
+          })
         }
+
+        const scope = nock(webhookUrl.origin)
+          .post(webhookUrl.pathname)
+          .delay(
+            setting ? Number(setting.value) + 1 : Config.webhookTimeout + 1
+          )
+          .reply(200)
+        await expect(webhookService.processNext()).resolves.toEqual(webhook.id)
+        scope.done()
+        const updatedWebhook = await Webhook.query(knex).findById(webhook.id)
+        assert.ok(updatedWebhook?.processAt)
+        expect(updatedWebhook).toMatchObject({
+          attempts: 1,
+          statusCode: null
+        })
+        expect(updatedWebhook.processAt.getTime()).toBeGreaterThanOrEqual(
+          event.createdAt.getTime() + RETRY_BACKOFF_MS
+        )
+      }
+    )
+
+    test.each`
+      isTenanted | description
+      ${false}   | ${''}
+      ${true}    | ${' in tenant settings'}
+    `(
+      'Does not send event if max attempts is reached$description',
+      async ({ isTenanted }): Promise<void> => {
+        let setting
+        if (isTenanted) {
+          setting = await TenantSetting.query(knex).insertAndFetch({
+            tenantId: Config.operatorTenantId,
+            key: TenantSettingKeys.WEBHOOK_MAX_RETRY.name,
+            value: '5'
+          })
+        }
+        let requests = 0
+        nock(webhookUrl.origin)
+          .post('/')
+          .reply(200, () => {
+            requests++
+          })
+        await webhook.$query(knex).patch({
+          attempts: setting ? Number(setting.value) : Config.webhookMaxRetry
+        })
+        await expect(webhookService.getEvent(event.id)).resolves.toEqual(event)
+        await expect(webhookService.processNext()).resolves.toBeUndefined()
+        expect(requests).toBe(0)
+      }
+    )
+
+    test.each`
+      isTenanted | description
+      ${false}   | ${''}
+      ${true}    | ${' in tenant settings'}
+    `(
+      'Skips the event if max attempts$description is reached (processes the next one)',
+      async ({ isTenanted }): Promise<void> => {
+        let setting
+        if (isTenanted) {
+          setting = await TenantSetting.query(knex).insertAndFetch({
+            tenantId: Config.operatorTenantId,
+            key: TenantSettingKeys.WEBHOOK_MAX_RETRY.name,
+            value: '5'
+          })
+        }
+        await webhook.$query(knex).patch({
+          attempts: setting ? Number(setting.value) : Config.webhookMaxRetry
+        })
+
+        const nextEvent = await WebhookEvent.query(knex).insertAndFetch({
+          id: uuid(),
+          type: WalletAddressEventType.WalletAddressNotFound,
+          data: {
+            account: {
+              id: uuid()
+            }
+          },
+          tenantId: Config.operatorTenantId
+        })
+        const scope = mockWebhookServer(200, nextEvent)
+
+        const nextWebhook = await Webhook.query(knex)
+          .insertAndFetch({
+            recipientTenantId: Config.operatorTenantId,
+            eventId: nextEvent.id
+          })
+          .withGraphFetched('event')
+
+        await expect(webhookService.getEvent(event.id)).resolves.toEqual(event)
+        await expect(webhookService.getEvent(nextEvent.id)).resolves.toEqual(
+          nextEvent
+        )
+
+        await expect(
+          Webhook.query(knex).findById(webhook.id).withGraphFetched('event')
+        ).resolves.toEqual(webhook)
+        await expect(
+          Webhook.query(knex).findById(nextWebhook.id).withGraphFetched('event')
+        ).resolves.toEqual(nextWebhook)
+
+        await expect(webhookService.processNext()).resolves.toBe(nextWebhook.id)
+        scope.done()
+        await expect(
+          Webhook.query(knex).findById(nextWebhook.id)
+        ).resolves.toMatchObject({
+          attempts: 1,
+          statusCode: 200,
+          processAt: null
+        })
+      }
+    )
+
+    test('Uses tenant webhook url', async (): Promise<void> => {
+      const tenantWebhookUrl = faker.internet.url()
+      await TenantSetting.query(knex).insertAndFetch({
+        tenantId: Config.operatorTenantId,
+        key: TenantSettingKeys.WEBHOOK_URL.name,
+        value: tenantWebhookUrl
       })
-      const scope = mockWebhookServer(200, nextEvent)
 
-      await expect(webhookService.getEvent(event.id)).resolves.toEqual(event)
-      await expect(webhookService.getEvent(nextEvent.id)).resolves.toEqual(
-        nextEvent
-      )
-
-      await expect(webhookService.processNext()).resolves.toBe(nextEvent.id)
-      scope.done()
+      const scope = mockWebhookServer(200, event, new URL(tenantWebhookUrl))
+      await expect(webhookService.processNext()).resolves.toEqual(webhook.id)
       await expect(
-        webhookService.getEvent(nextEvent.id)
+        Webhook.query(knex).findById(webhook.id)
       ).resolves.toMatchObject({
         attempts: 1,
         statusCode: 200,
         processAt: null
       })
+
+      scope.done()
     })
   })
 })

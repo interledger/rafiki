@@ -33,7 +33,8 @@ export class MockASE {
     this.apolloClient = createApolloClient({
       graphqlUrl: config.graphqlUrl,
       signatureSecret: config.signatureSecret,
-      signatureVersion: config.signatureVersion
+      signatureVersion: config.signatureVersion,
+      operatorTenantId: config.operatorTenantId
     })
     this.adminClient = new AdminClient(this.apolloClient)
     this.accounts = new AccountProvider()

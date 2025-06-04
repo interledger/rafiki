@@ -8,6 +8,9 @@ import { AccountingService, LiquidityAccountType } from '../accounting/service'
 import { WalletAddress } from '../open_payments/wallet_address/model'
 import { Peer } from '../payment-method/ilp/peer/model'
 import { CacheDataStore } from '../middleware/cache/data-stores'
+import { TenantSettingService } from '../tenants/settings/service'
+import { TenantSettingKeys } from '../tenants/settings/model'
+import { IAppConfig } from '../config/app'
 
 export interface AssetOptions {
   code: string
@@ -15,39 +18,59 @@ export interface AssetOptions {
 }
 
 export interface CreateOptions extends AssetOptions {
+  tenantId: string
   withdrawalThreshold?: bigint
   liquidityThreshold?: bigint
 }
 
 export interface UpdateOptions {
   id: string
+  tenantId: string
   withdrawalThreshold: bigint | null
   liquidityThreshold: bigint | null
 }
+
 export interface DeleteOptions {
   id: string
+  tenantId: string
   deletedAt: Date
+}
+
+interface GetByCodeAndScaleOptions {
+  code: string
+  scale: number
+  tenantId: string
+}
+
+interface GetPageOptions {
+  pagination?: Pagination
+  sortOrder?: SortOrder
+  tenantId?: string
 }
 
 export interface AssetService {
   create(options: CreateOptions): Promise<Asset | AssetError>
   update(options: UpdateOptions): Promise<Asset | AssetError>
   delete(options: DeleteOptions): Promise<Asset | AssetError>
-  get(id: string): Promise<void | Asset>
-  getByCodeAndScale(code: string, scale: number): Promise<void | Asset>
-  getPage(pagination?: Pagination, sortOrder?: SortOrder): Promise<Asset[]>
+  get(id: string, tenantId?: string): Promise<void | Asset>
+  getByCodeAndScale(options: GetByCodeAndScaleOptions): Promise<void | Asset>
+  getPage(options: GetPageOptions): Promise<Asset[]>
   getAll(): Promise<Asset[]>
 }
 
 interface ServiceDependencies extends BaseService {
+  config: IAppConfig
   accountingService: AccountingService
+  tenantSettingService: TenantSettingService
   assetCache: CacheDataStore<Asset>
 }
 
 export async function createAssetService({
+  config,
   logger,
   knex,
   accountingService,
+  tenantSettingService,
   assetCache
 }: ServiceDependencies): Promise<AssetService> {
   const log = logger.child({
@@ -55,9 +78,11 @@ export async function createAssetService({
   })
 
   const deps: ServiceDependencies = {
+    config,
     logger: log,
     knex,
     accountingService,
+    tenantSettingService,
     assetCache
   }
 
@@ -65,26 +90,45 @@ export async function createAssetService({
     create: (options) => createAsset(deps, options),
     update: (options) => updateAsset(deps, options),
     delete: (options) => deleteAsset(deps, options),
-    get: (id) => getAsset(deps, id),
-    getByCodeAndScale: (code, scale) =>
-      getAssetByCodeAndScale(deps, code, scale),
-    getPage: (pagination?, sortOrder?) =>
-      getAssetsPage(deps, pagination, sortOrder),
+    get: (id, tenantId) => getAsset(deps, id, tenantId),
+    getByCodeAndScale: (options) => getAssetByCodeAndScale(deps, options),
+    getPage: (options) => getAssetsPage(deps, options),
     getAll: () => getAll(deps)
   }
 }
 
 async function createAsset(
   deps: ServiceDependencies,
-  { code, scale, withdrawalThreshold, liquidityThreshold }: CreateOptions
+  {
+    code,
+    scale,
+    withdrawalThreshold,
+    liquidityThreshold,
+    tenantId
+  }: CreateOptions
 ): Promise<Asset | AssetError> {
   try {
-    // check if exists but deleted | by code-scale
-    const deletedAsset = await Asset.query(deps.knex)
-      .whereNotNull('deletedAt')
-      .where('code', code)
-      .andWhere('scale', scale)
-      .first()
+    const assets = await Asset.query(deps.knex)
+      .andWhere('tenantId', tenantId)
+      .select('*')
+
+    const sameCodeAssets = assets.find((asset) => asset.code === code)
+    if (!sameCodeAssets && assets.length > 0) {
+      const exchangeUrlSetting = await deps.tenantSettingService.get({
+        tenantId,
+        key: TenantSettingKeys.EXCHANGE_RATES_URL.name
+      })
+
+      const tenantExchangeRatesUrl = exchangeUrlSetting[0]?.value
+      if (!tenantExchangeRatesUrl && !deps.config.operatorExchangeRatesUrl) {
+        return AssetError.NoRatesForAsset
+      }
+    }
+
+    const deletedAsset = assets.find(
+      (asset) =>
+        asset.deletedAt !== null && asset.code === code && asset.scale === scale
+    )
 
     if (deletedAsset) {
       // if found, enable
@@ -105,6 +149,7 @@ async function createAsset(
       const asset = await Asset.query(trx).insertAndFetch({
         code,
         scale,
+        tenantId,
         withdrawalThreshold,
         liquidityThreshold
       })
@@ -126,14 +171,18 @@ async function createAsset(
 
 async function updateAsset(
   deps: ServiceDependencies,
-  { id, withdrawalThreshold, liquidityThreshold }: UpdateOptions
+  { id, tenantId, withdrawalThreshold, liquidityThreshold }: UpdateOptions
 ): Promise<Asset | AssetError> {
   if (!deps.knex) {
     throw new Error('Knex undefined')
   }
   try {
     const asset = await Asset.query(deps.knex)
-      .patchAndFetchById(id, { withdrawalThreshold, liquidityThreshold })
+      .where({ tenantId })
+      .patchAndFetchById(id, {
+        withdrawalThreshold,
+        liquidityThreshold
+      })
       .throwIfNotFound()
 
     await deps.assetCache.set(id, asset)
@@ -149,10 +198,18 @@ async function updateAsset(
 // soft delete
 async function deleteAsset(
   deps: ServiceDependencies,
-  { id, deletedAt }: DeleteOptions
+  options: DeleteOptions
 ): Promise<Asset | AssetError> {
+  const { id, tenantId, deletedAt } = options
   if (!deps.knex) {
     throw new Error('Knex undefined')
+  }
+
+  // Check the correct tenant is requesting delete operation
+  const existingAsset = await getAsset(deps, id, tenantId)
+
+  if (!existingAsset) {
+    return AssetError.UnknownAsset
   }
 
   await deps.assetCache.delete(id)
@@ -182,12 +239,22 @@ async function deleteAsset(
 
 async function getAsset(
   deps: ServiceDependencies,
-  id: string
+  id: string,
+  tenantId?: string
 ): Promise<void | Asset> {
   const inMem = await deps.assetCache.get(id)
-  if (inMem) return inMem
+  if (inMem) {
+    return tenantId && inMem.tenantId !== tenantId ? undefined : inMem
+  }
 
-  const asset = await Asset.query(deps.knex).whereNull('deletedAt').findById(id)
+  const query = Asset.query(deps.knex).whereNull('deletedAt')
+
+  if (tenantId) {
+    query.andWhere({ tenantId })
+  }
+
+  const asset = await query.findById(id)
+
   if (asset) await deps.assetCache.set(asset.id, asset)
 
   return asset
@@ -195,24 +262,27 @@ async function getAsset(
 
 async function getAssetByCodeAndScale(
   deps: ServiceDependencies,
-  code: string,
-  scale: number
+  options: GetByCodeAndScaleOptions
 ): Promise<void | Asset> {
-  return await Asset.query(deps.knex)
-    .where({ code: code, scale: scale })
-    .first()
+  return await Asset.query(deps.knex).where(options).first()
 }
 
 async function getAssetsPage(
   deps: ServiceDependencies,
-  pagination?: Pagination,
-  sortOrder?: SortOrder
+  options: GetPageOptions
 ): Promise<Asset[]> {
-  return await Asset.query(deps.knex)
-    .whereNull('deletedAt')
-    .getPage(pagination, sortOrder)
+  const { tenantId, pagination, sortOrder } = options
+
+  const query = Asset.query(deps.knex).whereNull('deletedAt')
+
+  if (tenantId) {
+    query.andWhere({ tenantId })
+  }
+
+  return await query.getPage(pagination, sortOrder)
 }
 
+// This used in auto-peering, what to do?
 async function getAll(deps: ServiceDependencies): Promise<Asset[]> {
   return await Asset.query(deps.knex).whereNull('deletedAt')
 }

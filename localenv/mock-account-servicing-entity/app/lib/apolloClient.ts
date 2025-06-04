@@ -68,7 +68,8 @@ const authLink = setContext((request, { headers }) => {
   return {
     headers: {
       ...headers,
-      signature: `t=${timestamp}, v${version}=${digest}`
+      signature: `t=${timestamp}, v${version}=${digest}`,
+      ['tenant-id']: process.env.OPERATOR_TENANT_ID
     }
   }
 })
