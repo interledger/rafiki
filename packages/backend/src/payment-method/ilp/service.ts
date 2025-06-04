@@ -170,7 +170,12 @@ async function getQuote(
       throw new PaymentMethodHandlerError('Received error during ILP quoting', {
         description: 'Minimum delivery amount of ILP quote is non-positive',
         retryable: false,
-        code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount
+        code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount,
+        details: {
+          minSendAmount: BigInt(
+            Math.ceil(ilpQuote.highEstimatedExchangeRate.reciprocal().valueOf())
+          )
+        }
       })
     }
 
@@ -200,7 +205,9 @@ async function getQuote(
         retryable: false,
         code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount,
         details: {
-          minSendAmount: BigInt(ilpQuote.highEstimatedExchangeRate.b.valueOf())
+          minSendAmount: BigInt(
+            Math.ceil(ilpQuote.highEstimatedExchangeRate.reciprocal().valueOf())
+          )
         }
       })
     }
