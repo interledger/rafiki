@@ -56,7 +56,7 @@ rafiki-auth:
       database: rafiki_auth
 
   # The public endpoint for your Rafiki instance’s auth server
-  authServerUrl: "http://YOUR_INGRESS_HOST/auth-server"
+  authServerUrl: "http://192.168.122.227/auth-server"
 
   # You either need to start up a separate identity server or for development purposes
   # you can use the Mock Account Servicing Entity (MASE) provided by Rafiki, 
@@ -262,9 +262,11 @@ rafiki-auth:
 rafiki-backend:
   fullnameOverride: rafiki-backend
 
-  # nodeEnv: production
+  nodeEnv: production
   
   logLevel: info
+
+
 
   # # Your Rafiki instance’s name used to communicate for auto-peering and/or 
   # # telemetry. Required when auto-peering and/or telemetry is enabled
@@ -272,7 +274,7 @@ rafiki-backend:
 
   auth:
     # The endpoint on your Open Payments authorization server to grant a request.
-      grantUrl: "http://YOUR_INGRESS_HOST/auth-server"
+      grantUrl: "http://192.168.122.227/auth-server"
     # The endpoint on your Open Payments authorization server to introspect an access 
     # token.
     # introspectionUrl: http://rafiki-auth-service:3007
@@ -311,16 +313,17 @@ rafiki-backend:
   # trustProxy: true
 
   ilp:
-    # ILP host
-    host: YOUR_INGRESS_HOST
+    # maps to OPEN_PAYMENTS_URL
+    host: "http://192.168.122.227/open-payments"
     # The ILP address of your Rafiki instance. Override this value.
     address: test.rafiki-backend
     # The ILP connector address where ILP packets are received.
-    connectorUrl: 'http://YOUR_INGRESS_HOST/connector'
+    connector: 'http://192.168.122.227/connector'
     # The seed secret to generate shared STREAM secrets.
     streamSecret: "BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU="  # override this value
-    # The accepted ILP rate fluctuation.
-    slippage: 0.01
+
+  # The accepted ILP rate fluctuation.
+  slippage: 0.01
 
   key:
     # Your Rafiki instance’s client key ID.
@@ -483,27 +486,33 @@ rafiki-backend:
   # secrets:
   #   - files/secret.yaml
 
-  # containers:
-  #   - name: server
-  #     # Note that envFrom will automatically be populated by chart magic
-  #     # unless it is explicitly configured otherwise here.
-  #     resources:
-  #       requests:
-  #         memory: 256Mi
-  #         cpu: 1
-  #       limits:
-  #         memory: 2048Mi
-  #         cpu: 4
-  #     ports:
-  #       - name: open-payments
-  #         containerPort: 3000
-  #         protocol: TCP
-  #       - name: admin
-  #         containerPort: 3001
-  #         protocol: TCP
-  #       - name: connector
-  #         containerPort: 3002
-  #         protocol: TCP
+  containers:
+    - name: server
+      envFrom:
+        - configMapRef:
+            name: "rafiki-backend"
+        - secretRef:
+            name: "rafiki-backend"
+      # Note that envFrom will automatically be populated by chart magic
+      # unless it is explicitly configured otherwise here.
+      resources:
+        requests:
+          memory: 256Mi
+          cpu: 1
+        limits:
+          memory: 2048Mi
+          cpu: 4
+      ports:
+        - name: open-payments
+          containerPort: 3000
+          protocol: TCP
+        - name: admin
+          containerPort: 3001
+          protocol: TCP
+        - name: connector
+          containerPort: 3002
+          protocol: TCP
+
 
 
 rafiki-frontend:

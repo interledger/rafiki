@@ -45,7 +45,7 @@ Umbrella charts allow bundling and deploying multiple Helm charts as a single ap
 This guide assumes you have:
 
 * A Kubernetes cluster running somewhere you can access
-* `kubectl` and `helm` installed on your local machine
+* `kubectl` and `helm` installed on your local machine. Ensure that kubectl is configured to connect to your Kubernetes cluster.
 * Some understanding of how Kubernetes and Helm works
 
 ---
