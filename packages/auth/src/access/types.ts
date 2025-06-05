@@ -77,6 +77,11 @@ type ReceiveOnly = {
   debitAmount?: never
 }
 
-export type OutgoingPaymentLimit = Limit & (DebitOnly | ReceiveOnly)
+type NoAmount = {
+  receiveAmount?: never
+  debitAmount?: never
+}
+
+export type OutgoingPaymentLimit = Limit & (DebitOnly | ReceiveOnly | NoAmount)
 
 export type LimitData = OutgoingPaymentLimit
