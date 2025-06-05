@@ -1,9 +1,13 @@
 import { gql } from '@apollo/client'
-import { apolloClient } from './apolloClient'
+import { generateApolloClient } from './apolloClient'
 import type { QueryAssetsArgs } from 'generated/graphql'
+import { TenantOptions } from './types'
 
-export const listAssets = async (args: QueryAssetsArgs) => {
-  const response = await apolloClient.query({
+export const listAssets = async (
+  args: QueryAssetsArgs,
+  tenantOptions?: TenantOptions
+) => {
+  const response = await generateApolloClient(tenantOptions).query({
     query: gql`
       query ListAssetsQuery(
         $after: String
@@ -18,6 +22,7 @@ export const listAssets = async (args: QueryAssetsArgs) => {
               id
               scale
               withdrawalThreshold
+              tenantId
               createdAt
             }
           }
@@ -36,13 +41,14 @@ export const listAssets = async (args: QueryAssetsArgs) => {
   return response.data.assets
 }
 
-export const loadAssets = async () => {
+export const loadAssets = async (tenantOptions?: TenantOptions) => {
   let assets: {
     node: {
       code: string
       id: string
       scale: number
       withdrawalThreshold?: bigint | null
+      tenantId: string
       createdAt: string
     }
   }[] = []
@@ -50,7 +56,7 @@ export const loadAssets = async () => {
   let after: string | undefined
 
   while (hasNextPage) {
-    const response = await listAssets({ first: 100, after })
+    const response = await listAssets({ first: 100, after }, tenantOptions)
 
     if (response.edges) {
       assets = [...assets, ...response.edges]

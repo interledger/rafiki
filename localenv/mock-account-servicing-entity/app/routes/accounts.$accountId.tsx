@@ -23,7 +23,7 @@ import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { getAccountTransactions } from '../lib/transactions.server'
 import { loadAssets } from '~/lib/asset.server'
 import { updateAccountSchema, addLiquiditySchema } from '~/lib/validate.server'
-import { getOpenPaymentsUrl } from '~/lib/utils'
+import { getOpenPaymentsUrl, getTenantCredentials } from '~/lib/utils'
 import { ZodFieldErrors } from '~/lib/types'
 import {
   getAccountWithBalance,
@@ -40,6 +40,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   }
 
   const session = await messageStorage.getSession(request.headers.get('cookie'))
+  const options = await getTenantCredentials(session)
   const account = await getAccountWithBalance(accountId)
   if (!account?.id) {
     return setMessageAndRedirect({
@@ -53,7 +54,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   }
 
   const transactions = await getAccountTransactions(accountId)
-  const assets = await loadAssets()
+  const assets = await loadAssets(options)
 
   return json({
     account,

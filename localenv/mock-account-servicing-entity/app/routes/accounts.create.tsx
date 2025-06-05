@@ -12,16 +12,28 @@ import { createWallet } from '~/lib/wallet.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createAccountSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/lib/types'
-import { getOpenPaymentsUrl } from '~/lib/utils'
+import { getOpenPaymentsUrl, getTenantCredentials } from '~/lib/utils'
 
 export async function loader() {
-  const assets = await loadAssets()
+  const session = await messageStorage.getSession()
+  const options = await getTenantCredentials(session)
+  const assets = await loadAssets(options)
 
-  return json({ assets })
+  const isTenant = process?.env?.IS_TENANT === 'true'
+
+  // Filter out assets that don't belong to the operator if the request returned all tenants' assets
+  return json({
+    assets: !isTenant
+      ? assets.filter(
+          (asset) => asset.node.tenantId === process?.env?.OPERATOR_TENANT_ID
+        )
+      : assets,
+    options
+  })
 }
 
 export default function CreateAccountPage() {
-  const { assets } = useLoaderData<typeof loader>()
+  const { assets, options } = useLoaderData<typeof loader>()
   const response = useActionData<typeof action>()
   const { state } = useNavigation()
   const isSubmitting = state === 'submitting'
@@ -56,7 +68,7 @@ export default function CreateAccountPage() {
                   />
                   <Input
                     required
-                    addOn={`${getOpenPaymentsUrl()}/accounts/`}
+                    addOn={`${options?.walletAddressPrefix ?? getOpenPaymentsUrl()}/accounts/`}
                     name='path'
                     label='Wallet address'
                     placeholder='jdoe'
@@ -112,7 +124,10 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  const assets = await loadAssets()
+  const session = await messageStorage.getSession(request.headers.get('cookie'))
+  const options = await getTenantCredentials(session)
+
+  const assets = await loadAssets(options)
   const assetDetail = assets.find(
     (asset: { node: { id: string } }) => asset.node.id == result.data.assetId
   )
@@ -128,9 +143,7 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  await createWallet({ ...result.data, accountId })
-
-  const session = await messageStorage.getSession(request.headers.get('cookie'))
+  await createWallet({ ...result.data, accountId }, options)
 
   return setMessageAndRedirect({
     session,

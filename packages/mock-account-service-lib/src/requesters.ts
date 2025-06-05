@@ -14,7 +14,9 @@ import type {
   CreateOrUpdatePeerByUrlMutationResponse,
   CreateOrUpdatePeerByUrlInput,
   Peer,
-  Asset
+  Asset,
+  TenantMutationResponse,
+  CreateTenantInput
 } from './generated/graphql'
 import { v4 as uuid } from 'uuid'
 
@@ -121,6 +123,46 @@ export function createRequesters(
   }
 }
 
+export async function createTenant(
+  apolloClient: ApolloClient<NormalizedCacheObject>,
+  publicName: string,
+  apiSecret: string,
+  walletAddressUrl: string
+): Promise<TenantMutationResponse> {
+  const input: CreateTenantInput = {
+    apiSecret,
+    publicName,
+    settings: [
+      {
+        key: 'WALLET_ADDRESS_URL',
+        value: walletAddressUrl
+      }
+    ]
+  }
+  const createTenantMutation = gql`
+    mutation CreateTenant($input: CreateTenantInput!) {
+      createTenant(input: $input) {
+        tenant {
+          id
+          apiSecret
+        }
+      }
+    }
+  `
+
+  return apolloClient
+    .mutate({
+      mutation: createTenantMutation,
+      variables: { input }
+    })
+    .then(({ data }): TenantMutationResponse => {
+      if (!data.createTenant.tenant) {
+        throw new Error('Data was empty')
+      }
+      return data.createTenant
+    })
+}
+
 export async function createAsset(
   apolloClient: ApolloClient<NormalizedCacheObject>,
   code: string,
@@ -182,8 +224,11 @@ export async function createPeer(
     input: {
       staticIlpAddress,
       http: {
-        incoming: { authTokens: [`test-${assetCode}`] },
-        outgoing: { endpoint: outgoingEndpoint, authToken: `test-${assetCode}` }
+        incoming: { authTokens: [`test-${assetCode}-${uuid()}`] },
+        outgoing: {
+          endpoint: outgoingEndpoint,
+          authToken: `test-${assetCode}-${uuid()}`
+        }
       },
       assetId,
       name,

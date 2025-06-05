@@ -1,0 +1,92 @@
+assets:
+  - code: USD
+    scale: 2
+    liquidity: 100000000
+    liquidityThreshold: 10000000
+  - code: EUR
+    scale: 2
+    liquidity: 100000000
+    liquidityThreshold: 10000000
+  - code: MXN
+    scale: 2
+    liquidity: 100000000
+    liquidityThreshold: 10000000
+  - code: JPY
+    scale: 0
+    liquidity: 1000000
+    liquidityThreshold: 100000
+peeringAsset: 'USD'
+peers:
+  - initialLiquidity: '10000000'
+    peerUrl: http://happy-life-bank-backend:3002
+    peerIlpAddress: test.happy-life-bank
+    liquidityThreshold: 1000000
+accounts:
+  - name: 'Frace Granklin'
+    path: accounts/fgranklin
+    id: 374e68c8-06d8-4b4f-b38a-9f047db870c5
+    initialBalance: 40000000
+    brunoEnvVar: fgranklinWalletAddress
+    assetCode: USD
+  - name: 'Hert Bamchest'
+    id: 9a6bbce5-23ab-4372-a7a7-45662e60a973
+    initialBalance: 40000000
+    path: accounts/hbamchest
+    brunoEnvVar: hbamchestWalletAddress
+    assetCode: USD
+  - name: "Galaxy's Best Croissant Co"
+    id: a7c4a79b-c66e-4901-9a28-c812fefbae1e
+    initialBalance: 20000000
+    path: accounts/gbcc
+    brunoEnvVar: gbccWalletAddress
+    assetCode: USD
+  - name: "Penniless Account"
+    id: 66daacec-ee36-4d21-bca9-c8013ea5f8a7
+    initialBalance: 50
+    path: accounts/penniless
+    brunoEnvVar: pennilessWalletAddress
+    assetCode: USD
+  - name: "Ruca Lossi"
+    id: 53e03ae8-afca-483b-a02b-1db0d49411dc
+    initialBalance: 50
+    path: accounts/rlossi
+    brunoEnvVar: rlossiWalletAddressId
+    assetCode: EUR
+rates:
+  EUR:
+    MXN: 18.78
+    USD: 1.10
+    JPY: 157.83
+  USD:
+    MXN: 17.07
+    EUR: 0.91
+    JPY: 147.71
+  MXN:
+    USD: 0.059
+    EUR: 0.054
+    JPY: 8.65
+  JPY:
+    USD: 0.007
+    EUR: 0.006
+    MXN: 0.12
+fees:
+  - fixed: 100
+    basisPoints: 200
+    asset: USD
+    scale: 2
+  - fixed: 100
+    basisPoints: 200
+    asset: EUR
+    scale: 2
+  - fixed: 100
+    basisPoints: 200
+    asset: MXN
+    scale: 2
+  - fixed: 1
+    basisPoints: 200
+    asset: JPY
+    scale: 0
+tenants:
+  - publicName: 'Cloud Ten Wallet'
+    apiSecret: 'LuagA4lRWSi9GRx5vBNr0vQHKrroaxkvg6ZMFjfLxPw='
+    walletAddressPrefix: 'https://cloud-nine-wallet-backend/cloud-ten'
