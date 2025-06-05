@@ -62,11 +62,26 @@ export interface PaymentAmount {
   assetScale: number
 }
 
-export type OutgoingPaymentLimit = {
+type Limit = {
   receiver: string
-  debitAmount?: PaymentAmount
-  receiveAmount?: PaymentAmount
   interval?: string
 }
+
+type DebitOnly = {
+  debitAmount: PaymentAmount
+  receiveAmount?: never
+}
+
+type ReceiveOnly = {
+  receiveAmount: PaymentAmount
+  debitAmount?: never
+}
+
+type NoAmount = {
+  receiveAmount?: never
+  debitAmount?: never
+}
+
+export type OutgoingPaymentLimit = Limit & (DebitOnly | ReceiveOnly | NoAmount)
 
 export type LimitData = OutgoingPaymentLimit

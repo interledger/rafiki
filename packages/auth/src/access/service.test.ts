@@ -75,11 +75,6 @@ describe('Access Service', (): void => {
           assetCode: 'usd',
           assetScale: 9
         },
-        receiveAmount: {
-          value: '2000000000',
-          assetCode: 'usd',
-          assetScale: 9
-        },
         expiresAt: new Date().toISOString(),
         receiver: 'https://wallet.com/alice'
       }
