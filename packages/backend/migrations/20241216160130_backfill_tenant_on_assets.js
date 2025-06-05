@@ -6,6 +6,8 @@ exports.up = function (knex) {
   return knex.schema
     .alterTable('assets', (table) => {
       table.uuid('tenantId').references('tenants.id').index()
+      table.dropUnique(['code', 'scale'])
+      table.unique(['code', 'scale', 'tenantId'])
     })
     .then(() => {
       return knex.raw(
@@ -26,5 +28,7 @@ exports.up = function (knex) {
 exports.down = function (knex) {
   return knex.schema.alterTable('assets', (table) => {
     table.dropColumn('tenantId')
+    table.dropUnique(['code', 'scale', 'tenantId'])
+    table.unique(['code', 'scale'])
   })
 }

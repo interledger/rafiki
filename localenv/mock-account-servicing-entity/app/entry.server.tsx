@@ -5,7 +5,7 @@ import { RemixServer } from '@remix-run/react'
 import { renderToPipeableStream } from 'react-dom/server'
 import { setupFromSeed } from 'mock-account-service-lib'
 import { CONFIG } from './lib/parse_config.server'
-import { apolloClient } from './lib/apolloClient'
+import { generateApolloClient } from './lib/apolloClient'
 import { mockAccounts } from './lib/accounts.server'
 
 declare global {
@@ -41,7 +41,7 @@ if (!global.__seeded) {
 
   callWithRetry(async () => {
     console.log('setting up from seed...')
-    return setupFromSeed(CONFIG, apolloClient, mockAccounts, {
+    return setupFromSeed(CONFIG, generateApolloClient, mockAccounts, {
       logLevel: 'debug',
       pinoPretty: true
     })

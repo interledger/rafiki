@@ -32,6 +32,12 @@ export interface Fee {
   scale: number
 }
 
+export interface Tenant {
+  apiSecret: string
+  publicName: string
+  walletAddressPrefix: string
+}
+
 export interface SeedInstance {
   assets: Array<Asset>
   peeringAsset: string
@@ -39,9 +45,11 @@ export interface SeedInstance {
   accounts: Array<Account>
   fees: Array<Fee>
   rates: Record<string, Record<string, number>>
+  tenants: Array<Tenant>
 }
 
 export interface Config {
+  isTenant: boolean
   seed: SeedInstance
   key: KeyObject
   publicHost: string
