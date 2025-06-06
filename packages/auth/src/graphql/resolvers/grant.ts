@@ -89,7 +89,7 @@ export const revokeGrant: MutationResolvers<ApolloContext>['revokeGrant'] =
 export const grantToGraphql = (grant: Grant): SchemaGrant => ({
   id: grant.id,
   client: grant.client,
-  access: grant.access?.map((item) => accessToGraphql(item)),
+  access: grant.access?.map((item) => accessToGraphql(item)) || [],
   state: grant.state,
   finalizationReason: grant.finalizationReason,
   createdAt: grant.createdAt.toISOString()
