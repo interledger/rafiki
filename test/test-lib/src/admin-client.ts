@@ -48,7 +48,6 @@ export class AdminClient {
                   assetScale
                   value
                 }
-                updatedAt
               }
             }
           }
