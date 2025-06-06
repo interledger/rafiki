@@ -38,8 +38,8 @@ importers:
         specifier: ^7.3.1
         version: 7.5.0(eslint@8.57.1)(typescript@5.4.3)
       dotenv:
-        specifier: ^16.4.7
-        version: 16.4.7
+        specifier: ^16.5.0
+        version: 16.5.0
       eslint:
         specifier: ^8.57.1
         version: 8.57.1
@@ -198,8 +198,8 @@ importers:
         specifier: ^1.8.2
         version: 1.8.2(debug@4.3.2)
       dotenv:
-        specifier: ^16.4.7
-        version: 16.4.7
+        specifier: ^16.5.0
+        version: 16.5.0
       graphql:
         specifier: ^16.11.0
         version: 16.11.0
@@ -394,8 +394,8 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       dotenv:
-        specifier: ^16.4.7
-        version: 16.4.7
+        specifier: ^16.5.0
+        version: 16.5.0
       extensible-error:
         specifier: ^1.0.2
         version: 1.0.2
@@ -4813,7 +4813,7 @@ packages:
       '@whatwg-node/fetch': 0.9.8
       chalk: 4.1.2
       debug: 4.4.0(supports-color@9.4.0)
-      dotenv: 16.4.7
+      dotenv: 16.5.0
       graphql: 16.11.0
       graphql-request: 6.1.0(graphql@16.11.0)
       http-proxy-agent: 7.0.0
@@ -6940,7 +6940,7 @@ packages:
       chalk: 4.1.2
       chokidar: 3.6.0
       cross-spawn: 7.0.6
-      dotenv: 16.4.7
+      dotenv: 16.5.0
       es-module-lexer: 1.6.0
       esbuild: 0.17.6
       esbuild-plugins-node-modules-polyfill: 1.6.1(esbuild@0.17.6)
@@ -11631,6 +11631,11 @@ packages:
 
   /dotenv@16.4.7:
     resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
+    engines: {node: '>=12'}
+    dev: true
+
+  /dotenv@16.5.0:
+    resolution: {integrity: sha512-m/C+AwOAr9/W1UOIZUo232ejMNnJAJtYQjUbHoNTBNTJSvqzzDh7vnrei3o3r3m9blf6ZoDkvcw0VmozNRFJxg==}
     engines: {node: '>=12'}
 
   /dset@3.1.4:
