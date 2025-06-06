@@ -27,8 +27,8 @@ exports.up = function (knex) {
  */
 exports.down = function (knex) {
   return knex.schema.alterTable('assets', (table) => {
-    table.dropColumn('tenantId')
     table.dropUnique(['code', 'scale', 'tenantId'])
+    table.dropColumn('tenantId')
     table.unique(['code', 'scale'])
   })
 }
