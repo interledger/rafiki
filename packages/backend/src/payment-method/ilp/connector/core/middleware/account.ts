@@ -104,7 +104,10 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
         }
       }
       const address = ctx.request.prepare.destination
-      const peer = await peers.getByDestinationAddress(address)
+      const peer = await peers.getByDestinationAddress(
+        address,
+        incomingAccount.tenantId
+      )
       if (peer) {
         return peer
       }
