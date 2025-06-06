@@ -1,6 +1,17 @@
 import { GraphQLErrorCode } from '../../graphql/errors'
 
-export enum QuoteError {
+export class QuoteError extends Error {
+  public type: QuoteErrorCode
+  public details?: Record<string, unknown>
+
+  constructor(type: QuoteErrorCode, details?: Record<string, unknown>) {
+    super(errorToMessage[type], details)
+    this.type = type
+    this.details = details
+  }
+}
+
+export enum QuoteErrorCode {
   UnknownWalletAddress = 'UnknownWalletAddress',
   InvalidAmount = 'InvalidAmount',
   InvalidReceiver = 'InvalidReceiver',
@@ -9,35 +20,34 @@ export enum QuoteError {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-export const isQuoteError = (o: any): o is QuoteError =>
-  Object.values(QuoteError).includes(o)
+export const isQuoteError = (o: any): o is QuoteError => o instanceof QuoteError
 
 export const errorToHTTPCode: {
-  [key in QuoteError]: number
+  [key in QuoteErrorCode]: number
 } = {
-  [QuoteError.UnknownWalletAddress]: 404,
-  [QuoteError.InvalidAmount]: 400,
-  [QuoteError.InvalidReceiver]: 400,
-  [QuoteError.InactiveWalletAddress]: 400,
-  [QuoteError.NonPositiveReceiveAmount]: 400
+  [QuoteErrorCode.UnknownWalletAddress]: 404,
+  [QuoteErrorCode.InvalidAmount]: 400,
+  [QuoteErrorCode.InvalidReceiver]: 400,
+  [QuoteErrorCode.InactiveWalletAddress]: 400,
+  [QuoteErrorCode.NonPositiveReceiveAmount]: 400
 }
 
 export const errorToCode: {
-  [key in QuoteError]: GraphQLErrorCode
+  [key in QuoteErrorCode]: GraphQLErrorCode
 } = {
-  [QuoteError.UnknownWalletAddress]: GraphQLErrorCode.NotFound,
-  [QuoteError.InvalidAmount]: GraphQLErrorCode.BadUserInput,
-  [QuoteError.InvalidReceiver]: GraphQLErrorCode.BadUserInput,
-  [QuoteError.InactiveWalletAddress]: GraphQLErrorCode.Inactive,
-  [QuoteError.NonPositiveReceiveAmount]: GraphQLErrorCode.BadUserInput
+  [QuoteErrorCode.UnknownWalletAddress]: GraphQLErrorCode.NotFound,
+  [QuoteErrorCode.InvalidAmount]: GraphQLErrorCode.BadUserInput,
+  [QuoteErrorCode.InvalidReceiver]: GraphQLErrorCode.BadUserInput,
+  [QuoteErrorCode.InactiveWalletAddress]: GraphQLErrorCode.Inactive,
+  [QuoteErrorCode.NonPositiveReceiveAmount]: GraphQLErrorCode.BadUserInput
 }
 
 export const errorToMessage: {
-  [key in QuoteError]: string
+  [key in QuoteErrorCode]: string
 } = {
-  [QuoteError.UnknownWalletAddress]: 'unknown wallet address',
-  [QuoteError.InvalidAmount]: 'invalid amount',
-  [QuoteError.InvalidReceiver]: 'invalid receiver',
-  [QuoteError.InactiveWalletAddress]: 'inactive wallet address',
-  [QuoteError.NonPositiveReceiveAmount]: 'non-positive receive amount'
+  [QuoteErrorCode.UnknownWalletAddress]: 'unknown wallet address',
+  [QuoteErrorCode.InvalidAmount]: 'invalid amount',
+  [QuoteErrorCode.InvalidReceiver]: 'invalid receiver',
+  [QuoteErrorCode.InactiveWalletAddress]: 'inactive wallet address',
+  [QuoteErrorCode.NonPositiveReceiveAmount]: 'non-positive receive amount'
 }
