@@ -24,12 +24,14 @@ import { generateBaseGrant } from '../tests/grant'
 describe('Access Token Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let trx: Knex.Transaction
+  let knex: Knex
   let accessTokenService: AccessTokenService
+  const testDate = new Date('2025-01-01')
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
+    knex = appContainer.knex
     accessTokenService = await deps.use('accessTokenService')
   })
 
@@ -63,11 +65,11 @@ describe('Access Token Service', (): void => {
 
   let grant: Grant
   beforeEach(async (): Promise<void> => {
-    grant = await Grant.query(trx).insertAndFetch(
+    grant = await Grant.query(knex).insertAndFetch(
       generateBaseGrant({ state: GrantState.Approved })
     )
     grant.access = [
-      await Access.query(trx).insertAndFetch({
+      await Access.query(knex).insertAndFetch({
         grantId: grant.id,
         ...BASE_ACCESS
       })
@@ -88,7 +90,7 @@ describe('Access Token Service', (): void => {
   describe('getByManagementId', (): void => {
     let accessToken: AccessToken
     beforeEach(async (): Promise<void> => {
-      accessToken = await AccessToken.query(trx).insert({
+      accessToken = await AccessToken.query(knex).insert({
         value: 'test-access-token',
         managementId: v4(),
         grantId: grant.id,
@@ -97,7 +99,7 @@ describe('Access Token Service', (): void => {
     })
 
     test('Can get an access token by its managementId', async (): Promise<void> => {
-      const retrievedGrant = await Grant.query(trx).findById(grant.id)
+      const retrievedGrant = await Grant.query(knex).findById(grant.id)
       await expect(
         accessTokenService.getByManagementId(accessToken.managementId)
       ).resolves.toMatchObject({
@@ -132,7 +134,7 @@ describe('Access Token Service', (): void => {
     }
 
     beforeEach(async (): Promise<void> => {
-      accessToken = await AccessToken.query(trx).insert({
+      accessToken = await AccessToken.query(knex).insert({
         value: 'test-access-token',
         managementId: v4(),
         grantId: grant.id,
@@ -158,7 +160,7 @@ describe('Access Token Service', (): void => {
     })
 
     test('Can introspect active token for revoked grant', async (): Promise<void> => {
-      await grant.$query(trx).patch({
+      await grant.$query(knex).patch({
         state: GrantState.Finalized,
         finalizationReason: GrantFinalization.Revoked
       })
@@ -186,11 +188,11 @@ describe('Access Token Service', (): void => {
     })
 
     test('Introspection only returns requested access', async (): Promise<void> => {
-      const grantWithTwoAccesses = await Grant.query(trx).insertAndFetch(
+      const grantWithTwoAccesses = await Grant.query(knex).insertAndFetch(
         generateBaseGrant({ state: GrantState.Approved })
       )
       grantWithTwoAccesses.access = [
-        await Access.query(trx).insertAndFetch({
+        await Access.query(knex).insertAndFetch({
           grantId: grantWithTwoAccesses.id,
           ...BASE_ACCESS
         })
@@ -199,19 +201,21 @@ describe('Access Token Service', (): void => {
         type: 'quote',
         actions: ['create', 'read']
       }
-      const dbSecondAccess = await Access.query(trx).insertAndFetch({
+      const dbSecondAccess = await Access.query(knex).insertAndFetch({
         grantId: grantWithTwoAccesses.id,
         ...secondAccessItem
       })
 
       grantWithTwoAccesses.access.push(dbSecondAccess)
 
-      const accessTokenForTwoAccessGrant = await AccessToken.query(trx).insert({
-        value: 'test-access-token-two-access',
-        managementId: v4(),
-        grantId: grantWithTwoAccesses.id,
-        expiresIn: 1234
-      })
+      const accessTokenForTwoAccessGrant = await AccessToken.query(knex).insert(
+        {
+          value: 'test-access-token-two-access',
+          managementId: v4(),
+          grantId: grantWithTwoAccesses.id,
+          expiresIn: 1234
+        }
+      )
 
       await expect(
         accessTokenService.introspect(accessTokenForTwoAccessGrant.value, [
@@ -250,14 +254,14 @@ describe('Access Token Service', (): void => {
     let grant: Grant
     let token: AccessToken
     beforeEach(async (): Promise<void> => {
-      grant = await Grant.query(trx).insertAndFetch(
+      grant = await Grant.query(knex).insertAndFetch(
         generateBaseGrant({
           state: GrantState.Finalized,
           finalizationReason: GrantFinalization.Issued
         })
       )
 
-      token = await AccessToken.query(trx).insertAndFetch({
+      token = await AccessToken.query(knex).insertAndFetch({
         grantId: grant.id,
         ...BASE_TOKEN,
         value: generateToken(),
@@ -267,7 +271,7 @@ describe('Access Token Service', (): void => {
 
     describe('Revoke by token id', (): void => {
       test('Can revoke un-expired token', async (): Promise<void> => {
-        await token.$query(trx).patch({ expiresIn: 1000000 })
+        await token.$query(knex).patch({ expiresIn: 1000000 })
         await expect(accessTokenService.revoke(token.id)).resolves.toEqual({
           ...token,
           revokedAt: expect.any(Date),
@@ -275,7 +279,7 @@ describe('Access Token Service', (): void => {
         })
       })
       test('Can revoke even if token has already expired', async (): Promise<void> => {
-        await token.$query(trx).patch({ expiresIn: -1 })
+        await token.$query(knex).patch({ expiresIn: -1 })
         await expect(accessTokenService.revoke(token.id)).resolves.toEqual({
           ...token,
           revokedAt: expect.any(Date),
@@ -283,12 +287,12 @@ describe('Access Token Service', (): void => {
         })
       })
       test('Can revoke even if token has already been revoked', async (): Promise<void> => {
-        await token.$query(trx).delete()
+        await token.$query(knex).delete()
         await expect(
           accessTokenService.revoke(token.id)
         ).resolves.toBeUndefined()
         await expect(
-          AccessToken.query(trx).findById(token.id)
+          AccessToken.query(knex).findById(token.id)
         ).resolves.toBeUndefined()
       })
 
@@ -302,12 +306,15 @@ describe('Access Token Service', (): void => {
     })
     describe('Revoke by grant id', (): void => {
       test('Can revoke un-expired token', async (): Promise<void> => {
-        await token.$query(trx).patch({ expiresIn: 1000000 })
+        await token.$query(knex).patch({ expiresIn: 1000000 })
+        jest.useFakeTimers()
+        jest.setSystemTime(testDate)
+
         await expect(
           accessTokenService.revokeByGrantId(grant.id)
-        ).resolves.toEqual(1)
+        ).resolves.toEqual(testDate)
         await expect(
-          AccessToken.query(trx).findById(token.id)
+          AccessToken.query(knex).findById(token.id)
         ).resolves.toEqual({
           ...token,
           revokedAt: expect.any(Date),
@@ -315,12 +322,15 @@ describe('Access Token Service', (): void => {
         })
       })
       test('Can revoke even if token has already expired', async (): Promise<void> => {
-        await token.$query(trx).patch({ expiresIn: -1 })
+        await token.$query(knex).patch({ expiresIn: -1 })
+        jest.useFakeTimers()
+        jest.setSystemTime(testDate)
+
         await expect(
           accessTokenService.revokeByGrantId(grant.id)
-        ).resolves.toEqual(1)
+        ).resolves.toEqual(testDate)
         await expect(
-          AccessToken.query(trx).findById(token.id)
+          AccessToken.query(knex).findById(token.id)
         ).resolves.toEqual({
           ...token,
           revokedAt: expect.any(Date),
@@ -328,21 +338,26 @@ describe('Access Token Service', (): void => {
         })
       })
       test('Can revoke even if token has already been revoked', async (): Promise<void> => {
-        await token.$query(trx).delete()
+        await token.$query(knex).delete()
+        jest.useFakeTimers()
+        jest.setSystemTime(testDate)
+
         await expect(
           accessTokenService.revokeByGrantId(grant.id)
-        ).resolves.toEqual(0)
+        ).resolves.toEqual(testDate)
         await expect(
-          AccessToken.query(trx).findById(token.id)
+          AccessToken.query(knex).findById(token.id)
         ).resolves.toBeUndefined()
       })
 
       test('Cannot revoke rotated access token', async (): Promise<void> => {
         await accessTokenService.rotate(token.id)
+        jest.useFakeTimers()
+        jest.setSystemTime(testDate)
 
         await expect(
           accessTokenService.revokeByGrantId(token.id)
-        ).resolves.toEqual(0)
+        ).resolves.toEqual(testDate)
       })
     })
   })
@@ -352,17 +367,17 @@ describe('Access Token Service', (): void => {
     let token: AccessToken
     let originalTokenValue: string
     beforeEach(async (): Promise<void> => {
-      grant = await Grant.query(trx).insertAndFetch(
+      grant = await Grant.query(knex).insertAndFetch(
         generateBaseGrant({
           state: GrantState.Finalized,
           finalizationReason: GrantFinalization.Issued
         })
       )
-      await Access.query(trx).insertAndFetch({
+      await Access.query(knex).insertAndFetch({
         grantId: grant.id,
         ...BASE_ACCESS
       })
-      token = await AccessToken.query(trx).insertAndFetch({
+      token = await AccessToken.query(knex).insertAndFetch({
         grantId: grant.id,
         ...BASE_TOKEN,
         value: generateToken(),
@@ -372,16 +387,16 @@ describe('Access Token Service', (): void => {
     })
 
     test('Can rotate un-expired token', async (): Promise<void> => {
-      await token.$query(trx).patch({ expiresIn: 1000000 })
+      await token.$query(knex).patch({ expiresIn: 1000000 })
       const result = await accessTokenService.rotate(token.id)
       assert.ok(result)
       expect(result.value).not.toBe(originalTokenValue)
     })
     test('Can rotate expired token', async (): Promise<void> => {
-      await token.$query(trx).patch({ expiresIn: -1 })
+      await token.$query(knex).patch({ expiresIn: -1 })
       const result = await accessTokenService.rotate(token.id)
       assert.ok(result)
-      const rotatedToken = await AccessToken.query(trx).findOne({
+      const rotatedToken = await AccessToken.query(knex).findOne({
         managementId: result.managementId
       })
       assert.ok(rotatedToken)
