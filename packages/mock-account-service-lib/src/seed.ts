@@ -4,7 +4,7 @@ import createLogger, { LevelWithSilent, LoggerOptions } from 'pino'
 import { generateJwk } from '@interledger/http-signature-utils'
 import { createRequesters, createTenant } from './requesters'
 import { Config, Account, Peering } from './types'
-import { Asset, FeeType } from './generated/graphql'
+import { Asset, FeeType, Tenant } from './generated/graphql'
 import { AccountProvider } from './account-provider'
 
 interface SetupFromSeedOptions {
@@ -20,7 +20,7 @@ export async function setupFromSeed(
   }) => ApolloClient<NormalizedCacheObject>,
   mockAccounts: AccountProvider,
   options: SetupFromSeedOptions = {}
-): Promise<void> {
+): Promise<{ tenantId: string; apiSecret: string } | undefined> {
   const { logLevel = 'info', pinoPretty = false } = options
 
   const loggerOptions: LoggerOptions<never> = {
@@ -35,15 +35,18 @@ export async function setupFromSeed(
 
   const logger = createLogger(loggerOptions)
 
+  let createdTenant: Tenant | undefined
   let requesterApolloClient: ApolloClient<NormalizedCacheObject> = apolloClient
   if (config.isTenant) {
     const seedTenant = config.seed.tenants[0]
-    const { tenant: createdTenant } = await createTenant(
-      apolloClient,
-      seedTenant.publicName,
-      seedTenant.apiSecret,
-      seedTenant.walletAddressPrefix
-    )
+    createdTenant = (
+      await createTenant(
+        apolloClient,
+        seedTenant.publicName,
+        seedTenant.apiSecret,
+        seedTenant.walletAddressPrefix
+      )
+    ).tenant
     requesterApolloClient = generateApolloClient({
       tenantId: createdTenant.id,
       apiSecret: createdTenant.apiSecret
@@ -199,4 +202,8 @@ export async function setupFromSeed(
     return `${account.brunoEnvVar}: ${host}/${account.path} hostname: ${hostname}`
   })
   logger.debug(envVarStrings)
+
+  return createdTenant
+    ? { tenantId: createdTenant.id, apiSecret: createdTenant.apiSecret }
+    : undefined
 }
