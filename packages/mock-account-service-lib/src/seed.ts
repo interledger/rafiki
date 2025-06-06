@@ -103,9 +103,10 @@ export async function setupFromSeed(
           peer.peerIlpAddress,
           peer.peerUrl,
           assets[peeringAsset].id,
-          assets[peeringAsset].code,
           peer.name,
-          peer.liquidityThreshold
+          peer.liquidityThreshold,
+          peer.tokens.incoming,
+          peer.tokens.outgoing
         ).then((response) => response.peer || null)
       }
       if (!peerResponse) {

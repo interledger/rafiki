@@ -33,9 +33,10 @@ export function createRequesters(
     staticIlpAddress: string,
     outgoingEndpoint: string,
     assetId: string,
-    assetCode: string,
     name: string,
-    liquidityThreshold: number
+    liquidityThreshold: number,
+    incomingTokens: string[],
+    outgoingToken: string
   ) => Promise<CreatePeerMutationResponse>
   createAutoPeer: (
     peerUrl: string,
@@ -83,9 +84,10 @@ export function createRequesters(
       staticIlpAddress,
       outgoingEndpoint,
       assetId,
-      assetCode,
       name,
-      liquidityThreshold
+      liquidityThreshold,
+      incomingToken,
+      outgoingToken
     ) =>
       createPeer(
         apolloClient,
@@ -93,9 +95,10 @@ export function createRequesters(
         staticIlpAddress,
         outgoingEndpoint,
         assetId,
-        assetCode,
         name,
-        liquidityThreshold
+        liquidityThreshold,
+        incomingToken,
+        outgoingToken
       ),
     createAutoPeer: (peerUrl, assetId) =>
       createAutoPeer(apolloClient, logger, peerUrl, assetId),
@@ -207,9 +210,10 @@ export async function createPeer(
   staticIlpAddress: string,
   outgoingEndpoint: string,
   assetId: string,
-  assetCode: string,
   name: string,
-  liquidityThreshold: number
+  liquidityThreshold: number,
+  incomingTokens: string[],
+  outgoingToken: string
 ): Promise<CreatePeerMutationResponse> {
   const createPeerMutation = gql`
     mutation CreatePeer($input: CreatePeerInput!) {
@@ -224,10 +228,10 @@ export async function createPeer(
     input: {
       staticIlpAddress,
       http: {
-        incoming: { authTokens: [`test-${assetCode}-${uuid()}`] },
+        incoming: { authTokens: incomingTokens },
         outgoing: {
           endpoint: outgoingEndpoint,
-          authToken: `test-${assetCode}-${uuid()}`
+          authToken: outgoingToken
         }
       },
       assetId,

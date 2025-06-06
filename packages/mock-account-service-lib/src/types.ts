@@ -13,6 +13,10 @@ export interface Peering {
   peerIlpAddress: string
   initialLiquidity: string
   name: string
+  tokens: {
+    incoming: string[]
+    outgoing: string
+  }
 }
 
 export interface Account {
