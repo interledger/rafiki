@@ -350,7 +350,8 @@ async function createOutgoingPayment(
           }
         )
         const peer = await deps.peerService.getByDestinationAddress(
-          receiver.ilpAddress
+          receiver.ilpAddress,
+          tenantId
         )
         stopTimerPeer()
 

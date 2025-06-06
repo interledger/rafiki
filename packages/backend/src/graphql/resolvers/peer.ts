@@ -70,7 +70,7 @@ export const getPeerByAddressAndAsset: QueryResolvers<TenantedApolloContext>['pe
     const peerService = await ctx.container.use('peerService')
     const peer = await peerService.getByDestinationAddress(
       args.staticIlpAddress,
-      ctx.isOperator ? undefined : ctx.tenant.id,
+      ctx.tenant.id,
       args.assetId
     )
     return peer ? peerToGraphql(peer) : null
