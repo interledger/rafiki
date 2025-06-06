@@ -28,6 +28,7 @@ type EnvConfig = {
   SIGNATURE_SECRET: string
   SIGNATURE_VERSION: string
   OPERATOR_TENANT_ID: string
+  IS_TENANT: string
 }
 
 const REQUIRED_KEYS: (keyof EnvConfig)[] = [
@@ -82,7 +83,8 @@ const createConfig = (name: string): TestConfig => {
     idpSecret: env.IDP_SECRET,
     signatureSecret: env.SIGNATURE_SECRET,
     signatureVersion: env.SIGNATURE_VERSION,
-    operatorTenantId: env.OPERATOR_TENANT_ID
+    operatorTenantId: env.OPERATOR_TENANT_ID,
+    isTenant: env.IS_TENANT === 'true'
   }
 }
 
