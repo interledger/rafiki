@@ -12,6 +12,7 @@ import {
 } from '../../factories'
 import { createAccountMiddleware } from '../../middleware/account'
 import { createILPContext } from '../../utils'
+import { Peer } from '../../../../peer/model'
 
 describe('Account Middleware', () => {
   const ADDRESS = 'test.rafiki'
@@ -98,6 +99,44 @@ describe('Account Middleware', () => {
 
     expect(ctx.accounts.incoming).toEqual(incomingAccount)
     expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
+  })
+
+  test('finds peer as outgoing account when no streamDestination present', async () => {
+    const tenantId = crypto.randomUUID()
+    const outgoingAccount = AccountFactory.build({
+      id: 'peer'
+    })
+
+    const getByDestinationAddressSpy = jest
+      .spyOn(rafikiServices.peers, 'getByDestinationAddress')
+      .mockResolvedValueOnce(outgoingAccount as unknown as Peer)
+
+    await rafikiServices.accounting.create(outgoingAccount)
+    const middleware = createAccountMiddleware(ADDRESS)
+    const next = jest.fn()
+    const ctx = createILPContext({
+      state: {
+        incomingAccount: {
+          ...incomingAccount,
+          tenantId
+        }
+      },
+      services: rafikiServices,
+      request: {
+        prepare: new ZeroCopyIlpPrepare(
+          IlpPrepareFactory.build({ destination: 'test.123' })
+        ),
+        rawPrepare: Buffer.alloc(0) // ignored
+      }
+    })
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+
+    expect(ctx.accounts.incoming).toEqual({ ...incomingAccount, tenantId })
+    expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
+    expect(getByDestinationAddressSpy).toHaveBeenCalledWith(
+      'test.123',
+      tenantId
+    )
   })
 
   test('return an error when the destination account is in an incorrect state', async () => {
