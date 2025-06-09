@@ -40,6 +40,7 @@ export interface Tenant {
   apiSecret: string
   publicName: string
   walletAddressPrefix: string
+  webhookUrl: string
 }
 
 export interface SeedInstance {

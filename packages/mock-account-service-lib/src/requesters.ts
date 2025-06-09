@@ -130,7 +130,8 @@ export async function createTenant(
   apolloClient: ApolloClient<NormalizedCacheObject>,
   publicName: string,
   apiSecret: string,
-  walletAddressUrl: string
+  walletAddressUrl: string,
+  webhookUrl: string
 ): Promise<TenantMutationResponse> {
   const input: CreateTenantInput = {
     apiSecret,
@@ -139,6 +140,10 @@ export async function createTenant(
       {
         key: 'WALLET_ADDRESS_URL',
         value: walletAddressUrl
+      },
+      {
+        key: 'WEBHOOK_URL',
+        value: webhookUrl
       }
     ]
   }

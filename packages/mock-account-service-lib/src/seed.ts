@@ -44,7 +44,8 @@ export async function setupFromSeed(
         apolloClient,
         seedTenant.publicName,
         seedTenant.apiSecret,
-        seedTenant.walletAddressPrefix
+        seedTenant.walletAddressPrefix,
+        seedTenant.webhookUrl
       )
     ).tenant
     requesterApolloClient = generateApolloClient({

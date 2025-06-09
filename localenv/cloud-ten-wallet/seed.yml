@@ -94,3 +94,4 @@ tenants:
   - publicName: 'Cloud Ten Wallet'
     apiSecret: 'LuagA4lRWSi9GRx5vBNr0vQHKrroaxkvg6ZMFjfLxPw='
     walletAddressPrefix: 'https://cloud-nine-wallet-backend/cloud-ten'
+    webhookUrl: 'http://cloud-ten-wallet/webhooks'
