@@ -14,8 +14,15 @@ export const listAssets = async (
         $before: String
         $first: Int
         $last: Int
+        $tenantId: String
       ) {
-        assets(after: $after, before: $before, first: $first, last: $last) {
+        assets(
+          after: $after
+          before: $before
+          first: $first
+          last: $last
+          tenantId: $tenantId
+        ) {
           edges {
             node {
               code
@@ -56,7 +63,16 @@ export const loadAssets = async (tenantOptions?: TenantOptions) => {
   let after: string | undefined
 
   while (hasNextPage) {
-    const response = await listAssets({ first: 100, after }, tenantOptions)
+    const response = await listAssets(
+      {
+        first: 100,
+        after,
+        tenantId: tenantOptions?.tenantId
+          ? tenantOptions.tenantId
+          : process.env.OPERATOR_TENANT_ID
+      },
+      tenantOptions
+    )
 
     if (response.edges) {
       assets = [...assets, ...response.edges]

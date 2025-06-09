@@ -19,15 +19,8 @@ export async function loader() {
   const options = await getTenantCredentials(session)
   const assets = await loadAssets(options)
 
-  const isTenant = process?.env?.IS_TENANT === 'true'
-
-  // Filter out assets that don't belong to the operator if the request returned all tenants' assets
   return json({
-    assets: !isTenant
-      ? assets.filter(
-          (asset) => asset.node.tenantId === process?.env?.OPERATOR_TENANT_ID
-        )
-      : assets,
+    assets,
     options
   })
 }
