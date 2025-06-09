@@ -43,8 +43,13 @@ helm repo update
 
 #### Create yaml file
 
-Create a `values.yaml` file to customize your Rafiki deployment. Below is a template that you can use, but must be configured for your specific environment.
+Create a `values.yaml` file to customize your Rafiki deployment.
 
+:::note
+A template file is in progress and will be included in this section when published.
+:::
+
+<div hidden>
 <details>
 <summary>Click to expand</summary>
 ```yaml
@@ -321,9 +326,8 @@ replicaCount: 3 # Should match replicaCount above # For consensus algorithm (1f+
 
 ````
 
-Save this file as `values.yaml` in your working directory.
-
 </details>
+
 
 #### Configure environment variables
 
@@ -375,7 +379,7 @@ Ports exposed:
 
 <FrontEnv />
 </details>
-
+</div>
 #### Install Rafiki
 
 Install Rafiki using the following command:
@@ -410,6 +414,10 @@ kubectl get services
 
 ## Configure ingress with NGINX Ingress Controller
 
+:::note
+This example demonstrates ingress using NGINX. The exact steps and commands will differ depending on the product you use for ingress in your Kubernetes environment.
+:::
+
 To expose Rafiki services outside the cluster using NGINX Ingress Controller:
 
 #### Install NGINX Ingress Controller
@@ -439,49 +447,9 @@ Once the Load Balancer has an external IP or hostname assigned, create DNS recor
 - `auth.example.com` pointing to the Load Balancer IP/hostname
 - `backend.example.com` pointing to the Load Balancer IP/hostname
 
-#### Configure Rafiki with ingress
-
-Create or update your `values.yaml` file with the following ingress configuration:
-
-```yaml
-ingress:
-  enabled: true
-  # Use the NGINX Ingress Controller class
-  className: nginx
-  annotations:
-    # Required NGINX annotations
-    nginx.ingress.kubernetes.io/proxy-buffer-size: '128k'
-    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
-    nginx.ingress.kubernetes.io/proxy-body-size: '50m'
-    # If using cert-manager for TLS
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-
-  # Auth Server ingress configuration
-  authServer:
-    enabled: true
-    hosts:
-      - host: auth.example.com
-        paths:
-          - path: /
-            pathType: Prefix
-    tls:
-      - secretName: auth-tls-secret
-        hosts:
-          - auth.example.com
-
-  # Backend API ingress configuration
-  backendApi:
-    enabled: true
-    hosts:
-      - host: backend.example.com
-        paths:
-          - path: /
-            pathType: Prefix
-    tls:
-      - secretName: backend-tls-secret
-        hosts:
-          - backend.example.com
-```
+:::note
+The example domain and subdomain values are for demonstration purposes only. You must use the actual domain names that you set up with your DNS host.  
+:::
 
 #### Apply the configuration
 
@@ -512,67 +480,6 @@ If you don't want to use ingress to access Rafiki services, you can use port for
 | Admin UI    | `kubectl port-forward svc/rafiki-backend-api 3001:3001`  |
 | PostgreSQL  | `kubectl port-forward svc/rafiki-postgresql 5432:5432`   |
 | Redis       | `kubectl port-forward svc/rafiki-redis-master 6379:6379` |
-
-## TLS configuration
-
-To enable TLS for secure communications:
-
-```yaml
-global:
-  tls:
-    enabled: true
-    # Use this if you're using cert-manager
-    certManager:
-      enabled: true
-      clusterIssuer: letsencrypt-prod
-    # Or provide your own certificates
-    certificates:
-      authServer:
-        cert: |
-          -----BEGIN CERTIFICATE-----
-          ...
-          -----END CERTIFICATE-----
-        key: |
-          -----BEGIN PRIVATE KEY-----
-          ...
-          -----END PRIVATE KEY-----
-      backendApi:
-        cert: |
-          -----BEGIN CERTIFICATE-----
-          ...
-          -----END CERTIFICATE-----
-        key: |
-          -----BEGIN PRIVATE KEY-----
-          ...
-          -----END PRIVATE KEY-----
-```
-
-## Resource limits
-
-Configure resource limits for Rafiki components:
-
-```yaml
-components:
-  authServer:
-    resources:
-      limits:
-        cpu: 500m
-        memory: 512Mi
-      requests:
-        cpu: 100m
-        memory: 256Mi
-
-  backendApi:
-    resources:
-      limits:
-        cpu: 500m
-        memory: 512Mi
-      requests:
-        cpu: 100m
-        memory: 256Mi
-
-  # Configure other components similarly
-```
 
 ## Upgrade Rafiki
 
@@ -821,56 +728,3 @@ EOF
 # Update the Tigerbeetle StatefulSet to use the restored PVC
 kubectl patch statefulset tigerbeetle -p '{"spec":{"template":{"spec":{"volumes":[{"name":"data","persistentVolumeClaim":{"claimName":"tigerbeetle-data-restored"}}]}}}}'
 ```
-
-## High availability configuration
-
-For production environments requiring high availability:
-
-```yaml
-components:
-  authServer:
-    replicaCount: 3
-    podDisruptionBudget:
-      enabled: true
-      minAvailable: 2
-
-  backendApi:
-    replicaCount: 3
-    podDisruptionBudget:
-      enabled: true
-      minAvailable: 2
-
-  engineServer:
-    replicaCount: 3
-    podDisruptionBudget:
-      enabled: true
-      minAvailable: 2
-
-  # Configure other components similarly
-
-postgresql:
-  architecture: replication
-  replication:
-    enabled: true
-    readReplicas: 2
-
-redis:
-  cluster:
-    enabled: true
-    slaveCount: 2
-
-tigerbeetle:
-  replicaCount: 3 # Use multiple replicas for fault tolerance
-  persistence:
-    enabled: true
-    size: 20Gi # Larger storage for production
-  resources:
-    limits:
-      cpu: 1000m
-      memory: 2Gi
-    requests:
-      cpu: 500m
-      memory: 1Gi
-```
-
-This configuration sets up multiple replicas for each Rafiki component and enables replication for both PostgreSQL, Redis, and Tigerbeetle.
