@@ -65,7 +65,7 @@ export interface PeerService {
   update(options: UpdateOptions): Promise<Peer | PeerError>
   getByDestinationAddress(
     address: string,
-    tenantId?: string,
+    tenantId: string,
     assetId?: string
   ): Promise<Peer | undefined>
   getByIncomingToken(token: string): Promise<Peer | undefined>
