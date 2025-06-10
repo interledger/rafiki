@@ -9,15 +9,10 @@ import { IlpAddress, isValidIlpAddress } from 'ilp-packet'
 type ReceiverIncomingPayment = Readonly<
   Omit<
     OpenPaymentsIncomingPaymentWithPaymentMethod,
-    | 'expiresAt'
-    | 'receivedAmount'
-    | 'incomingAmount'
-    | 'createdAt'
-    | 'updatedAt'
+    'expiresAt' | 'receivedAmount' | 'incomingAmount' | 'createdAt'
   > & {
     expiresAt?: Date
     createdAt: Date
-    updatedAt: Date
     receivedAmount: Amount
     incomingAmount?: Amount
   }
@@ -65,8 +60,7 @@ export class Receiver {
       expiresAt,
       receivedAmount,
       incomingAmount,
-      createdAt: new Date(incomingPayment.createdAt),
-      updatedAt: new Date(incomingPayment.updatedAt)
+      createdAt: new Date(incomingPayment.createdAt)
     }
     this.isLocal = isLocal
   }

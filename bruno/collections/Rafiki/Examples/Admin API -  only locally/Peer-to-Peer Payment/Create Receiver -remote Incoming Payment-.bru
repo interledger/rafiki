@@ -30,7 +30,6 @@ body:graphql {
           assetScale
           value
         }
-        updatedAt
       }
     }
   }
@@ -60,7 +59,7 @@ script:pre-request {
 
 script:post-response {
   const body = res.getBody();
-
+  
   if (body?.data) {
     bru.setEnvVar("receiverId", body.data.createReceiver.receiver.id);
   }
