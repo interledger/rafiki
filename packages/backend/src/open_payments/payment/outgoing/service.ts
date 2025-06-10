@@ -349,10 +349,15 @@ async function createOutgoingPayment(
             description: 'Time to retrieve peer in outgoing payment'
           }
         )
-        const peer = await deps.peerService.getByDestinationAddress(
-          receiver.ilpAddress,
-          tenantId
+        const ilpPaymentMethod = receiver.paymentMethods.find(
+          (method) => method.type === 'ilp'
         )
+        const peer = ilpPaymentMethod
+          ? await deps.peerService.getByDestinationAddress(
+              ilpPaymentMethod.ilpAddress,
+              tenantId
+            )
+          : undefined
         stopTimerPeer()
 
         const payment = await OutgoingPayment.transaction(async (trx) => {
