@@ -519,7 +519,7 @@ function validateAmountAssets(
   limits: Limits
 ): boolean {
   if (limits.debitAmount && limits.receiveAmount) {
-    throw OutgoingPaymentError.OnlyOneAmountAllowed
+    throw OutgoingPaymentError.OnlyOneGrantAmountAllowed
   }
   if (
     limits.debitAmount &&

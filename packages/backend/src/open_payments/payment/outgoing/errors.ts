@@ -18,7 +18,7 @@ export enum OutgoingPaymentError {
   InvalidAmount = 'InvalidAmount',
   NegativeReceiveAmount = 'NegativeReceiveAmount',
   InvalidReceiver = 'InvalidReceiver',
-  OnlyOneAmountAllowed = 'OnlyOneAmountAllowed'
+  OnlyOneGrantAmountAllowed = 'OnlyOneGrantAmountAllowed'
 }
 
 export const quoteErrorToOutgoingPaymentError: Record<
@@ -51,7 +51,7 @@ export const errorToHTTPCode: {
   [OutgoingPaymentError.InvalidAmount]: 400,
   [OutgoingPaymentError.NegativeReceiveAmount]: 400,
   [OutgoingPaymentError.InvalidReceiver]: 400,
-  [OutgoingPaymentError.OnlyOneAmountAllowed]: 400
+  [OutgoingPaymentError.OnlyOneGrantAmountAllowed]: 400
 }
 
 export const errorToCode: {
@@ -67,7 +67,8 @@ export const errorToCode: {
   [OutgoingPaymentError.InvalidAmount]: GraphQLErrorCode.BadUserInput,
   [OutgoingPaymentError.NegativeReceiveAmount]: GraphQLErrorCode.BadUserInput,
   [OutgoingPaymentError.InvalidReceiver]: GraphQLErrorCode.BadUserInput,
-  [OutgoingPaymentError.OnlyOneAmountAllowed]: GraphQLErrorCode.BadUserInput
+  [OutgoingPaymentError.OnlyOneGrantAmountAllowed]:
+    GraphQLErrorCode.BadUserInput
 }
 
 export const errorToMessage: {
@@ -83,7 +84,7 @@ export const errorToMessage: {
   [OutgoingPaymentError.InvalidAmount]: 'invalid amount',
   [OutgoingPaymentError.NegativeReceiveAmount]: 'negative receive amount',
   [OutgoingPaymentError.InvalidReceiver]: 'invalid receiver',
-  [OutgoingPaymentError.OnlyOneAmountAllowed]:
+  [OutgoingPaymentError.OnlyOneGrantAmountAllowed]:
     'only one of receiveAmount or debitAmount allowed'
 }
 

@@ -47,6 +47,8 @@ async function createAccess(
   accessRequests: AccessRequest[],
   trx?: Transaction
 ): Promise<Access[]> {
+  validateLimits(accessRequests)
+
   const accessRequestsWithGrant = accessRequests.map((access) => {
     return { grantId, ...access }
   })
@@ -62,4 +64,15 @@ async function getByGrant(
   return Access.query(trx || deps.knex).where({
     grantId
   })
+}
+
+function validateLimits(accessRequests: AccessRequest[]) {
+  const areBothLimitsSet =
+    accessRequests.findIndex(
+      (access) => access.limits?.debitAmount && access.limits.receiveAmount
+    ) !== -1
+
+  if (areBothLimitsSet) {
+    throw new Error('Only one of receiveAmount or debitAmount allowed')
+  }
 }

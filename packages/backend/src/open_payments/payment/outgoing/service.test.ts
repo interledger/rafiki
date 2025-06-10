@@ -1343,7 +1343,7 @@ describe('OutgoingPaymentService', (): void => {
 
           const payment = await outgoingPaymentService.create(options)
           expect(isOutgoingPaymentError(payment)).toBeTruthy()
-          expect(payment).toBe(OutgoingPaymentError.OnlyOneAmountAllowed)
+          expect(payment).toBe(OutgoingPaymentError.OnlyOneGrantAmountAllowed)
         }
       )
     })
