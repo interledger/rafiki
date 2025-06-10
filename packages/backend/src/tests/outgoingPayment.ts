@@ -40,6 +40,9 @@ export async function createOutgoingPayment(
   const outgoingPaymentService = await deps.use('outgoingPaymentService')
   const config = await deps.use('config')
   const receiverService = await deps.use('receiverService')
+  const paymentMethodProviderService = await deps.use(
+    'paymentMethodProviderService'
+  )
   if (options.validDestination === false) {
     const walletAddressService = await deps.use('walletAddressService')
     const walletAddress = await walletAddressService.get(
@@ -60,7 +63,9 @@ export async function createOutgoingPayment(
           incomingPayment.toOpenPaymentsTypeWithMethods(
             config.openPaymentsUrl,
             walletAddress,
-            []
+            await paymentMethodProviderService.getPaymentMethods(
+              incomingPayment
+            )
           ),
           false
         )
