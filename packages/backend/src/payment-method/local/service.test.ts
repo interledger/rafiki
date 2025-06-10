@@ -409,7 +409,7 @@ describe('LocalPaymentService', (): void => {
       const incomingAssetCode = 'USD'
       const expectedMinSendAmount = 100n
 
-      const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({
+      const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({
         [incomingAssetCode]: exchangeRate
       }))
 

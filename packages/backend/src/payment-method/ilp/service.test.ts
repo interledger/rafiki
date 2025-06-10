@@ -528,7 +528,7 @@ describe('IlpPaymentService', (): void => {
       const rate = 0.1
 
       test('if debitAmount is 0', async () => {
-        const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({
+        const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({
           EUR: rate
         }))
         const options: StartQuoteOptions = {
@@ -560,7 +560,7 @@ describe('IlpPaymentService', (): void => {
       })
 
       test('if estimatedReceiveAmount < 1', async () => {
-        const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({
+        const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({
           EUR: rate
         }))
         const options: StartQuoteOptions = {
