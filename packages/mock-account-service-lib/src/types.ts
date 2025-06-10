@@ -37,6 +37,7 @@ export interface Fee {
 }
 
 export interface Tenant {
+  id?: string
   apiSecret: string
   publicName: string
   idpConsentUrl: string

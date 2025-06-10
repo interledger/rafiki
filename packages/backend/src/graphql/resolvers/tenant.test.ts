@@ -21,6 +21,7 @@ import { truncateTables } from '../../tests/tableManager'
 import { ApolloClient } from '@apollo/client'
 import { GraphQLErrorCode } from '../errors'
 import { Tenant as TenantModel } from '../../tenants/model'
+import { v4 } from 'uuid'
 
 describe('Tenant Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -252,6 +253,38 @@ describe('Tenant Resolvers', (): void => {
         expect(mutation.tenant).toEqual({
           ...input,
           id: expect.any(String),
+          __typename: 'Tenant'
+        })
+      })
+
+      test('can create a tenant with specific id', async (): Promise<void> => {
+        const inputId = v4()
+        const input = { ...generateTenantInput(), id: inputId }
+
+        const mutation = await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateTenant($input: CreateTenantInput!) {
+                createTenant(input: $input) {
+                  tenant {
+                    id
+                    email
+                    apiSecret
+                    idpConsentUrl
+                    idpSecret
+                    publicName
+                  }
+                }
+              }
+            `,
+            variables: {
+              input
+            }
+          })
+          .then((query): TenantMutationResponse => query.data?.createTenant)
+
+        expect(mutation.tenant).toEqual({
+          ...input,
           __typename: 'Tenant'
         })
       })

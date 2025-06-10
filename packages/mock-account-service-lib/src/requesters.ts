@@ -133,9 +133,11 @@ export async function createTenant(
   idpConsentUrl: string,
   idpSecret: string,
   walletAddressUrl: string,
-  webhookUrl: string
+  webhookUrl: string,
+  id?: string
 ): Promise<TenantMutationResponse> {
   const input: CreateTenantInput = {
+    id,
     apiSecret,
     publicName,
     idpConsentUrl,

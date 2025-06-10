@@ -75,6 +75,7 @@ async function getTenantPage(
 }
 
 interface CreateTenantOptions {
+  id?: string
   email?: string
   apiSecret: string
   idpSecret?: string
@@ -89,9 +90,17 @@ async function createTenant(
 ): Promise<Tenant> {
   const trx = await deps.knex.transaction()
   try {
-    const { email, apiSecret, publicName, idpSecret, idpConsentUrl, settings } =
-      options
+    const {
+      id,
+      email,
+      apiSecret,
+      publicName,
+      idpSecret,
+      idpConsentUrl,
+      settings
+    } = options
     const tenant = await Tenant.query(trx).insertAndFetch({
+      id,
       email,
       publicName,
       apiSecret,

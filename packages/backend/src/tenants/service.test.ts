@@ -18,6 +18,7 @@ import { withConfigOverride } from '../tests/helpers'
 import { TenantSetting, TenantSettingKeys } from './settings/model'
 import { TenantSettingService } from './settings/service'
 import { isTenantError, TenantError } from './errors'
+import { v4 } from 'uuid'
 
 describe('Tenant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -173,6 +174,25 @@ describe('Tenant Service', (): void => {
 
       expect(tenantSetting.length).toBe(1)
       expect(tenantSetting[0].value).toEqual(walletAddressUrl)
+    })
+
+    test('can create tenant with a specified id', async (): Promise<void> => {
+      const inputId = v4()
+      const createOptions = {
+        id: inputId,
+        apiSecret: 'test-api-secret',
+        publicName: 'test tenant',
+        email: faker.internet.email(),
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret'
+      }
+
+      jest
+        .spyOn(authServiceClient.tenant, 'create')
+        .mockImplementationOnce(async () => undefined)
+
+      const tenant = await tenantService.create(createOptions)
+      expect(tenant.id).toEqual(inputId)
     })
 
     test('tenant creation rolls back if auth tenant create fails', async (): Promise<void> => {

@@ -97,3 +97,4 @@ tenants:
     idpSecret: 'ue3ixgIiWLIlWOd4w5KO78scYpFH+vHuCJ33lnjgzEg='
     walletAddressPrefix: 'https://cloud-nine-wallet-backend/cloud-ten'
     webhookUrl: 'http://cloud-ten-wallet/webhooks'
+    id: 'bc293b79-8609-47bd-b914-6438b470aff8'
