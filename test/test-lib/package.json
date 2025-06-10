@@ -20,7 +20,7 @@
     "@types/koa": "2.15.0",
     "@types/koa-bodyparser": "^4.3.12",
     "@types/node": "^20.14.15",
-    "graphql": "^16.8.1",
+    "graphql": "^16.11.0",
     "json-canonicalize": "^1.0.6",
     "koa": "^2.15.3",
     "mock-account-service-lib": "workspace:*",
