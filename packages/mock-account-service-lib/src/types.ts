@@ -39,6 +39,8 @@ export interface Fee {
 export interface Tenant {
   apiSecret: string
   publicName: string
+  idpConsentUrl: string
+  idpSecret: string
   walletAddressPrefix: string
   webhookUrl: string
 }

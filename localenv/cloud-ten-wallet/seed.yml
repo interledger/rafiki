@@ -93,5 +93,7 @@ fees:
 tenants:
   - publicName: 'Cloud Ten Wallet'
     apiSecret: 'LuagA4lRWSi9GRx5vBNr0vQHKrroaxkvg6ZMFjfLxPw='
+    idpConsentUrl: 'http://localhost:5030/mock-idp'
+    idpSecret: 'ue3ixgIiWLIlWOd4w5KO78scYpFH+vHuCJ33lnjgzEg='
     walletAddressPrefix: 'https://cloud-nine-wallet-backend/cloud-ten'
     webhookUrl: 'http://cloud-ten-wallet/webhooks'

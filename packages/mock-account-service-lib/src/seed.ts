@@ -44,6 +44,8 @@ export async function setupFromSeed(
         apolloClient,
         seedTenant.publicName,
         seedTenant.apiSecret,
+        seedTenant.idpConsentUrl,
+        seedTenant.idpSecret,
         seedTenant.walletAddressPrefix,
         seedTenant.webhookUrl
       )

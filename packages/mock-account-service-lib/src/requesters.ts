@@ -130,12 +130,16 @@ export async function createTenant(
   apolloClient: ApolloClient<NormalizedCacheObject>,
   publicName: string,
   apiSecret: string,
+  idpConsentUrl: string,
+  idpSecret: string,
   walletAddressUrl: string,
   webhookUrl: string
 ): Promise<TenantMutationResponse> {
   const input: CreateTenantInput = {
     apiSecret,
     publicName,
+    idpConsentUrl,
+    idpSecret,
     settings: [
       {
         key: 'WALLET_ADDRESS_URL',
