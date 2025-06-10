@@ -110,6 +110,8 @@ import {
 import { TenantService } from './tenants/service'
 import { AuthServiceClient } from './auth-service-client/client'
 import { TenantSettingService } from './tenants/settings/service'
+import { StreamCredentialsService } from './payment-method/ilp/stream-credentials/service'
+import { PaymentMethodProviderService } from './payment-method/provider/service'
 
 export interface AppContextData {
   logger: Logger
@@ -278,6 +280,8 @@ export interface AppServices {
   tenantService: Promise<TenantService>
   authServiceClient: AuthServiceClient
   tenantSettingService: Promise<TenantSettingService>
+  streamCredentialsService: Promise<StreamCredentialsService>
+  paymentMethodProviderService: Promise<PaymentMethodProviderService>
 }
 
 export type AppContainer = IocContract<AppServices>
