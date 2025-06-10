@@ -6,6 +6,7 @@ import { IAppConfig } from '../../../config/app'
 export { IlpStreamCredentials }
 
 interface GetStreamCredentialsArgs {
+  ilpAddress: string
   paymentTag: string
   asset: {
     scale: number
@@ -14,7 +15,7 @@ interface GetStreamCredentialsArgs {
 }
 
 export interface StreamCredentialsService {
-  get(payment: GetStreamCredentialsArgs): IlpStreamCredentials | undefined
+  get(args: GetStreamCredentialsArgs): IlpStreamCredentials | undefined
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -32,7 +33,7 @@ export async function createStreamCredentialsService(
     logger: log
   }
   return {
-    get: (payment) => getStreamCredentials(deps, payment)
+    get: (args) => getStreamCredentials(deps, args)
   }
 }
 
@@ -42,7 +43,7 @@ function getStreamCredentials(
 ): IlpStreamCredentials | undefined {
   const streamServer = new StreamServer({
     serverSecret: deps.config.streamSecret,
-    serverAddress: deps.config.ilpAddress
+    serverAddress: args.ilpAddress
   })
 
   const credentials = streamServer.generateCredentials({
