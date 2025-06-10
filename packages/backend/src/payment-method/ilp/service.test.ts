@@ -1,4 +1,8 @@
-import { IlpPaymentService, retryableIlpErrors } from './service'
+import {
+  IlpPaymentService,
+  resolveIlpDestination,
+  retryableIlpErrors
+} from './service'
 import { initIocContainer } from '../../'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IAppConfig, Config } from '../../config/app'
@@ -594,6 +598,42 @@ describe('IlpPaymentService', (): void => {
       })
     })
 
+    test('throws if invalid ILP destination', async (): Promise<void> => {
+      const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({}))
+
+      const incomingAmount = {
+        assetCode: 'USD',
+        assetScale: 2,
+        value: 100n
+      }
+
+      const options: StartQuoteOptions = {
+        quoteId: uuid(),
+        walletAddress: walletAddressMap['USD'],
+        receiver: await createReceiver(deps, walletAddressMap['USD'], {
+          incomingAmount,
+          tenantId: Config.operatorTenantId,
+          paymentMethods: []
+        })
+      }
+
+      expect.assertions(4)
+      try {
+        await ilpPaymentService.getQuote(options)
+      } catch (error) {
+        expect(error).toBeInstanceOf(PaymentMethodHandlerError)
+        expect((error as PaymentMethodHandlerError).message).toBe(
+          'Invalid ILP payment method on receiver'
+        )
+        expect((error as PaymentMethodHandlerError).description).toBe(
+          'No ILP payment method found in receiver'
+        )
+        expect((error as PaymentMethodHandlerError).retryable).toBe(false)
+      }
+
+      ratesScope.done()
+    })
+
     describe('successfully gets ilp quote', (): void => {
       describe('with incomingAmount', () => {
         test.each`
@@ -920,6 +960,43 @@ describe('IlpPaymentService', (): void => {
       })
     })
 
+    test('throws if invalid ILP destination', async (): Promise<void> => {
+      const { receiver, outgoingPayment } =
+        await createOutgoingPaymentWithReceiver(deps, {
+          sendingWalletAddress: walletAddressMap['USD'],
+          receivingWalletAddress: walletAddressMap['USD'],
+          method: 'ilp',
+          quoteOptions: {
+            tenantId,
+            debitAmount: {
+              value: 100n,
+              assetScale: walletAddressMap['USD'].asset.scale,
+              assetCode: walletAddressMap['USD'].asset.code
+            }
+          },
+          receiverPaymentMethods: []
+        })
+
+      expect.assertions(4)
+      try {
+        await ilpPaymentService.pay({
+          receiver,
+          outgoingPayment,
+          finalDebitAmount: 50n,
+          finalReceiveAmount: 0n
+        })
+      } catch (error) {
+        expect(error).toBeInstanceOf(PaymentMethodHandlerError)
+        expect((error as PaymentMethodHandlerError).message).toBe(
+          'Could not start ILP streaming'
+        )
+        expect((error as PaymentMethodHandlerError).description).toBe(
+          'Invalid finalReceiveAmount'
+        )
+        expect((error as PaymentMethodHandlerError).retryable).toBe(false)
+      }
+    })
+
     test('throws retryable ILP error', async (): Promise<void> => {
       const { receiver, outgoingPayment } =
         await createOutgoingPaymentWithReceiver(deps, {
@@ -995,6 +1072,70 @@ describe('IlpPaymentService', (): void => {
         )
         expect((error as PaymentMethodHandlerError).description).toBe(
           nonRetryableIlpError
+        )
+        expect((error as PaymentMethodHandlerError).retryable).toBe(false)
+      }
+    })
+  })
+
+  describe('resolveIlpDestination', (): void => {
+    test('throws if missing payment methods on receiver', async (): Promise<void> => {
+      const incomingAmount = {
+        assetCode: 'USD',
+        assetScale: 2,
+        value: 100n
+      }
+
+      const receiver = await createReceiver(deps, walletAddressMap['USD'], {
+        incomingAmount,
+        tenantId: Config.operatorTenantId,
+        paymentMethods: []
+      })
+
+      expect.assertions(4)
+      try {
+        resolveIlpDestination(receiver)
+      } catch (error) {
+        expect(error).toBeInstanceOf(PaymentMethodHandlerError)
+        expect((error as PaymentMethodHandlerError).message).toBe(
+          'Invalid ILP payment method on receiver'
+        )
+        expect((error as PaymentMethodHandlerError).description).toBe(
+          'No ILP payment method found in receiver'
+        )
+        expect((error as PaymentMethodHandlerError).retryable).toBe(false)
+      }
+    })
+
+    test('throws if invalid ILP address for receiver', async (): Promise<void> => {
+      const incomingAmount = {
+        assetCode: 'USD',
+        assetScale: 2,
+        value: 100n
+      }
+
+      const receiver = await createReceiver(deps, walletAddressMap['USD'], {
+        incomingAmount,
+        tenantId: Config.operatorTenantId,
+        paymentMethods: [
+          {
+            type: 'ilp',
+            ilpAddress: '',
+            sharedSecret: ''
+          }
+        ]
+      })
+
+      expect.assertions(4)
+      try {
+        resolveIlpDestination(receiver)
+      } catch (error) {
+        expect(error).toBeInstanceOf(PaymentMethodHandlerError)
+        expect((error as PaymentMethodHandlerError).message).toBe(
+          'Invalid ILP payment method on receiver'
+        )
+        expect((error as PaymentMethodHandlerError).description).toBe(
+          'Invalid ILP address for ILP payment method'
         )
         expect((error as PaymentMethodHandlerError).retryable).toBe(false)
       }
