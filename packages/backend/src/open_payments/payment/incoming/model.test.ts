@@ -6,14 +6,12 @@ import { AppServices } from '../../../app'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createWalletAddress } from '../../../tests/walletAddress'
 import { truncateTables } from '../../../tests/tableManager'
-import { IlpStreamCredentials } from '../../../payment-method/ilp/stream-credentials/service'
 import { serializeAmount } from '../../amount'
 import { IlpAddress } from 'ilp-packet'
 import {
   IncomingPayment,
   IncomingPaymentEvent,
   IncomingPaymentEventType,
-  IncomingPaymentState,
   IncomingPaymentEventError
 } from './model'
 import { WalletAddress } from '../../wallet_address/model'

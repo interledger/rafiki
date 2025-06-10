@@ -4,7 +4,6 @@ import { StreamCredentialsService } from '../ilp/stream-credentials/service'
 import { TenantSettingService } from '../../tenants/settings/service'
 import { TenantSettingKeys } from '../../tenants/settings/model'
 import base64url from 'base64url'
-import { TenantService } from '../../tenants/service'
 import { IAppConfig } from '../../config/app'
 
 interface BasePaymentMethod {
