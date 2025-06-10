@@ -1,6 +1,7 @@
 import { Pojo } from 'objection'
 import { BaseModel } from '../../shared/baseModel'
 import { KeyValuePair } from './service'
+import { isValidIlpAddress } from 'ilp-packet'
 
 interface TenantSettingKeyType {
   name: string
@@ -12,7 +13,8 @@ export const TenantSettingKeys: { [key: string]: TenantSettingKeyType } = {
   WEBHOOK_URL: { name: 'WEBHOOK_URL' },
   WEBHOOK_TIMEOUT: { name: 'WEBHOOK_TIMEOUT', default: 2000 },
   WEBHOOK_MAX_RETRY: { name: 'WEBHOOK_MAX_RETRY', default: 10 },
-  WALLET_ADDRESS_URL: { name: 'WALLET_ADDRESS_URL' }
+  WALLET_ADDRESS_URL: { name: 'WALLET_ADDRESS_URL' },
+  ILP_ADDRESS: { name: 'ILP_ADDRESS' }
 }
 
 export class TenantSetting extends BaseModel {
@@ -57,7 +59,8 @@ const TENANT_KEY_MAPPING = {
   [TenantSettingKeys.WEBHOOK_MAX_RETRY.name]: 'webhookMaxRetry',
   [TenantSettingKeys.WEBHOOK_TIMEOUT.name]: 'webhookTimeout',
   [TenantSettingKeys.WEBHOOK_URL.name]: 'webhookUrl',
-  [TenantSettingKeys.WALLET_ADDRESS_URL.name]: 'walletAddressUrl'
+  [TenantSettingKeys.WALLET_ADDRESS_URL.name]: 'walletAddressUrl',
+  [TenantSettingKeys.ILP_ADDRESS.name]: 'ilpAddress'
 } as const
 
 export type FormattedTenantSettings = Record<
@@ -84,6 +87,10 @@ const validateUrlTenantSetting = (url: string): boolean => {
   }
 }
 
+const validateIlpAddressTenantSetting = (ilpAddress: string): boolean => {
+  return isValidIlpAddress(ilpAddress)
+}
+
 const validateNonNegativeTenantSetting = (numberString: string): boolean => {
   return !!(Number.isFinite(Number(numberString)) && Number(numberString) > -1)
 }
@@ -97,5 +104,6 @@ export const TENANT_SETTING_VALIDATORS = {
   [TenantSettingKeys.WEBHOOK_MAX_RETRY.name]: validateNonNegativeTenantSetting,
   [TenantSettingKeys.WEBHOOK_TIMEOUT.name]: validatePositiveTenantSetting,
   [TenantSettingKeys.WEBHOOK_URL.name]: validateUrlTenantSetting,
-  [TenantSettingKeys.WALLET_ADDRESS_URL.name]: validateUrlTenantSetting
+  [TenantSettingKeys.WALLET_ADDRESS_URL.name]: validateUrlTenantSetting,
+  [TenantSettingKeys.ILP_ADDRESS.name]: validateIlpAddressTenantSetting
 }
