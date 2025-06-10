@@ -111,7 +111,13 @@ async function getIncomingPaymentPrivate(
 
   const streamCredentials = incomingPayment.isExpiredOrComplete()
     ? undefined
-    : deps.streamCredentialsService.get(incomingPayment)
+    : deps.streamCredentialsService.get({
+        paymentTag: incomingPayment.id,
+        asset: {
+          code: incomingPayment.asset.code,
+          scale: incomingPayment.asset.scale
+        }
+      })
 
   ctx.body = incomingPayment.toOpenPaymentsTypeWithMethods(
     deps.config.openPaymentsUrl,
@@ -155,9 +161,13 @@ async function createIncomingPayment(
   }
 
   ctx.status = 201
-  const streamCredentials = deps.streamCredentialsService.get(
-    incomingPaymentOrError
-  )
+  const streamCredentials = deps.streamCredentialsService.get({
+    paymentTag: incomingPaymentOrError.id,
+    asset: {
+      code: incomingPaymentOrError.asset.code,
+      scale: incomingPaymentOrError.asset.scale
+    }
+  })
   ctx.body = incomingPaymentOrError.toOpenPaymentsTypeWithMethods(
     deps.config.openPaymentsUrl,
     ctx.walletAddress,

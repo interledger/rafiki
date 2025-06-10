@@ -46,7 +46,13 @@ describe('Stream Credentials Service', (): void => {
 
   describe('get', (): void => {
     test('returns stream credentials for incoming payment', (): void => {
-      const credentials = streamCredentialsService.get(incomingPayment)
+      const credentials = streamCredentialsService.get({
+        paymentTag: incomingPayment.id,
+        asset: {
+          code: incomingPayment.asset.code,
+          scale: incomingPayment.asset.scale
+        }
+      })
       assert.ok(credentials)
       expect(credentials).toMatchObject({
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
@@ -66,7 +72,15 @@ describe('Stream Credentials Service', (): void => {
           expiresAt:
             state === IncomingPaymentState.Expired ? new Date() : undefined
         })
-        expect(streamCredentialsService.get(incomingPayment)).toMatchObject({
+        expect(
+          streamCredentialsService.get({
+            paymentTag: incomingPayment.id,
+            asset: {
+              code: incomingPayment.asset.code,
+              scale: incomingPayment.asset.scale
+            }
+          })
+        ).toMatchObject({
           ilpAddress: expect.stringMatching(
             /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
           ),

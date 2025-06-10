@@ -126,9 +126,13 @@ async function createLocalIncomingPayment(
     return incomingPaymentOrError
   }
 
-  const streamCredentials = deps.streamCredentialsService.get(
-    incomingPaymentOrError
-  )
+  const streamCredentials = deps.streamCredentialsService.get({
+    paymentTag: incomingPaymentOrError.id,
+    asset: {
+      code: incomingPaymentOrError.asset.code,
+      scale: incomingPaymentOrError.asset.scale
+    }
+  })
 
   if (!streamCredentials) {
     const errorMessage =
@@ -213,7 +217,13 @@ export async function getLocalIncomingPayment(
     throw new Error(errorMessage)
   }
 
-  const streamCredentials = deps.streamCredentialsService.get(incomingPayment)
+  const streamCredentials = deps.streamCredentialsService.get({
+    paymentTag: incomingPayment.id,
+    asset: {
+      code: incomingPayment.asset.code,
+      scale: incomingPayment.asset.scale
+    }
+  })
 
   return incomingPayment.toOpenPaymentsTypeWithMethods(
     deps.config.openPaymentsUrl,

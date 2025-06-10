@@ -49,7 +49,13 @@ describe('Receiver Model', (): void => {
       })
       const isLocal = true
 
-      const streamCredentials = streamCredentialsService.get(incomingPayment)
+      const streamCredentials = streamCredentialsService.get({
+        paymentTag: incomingPayment.id,
+        asset: {
+          code: incomingPayment.asset.code,
+          scale: incomingPayment.asset.scale
+        }
+      })
       assert(streamCredentials)
 
       const receiver = new Receiver(
@@ -124,7 +130,13 @@ describe('Receiver Model', (): void => {
       })
 
       incomingPayment.expiresAt = new Date(Date.now() - 1)
-      const streamCredentials = streamCredentialsService.get(incomingPayment)
+      const streamCredentials = streamCredentialsService.get({
+        paymentTag: incomingPayment.id,
+        asset: {
+          code: incomingPayment.asset.code,
+          scale: incomingPayment.asset.scale
+        }
+      })
       assert(streamCredentials)
       const openPaymentsIncomingPayment =
         incomingPayment.toOpenPaymentsTypeWithMethods(
@@ -147,7 +159,13 @@ describe('Receiver Model', (): void => {
         tenantId: Config.operatorTenantId
       })
 
-      const streamCredentials = streamCredentialsService.get(incomingPayment)
+      const streamCredentials = streamCredentialsService.get({
+        paymentTag: incomingPayment.id,
+        asset: {
+          code: incomingPayment.asset.code,
+          scale: incomingPayment.asset.scale
+        }
+      })
       assert(streamCredentials)
       ;(streamCredentials.ilpAddress as string) = 'not base 64 encoded'
 
@@ -198,7 +216,13 @@ describe('Receiver Model', (): void => {
       })
 
       incomingPayment.expiresAt = new Date(Date.now() - 1)
-      const streamCredentials = streamCredentialsService.get(incomingPayment)
+      const streamCredentials = streamCredentialsService.get({
+        paymentTag: incomingPayment.id,
+        asset: {
+          code: incomingPayment.asset.code,
+          scale: incomingPayment.asset.scale
+        }
+      })
       assert(streamCredentials)
       const openPaymentsIncomingPayment =
         incomingPayment.toOpenPaymentsTypeWithMethods(
