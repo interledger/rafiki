@@ -1619,7 +1619,7 @@ type TenantSetting {
 }
 
 input CreateTenantInput {
-  "Unique identifier of the tenant. Will be generated automatically if not provided."
+  "Unique identifier of the tenant. Must be compliant with uuid v4. Will be generated automatically if not provided."
   id: ID
   "Contact email of the tenant owner."
   email: String

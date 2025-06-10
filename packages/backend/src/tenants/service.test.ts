@@ -129,7 +129,7 @@ describe('Tenant Service', (): void => {
         .mockImplementationOnce(async () => undefined)
 
       const tenant = await tenantService.create(createOptions)
-
+      assert(!isTenantError(tenant))
       expect(tenant).toEqual(expect.objectContaining(createOptions))
 
       expect(spy).toHaveBeenCalledWith(
@@ -168,6 +168,7 @@ describe('Tenant Service', (): void => {
         .mockImplementationOnce(async () => undefined)
 
       const tenant = await tenantService.create(createOptions)
+      assert(!isTenantError(tenant))
       const tenantSetting = await TenantSetting.query()
         .where('tenantId', tenant.id)
         .andWhere('key', TenantSettingKeys.WALLET_ADDRESS_URL.name)
@@ -192,6 +193,7 @@ describe('Tenant Service', (): void => {
         .mockImplementationOnce(async () => undefined)
 
       const tenant = await tenantService.create(createOptions)
+      assert(!isTenantError(tenant))
       expect(tenant.id).toEqual(inputId)
     })
 
@@ -246,6 +248,7 @@ describe('Tenant Service', (): void => {
         .mockImplementationOnce(async () => undefined)
 
       const tenant = await tenantService.create(originalTenantInfo)
+      assert(!isTenantError(tenant))
 
       const updatedTenantInfo = {
         id: tenant.id,
@@ -282,6 +285,7 @@ describe('Tenant Service', (): void => {
         .mockImplementationOnce(async () => undefined)
 
       const tenant = await tenantService.create(originalTenantInfo)
+      assert(!isTenantError(tenant))
       const updatedTenantInfo = {
         id: tenant.id,
         apiSecret: 'test-api-secret-two',
@@ -358,6 +362,7 @@ describe('Tenant Service', (): void => {
         .spyOn(authServiceClient.tenant, 'create')
         .mockImplementationOnce(async () => undefined)
       const tenant = await tenantService.create(createOptions)
+      assert(!isTenantError(tenant))
 
       const spy = jest
         .spyOn(authServiceClient.tenant, 'delete')
@@ -390,6 +395,7 @@ describe('Tenant Service', (): void => {
         .spyOn(authServiceClient.tenant, 'create')
         .mockImplementationOnce(async () => undefined)
       const tenant = await tenantService.create(createOptions)
+      assert(!isTenantError(tenant))
 
       const spy = jest
         .spyOn(authServiceClient.tenant, 'delete')
@@ -440,6 +446,7 @@ describe('Tenant Service', (): void => {
 
             const spyCacheSet = jest.spyOn(tenantCache, 'set')
             const tenant = await tenantService.create(createOptions)
+            assert(!isTenantError(tenant))
             expect(tenant).toMatchObject({
               ...createOptions,
               id: tenant.id

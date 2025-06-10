@@ -22,6 +22,7 @@ import { ApolloClient } from '@apollo/client'
 import { GraphQLErrorCode } from '../errors'
 import { Tenant as TenantModel } from '../../tenants/model'
 import { v4 } from 'uuid'
+import { errorToMessage, TenantError } from '../../tenants/errors'
 
 describe('Tenant Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -287,6 +288,45 @@ describe('Tenant Resolvers', (): void => {
           ...input,
           __typename: 'Tenant'
         })
+      })
+
+      test('cannot create tenant with invalid uuid specified', async (): Promise<void> => {
+        expect.assertions(2)
+        try {
+          const input = { ...generateTenantInput(), id: 'invalid-id-format' }
+
+          await appContainer.apolloClient
+            .mutate({
+              mutation: gql`
+                mutation CreateTenant($input: CreateTenantInput!) {
+                  createTenant(input: $input) {
+                    tenant {
+                      id
+                      email
+                      apiSecret
+                      idpConsentUrl
+                      idpSecret
+                      publicName
+                    }
+                  }
+                }
+              `,
+              variables: {
+                input
+              }
+            })
+            .then((query): TenantMutationResponse => query.data?.createTenant)
+        } catch (error) {
+          expect(error).toBeInstanceOf(ApolloError)
+          expect((error as ApolloError).graphQLErrors).toContainEqual(
+            expect.objectContaining({
+              message: errorToMessage[TenantError.InvalidTenantId],
+              extensions: expect.objectContaining({
+                code: GraphQLErrorCode.BadUserInput
+              })
+            })
+          )
+        }
       })
 
       test('cannot create tenant as non-operator', async (): Promise<void> => {
