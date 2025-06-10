@@ -2204,6 +2204,18 @@
             "deprecationReason": null
           },
           {
+            "name": "id",
+            "description": "Unique identifier of the tenant. Must be compliant with uuid v4. Will be generated automatically if not provided.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "ID",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "idpConsentUrl",
             "description": "URL of the tenant's identity provider's consent screen.",
             "type": {
