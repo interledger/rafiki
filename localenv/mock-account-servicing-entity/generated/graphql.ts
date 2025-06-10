@@ -372,6 +372,8 @@ export type CreateTenantInput = {
   apiSecret: Scalars['String']['input'];
   /** Contact email of the tenant owner. */
   email?: InputMaybe<Scalars['String']['input']>;
+  /** Unique identifier of the tenant. Must be compliant with uuid v4. Will be generated automatically if not provided. */
+  id?: InputMaybe<Scalars['ID']['input']>;
   /** URL of the tenant's identity provider's consent screen. */
   idpConsentUrl?: InputMaybe<Scalars['String']['input']>;
   /** Secret used to secure requests from the tenant's identity provider. */
@@ -1259,6 +1261,7 @@ export type QueryAssetsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   sortOrder?: InputMaybe<SortOrder>;
+  tenantId?: InputMaybe<Scalars['String']['input']>;
 };
 
 

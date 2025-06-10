@@ -11,6 +11,7 @@ import {
 } from '@apollo/client'
 import { setContext } from '@apollo/client/link/context'
 import { TestContainer } from './app'
+import { isTenantError } from '../tenants/errors'
 
 interface CreateOptions {
   email: string
@@ -75,7 +76,7 @@ export async function createTenant(
   jest
     .spyOn(authServiceClient.tenant, 'create')
     .mockImplementationOnce(async () => undefined)
-  const tenant = await tenantService.create(
+  const tenantOrError = await tenantService.create(
     options || {
       email: faker.internet.email(),
       apiSecret: 'test-api-secret',
@@ -85,9 +86,9 @@ export async function createTenant(
     }
   )
 
-  if (!tenant) {
+  if (!tenantOrError || isTenantError(tenantOrError)) {
     throw Error('Failed to create test tenant')
   }
 
-  return tenant
+  return tenantOrError
 }

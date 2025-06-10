@@ -18,6 +18,7 @@ import { withConfigOverride } from '../tests/helpers'
 import { TenantSetting, TenantSettingKeys } from './settings/model'
 import { TenantSettingService } from './settings/service'
 import { isTenantError, TenantError } from './errors'
+import { v4 } from 'uuid'
 
 describe('Tenant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -128,7 +129,7 @@ describe('Tenant Service', (): void => {
         .mockImplementationOnce(async () => undefined)
 
       const tenant = await tenantService.create(createOptions)
-
+      assert(!isTenantError(tenant))
       expect(tenant).toEqual(expect.objectContaining(createOptions))
 
       expect(spy).toHaveBeenCalledWith(
@@ -167,12 +168,33 @@ describe('Tenant Service', (): void => {
         .mockImplementationOnce(async () => undefined)
 
       const tenant = await tenantService.create(createOptions)
+      assert(!isTenantError(tenant))
       const tenantSetting = await TenantSetting.query()
         .where('tenantId', tenant.id)
         .andWhere('key', TenantSettingKeys.WALLET_ADDRESS_URL.name)
 
       expect(tenantSetting.length).toBe(1)
       expect(tenantSetting[0].value).toEqual(walletAddressUrl)
+    })
+
+    test('can create tenant with a specified id', async (): Promise<void> => {
+      const inputId = v4()
+      const createOptions = {
+        id: inputId,
+        apiSecret: 'test-api-secret',
+        publicName: 'test tenant',
+        email: faker.internet.email(),
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret'
+      }
+
+      jest
+        .spyOn(authServiceClient.tenant, 'create')
+        .mockImplementationOnce(async () => undefined)
+
+      const tenant = await tenantService.create(createOptions)
+      assert(!isTenantError(tenant))
+      expect(tenant.id).toEqual(inputId)
     })
 
     test('tenant creation rolls back if auth tenant create fails', async (): Promise<void> => {
@@ -226,6 +248,7 @@ describe('Tenant Service', (): void => {
         .mockImplementationOnce(async () => undefined)
 
       const tenant = await tenantService.create(originalTenantInfo)
+      assert(!isTenantError(tenant))
 
       const updatedTenantInfo = {
         id: tenant.id,
@@ -262,6 +285,7 @@ describe('Tenant Service', (): void => {
         .mockImplementationOnce(async () => undefined)
 
       const tenant = await tenantService.create(originalTenantInfo)
+      assert(!isTenantError(tenant))
       const updatedTenantInfo = {
         id: tenant.id,
         apiSecret: 'test-api-secret-two',
@@ -338,6 +362,7 @@ describe('Tenant Service', (): void => {
         .spyOn(authServiceClient.tenant, 'create')
         .mockImplementationOnce(async () => undefined)
       const tenant = await tenantService.create(createOptions)
+      assert(!isTenantError(tenant))
 
       const spy = jest
         .spyOn(authServiceClient.tenant, 'delete')
@@ -370,6 +395,7 @@ describe('Tenant Service', (): void => {
         .spyOn(authServiceClient.tenant, 'create')
         .mockImplementationOnce(async () => undefined)
       const tenant = await tenantService.create(createOptions)
+      assert(!isTenantError(tenant))
 
       const spy = jest
         .spyOn(authServiceClient.tenant, 'delete')
@@ -420,6 +446,7 @@ describe('Tenant Service', (): void => {
 
             const spyCacheSet = jest.spyOn(tenantCache, 'set')
             const tenant = await tenantService.create(createOptions)
+            assert(!isTenantError(tenant))
             expect(tenant).toMatchObject({
               ...createOptions,
               id: tenant.id

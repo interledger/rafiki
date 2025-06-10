@@ -1,3 +1,4 @@
+import { validate as validateUuid } from 'uuid'
 import { Tenant } from './model'
 import { BaseService } from '../shared/baseService'
 import { TransactionOrKnex } from 'objection'
@@ -7,12 +8,12 @@ import type { AuthServiceClient } from '../auth-service-client/client'
 import { KeyValuePair, TenantSettingService } from './settings/service'
 import { TenantSetting, TenantSettingKeys } from './settings/model'
 import type { IAppConfig } from '../config/app'
-import { TenantError } from './errors'
+import { isTenantError, TenantError } from './errors'
 import { TenantSettingInput } from '../graphql/generated/graphql'
 
 export interface TenantService {
   get: (id: string, includeDeleted?: boolean) => Promise<Tenant | undefined>
-  create: (options: CreateTenantOptions) => Promise<Tenant>
+  create: (options: CreateTenantOptions) => Promise<Tenant | TenantError>
   update: (options: UpdateTenantOptions) => Promise<Tenant>
   delete: (id: string) => Promise<void>
   getPage: (pagination?: Pagination, sortOrder?: SortOrder) => Promise<Tenant[]>
@@ -75,6 +76,7 @@ async function getTenantPage(
 }
 
 interface CreateTenantOptions {
+  id?: string
   email?: string
   apiSecret: string
   idpSecret?: string
@@ -86,12 +88,23 @@ interface CreateTenantOptions {
 async function createTenant(
   deps: ServiceDependencies,
   options: CreateTenantOptions
-): Promise<Tenant> {
+): Promise<Tenant | TenantError> {
   const trx = await deps.knex.transaction()
   try {
-    const { email, apiSecret, publicName, idpSecret, idpConsentUrl, settings } =
-      options
+    const {
+      id,
+      email,
+      apiSecret,
+      publicName,
+      idpSecret,
+      idpConsentUrl,
+      settings
+    } = options
+    if (id && !validateUuid(id)) {
+      throw TenantError.InvalidTenantId
+    }
     const tenant = await Tenant.query(trx).insertAndFetch({
+      id,
       email,
       publicName,
       apiSecret,
@@ -132,6 +145,7 @@ async function createTenant(
     return tenant
   } catch (err) {
     await trx.rollback()
+    if (isTenantError(err)) return err
     throw err
   }
 }

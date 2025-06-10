@@ -1,0 +1,46 @@
+meta {
+  name: Grant Request Quote
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{senderTenantOpenPaymentsAuthHost}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "access_token": {
+          "access": [
+              {
+                  "type": "quote",
+                  "actions": [
+                      "create", "read"
+                  ]
+              }
+          ]
+      },
+      "client": "{{clientWalletAddress}}"
+  }
+  
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  await scripts.addSignatureHeaders();
+}
+
+script:post-response {
+  const scripts = require('./scripts');
+  
+  scripts.storeTokenDetails();
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

@@ -22,6 +22,8 @@ type Query {
     last: Int
     "Specify the sort order of assets based on their creation data, either ascending or descending."
     sortOrder: SortOrder
+    "Unique identifier of the tenant associated with the wallet address. Optional, if not provided, the tenantId will be obtained from the signature."
+    tenantId: String
   ): AssetsConnection!
 
   "Fetch a peer by its ID."
@@ -1617,6 +1619,8 @@ type TenantSetting {
 }
 
 input CreateTenantInput {
+  "Unique identifier of the tenant. Must be compliant with uuid v4. Will be generated automatically if not provided."
+  id: ID
   "Contact email of the tenant owner."
   email: String
   "Secret used to secure requests made for this tenant."

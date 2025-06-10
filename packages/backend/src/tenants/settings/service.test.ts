@@ -21,6 +21,7 @@ import { AuthServiceClient } from '../../auth-service-client/client'
 import { v4 as uuid } from 'uuid'
 import { createTenant } from '../../tests/tenant'
 import { isTenantSettingError, TenantSettingError } from './errors'
+import { isTenantError } from '../errors'
 
 describe('TenantSetting Service', (): void => {
   let deps: IocContract<AppServices>
@@ -50,12 +51,14 @@ describe('TenantSetting Service', (): void => {
       .spyOn(authServiceClient.tenant, 'delete')
       .mockResolvedValueOnce(undefined)
 
-    tenant = await tenantService.create({
+    const tenantOrError = await tenantService.create({
       apiSecret: faker.string.uuid(),
       email: faker.internet.email(),
       idpConsentUrl: faker.internet.url(),
       idpSecret: faker.string.uuid()
     })
+    assert(!isTenantError(tenantOrError))
+    tenant = tenantOrError
   })
 
   afterEach(async (): Promise<void> => {

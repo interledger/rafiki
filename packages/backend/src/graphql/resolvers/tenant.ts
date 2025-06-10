@@ -11,6 +11,7 @@ import { Tenant } from '../../tenants/model'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { getPageInfo } from '../../shared/pagination'
 import { tenantSettingsToGraphql } from './tenant_settings'
+import { errorToMessage, isTenantError } from '../../tenants/errors'
 
 export const whoami: QueryResolvers<TenantedApolloContext>['whoami'] = async (
   parent,
@@ -102,9 +103,16 @@ export const createTenant: MutationResolvers<TenantedApolloContext>['createTenan
     }
 
     const tenantService = await ctx.container.use('tenantService')
-    const tenant = await tenantService.create(args.input)
+    const tenantOrError = await tenantService.create(args.input)
+    if (isTenantError(tenantOrError)) {
+      throw new GraphQLError(errorToMessage[tenantOrError], {
+        extensions: {
+          code: GraphQLErrorCode.BadUserInput
+        }
+      })
+    }
 
-    return { tenant: tenantToGraphQl(tenant) }
+    return { tenant: tenantToGraphQl(tenantOrError) }
   }
 
 export const updateTenant: MutationResolvers<TenantedApolloContext>['updateTenant'] =
