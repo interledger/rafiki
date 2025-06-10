@@ -66,7 +66,7 @@ export async function grantContinueHttpsigMiddleware(
     throw new GNAPServerRouteError(
       401,
       GNAPErrorCode.InvalidClient,
-      'continue: invalid signature headers'
+      'invalid signature headers'
     )
   }
 
@@ -119,7 +119,7 @@ export async function grantInitiationHttpsigMiddleware(
     throw new GNAPServerRouteError(
       401,
       GNAPErrorCode.InvalidClient,
-      'initiate: invalid signature headers'
+      'invalid signature headers'
     )
   }
 
@@ -144,7 +144,7 @@ export async function tokenHttpsigMiddleware(
     throw new GNAPServerRouteError(
       401,
       GNAPErrorCode.InvalidClient,
-      'token: invalid signature headers'
+      'invalid signature headers'
     )
   }
 
