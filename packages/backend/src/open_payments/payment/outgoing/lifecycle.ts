@@ -182,9 +182,17 @@ async function handleCompleted(
   const stopTimer = deps.telemetry.startTimer('handle_completed_ms', {
     callName: 'OutgoingPaymentLifecycle:handleCompleted'
   })
-  await payment.$query(deps.knex).patch({
+  const updatedPayment = await payment.$query(deps.knex).patchAndFetch({
     state: OutgoingPaymentState.Completed
   })
+
+  deps.telemetry.recordHistogram(
+    'outgoing_payment_lifecycle_completed_ms',
+    updatedPayment.updatedAt.getTime() - payment.createdAt.getTime(),
+    {
+      callName: 'OutgoingPaymentLifecycle:handleCompleted'
+    }
+  )
 
   await sendWebhookEvent(
     deps,

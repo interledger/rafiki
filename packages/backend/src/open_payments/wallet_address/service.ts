@@ -578,6 +578,6 @@ export interface WalletAddressSubresourceService<
   M extends WalletAddressSubresource
 > {
   get(options: GetOptions): Promise<M | undefined>
-  create(options: { walletAddressId: string }): Promise<M | string>
+  create(options: { walletAddressId: string }): Promise<M | string | Error>
   getWalletAddressPage(options: ListOptions): Promise<M[]>
 }

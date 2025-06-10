@@ -48,7 +48,7 @@ import { PaymentMethodHandlerService } from '../../../payment-method/handler/ser
 import { PaymentMethodHandlerError } from '../../../payment-method/handler/errors'
 import { mockRatesApi } from '../../../tests/rates'
 import { UnionOmit } from '../../../shared/utils'
-import { QuoteError } from '../../quote/errors'
+import { QuoteError, QuoteErrorCode } from '../../quote/errors'
 import { withConfigOverride } from '../../../tests/helpers'
 import { TelemetryService } from '../../../telemetry/service'
 import { getPageTests } from '../../../shared/baseModel.test'
@@ -801,10 +801,11 @@ describe('OutgoingPaymentService', (): void => {
         assetScale: receiverWalletAddress.asset.scale
       }
 
-      const quoteCreateResponse = QuoteError.InvalidAmount
       const quoteSpy = jest
         .spyOn(quoteService, 'create')
-        .mockImplementationOnce(async () => quoteCreateResponse)
+        .mockImplementationOnce(
+          async () => new QuoteError(QuoteErrorCode.InvalidAmount)
+        )
 
       const payment = await outgoingPaymentService.create({
         tenantId,
@@ -814,7 +815,7 @@ describe('OutgoingPaymentService', (): void => {
       })
 
       expect(isOutgoingPaymentError(payment)).toBeTruthy()
-      expect(payment).toBe(quoteCreateResponse)
+      expect(payment).toBe(OutgoingPaymentError.InvalidAmount)
       expect(quoteSpy).toHaveBeenCalledWith({
         tenantId,
         walletAddressId,

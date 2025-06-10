@@ -401,6 +401,41 @@ describe('LocalPaymentService', (): void => {
         )
       })
     })
+
+    it('throws with minSendAmount when debitAmount < exchange value', async () => {
+      const debitAmountValue = 99n
+      const debitAssetCode = 'EUR'
+      const exchangeRate = 0.01
+      const incomingAssetCode = 'USD'
+      const expectedMinSendAmount = 100n
+
+      const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({
+        [incomingAssetCode]: exchangeRate
+      }))
+
+      const receivingWalletAddress = walletAddressMap[incomingAssetCode]
+      const sendingWalletAddress = walletAddressMap[debitAssetCode]
+
+      const options: StartQuoteOptions = {
+        walletAddress: sendingWalletAddress,
+        receiver: await createReceiver(deps, receivingWalletAddress),
+        debitAmount: {
+          assetCode: sendingWalletAddress.asset.code,
+          assetScale: sendingWalletAddress.asset.scale,
+          value: debitAmountValue
+        }
+      }
+
+      await expect(localPaymentService.getQuote(options)).rejects.toMatchObject(
+        {
+          details: {
+            minSendAmount: expectedMinSendAmount
+          }
+        }
+      )
+
+      ratesScope && ratesScope.done()
+    })
   })
 
   describe('pay', (): void => {

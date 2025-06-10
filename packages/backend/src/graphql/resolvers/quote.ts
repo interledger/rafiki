@@ -62,9 +62,10 @@ export const createQuote: MutationResolvers<TenantedApolloContext>['createQuote'
       options.receiveAmount = args.input.receiveAmount
     const quoteOrError = await quoteService.create(options)
     if (isQuoteError(quoteOrError)) {
-      throw new GraphQLError(errorToMessage[quoteOrError], {
+      throw new GraphQLError(errorToMessage[quoteOrError.type], {
         extensions: {
-          code: errorToCode[quoteOrError]
+          code: errorToCode[quoteOrError.type],
+          details: quoteOrError.details
         }
       })
     } else

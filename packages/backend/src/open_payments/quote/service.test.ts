@@ -3,7 +3,7 @@ import { faker } from '@faker-js/faker'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
-import { QuoteError, isQuoteError } from './errors'
+import { QuoteErrorCode, isQuoteError } from './errors'
 import { QuoteService, CreateQuoteOptions } from './service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IAppConfig, Config } from '../../config/app'
@@ -204,9 +204,9 @@ describe('QuoteService', (): void => {
 
         if (!debitAmount && !receiveAmount && !incomingAmount) {
           test('fails without receiver.incomingAmount', async (): Promise<void> => {
-            await expect(quoteService.create(options)).resolves.toEqual(
-              QuoteError.InvalidReceiver
-            )
+            await expect(quoteService.create(options)).resolves.toMatchObject({
+              type: QuoteErrorCode.InvalidReceiver
+            })
           })
         } else {
           if (debitAmount || receiveAmount) {
@@ -305,9 +305,11 @@ describe('QuoteService', (): void => {
                     assetScale: destinationAsset.scale
                   }
                 })
-                await expect(quoteService.create(options)).resolves.toEqual(
-                  QuoteError.InvalidAmount
-                )
+                await expect(
+                  quoteService.create(options)
+                ).resolves.toMatchObject({
+                  type: QuoteErrorCode.InvalidAmount
+                })
               })
             }
           } else if (incomingAmount) {
@@ -372,7 +374,7 @@ describe('QuoteService', (): void => {
             ${IncomingPaymentState.Completed}
             ${IncomingPaymentState.Expired}
           `(
-            `returns ${QuoteError.InvalidReceiver} on $state receiver`,
+            `returns ${QuoteErrorCode.InvalidReceiver} on $state receiver`,
             async ({ state }): Promise<void> => {
               await incomingPayment.$query(knex).patch({
                 state,
@@ -381,8 +383,8 @@ describe('QuoteService', (): void => {
                     ? new Date()
                     : undefined
               })
-              await expect(quoteService.create(options)).resolves.toEqual(
-                QuoteError.InvalidReceiver
+              await expect(quoteService.create(options)).resolves.toMatchObject(
+                { type: QuoteErrorCode.InvalidReceiver }
               )
             }
           )
@@ -460,7 +462,7 @@ describe('QuoteService', (): void => {
           debitAmount,
           method: 'ilp'
         })
-      ).resolves.toEqual(QuoteError.UnknownWalletAddress)
+      ).resolves.toMatchObject({ type: QuoteErrorCode.UnknownWalletAddress })
       expect(walletAddressService.get).toHaveBeenCalledTimes(1)
       expect(walletAddressService.get).toHaveBeenCalledWith(
         walletAddress.id,
@@ -480,7 +482,7 @@ describe('QuoteService', (): void => {
           debitAmount,
           method: 'ilp'
         })
-      ).resolves.toEqual(QuoteError.UnknownWalletAddress)
+      ).resolves.toMatchObject({ type: QuoteErrorCode.UnknownWalletAddress })
       expect(walletAddressService.get).toHaveBeenCalledTimes(1)
       expect(walletAddressService.get).toHaveBeenCalledWith(
         unknownWalletAddressId,
@@ -504,7 +506,7 @@ describe('QuoteService', (): void => {
           debitAmount,
           method: 'ilp'
         })
-      ).resolves.toEqual(QuoteError.InactiveWalletAddress)
+      ).resolves.toMatchObject({ type: QuoteErrorCode.InactiveWalletAddress })
     })
 
     test('fails on invalid receiver', async (): Promise<void> => {
@@ -516,7 +518,7 @@ describe('QuoteService', (): void => {
           debitAmount,
           method: 'ilp'
         })
-      ).resolves.toEqual(QuoteError.InvalidReceiver)
+      ).resolves.toMatchObject({ type: QuoteErrorCode.InvalidReceiver })
     })
 
     test('fails on non-positive receive amount from quote', async (): Promise<void> => {
@@ -543,7 +545,9 @@ describe('QuoteService', (): void => {
             assetScale: sendingWalletAddress.asset.scale
           }
         })
-      ).resolves.toBe(QuoteError.NonPositiveReceiveAmount)
+      ).resolves.toMatchObject({
+        type: QuoteErrorCode.NonPositiveReceiveAmount
+      })
     })
 
     test.each`
@@ -570,9 +574,9 @@ describe('QuoteService', (): void => {
         }
         if (debitAmount) options.debitAmount = debitAmount
         if (receiveAmount) options.receiveAmount = receiveAmount
-        await expect(quoteService.create(options)).resolves.toEqual(
-          QuoteError.InvalidAmount
-        )
+        await expect(quoteService.create(options)).resolves.toMatchObject({
+          type: QuoteErrorCode.InvalidAmount
+        })
       }
     )
 
@@ -683,7 +687,7 @@ describe('QuoteService', (): void => {
             receiver: receiver.incomingPayment!.id,
             method: 'ilp'
           })
-        ).resolves.toEqual(QuoteError.InvalidAmount)
+        ).resolves.toMatchObject({ type: QuoteErrorCode.InvalidAmount })
       })
     })
 
@@ -721,7 +725,7 @@ describe('QuoteService', (): void => {
         ${200n}          | ${0}     | ${0}          | ${0.5}       | ${100n}                    | ${'no fees'}
         ${200n}          | ${0}     | ${0}          | ${1.0}       | ${200n}                    | ${'no fees, equal exchange rate'}
         ${200n}          | ${20}    | ${0}          | ${0.5}       | ${90n}                     | ${'fixed fee'}
-        ${200n}          | ${101n}  | ${0}          | ${1.0}       | ${99n}                     | ${'fixed fee larger than receiveAmount, equal exchange rate'}
+        ${200n}          | ${101}   | ${0}          | ${1.0}       | ${99n}                     | ${'fixed fee larger than receiveAmount, equal exchange rate'}
         ${200n}          | ${0}     | ${200}        | ${0.5}       | ${98n}                     | ${'basis point fee'}
         ${200n}          | ${20}    | ${200}        | ${0.5}       | ${88n}                     | ${'fixed and basis point fee'}
         ${200n}          | ${20}    | ${200}        | ${0.455}     | ${80n}                     | ${'fixed and basis point fee with floating exchange rate'}
@@ -776,6 +780,73 @@ describe('QuoteService', (): void => {
         }
       )
 
+      test.each`
+        debitAmountValue | fixedFee | basisPointFee | exchangeRate | expectedMinSendAmountValue | description
+        ${1n}            | ${0}     | ${0}          | ${0.01}      | ${100n}                    | ${'debit < 100 + no fee'}
+        ${99n}           | ${0}     | ${0}          | ${0.01}      | ${100n}                    | ${'debit < 100 + no fee'}
+        ${100n}          | ${50}    | ${0}          | ${0.01}      | ${150n}                    | ${'debit < 100 + fixed fee'}
+        ${149n}          | ${50}    | ${0}          | ${0.01}      | ${150n}                    | ${'debit < 100 + fixed fee'}
+        ${101n}          | ${0}     | ${200}        | ${0.01}      | ${103n}                    | ${'debit < 100 + 2% fee'}
+        ${1n}            | ${50}    | ${200}        | ${0.01}      | ${154n}                    | ${'debit < 100 + mixed fee'}
+        ${100n}          | ${50}    | ${200}        | ${0.01}      | ${154n}                    | ${'debit < 100 + mixed fee'}
+        ${152n}          | ${50}    | ${2000}       | ${0.01}      | ${188n}                    | ${'debit < 100 + mixed fee'}
+      `(
+        'returns minSendAmount $expectedMinSendAmountValue for $description',
+        async ({
+          debitAmountValue,
+          fixedFee,
+          basisPointFee,
+          expectedMinSendAmountValue,
+          exchangeRate
+        }): Promise<void> => {
+          const receiver = await createReceiver(deps, receivingWalletAddress)
+
+          await Fee.query().insertAndFetch({
+            assetId: sendAsset.id,
+            type: FeeType.Sending,
+            fixedFee,
+            basisPointFee
+          })
+
+          const mockRejectQuote = new PaymentMethodHandlerError(
+            'Failed getting quote',
+            {
+              description:
+                'Minimum delivery amount of ILP quote is non-positive',
+              retryable: false,
+              code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount,
+              details: {
+                minSendAmount: BigInt(Math.ceil(1 / exchangeRate))
+              }
+            }
+          )
+
+          jest
+            .spyOn(paymentMethodHandlerService, 'getQuote')
+            .mockRejectedValueOnce(mockRejectQuote)
+
+          await expect(
+            quoteService.create({
+              tenantId,
+              walletAddressId: sendingWalletAddress.id,
+              receiver: receiver.incomingPayment!.id,
+              debitAmount: {
+                value: debitAmountValue,
+                assetCode: sendAsset.code,
+                assetScale: sendAsset.scale
+              },
+              method: 'ilp'
+            })
+          ).resolves.toMatchObject({
+            details: {
+              minSendAmount: {
+                value: expectedMinSendAmountValue
+              }
+            }
+          })
+        }
+      )
+
       test('fails on non-positive receive amount', async () => {
         const receiver = await createReceiver(deps, receivingWalletAddress)
         const debitAmountValue = 100n
@@ -810,7 +881,9 @@ describe('QuoteService', (): void => {
             },
             method: 'ilp'
           })
-        ).resolves.toEqual(QuoteError.NonPositiveReceiveAmount)
+        ).resolves.toMatchObject({
+          type: QuoteErrorCode.NonPositiveReceiveAmount
+        })
       })
     })
 
@@ -818,6 +891,7 @@ describe('QuoteService', (): void => {
       beforeEach(() => {
         receiverGetSpy.mockRestore()
       })
+
       test('Local receiver uses local payment method', async () => {
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId: receivingWalletAddress.id,

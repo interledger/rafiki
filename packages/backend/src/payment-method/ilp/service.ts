@@ -54,6 +54,7 @@ async function getQuote(
       retryable: false
     })
   }
+
   const stopTimerRates = deps.telemetry.startTimer(
     'ilp_get_quote_rate_time_ms',
     {
@@ -61,7 +62,6 @@ async function getQuote(
       description: 'Time to get rates'
     }
   )
-
   let rates
   try {
     rates = await deps.ratesService.rates(
@@ -116,6 +116,26 @@ async function getQuote(
         options.receiveAmount?.value || options.receiver.incomingAmount?.value
     }
 
+    // Probing quote to get the exchange rate even if amountToSend is less than 0 because of fees
+    if (options.debitAmount && quoteOptions.amountToSend === 0n) {
+      const ilpQuote = await Pay.startQuote({
+        ...quoteOptions,
+        amountToSend: 1n,
+        slippage: deps.config.slippage,
+        prices: convertRatesToIlpPrices(rates)
+      })
+      throw new PaymentMethodHandlerError('Received error during ILP quoting', {
+        description: 'Minimum delivery amount of ILP quote is non-positive',
+        retryable: false,
+        code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount,
+        details: {
+          minSendAmount: BigInt(
+            Math.ceil(ilpQuote.highEstimatedExchangeRate.reciprocal().valueOf())
+          )
+        }
+      })
+    }
+
     let ilpQuote: Pay.Quote | undefined
     const stopTimerProbe = deps.telemetry.startTimer('ilp_rate_probe_time_ms', {
       callName: 'Pay:startQuote',
@@ -153,7 +173,12 @@ async function getQuote(
       throw new PaymentMethodHandlerError('Received error during ILP quoting', {
         description: 'Minimum delivery amount of ILP quote is non-positive',
         retryable: false,
-        code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount
+        code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount,
+        details: {
+          minSendAmount: BigInt(
+            Math.ceil(ilpQuote.highEstimatedExchangeRate.reciprocal().valueOf())
+          )
+        }
       })
     }
 
@@ -161,7 +186,7 @@ async function getQuote(
     // maxSourceAmount that won't be able to fulfill even a single unit of the receiving asset.
     // e.g. if maxSourceAmount is 4 and the high estimated exchange rate is 0.2, 4 * 0.2 = 0.8
     // where 0.8 < 1, meaning the payment for this quote won't be able to deliver a single unit of value,
-    // even with the most favourable exchange rate. We throw here since we don't want any payments
+    // even with the most favorable exchange rate. We throw here since we don't want any payments
     // to be created against this quote. This allows us to fail early.
     const estimatedReceiveAmount =
       Number(ilpQuote.maxSourceAmount) *
@@ -181,7 +206,12 @@ async function getQuote(
       throw new PaymentMethodHandlerError('Received error during ILP quoting', {
         description: errorDescription,
         retryable: false,
-        code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount
+        code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount,
+        details: {
+          minSendAmount: BigInt(
+            Math.ceil(ilpQuote.highEstimatedExchangeRate.reciprocal().valueOf())
+          )
+        }
       })
     }
 

@@ -459,12 +459,15 @@ describe('IlpPaymentService', (): void => {
         })
       }
 
+      const highEstimatedExchangeRate = Pay.Ratio.from(0.034)
+
       jest.spyOn(Pay, 'startQuote').mockResolvedValueOnce({
         maxSourceAmount: 1n,
-        minDeliveryAmount: -1n
-      } as Pay.Quote)
+        minDeliveryAmount: -1n,
+        highEstimatedExchangeRate
+      } as unknown as Pay.Quote)
 
-      expect.assertions(5)
+      expect.assertions(6)
       try {
         await ilpPaymentService.getQuote(options)
       } catch (error) {
@@ -479,6 +482,9 @@ describe('IlpPaymentService', (): void => {
         expect((error as PaymentMethodHandlerError).code).toBe(
           PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount
         )
+        expect((error as PaymentMethodHandlerError).details).toMatchObject({
+          minSendAmount: 30n
+        })
       }
 
       ratesScope.done()
@@ -516,6 +522,76 @@ describe('IlpPaymentService', (): void => {
       }
 
       ratesScope.done()
+    })
+
+    describe('throws with details.minSendAmount', () => {
+      const rate = 0.1
+
+      test('if debitAmount is 0', async () => {
+        const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({
+          EUR: rate
+        }))
+        const options: StartQuoteOptions = {
+          quoteId: uuid(),
+          walletAddress: walletAddressMap['USD'],
+          receiver: await createReceiver(deps, walletAddressMap['EUR']),
+          debitAmount: {
+            assetCode: 'USD',
+            assetScale: 2,
+            value: 0n
+          }
+        }
+        jest.spyOn(Pay, 'startQuote').mockResolvedValueOnce({
+          maxSourceAmount: 9n,
+          highEstimatedExchangeRate: Pay.Ratio.from(rate)
+        } as unknown as Pay.Quote)
+
+        await expect(ilpPaymentService.getQuote(options)).rejects.toMatchObject(
+          {
+            description: 'Minimum delivery amount of ILP quote is non-positive',
+            retryable: false,
+            code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount,
+            details: {
+              minSendAmount: 10n
+            }
+          }
+        )
+        ratesScope.done()
+      })
+
+      test('if estimatedReceiveAmount < 1', async () => {
+        const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({
+          EUR: rate
+        }))
+        const options: StartQuoteOptions = {
+          quoteId: uuid(),
+          walletAddress: walletAddressMap['USD'],
+          receiver: await createReceiver(deps, walletAddressMap['EUR']),
+          debitAmount: {
+            assetCode: 'USD',
+            assetScale: 2,
+            value: 9n
+          }
+        }
+        jest.spyOn(Pay, 'startQuote').mockResolvedValueOnce({
+          minDeliveryAmount: 1n,
+          maxSourceAmount: 9n,
+          highEstimatedExchangeRate: Pay.Ratio.from(rate)
+        } as unknown as Pay.Quote)
+
+        await expect(ilpPaymentService.getQuote(options)).rejects.toMatchObject(
+          {
+            description:
+              'Estimated receive amount of ILP quote is non-positive',
+            retryable: false,
+            code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount,
+            details: {
+              minSendAmount: 10n
+            }
+          }
+        )
+        ratesScope.done()
+      })
     })
 
     describe('successfully gets ilp quote', (): void => {

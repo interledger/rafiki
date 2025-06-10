@@ -43,7 +43,16 @@ export async function openPaymentsServerErrorMiddleware(
         },
         'Received error when handling Open Payments request'
       )
-      ctx.throw(err.status, err.message)
+
+      ctx.status = err.status
+      ctx.body = {
+        error: {
+          code: `${err.status}`,
+          description: err.message,
+          details: err.details
+        }
+      }
+      return
     }
 
     if (err instanceof OpenAPIValidatorMiddlewareError) {
@@ -57,7 +66,15 @@ export async function openPaymentsServerErrorMiddleware(
         },
         'Received OpenAPI validation error when handling Open Payments request'
       )
-      ctx.throw(finalStatus, err.message)
+
+      ctx.status = finalStatus
+      ctx.body = {
+        error: {
+          code: `${finalStatus}`,
+          description: err.message
+        }
+      }
+      return
     }
 
     if (err instanceof SPSPRouteError) {
@@ -69,7 +86,16 @@ export async function openPaymentsServerErrorMiddleware(
         },
         'Received error when handling SPSP request'
       )
-      ctx.throw(err.status, err.message)
+
+      ctx.status = err.status
+      ctx.body = {
+        error: {
+          code: `${err.status}`,
+          description: err.message,
+          details: err.details
+        }
+      }
+      return
     }
 
     logger.error(
