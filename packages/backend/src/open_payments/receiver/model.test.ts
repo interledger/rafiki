@@ -6,26 +6,17 @@ import { AppServices } from '../../app'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
-import {
-  IlpStreamCredentials,
-  StreamCredentialsService
-} from '../../payment-method/ilp/stream-credentials/service'
 import { Receiver } from './model'
 import { IncomingPaymentState } from '../payment/incoming/model'
-import assert from 'assert'
-import base64url from 'base64url'
-import { IlpAddress } from 'ilp-packet'
 
 describe('Receiver Model', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let streamCredentialsService: StreamCredentialsService
   let config: IAppConfig
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    streamCredentialsService = await deps.use('streamCredentialsService')
     config = await deps.use('config')
   })
 
@@ -49,20 +40,11 @@ describe('Receiver Model', (): void => {
       })
       const isLocal = true
 
-      const streamCredentials = streamCredentialsService.get({
-        paymentTag: incomingPayment.id,
-        asset: {
-          code: incomingPayment.asset.code,
-          scale: incomingPayment.asset.scale
-        }
-      })
-      assert(streamCredentials)
-
       const receiver = new Receiver(
         incomingPayment.toOpenPaymentsTypeWithMethods(
           config.openPaymentsUrl,
           walletAddress,
-          streamCredentials
+          []
         ),
         isLocal
       )
@@ -70,8 +52,6 @@ describe('Receiver Model', (): void => {
       expect(receiver).toEqual({
         assetCode: incomingPayment.asset.code,
         assetScale: incomingPayment.asset.scale,
-        ilpAddress: expect.any(String),
-        sharedSecret: expect.any(Buffer),
         incomingPayment: {
           id: incomingPayment.getUrl(config.openPaymentsUrl),
           walletAddress: walletAddress.address,
@@ -81,13 +61,7 @@ describe('Receiver Model', (): void => {
           receivedAmount: incomingPayment.receivedAmount,
           incomingAmount: incomingPayment.incomingAmount,
           expiresAt: incomingPayment.expiresAt,
-          methods: [
-            {
-              type: 'ilp',
-              ilpAddress: streamCredentials.ilpAddress,
-              sharedSecret: base64url(streamCredentials.sharedSecret)
-            }
-          ]
+          methods: []
         },
         isLocal
       })
@@ -103,16 +77,12 @@ describe('Receiver Model', (): void => {
       })
 
       incomingPayment.state = IncomingPaymentState.Completed
-      const streamCredentials: IlpStreamCredentials = {
-        ilpAddress: 'test.ilp' as IlpAddress,
-        sharedSecret: Buffer.from('')
-      }
 
       const openPaymentsIncomingPayment =
         incomingPayment.toOpenPaymentsTypeWithMethods(
           config.openPaymentsUrl,
           walletAddress,
-          streamCredentials
+          []
         )
 
       expect(
@@ -130,55 +100,17 @@ describe('Receiver Model', (): void => {
       })
 
       incomingPayment.expiresAt = new Date(Date.now() - 1)
-      const streamCredentials = streamCredentialsService.get({
-        paymentTag: incomingPayment.id,
-        asset: {
-          code: incomingPayment.asset.code,
-          scale: incomingPayment.asset.scale
-        }
-      })
-      assert(streamCredentials)
+
       const openPaymentsIncomingPayment =
         incomingPayment.toOpenPaymentsTypeWithMethods(
           config.openPaymentsUrl,
           walletAddress,
-          streamCredentials
+          []
         )
 
       expect(
         () => new Receiver(openPaymentsIncomingPayment, false)
       ).not.toThrow()
-    })
-
-    test('throws if stream credentials has invalid ILP address', async () => {
-      const walletAddress = await createWalletAddress(deps, {
-        tenantId: Config.operatorTenantId
-      })
-      const incomingPayment = await createIncomingPayment(deps, {
-        walletAddressId: walletAddress.id,
-        tenantId: Config.operatorTenantId
-      })
-
-      const streamCredentials = streamCredentialsService.get({
-        paymentTag: incomingPayment.id,
-        asset: {
-          code: incomingPayment.asset.code,
-          scale: incomingPayment.asset.scale
-        }
-      })
-      assert(streamCredentials)
-      ;(streamCredentials.ilpAddress as string) = 'not base 64 encoded'
-
-      const openPaymentsIncomingPayment =
-        incomingPayment.toOpenPaymentsTypeWithMethods(
-          config.openPaymentsUrl,
-          walletAddress,
-          streamCredentials
-        )
-
-      expect(() => new Receiver(openPaymentsIncomingPayment, false)).toThrow(
-        'Invalid ILP address on ilp payment method'
-      )
     })
   })
 
@@ -191,16 +123,12 @@ describe('Receiver Model', (): void => {
       })
 
       incomingPayment.state = IncomingPaymentState.Completed
-      const streamCredentials: IlpStreamCredentials = {
-        ilpAddress: 'test.ilp' as IlpAddress,
-        sharedSecret: Buffer.from('')
-      }
 
       const openPaymentsIncomingPayment =
         incomingPayment.toOpenPaymentsTypeWithMethods(
           config.openPaymentsUrl,
           walletAddress,
-          streamCredentials
+          []
         )
 
       const receiver = new Receiver(openPaymentsIncomingPayment, false)
@@ -216,19 +144,11 @@ describe('Receiver Model', (): void => {
       })
 
       incomingPayment.expiresAt = new Date(Date.now() - 1)
-      const streamCredentials = streamCredentialsService.get({
-        paymentTag: incomingPayment.id,
-        asset: {
-          code: incomingPayment.asset.code,
-          scale: incomingPayment.asset.scale
-        }
-      })
-      assert(streamCredentials)
       const openPaymentsIncomingPayment =
         incomingPayment.toOpenPaymentsTypeWithMethods(
           config.openPaymentsUrl,
           walletAddress,
-          streamCredentials
+          []
         )
 
       const receiver = new Receiver(openPaymentsIncomingPayment, false)
