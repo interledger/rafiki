@@ -372,7 +372,7 @@ export type CreateTenantInput = {
   apiSecret: Scalars['String']['input'];
   /** Contact email of the tenant owner. */
   email?: InputMaybe<Scalars['String']['input']>;
-  /** Unique identifier of the tenant. Will be generated automatically if not provided. */
+  /** Unique identifier of the tenant. Must be compliant with uuid v4. Will be generated automatically if not provided. */
   id?: InputMaybe<Scalars['ID']['input']>;
   /** URL of the tenant's identity provider's consent screen. */
   idpConsentUrl?: InputMaybe<Scalars['String']['input']>;

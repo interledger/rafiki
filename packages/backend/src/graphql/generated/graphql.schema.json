@@ -2205,7 +2205,7 @@
           },
           {
             "name": "id",
-            "description": "Unique identifier of the tenant. Will be generated automatically if not provided.",
+            "description": "Unique identifier of the tenant. Must be compliant with uuid v4. Will be generated automatically if not provided.",
             "type": {
               "kind": "SCALAR",
               "name": "ID",
