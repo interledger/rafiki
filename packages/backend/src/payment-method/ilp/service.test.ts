@@ -11,7 +11,7 @@ import { withConfigOverride } from '../../tests/helpers'
 import { StartQuoteOptions } from '../handler/service'
 import { WalletAddress } from '../../open_payments/wallet_address/model'
 import * as Pay from '@interledger/pay'
-import { Ratio, Int, PaymentType, PositiveInt } from '@interledger/pay'
+import { Ratio, Int, PaymentType } from '@interledger/pay'
 import assert from 'assert'
 
 import { createReceiver } from '../../tests/receiver'
