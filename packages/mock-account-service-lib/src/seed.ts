@@ -81,6 +81,7 @@ export async function setupFromSeed(
           assets[peeringAsset].id,
           assets[peeringAsset].code,
           peer.name,
+          peer.routes || [],
           peer.liquidityThreshold,
           peer.incomingToken,
           peer.outgoingToken

@@ -76,7 +76,6 @@ services:
       ILP_CONNECTOR_URL: ${CLOUD_NINE_CONNECTOR_URL:-http://cloud-nine-wallet-backend:3002}
       ENABLE_TELEMETRY: true
       KEY_ID: 7097F83B-CB84-469E-96C6-2141C72E22C0
-      STATIC_ROUTES: test.happy-life-bank:test.global-bank
     depends_on:
       - shared-database
       - shared-redis

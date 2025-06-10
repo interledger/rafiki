@@ -53,6 +53,8 @@ export class Peer
 
   public name?: string
 
+  public routes?: string[]
+
   public async onDebit({ balance }: OnDebitOptions): Promise<Peer> {
     if (this.liquidityThreshold !== null) {
       if (balance <= this.liquidityThreshold) {

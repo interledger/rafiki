@@ -22,6 +22,7 @@ import { BaseService } from '../../../shared/baseService'
 import { isValidHttpUrl } from '../../../shared/utils'
 import { v4 as uuid } from 'uuid'
 import { TransferError } from '../../../accounting/errors'
+import { RouterService } from '../connector/ilp-routing/service'
 
 export interface HttpOptions {
   incoming?: {
@@ -40,6 +41,7 @@ export type Options = {
   name?: string
   liquidityThreshold?: bigint
   initialLiquidity?: bigint
+  routes?: string[]
 }
 
 export type CreateOptions = Options & {
@@ -77,6 +79,7 @@ interface ServiceDependencies extends BaseService {
   assetService: AssetService
   httpTokenService: HttpTokenService
   knex: TransactionOrKnex
+  routerService: RouterService
 }
 
 export async function createPeerService({
@@ -84,7 +87,8 @@ export async function createPeerService({
   knex,
   accountingService,
   assetService,
-  httpTokenService
+  httpTokenService,
+  routerService
 }: ServiceDependencies): Promise<PeerService> {
   const log = logger.child({
     service: 'PeerService'
@@ -94,7 +98,8 @@ export async function createPeerService({
     knex,
     accountingService,
     assetService,
-    httpTokenService
+    httpTokenService,
+    routerService
   }
   return {
     get: (id) => getPeer(deps, id),
@@ -136,13 +141,19 @@ async function createPeer(
 
   try {
     return await Peer.transaction(deps.knex, async (trx) => {
+      const routes = [options.staticIlpAddress]
+      if (options.routes) {
+        routes.push(...options.routes)
+      }
+
       const peer = await Peer.query(trx).insertAndFetch({
         assetId: options.assetId,
         http: options.http,
         maxPacketAmount: options.maxPacketAmount,
         staticIlpAddress: options.staticIlpAddress,
         name: options.name,
-        liquidityThreshold: options.liquidityThreshold
+        liquidityThreshold: options.liquidityThreshold,
+        routes
       })
       const asset = await deps.assetService.get(peer.assetId)
       if (asset) peer.asset = asset
@@ -185,6 +196,8 @@ async function createPeer(
         }
       }
 
+      await syncPeerRoutesToMemory(deps, peer)
+
       return peer
     })
   } catch (err) {
@@ -225,6 +238,11 @@ async function updatePeer(
 
   try {
     return await Peer.transaction(deps.knex, async (trx) => {
+      const existingPeer = await Peer.query(trx).findById(options.id)
+      if (!existingPeer) {
+        return PeerError.UnknownPeer
+      }
+
       if (options.http?.incoming) {
         await deps.httpTokenService.deleteByPeer(options.id, trx)
         const err = await addIncomingHttpTokens({
@@ -238,9 +256,21 @@ async function updatePeer(
         }
       }
 
+      const updateData = { ...options }
+
+      if (options.routes !== undefined) {
+        const staticIlpAddress =
+          options.staticIlpAddress ?? existingPeer.staticIlpAddress
+        updateData.routes = [staticIlpAddress, ...options.routes]
+      }
+
       const peer = await Peer.query(trx)
-        .patchAndFetchById(options.id, options)
+        .patchAndFetchById(options.id, updateData)
         .throwIfNotFound()
+
+      await clearPeerRoutesFromMemory(deps, existingPeer)
+      await syncPeerRoutesToMemory(deps, peer)
+
       const asset = await deps.assetService.get(peer.assetId)
       if (asset) peer.asset = asset
       return peer
@@ -399,8 +429,33 @@ async function deletePeer(
 ): Promise<Peer | undefined> {
   const peer = await Peer.query(deps.knex).deleteById(id).returning('*').first()
   if (peer) {
+    await clearPeerRoutesFromMemory(deps, peer)
     const asset = await deps.assetService.get(peer.assetId)
     if (asset) peer.asset = asset
   }
   return peer
+}
+
+async function syncPeerRoutesToMemory(
+  deps: ServiceDependencies,
+  peer: Peer
+): Promise<void> {
+  if (!peer.routes || peer.routes.length === 0) {
+    await deps.routerService.addStaticRoute(peer.staticIlpAddress, peer.id)
+    return
+  }
+
+  for (const route of peer.routes) {
+    await deps.routerService.addStaticRoute(route, peer.id)
+  }
+}
+
+async function clearPeerRoutesFromMemory(
+  deps: ServiceDependencies,
+  peer: Peer
+): Promise<void> {
+  const routes = peer.routes || [peer.staticIlpAddress]
+  for (const route of routes) {
+    await deps.routerService.removeStaticRoute(route, peer.id)
+  }
 }

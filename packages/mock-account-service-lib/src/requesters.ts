@@ -33,6 +33,7 @@ export function createRequesters(
     assetId: string,
     assetCode: string,
     name: string,
+    routes: string[],
     liquidityThreshold: number,
     incomingToken: string,
     outgoingToken: string
@@ -85,6 +86,7 @@ export function createRequesters(
       assetId,
       assetCode,
       name,
+      routes,
       liquidityThreshold,
       incomingToken,
       outgoingToken
@@ -97,6 +99,7 @@ export function createRequesters(
         assetId,
         assetCode,
         name,
+        routes,
         liquidityThreshold,
         incomingToken,
         outgoingToken
@@ -173,6 +176,7 @@ export async function createPeer(
   assetId: string,
   assetCode: string,
   name: string,
+  routes: string[],
   liquidityThreshold: number,
   incomingToken: string,
   outgoingToken: string
@@ -195,8 +199,8 @@ export async function createPeer(
       },
       assetId,
       name,
-      liquidityThreshold
-      //maxPacketAmount: BigInt(10000),
+      liquidityThreshold,
+      routes
     }
   }
   return apolloClient

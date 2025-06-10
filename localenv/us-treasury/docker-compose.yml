@@ -76,7 +76,6 @@ services:
       WALLET_ADDRESS_URL: ${US_TREASURY_WALLET_ADDRESS_URL:-https://us-treasury-backend/.well-known/pay}
       ENABLE_TELEMETRY: true
       KEY_ID: 7097F83B-CB84-469E-96C6-2141C72E22C0
-      STATIC_ROUTES:
     depends_on:
       - shared-database
       - shared-redis

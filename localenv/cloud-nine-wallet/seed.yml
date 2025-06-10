@@ -1,7 +1,7 @@
 assets:
   - code: USD
     scale: 2
-    liquidity: 100000000
+    liquidity: 1000000000000
     liquidityThreshold: 10000000
   # - code: EUR
   #   scale: 2
@@ -23,6 +23,9 @@ peers:
     incomingToken: global-to-cloud
     outgoingToken: cloud-to-global
     liquidityThreshold: 1000000
+    routes: 
+      - "test.happy-life-bank"
+      #- "test.global-bank"
 accounts:
   - name: 'Grace Franklin'
     path: accounts/gfranklin

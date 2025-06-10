@@ -13,6 +13,7 @@ export interface Peering {
   outgoingToken: string
   peerUrl: string
   peerIlpAddress: string
+  routes: string[]
   initialLiquidity: string
   name: string
 }

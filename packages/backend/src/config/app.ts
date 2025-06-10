@@ -193,8 +193,7 @@ export const Config = {
     5
   ),
   walletAddressRedirectHtmlPage: process.env.WALLET_ADDRESS_REDIRECT_HTML_PAGE,
-  localCacheDuration: envInt('LOCAL_CACHE_DURATION_MS', 15_000),
-  staticRoutes: process.env.STATIC_ROUTES
+  localCacheDuration: envInt('LOCAL_CACHE_DURATION_MS', 15_000)
 }
 
 function parseRedisTlsConfig(
