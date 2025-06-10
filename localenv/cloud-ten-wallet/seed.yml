@@ -22,39 +22,39 @@ peers:
     peerIlpAddress: test.happy-life-bank
     liquidityThreshold: 1000000
     tokens:
-      incoming:
-        - test-USD-happy-life-bank-cloud-nine-wallet
-      outgoing: test-USD-cloud-nine-wallet-happy-life-bank
+      incoming: 
+        - test-USD-happy-life-bank-cloud-ten-wallet
+      outgoing: test-USD-cloud-ten-wallet-happy-life-bank
 accounts:
-  - name: 'Grace Franklin'
-    path: accounts/gfranklin
-    id: 742ab7cd-1624-4d2e-af6e-e15a71638669
+  - name: 'Frace Granklin'
+    path: accounts/fgranklin
+    id: 374e68c8-06d8-4b4f-b38a-9f047db870c5
     initialBalance: 40000000
-    brunoEnvVar: gfranklinWalletAddress
+    brunoEnvVar: fgranklinWalletAddress
     assetCode: USD
-  - name: 'Bert Hamchest'
-    id: a9adbe1a-df31-4766-87c9-d2cb2e636a9b
+  - name: 'Hert Bamchest'
+    id: 9a6bbce5-23ab-4372-a7a7-45662e60a973
     initialBalance: 40000000
-    path: accounts/bhamchest
-    brunoEnvVar: bhamchestWalletAddress
+    path: accounts/hbamchest
+    brunoEnvVar: hbamchestWalletAddress
     assetCode: USD
-  - name: "World's Best Donut Co"
-    id: 5726eefe-8737-459d-a36b-0acce152cb90
+  - name: "Galaxy's Best Croissant Co"
+    id: a7c4a79b-c66e-4901-9a28-c812fefbae1e
     initialBalance: 20000000
-    path: accounts/wbdc
-    brunoEnvVar: wbdcWalletAddress
+    path: accounts/gbcc
+    brunoEnvVar: gbccWalletAddress
     assetCode: USD
-  - name: "Broke Account"
-    id: 5a95366f-8cb4-4925-88d9-ae57dcb444bb
+  - name: "Penniless Account"
+    id: 66daacec-ee36-4d21-bca9-c8013ea5f8a7
     initialBalance: 50
-    path: accounts/broke
-    brunoEnvVar: brokeWalletAddress
+    path: accounts/penniless
+    brunoEnvVar: pennilessWalletAddress
     assetCode: USD
-  - name: "Luca Rossi"
-    id: 63dcc665-d946-4263-ac27-d0da1eb08a83
+  - name: "Ruca Lossi"
+    id: 53e03ae8-afca-483b-a02b-1db0d49411dc
     initialBalance: 50
-    path: accounts/lrossi
-    brunoEnvVar: lrossiWalletAddressId
+    path: accounts/rlossi
+    brunoEnvVar: rlossiWalletAddressId
     assetCode: EUR
 rates:
   EUR:
@@ -90,3 +90,10 @@ fees:
     basisPoints: 200
     asset: JPY
     scale: 0
+tenants:
+  - publicName: 'Cloud Ten Wallet'
+    apiSecret: 'LuagA4lRWSi9GRx5vBNr0vQHKrroaxkvg6ZMFjfLxPw='
+    idpConsentUrl: 'http://localhost:5030/mock-idp'
+    idpSecret: 'ue3ixgIiWLIlWOd4w5KO78scYpFH+vHuCJ33lnjgzEg='
+    walletAddressPrefix: 'https://cloud-nine-wallet-backend/cloud-ten'
+    webhookUrl: 'http://cloud-ten-wallet/webhooks'

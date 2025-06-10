@@ -48,33 +48,48 @@ const errorLink = onError(({ graphQLErrors }) => {
   }
 })
 
-const authLink = setContext((request, { headers }) => {
-  if (!process.env.SIGNATURE_SECRET || !process.env.SIGNATURE_VERSION)
-    return { headers }
-  const timestamp = Date.now()
-  const version = process.env.SIGNATURE_VERSION
+interface TenantOptions {
+  tenantId: string
+  apiSecret: string
+}
 
-  const { query, variables, operationName } = request
-  const formattedRequest = {
-    variables,
-    operationName,
-    query: print(query)
-  }
+const createAuthLink = (options?: TenantOptions) => {
+  return setContext((request, { headers }) => {
+    if (
+      !(options || process.env.SIGNATURE_SECRET) ||
+      !process.env.SIGNATURE_VERSION
+    )
+      return { headers }
+    const timestamp = Date.now()
+    const version = process.env.SIGNATURE_VERSION
 
-  const payload = `${timestamp}.${canonicalize(formattedRequest)}`
-  const hmac = createHmac('sha256', process.env.SIGNATURE_SECRET)
-  hmac.update(payload)
-  const digest = hmac.digest('hex')
-  return {
-    headers: {
-      ...headers,
-      signature: `t=${timestamp}, v${version}=${digest}`,
-      ['tenant-id']: process.env.OPERATOR_TENANT_ID
+    const { query, variables, operationName } = request
+    const formattedRequest = {
+      variables,
+      operationName,
+      query: print(query)
     }
-  }
-})
 
-const link = ApolloLink.from([errorLink, authLink, httpLink])
+    const payload = `${timestamp}.${canonicalize(formattedRequest)}`
+    const hmac = createHmac(
+      'sha256',
+      options ? options.apiSecret : (process.env.SIGNATURE_SECRET as string)
+    )
+    hmac.update(payload)
+    const digest = hmac.digest('hex')
+    return {
+      headers: {
+        ...headers,
+        signature: `t=${timestamp}, v${version}=${digest}`,
+        ['tenant-id']: options
+          ? options.tenantId
+          : process.env.OPERATOR_TENANT_ID
+      }
+    }
+  })
+}
+
+const link = ApolloLink.from([errorLink, createAuthLink(), httpLink])
 
 export const apolloClient: ApolloClient<NormalizedCacheObject> =
   new ApolloClient({
@@ -92,3 +107,23 @@ export const apolloClient: ApolloClient<NormalizedCacheObject> =
       }
     }
   })
+
+export function generateApolloClient(
+  options?: TenantOptions
+): ApolloClient<NormalizedCacheObject> {
+  return new ApolloClient({
+    cache: new InMemoryCache({}),
+    link: ApolloLink.from([createAuthLink(options), httpLink]),
+    defaultOptions: {
+      query: {
+        fetchPolicy: 'no-cache'
+      },
+      mutate: {
+        fetchPolicy: 'no-cache'
+      },
+      watchQuery: {
+        fetchPolicy: 'no-cache'
+      }
+    }
+  })
+}

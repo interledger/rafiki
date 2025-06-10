@@ -2,9 +2,9 @@ import { v4 } from 'uuid'
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 import createLogger, { LevelWithSilent, LoggerOptions } from 'pino'
 import { generateJwk } from '@interledger/http-signature-utils'
-import { createRequesters } from './requesters'
+import { createRequesters, createTenant } from './requesters'
 import { Config, Account, Peering } from './types'
-import { Asset, FeeType } from './generated/graphql'
+import { Asset, FeeType, Tenant } from './generated/graphql'
 import { AccountProvider } from './account-provider'
 
 interface SetupFromSeedOptions {
@@ -14,10 +14,13 @@ interface SetupFromSeedOptions {
 
 export async function setupFromSeed(
   config: Config,
-  apolloClient: ApolloClient<NormalizedCacheObject>,
+  generateApolloClient: (options?: {
+    tenantId: string
+    apiSecret: string
+  }) => ApolloClient<NormalizedCacheObject>,
   mockAccounts: AccountProvider,
   options: SetupFromSeedOptions = {}
-): Promise<void> {
+): Promise<{ tenantId: string; apiSecret: string } | undefined> {
   const { logLevel = 'info', pinoPretty = false } = options
 
   const loggerOptions: LoggerOptions<never> = {
@@ -28,7 +31,31 @@ export async function setupFromSeed(
     loggerOptions.transport = { target: 'pino-pretty' }
   }
 
+  const apolloClient = generateApolloClient()
+
   const logger = createLogger(loggerOptions)
+
+  let createdTenant: Tenant | undefined
+  let requesterApolloClient: ApolloClient<NormalizedCacheObject> = apolloClient
+  if (config.isTenant) {
+    const seedTenant = config.seed.tenants[0]
+    createdTenant = (
+      await createTenant(
+        apolloClient,
+        seedTenant.publicName,
+        seedTenant.apiSecret,
+        seedTenant.idpConsentUrl,
+        seedTenant.idpSecret,
+        seedTenant.walletAddressPrefix,
+        seedTenant.webhookUrl
+      )
+    ).tenant
+    requesterApolloClient = generateApolloClient({
+      tenantId: createdTenant.id,
+      apiSecret: createdTenant.apiSecret
+    })
+  }
+
   const {
     createAsset,
     depositAssetLiquidity,
@@ -41,7 +68,7 @@ export async function setupFromSeed(
     getAssetByCodeAndScale,
     getWalletAddressByURL,
     getPeerByAddressAndAsset
-  } = createRequesters(apolloClient, logger)
+  } = createRequesters(requesterApolloClient, logger)
 
   const assets: Record<string, Asset> = {}
   for (const { code, scale, liquidity, liquidityThreshold } of config.seed
@@ -68,6 +95,9 @@ export async function setupFromSeed(
 
   const peeringAsset = config.seed.peeringAsset
 
+  const host = config.isTenant
+    ? config.seed.tenants[0].walletAddressPrefix
+    : config.publicHost
   const peerResponses = await Promise.all(
     config.seed.peers.map(async (peer: Peering) => {
       let peerResponse = await getPeerByAddressAndAsset(
@@ -79,9 +109,10 @@ export async function setupFromSeed(
           peer.peerIlpAddress,
           peer.peerUrl,
           assets[peeringAsset].id,
-          assets[peeringAsset].code,
           peer.name,
-          peer.liquidityThreshold
+          peer.liquidityThreshold,
+          peer.tokens.incoming,
+          peer.tokens.outgoing
         ).then((response) => response.peer || null)
       }
       if (!peerResponse) {
@@ -137,9 +168,9 @@ export async function setupFromSeed(
         return
       }
 
-      logger.debug('hostname: ', config.publicHost)
+      logger.debug('hostname: ', host)
 
-      const url = `${config.publicHost}/${account.path}`
+      const url = `${host}/${account.path}`
       let walletAddress = await getWalletAddressByURL(url)
       if (!walletAddress) {
         walletAddress = await createWalletAddress(
@@ -168,9 +199,14 @@ export async function setupFromSeed(
   )
   logger.debug('seed complete')
   logger.debug(accountResponses)
-  const hostname = new URL(config.publicHost).hostname
+
+  const hostname = new URL(host).hostname
   const envVarStrings = config.seed.accounts.map((account) => {
-    return `${account.brunoEnvVar}: ${config.publicHost}/${account.path} hostname: ${hostname}`
+    return `${account.brunoEnvVar}: ${host}/${account.path} hostname: ${hostname}`
   })
   logger.debug(envVarStrings)
+
+  return createdTenant
+    ? { tenantId: createdTenant.id, apiSecret: createdTenant.apiSecret }
+    : undefined
 }

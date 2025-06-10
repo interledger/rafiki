@@ -14,7 +14,9 @@ import type {
   CreateOrUpdatePeerByUrlMutationResponse,
   CreateOrUpdatePeerByUrlInput,
   Peer,
-  Asset
+  Asset,
+  TenantMutationResponse,
+  CreateTenantInput
 } from './generated/graphql'
 import { v4 as uuid } from 'uuid'
 
@@ -31,9 +33,10 @@ export function createRequesters(
     staticIlpAddress: string,
     outgoingEndpoint: string,
     assetId: string,
-    assetCode: string,
     name: string,
-    liquidityThreshold: number
+    liquidityThreshold: number,
+    incomingTokens: string[],
+    outgoingToken: string
   ) => Promise<CreatePeerMutationResponse>
   createAutoPeer: (
     peerUrl: string,
@@ -81,9 +84,10 @@ export function createRequesters(
       staticIlpAddress,
       outgoingEndpoint,
       assetId,
-      assetCode,
       name,
-      liquidityThreshold
+      liquidityThreshold,
+      incomingToken,
+      outgoingToken
     ) =>
       createPeer(
         apolloClient,
@@ -91,9 +95,10 @@ export function createRequesters(
         staticIlpAddress,
         outgoingEndpoint,
         assetId,
-        assetCode,
         name,
-        liquidityThreshold
+        liquidityThreshold,
+        incomingToken,
+        outgoingToken
       ),
     createAutoPeer: (peerUrl, assetId) =>
       createAutoPeer(apolloClient, logger, peerUrl, assetId),
@@ -119,6 +124,55 @@ export function createRequesters(
     getPeerByAddressAndAsset: (staticIlpAddress, assetId) =>
       getPeerByAddressAndAsset(apolloClient, staticIlpAddress, assetId)
   }
+}
+
+export async function createTenant(
+  apolloClient: ApolloClient<NormalizedCacheObject>,
+  publicName: string,
+  apiSecret: string,
+  idpConsentUrl: string,
+  idpSecret: string,
+  walletAddressUrl: string,
+  webhookUrl: string
+): Promise<TenantMutationResponse> {
+  const input: CreateTenantInput = {
+    apiSecret,
+    publicName,
+    idpConsentUrl,
+    idpSecret,
+    settings: [
+      {
+        key: 'WALLET_ADDRESS_URL',
+        value: walletAddressUrl
+      },
+      {
+        key: 'WEBHOOK_URL',
+        value: webhookUrl
+      }
+    ]
+  }
+  const createTenantMutation = gql`
+    mutation CreateTenant($input: CreateTenantInput!) {
+      createTenant(input: $input) {
+        tenant {
+          id
+          apiSecret
+        }
+      }
+    }
+  `
+
+  return apolloClient
+    .mutate({
+      mutation: createTenantMutation,
+      variables: { input }
+    })
+    .then(({ data }): TenantMutationResponse => {
+      if (!data.createTenant.tenant) {
+        throw new Error('Data was empty')
+      }
+      return data.createTenant
+    })
 }
 
 export async function createAsset(
@@ -165,9 +219,10 @@ export async function createPeer(
   staticIlpAddress: string,
   outgoingEndpoint: string,
   assetId: string,
-  assetCode: string,
   name: string,
-  liquidityThreshold: number
+  liquidityThreshold: number,
+  incomingTokens: string[],
+  outgoingToken: string
 ): Promise<CreatePeerMutationResponse> {
   const createPeerMutation = gql`
     mutation CreatePeer($input: CreatePeerInput!) {
@@ -182,8 +237,11 @@ export async function createPeer(
     input: {
       staticIlpAddress,
       http: {
-        incoming: { authTokens: [`test-${assetCode}`] },
-        outgoing: { endpoint: outgoingEndpoint, authToken: `test-${assetCode}` }
+        incoming: { authTokens: incomingTokens },
+        outgoing: {
+          endpoint: outgoingEndpoint,
+          authToken: outgoingToken
+        }
       },
       assetId,
       name,

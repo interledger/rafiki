@@ -1,0 +1,58 @@
+meta {
+  name: Get sender wallet address
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{senderTenantWalletAddress}}
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addHostHeader("senderOpenPaymentsHost");
+}
+
+script:post-response {
+  const url = require('url')
+  
+  if (res.getStatus() !== 200) {
+    return
+  }
+  
+  const body = res.getBody()
+  bru.setEnvVar("senderAssetCode", body?.assetCode)
+  bru.setEnvVar("senderAssetScale", body?.assetScale)
+  
+  const authUrl = url.parse(body?.authServer)
+  if (
+      authUrl.hostname.includes('cloud-nine-wallet') || 
+      authUrl.hostname.includes('happy-life-bank')
+  ){
+      const port = authUrl.hostname.includes('cloud-nine-wallet')? authUrl.port: Number(authUrl.port) + 1000
+      bru.setEnvVar("senderTenantOpenPaymentsAuthHost", authUrl.protocol + '//localhost:' + port + authUrl.path);
+  } else {
+      bru.setEnvVar("senderTenantOpenPaymentsAuthHost", body?.authServer);
+  }
+  
+  const resourceUrl = url.parse(body?.resourceServer)
+  if (resourceUrl.hostname.includes('cloud-nine-wallet') || resourceUrl.hostname.includes('happy-life-bank')) {
+    const port = resourceUrl.hostname.includes('cloud-nine-wallet') ? bru.getEnvVar('senderOpenPaymentsPort') : bru.getEnvVar('receiverOpenPaymentsPort')
+      bru.setEnvVar("senderTenantOpenPaymentsHost", 'http://localhost:' + port + resourceUrl.path);
+  } else {
+      bru.setEnvVar("senderTenantOpenPaymentsHost", body?.resourceServer);
+  }
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
