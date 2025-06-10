@@ -478,11 +478,9 @@ export function initIocContainer(
     })
   })
   container.singleton('streamCredentialsService', async (deps) => {
-    const config = await deps.use('config')
     return await createStreamCredentialsService({
       logger: await deps.use('logger'),
-      openPaymentsUrl: config.openPaymentsUrl,
-      streamServer: await deps.use('streamServer')
+      config: await deps.use('config')
     })
   })
   container.singleton('receiverService', async (deps) => {

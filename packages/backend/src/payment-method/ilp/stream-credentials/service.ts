@@ -1,6 +1,7 @@
 import { StreamServer } from '@interledger/stream-receiver'
 import { BaseService } from '../../../shared/baseService'
 import { StreamCredentials as IlpStreamCredentials } from '@interledger/stream-receiver'
+import { IAppConfig } from '../../../config/app'
 
 export { IlpStreamCredentials }
 
@@ -17,8 +18,7 @@ export interface StreamCredentialsService {
 }
 
 export interface ServiceDependencies extends BaseService {
-  openPaymentsUrl: string
-  streamServer: StreamServer
+  config: IAppConfig
 }
 
 export async function createStreamCredentialsService(
@@ -40,7 +40,12 @@ function getStreamCredentials(
   deps: ServiceDependencies,
   args: GetStreamCredentialsArgs
 ): IlpStreamCredentials | undefined {
-  const credentials = deps.streamServer.generateCredentials({
+  const streamServer = new StreamServer({
+    serverSecret: deps.config.streamSecret,
+    serverAddress: deps.config.ilpAddress
+  })
+
+  const credentials = streamServer.generateCredentials({
     paymentTag: args.paymentTag,
     asset: args.asset
   })
