@@ -8,10 +8,16 @@ import {
 import logger from './logger'
 
 /**
- * The AES Local Master Key for the ILF HSM.
+ * The AES Local Master Key for the Customer ASE HSM.
  */
-const AES_ILF_LMK_HEX =
+const AES_CUSTOMER_ASE_LMK_HEX =
   '00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff'
+
+/**
+ * The AES Local Master Key for the Merchant ASE HSM.
+ */
+const AES_MERCHANT_ASE_LMK_HEX =
+  '01112233445566778899aabbccddeeff00112233445566778899aabbccddeeff'
 /**
  * The AES Local Master Key for the KaiOS HSM.
  */
@@ -607,7 +613,8 @@ function createTR31KeyBlockUnder(
 
 function isKeyUsageForNon3DS(keyUsage: KeyUsage): boolean {
   switch (keyUsage) {
-    case (KeyUsage.DEK, KeyUsage.IPK):
+    case KeyUsage.DEK:
+    case KeyUsage.IPK:
       return true
     default:
       return false
@@ -662,7 +669,8 @@ export {
   importTMK,
   generateCardKey,
   importCardKey,
-  AES_ILF_LMK_HEX,
+  AES_MERCHANT_ASE_LMK_HEX,
+  AES_CUSTOMER_ASE_LMK_HEX,
   AES_KAI_LMK_HEX,
   AES_AUSTRIA_CARD_LMK_HEX,
   KeyUsage,

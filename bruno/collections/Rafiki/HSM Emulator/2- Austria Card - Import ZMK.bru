@@ -1,11 +1,11 @@
 meta {
-  name: HSM KaiOS - Import ZMK
+  name: 2: Austria Card - Import ZMK
   type: http
-  seq: 3
+  seq: 2
 }
 
 post {
-  url: {{hsmEmulatorHost}}/hsm-kai/import-zmk
+  url: {{hsmEmulatorHost}}/hsm/austria-card/import-zmk
   body: json
   auth: none
 }
@@ -26,7 +26,7 @@ body:json {
 script:post-response {
   const body = res.getBody();
   
-  if (body?.tr31Block) bru.setEnvVar("zmk_tr31_lmk_kai", body.tr31Block);
+  if (body?.tr31Block) bru.setEnvVar("zmk_tr31_lmk_austria_card", body.tr31Block);
   
 }
 

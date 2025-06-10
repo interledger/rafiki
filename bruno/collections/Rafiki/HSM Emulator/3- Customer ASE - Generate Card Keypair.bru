@@ -1,11 +1,11 @@
 meta {
-  name: HSM ILF - Generate Card Keypair
+  name: 3: Customer ASE - Generate Card Keypair
   type: http
-  seq: 8
+  seq: 3
 }
 
 post {
-  url: {{hsmEmulatorHost}}/hsm-ilf/generate-card-key
+  url: {{hsmEmulatorHost}}/hsm/ase-customer/generate-card-key
   body: json
   auth: none
 }
