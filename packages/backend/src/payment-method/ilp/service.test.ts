@@ -11,7 +11,7 @@ import { withConfigOverride } from '../../tests/helpers'
 import { StartQuoteOptions } from '../handler/service'
 import { WalletAddress } from '../../open_payments/wallet_address/model'
 import * as Pay from '@interledger/pay'
-import { Ratio, Int, PaymentType } from '@interledger/pay'
+import { Ratio, Int, PaymentType, PositiveInt } from '@interledger/pay'
 import assert from 'assert'
 
 import { createReceiver } from '../../tests/receiver'
@@ -437,13 +437,15 @@ describe('IlpPaymentService', (): void => {
         })
       }
 
+      const highEstimatedExchangeRate = Pay.Ratio.from(0.034)
+
       jest.spyOn(Pay, 'startQuote').mockResolvedValueOnce({
         maxSourceAmount: 1n,
         minDeliveryAmount: -1n,
-        highEstimatedExchangeRate: Pay.Ratio.from(0.034)
+        highEstimatedExchangeRate
       } as unknown as Pay.Quote)
 
-      expect.assertions(5)
+      expect.assertions(6)
       try {
         await ilpPaymentService.getQuote(options)
       } catch (error) {
@@ -458,6 +460,9 @@ describe('IlpPaymentService', (): void => {
         expect((error as PaymentMethodHandlerError).code).toBe(
           PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount
         )
+        expect((error as PaymentMethodHandlerError).details).toMatchObject({
+          minSendAmount: 30n
+        })
       }
 
       ratesScope.done()
