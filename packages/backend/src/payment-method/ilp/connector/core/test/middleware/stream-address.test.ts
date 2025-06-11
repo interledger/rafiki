@@ -2,6 +2,7 @@ import { createILPContext } from '../../utils'
 import { ZeroCopyIlpPrepare } from '../..'
 import { IlpPrepareFactory, RafikiServicesFactory } from '../../factories'
 import { createStreamAddressMiddleware } from '../../middleware/stream-address'
+import { StreamServer } from '@interledger/stream-receiver'
 
 describe('Stream Address Middleware', function () {
   const services = RafikiServicesFactory.build()
@@ -20,12 +21,21 @@ describe('Stream Address Middleware', function () {
   })
 
   test('sets "state.streamDestination" of stream packets', async () => {
+    const streamServer = new StreamServer({
+      serverAddress: ctx.services.config.ilpAddress,
+      serverSecret: ctx.services.config.streamSecret
+    })
+
     const prepare = IlpPrepareFactory.build({
-      destination: services.streamServer.generateCredentials({
+      destination: streamServer.generateCredentials({
         paymentTag: 'bob'
       }).ilpAddress
     })
+
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
+    ctx.state.incomingAccount = {
+      tenantId: ctx.services.config.operatorTenantId
+    }
     const next = jest.fn()
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()

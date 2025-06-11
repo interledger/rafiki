@@ -12,18 +12,18 @@ export function createStreamController(): ILPMiddleware {
     ctx: ILPContext,
     next: () => Promise<void>
   ): Promise<void> {
-    const { logger, redis, streamServer } = ctx.services
+    const { logger, redis } = ctx.services
     const { request, response } = ctx
 
     if (
       ctx.accounts.outgoing.http ||
-      !streamServer.decodePaymentTag(request.prepare.destination) // XXX mark this earlier in the middleware pipeline
+      !ctx.state.streamDestination // XXX mark this earlier in the middleware pipeline
     ) {
       await next()
       return
     }
 
-    const moneyOrReply = streamServer.createReply(request.prepare)
+    const moneyOrReply = ctx.state.streamServer.createReply(request.prepare)
     if (isIlpReply(moneyOrReply)) {
       response.reply = moneyOrReply
       return

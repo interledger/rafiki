@@ -523,15 +523,16 @@ export function initIocContainer(
     const config = await deps.use('config')
     return await createConnectorService({
       logger: await deps.use('logger'),
+      config: await deps.use('config'),
       redis: await deps.use('redis'),
       accountingService: await deps.use('accountingService'),
       walletAddressService: await deps.use('walletAddressService'),
       incomingPaymentService: await deps.use('incomingPaymentService'),
       peerService: await deps.use('peerService'),
       ratesService: await deps.use('ratesService'),
-      streamServer: await deps.use('streamServer'),
       ilpAddress: config.ilpAddress,
-      telemetry: await deps.use('telemetry')
+      telemetry: await deps.use('telemetry'),
+      tenantSettingService: await deps.use('tenantSettingService')
     })
   })
 

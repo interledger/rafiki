@@ -22,6 +22,7 @@ import { BaseService } from '../../../shared/baseService'
 import { isValidHttpUrl } from '../../../shared/utils'
 import { v4 as uuid } from 'uuid'
 import { TransferError } from '../../../accounting/errors'
+import PrefixMap from '../connector/ilp-routing/lib/prefix-map'
 
 export interface HttpOptions {
   incoming?: {
@@ -373,12 +374,26 @@ async function getPeerByDestinationAddress(
     peerQuery.andWhere('tenantId', tenantId)
   }
 
-  const peer = await peerQuery.first()
+  const peers = await peerQuery
+  const peer = getByLongestPrefixMatch(peers, destinationAddress)
+
   if (peer) {
     const asset = await deps.assetService.get(peer.assetId)
     if (asset) peer.asset = asset
   }
   return peer || undefined
+}
+
+function getByLongestPrefixMatch(
+  peers: Peer[],
+  destinationAddress: string
+): Peer | undefined {
+  const map = new PrefixMap<Peer>()
+  for (const peer of peers) {
+    map.insert(peer.staticIlpAddress, peer)
+  }
+
+  return map.resolve(destinationAddress)
 }
 
 async function getPeerByIncomingToken(
