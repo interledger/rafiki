@@ -140,6 +140,9 @@ async function createApprovedGrant(
     await trx.commit()
   } catch (err) {
     await trx.rollback()
+    if (typeof err === 'string') {
+      throw new GNAPServerRouteError(400, GNAPErrorCode.InvalidRequest, err)
+    }
     throw new GNAPServerRouteError(
       500,
       GNAPErrorCode.RequestDenied,
@@ -211,6 +214,9 @@ async function createPendingGrant(
     )
   } catch (err) {
     await trx.rollback()
+    if (typeof err === 'string') {
+      throw new GNAPServerRouteError(400, GNAPErrorCode.InvalidRequest, err)
+    }
     throw new GNAPServerRouteError(
       500,
       GNAPErrorCode.RequestDenied,

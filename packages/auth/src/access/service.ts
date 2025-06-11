@@ -2,7 +2,7 @@ import { Transaction, TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../shared/baseService'
 import { Access } from './model'
-import { AccessRequest } from './types'
+import { AccessError, AccessRequest } from './types'
 
 export interface AccessService {
   createAccess(
@@ -67,12 +67,11 @@ async function getByGrant(
 }
 
 function validateLimits(accessRequests: AccessRequest[]) {
-  const areBothLimitsSet =
-    accessRequests.findIndex(
-      (access) => access.limits?.debitAmount && access.limits.receiveAmount
-    ) !== -1
+  const areBothLimitsSet = accessRequests.some(
+    (access) => access.limits?.debitAmount && access.limits.receiveAmount
+  )
 
   if (areBothLimitsSet) {
-    throw new Error('Only one of receiveAmount or debitAmount allowed')
+    throw AccessError.OnlyOneAccessAmountAllowed
   }
 }

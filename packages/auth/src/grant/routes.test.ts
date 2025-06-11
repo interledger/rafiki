@@ -434,6 +434,74 @@ describe('Grant Routes', (): void => {
           message: "missing required request field 'client'"
         })
       })
+
+      test('Fails to create a grant with at least one access having both receiveAmount and debitAmount as limits', async (): Promise<void> => {
+        const scope = nock(CLIENT)
+          .get('/')
+          .reply(200, {
+            id: CLIENT,
+            publicName: TEST_CLIENT_DISPLAY.name,
+            assetCode: 'USD',
+            assetScale: 2,
+            authServer: Config.authServerUrl,
+            resourceServer: faker.internet.url({ appendSlash: false })
+          })
+
+        const ctx = createContext<CreateContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            },
+            url,
+            method
+          },
+          {}
+        )
+        ctx.request.body = {
+          access_token: {
+            access: [
+              {
+                type: 'outgoing-payment',
+                actions: [
+                  AccessAction.Create,
+                  AccessAction.Read,
+                  AccessAction.List
+                ],
+                identifier: `https://example.com/${v4()}`,
+                limits: {
+                  receiver: '',
+                  debitAmount: {
+                    value: '1000',
+                    assetCode: 'USD',
+                    assetScale: 1
+                  },
+                  receiveAmount: {
+                    value: '1000',
+                    assetCode: 'USD',
+                    assetScale: 1
+                  }
+                }
+              }
+            ]
+          },
+          client: CLIENT,
+          interact: {
+            start: [StartMethod.Redirect],
+            finish: {
+              method: FinishMethod.Redirect,
+              uri: 'https://example.com/finish',
+              nonce: generateNonce()
+            }
+          }
+        }
+        await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
+          status: 400,
+          code: GNAPErrorCode.InvalidRequest,
+          message: 'only one of receiveAmount or debitAmount allowed'
+        })
+        scope.done()
+      })
     })
 
     describe('/continue', (): void => {
