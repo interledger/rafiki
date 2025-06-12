@@ -24,6 +24,7 @@ import { AccessToken } from '../accessToken/model'
 import { Interaction, InteractionState } from '../interaction/model'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { getPageTests } from '../shared/baseModel.test'
+import { isGrantError } from './errors'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -127,6 +128,7 @@ describe('Grant Service', (): void => {
         }
 
         const grant = await grantService.create(grantRequest)
+        assert.ok(!isGrantError(grant))
 
         expect(grant).toMatchObject({
           state: GrantState.Approved,
@@ -171,6 +173,7 @@ describe('Grant Service', (): void => {
           }
 
           const grant = await grantService.create(grantRequest)
+          assert.ok(!isGrantError(grant))
 
           expect(grant).toMatchObject({
             state: expectedState,
@@ -267,12 +270,18 @@ describe('Grant Service', (): void => {
         }
 
         const grant1 = await grantService.create(grantRequest)
+        assert.ok(!isGrantError(grant1))
+
         await grant1
           .$query()
           .patch({ finalizationReason: GrantFinalization.Issued })
 
         const grant2 = await grantService.create(grantRequest)
+        assert.ok(!isGrantError(grant2))
+
         const grant3 = await grantService.create(grantRequest)
+        assert.ok(!isGrantError(grant3))
+
         await grant3
           .$query()
           .patch({ finalizationReason: GrantFinalization.Revoked })
@@ -387,6 +396,7 @@ describe('Grant Service', (): void => {
         }
 
         const grant = await grantService.create(grantRequest)
+        assert.ok(!isGrantError(grant))
 
         const timeoutMs = 50
 

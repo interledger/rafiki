@@ -340,24 +340,39 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
       (!ctx.price || !ctx.costToUser)
     ) {
       if (
-        ctx.outgoingPaymentAccess.limits &&
-        ctx.outgoingPaymentAccess.limits.debitAmount &&
+        ctx.outgoingPaymentAccess.limits?.debitAmount &&
         ctx.outgoingPaymentAccess.limits.receiveAmount
+      ) {
+        setCtx({
+          ...ctx,
+          errors: [
+            new Error('only one of receiveAmount or debitAmount allowed')
+          ]
+        })
+      } else if (
+        ctx.outgoingPaymentAccess.limits &&
+        (ctx.outgoingPaymentAccess.limits?.debitAmount ||
+          ctx.outgoingPaymentAccess.limits?.receiveAmount)
       ) {
         const { receiveAmount, debitAmount } = ctx.outgoingPaymentAccess.limits
         setCtx({
           ...ctx,
-          price: {
-            amount:
-              Number(receiveAmount.value) /
-              Math.pow(10, receiveAmount.assetScale),
-            currencyDisplayCode: receiveAmount.assetCode
-          },
-          costToUser: {
-            amount:
-              Number(debitAmount.value) / Math.pow(10, debitAmount.assetScale),
-            currencyDisplayCode: debitAmount.assetCode
-          }
+          ...(receiveAmount && {
+            price: {
+              amount:
+                Number(receiveAmount.value) /
+                Math.pow(10, receiveAmount.assetScale),
+              currencyDisplayCode: receiveAmount.assetCode
+            }
+          }),
+          ...(debitAmount && {
+            costToUser: {
+              amount:
+                Number(debitAmount.value) /
+                Math.pow(10, debitAmount.assetScale),
+              currencyDisplayCode: debitAmount.assetCode
+            }
+          })
         })
       } else {
         setCtx({
