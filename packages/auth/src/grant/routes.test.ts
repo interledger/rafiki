@@ -35,8 +35,8 @@ import { withConfigOverride } from '../tests/helpers'
 import { AccessAction, AccessType } from '@interledger/open-payments'
 import { generateBaseGrant } from '../tests/grant'
 import { generateBaseInteraction } from '../tests/interaction'
-import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
-import { GrantError, isGrantError } from './errors'
+import { GNAPErrorCode } from '../shared/gnapErrors'
+import { GrantError } from './errors'
 
 export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',

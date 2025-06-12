@@ -134,15 +134,7 @@ async function createApprovedGrant(
   const { body } = ctx.request
   const { grantService, config, logger } = deps
   const trx = await Grant.startTransaction()
-  const grantOrError: Grant | GrantError = await grantService.create(body, trx)
-  if (isGrantError(grantOrError)) {
-    throw new GNAPServerRouteError(
-      400,
-      GNAPErrorCode.InvalidRequest,
-      grantOrError
-    )
-  }
-  const grant = grantOrError
+  const grant = await createGrantOrThrowError(grantService, body, trx)
   let accessToken: AccessToken
   try {
     accessToken = await deps.accessTokenService.create(grant.id, trx)
@@ -199,16 +191,7 @@ async function createPendingGrant(
 
   const trx = await Grant.startTransaction()
 
-  // const grant = await createGrantOrThrowError(grantService, body, trx)
-  const grantOrError: Grant | GrantError = await grantService.create(body, trx)
-  if (isGrantError(grantOrError)) {
-    throw new GNAPServerRouteError(
-      400,
-      GNAPErrorCode.InvalidRequest,
-      grantOrError
-    )
-  }
-  const grant = grantOrError
+  const grant = await createGrantOrThrowError(grantService, body, trx)
   try {
     const interaction = await interactionService.create(grant.id, trx)
     await trx.commit()
@@ -241,7 +224,17 @@ async function createGrantOrThrowError(
   grantService: GrantService,
   body: GrantRequestBody,
   trx: Objection.Transaction
-) {}
+) {
+  const grantOrError: Grant | GrantError = await grantService.create(body, trx)
+  if (isGrantError(grantOrError)) {
+    throw new GNAPServerRouteError(
+      400,
+      GNAPErrorCode.InvalidRequest,
+      grantOrError
+    )
+  }
+  return grantOrError
+}
 
 function isMatchingContinueRequest(
   reqContinueId: string,
