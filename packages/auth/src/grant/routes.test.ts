@@ -35,7 +35,8 @@ import { withConfigOverride } from '../tests/helpers'
 import { AccessAction, AccessType } from '@interledger/open-payments'
 import { generateBaseGrant } from '../tests/grant'
 import { generateBaseInteraction } from '../tests/interaction'
-import { GNAPErrorCode } from '../shared/gnapErrors'
+import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
+import { GrantError, isGrantError } from './errors'
 
 export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
@@ -498,7 +499,7 @@ describe('Grant Routes', (): void => {
         await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
           status: 400,
           code: GNAPErrorCode.InvalidRequest,
-          message: 'only one of receiveAmount or debitAmount allowed'
+          message: GrantError.OnlyOneAccessAmountAllowed
         })
         scope.done()
       })

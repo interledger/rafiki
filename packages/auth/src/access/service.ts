@@ -2,7 +2,8 @@ import { Transaction, TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../shared/baseService'
 import { Access } from './model'
-import { AccessError, AccessRequest } from './types'
+import { AccessRequest } from './types'
+import { AccessError } from './errors'
 
 export interface AccessService {
   createAccess(

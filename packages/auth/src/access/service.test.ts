@@ -10,11 +10,8 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { AccessService } from './service'
 import { Grant, GrantState, StartMethod, FinishMethod } from '../grant/model'
-import {
-  AccessError,
-  IncomingPaymentRequest,
-  OutgoingPaymentRequest
-} from './types'
+import { IncomingPaymentRequest, OutgoingPaymentRequest } from './types'
+import { AccessError } from './errors'
 import { generateNonce, generateToken } from '../shared/utils'
 import { AccessType, AccessAction } from '@interledger/open-payments'
 import { Access } from './model'

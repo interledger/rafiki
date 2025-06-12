@@ -70,7 +70,3 @@ export type OutgoingPaymentLimit = {
 }
 
 export type LimitData = OutgoingPaymentLimit
-
-export enum AccessError {
-  OnlyOneAccessAmountAllowed = 'only one of receiveAmount or debitAmount allowed'
-}
