@@ -227,6 +227,7 @@ async function createGrantOrThrowError(
 ) {
   const grantOrError: Grant | GrantError = await grantService.create(body, trx)
   if (isGrantError(grantOrError)) {
+    await trx.rollback()
     throw new GNAPServerRouteError(
       400,
       GNAPErrorCode.InvalidRequest,

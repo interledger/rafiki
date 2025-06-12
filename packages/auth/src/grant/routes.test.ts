@@ -460,6 +460,7 @@ describe('Grant Routes', (): void => {
           {}
         )
         ctx.request.body = {
+          ...BASE_GRANT_REQUEST,
           access_token: {
             access: [
               {
@@ -485,15 +486,6 @@ describe('Grant Routes', (): void => {
                 }
               }
             ]
-          },
-          client: CLIENT,
-          interact: {
-            start: [StartMethod.Redirect],
-            finish: {
-              method: FinishMethod.Redirect,
-              uri: 'https://example.com/finish',
-              nonce: generateNonce()
-            }
           }
         }
         await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
