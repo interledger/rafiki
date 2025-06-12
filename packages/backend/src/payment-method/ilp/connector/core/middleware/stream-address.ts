@@ -16,7 +16,6 @@ export function createStreamAddressMiddleware(): ILPMiddleware {
       serverAddress: await getIlpAddressForTenant(ctx)
     })
 
-    // To preserve sender privacy, the accountId wasn't included in the original destination address.
     ctx.state.streamDestination = ctx.state.streamServer.decodePaymentTag(
       ctx.request.prepare.destination
     )
@@ -26,7 +25,7 @@ export function createStreamAddressMiddleware(): ILPMiddleware {
   }
 }
 
-async function getIlpAddressForTenant(ctx: ILPContext): Promise<string> {
+export async function getIlpAddressForTenant(ctx: ILPContext): Promise<string> {
   const tenantId = ctx.state.incomingAccount?.tenantId
 
   if (tenantId === ctx.services.config.operatorTenantId) {
