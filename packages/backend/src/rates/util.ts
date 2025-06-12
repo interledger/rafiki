@@ -28,7 +28,7 @@ export function convertSource(opts: ConvertSourceOptions): ConvertResults {
   const scaledExchangeRate = opts.exchangeRate * 10 ** scaleDiff
 
   return {
-    amount: BigInt(Math.round(Number(opts.sourceAmount) * scaledExchangeRate)),
+    amount: BigInt(Math.floor(Number(opts.sourceAmount) * scaledExchangeRate)),
     scaledExchangeRate
   }
 }
