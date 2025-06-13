@@ -1,0 +1,29 @@
+meta {
+  name: Get Outgoing Payment
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{senderTenantOpenPaymentsHost}}/outgoing-payments/{{outgoingPaymentId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: GNAP {{accessToken}}
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addHostHeader();
+  
+  await scripts.addSignatureHeaders();
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

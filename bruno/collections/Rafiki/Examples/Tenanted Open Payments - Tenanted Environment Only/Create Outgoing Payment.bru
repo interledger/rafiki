@@ -1,0 +1,48 @@
+meta {
+  name: Create Outgoing Payment
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{senderTenantOpenPaymentsHost}}/outgoing-payments
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: GNAP {{accessToken}}
+}
+
+body:json {
+  {
+      "walletAddress": "{{senderTenantWalletAddress}}",
+      "quoteId": "{{senderTenantWalletAddress}}/quotes/{{quoteId}}",
+      "metadata": {
+          "description": "Free Money!"
+      }
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addHostHeader();
+  
+  await scripts.addSignatureHeaders();
+}
+
+script:post-response {
+  const body = res.getBody();
+  
+  if (body?.id) {
+    bru.setEnvVar("outgoingPaymentId", body.id.split("/").pop());
+  }
+  
+}
+
+tests {
+  test("Status code is 201", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+}

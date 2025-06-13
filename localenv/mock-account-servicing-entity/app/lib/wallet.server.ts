@@ -2,6 +2,7 @@ import { generateJwk, generateKey } from '@interledger/http-signature-utils'
 import { mockAccounts } from './accounts.server'
 import { createWalletAddressKey, createWalletAddress } from './requesters'
 import { getOpenPaymentsUrl } from './utils'
+import { TenantOptions } from './types'
 
 export type CreateWalletParams = {
   path: string
@@ -10,22 +11,21 @@ export type CreateWalletParams = {
   accountId: string
 }
 
-export async function createWallet({
-  name,
-  path,
-  assetId,
-  accountId
-}: CreateWalletParams): Promise<void> {
+export async function createWallet(
+  { name, path, assetId, accountId }: CreateWalletParams,
+  options?: TenantOptions
+): Promise<void> {
   const walletAddress = await createWalletAddress(
     name,
-    `${getOpenPaymentsUrl()}/${path}`,
-    assetId
+    `${options?.walletAddressPrefix ?? getOpenPaymentsUrl()}/${path}`,
+    assetId,
+    options
   )
 
   await mockAccounts.setWalletAddress(
     accountId,
     walletAddress.id,
-    walletAddress.url
+    walletAddress.address
   )
 
   await createWalletAddressKey({
@@ -33,6 +33,7 @@ export async function createWallet({
     jwk: generateJwk({
       keyId: `keyid-${accountId}`,
       privateKey: generateKey()
-    }) as unknown as string
+    }) as unknown as string,
+    options
   })
 }

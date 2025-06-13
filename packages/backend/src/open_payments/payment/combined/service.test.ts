@@ -4,7 +4,6 @@ import { TestContainer, createTestApp } from '../../../tests/app'
 import { initIocContainer } from '../../..'
 import { Config, IAppConfig } from '../../../config/app'
 import { CombinedPaymentService } from './service'
-import { Knex } from 'knex'
 import { truncateTables } from '../../../tests/tableManager'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
@@ -26,8 +25,8 @@ describe('Combined Payment Service', (): void => {
   let deps: IocContract<AppServices>
   let config: IAppConfig
   let appContainer: TestContainer
-  let knex: Knex
   let combinedPaymentService: CombinedPaymentService
+  let tenantId: string
   let sendAsset: Asset
   let sendWalletAddressId: string
   let receiveAsset: Asset
@@ -37,23 +36,27 @@ describe('Combined Payment Service', (): void => {
     deps = await initIocContainer(Config)
     config = await deps.use('config')
     appContainer = await createTestApp(deps)
-    knex = appContainer.knex
     combinedPaymentService = await deps.use('combinedPaymentService')
+    tenantId = Config.operatorTenantId
   })
 
   beforeEach(async (): Promise<void> => {
     sendAsset = await createAsset(deps)
     receiveAsset = await createAsset(deps)
     sendWalletAddressId = (
-      await createWalletAddress(deps, { assetId: sendAsset.id })
+      await createWalletAddress(deps, {
+        tenantId: sendAsset.tenantId,
+        assetId: sendAsset.id
+      })
     ).id
     receiveWalletAddress = await createWalletAddress(deps, {
+      tenantId: sendAsset.tenantId,
       assetId: receiveAsset.id
     })
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -62,11 +65,13 @@ describe('Combined Payment Service', (): void => {
 
   async function setupPayments(deps: IocContract<AppServices>) {
     const incomingPayment = await createIncomingPayment(deps, {
-      walletAddressId: receiveWalletAddress.id
+      walletAddressId: receiveWalletAddress.id,
+      tenantId: Config.operatorTenantId
     })
     const receiverUrl = incomingPayment.getUrl(config.openPaymentsUrl)
 
     const outgoingPayment = await createOutgoingPayment(deps, {
+      tenantId,
       walletAddressId: sendWalletAddressId,
       method: 'ilp',
       receiver: receiverUrl,

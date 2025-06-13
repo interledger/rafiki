@@ -8,7 +8,7 @@ import {
   MutationResolvers,
   WalletAddressStatus
 } from '../generated/graphql'
-import { ApolloContext } from '../../app'
+import { ForTenantIdContext, TenantedApolloContext } from '../../app'
 import {
   WalletAddressError,
   isWalletAddressError,
@@ -23,19 +23,22 @@ import {
   CreateOptions,
   UpdateOptions
 } from '../../open_payments/wallet_address/service'
+import { GraphQLErrorCode } from '../errors'
 
-export const getWalletAddresses: QueryResolvers<ApolloContext>['walletAddresses'] =
+export const getWalletAddresses: QueryResolvers<TenantedApolloContext>['walletAddresses'] =
   async (
     parent,
     args,
     ctx
   ): Promise<ResolversTypes['WalletAddressesConnection']> => {
     const walletAddressService = await ctx.container.use('walletAddressService')
-    const { sortOrder, ...pagination } = args
+    const { tenantId, sortOrder, ...pagination } = args
     const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+
     const walletAddresses = await walletAddressService.getPage(
       pagination,
-      order
+      order,
+      ctx.isOperator ? tenantId : ctx.tenant.id
     )
     const pageInfo = await getPageInfo({
       getPage: (pagination: Pagination, sortOrder?: SortOrder) =>
@@ -52,10 +55,13 @@ export const getWalletAddresses: QueryResolvers<ApolloContext>['walletAddresses'
     }
   }
 
-export const getWalletAddress: QueryResolvers<ApolloContext>['walletAddress'] =
+export const getWalletAddress: QueryResolvers<TenantedApolloContext>['walletAddress'] =
   async (parent, args, ctx): Promise<ResolversTypes['WalletAddress']> => {
     const walletAddressService = await ctx.container.use('walletAddressService')
-    const walletAddress = await walletAddressService.get(args.id)
+    const walletAddress = await walletAddressService.get(
+      args.id,
+      ctx.isOperator ? undefined : ctx.tenant.id
+    )
     if (!walletAddress) {
       throw new GraphQLError(
         errorToMessage[WalletAddressError.UnknownWalletAddress],
@@ -69,18 +75,21 @@ export const getWalletAddress: QueryResolvers<ApolloContext>['walletAddress'] =
     return walletAddressToGraphql(walletAddress)
   }
 
-export const getWalletAddressByUrl: QueryResolvers<ApolloContext>['walletAddressByUrl'] =
+export const getWalletAddressByUrl: QueryResolvers<TenantedApolloContext>['walletAddressByUrl'] =
   async (
     parent,
     args,
     ctx
   ): Promise<ResolversTypes['WalletAddress'] | null> => {
     const walletAddressService = await ctx.container.use('walletAddressService')
-    const walletAddress = await walletAddressService.getByUrl(args.url)
+    const walletAddress = await walletAddressService.getByUrl(
+      args.url,
+      ctx.isOperator ? undefined : ctx.tenant.id
+    )
     return walletAddress ? walletAddressToGraphql(walletAddress) : null
   }
 
-export const createWalletAddress: MutationResolvers<ApolloContext>['createWalletAddress'] =
+export const createWalletAddress: MutationResolvers<ForTenantIdContext>['createWalletAddress'] =
   async (
     parent,
     args,
@@ -97,11 +106,25 @@ export const createWalletAddress: MutationResolvers<ApolloContext>['createWallet
         addProps.push(toAdd)
       })
 
+    const tenantId = ctx.forTenantId
+
+    if (!tenantId)
+      throw new GraphQLError(
+        `Assignment to the specified tenant is not permitted`,
+        {
+          extensions: {
+            code: GraphQLErrorCode.BadUserInput
+          }
+        }
+      )
+
     const options: CreateOptions = {
       assetId: args.input.assetId,
+      tenantId,
       additionalProperties: addProps,
       publicName: args.input.publicName,
-      url: args.input.url
+      address: args.input.address,
+      isOperator: ctx.isOperator
     }
 
     const walletAddressOrError = await walletAddressService.create(options)
@@ -117,7 +140,7 @@ export const createWalletAddress: MutationResolvers<ApolloContext>['createWallet
     }
   }
 
-export const updateWalletAddress: MutationResolvers<ApolloContext>['updateWalletAddress'] =
+export const updateWalletAddress: MutationResolvers<ForTenantIdContext>['updateWalletAddress'] =
   async (
     parent,
     args,
@@ -125,9 +148,23 @@ export const updateWalletAddress: MutationResolvers<ApolloContext>['updateWallet
   ): Promise<ResolversTypes['UpdateWalletAddressMutationResponse']> => {
     const walletAddressService = await ctx.container.use('walletAddressService')
     const { additionalProperties, ...rest } = args.input
+
     const updateOptions: UpdateOptions = {
       ...rest
     }
+
+    const existing = await walletAddressService.get(
+      updateOptions.id,
+      ctx.forTenantId
+    )
+    if (!existing) {
+      throw new GraphQLError(`Unknown wallet address`, {
+        extensions: {
+          code: GraphQLErrorCode.NotFound
+        }
+      })
+    }
+
     if (additionalProperties) {
       updateOptions.additionalProperties = additionalProperties.map(
         (property) => {
@@ -153,7 +190,7 @@ export const updateWalletAddress: MutationResolvers<ApolloContext>['updateWallet
     }
   }
 
-export const triggerWalletAddressEvents: MutationResolvers<ApolloContext>['triggerWalletAddressEvents'] =
+export const triggerWalletAddressEvents: MutationResolvers<TenantedApolloContext>['triggerWalletAddressEvents'] =
   async (
     parent,
     args,
@@ -166,15 +203,18 @@ export const triggerWalletAddressEvents: MutationResolvers<ApolloContext>['trigg
     }
   }
 
-export const walletAddressToGraphql = (
+export function walletAddressToGraphql(
   walletAddress: WalletAddress
-): SchemaWalletAddress => ({
-  id: walletAddress.id,
-  url: walletAddress.url,
-  asset: assetToGraphql(walletAddress.asset),
-  publicName: walletAddress.publicName ?? undefined,
-  createdAt: new Date(+walletAddress.createdAt).toISOString(),
-  status: walletAddress.isActive
-    ? WalletAddressStatus.Active
-    : WalletAddressStatus.Inactive
-})
+): SchemaWalletAddress {
+  return {
+    id: walletAddress.id,
+    address: walletAddress.address,
+    asset: assetToGraphql(walletAddress.asset),
+    publicName: walletAddress.publicName ?? undefined,
+    createdAt: new Date(+walletAddress.createdAt).toISOString(),
+    status: walletAddress.isActive
+      ? WalletAddressStatus.Active
+      : WalletAddressStatus.Inactive,
+    tenantId: walletAddress.tenantId
+  }
+}

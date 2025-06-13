@@ -34,7 +34,7 @@ describe('Payment', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -50,11 +50,13 @@ describe('Payment', (): void => {
 
   test('Can get payments', async (): Promise<void> => {
     const { id: outWalletAddressId } = await createWalletAddress(deps, {
+      tenantId: Config.operatorTenantId,
       assetId: asset.id
     })
 
     const client = 'client-test'
     const outgoingPayment = await createOutgoingPayment(deps, {
+      tenantId: Config.operatorTenantId,
       walletAddressId: outWalletAddressId,
       client: client,
       method: 'ilp',
@@ -68,11 +70,13 @@ describe('Payment', (): void => {
     })
 
     const { id: inWalletAddressId } = await createWalletAddress(deps, {
+      tenantId: Config.operatorTenantId,
       assetId: asset.id
     })
     const incomingPayment = await createIncomingPayment(deps, {
       walletAddressId: inWalletAddressId,
-      client: client
+      client: client,
+      tenantId: Config.operatorTenantId
     })
 
     const query = await appContainer.apolloClient
@@ -146,6 +150,7 @@ describe('Payment', (): void => {
 
   test('Can filter payments by type and wallet address', async (): Promise<void> => {
     const { id: outWalletAddressId } = await createWalletAddress(deps, {
+      tenantId: Config.operatorTenantId,
       assetId: asset.id
     })
 
@@ -161,6 +166,7 @@ describe('Payment', (): void => {
 
     const client = 'client-test-type-wallet-address'
     const outgoingPayment = await createOutgoingPayment(deps, {
+      tenantId: Config.operatorTenantId,
       walletAddressId: outWalletAddressId,
       client: client,
       method: 'ilp',
@@ -168,9 +174,11 @@ describe('Payment', (): void => {
     })
 
     const { id: outWalletAddressId2 } = await createWalletAddress(deps, {
+      tenantId: Config.operatorTenantId,
       assetId: asset.id
     })
     await createOutgoingPayment(deps, {
+      tenantId: Config.operatorTenantId,
       walletAddressId: outWalletAddressId2,
       client: client,
       method: 'ilp',

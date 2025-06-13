@@ -1,4 +1,3 @@
-import { StreamServer } from '@interledger/stream-receiver'
 import { Redis } from 'ioredis'
 
 import { AccountingService } from '../../../accounting/service'
@@ -28,30 +27,34 @@ import {
   createStreamController
 } from './core'
 import { TelemetryService } from '../../../telemetry/service'
+import { TenantSettingService } from '../../../tenants/settings/service'
+import { IAppConfig } from '../../../config/app'
 
 interface ServiceDependencies extends BaseService {
+  config: IAppConfig
   redis: Redis
   ratesService: RatesService
   accountingService: AccountingService
   walletAddressService: WalletAddressService
   incomingPaymentService: IncomingPaymentService
   peerService: PeerService
-  streamServer: StreamServer
   ilpAddress: string
   telemetry: TelemetryService
+  tenantSettingService: TenantSettingService
 }
 
 export async function createConnectorService({
   logger,
+  config,
   redis,
   ratesService,
   accountingService,
   walletAddressService,
   incomingPaymentService,
   peerService,
-  streamServer,
   ilpAddress,
-  telemetry
+  telemetry,
+  tenantSettingService
 }: ServiceDependencies): Promise<Rafiki> {
   return createApp(
     {
@@ -59,20 +62,21 @@ export async function createConnectorService({
       logger: logger.child({
         service: 'ConnectorService'
       }),
+      config,
       accounting: accountingService,
       walletAddresses: walletAddressService,
       incomingPayments: incomingPaymentService,
       peers: peerService,
       redis,
       rates: ratesService,
-      streamServer,
-      telemetry
+      telemetry,
+      tenantSettingService
     },
     compose([
       // Incoming Rules
       createIncomingErrorHandlerMiddleware(ilpAddress),
       createStreamAddressMiddleware(),
-      createAccountMiddleware(ilpAddress),
+      createAccountMiddleware(),
       createIncomingMaxPacketAmountMiddleware(),
       createIncomingRateLimitMiddleware({}),
       createIncomingThroughputMiddleware(),

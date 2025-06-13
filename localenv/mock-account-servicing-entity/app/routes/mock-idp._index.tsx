@@ -31,7 +31,10 @@ interface GrantAmount {
 }
 
 export function loader() {
-  return json({ defaultIdpSecret: CONFIG.idpSecret })
+  return json({
+    defaultIdpSecret: CONFIG.idpSecret,
+    isTenant: process.env.IS_TENANT === 'true'
+  })
 }
 
 function ConsentScreenBody({
@@ -207,13 +210,14 @@ type ConsentScreenProps = {
 
 // In production, ensure that secrets are handled securely and are not exposed to the client-side code.
 export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
+  const { defaultIdpSecret, isTenant } = useLoaderData<typeof loader>()
   const [ctx, setCtx] = useState({
     ready: false,
     thirdPartyName: '',
     thirdPartyUri: '',
     interactId: 'demo-interact-id',
     nonce: 'demo-interact-nonce',
-    returnUrl: 'http://localhost:3030/mock-idp/consent?',
+    returnUrl: `http://localhost:${isTenant ? 5030 : 3030}/mock-idp/consent?`,
     //TODO returnUrl: 'http://localhost:3030/mock-idp/consent?interactid=demo-interact-id&nonce=demo-interact-nonce',
     accesses: null,
     outgoingPaymentAccess: null,
@@ -225,7 +229,6 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
   const queryParams = new URLSearchParams(location.search)
   const instanceConfig: InstanceConfig = useOutletContext()
 
-  const { defaultIdpSecret } = useLoaderData<typeof loader>()
   const idpSecret = idpSecretParam ? idpSecretParam : defaultIdpSecret
 
   useEffect(() => {

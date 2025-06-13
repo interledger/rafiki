@@ -1,5 +1,4 @@
 import { IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethods } from '@interledger/open-payments'
-import { StreamCredentialsService } from '../../payment-method/ilp/stream-credentials/service'
 import { WalletAddressService } from '../wallet_address/service'
 import { BaseService } from '../../shared/baseService'
 import { IncomingPaymentService } from '../payment/incoming/service'
@@ -16,12 +15,14 @@ import {
 import { isRemoteIncomingPaymentError } from '../payment/incoming_remote/errors'
 import { TelemetryService } from '../../telemetry/service'
 import { IAppConfig } from '../../config/app'
+import { PaymentMethodProviderService } from '../../payment-method/provider/service'
 
 interface CreateReceiverArgs {
   walletAddressUrl: string
   expiresAt?: Date
   incomingAmount?: Amount
   metadata?: Record<string, unknown>
+  tenantId: string
 }
 
 // A receiver is resolved from an incoming payment
@@ -32,11 +33,11 @@ export interface ReceiverService {
 
 export interface ServiceDependencies extends BaseService {
   config: IAppConfig
-  streamCredentialsService: StreamCredentialsService
   incomingPaymentService: IncomingPaymentService
   walletAddressService: WalletAddressService
   remoteIncomingPaymentService: RemoteIncomingPaymentService
   telemetry: TelemetryService
+  paymentMethodProviderService: PaymentMethodProviderService
 }
 
 const INCOMING_PAYMENT_URL_REGEX =
@@ -105,13 +106,14 @@ async function createLocalIncomingPayment(
   args: CreateReceiverArgs,
   walletAddress: WalletAddress
 ): Promise<OpenPaymentsIncomingPaymentWithPaymentMethods | ReceiverError> {
-  const { expiresAt, incomingAmount, metadata } = args
+  const { expiresAt, incomingAmount, metadata, tenantId } = args
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
     walletAddressId: walletAddress.id,
     expiresAt,
     incomingAmount,
-    metadata
+    metadata,
+    tenantId
   })
 
   if (isIncomingPaymentError(incomingPaymentOrError)) {
@@ -124,14 +126,18 @@ async function createLocalIncomingPayment(
     return incomingPaymentOrError
   }
 
-  const streamCredentials = deps.streamCredentialsService.get(
-    incomingPaymentOrError
-  )
+  const paymentMethods =
+    await deps.paymentMethodProviderService.getPaymentMethods(
+      incomingPaymentOrError
+    )
 
-  if (!streamCredentials) {
+  if (paymentMethods.length === 0) {
     const errorMessage =
-      'Could not get stream credentials for local incoming payment'
-    deps.logger.error({ err: incomingPaymentOrError }, errorMessage)
+      'Could not get any payment methods during local incoming payment creation'
+    deps.logger.error(
+      { incomingPaymentId: incomingPaymentOrError.id },
+      errorMessage
+    )
 
     throw new Error(errorMessage)
   }
@@ -139,7 +145,7 @@ async function createLocalIncomingPayment(
   return incomingPaymentOrError.toOpenPaymentsTypeWithMethods(
     deps.config.openPaymentsUrl,
     walletAddress,
-    streamCredentials
+    paymentMethods
   )
 }
 
@@ -211,12 +217,13 @@ export async function getLocalIncomingPayment(
     throw new Error(errorMessage)
   }
 
-  const streamCredentials = deps.streamCredentialsService.get(incomingPayment)
+  const paymentMethods =
+    await deps.paymentMethodProviderService.getPaymentMethods(incomingPayment)
 
   return incomingPayment.toOpenPaymentsTypeWithMethods(
     deps.config.openPaymentsUrl,
     incomingPayment.walletAddress,
-    streamCredentials
+    paymentMethods
   )
 }
 

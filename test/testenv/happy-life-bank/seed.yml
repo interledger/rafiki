@@ -18,9 +18,13 @@ assets:
 peeringAsset: 'USD'
 peers:
   - initialLiquidity: '1000000000000'
-    peerUrl: http://cloud-nine-wallet-test-backend:3102
-    peerIlpAddress: test.cloud-nine-wallet-test
+    peerUrl: http://cloud-nine-wallet-backend:3002
+    peerIlpAddress: test.cloud-nine-wallet
     liquidityThreshold: 1000000
+    tokens:
+      incoming: 
+        - test-USD-cloud-nine-wallet-happy-life-bank
+      outgoing: test-USD-happy-life-bank-cloud-nine-wallet
 accounts:
   - name: 'Philip Fry'
     path: accounts/pfry

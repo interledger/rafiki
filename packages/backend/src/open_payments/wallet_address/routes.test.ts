@@ -34,7 +34,7 @@ describe('Wallet Address Routes', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -62,6 +62,7 @@ describe('Wallet Address Routes', (): void => {
 
     test('throws 404 error for inactive wallet address', async (): Promise<void> => {
       const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
         publicName: faker.person.firstName()
       })
 
@@ -70,7 +71,7 @@ describe('Wallet Address Routes', (): void => {
       const ctx = createContext<WalletAddressUrlContext>({
         headers: { Accept: 'application/json' }
       })
-      ctx.walletAddressUrl = walletAddress.url
+      ctx.walletAddressUrl = walletAddress.address
 
       const getOrPollByUrlSpy = jest.spyOn(
         walletAddressService,
@@ -102,6 +103,7 @@ describe('Wallet Address Routes', (): void => {
       addPropNotVisibleInOpenPayments.fieldValue = 'it-is-not'
       addPropNotVisibleInOpenPayments.visibleInOpenPayments = false
       const walletAddress = await createWalletAddress(deps, {
+        tenantId: config.operatorTenantId,
         publicName: faker.person.firstName(),
         additionalProperties: [addProp, addPropNotVisibleInOpenPayments]
       })
@@ -110,16 +112,17 @@ describe('Wallet Address Routes', (): void => {
         headers: { Accept: 'application/json' },
         url: '/'
       })
-      ctx.walletAddressUrl = walletAddress.url
+      ctx.walletAddressUrl = walletAddress.address
       await expect(walletAddressRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
-        id: walletAddress.url,
+        id: walletAddress.address,
         publicName: walletAddress.publicName,
         assetCode: walletAddress.asset.code,
         assetScale: walletAddress.asset.scale,
-        authServer: config.authServerGrantUrl,
-        resourceServer: config.openPaymentsUrl,
+        // Ensure the tenant id is returned for auth and resource server:
+        authServer: `${config.authServerGrantUrl}/${config.operatorTenantId}`,
+        resourceServer: `${config.openPaymentsUrl}/${config.operatorTenantId}`,
         additionalProperties: {
           [addProp.fieldKey]: addProp.fieldValue
         }
@@ -145,6 +148,7 @@ describe('Wallet Address Routes', (): void => {
 
     test('returns wallet address', async (): Promise<void> => {
       const walletAddress = await createWalletAddress(deps, {
+        tenantId: config.operatorTenantId,
         publicName: faker.person.firstName()
       })
 
@@ -152,16 +156,17 @@ describe('Wallet Address Routes', (): void => {
         headers: { Accept: 'application/json' },
         url: '/'
       })
-      ctx.walletAddressUrl = walletAddress.url
+      ctx.walletAddressUrl = walletAddress.address
       await expect(walletAddressRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
-        id: walletAddress.url,
+        id: walletAddress.address,
         publicName: walletAddress.publicName,
         assetCode: walletAddress.asset.code,
         assetScale: walletAddress.asset.scale,
-        authServer: config.authServerGrantUrl,
-        resourceServer: config.openPaymentsUrl
+        // Ensure the tenant id is returned for auth and resource server:
+        authServer: `${config.authServerGrantUrl}/${walletAddress.tenantId}`,
+        resourceServer: `${config.openPaymentsUrl}/${walletAddress.tenantId}`
       })
     })
   })
