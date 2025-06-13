@@ -76,7 +76,7 @@ export async function createConnectorService({
       // Incoming Rules
       createIncomingErrorHandlerMiddleware(ilpAddress),
       createStreamAddressMiddleware(),
-      createAccountMiddleware(ilpAddress),
+      createAccountMiddleware(),
       createIncomingMaxPacketAmountMiddleware(),
       createIncomingRateLimitMiddleware({}),
       createIncomingThroughputMiddleware(),
