@@ -1,7 +1,13 @@
 import { createILPContext } from '../../utils'
-import { ZeroCopyIlpPrepare } from '../..'
+import {
+  AuthState,
+  ILPContext,
+  IncomingAccount,
+  ZeroCopyIlpPrepare
+} from '../..'
 import { IlpPrepareFactory, RafikiServicesFactory } from '../../factories'
 import {
+  StreamState,
   createStreamAddressMiddleware,
   getIlpAddressForTenant
 } from '../../middleware/stream-address'
@@ -14,7 +20,7 @@ import {
 describe('Stream Address Middleware', function () {
   const services = RafikiServicesFactory.build()
 
-  function makeIlpContext() {
+  function makeIlpContext(): ILPContext<AuthState & StreamState> {
     return createILPContext({ services })
   }
 
@@ -31,7 +37,7 @@ describe('Stream Address Middleware', function () {
 
       expect(next).toHaveBeenCalledTimes(1)
       expect(ctx.state.streamDestination).toBeUndefined()
-      expect(ctx.state['streamServer']).toBeDefined()
+      expect(ctx.state.streamServer).toBeDefined()
     })
 
     test('sets "state.streamDestination" of stream packets', async () => {
@@ -50,23 +56,28 @@ describe('Stream Address Middleware', function () {
       ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
       ctx.state.incomingAccount = {
         tenantId: ctx.services.config.operatorTenantId
-      }
+      } as IncomingAccount
       const next = jest.fn()
 
       await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
       expect(next).toHaveBeenCalledTimes(1)
-      expect(ctx.state['streamDestination']).toBe('bob')
-      expect(ctx.state['streamServer']).toBeDefined()
+      expect(ctx.state.streamDestination).toBe('bob')
+      expect(ctx.state.streamServer).toBeDefined()
     })
   })
 
   describe('getIlpAddressForTenant', function () {
+    test('returns undefined if no state.incomingAccount set', async () => {
+      const ctx = makeIlpContext()
+
+      await expect(getIlpAddressForTenant(ctx)).resolves.toBeUndefined()
+    })
     test('returns operator tenant ILP address if equals incomingAccount tenantId', async () => {
       const ctx = makeIlpContext()
       ctx.state.incomingAccount = {
         tenantId: ctx.services.config.operatorTenantId
-      }
+      } as IncomingAccount
 
       await expect(getIlpAddressForTenant(ctx)).resolves.toBe(
         ctx.services.config.ilpAddress
@@ -80,7 +91,7 @@ describe('Stream Address Middleware', function () {
 
       ctx.state.incomingAccount = {
         tenantId: tenantId
-      }
+      } as IncomingAccount
 
       jest
         .spyOn(ctx.services.tenantSettingService, 'get')
@@ -95,21 +106,19 @@ describe('Stream Address Middleware', function () {
       await expect(getIlpAddressForTenant(ctx)).resolves.toBe(tenantIlpAddress)
     })
 
-    test('falls back to operator tenant ILP address if missing ILP address tenant setting', async () => {
+    test('returns undefined if missing ILP address tenant setting', async () => {
       const tenantId = crypto.randomUUID()
       const ctx = makeIlpContext()
 
       ctx.state.incomingAccount = {
         tenantId: tenantId
-      }
+      } as IncomingAccount
 
       jest
         .spyOn(ctx.services.tenantSettingService, 'get')
         .mockResolvedValueOnce([])
 
-      await expect(getIlpAddressForTenant(ctx)).resolves.toBe(
-        ctx.services.config.ilpAddress
-      )
+      await expect(getIlpAddressForTenant(ctx)).resolves.toBeUndefined()
     })
   })
 })

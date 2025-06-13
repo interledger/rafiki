@@ -1,9 +1,18 @@
 import { StreamServer } from '@interledger/stream-receiver'
 import { ILPMiddleware, ILPContext } from '../rafiki'
 import { TenantSettingKeys } from '../../../../../tenants/settings/model'
+import { AuthState } from './auth'
+
+export interface StreamState {
+  streamDestination?: string
+  streamServer?: StreamServer
+}
 
 export function createStreamAddressMiddleware(): ILPMiddleware {
-  return async (ctx: ILPContext, next: () => Promise<void>): Promise<void> => {
+  return async (
+    ctx: ILPContext<AuthState & StreamState>,
+    next: () => Promise<void>
+  ): Promise<void> => {
     const stopTimer = ctx.services.telemetry.startTimer(
       'create_stream_address_middleware_decode_tag',
       {
@@ -11,22 +20,33 @@ export function createStreamAddressMiddleware(): ILPMiddleware {
       }
     )
 
-    ctx.state.streamServer = new StreamServer({
-      serverSecret: ctx.services.config.streamSecret,
-      serverAddress: await getIlpAddressForTenant(ctx)
-    })
+    const tenantIlpAddress = await getIlpAddressForTenant(ctx)
 
-    ctx.state.streamDestination = ctx.state.streamServer.decodePaymentTag(
-      ctx.request.prepare.destination
-    )
+    ctx.state.streamServer = tenantIlpAddress
+      ? new StreamServer({
+          serverSecret: ctx.services.config.streamSecret,
+          serverAddress: tenantIlpAddress
+        })
+      : undefined
+
+    ctx.state.streamDestination =
+      ctx.state.streamServer?.decodePaymentTag(
+        ctx.request.prepare.destination
+      ) || undefined
 
     stopTimer()
     await next()
   }
 }
 
-export async function getIlpAddressForTenant(ctx: ILPContext): Promise<string> {
+export async function getIlpAddressForTenant(
+  ctx: ILPContext<AuthState & StreamState>
+): Promise<string | undefined> {
   const tenantId = ctx.state.incomingAccount?.tenantId
+
+  if (!tenantId) {
+    return undefined
+  }
 
   if (tenantId === ctx.services.config.operatorTenantId) {
     return ctx.services.config.ilpAddress
@@ -37,9 +57,5 @@ export async function getIlpAddressForTenant(ctx: ILPContext): Promise<string> {
     key: TenantSettingKeys.ILP_ADDRESS.name
   })
 
-  if (!tenantSettings.length) {
-    return ctx.services.config.ilpAddress // Fall back to operator ILP address
-  }
-
-  return tenantSettings[0].value
+  return tenantSettings.length > 0 ? tenantSettings[0].value : undefined
 }
