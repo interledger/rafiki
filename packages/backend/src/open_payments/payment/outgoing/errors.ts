@@ -17,8 +17,7 @@ export enum OutgoingPaymentError {
   InactiveWalletAddress = 'InactiveWalletAddress',
   InvalidAmount = 'InvalidAmount',
   NegativeReceiveAmount = 'NegativeReceiveAmount',
-  InvalidReceiver = 'InvalidReceiver',
-  InvalidGrantSpentAmountState = 'InvalidGrantSpentAmountState'
+  InvalidReceiver = 'InvalidReceiver'
 }
 
 export const quoteErrorToOutgoingPaymentError: Record<
@@ -50,8 +49,7 @@ export const errorToHTTPCode: {
   [OutgoingPaymentError.InactiveWalletAddress]: 400,
   [OutgoingPaymentError.InvalidAmount]: 400,
   [OutgoingPaymentError.NegativeReceiveAmount]: 400,
-  [OutgoingPaymentError.InvalidReceiver]: 400,
-  [OutgoingPaymentError.InvalidGrantSpentAmountState]: 500
+  [OutgoingPaymentError.InvalidReceiver]: 400
 }
 
 export const errorToCode: {
@@ -66,9 +64,7 @@ export const errorToCode: {
   [OutgoingPaymentError.InactiveWalletAddress]: GraphQLErrorCode.Inactive,
   [OutgoingPaymentError.InvalidAmount]: GraphQLErrorCode.BadUserInput,
   [OutgoingPaymentError.NegativeReceiveAmount]: GraphQLErrorCode.BadUserInput,
-  [OutgoingPaymentError.InvalidReceiver]: GraphQLErrorCode.BadUserInput,
-  [OutgoingPaymentError.InvalidGrantSpentAmountState]:
-    GraphQLErrorCode.InternalServerError
+  [OutgoingPaymentError.InvalidReceiver]: GraphQLErrorCode.BadUserInput
 }
 
 export const errorToMessage: {
@@ -83,9 +79,7 @@ export const errorToMessage: {
   [OutgoingPaymentError.InactiveWalletAddress]: 'inactive wallet address',
   [OutgoingPaymentError.InvalidAmount]: 'invalid amount',
   [OutgoingPaymentError.NegativeReceiveAmount]: 'negative receive amount',
-  [OutgoingPaymentError.InvalidReceiver]: 'invalid receiver',
-  [OutgoingPaymentError.InvalidGrantSpentAmountState]:
-    'invalid grant spent amounts'
+  [OutgoingPaymentError.InvalidReceiver]: 'invalid receiver'
 }
 
 export const FundingError = { ...OutgoingPaymentError, ...TransferError }

@@ -571,17 +571,21 @@ interface PaymentLimits extends Limits {
   paymentInterval?: Interval
 }
 
-interface SpentAmounts {
+type SpentAmountsWithoutInterval = {
   sent: Amount
   received: Amount
-  intervalSent: Amount | null
-  intervalReceived: Amount | null
+  intervalSent: null
+  intervalReceived: null
 }
 
-interface SpentAmountsWithIntervals extends SpentAmounts {
+type SpentAmountsWithInterval = {
+  sent: Amount
+  received: Amount
   intervalSent: Amount
   intervalReceived: Amount
 }
+
+type SpentAmounts = SpentAmountsWithoutInterval | SpentAmountsWithInterval
 
 async function validateGrantAndAddSpentAmountsToPayment(
   deps: ServiceDependencies,
@@ -639,8 +643,8 @@ async function validateGrantAndAddSpentAmountsToPayment(
     .limit(1)
     .first()
 
-  let newSpentAmounts: SpentAmounts | SpentAmountsWithIntervals
   const hasInterval = !!paymentLimits.paymentInterval
+  let newSpentAmounts: SpentAmounts
 
   if (isExistingGrant && !latestSpentAmounts) {
     // Legacy path: calculate spent amounts from historical payments
@@ -653,32 +657,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
       })
       .withGraphFetched('quote')
 
-    newSpentAmounts = {
-      sent: {
-        assetCode: payment.asset.code,
-        assetScale: payment.asset.scale,
-        value: BigInt(0)
-      },
-      received: {
-        assetCode: payment.receiveAmount.assetCode,
-        assetScale: payment.receiveAmount.assetScale,
-        value: BigInt(0)
-      },
-      intervalSent: hasInterval
-        ? {
-            assetCode: payment.asset.code,
-            assetScale: payment.asset.scale,
-            value: 0n
-          }
-        : null,
-      intervalReceived: hasInterval
-        ? {
-            assetCode: payment.receiveAmount.assetCode,
-            assetScale: payment.receiveAmount.assetScale,
-            value: 0n
-          }
-        : null
-    }
+    newSpentAmounts = initSpentAmounts(payment, hasInterval)
 
     for (const grantPayment of grantPayments) {
       const asset = await deps.assetService.get(grantPayment.quote.assetId)
@@ -703,45 +682,25 @@ async function validateGrantAndAddSpentAmountsToPayment(
         // Sum grant totals
         newSpentAmounts.sent.value += totalSent
         // Estimate delivered amount of failed payment
-        newSpentAmounts.received.value +=
+        const estimatedReceived =
           (grantPayment.receiveAmount.value * totalSent) /
           grantPayment.debitAmount.value
+        newSpentAmounts.received.value += estimatedReceived
 
-        // If payment is in current interval, update interval amounts too
         if (intervalStatus === 'current') {
-          if (
-            !newSpentAmounts.intervalSent ||
-            !newSpentAmounts.intervalReceived
-          ) {
-            throw OutgoingPaymentError.InvalidGrantSpentAmountState
-          }
-
-          newSpentAmounts.intervalSent.value =
-            (newSpentAmounts.intervalSent.value ?? 0n) + totalSent
-          newSpentAmounts.intervalReceived.value =
-            (newSpentAmounts.intervalReceived.value ?? 0n) +
-            (grantPayment.receiveAmount.value * totalSent) /
-              grantPayment.debitAmount.value
+          updateIntervalAmounts(newSpentAmounts, totalSent, estimatedReceived)
         }
       } else {
         // Sum grant totals for successful payments
         newSpentAmounts.sent.value += grantPayment.debitAmount.value
         newSpentAmounts.received.value += grantPayment.receiveAmount.value
 
-        // If payment is in current interval, update interval amounts too
         if (intervalStatus === 'current') {
-          if (
-            !newSpentAmounts.intervalSent ||
-            !newSpentAmounts.intervalReceived
-          ) {
-            throw OutgoingPaymentError.InvalidGrantSpentAmountState
-          }
-          newSpentAmounts.intervalSent.value =
-            (newSpentAmounts.intervalSent.value ?? 0n) +
-            grantPayment.debitAmount.value
-          newSpentAmounts.intervalReceived.value =
-            (newSpentAmounts.intervalReceived.value ?? 0n) +
+          updateIntervalAmounts(
+            newSpentAmounts,
+            grantPayment.debitAmount.value,
             grantPayment.receiveAmount.value
+          )
         }
       }
     }
@@ -762,7 +721,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
       grantTotalDebitAmountValue: 0n
     }
 
-    newSpentAmounts = {
+    const baseSpentAmounts = {
       sent: {
         assetCode: startingSpendAmounts.debitAmountCode,
         assetScale: startingSpendAmounts.debitAmountScale,
@@ -772,34 +731,34 @@ async function validateGrantAndAddSpentAmountsToPayment(
         assetCode: startingSpendAmounts.receiveAmountCode,
         assetScale: startingSpendAmounts.receiveAmountScale,
         value: startingSpendAmounts.grantTotalReceiveAmountValue
-      },
-      intervalSent: null,
-      intervalReceived: null
+      }
     }
 
     if (hasInterval) {
-      if (
-        startingSpendAmounts.intervalDebitAmountValue === null ||
-        startingSpendAmounts.intervalReceiveAmountValue === null
-      ) {
-        throw OutgoingPaymentError.InvalidGrantSpentAmountState
-      }
-      newSpentAmounts.intervalSent = {
-        assetCode: startingSpendAmounts.debitAmountCode,
-        assetScale: startingSpendAmounts.debitAmountScale,
-        value:
-          intervalStatus === 'next'
-            ? 0n
-            : startingSpendAmounts.intervalDebitAmountValue
-      }
-      newSpentAmounts.intervalReceived = {
-        assetCode: startingSpendAmounts.receiveAmountCode,
-        assetScale: startingSpendAmounts.receiveAmountScale,
-        value:
-          intervalStatus === 'next'
-            ? 0n
-            : startingSpendAmounts.intervalReceiveAmountValue
-      }
+      const intervalDebitValue =
+        startingSpendAmounts.intervalDebitAmountValue ?? 0n
+      const intervalReceiveValue =
+        startingSpendAmounts.intervalReceiveAmountValue ?? 0n
+
+      newSpentAmounts = {
+        ...baseSpentAmounts,
+        intervalSent: {
+          assetCode: startingSpendAmounts.debitAmountCode,
+          assetScale: startingSpendAmounts.debitAmountScale,
+          value: intervalStatus === 'next' ? 0n : intervalDebitValue
+        },
+        intervalReceived: {
+          assetCode: startingSpendAmounts.receiveAmountCode,
+          assetScale: startingSpendAmounts.receiveAmountScale,
+          value: intervalStatus === 'next' ? 0n : intervalReceiveValue
+        }
+      } as SpentAmountsWithInterval
+    } else {
+      newSpentAmounts = {
+        ...baseSpentAmounts,
+        intervalSent: null,
+        intervalReceived: null
+      } as SpentAmountsWithoutInterval
     }
   }
 
@@ -827,13 +786,11 @@ async function validateGrantAndAddSpentAmountsToPayment(
   newSpentAmounts.sent.value += payment.debitAmount.value
   newSpentAmounts.received.value += payment.receiveAmount.value
 
-  if (newSpentAmounts.intervalSent !== null) {
-    newSpentAmounts.intervalSent.value += payment.debitAmount.value
-  }
-
-  if (newSpentAmounts.intervalReceived !== null) {
-    newSpentAmounts.intervalReceived.value += payment.receiveAmount.value
-  }
+  updateIntervalAmounts(
+    newSpentAmounts,
+    payment.debitAmount.value,
+    payment.receiveAmount.value
+  )
 
   await OutgoingPaymentGrantSpentAmounts.query(trx).insert({
     id: uuid(),
@@ -858,13 +815,68 @@ async function validateGrantAndAddSpentAmountsToPayment(
 }
 
 function getActiveSpentAmounts(
-  newSpent: SpentAmounts | SpentAmountsWithIntervals
+  newSpent: SpentAmounts | SpentAmountsWithInterval
 ) {
   const useInterval =
     newSpent.intervalSent !== null && newSpent.intervalReceived !== null
   return {
     debit: useInterval ? newSpent.intervalSent! : newSpent.sent,
     receive: useInterval ? newSpent.intervalReceived! : newSpent.received
+  }
+}
+
+function initSpentAmounts(
+  payment: OutgoingPayment,
+  hasInterval: boolean
+): SpentAmounts {
+  const baseAmounts = {
+    sent: {
+      assetCode: payment.asset.code,
+      assetScale: payment.asset.scale,
+      value: BigInt(0)
+    },
+    received: {
+      assetCode: payment.receiveAmount.assetCode,
+      assetScale: payment.receiveAmount.assetScale,
+      value: BigInt(0)
+    }
+  }
+
+  if (hasInterval) {
+    return {
+      ...baseAmounts,
+      intervalSent: {
+        assetCode: payment.asset.code,
+        assetScale: payment.asset.scale,
+        value: 0n
+      },
+      intervalReceived: {
+        assetCode: payment.receiveAmount.assetCode,
+        assetScale: payment.receiveAmount.assetScale,
+        value: 0n
+      }
+    } as SpentAmountsWithInterval
+  } else {
+    return {
+      ...baseAmounts,
+      intervalSent: null,
+      intervalReceived: null
+    } as SpentAmountsWithoutInterval
+  }
+}
+
+// no-op if there are no intervals
+function updateIntervalAmounts(
+  spentAmounts: SpentAmounts,
+  debitAmount: bigint,
+  receiveAmount: bigint
+): void {
+  if (
+    spentAmounts.intervalSent !== null &&
+    spentAmounts.intervalReceived !== null
+  ) {
+    spentAmounts.intervalSent.value += debitAmount
+    spentAmounts.intervalReceived.value += receiveAmount
   }
 }
 
