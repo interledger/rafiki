@@ -246,15 +246,23 @@ type ConsentScreenProps = {
 
 // In production, ensure that secrets are handled securely and are not exposed to the client-side code.
 export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
+<<<<<<< HEAD
   const { defaultIdpSecret, interactionReturnUrl, authIdpServiceDomain } =
     useLoaderData<typeof loader>()
+=======
+  const { defaultIdpSecret, isTenant } = useLoaderData<typeof loader>()
+>>>>>>> 9a719a02 (feat(backend): abstract away payment method generation, add ILP_ADDRESS tenantSetting (#3460))
   const [ctx, setCtx] = useState({
     ready: false,
     thirdPartyName: '',
     thirdPartyUri: '',
     interactId: 'demo-interact-id',
     nonce: 'demo-interact-nonce',
+<<<<<<< HEAD
     returnUrl: `${interactionReturnUrl}/mock-idp/consent?`,
+=======
+    returnUrl: `http://localhost:${isTenant ? 5030 : 3030}/mock-idp/consent?`,
+>>>>>>> 9a719a02 (feat(backend): abstract away payment method generation, add ILP_ADDRESS tenantSetting (#3460))
     //TODO returnUrl: 'http://localhost:3030/mock-idp/consent?interactid=demo-interact-id&nonce=demo-interact-nonce',
     accesses: null,
     outgoingPaymentAccess: null,

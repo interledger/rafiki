@@ -1,6 +1,9 @@
 import {
   IlpPaymentService,
+<<<<<<< HEAD
   calculateMinSendAmount,
+=======
+>>>>>>> 9a719a02 (feat(backend): abstract away payment method generation, add ILP_ADDRESS tenantSetting (#3460))
   resolveIlpDestination,
   retryableIlpErrors
 } from './service'
