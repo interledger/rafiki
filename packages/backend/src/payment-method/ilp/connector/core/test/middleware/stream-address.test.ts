@@ -37,7 +37,7 @@ describe('Stream Address Middleware', function () {
 
       expect(next).toHaveBeenCalledTimes(1)
       expect(ctx.state.streamDestination).toBeUndefined()
-      expect(ctx.state.streamServer).toBeDefined()
+      expect(ctx.state.streamServer).toBeUndefined()
     })
 
     test('sets "state.streamDestination" of stream packets', async () => {
