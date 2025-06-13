@@ -75,7 +75,10 @@ export const createPeer: MutationResolvers<ApolloContext>['createPeer'] =
     ctx
   ): Promise<ResolversTypes['CreatePeerMutationResponse']> => {
     const peerService = await ctx.container.use('peerService')
-    const peerOrError = await peerService.create(args.input)
+    const peerOrError = await peerService.create({
+      ...args.input,
+      routes: args.input.routes || []
+    })
     if (isPeerError(peerOrError)) {
       throw new GraphQLError(errorToMessage[peerOrError], {
         extensions: {
@@ -95,7 +98,10 @@ export const updatePeer: MutationResolvers<ApolloContext>['updatePeer'] =
     ctx
   ): Promise<ResolversTypes['UpdatePeerMutationResponse']> => {
     const peerService = await ctx.container.use('peerService')
-    const peerOrError = await peerService.update(args.input)
+    const peerOrError = await peerService.update({
+      ...args.input,
+      routes: args.input.routes
+    })
     if (isPeerError(peerOrError)) {
       throw new GraphQLError(errorToMessage[peerOrError], {
         extensions: {
@@ -134,6 +140,7 @@ export const peerToGraphql = (peer: Peer): SchemaPeer => ({
   http: peer.http,
   asset: assetToGraphql(peer.asset),
   staticIlpAddress: peer.staticIlpAddress,
+  routes: peer.routes || [],
   name: peer.name,
   liquidityThreshold: peer.liquidityThreshold,
   createdAt: new Date(+peer.createdAt).toISOString()

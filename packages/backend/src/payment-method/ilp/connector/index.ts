@@ -28,6 +28,8 @@ import {
   createStreamController
 } from './core'
 import { TelemetryService } from '../../../telemetry/service'
+import { createRoutingMiddleware } from './core/middleware/routing'
+import { RouterService } from './ilp-routing/service'
 
 interface ServiceDependencies extends BaseService {
   redis: Redis
@@ -39,6 +41,7 @@ interface ServiceDependencies extends BaseService {
   streamServer: StreamServer
   ilpAddress: string
   telemetry: TelemetryService
+  routerService: RouterService
 }
 
 export async function createConnectorService({
@@ -51,11 +54,12 @@ export async function createConnectorService({
   peerService,
   streamServer,
   ilpAddress,
-  telemetry
+  telemetry,
+  routerService
 }: ServiceDependencies): Promise<Rafiki> {
   return createApp(
     {
-      //router: router,
+      router: routerService,
       logger: logger.child({
         service: 'ConnectorService'
       }),
@@ -72,6 +76,9 @@ export async function createConnectorService({
       // Incoming Rules
       createIncomingErrorHandlerMiddleware(ilpAddress),
       createStreamAddressMiddleware(),
+      // Routing
+      createRoutingMiddleware({ routerService }),
+
       createAccountMiddleware(ilpAddress),
       createIncomingMaxPacketAmountMiddleware(),
       createIncomingRateLimitMiddleware({}),

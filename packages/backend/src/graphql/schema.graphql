@@ -405,6 +405,8 @@ input CreatePeerInput {
   initialLiquidity: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
+  "Routes for the peer."
+  routes: [String!]
 }
 
 input CreateOrUpdatePeerByUrlInput {
@@ -439,6 +441,8 @@ input UpdatePeerInput {
   liquidityThreshold: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
+  "New routes for the peer."
+  routes: [String!]
 }
 
 input HttpInput {
@@ -688,6 +692,8 @@ type Peer implements Model {
   liquidity: UInt64
   "The date and time when the peer was created."
   createdAt: String!
+  "Routes for the peer."
+  routes: [String!]
 }
 
 input DeletePeerInput {
