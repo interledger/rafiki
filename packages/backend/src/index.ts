@@ -76,6 +76,7 @@ import { createInMemoryDataStore } from './middleware/cache/data-stores/in-memor
 import { createTenantService } from './tenants/service'
 import { AuthServiceClient } from './auth-service-client/client'
 import { createTenantSettingService } from './tenants/settings/service'
+import { createPaymentMethodProviderService } from './payment-method/provider/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -247,6 +248,16 @@ export function initIocContainer(
       deps.use('knex')
     ])
     return createTenantSettingService({ logger, knex })
+  })
+
+  container.singleton('paymentMethodProviderService', async (deps) => {
+    return createPaymentMethodProviderService({
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex'),
+      config: await deps.use('config'),
+      streamCredentialsService: await deps.use('streamCredentialsService'),
+      tenantSettingsService: await deps.use('tenantSettingService')
+    })
   })
 
   container.singleton('ratesService', async (deps) => {
@@ -460,7 +471,9 @@ export function initIocContainer(
       config: await deps.use('config'),
       logger: await deps.use('logger'),
       incomingPaymentService: await deps.use('incomingPaymentService'),
-      streamCredentialsService: await deps.use('streamCredentialsService')
+      paymentMethodProviderService: await deps.use(
+        'paymentMethodProviderService'
+      )
     })
   })
   container.singleton('walletAddressRoutes', async (deps) => {
@@ -478,24 +491,24 @@ export function initIocContainer(
     })
   })
   container.singleton('streamCredentialsService', async (deps) => {
-    const config = await deps.use('config')
     return await createStreamCredentialsService({
       logger: await deps.use('logger'),
-      openPaymentsUrl: config.openPaymentsUrl,
-      streamServer: await deps.use('streamServer')
+      config: await deps.use('config')
     })
   })
   container.singleton('receiverService', async (deps) => {
     return await createReceiverService({
       logger: await deps.use('logger'),
       config: await deps.use('config'),
-      streamCredentialsService: await deps.use('streamCredentialsService'),
       incomingPaymentService: await deps.use('incomingPaymentService'),
       walletAddressService: await deps.use('walletAddressService'),
       remoteIncomingPaymentService: await deps.use(
         'remoteIncomingPaymentService'
       ),
-      telemetry: await deps.use('telemetry')
+      telemetry: await deps.use('telemetry'),
+      paymentMethodProviderService: await deps.use(
+        'paymentMethodProviderService'
+      )
     })
   })
 
@@ -510,15 +523,16 @@ export function initIocContainer(
     const config = await deps.use('config')
     return await createConnectorService({
       logger: await deps.use('logger'),
+      config: await deps.use('config'),
       redis: await deps.use('redis'),
       accountingService: await deps.use('accountingService'),
       walletAddressService: await deps.use('walletAddressService'),
       incomingPaymentService: await deps.use('incomingPaymentService'),
       peerService: await deps.use('peerService'),
       ratesService: await deps.use('ratesService'),
-      streamServer: await deps.use('streamServer'),
       ilpAddress: config.ilpAddress,
-      telemetry: await deps.use('telemetry')
+      telemetry: await deps.use('telemetry'),
+      tenantSettingService: await deps.use('tenantSettingService')
     })
   })
 

@@ -22,7 +22,7 @@ services:
       GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
       SIGNATURE_VERSION: 1
       SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
-      IDP_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
+      IDP_SECRET: ue3ixgIiWLIlWOd4w5KO78scYpFH+vHuCJ33lnjgzEg=
       DISPLAY_NAME: Cloud Ten Wallet
       DISPLAY_ICON: wallet-icon.svg
       OPERATOR_TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787

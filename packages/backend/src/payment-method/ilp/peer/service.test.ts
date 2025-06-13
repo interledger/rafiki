@@ -431,7 +431,7 @@ describe('Peer Service', (): void => {
       })
 
       await expect(
-        peerService.getByDestinationAddress('test.rafiki', tenantId)
+        peerService.getByDestinationAddress('test.rafiki', tenantId, asset.id)
       ).resolves.toEqual(peer)
       await expect(
         peerService.getByDestinationAddress(
@@ -440,6 +440,24 @@ describe('Peer Service', (): void => {
           secondAsset.id
         )
       ).resolves.toEqual(peerWithSecondAsset)
+    })
+
+    test('returns peer with longest prefix match for ILP address', async (): Promise<void> => {
+      const peer = await createPeer(deps, {
+        staticIlpAddress: 'test.rafiki',
+        assetId: asset.id
+      })
+
+      const peerWithLongerPrefixMatch = await createPeer(deps, {
+        staticIlpAddress: 'test.rafiki.account'
+      })
+
+      await expect(
+        peerService.getByDestinationAddress(
+          'test.rafiki.account.12345',
+          peer.tenantId
+        )
+      ).resolves.toEqual(peerWithLongerPrefixMatch)
     })
   })
 

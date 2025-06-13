@@ -15,15 +15,15 @@ import {
 } from './errors'
 import { AmountJSON, parseAmount } from '../../amount'
 import { listSubresource } from '../../wallet_address/routes'
-import { StreamCredentialsService } from '../../../payment-method/ilp/stream-credentials/service'
 import { AccessAction } from '@interledger/open-payments'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
+import { PaymentMethodProviderService } from '../../../payment-method/provider/service'
 
 interface ServiceDependencies {
   config: IAppConfig
   logger: Logger
   incomingPaymentService: IncomingPaymentService
-  streamCredentialsService: StreamCredentialsService
+  paymentMethodProviderService: PaymentMethodProviderService
 }
 
 export type ReadContextWithAuthenticatedStatus = ReadContext &
@@ -109,14 +109,14 @@ async function getIncomingPaymentPrivate(
     )
   }
 
-  const streamCredentials = incomingPayment.isExpiredOrComplete()
-    ? undefined
-    : deps.streamCredentialsService.get(incomingPayment)
+  const paymentMethods = incomingPayment.isExpiredOrComplete()
+    ? []
+    : await deps.paymentMethodProviderService.getPaymentMethods(incomingPayment)
 
   ctx.body = incomingPayment.toOpenPaymentsTypeWithMethods(
     deps.config.openPaymentsUrl,
     ctx.walletAddress,
-    streamCredentials
+    paymentMethods
   )
 }
 
@@ -153,15 +153,16 @@ async function createIncomingPayment(
       errorToMessage[incomingPaymentOrError]
     )
   }
+  const paymentMethods =
+    await deps.paymentMethodProviderService.getPaymentMethods(
+      incomingPaymentOrError
+    )
 
   ctx.status = 201
-  const streamCredentials = deps.streamCredentialsService.get(
-    incomingPaymentOrError
-  )
   ctx.body = incomingPaymentOrError.toOpenPaymentsTypeWithMethods(
     deps.config.openPaymentsUrl,
     ctx.walletAddress,
-    streamCredentials
+    paymentMethods
   )
 }
 

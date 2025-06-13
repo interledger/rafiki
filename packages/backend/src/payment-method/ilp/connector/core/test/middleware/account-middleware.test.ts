@@ -15,7 +15,6 @@ import { createILPContext } from '../../utils'
 import { Peer } from '../../../../peer/model'
 
 describe('Account Middleware', () => {
-  const ADDRESS = 'test.rafiki'
   const incomingAccount = IncomingPeerFactory.build({
     id: 'incomingPeer'
   })
@@ -31,7 +30,7 @@ describe('Account Middleware', () => {
     })
     await rafikiServices.accounting.create(outgoingAccount)
 
-    const middleware = createAccountMiddleware(ADDRESS)
+    const middleware = createAccountMiddleware()
     const next = jest.fn()
     const ctx = createILPContext({
       state: { incomingAccount },
@@ -54,7 +53,7 @@ describe('Account Middleware', () => {
       id: 'outgoingIncomingPayment'
     })
     await rafikiServices.accounting.create(outgoingAccount)
-    const middleware = createAccountMiddleware(ADDRESS)
+    const middleware = createAccountMiddleware()
     const next = jest.fn()
     const ctx = createILPContext({
       state: {
@@ -80,7 +79,7 @@ describe('Account Middleware', () => {
       id: 'spspFallback'
     })
     await rafikiServices.accounting.create(outgoingAccount)
-    const middleware = createAccountMiddleware(ADDRESS)
+    const middleware = createAccountMiddleware()
     const next = jest.fn()
     const ctx = createILPContext({
       state: {
@@ -112,7 +111,7 @@ describe('Account Middleware', () => {
       .mockResolvedValueOnce(outgoingAccount as unknown as Peer)
 
     await rafikiServices.accounting.create(outgoingAccount)
-    const middleware = createAccountMiddleware(ADDRESS)
+    const middleware = createAccountMiddleware()
     const next = jest.fn()
     const ctx = createILPContext({
       state: {
@@ -145,7 +144,7 @@ describe('Account Middleware', () => {
       state: 'COMPLETED'
     })
     await rafikiServices.accounting.create(outgoingAccount)
-    const middleware = createAccountMiddleware(ADDRESS)
+    const middleware = createAccountMiddleware()
     const next = jest.fn()
     const ctx = createILPContext({
       state: {
@@ -166,7 +165,7 @@ describe('Account Middleware', () => {
   })
 
   test('return an error when the destination account unknown', async () => {
-    const middleware = createAccountMiddleware(ADDRESS)
+    const middleware = createAccountMiddleware()
     const next = jest.fn()
     const ctx = createILPContext({
       state: {
@@ -193,7 +192,7 @@ describe('Account Middleware', () => {
       state: 'COMPLETED'
     })
     await rafikiServices.accounting.create(outgoingAccount)
-    const middleware = createAccountMiddleware(ADDRESS)
+    const middleware = createAccountMiddleware()
     const next = jest.fn()
     const ctx = createILPContext({
       state: {
@@ -225,7 +224,7 @@ describe('Account Middleware', () => {
       state: 'PENDING'
     })
     await rafikiServices.accounting.create(outgoingAccount)
-    const middleware = createAccountMiddleware(ADDRESS)
+    const middleware = createAccountMiddleware()
     const next = jest.fn()
     const ctx = createILPContext({
       state: {
@@ -268,7 +267,7 @@ describe('Account Middleware', () => {
       id: 'spspFallback'
     })
     await rafikiServices.accounting.create(outgoingAccount)
-    const middleware = createAccountMiddleware(ADDRESS)
+    const middleware = createAccountMiddleware()
     const next = jest.fn()
     const ctx = createILPContext({
       state: {

@@ -5,8 +5,8 @@ import { TransactionOrKnex } from 'objection'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { CacheDataStore } from '../middleware/cache/data-stores'
 import type { AuthServiceClient } from '../auth-service-client/client'
-import { TenantSettingService } from './settings/service'
-import { TenantSetting } from './settings/model'
+import { KeyValuePair, TenantSettingService } from './settings/service'
+import { TenantSetting, TenantSettingKeys } from './settings/model'
 import type { IAppConfig } from '../config/app'
 import { isTenantError, TenantError } from './errors'
 import { TenantSettingInput } from '../graphql/generated/graphql'
@@ -122,6 +122,13 @@ async function createTenant(
       tenantId: tenant.id,
       setting: TenantSetting.default()
     }
+
+    const defaultIlpAddressSetting: KeyValuePair = {
+      key: TenantSettingKeys.ILP_ADDRESS.name,
+      value: `${deps.config.ilpAddress}.${tenant.id}`
+    }
+
+    createInitialTenantSettingsOptions.setting.push(defaultIlpAddressSetting)
 
     if (settings) {
       createInitialTenantSettingsOptions.setting =

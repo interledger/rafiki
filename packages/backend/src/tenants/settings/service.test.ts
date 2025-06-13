@@ -244,6 +244,44 @@ describe('TenantSetting Service', (): void => {
         tenantSettingService.create(negativeOption)
       ).resolves.toEqual(TenantSettingError.InvalidSetting)
     })
+
+    test('accepts valid ILP address for ILP address tenant setting', async (): Promise<void> => {
+      const invalidIlpAddressSetting: CreateOptions = {
+        tenantId: tenant.id,
+        setting: [
+          {
+            key: TenantSettingKeys.ILP_ADDRESS.name,
+            value: 'test.net'
+          }
+        ]
+      }
+
+      await expect(
+        tenantSettingService.create(invalidIlpAddressSetting)
+      ).resolves.toEqual([
+        expect.objectContaining({
+          tenantId: tenant.id,
+          key: TenantSettingKeys.ILP_ADDRESS.name,
+          value: 'test.net'
+        })
+      ])
+    })
+
+    test('cannot use invalid ILP address for ILP address tenant setting', async (): Promise<void> => {
+      const invalidIlpAddressSetting: CreateOptions = {
+        tenantId: tenant.id,
+        setting: [
+          {
+            key: TenantSettingKeys.ILP_ADDRESS.name,
+            value: 'test'
+          }
+        ]
+      }
+
+      await expect(
+        tenantSettingService.create(invalidIlpAddressSetting)
+      ).resolves.toEqual(TenantSettingError.InvalidSetting)
+    })
   })
 
   describe('get', () => {

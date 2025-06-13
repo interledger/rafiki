@@ -6,17 +6,16 @@ import { AppServices } from '../../../app'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createWalletAddress } from '../../../tests/walletAddress'
 import { truncateTables } from '../../../tests/tableManager'
-import { IlpStreamCredentials } from '../../../payment-method/ilp/stream-credentials/service'
 import { serializeAmount } from '../../amount'
 import { IlpAddress } from 'ilp-packet'
 import {
   IncomingPayment,
   IncomingPaymentEvent,
   IncomingPaymentEventType,
-  IncomingPaymentState,
   IncomingPaymentEventError
 } from './model'
 import { WalletAddress } from '../../wallet_address/model'
+import { OpenPaymentsPaymentMethod } from '../../../payment-method/provider/service'
 
 describe('Models', (): void => {
   let deps: IocContract<AppServices>
@@ -80,16 +79,19 @@ describe('Models', (): void => {
 
     describe('toOpenPaymentsTypeWithMethods', () => {
       test('returns incoming payment with payment methods', async () => {
-        const streamCredentials: IlpStreamCredentials = {
-          ilpAddress: 'test.ilp' as IlpAddress,
-          sharedSecret: Buffer.from('')
-        }
+        const paymentMethods: OpenPaymentsPaymentMethod[] = [
+          {
+            type: 'ilp',
+            ilpAddress: 'test.ilp' as IlpAddress,
+            sharedSecret: ''
+          }
+        ]
 
         expect(
           incomingPayment.toOpenPaymentsTypeWithMethods(
             config.openPaymentsUrl,
             walletAddress,
-            streamCredentials
+            paymentMethods
           )
         ).toEqual({
           id: `${baseUrl}/${Config.operatorTenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
@@ -112,67 +114,6 @@ describe('Models', (): void => {
           ]
         })
       })
-
-      test('returns incoming payment with empty methods when stream credentials are undefined', async () => {
-        expect(
-          incomingPayment.toOpenPaymentsTypeWithMethods(
-            config.openPaymentsUrl,
-            walletAddress
-          )
-        ).toEqual({
-          id: `${baseUrl}/${Config.operatorTenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
-          walletAddress: walletAddress.address,
-          completed: incomingPayment.completed,
-          receivedAmount: serializeAmount(incomingPayment.receivedAmount),
-          incomingAmount: incomingPayment.incomingAmount
-            ? serializeAmount(incomingPayment.incomingAmount)
-            : undefined,
-          expiresAt: incomingPayment.expiresAt.toISOString(),
-          metadata: incomingPayment.metadata ?? undefined,
-          updatedAt: incomingPayment.updatedAt.toISOString(),
-          createdAt: incomingPayment.createdAt.toISOString(),
-          methods: []
-        })
-      })
-
-      test.each([IncomingPaymentState.Completed, IncomingPaymentState.Expired])(
-        'returns incoming payment with existing methods if payment state is %s',
-        async (paymentState): Promise<void> => {
-          incomingPayment.state = paymentState
-
-          const streamCredentials: IlpStreamCredentials = {
-            ilpAddress: 'test.ilp' as IlpAddress,
-            sharedSecret: Buffer.from('')
-          }
-
-          expect(
-            incomingPayment.toOpenPaymentsTypeWithMethods(
-              config.openPaymentsUrl,
-              walletAddress,
-              streamCredentials
-            )
-          ).toMatchObject({
-            id: `${baseUrl}/${Config.operatorTenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
-            walletAddress: walletAddress.address,
-            completed: incomingPayment.completed,
-            receivedAmount: serializeAmount(incomingPayment.receivedAmount),
-            incomingAmount: incomingPayment.incomingAmount
-              ? serializeAmount(incomingPayment.incomingAmount)
-              : undefined,
-            expiresAt: incomingPayment.expiresAt.toISOString(),
-            metadata: incomingPayment.metadata ?? undefined,
-            updatedAt: incomingPayment.updatedAt.toISOString(),
-            createdAt: incomingPayment.createdAt.toISOString(),
-            methods: [
-              expect.objectContaining({
-                type: 'ilp',
-                ilpAddress: streamCredentials.ilpAddress,
-                sharedSecret: expect.any(String)
-              })
-            ]
-          })
-        }
-      )
     })
   })
 

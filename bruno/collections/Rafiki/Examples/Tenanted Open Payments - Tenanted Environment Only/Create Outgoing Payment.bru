@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{senderOpenPaymentsHost}}/outgoing-payments
+  url: {{senderTenantOpenPaymentsHost}}/outgoing-payments
   body: json
   auth: none
 }
@@ -16,8 +16,8 @@ headers {
 
 body:json {
   {
-      "walletAddress": "{{senderWalletAddress}}",
-      "quoteId": "{{senderWalletAddress}}/quotes/{{quoteId}}",
+      "walletAddress": "{{senderTenantWalletAddress}}",
+      "quoteId": "{{senderTenantWalletAddress}}/quotes/{{quoteId}}",
       "metadata": {
           "description": "Free Money!"
       }
