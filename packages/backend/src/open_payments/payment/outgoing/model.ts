@@ -15,6 +15,7 @@ import {
   OutgoingPayment as OpenPaymentsOutgoingPayment,
   OutgoingPaymentWithSpentAmounts
 } from '@interledger/open-payments'
+import { BaseModel } from '../../../shared/baseModel'
 
 export class OutgoingPaymentGrant extends DbErrors(Model) {
   public static get modelPaths(): string[] {
@@ -22,6 +23,32 @@ export class OutgoingPaymentGrant extends DbErrors(Model) {
   }
   public static readonly tableName = 'outgoingPaymentGrants'
   public id!: string
+  public interval?: string
+}
+
+export class OutgoingPaymentGrantSpentAmounts extends BaseModel {
+  public static get modelPaths(): string[] {
+    return [__dirname]
+  }
+  public static readonly tableName = 'outgoingPaymentGrantSpentAmounts'
+
+  public id!: string
+  public grantId!: string
+  public outgoingPaymentId!: string
+  public receiveAmountScale!: number
+  public receiveAmountCode!: string
+  public paymentReceiveAmountValue!: bigint
+  public intervalReceiveAmountValue!: bigint | null
+  public grantTotalReceiveAmountValue!: bigint
+  public debitAmountScale!: number
+  public debitAmountCode!: string
+  public paymentDebitAmountValue!: bigint
+  public intervalDebitAmountValue!: bigint | null
+  public grantTotalDebitAmountValue!: bigint
+  public paymentState!: string
+  public intervalStart!: Date | null
+  public intervalEnd!: Date | null
+  public createdAt!: Date
 }
 
 export class OutgoingPayment
