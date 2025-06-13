@@ -1,5 +1,6 @@
 import { isIlpReply } from 'ilp-packet'
 import { ILPContext, ILPMiddleware } from '../rafiki'
+import { StreamState } from '../middleware'
 
 const CONNECTION_EXPIRY = 60 * 10 // seconds
 
@@ -9,7 +10,7 @@ export const streamReceivedKey = (connectionId: string): string =>
 
 export function createStreamController(): ILPMiddleware {
   return async function (
-    ctx: ILPContext,
+    ctx: ILPContext<StreamState>,
     next: () => Promise<void>
   ): Promise<void> {
     const { logger, redis } = ctx.services
@@ -17,7 +18,8 @@ export function createStreamController(): ILPMiddleware {
 
     if (
       ctx.accounts.outgoing.http ||
-      !ctx.state.streamDestination // XXX mark this earlier in the middleware pipeline
+      !ctx.state.streamDestination ||
+      !ctx.state.streamServer
     ) {
       await next()
       return
