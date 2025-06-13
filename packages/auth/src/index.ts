@@ -14,13 +14,11 @@ import { createAccessTokenRoutes } from './accessToken/routes'
 import { createGrantRoutes } from './grant/routes'
 import { createInteractionRoutes } from './interaction/routes'
 import { createOpenAPI } from '@interledger/openapi'
-import {
-  createUnauthenticatedClient as createOpenPaymentsClient,
-  getAuthServerOpenAPI
-} from '@interledger/open-payments'
+import { createUnauthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
 import { createInteractionService } from './interaction/service'
 import { getTokenIntrospectionOpenAPI } from 'token-introspection'
 import { Redis } from 'ioredis'
+import { createSubjectService } from './subject/service'
 
 const container = initIocContainer(Config)
 const app = new App(container)
@@ -103,6 +101,16 @@ export function initIocContainer(
   )
 
   container.singleton(
+    'subjectService',
+    async (deps: IocContract<AppServices>) => {
+      return createSubjectService({
+        logger: await deps.use('logger'),
+        knex: await deps.use('knex')
+      })
+    }
+  )
+
+  container.singleton(
     'clientService',
     async (deps: IocContract<AppServices>) => {
       return createClientService({
@@ -120,6 +128,7 @@ export function initIocContainer(
         logger: await deps.use('logger'),
         accessService: await deps.use('accessService'),
         accessTokenService: await deps.use('accessTokenService'),
+        subjectService: await deps.use('subjectService'),
         knex: await deps.use('knex')
       })
     }
@@ -143,6 +152,7 @@ export function initIocContainer(
       clientService: await deps.use('clientService'),
       accessTokenService: await deps.use('accessTokenService'),
       accessService: await deps.use('accessService'),
+      subjectService: await deps.use('subjectService'),
       interactionService: await deps.use('interactionService'),
       logger: await deps.use('logger'),
       config: await deps.use('config')
@@ -154,6 +164,7 @@ export function initIocContainer(
     async (deps: IocContract<AppServices>) => {
       return createInteractionRoutes({
         accessService: await deps.use('accessService'),
+        subjectService: await deps.use('subjectService'),
         interactionService: await deps.use('interactionService'),
         grantService: await deps.use('grantService'),
         logger: await deps.use('logger'),
@@ -163,7 +174,11 @@ export function initIocContainer(
   )
 
   container.singleton('openApi', async () => {
-    const authServerSpec = await getAuthServerOpenAPI()
+    // TODO: Use the latest version of the auth server spec
+    // const authServerSpec = await getAuthServerOpenAPI()
+    const authServerSpec = await createOpenAPI(
+      'https://raw.githubusercontent.com/interledger/open-payments/e62c77c9442591f1d5840dbbbdae9f14d5b765d5/openapi/auth-server.yaml'
+    )
     const idpSpec = await createOpenAPI(
       path.resolve(__dirname, './openapi/specs/id-provider.yaml')
     )
@@ -189,6 +204,7 @@ export function initIocContainer(
       })
     }
   )
+
   container.singleton(
     'accessTokenRoutes',
     async (deps: IocContract<AppServices>) => {
