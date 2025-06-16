@@ -51,7 +51,7 @@ export const errorToHTTPCode: {
   [OutgoingPaymentError.InvalidAmount]: 400,
   [OutgoingPaymentError.NegativeReceiveAmount]: 400,
   [OutgoingPaymentError.InvalidReceiver]: 400,
-  [OutgoingPaymentError.OnlyOneGrantAmountAllowed]: 400
+  [OutgoingPaymentError.OnlyOneGrantAmountAllowed]: 500
 }
 
 export const errorToCode: {
