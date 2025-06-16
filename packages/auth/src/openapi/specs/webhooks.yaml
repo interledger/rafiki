@@ -1,0 +1,50 @@
+openapi: 3.1.0
+info:
+  title: Rafiki Auth Webhooks
+  version: 1.1.0
+  description: 'Webhook events fired by Rafiki Auth'
+  contact:
+    email: tech@interledger.org
+servers:
+  - url: 'https://account-servicing-entity.com/webhooks'
+webhooks:
+  grantRevoked:
+    post:
+      requestBody:
+        description: Notifies the account servicing entity that a grant was revoked.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/grantEvent'
+      responses:
+        '200':
+          description: Data received successfully
+
+components:
+  schemas:
+    grantEvent:
+      required:
+        - id
+        - type
+        - data
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum:
+            - grant.revoked
+        data:
+          type: object
+          required:
+            - id
+            - revokedAt
+          properties:
+            id:
+              type: string
+              format: uuid
+            revokedAt:
+              type: string
+              format: date-time
+      additionalProperties: false
