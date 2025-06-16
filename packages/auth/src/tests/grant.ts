@@ -11,7 +11,6 @@ import {
   FinishMethod
 } from '../grant/model'
 import { generateNonce, generateToken } from '../shared/utils'
-import { isGrantError } from '../grant/errors'
 
 const CLIENT = faker.internet.url({ appendSlash: false })
 
@@ -49,7 +48,6 @@ export async function createGrant(
     }
   })
 
-  if (isGrantError(grantOrError)) throw grantOrError
   return grantOrError
 }
 

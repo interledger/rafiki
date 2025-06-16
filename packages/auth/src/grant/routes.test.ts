@@ -36,7 +36,7 @@ import { AccessAction, AccessType } from '@interledger/open-payments'
 import { generateBaseGrant } from '../tests/grant'
 import { generateBaseInteraction } from '../tests/interaction'
 import { GNAPErrorCode } from '../shared/gnapErrors'
-import { GrantError } from './errors'
+import { AccessError } from '../access/errors'
 
 export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
@@ -491,7 +491,7 @@ describe('Grant Routes', (): void => {
         await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
           status: 400,
           code: GNAPErrorCode.InvalidRequest,
-          message: GrantError.OnlyOneAccessAmountAllowed
+          message: AccessError.OnlyOneAccessAmountAllowed
         })
         scope.done()
       })

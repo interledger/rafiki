@@ -17,7 +17,6 @@ import { FilterString } from '../shared/filters'
 import { AccessTokenService } from '../accessToken/service'
 import { canSkipInteraction } from './utils'
 import { IAppConfig } from '../config/app'
-import { GrantError, isGrantError } from './errors'
 
 interface GrantFilter {
   identifier?: FilterString
@@ -25,10 +24,7 @@ interface GrantFilter {
 
 export interface GrantService {
   getByIdWithAccess(grantId: string): Promise<Grant | undefined>
-  create(
-    grantRequest: GrantRequest,
-    trx?: Transaction
-  ): Promise<Grant | GrantError>
+  create(grantRequest: GrantRequest, trx?: Transaction): Promise<Grant>
   markPending(grantId: string, trx?: Transaction): Promise<Grant | undefined>
   approve(grantId: string, trx?: Transaction): Promise<Grant>
   finalize(grantId: string, reason: GrantFinalization): Promise<Grant>
@@ -216,7 +212,7 @@ async function create(
   deps: ServiceDependencies,
   grantRequest: GrantRequest,
   trx?: Transaction
-): Promise<Grant | GrantError> {
+): Promise<Grant> {
   const { accessService, knex } = deps
 
   const {
@@ -243,13 +239,8 @@ async function create(
     const grant = await Grant.query(grantTrx).insert(grantData)
 
     // Associate provided accesses with grant
-    try {
-      await accessService.createAccess(grant.id, access, grantTrx)
-    } catch (e) {
-      if (isGrantError(e)) {
-        return e
-      }
-    }
+    await accessService.createAccess(grant.id, access, grantTrx)
+
     if (!trx) {
       await grantTrx.commit()
     }

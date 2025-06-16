@@ -22,8 +22,11 @@ import { InteractionService } from '../interaction/service'
 import { canSkipInteraction } from './utils'
 import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
 import { generateRouteLogs } from '../shared/utils'
-import { GrantError, isGrantError } from './errors'
-import Objection from 'objection'
+import {
+  errorToGNAPCode,
+  errorToHTTPCode,
+  isAccessError
+} from '../access/errors'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
@@ -134,13 +137,21 @@ async function createApprovedGrant(
   const { body } = ctx.request
   const { grantService, config, logger } = deps
   const trx = await Grant.startTransaction()
-  const grant = await createGrantOrThrowError(grantService, body, trx)
+  let grant: Grant
   let accessToken: AccessToken
   try {
+    grant = await grantService.create(body, trx)
     accessToken = await deps.accessTokenService.create(grant.id, trx)
     await trx.commit()
   } catch (err) {
     await trx.rollback()
+    if (isAccessError(err)) {
+      throw new GNAPServerRouteError(
+        errorToHTTPCode[err],
+        errorToGNAPCode[err],
+        err
+      )
+    }
     throw new GNAPServerRouteError(
       500,
       GNAPErrorCode.RequestDenied,
@@ -191,8 +202,8 @@ async function createPendingGrant(
 
   const trx = await Grant.startTransaction()
 
-  const grant = await createGrantOrThrowError(grantService, body, trx)
   try {
+    const grant = await grantService.create(body, trx)
     const interaction = await interactionService.create(grant.id, trx)
     await trx.commit()
 
@@ -212,29 +223,19 @@ async function createPendingGrant(
     )
   } catch (err) {
     await trx.rollback()
+    if (isAccessError(err)) {
+      throw new GNAPServerRouteError(
+        errorToHTTPCode[err],
+        errorToGNAPCode[err],
+        err
+      )
+    }
     throw new GNAPServerRouteError(
       500,
       GNAPErrorCode.RequestDenied,
       'internal server error'
     )
   }
-}
-
-async function createGrantOrThrowError(
-  grantService: GrantService,
-  body: GrantRequestBody,
-  trx: Objection.Transaction
-) {
-  const grantOrError: Grant | GrantError = await grantService.create(body, trx)
-  if (isGrantError(grantOrError)) {
-    await trx.rollback()
-    throw new GNAPServerRouteError(
-      400,
-      GNAPErrorCode.InvalidRequest,
-      grantOrError
-    )
-  }
-  return grantOrError
 }
 
 function isMatchingContinueRequest(
