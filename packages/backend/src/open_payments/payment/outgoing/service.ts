@@ -518,6 +518,9 @@ function validateAmountAssets(
   payment: OutgoingPayment,
   limits: Limits
 ): boolean {
+  if (limits.debitAmount && limits.receiveAmount) {
+    throw OutgoingPaymentError.OnlyOneGrantAmountAllowed
+  }
   if (
     limits.debitAmount &&
     (limits.debitAmount.assetCode !== payment.asset.code ||

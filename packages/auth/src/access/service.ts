@@ -3,6 +3,7 @@ import { Transaction, TransactionOrKnex } from 'objection'
 import { BaseService } from '../shared/baseService'
 import { Access } from './model'
 import { AccessRequest } from './types'
+import { AccessError } from './errors'
 
 export interface AccessService {
   createAccess(
@@ -47,6 +48,8 @@ async function createAccess(
   accessRequests: AccessRequest[],
   trx?: Transaction
 ): Promise<Access[]> {
+  validateLimits(accessRequests)
+
   const accessRequestsWithGrant = accessRequests.map((access) => {
     return { grantId, ...access }
   })
@@ -62,4 +65,14 @@ async function getByGrant(
   return Access.query(trx || deps.knex).where({
     grantId
   })
+}
+
+function validateLimits(accessRequests: AccessRequest[]) {
+  const areBothLimitsSet = accessRequests.some(
+    (access) => access.limits?.debitAmount && access.limits.receiveAmount
+  )
+
+  if (areBothLimitsSet) {
+    throw AccessError.OnlyOneAccessAmountAllowed
+  }
 }

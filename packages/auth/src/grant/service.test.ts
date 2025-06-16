@@ -267,12 +267,15 @@ describe('Grant Service', (): void => {
         }
 
         const grant1 = await grantService.create(grantRequest)
+
         await grant1
           .$query()
           .patch({ finalizationReason: GrantFinalization.Issued })
 
         const grant2 = await grantService.create(grantRequest)
+
         const grant3 = await grantService.create(grantRequest)
+
         await grant3
           .$query()
           .patch({ finalizationReason: GrantFinalization.Revoked })
