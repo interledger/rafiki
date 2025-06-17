@@ -11,6 +11,7 @@ import {
 } from '../../shared/pagination'
 import { OpenPaymentsServerRouteError } from '../route-errors'
 import { IAppConfig } from '../../config/app'
+import { ensureTrailingSlash } from '../../shared/utils'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -60,8 +61,8 @@ export async function getWalletAddress(
     )
 
   ctx.body = walletAddress.toOpenPaymentsType({
-    authServer: deps.config.authServerGrantUrl,
-    resourceServer: deps.config.openPaymentsUrl
+    authServer: `${ensureTrailingSlash(deps.config.authServerGrantUrl)}${walletAddress.tenantId}`,
+    resourceServer: `${ensureTrailingSlash(deps.config.openPaymentsUrl)}${walletAddress.tenantId}`
   })
 }
 
@@ -94,14 +95,16 @@ export const listSubresource = async <M extends WalletAddressSubresource>({
   const page = await getWalletAddressPage({
     walletAddressId: ctx.walletAddress.id,
     pagination,
-    client
+    client,
+    tenantId: ctx.params.tenantId
   })
   const pageInfo = await getPageInfo({
     getPage: (pagination) =>
       getWalletAddressPage({
         walletAddressId: ctx.walletAddress.id,
         pagination,
-        client
+        client,
+        tenantId: ctx.params.tenantId
       }),
     page,
     walletAddress: ctx.request.query['wallet-address']

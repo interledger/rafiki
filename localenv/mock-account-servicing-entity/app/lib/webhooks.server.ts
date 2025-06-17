@@ -2,7 +2,7 @@ import { gql } from '@apollo/client'
 import type { LiquidityMutationResponse } from 'generated/graphql'
 import type { Amount } from './transactions.server'
 import { mockAccounts } from './accounts.server'
-import { apolloClient } from './apolloClient'
+import { generateApolloClient } from './apolloClient'
 import { v4 as uuid } from 'uuid'
 import {
   depositAssetLiquidity,
@@ -10,6 +10,7 @@ import {
   createWalletAddress
 } from './requesters'
 import { Webhook, WebhookEventType } from 'mock-account-service-lib'
+import { TenantOptions } from './types'
 
 export interface AmountJSON {
   value: string
@@ -61,7 +62,10 @@ export async function handleOutgoingPaymentCompletedFailed(wh: Webhook) {
   return
 }
 
-export async function handleOutgoingPaymentCreated(wh: Webhook) {
+export async function handleOutgoingPaymentCreated(
+  wh: Webhook,
+  options?: TenantOptions
+) {
   if (wh.type !== WebhookEventType.OutgoingPaymentCreated) {
     throw new Error('Invalid event type when handling outgoing payment webhook')
   }
@@ -79,7 +83,7 @@ export async function handleOutgoingPaymentCreated(wh: Webhook) {
   try {
     await mockAccounts.pendingDebit(acc.id, amt.value)
   } catch (err) {
-    await apolloClient.mutate({
+    await generateApolloClient(options).mutate({
       mutation: gql`
         mutation CancelOutgoingPayment($input: CancelOutgoingPaymentInput!) {
           cancelOutgoingPayment(input: $input) {
@@ -100,7 +104,7 @@ export async function handleOutgoingPaymentCreated(wh: Webhook) {
   }
 
   // notify rafiki
-  await apolloClient
+  await generateApolloClient(options)
     .mutate({
       mutation: gql`
         mutation DepositOutgoingPaymentLiquidity(
@@ -129,7 +133,10 @@ export async function handleOutgoingPaymentCreated(wh: Webhook) {
   return
 }
 
-export async function handleIncomingPaymentCompletedExpired(wh: Webhook) {
+export async function handleIncomingPaymentCompletedExpired(
+  wh: Webhook,
+  options?: TenantOptions
+) {
   if (
     wh.type !== WebhookEventType.IncomingPaymentCompleted &&
     wh.type !== WebhookEventType.IncomingPaymentExpired
@@ -149,7 +156,7 @@ export async function handleIncomingPaymentCompletedExpired(wh: Webhook) {
 
   await mockAccounts.credit(acc.id, amt.value, false)
 
-  await apolloClient
+  await generateApolloClient(options)
     .mutate({
       mutation: gql`
         mutation CreateIncomingPaymentWithdrawal(
@@ -179,7 +186,10 @@ export async function handleIncomingPaymentCompletedExpired(wh: Webhook) {
   return
 }
 
-export async function handleWalletAddressWebMonetization(wh: Webhook) {
+export async function handleWalletAddressWebMonetization(
+  wh: Webhook,
+  options?: TenantOptions
+) {
   const walletAddressObj = wh.data.walletAddress as WalletAddressObject
   const walletAddressId = walletAddressObj.id
 
@@ -196,7 +206,7 @@ export async function handleWalletAddressWebMonetization(wh: Webhook) {
   const withdrawalId = uuid()
 
   try {
-    await apolloClient.mutate({
+    await generateApolloClient(options).mutate({
       mutation: gql`
         mutation CreateWalletAddressWithdrawal(
           $input: CreateWalletAddressWithdrawalInput!
@@ -231,7 +241,7 @@ export async function handleWalletAddressWebMonetization(wh: Webhook) {
     const amount = parseAmount(walletAddressObj.receivedAmount as AmountJSON)
     await mockAccounts.credit(account.id, amount.value, true)
 
-    return await apolloClient.mutate({
+    return await generateApolloClient(options).mutate({
       mutation: gql`
         mutation PostLiquidityWithdrawal(
           $input: PostLiquidityWithdrawalInput!
@@ -277,7 +287,7 @@ export async function handleWalletAddressNotFound(wh: Webhook) {
   await mockAccounts.setWalletAddress(
     account.id,
     walletAddress.id,
-    walletAddress.url
+    walletAddress.address
   )
 }
 

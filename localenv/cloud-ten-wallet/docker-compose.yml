@@ -1,0 +1,39 @@
+name: c10
+services:
+  cloud-ten-mock-ase:
+    hostname: cloud-ten-wallet
+    image: rafiki-mock-ase
+    build:
+      context: ../..
+      dockerfile: ./localenv/mock-account-servicing-entity/Dockerfile
+    restart: always
+    networks:
+      - rafiki
+    ports:
+      - '5030:80'
+    environment:
+      LOG_LEVEL: debug
+      PORT: 80
+      SEED_FILE_LOCATION: /workspace/seed.yml
+      KEY_FILE: /workspace/private-key.pem
+      OPEN_PAYMENTS_URL: ${CLOUD_NINE_OPEN_PAYMENTS_URL:-https://cloud-nine-wallet-backend}
+      AUTH_SERVER_DOMAIN: ${CLOUD_NINE_AUTH_SERVER_DOMAIN:-http://localhost:3006}
+      TESTNET_AUTOPEER_URL: ${TESTNET_AUTOPEER_URL}
+      GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
+      SIGNATURE_VERSION: 1
+      SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      IDP_SECRET: ue3ixgIiWLIlWOd4w5KO78scYpFH+vHuCJ33lnjgzEg=
+      DISPLAY_NAME: Cloud Ten Wallet
+      DISPLAY_ICON: wallet-icon.svg
+      OPERATOR_TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
+      FRONTEND_PORT: 3010
+      IS_TENANT: true
+    volumes:
+      - ../cloud-ten-wallet/seed.yml:/workspace/seed.yml
+      - ../cloud-ten-wallet/private-key.pem:/workspace/private-key.pem
+    depends_on:
+      cloud-nine-backend:
+        condition: service_healthy
+      cloud-nine-mock-ase:
+        condition: service_started
+      

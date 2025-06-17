@@ -2,7 +2,6 @@ import { Errors } from 'ilp-packet'
 import { AccountAlreadyExistsError } from '../../../../../accounting/errors'
 import { LiquidityAccountType } from '../../../../../accounting/service'
 import { IncomingPaymentState } from '../../../../../open_payments/payment/incoming/model'
-import { validateId } from '../../../../../shared/utils'
 import {
   ILPContext,
   ILPMiddleware,
@@ -10,12 +9,11 @@ import {
   OutgoingAccount
 } from '../rafiki'
 import { AuthState } from './auth'
+import { StreamState } from './stream-address'
 
-const UUID_LENGTH = 36
-
-export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
+export function createAccountMiddleware(): ILPMiddleware {
   return async function account(
-    ctx: ILPContext<AuthState & { streamDestination?: string }>,
+    ctx: ILPContext<AuthState & StreamState>,
     next: () => Promise<void>
   ): Promise<void> {
     const createLiquidityAccount = async (
@@ -104,23 +102,12 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
         }
       }
       const address = ctx.request.prepare.destination
-      const peer = await peers.getByDestinationAddress(address)
+      const peer = await peers.getByDestinationAddress(
+        address,
+        incomingAccount.tenantId
+      )
       if (peer) {
         return peer
-      }
-      if (
-        address.startsWith(serverAddress + '.') &&
-        (address.length === serverAddress.length + 1 + UUID_LENGTH ||
-          address[serverAddress.length + 1 + UUID_LENGTH] === '.')
-      ) {
-        const accountId = address.slice(
-          serverAddress.length + 1,
-          serverAddress.length + 1 + UUID_LENGTH
-        )
-        if (validateId(accountId)) {
-          // TODO: Look up direct ILP access account
-          // return await accounts.get(accountId)
-        }
       }
     }
 

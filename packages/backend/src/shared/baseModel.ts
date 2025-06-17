@@ -49,6 +49,7 @@ class PaginationQueryBuilder<M extends Model, R = M[]> extends QueryBuilder<
    * Please read the spec before changing things:
    * https://relay.dev/graphql/connections.htm
    * @param pagination Pagination - cursors and limits.
+   * @param sortOrder SortOrder - Asc/Desc sort order.
    * @returns Model[] An array of Models that form a page.
    */
   getPage(

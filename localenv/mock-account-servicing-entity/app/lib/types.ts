@@ -1,3 +1,4 @@
+import { SeedInstance } from 'mock-account-service-lib'
 import type { z } from 'zod'
 
 export type AccessAction = 'create' | 'read' | 'list' | 'complete'
@@ -33,6 +34,11 @@ export type InstanceConfig = {
   background: string
 }
 
+export type TenantInstanceConfig = {
+  isTenant: boolean
+  seed: SeedInstance
+}
+
 export type JSONError<T extends z.ZodTypeAny> = {
   errors: z.typeToFlattenedError<z.infer<T>>
 }
@@ -42,4 +48,10 @@ type Keys<T> = T extends any ? keyof T : never
 
 export type ZodFieldErrors<T extends z.ZodTypeAny> = {
   [P in Keys<z.TypeOf<T>>]?: string[] | undefined
+}
+
+export type TenantOptions = {
+  tenantId: string
+  apiSecret: string
+  walletAddressPrefix?: string
 }

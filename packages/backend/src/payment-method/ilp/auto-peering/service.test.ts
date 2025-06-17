@@ -27,6 +27,7 @@ describe('Auto Peering Service', (): void => {
   let autoPeeringService: AutoPeeringService
   let peerService: PeerService
   let accountingService: AccountingService
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({ ...Config, enableAutoPeering: true })
@@ -35,10 +36,11 @@ describe('Auto Peering Service', (): void => {
     autoPeeringService = await deps.use('autoPeeringService')
     peerService = await deps.use('peerService')
     accountingService = await deps.use('accountingService')
+    tenantId = Config.operatorTenantId
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -55,7 +57,8 @@ describe('Auto Peering Service', (): void => {
         asset: { code: asset.code, scale: asset.scale },
         httpToken: 'someHttpToken',
         name: 'Rafiki Money',
-        maxPacketAmount: 1000
+        maxPacketAmount: 1000,
+        tenantId
       }
 
       const peerCreateSpy = jest.spyOn(peerService, 'create')
@@ -66,7 +69,8 @@ describe('Auto Peering Service', (): void => {
         staticIlpAddress: config.ilpAddress,
         ilpConnectorUrl: config.ilpConnectorUrl,
         httpToken: expect.any(String),
-        name: config.instanceName
+        name: config.instanceName,
+        tenantId
       })
       expect(peerCreateSpy).toHaveBeenCalledWith({
         staticIlpAddress: args.staticIlpAddress,
@@ -80,7 +84,8 @@ describe('Auto Peering Service', (): void => {
             authToken: expect.any(String),
             endpoint: args.ilpConnectorUrl
           }
-        }
+        },
+        tenantId
       })
     })
 
@@ -92,28 +97,31 @@ describe('Auto Peering Service', (): void => {
         ilpConnectorUrl: 'http://peer.rafiki.money',
         asset: { code: asset.code, scale: asset.scale },
         httpToken: 'someHttpToken',
-        name: 'Rafiki Money'
+        name: 'Rafiki Money',
+        tenantId
       }
 
       const peerUpdateSpy = jest.spyOn(peerService, 'update')
 
       await expect(
         autoPeeringService.acceptPeeringRequest(args)
-      ).resolves.toEqual({
+      ).resolves.toMatchObject({
         staticIlpAddress: config.ilpAddress,
         ilpConnectorUrl: config.ilpConnectorUrl,
         httpToken: expect.any(String),
-        name: config.instanceName
+        name: config.instanceName,
+        tenantId
       })
       expect(peerUpdateSpy).toHaveBeenCalledTimes(0)
 
       await expect(
         autoPeeringService.acceptPeeringRequest(args)
-      ).resolves.toEqual({
+      ).resolves.toMatchObject({
         staticIlpAddress: config.ilpAddress,
         ilpConnectorUrl: config.ilpConnectorUrl,
         httpToken: expect.any(String),
-        name: config.instanceName
+        name: config.instanceName,
+        tenantId
       })
       expect(peerUpdateSpy).toHaveBeenCalledWith({
         id: expect.any(String),
@@ -124,7 +132,8 @@ describe('Auto Peering Service', (): void => {
             authToken: expect.any(String),
             endpoint: args.ilpConnectorUrl
           }
-        }
+        },
+        tenantId
       })
       expect(peerUpdateSpy).toHaveBeenCalledTimes(1)
     })
@@ -134,7 +143,8 @@ describe('Auto Peering Service', (): void => {
         staticIlpAddress: 'test.rafiki-money',
         ilpConnectorUrl: 'http://peer.rafiki.money',
         asset: { code: 'USD', scale: 2 },
-        httpToken: 'someHttpToken'
+        httpToken: 'someHttpToken',
+        tenantId
       }
 
       await expect(autoPeeringService.acceptPeeringRequest(args)).resolves.toBe(
@@ -149,7 +159,8 @@ describe('Auto Peering Service', (): void => {
         staticIlpAddress: 'test.rafiki-money',
         ilpConnectorUrl: 'invalid',
         asset: { code: asset.code, scale: asset.scale },
-        httpToken: 'someHttpToken'
+        httpToken: 'someHttpToken',
+        tenantId
       }
 
       await expect(
@@ -164,7 +175,8 @@ describe('Auto Peering Service', (): void => {
         staticIlpAddress: 'invalid',
         ilpConnectorUrl: 'http://peer.rafiki.money',
         asset: { code: asset.code, scale: asset.scale },
-        httpToken: 'someHttpToken'
+        httpToken: 'someHttpToken',
+        tenantId
       }
 
       await expect(
@@ -179,7 +191,8 @@ describe('Auto Peering Service', (): void => {
         staticIlpAddress: 'test.rafiki-money',
         ilpConnectorUrl: 'http://peer.rafiki.money',
         asset: { code: asset.code, scale: asset.scale },
-        httpToken: 'someHttpToken'
+        httpToken: 'someHttpToken',
+        tenantId
       }
 
       assert.ok(
@@ -199,7 +212,8 @@ describe('Auto Peering Service', (): void => {
     test('returns error if unknown asset', async (): Promise<void> => {
       const args: InitiatePeeringRequestArgs = {
         peerUrl: 'http://peer.rafiki.money',
-        assetId: uuid()
+        assetId: uuid(),
+        tenantId
       }
 
       await expect(
@@ -214,14 +228,16 @@ describe('Auto Peering Service', (): void => {
         peerUrl: 'http://peer.rafiki.money',
         assetId: asset.id,
         maxPacketAmount: 1000n,
-        liquidityThreshold: 100n
+        liquidityThreshold: 100n,
+        tenantId
       }
 
       const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
         ilpConnectorUrl: 'http://peer-two.com',
         httpToken: 'peerHttpToken',
-        name: 'Peer 2'
+        name: 'Peer 2',
+        tenantId
       }
 
       const scope = nock(args.peerUrl)
@@ -261,7 +277,8 @@ describe('Auto Peering Service', (): void => {
         },
         maxPacketAmount: args.maxPacketAmount,
         name: peerDetails.name,
-        liquidityThreshold: args.liquidityThreshold
+        liquidityThreshold: args.liquidityThreshold,
+        tenantId
       })
 
       scope.done()
@@ -275,14 +292,16 @@ describe('Auto Peering Service', (): void => {
         assetId: asset.id,
         maxPacketAmount: 1000n,
         liquidityThreshold: 100n,
-        liquidityToDeposit: 10000n
+        liquidityToDeposit: 10000n,
+        tenantId
       }
 
       const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
         ilpConnectorUrl: 'http://peer-two.com',
         httpToken: 'peerHttpToken',
-        name: 'Peer 2'
+        name: 'Peer 2',
+        tenantId
       }
 
       const scope = nock(args.peerUrl)
@@ -321,14 +340,16 @@ describe('Auto Peering Service', (): void => {
         assetId: asset.id,
         maxPacketAmount: 1000n,
         liquidityThreshold: 100n,
-        liquidityToDeposit: -10000n
+        liquidityToDeposit: -10000n,
+        tenantId
       }
 
       const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
         ilpConnectorUrl: 'http://peer-two.com',
         httpToken: 'peerHttpToken',
-        name: 'Peer 2'
+        name: 'Peer 2',
+        tenantId
       }
 
       const scope = nock(args.peerUrl)
@@ -361,14 +382,16 @@ describe('Auto Peering Service', (): void => {
         peerUrl: 'http://peer.rafiki.money',
         assetId: asset.id,
         maxPacketAmount: 1000n,
-        name: 'Overridden Peer Name'
+        name: 'Overridden Peer Name',
+        tenantId
       }
 
       const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
         ilpConnectorUrl: 'http://peer-two.com',
         httpToken: 'peerHttpToken',
-        name: 'Peer 2'
+        name: 'Peer 2',
+        tenantId
       }
 
       const scope = nock(args.peerUrl).post('/').reply(200, peerDetails)
@@ -392,7 +415,8 @@ describe('Auto Peering Service', (): void => {
           }
         },
         maxPacketAmount: args.maxPacketAmount,
-        name: args.name
+        name: args.name,
+        tenantId
       })
 
       scope.done()
@@ -403,7 +427,8 @@ describe('Auto Peering Service', (): void => {
 
       const args: InitiatePeeringRequestArgs = {
         peerUrl: `http://${uuid()}.test`,
-        assetId: asset.id
+        assetId: asset.id,
+        tenantId
       }
 
       await expect(
@@ -416,7 +441,8 @@ describe('Auto Peering Service', (): void => {
 
       const args: InitiatePeeringRequestArgs = {
         peerUrl: 'http://peer.rafiki.money',
-        assetId: asset.id
+        assetId: asset.id,
+        tenantId
       }
 
       const scope = nock(args.peerUrl)
@@ -424,7 +450,6 @@ describe('Auto Peering Service', (): void => {
         .reply(400, {
           error: { type: AutoPeeringError.InvalidPeerIlpConfiguration }
         })
-
       await expect(
         autoPeeringService.initiatePeeringRequest(args)
       ).resolves.toBe(AutoPeeringError.InvalidIlpConfiguration)
@@ -433,18 +458,16 @@ describe('Auto Peering Service', (): void => {
 
     test('returns error if peer does not support asset', async (): Promise<void> => {
       const asset = await createAsset(deps)
-
       const args: InitiatePeeringRequestArgs = {
         peerUrl: 'http://peer.rafiki.money',
-        assetId: asset.id
+        assetId: asset.id,
+        tenantId
       }
-
       const scope = nock(args.peerUrl)
         .post('/')
         .reply(400, {
           error: { type: AutoPeeringError.UnknownAsset }
         })
-
       await expect(
         autoPeeringService.initiatePeeringRequest(args)
       ).resolves.toBe(AutoPeeringError.PeerUnsupportedAsset)
@@ -453,14 +476,13 @@ describe('Auto Peering Service', (): void => {
 
     test('returns error if peer URL request error', async (): Promise<void> => {
       const asset = await createAsset(deps)
-
       const args: InitiatePeeringRequestArgs = {
         peerUrl: 'http://peer.rafiki.money',
-        assetId: asset.id
+        assetId: asset.id,
+        tenantId
       }
 
       const scope = nock(args.peerUrl).post('/').replyWithError('some  error')
-
       await expect(
         autoPeeringService.initiatePeeringRequest(args)
       ).resolves.toBe(AutoPeeringError.InvalidPeeringRequest)
@@ -472,14 +494,16 @@ describe('Auto Peering Service', (): void => {
 
       const args: InitiatePeeringRequestArgs = {
         peerUrl: 'http://peer.rafiki.money',
-        assetId: asset.id
+        assetId: asset.id,
+        tenantId
       }
 
       const peerDetails: PeeringDetails = {
         staticIlpAddress: '',
         ilpConnectorUrl: 'http://peer-two.com',
         httpToken: 'peerHttpToken',
-        name: 'Peer 2'
+        name: 'Peer 2',
+        tenantId
       }
 
       const scope = nock(args.peerUrl).post('/').reply(200, peerDetails)
@@ -495,14 +519,16 @@ describe('Auto Peering Service', (): void => {
 
       const args: InitiatePeeringRequestArgs = {
         peerUrl: 'http://peer.rafiki.money',
-        assetId: asset.id
+        assetId: asset.id,
+        tenantId
       }
 
       const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
         ilpConnectorUrl: '',
         httpToken: 'peerHttpToken',
-        name: 'Peer 2'
+        name: 'Peer 2',
+        tenantId
       }
 
       const scope = nock(args.peerUrl).post('/').reply(200, peerDetails)
@@ -518,14 +544,16 @@ describe('Auto Peering Service', (): void => {
 
       const args: InitiatePeeringRequestArgs = {
         peerUrl: 'http://peer.rafiki.money',
-        assetId: asset.id
+        assetId: asset.id,
+        tenantId
       }
 
       const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
         ilpConnectorUrl: 'http://peer-two.com',
         httpToken: uuid(),
-        name: 'Peer 2'
+        name: 'Peer 2',
+        tenantId
       }
 
       const secondPeerDetails: PeeringDetails = {
@@ -574,14 +602,16 @@ describe('Auto Peering Service', (): void => {
       const args: InitiatePeeringRequestArgs = {
         peerUrl: 'http://peer.rafiki.money',
         assetId: asset.id,
-        liquidityToDeposit: 1000n
+        liquidityToDeposit: 1000n,
+        tenantId
       }
 
       const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
         ilpConnectorUrl: 'http://peer-two.com',
         httpToken: uuid(),
-        name: 'Peer 2'
+        name: 'Peer 2',
+        tenantId
       }
 
       const scope = nock(args.peerUrl).post('/').twice().reply(200, peerDetails)
@@ -612,14 +642,16 @@ describe('Auto Peering Service', (): void => {
       const args: InitiatePeeringRequestArgs = {
         peerUrl: 'http://peer.rafiki.money',
         assetId: asset.id,
-        liquidityToDeposit: 1000n
+        liquidityToDeposit: 1000n,
+        tenantId
       }
 
       const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
         ilpConnectorUrl: 'http://peer-two.com',
         httpToken: uuid(),
-        name: 'Peer 2'
+        name: 'Peer 2',
+        tenantId
       }
 
       const scope = nock(args.peerUrl).post('/').twice().reply(200, peerDetails)
@@ -644,14 +676,16 @@ describe('Auto Peering Service', (): void => {
 
       const args: InitiatePeeringRequestArgs = {
         peerUrl: 'http://peer.rafiki.money',
-        assetId: asset.id
+        assetId: asset.id,
+        tenantId
       }
 
       const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
         ilpConnectorUrl: 'http://peer-two.com',
         httpToken: 'peerHttpToken',
-        name: 'Peer 2'
+        name: 'Peer 2',
+        tenantId
       }
 
       const scope = nock(args.peerUrl).post('/').reply(200, peerDetails)

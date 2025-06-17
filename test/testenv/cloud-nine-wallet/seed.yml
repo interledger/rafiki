@@ -21,6 +21,10 @@ peers:
     peerUrl: http://happy-life-bank-test-backend:4102
     peerIlpAddress: test.happy-life-bank-test
     liquidityThreshold: 1000000
+    tokens:
+      incoming:
+        - test-USD-happy-life-bank-cloud-nine-wallet
+      outgoing: test-USD-cloud-nine-wallet-happy-life-bank
 accounts:
   - name: 'Grace Franklin'
     path: accounts/gfranklin

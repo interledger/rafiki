@@ -17,6 +17,7 @@ import {
   RafikiServicesFactory
 } from '../../factories'
 import { ZeroCopyIlpPrepare } from '../../middleware/ilp-packet'
+import { StreamServer } from '@interledger/stream-receiver'
 
 const sha256 = (preimage: string | Buffer): Buffer =>
   crypto.createHash('sha256').update(preimage).digest()
@@ -35,12 +36,22 @@ describe('Stream Controller', function () {
 
   test('constructs a reply for a receive account', async () => {
     const bob = IncomingPaymentAccountFactory.build()
-    const { ilpAddress, sharedSecret } =
-      services.streamServer.generateCredentials({
-        paymentTag: 'foo'
-      })
+
+    const streamServer = new StreamServer({
+      serverAddress: services.config.ilpAddress,
+      serverSecret: services.config.streamSecret
+    })
+
+    const { ilpAddress, sharedSecret } = streamServer.generateCredentials({
+      paymentTag: 'foo'
+    })
+
     const ctx = createILPContext({
       services,
+      state: {
+        streamServer,
+        streamDestination: streamServer.decodePaymentTag(ilpAddress)
+      },
       accounts: {
         get incoming() {
           return alice

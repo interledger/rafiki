@@ -1,9 +1,14 @@
 import { GraphQLError } from 'graphql'
 import { IMiddleware } from 'graphql-middleware'
-import { ApolloContext } from '../../app'
+import {
+  ApolloContext,
+  ForTenantIdContext,
+  TenantedApolloContext
+} from '../../app'
 import { CacheDataStore } from '../../middleware/cache/data-stores'
 import { lockMiddleware, Lock } from '../../middleware/lock'
 import { cacheMiddleware } from '../../middleware/cache'
+import { validateTenantMiddleware } from '../../middleware/tenant'
 
 export function lockGraphQLMutationMiddleware(lock: Lock): {
   Mutation: IMiddleware
@@ -42,6 +47,20 @@ export function idempotencyGraphQLMiddleware(
             `Incoming arguments are different than the original request for idempotencyKey: ${args?.input?.idempotencyKey}`
           )
         }
+      })
+    }
+  }
+}
+
+export function setForTenantIdGraphQLMutationMiddleware(): {
+  Mutation: IMiddleware<TenantedApolloContext, ForTenantIdContext>
+} {
+  return {
+    Mutation: async (resolve, root, args, context, info) => {
+      return validateTenantMiddleware({
+        deps: { context },
+        next: () => resolve(root, args, context, info),
+        tenantIdInput: args?.input?.tenantId
       })
     }
   }

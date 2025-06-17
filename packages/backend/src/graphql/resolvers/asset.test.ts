@@ -3,7 +3,11 @@ import assert from 'assert'
 import { v4 as uuid } from 'uuid'
 
 import { getPageTests } from './page.test'
-import { createTestApp, TestContainer } from '../../tests/app'
+import {
+  createApolloClient,
+  createTestApp,
+  TestContainer
+} from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
@@ -32,6 +36,7 @@ import { isFeeError } from '../../fee/errors'
 import { createFee } from '../../tests/fee'
 import { createAsset } from '../../tests/asset'
 import { GraphQLErrorCode } from '../errors'
+import { createTenant } from '../../tests/tenant'
 
 describe('Asset Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -49,7 +54,7 @@ describe('Asset Resolvers', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -132,7 +137,7 @@ describe('Asset Resolvers', (): void => {
     test('Returns error for duplicate asset', async (): Promise<void> => {
       const input = randomAsset()
 
-      await assetService.create(input)
+      await assetService.create({ ...input, tenantId: Config.operatorTenantId })
 
       expect.assertions(2)
       try {
@@ -212,12 +217,62 @@ describe('Asset Resolvers', (): void => {
         )
       }
     })
+
+    test('bad input data when not allowed to perform cross tenant create', async (): Promise<void> => {
+      const otherTenant = await createTenant(deps)
+      const badInputData = {
+        ...randomAsset(),
+        tenantId: uuid()
+      }
+
+      const tenantedApolloClient = await createApolloClient(
+        appContainer.container,
+        appContainer.app,
+        otherTenant.id
+      )
+      try {
+        expect.assertions(2)
+        await tenantedApolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateAsset($input: CreateAssetInput!) {
+                createAsset(input: $input) {
+                  asset {
+                    id
+                  }
+                }
+              }
+            `,
+            variables: {
+              input: badInputData
+            }
+          })
+          .then((query): AssetMutationResponse => {
+            if (query.data) {
+              return query.data.createAsset
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Assignment to the specified tenant is not permitted',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.BadUserInput
+            })
+          })
+        )
+      }
+    })
   })
 
   describe('Asset Queries', (): void => {
     test('Can get an asset', async (): Promise<void> => {
       const asset = await assetService.create({
         ...randomAsset(),
+        tenantId: Config.operatorTenantId,
         withdrawalThreshold: BigInt(10),
         liquidityThreshold: BigInt(100)
       })
@@ -283,6 +338,7 @@ describe('Asset Resolvers', (): void => {
     test('Can get an asset by code and scale', async (): Promise<void> => {
       const asset = await assetService.create({
         ...randomAsset(),
+        tenantId: Config.operatorTenantId,
         withdrawalThreshold: BigInt(10),
         liquidityThreshold: BigInt(100)
       })
@@ -349,7 +405,10 @@ describe('Asset Resolvers', (): void => {
       { fixed: BigInt(100), basisPoints: 1000, type: FeeType.Sending },
       { fixed: BigInt(100), basisPoints: 1000, type: FeeType.Receiving }
     ])('Can get an asset with fee of %p', async (fee): Promise<void> => {
-      const asset = await assetService.create(randomAsset())
+      const asset = await assetService.create({
+        ...randomAsset(),
+        tenantId: Config.operatorTenantId
+      })
       assert.ok(!isAssetError(asset))
 
       let expectedFee = null
@@ -469,6 +528,7 @@ describe('Asset Resolvers', (): void => {
       createModel: () =>
         assetService.create({
           ...randomAsset(),
+          tenantId: Config.operatorTenantId,
           withdrawalThreshold: BigInt(10),
           liquidityThreshold: BigInt(100)
         }) as Promise<AssetModel>,
@@ -480,6 +540,7 @@ describe('Asset Resolvers', (): void => {
       for (let i = 0; i < 2; i++) {
         const asset = await assetService.create({
           ...randomAsset(),
+          tenantId: Config.operatorTenantId,
           withdrawalThreshold: BigInt(10),
           liquidityThreshold: BigInt(100)
         })
@@ -620,6 +681,7 @@ describe('Asset Resolvers', (): void => {
         beforeEach(async (): Promise<void> => {
           asset = (await assetService.create({
             ...randomAsset(),
+            tenantId: Config.operatorTenantId,
             withdrawalThreshold,
             liquidityThreshold
           })) as AssetModel
