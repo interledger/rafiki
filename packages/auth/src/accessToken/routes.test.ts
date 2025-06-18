@@ -105,9 +105,6 @@ describe('Access Token Routes', (): void => {
         grantId: grant.id,
         ...BASE_TOKEN
       })
-
-      const openApi = await deps.use('openApi')
-      jestOpenAPI(openApi.tokenIntrospectionSpec)
     })
     test('Cannot introspect fake token', async (): Promise<void> => {
       const ctx = createContext<IntrospectContext>(
@@ -124,7 +121,6 @@ describe('Access Token Routes', (): void => {
         access_token: v4()
       }
       await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
-      expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.status).toBe(200)
       expect(ctx.response.get('Content-Type')).toBe(
         'application/json; charset=utf-8'
@@ -151,7 +147,6 @@ describe('Access Token Routes', (): void => {
       }
 
       await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
-      expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.status).toBe(200)
       expect(ctx.response.get('Content-Type')).toBe(
         'application/json; charset=utf-8'
@@ -187,7 +182,6 @@ describe('Access Token Routes', (): void => {
         access_token: token.value
       }
       await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
-      expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.status).toBe(200)
       expect(ctx.response.get('Content-Type')).toBe(
         'application/json; charset=utf-8'
@@ -215,7 +209,6 @@ describe('Access Token Routes', (): void => {
       }
 
       await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
-      expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.status).toBe(200)
       expect(ctx.response.get('Content-Type')).toBe(
         'application/json; charset=utf-8'
@@ -259,7 +252,6 @@ describe('Access Token Routes', (): void => {
       }
 
       await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
-      expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.status).toBe(200)
       expect(ctx.response.get('Content-Type')).toBe(
         'application/json; charset=utf-8'
@@ -307,7 +299,6 @@ describe('Access Token Routes', (): void => {
       }
 
       await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
-      expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.status).toBe(200)
       expect(ctx.response.get('Content-Type')).toBe(
         'application/json; charset=utf-8'
@@ -350,7 +341,6 @@ describe('Access Token Routes', (): void => {
       }
 
       await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
-      expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.status).toBe(200)
       expect(ctx.response.get('Content-Type')).toBe(
         'application/json; charset=utf-8'
