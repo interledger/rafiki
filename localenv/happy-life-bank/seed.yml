@@ -20,9 +20,19 @@ peers:
   - initialLiquidity: '1000000000000'
     peerUrl: http://global-bank-backend:3002
     peerIlpAddress: test.global-bank
-    incomingToken: global-to-happy
-    outgoingToken: happy-to-global
     liquidityThreshold: 1000000
+    tokens:
+      incoming: 
+        - test-USD-global-bank-happy-life-bank
+      outgoing: test-USD-happy-life-bank-global-bank
+  - initialLiquidity: '1000000000000'
+    peerUrl: http://global-bank-backend:3002
+    peerIlpAddress: test.global-bank.bc293b79-8609-47bd-b914-6438b470aff8
+    liquidityThreshold: 1000000
+    tokens:
+      incoming: 
+        - test-USD-cloud-ten-wallet-happy-life-bank
+      outgoing: test-USD-happy-life-bank-cloud-ten-wallet
     routes: []
 accounts:
   - name: 'Philip Fry'

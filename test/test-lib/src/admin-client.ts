@@ -286,7 +286,7 @@ export class AdminClient {
             createWalletAddress(input: $input) {
               walletAddress {
                 id
-                url
+                address
                 publicName
               }
             }

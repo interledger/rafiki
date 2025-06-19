@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "@adonisjs/fold": "^8.2.0",
+    "@apollo/client": "^3.11.8",
     "@apollo/server": "^4.11.2",
     "@as-integrations/koa": "^1.1.1",
     "@escape.tech/graphql-armor": "^2.4.0",
@@ -77,7 +78,7 @@
     "base64url": "^3.0.1",
     "dotenv": "^16.4.7",
     "extensible-error": "^1.0.2",
-    "graphql": "^16.8.1",
+    "graphql": "^16.11.0",
     "graphql-middleware": "^6.1.35",
     "graphql-scalars": "^1.23.0",
     "ilp-packet": "3.1.4-alpha.2",

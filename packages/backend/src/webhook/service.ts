@@ -2,12 +2,19 @@ import axios, { isAxiosError } from 'axios'
 import { createHmac } from 'crypto'
 import { canonicalize } from 'json-canonicalize'
 
-import { WebhookEvent } from './model'
+import { isWebhookWithEvent, Webhook, WebhookWithEvent } from './model'
+import { WebhookEvent } from './event/model'
 import { IAppConfig } from '../config/app'
 import { BaseService } from '../shared/baseService'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { FilterString } from '../shared/filters'
 import { trace, Span } from '@opentelemetry/api'
+import {
+  formatSettings,
+  FormattedTenantSettings,
+  TenantSettingKeys
+} from '../tenants/settings/model'
+import { TenantSettingService } from '../tenants/settings/service'
 
 // First retry waits 10 seconds
 // Second retry waits 20 (more) seconds
@@ -35,6 +42,7 @@ export interface WebhookService {
 
 interface ServiceDependencies extends BaseService {
   config: IAppConfig
+  tenantSettingService: TenantSettingService
 }
 
 export async function createWebhookService(
@@ -48,7 +56,7 @@ export async function createWebhookService(
     getEvent: (id) => getWebhookEvent(deps, id),
     getLatestByResourceId: (options) =>
       getLatestWebhookEventByResourceId(deps, options),
-    processNext: () => processNextWebhookEvent(deps),
+    processNext: () => processNextWebhook(deps),
     getPage: (options) => getWebhookEventsPage(deps, options)
   }
 }
@@ -114,9 +122,9 @@ async function getLatestWebhookEventByResourceId(
   return await query.first()
 }
 
-// Fetch (and lock) a webhook event for work.
-// Returns the id of the processed event (if any).
-async function processNextWebhookEvent(
+// Fetch (and lock) a webhook for work.
+// Returns the id of the processed webhook (if any).
+async function processNextWebhook(
   deps_: ServiceDependencies
 ): Promise<string | undefined> {
   if (!deps_.knex) {
@@ -125,37 +133,44 @@ async function processNextWebhookEvent(
 
   const tracer = trace.getTracer('webhook_worker')
 
-  return tracer.startActiveSpan(
-    'processNextWebhookEvent',
-    async (span: Span) => {
-      return deps_.knex!.transaction(async (trx) => {
-        const now = Date.now()
-        const events = await WebhookEvent.query(trx)
-          .limit(1)
-          // Ensure the webhook event cannot be processed concurrently by multiple workers.
-          .forUpdate()
-          // If a webhook event is locked, don't wait — just come back for it later.
-          .skipLocked()
-          .where('attempts', '<', deps_.config.webhookMaxRetry)
-          .where('processAt', '<=', new Date(now).toISOString())
+  return tracer.startActiveSpan('processNextWebhook', async (span: Span) => {
+    return deps_.knex!.transaction(async (trx) => {
+      const now = Date.now()
+      const webhooks = await Webhook.query(trx)
+        .limit(1)
+        // Ensure the webhook cannot be processed concurrently by multiple workers.
+        .forUpdate()
+        // If a webhook is locked, don't wait — just come back for it later.
+        .skipLocked()
+        .whereRaw(
+          `attempts < GREATEST(coalesce((select value from "tenantSettings" where "tenantId" = "webhooks"."recipientTenantId" and key = '${TenantSettingKeys.WEBHOOK_MAX_RETRY.name}')::integer, ${deps_.config.webhookMaxRetry}))`
+        )
+        .where('processAt', '<=', new Date(now).toISOString())
+        .withGraphFetched('event')
 
-        const event = events[0]
-        if (!event) return
+      const webhook = webhooks[0]
+      if (!webhook || !isWebhookWithEvent(webhook)) return
 
-        const deps = {
-          ...deps_,
-          knex: trx,
-          logger: deps_.logger.child({
-            event: event.id
-          })
-        }
+      const deps = {
+        ...deps_,
+        knex: trx,
+        logger: deps_.logger.child({
+          event: webhook.eventId,
+          webhook: webhook.id
+        })
+      }
 
-        await sendWebhookEvent(deps, event)
-        span.end()
-        return event.id
+      const settings = await deps_.tenantSettingService.get({
+        tenantId: webhook.recipientTenantId
       })
-    }
-  )
+      const formattedSettings = formatSettings(settings)
+
+      await sendWebhook(deps, webhook, formattedSettings)
+
+      span.end()
+      return webhook.id
+    })
+  })
 }
 
 type WebhookHeaders = {
@@ -163,9 +178,10 @@ type WebhookHeaders = {
   'Rafiki-Signature'?: string
 }
 
-async function sendWebhookEvent(
+async function sendWebhook(
   deps: ServiceDependencies,
-  event: WebhookEvent
+  webhook: WebhookWithEvent,
+  settings: Partial<FormattedTenantSettings>
 ): Promise<void> {
   try {
     const requestHeaders: WebhookHeaders = {
@@ -173,9 +189,9 @@ async function sendWebhookEvent(
     }
 
     const body = {
-      id: event.id,
-      type: event.type,
-      data: event.data
+      id: webhook.event.id,
+      type: webhook.event.type,
+      data: webhook.event.data
     }
 
     if (deps.config.signatureSecret) {
@@ -186,20 +202,22 @@ async function sendWebhookEvent(
       )
     }
 
-    await axios.post(deps.config.webhookUrl, body, {
-      timeout: deps.config.webhookTimeout,
+    await axios.post(settings?.webhookUrl ?? deps.config.webhookUrl, body, {
+      timeout: settings?.webhookTimeout
+        ? Number(settings?.webhookTimeout)
+        : deps.config.webhookTimeout,
       headers: requestHeaders,
       validateStatus: (status) => status === 200
     })
 
-    await event.$query(deps.knex).patch({
-      attempts: event.attempts + 1,
+    await webhook.$query(deps.knex).patch({
+      attempts: webhook.attempts + 1,
       statusCode: 200,
       processAt: null
     })
   } catch (err) {
     if (isAxiosError(err)) {
-      const attempts = event.attempts + 1
+      const attempts = webhook.attempts + 1
       const errorMessage = err.message
       deps.logger.warn(
         {
@@ -209,7 +227,7 @@ async function sendWebhookEvent(
         'webhook request failed'
       )
 
-      await event.$query(deps.knex).patch({
+      await webhook.$query(deps.knex).patch({
         attempts,
         statusCode: err.response ? err.response.status : undefined,
         processAt: new Date(

@@ -93,7 +93,7 @@ describe('Auto Peering Resolvers', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -111,7 +111,8 @@ describe('Auto Peering Resolvers', (): void => {
         staticIlpAddress: 'test.peer2',
         ilpConnectorUrl: 'http://peer-two.com',
         name: 'Test Peer',
-        httpToken: 'httpToken'
+        httpToken: 'httpToken',
+        tenant: Config.operatorTenantId
       }
 
       const scope = nock(input.peerUrl).post('/').reply(200, peerDetails)
@@ -150,7 +151,8 @@ describe('Auto Peering Resolvers', (): void => {
         staticIlpAddress: 'test.peer2',
         ilpConnectorUrl: 'http://peer-two.com',
         name: 'Test Peer',
-        httpToken: 'httpToken'
+        httpToken: 'httpToken',
+        tenantId: Config.operatorTenantId
       }
 
       const secondPeerDetails = {

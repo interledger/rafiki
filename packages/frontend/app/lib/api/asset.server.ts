@@ -27,9 +27,10 @@ import type {
   WithdrawAssetLiquidity,
   WithdrawAssetLiquidityVariables
 } from '~/generated/graphql'
-import { apolloClient } from '../apollo.server'
+import { getApolloClient } from '../apollo.server'
 
-export const getAssetInfo = async (args: QueryAssetArgs) => {
+export const getAssetInfo = async (request: Request, args: QueryAssetArgs) => {
+  const apolloClient = await getApolloClient(request)
   const response = await apolloClient.query<
     GetAssetQuery,
     GetAssetQueryVariables
@@ -56,7 +57,11 @@ export const getAssetInfo = async (args: QueryAssetArgs) => {
   return response.data.asset
 }
 
-export const getAssetWithFees = async (args: QueryAssetArgs) => {
+export const getAssetWithFees = async (
+  request: Request,
+  args: QueryAssetArgs
+) => {
+  const apolloClient = await getApolloClient(request)
   const response = await apolloClient.query<
     GetAssetWithFeesQuery,
     GetAssetWithFeesQueryVariables
@@ -97,7 +102,8 @@ export const getAssetWithFees = async (args: QueryAssetArgs) => {
   return response.data.asset
 }
 
-export const listAssets = async (args: QueryAssetsArgs) => {
+export const listAssets = async (request: Request, args: QueryAssetsArgs) => {
+  const apolloClient = await getApolloClient(request)
   const response = await apolloClient.query<
     ListAssetsQuery,
     ListAssetsQueryVariables
@@ -117,6 +123,7 @@ export const listAssets = async (args: QueryAssetsArgs) => {
               scale
               withdrawalThreshold
               createdAt
+              tenantId
             }
           }
           pageInfo {
@@ -130,11 +137,11 @@ export const listAssets = async (args: QueryAssetsArgs) => {
     `,
     variables: args
   })
-
   return response.data.assets
 }
 
-export const createAsset = async (args: CreateAssetInput) => {
+export const createAsset = async (request: Request, args: CreateAssetInput) => {
+  const apolloClient = await getApolloClient(request)
   const response = await apolloClient.mutate<
     CreateAssetMutation,
     CreateAssetMutationVariables
@@ -166,7 +173,8 @@ export const createAsset = async (args: CreateAssetInput) => {
   return response.data?.createAsset
 }
 
-export const updateAsset = async (args: UpdateAssetInput) => {
+export const updateAsset = async (request: Request, args: UpdateAssetInput) => {
+  const apolloClient = await getApolloClient(request)
   const response = await apolloClient.mutate<
     UpdateAssetMutation,
     UpdateAssetMutationVariables
@@ -198,7 +206,8 @@ export const updateAsset = async (args: UpdateAssetInput) => {
   return response.data?.updateAsset
 }
 
-export const setFee = async (args: SetFeeInput) => {
+export const setFee = async (request: Request, args: SetFeeInput) => {
+  const apolloClient = await getApolloClient(request)
   const response = await apolloClient.mutate<
     SetFeeMutation,
     SetFeeMutationVariables
@@ -226,8 +235,10 @@ export const setFee = async (args: SetFeeInput) => {
 }
 
 export const depositAssetLiquidity = async (
+  request: Request,
   args: DepositAssetLiquidityInput
 ) => {
+  const apolloClient = await getApolloClient(request)
   const response = await apolloClient.mutate<
     DepositAssetLiquidityMutation,
     DepositAssetLiquidityMutationVariables
@@ -250,8 +261,10 @@ export const depositAssetLiquidity = async (
 }
 
 export const withdrawAssetLiquidity = async (
+  request: Request,
   args: CreateAssetLiquidityWithdrawalInput
 ) => {
+  const apolloClient = await getApolloClient(request)
   const response = await apolloClient.mutate<
     WithdrawAssetLiquidity,
     WithdrawAssetLiquidityVariables
@@ -273,13 +286,13 @@ export const withdrawAssetLiquidity = async (
   return response.data?.createAssetLiquidityWithdrawal
 }
 
-export const loadAssets = async () => {
+export const loadAssets = async (request: Request) => {
   let assets: ListAssetsQuery['assets']['edges'] = []
   let hasNextPage = true
   let after: string | undefined
 
   while (hasNextPage) {
-    const response = await listAssets({ first: 100, after })
+    const response = await listAssets(request, { first: 100, after })
 
     if (!response.edges.length) {
       return []
@@ -295,7 +308,8 @@ export const loadAssets = async () => {
   return assets
 }
 
-export const deleteAsset = async (args: DeleteAssetInput) => {
+export const deleteAsset = async (request: Request, args: DeleteAssetInput) => {
+  const apolloClient = await getApolloClient(request)
   const response = await apolloClient.mutate<
     DeleteAssetMutation,
     DeleteAssetMutationVariables

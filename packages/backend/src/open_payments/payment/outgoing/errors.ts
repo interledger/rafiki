@@ -5,7 +5,7 @@ import {
 } from '../../../accounting/errors'
 import { GraphQLErrorCode } from '../../../graphql/errors'
 import { PaymentMethodHandlerError } from '../../../payment-method/handler/errors'
-import { QuoteError } from '../../quote/errors'
+import { QuoteErrorCode } from '../../quote/errors'
 
 export enum OutgoingPaymentError {
   UnknownWalletAddress = 'UnknownWalletAddress',
@@ -21,15 +21,16 @@ export enum OutgoingPaymentError {
 }
 
 export const quoteErrorToOutgoingPaymentError: Record<
-  QuoteError,
+  QuoteErrorCode,
   OutgoingPaymentError
 > = {
-  [QuoteError.UnknownWalletAddress]: OutgoingPaymentError.UnknownWalletAddress,
-  [QuoteError.InvalidAmount]: OutgoingPaymentError.InvalidAmount,
-  [QuoteError.InvalidReceiver]: OutgoingPaymentError.InvalidReceiver,
-  [QuoteError.InactiveWalletAddress]:
+  [QuoteErrorCode.UnknownWalletAddress]:
+    OutgoingPaymentError.UnknownWalletAddress,
+  [QuoteErrorCode.InvalidAmount]: OutgoingPaymentError.InvalidAmount,
+  [QuoteErrorCode.InvalidReceiver]: OutgoingPaymentError.InvalidReceiver,
+  [QuoteErrorCode.InactiveWalletAddress]:
     OutgoingPaymentError.InactiveWalletAddress,
-  [QuoteError.NonPositiveReceiveAmount]:
+  [QuoteErrorCode.NonPositiveReceiveAmount]:
     OutgoingPaymentError.NegativeReceiveAmount
 }
 

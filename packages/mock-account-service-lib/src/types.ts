@@ -16,6 +16,10 @@ export interface Peering {
   routes: string[]
   initialLiquidity: string
   name: string
+  tokens: {
+    incoming: string[]
+    outgoing: string
+  }
 }
 
 export interface Account {
@@ -35,6 +39,16 @@ export interface Fee {
   scale: number
 }
 
+export interface Tenant {
+  id?: string
+  apiSecret: string
+  publicName: string
+  idpConsentUrl: string
+  idpSecret: string
+  walletAddressPrefix: string
+  webhookUrl: string
+}
+
 export interface SeedInstance {
   assets: Array<Asset>
   peeringAsset: string
@@ -42,9 +56,11 @@ export interface SeedInstance {
   accounts: Array<Account>
   fees: Array<Fee>
   rates: Record<string, Record<string, number>>
+  tenants: Array<Tenant>
 }
 
 export interface Config {
+  isTenant: boolean
   seed: SeedInstance
   key: KeyObject
   publicHost: string
@@ -52,6 +68,7 @@ export interface Config {
   authServerDomain: string
   graphqlUrl: string
   idpSecret: string
+  operatorTenantId: string
 }
 export interface Webhook {
   id: string

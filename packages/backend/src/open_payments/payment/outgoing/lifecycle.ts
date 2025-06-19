@@ -122,6 +122,7 @@ export async function handleSending(
       'transaction_fee_amounts',
       payment.sentAmount,
       payment.receiveAmount,
+      payment.tenantId,
       {
         description: 'Amount sent through the network as fees',
         valueType: ValueType.DOUBLE
@@ -181,9 +182,17 @@ async function handleCompleted(
   const stopTimer = deps.telemetry.startTimer('handle_completed_ms', {
     callName: 'OutgoingPaymentLifecycle:handleCompleted'
   })
-  await payment.$query(deps.knex).patch({
+  const updatedPayment = await payment.$query(deps.knex).patchAndFetch({
     state: OutgoingPaymentState.Completed
   })
+
+  deps.telemetry.recordHistogram(
+    'outgoing_payment_lifecycle_completed_ms',
+    updatedPayment.updatedAt.getTime() - payment.createdAt.getTime(),
+    {
+      callName: 'OutgoingPaymentLifecycle:handleCompleted'
+    }
+  )
 
   await sendWebhookEvent(
     deps,
@@ -226,11 +235,17 @@ export async function sendWebhookEvent(
       }
     : undefined
 
-  await OutgoingPaymentEvent.query(trx || deps.knex).insert({
+  const webhooks = [{ recipientTenantId: payment.tenantId }]
+  if (payment.tenantId !== deps.config.operatorTenantId) {
+    webhooks.push({ recipientTenantId: deps.config.operatorTenantId })
+  }
+  await OutgoingPaymentEvent.query(trx || deps.knex).insertGraph({
     outgoingPaymentId: payment.id,
     type,
     data: payment.toData({ amountSent, balance }),
-    withdrawal
+    withdrawal,
+    tenantId: payment.tenantId,
+    webhooks
   })
   stopTimer()
 }

@@ -16,12 +16,14 @@ type Query {
     after: String
     "Backward pagination: Cursor (asset ID) to start retrieving assets before this point."
     before: String
-    "Foward pagination: Limit the result to the first **n** assets after the `after` cursor."
+    "Forward pagination: Limit the result to the first **n** assets after the `after` cursor."
     first: Int
     "Backward pagination: Limit the result to the last **n** assets before the `before` cursor."
     last: Int
     "Specify the sort order of assets based on their creation data, either ascending or descending."
     sortOrder: SortOrder
+    "Unique identifier of the tenant associated with the wallet address. Optional, if not provided, the tenantId will be obtained from the signature."
+    tenantId: String
   ): AssetsConnection!
 
   "Fetch a peer by its ID."
@@ -47,6 +49,8 @@ type Query {
     last: Int
     "Specify the sort order of peers based on their creation date, either ascending or descending."
     sortOrder: SortOrder
+    "Unique identifier of the tenant associated with the peer."
+    tenantId: ID
   ): PeersConnection!
 
   "Fetch a wallet address by its ID."
@@ -70,6 +74,8 @@ type Query {
     last: Int
     "Specify the sort order of wallet addresses based on their creation date, either ascending or descending."
     sortOrder: SortOrder
+    "Unique identifier of the tenant associated with the wallet address. Optional, if not provided, the tenantId will be obtained from the signature."
+    tenantId: String
   ): WalletAddressesConnection!
 
   "Fetch an Open Payments quote by its ID."
@@ -95,6 +101,8 @@ type Query {
     sortOrder: SortOrder
     "Filter outgoing payments based on specific criteria such as receiver, wallet address ID, or state."
     filter: OutgoingPaymentFilter
+    "Unique identifier of the tenant associated with the wallet address. Optional, if not provided, the tenantId will be obtained from the signature."
+    tenantId: String
   ): OutgoingPaymentConnection!
 
   "Fetch an Open Payments incoming payment by its ID."
@@ -133,6 +141,8 @@ type Query {
     sortOrder: SortOrder
     "Filter payment events based on specific criteria such as payment type or wallet address ID."
     filter: PaymentFilter
+    "Unique identifier of the tenant associated with the wallet address. Optional, if not provided, the tenantId will be obtained from the signature."
+    tenantId: String
   ): PaymentConnection!
 
   "Fetch a paginated list of accounting transfers for a given account."
@@ -148,6 +158,26 @@ type Query {
     "Unique identifier of the receiver (incoming payment URL)."
     id: String!
   ): Receiver
+
+  "Retrieve a tenant of the instance."
+  tenant("Unique identifier of the tenant." id: String!): Tenant!
+
+  "As an operator, fetch a paginated list of tenants on the instance."
+  tenants(
+    "Forward pagination: Cursor (tenant ID) to start retrieving tenants after this point."
+    after: String
+    "Backward pagination: Cursor (tenant ID) to start retrieving tenants before this point."
+    before: String
+    "Forward pagination: Limit the result to the first **n** tenants after the `after` cursor."
+    first: Int
+    "Backward pagination: Limit the result to the last **n** tenants before the `before` cursor."
+    last: Int
+    "Specify the sort order of tenants based on their creation date, either ascending or descending."
+    sortOrder: SortOrder
+  ): TenantsConnection!
+
+  "Determine if the requester has operator permissions"
+  whoami: WhoamiResponse!
 }
 
 type Mutation {
@@ -218,6 +248,10 @@ type Mutation {
   createWalletAddressKey(
     input: CreateWalletAddressKeyInput!
   ): CreateWalletAddressKeyMutationResponse
+
+  createTenantSettings(
+    input: CreateTenantSettingsInput!
+  ): CreateTenantSettingsMutationResponse
 
   "Revoke a public key associated with a wallet address. Open Payment requests using this key for request signatures will be denied going forward."
   revokeWalletAddressKey(
@@ -306,6 +340,15 @@ type Mutation {
   cancelIncomingPayment(
     input: CancelIncomingPaymentInput!
   ): CancelIncomingPaymentResponse!
+
+  "As an operator, create a tenant."
+  createTenant(input: CreateTenantInput!): TenantMutationResponse!
+
+  "Update a tenant."
+  updateTenant(input: UpdateTenantInput!): TenantMutationResponse!
+
+  "Delete a tenant."
+  deleteTenant(id: String!): DeleteTenantMutationResponse!
 }
 
 type PageInfo {
@@ -317,6 +360,11 @@ type PageInfo {
   hasPreviousPage: Boolean!
   "The cursor used to fetch the next page when paginating backwards."
   startCursor: String
+}
+
+type WhoamiResponse {
+  id: String!
+  isOperator: Boolean!
 }
 
 type AssetsConnection {
@@ -354,6 +402,8 @@ input CreateAssetInput {
   liquidityThreshold: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
+  "Unique identifier of the tenant associated with the asset. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature."
+  tenantId: ID
 }
 
 input UpdateAssetInput {
@@ -598,6 +648,18 @@ input CreateWalletAddressKeyInput {
   idempotencyKey: String
 }
 
+input CreateTenantSettingsInput {
+  "List of a settings for a tenant."
+  settings: [TenantSettingInput!]!
+}
+
+input TenantSettingInput {
+  "Key for this setting."
+  key: String!
+  "Value of a setting for this key."
+  value: String!
+}
+
 input RevokeWalletAddressKeyInput {
   "Internal unique identifier of the key to revoke."
   id: String!
@@ -628,7 +690,7 @@ type Asset implements Model {
     after: String
     "Backward pagination: Cursor (fee ID) to start retrieving fees before this point."
     before: String
-    "Foward pagination: Limit the result to the first **n** fees after the `after` cursor."
+    "Forward pagination: Limit the result to the first **n** fees after the `after` cursor."
     first: Int
     "Backward pagination: Limit the result to the last **n** fees before the `before` cursor."
     last: Int
@@ -637,6 +699,7 @@ type Asset implements Model {
   ): FeesConnection
   "The date and time when the asset was created."
   createdAt: String!
+  tenantId: ID!
 }
 
 enum SortOrder {
@@ -692,6 +755,8 @@ type Peer implements Model {
   liquidity: UInt64
   "The date and time when the peer was created."
   createdAt: String!
+  "Unique identifier of the tenant associated with the peer."
+  tenantId: ID!
   "Routes for the peer."
   routes: [String!]
 }
@@ -739,8 +804,8 @@ type WalletAddress implements Model {
   "Current amount of liquidity available for this wallet address."
   liquidity: UInt64
 
-  "Wallet Address URL."
-  url: String!
+  "Wallet Address."
+  address: String!
 
   "Public name associated with the wallet address. This is visible to anyone with the wallet address URL."
   publicName: String
@@ -765,7 +830,7 @@ type WalletAddress implements Model {
     after: String
     "Backward pagination: Cursor (quote ID) to start retrieving quotes before this point."
     before: String
-    "Foward pagination: Limit the result to the first **n** quotes after the `after` cursor."
+    "Forward pagination: Limit the result to the first **n** quotes after the `after` cursor."
     first: Int
     "Backward pagination: Limit the result to the last **n** quotes before the `before` cursor."
     last: Int
@@ -799,7 +864,7 @@ type WalletAddress implements Model {
     after: String
     "Backward pagination: Cursor (wallet address key ID) to start retrieving keys before this point."
     before: String
-    "Foward pagination: Limit the result to the first **n** keys after the `after` cursor."
+    "Forward pagination: Limit the result to the first **n** keys after the `after` cursor."
     first: Int
     "Backward pagination: Limit the result to the last **n** keys before the `before` cursor."
     last: Int
@@ -809,6 +874,9 @@ type WalletAddress implements Model {
 
   "Additional properties associated with the wallet address."
   additionalProperties: [AdditionalProperty]
+
+  "Tenant ID of the wallet address."
+  tenantId: String
 }
 
 type AdditionalProperty {
@@ -889,6 +957,8 @@ type IncomingPayment implements BasePayment & Model {
   metadata: JSONObject
   "The date and time that the incoming payment was created."
   createdAt: String!
+  "The tenant UUID associated with the incoming payment. If not provided, it will be obtained from the signature."
+  tenantId: String
 }
 
 type Receiver {
@@ -986,6 +1056,8 @@ type OutgoingPayment implements BasePayment & Model {
   createdAt: String!
   "Unique identifier of the grant under which the outgoing payment was created."
   grantId: String
+  "Tenant ID of the outgoing payment."
+  tenantId: String
 }
 
 enum OutgoingPaymentState {
@@ -1109,6 +1181,8 @@ type QuoteEdge {
 type Quote {
   "Unique identifier of the quote."
   id: ID!
+  "Unique identifier of the tenant under which the quote was created."
+  tenantId: ID!
   "Unique identifier of the wallet address under which the quote was created."
   walletAddressId: ID!
   "Wallet address URL of the receiver."
@@ -1232,10 +1306,12 @@ type CreateReceiverResponse {
 }
 
 input CreateWalletAddressInput {
+  "Unique identifier of the tenant associated with the wallet address. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature."
+  tenantId: ID
   "Unique identifier of the asset associated with the wallet address. This cannot be changed."
   assetId: String!
-  "Wallet address URL. This cannot be changed."
-  url: String!
+  "Wallet address. This cannot be changed."
+  address: String!
   "Public name associated with the wallet address. This is visible to anyone with the wallet address URL."
   publicName: String
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
@@ -1326,6 +1402,8 @@ type WalletAddressWithdrawal {
 type WebhookEvent implements Model {
   "Unique identifier of the webhook event."
   id: ID!
+  "Tenant of the webhook event."
+  tenantId: ID!
   "Type of webhook event."
   type: String!
   "Stringified JSON data for the webhook event."
@@ -1479,6 +1557,11 @@ type CreateWalletAddressKeyMutationResponse {
   walletAddressKey: WalletAddressKey
 }
 
+type CreateTenantSettingsMutationResponse {
+  "New tenant settings."
+  settings: [TenantSetting!]!
+}
+
 type RevokeWalletAddressKeyMutationResponse {
   "The wallet address key that was revoked."
   walletAddressKey: WalletAddressKey
@@ -1497,6 +1580,88 @@ type ApproveIncomingPaymentResponse {
 type CancelIncomingPaymentResponse {
   "The incoming payment that was canceled."
   payment: IncomingPayment
+}
+
+type Tenant implements Model {
+  "Unique identifier of the tenant."
+  id: ID!
+  "Contact email of the tenant owner."
+  email: String
+  "Secret used to secure requests made for this tenant."
+  apiSecret: String!
+  "URL of the tenant's identity provider's consent screen."
+  idpConsentUrl: String
+  "Secret used to secure requests from the tenant's identity provider."
+  idpSecret: String
+  "Public name for the tenant."
+  publicName: String
+  "The date and time that this tenant was created."
+  createdAt: String!
+  "The date and time that this tenant was deleted."
+  deletedAt: String
+  "List of settings for the tenant."
+  settings: [TenantSetting!]!
+}
+
+type TenantsConnection {
+  "Information to aid in pagination."
+  pageInfo: PageInfo!
+  "A list of edges representing tenants and cursors for pagination."
+  edges: [TenantEdge!]!
+}
+
+type TenantEdge {
+  "A tenant node in the list."
+  node: Tenant!
+  "A cursor for paginating through the tenants."
+  cursor: String!
+}
+
+type TenantSetting {
+  "Key for this setting."
+  key: String!
+  "Value of a setting for this key."
+  value: String!
+}
+
+input CreateTenantInput {
+  "Unique identifier of the tenant. Must be compliant with uuid v4. Will be generated automatically if not provided."
+  id: ID
+  "Contact email of the tenant owner."
+  email: String
+  "Secret used to secure requests made for this tenant."
+  apiSecret: String!
+  "URL of the tenant's identity provider's consent screen."
+  idpConsentUrl: String
+  "Secret used to secure requests from the tenant's identity provider."
+  idpSecret: String
+  "Public name for the tenant."
+  publicName: String
+  "Initial settings for tenant."
+  settings: [TenantSettingInput!]
+}
+
+input UpdateTenantInput {
+  "Unique identifier of the tenant."
+  id: ID!
+  "Contact email of the tenant owner."
+  email: String
+  "Secret used to secure requests made for this tenant."
+  apiSecret: String
+  "URL of the tenant's identity provider's consent screen."
+  idpConsentUrl: String
+  "Secret used to secure requests from the tenant's identity provider."
+  idpSecret: String
+  "Public name for the tenant."
+  publicName: String
+}
+
+type TenantMutationResponse {
+  tenant: Tenant!
+}
+
+type DeleteTenantMutationResponse {
+  success: Boolean!
 }
 
 """

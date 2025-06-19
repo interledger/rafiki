@@ -6,7 +6,7 @@ import {
 } from 'objection'
 import { URL } from 'url'
 
-import { WalletAddressError } from './errors'
+import { isWalletAddressError, WalletAddressError } from './errors'
 import {
   WalletAddress,
   WalletAddressEvent,
@@ -28,6 +28,8 @@ import { poll } from '../../shared/utils'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
 import { AssetService } from '../../asset/service'
 import { CacheDataStore } from '../../middleware/cache/data-stores'
+import { TenantSettingKeys } from '../../tenants/settings/model'
+import { TenantSettingService } from '../../tenants/settings/service'
 
 interface Options {
   publicName?: string
@@ -39,9 +41,11 @@ export type WalletAddressAdditionalPropertyInput = Pick<
 >
 
 export interface CreateOptions extends Options {
-  url: string
+  tenantId: string
+  address: string
   assetId: string
   additionalProperties?: WalletAddressAdditionalPropertyInput[]
+  isOperator?: boolean
 }
 
 type Status = 'ACTIVE' | 'INACTIVE'
@@ -64,12 +68,13 @@ export interface WalletAddressService {
     id: string,
     includeVisibleOnlyAddProps: boolean
   ): Promise<WalletAddressAdditionalProperty[] | undefined>
-  get(id: string): Promise<WalletAddress | undefined>
-  getByUrl(url: string): Promise<WalletAddress | undefined>
+  get(id: string, tenantId?: string): Promise<WalletAddress | undefined>
+  getByUrl(url: string, tenantId?: string): Promise<WalletAddress | undefined>
   getOrPollByUrl(url: string): Promise<WalletAddress | undefined>
   getPage(
     pagination?: Pagination,
-    sortOrder?: SortOrder
+    sortOrder?: SortOrder,
+    tenantId?: string
   ): Promise<WalletAddress[]>
   processNext(): Promise<string | undefined>
   triggerEvents(limit: number): Promise<number>
@@ -82,6 +87,7 @@ interface ServiceDependencies extends BaseService {
   webhookService: WebhookService
   assetService: AssetService
   walletAddressCache: CacheDataStore<WalletAddress>
+  tenantSettingService: TenantSettingService
 }
 
 export async function createWalletAddressService({
@@ -91,7 +97,8 @@ export async function createWalletAddressService({
   accountingService,
   webhookService,
   assetService,
-  walletAddressCache
+  walletAddressCache,
+  tenantSettingService
 }: ServiceDependencies): Promise<WalletAddressService> {
   const log = logger.child({
     service: 'WalletAddressService'
@@ -103,7 +110,8 @@ export async function createWalletAddressService({
     accountingService,
     webhookService,
     assetService,
-    walletAddressCache
+    walletAddressCache,
+    tenantSettingService
   }
   return {
     create: (options) => createWalletAddress(deps, options),
@@ -114,11 +122,11 @@ export async function createWalletAddressService({
         walletAddressId,
         includeVisibleOnlyAddProps
       ),
-    get: (id) => getWalletAddress(deps, id),
-    getByUrl: (url) => getWalletAddressByUrl(deps, url),
+    get: (id, tenantId) => getWalletAddress(deps, id, tenantId),
+    getByUrl: (url, tenantId) => getWalletAddressByUrl(deps, url, tenantId),
     getOrPollByUrl: (url) => getOrPollByUrl(deps, url),
-    getPage: (pagination?, sortOrder?) =>
-      getWalletAddressPage(deps, pagination, sortOrder),
+    getPage: (pagination?, sortOrder?, tenantId?) =>
+      getWalletAddressPage(deps, pagination, sortOrder, tenantId),
     processNext: () => processNextWalletAddress(deps),
     triggerEvents: (limit) => triggerWalletAddressEvents(deps, limit)
   }
@@ -159,15 +167,82 @@ function cleanAdditionalProperties(
     .filter((prop) => prop.fieldKey.length > 0 && prop.fieldValue.length > 0)
 }
 
+async function createWalletAddressUrl(
+  deps: ServiceDependencies,
+  options: CreateOptions
+): Promise<string | WalletAddressError> {
+  let tenantWalletAddressUrl = new URL(deps.config.openPaymentsUrl)
+
+  const found = await deps.tenantSettingService.get({
+    tenantId: options.tenantId,
+    key: TenantSettingKeys.WALLET_ADDRESS_URL.name
+  })
+
+  if (!found || found.length === 0) {
+    if (!options.isOperator) {
+      return WalletAddressError.WalletAddressSettingNotFound
+    }
+  } else {
+    tenantWalletAddressUrl = new URL(found[0].value)
+  }
+
+  let tenantBaseUrl = tenantWalletAddressUrl.toString()
+  if (!tenantWalletAddressUrl.pathname.endsWith('/')) {
+    tenantBaseUrl =
+      tenantWalletAddressUrl.origin + tenantWalletAddressUrl.pathname + '/'
+  }
+
+  const isValidUrl = (str: string): boolean => {
+    try {
+      new URL(str)
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  let finalWalletAddressUrl: string
+  if (isValidUrl(options.address)) {
+    // in case that client provided full url, verify that it starts with the tenant's URL
+    const walletAddressUrl = new URL(options.address)
+    if (!walletAddressUrl.href.startsWith(tenantWalletAddressUrl.href)) {
+      return WalletAddressError.InvalidUrl
+    }
+    finalWalletAddressUrl = walletAddressUrl.toString()
+  } else {
+    // in case that client provided just the path / wallet address name, construct the address using the wallet address url from tenant setting
+    try {
+      let relativePath = options.address
+      if (relativePath.startsWith('/')) {
+        relativePath = relativePath.substring(1)
+      }
+      finalWalletAddressUrl = tenantBaseUrl + relativePath
+    } catch (err) {
+      return WalletAddressError.InvalidUrl
+    }
+  }
+
+  if (!isValidWalletAddressUrl(finalWalletAddressUrl)) {
+    return WalletAddressError.InvalidUrl
+  }
+
+  return finalWalletAddressUrl
+}
+
 async function createWalletAddress(
   deps: ServiceDependencies,
   options: CreateOptions
 ): Promise<WalletAddress | WalletAddressError> {
-  if (!isValidWalletAddressUrl(options.url)) {
-    return WalletAddressError.InvalidUrl
+  const finalWalletAddressUrl = await createWalletAddressUrl(deps, options)
+
+  if (isWalletAddressError(finalWalletAddressUrl)) {
+    return finalWalletAddressUrl
   }
 
   try {
+    const asset = await deps.assetService.get(options.assetId, options.tenantId)
+    if (!asset) return WalletAddressError.UnknownAsset
+
     // Remove blank key/value pairs:
     const additionalProperties = options.additionalProperties
       ? cleanAdditionalProperties(options.additionalProperties)
@@ -176,13 +251,13 @@ async function createWalletAddress(
     const walletAddress = await WalletAddress.query(
       deps.knex
     ).insertGraphAndFetch({
-      url: options.url.toLowerCase(),
+      tenantId: options.tenantId,
+      address: finalWalletAddressUrl.toLowerCase(),
       publicName: options.publicName,
-      assetId: options.assetId,
+      assetId: asset.id,
       additionalProperties: additionalProperties
     })
-    const asset = await deps.assetService.get(walletAddress.assetId)
-    if (asset) walletAddress.asset = asset
+    walletAddress.asset = asset
 
     await deps.walletAddressCache.set(walletAddress.id, walletAddress)
     return walletAddress
@@ -260,12 +335,18 @@ async function updateWalletAddress(
 
 async function getWalletAddress(
   deps: ServiceDependencies,
-  id: string
+  id: string,
+  tenantId?: string
 ): Promise<WalletAddress | undefined> {
-  const walletAdd = await deps.walletAddressCache.get(id)
-  if (walletAdd) return walletAdd
+  const inMem = await deps.walletAddressCache.get(id)
+  if (inMem) {
+    return tenantId && inMem.tenantId !== tenantId ? undefined : inMem
+  }
 
-  const walletAddress = await WalletAddress.query(deps.knex).findById(id)
+  const query = WalletAddress.query(deps.knex)
+  if (tenantId) query.andWhere({ tenantId })
+
+  const walletAddress = await query.findById(id)
   if (walletAddress) {
     const asset = await deps.assetService.get(walletAddress.assetId)
     if (asset) walletAddress.asset = asset
@@ -298,11 +379,25 @@ async function getOrPollByUrl(
   const existingWalletAddress = await getWalletAddressByUrl(deps, url)
   if (existingWalletAddress) return existingWalletAddress
 
-  await WalletAddressEvent.query(deps.knex).insert({
+  let containsOperatorTenant = false
+  const webhookRecipients = (
+    await deps.tenantSettingService.getSettingsByPrefix(url)
+  ).map((tenantSetting) => {
+    if (tenantSetting.tenantId === deps.config.operatorTenantId)
+      containsOperatorTenant = true
+    return { recipientTenantId: tenantSetting.tenantId }
+  })
+
+  if (!containsOperatorTenant)
+    webhookRecipients.push({ recipientTenantId: deps.config.operatorTenantId })
+
+  await WalletAddressEvent.query(deps.knex).insertGraph({
     type: WalletAddressEventType.WalletAddressNotFound,
     data: {
       walletAddressUrl: url
-    }
+    },
+    tenantId: deps.config.operatorTenantId,
+    webhooks: webhookRecipients
   })
 
   deps.logger.debug(
@@ -323,10 +418,14 @@ async function getOrPollByUrl(
 
 async function getWalletAddressByUrl(
   deps: ServiceDependencies,
-  url: string
+  url: string,
+  tenantId?: string
 ): Promise<WalletAddress | undefined> {
-  const walletAddress = await WalletAddress.query(deps.knex).findOne({
-    url: url.toLowerCase()
+  const query = WalletAddress.query(deps.knex)
+  if (tenantId) query.andWhere({ tenantId })
+
+  const walletAddress = await query.findOne({
+    address: url.toLowerCase()
   })
   if (walletAddress) {
     const asset = await deps.assetService.get(walletAddress.assetId)
@@ -338,11 +437,18 @@ async function getWalletAddressByUrl(
 async function getWalletAddressPage(
   deps: ServiceDependencies,
   pagination?: Pagination,
-  sortOrder?: SortOrder
+  sortOrder?: SortOrder,
+  tenantId?: string
 ): Promise<WalletAddress[]> {
-  return await WalletAddress.query(deps.knex)
-    .getPage(pagination, sortOrder)
-    .withGraphFetched('asset')
+  const query = WalletAddress.query(deps.knex)
+  if (tenantId) query.where({ tenantId })
+
+  const addresses = await query.getPage(pagination, sortOrder)
+  for (const address of addresses) {
+    const asset = await deps.assetService.get(address.assetId)
+    if (asset) address.asset = asset
+  }
+  return addresses
 }
 
 // Returns the id of the processed wallet address (if any).
@@ -428,7 +534,11 @@ async function createWithdrawalEvent(
 
   deps.logger.trace({ amount }, 'creating webhook withdrawal event')
 
-  await WalletAddressEvent.query(deps.knex).insert({
+  const webhooks = [{ recipientTenantId: walletAddress.tenantId }]
+  if (walletAddress.tenantId !== deps.config.operatorTenantId) {
+    webhooks.push({ recipientTenantId: deps.config.operatorTenantId })
+  }
+  await WalletAddressEvent.query(deps.knex).insertGraph({
     walletAddressId: walletAddress.id,
     type: WalletAddressEventType.WalletAddressWebMonetization,
     data: walletAddress.toData(amount),
@@ -436,7 +546,9 @@ async function createWithdrawalEvent(
       accountId: walletAddress.id,
       assetId: walletAddress.assetId,
       amount
-    }
+    },
+    tenantId: walletAddress.tenantId,
+    webhooks
   })
 
   await walletAddress.$query(deps.knex).patch({
@@ -466,6 +578,6 @@ export interface WalletAddressSubresourceService<
   M extends WalletAddressSubresource
 > {
   get(options: GetOptions): Promise<M | undefined>
-  create(options: { walletAddressId: string }): Promise<M | string>
+  create(options: { walletAddressId: string }): Promise<M | string | Error>
   getWalletAddressPage(options: ListOptions): Promise<M[]>
 }

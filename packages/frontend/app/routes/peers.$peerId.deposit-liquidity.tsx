@@ -20,7 +20,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     throw json(null, { status: 400, statusText: 'Invalid peer ID.' })
   }
 
-  const peer = await getPeer({ id: result.data })
+  const peer = await getPeer(request, { id: result.data })
 
   if (!peer) {
     throw json(null, { status: 400, statusText: 'Peer not found.' })
@@ -73,7 +73,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     })
   }
 
-  const response = await depositPeerLiquidity({
+  const response = await depositPeerLiquidity(request, {
     peerId,
     amount: result.data,
     id: v4(),
