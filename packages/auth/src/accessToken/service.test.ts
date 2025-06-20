@@ -24,7 +24,7 @@ import { generateBaseGrant } from '../tests/grant'
 describe('Access Token Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let trx: Knex.Transaction
+  const trx: Knex.Transaction = undefined as unknown as Knex.Transaction
   let accessTokenService: AccessTokenService
 
   beforeAll(async (): Promise<void> => {

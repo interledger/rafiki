@@ -18,7 +18,7 @@ describe('Subject Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let subjectService: SubjectService
-  let trx: Knex.Transaction
+  const trx: Knex.Transaction = null as unknown as Knex.Transaction
   let grant: Grant
 
   const generateBaseGrant = () => ({
@@ -70,7 +70,7 @@ describe('Subject Service', (): void => {
   })
 
   describe('getByGrant', (): void => {
-    test('gets access', async () => {
+    test('gets subject', async () => {
       const subject1 = {
         grantId: grant.id,
         subId: 'https://wallet.com/alice',

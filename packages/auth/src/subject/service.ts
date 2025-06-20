@@ -2,6 +2,7 @@ import { Transaction, TransactionOrKnex } from 'objection'
 import { BaseService } from '../shared/baseService'
 import { Subject } from './model'
 import { SubjectRequest } from './types'
+import { GrantError } from '../grant/errors'
 
 export interface SubjectService {
   createSubject(
@@ -47,6 +48,7 @@ async function createSubject(
   trx?: Transaction
 ): Promise<Subject[]> {
   const subjectRequestsWithGrant = subjectRequests.map((subject) => {
+    validateSubjectRequest(subject)
     return { grantId, subId: subject.id, subIdFormat: subject.format }
   })
 
@@ -59,4 +61,16 @@ async function getByGrant(
   trx?: Transaction
 ): Promise<Subject[]> {
   return Subject.query(trx || deps.knex).where({ grantId })
+}
+
+function validateSubjectRequest(subject: SubjectRequest): void {
+  try {
+    if (!subject.id.startsWith('https://')) throw 1
+    new URL(subject.id)
+  } catch {
+    throw new GrantError('Subject id must be a valid https url')
+  }
+  if (subject.format != 'uri') {
+    throw new GrantError('Subject format is invalid')
+  }
 }

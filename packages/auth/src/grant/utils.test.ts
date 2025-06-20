@@ -28,12 +28,6 @@ const outgoingPaymentAccess: AccessRequest = {
   identifier: 'id'
 }
 
-jest.mock('../access/types', () => ({
-  isIncomingPaymentAccessRequest: (access: AccessRequest) =>
-    access.type === 'incoming-payment',
-  isQuoteAccessRequest: (access: AccessRequest) => access.type === 'quote'
-}))
-
 describe('canSkipInteraction', () => {
   it('returns false if no access_token and has sub_ids', () => {
     const body: GrantRequest = {

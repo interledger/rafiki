@@ -29,7 +29,7 @@ describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let grantService: GrantService
-  let trx: Knex.Transaction
+  const trx: Knex.Transaction = null as unknown as Knex.Transaction
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)

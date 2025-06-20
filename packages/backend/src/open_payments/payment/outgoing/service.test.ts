@@ -71,7 +71,7 @@ describe('OutgoingPaymentService', (): void => {
   let receiver: string
   let client: string
   let amtDelivered: bigint
-  let trx: Knex.Transaction
+  const trx: Knex.Transaction = null as unknown as Knex.Transaction
   let config: IAppConfig
   let receiverService: ReceiverService
   let receiverGet: typeof receiverService.get

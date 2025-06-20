@@ -5,6 +5,7 @@ import {
   MutationResolvers,
   Grant as SchemaGrant,
   Access as SchemaAccess,
+  Subject as SchemaSubject,
   QueryResolvers
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
@@ -13,6 +14,7 @@ import { Pagination } from '../../shared/baseModel'
 import { getPageInfo } from '../../shared/pagination'
 import { Access } from '../../access/model'
 import { GraphQLErrorCode } from '../errors'
+import { Subject } from '../../subject/model'
 
 export const getGrants: QueryResolvers<ApolloContext>['grants'] = async (
   _,
@@ -90,6 +92,7 @@ export const grantToGraphql = (grant: Grant): SchemaGrant => ({
   id: grant.id,
   client: grant.client,
   access: grant.access?.map((item) => accessToGraphql(item)) || [],
+  subject: grant.subjects?.map((item) => subjectToGraphql(item)) || [],
   state: grant.state,
   finalizationReason: grant.finalizationReason,
   createdAt: grant.createdAt.toISOString()
@@ -102,4 +105,11 @@ export const accessToGraphql = (access: Access): SchemaAccess => ({
   identifier: access.identifier,
   createdAt: access.createdAt.toISOString(),
   limits: access.limits
+})
+
+export const subjectToGraphql = (subject: Subject): SchemaSubject => ({
+  id: subject.id,
+  subId: subject.subId,
+  subIdFormat: subject.subIdFormat,
+  createdAt: subject.createdAt.toISOString()
 })

@@ -23,6 +23,7 @@ import { canSkipInteraction } from './utils'
 import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
 import { generateRouteLogs } from '../shared/utils'
 import { SubjectService } from '../subject/service'
+import { isGrantError } from './errors'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
@@ -217,6 +218,13 @@ async function createPendingGrant(
     )
   } catch (err) {
     await trx.rollback()
+    if (isGrantError(err)) {
+      throw new GNAPServerRouteError(
+        400,
+        GNAPErrorCode.InvalidRequest,
+        err.message || 'invalid request'
+      )
+    }
     throw new GNAPServerRouteError(
       500,
       GNAPErrorCode.RequestDenied,
