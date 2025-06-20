@@ -198,7 +198,7 @@ describe('Grant Service', (): void => {
             sub_ids: [
               {
                 id: faker.internet.url(),
-                format: 'url'
+                format: 'uri'
               }
             ]
           }

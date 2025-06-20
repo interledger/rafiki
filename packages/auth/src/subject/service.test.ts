@@ -55,7 +55,7 @@ describe('Subject Service', (): void => {
     test('Can create 1 subject', async (): Promise<void> => {
       const subjectRequest: SubjectRequest = {
         id: 'https://wallet.com/alice',
-        format: 'url'
+        format: 'uri'
       }
 
       const subject = await subjectService.createSubject(grant.id, [
@@ -74,12 +74,12 @@ describe('Subject Service', (): void => {
       const subject1 = {
         grantId: grant.id,
         subId: 'https://wallet.com/alice',
-        subIdFormat: 'url'
+        subIdFormat: 'uri'
       }
       const subject2 = {
         grantId: grant.id,
         subId: 'https://wallet.com/bob',
-        subIdFormat: 'url'
+        subIdFormat: 'uri'
       }
       await Subject.query(trx).insert([subject1, subject2])
 
