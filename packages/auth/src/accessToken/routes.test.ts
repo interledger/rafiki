@@ -28,7 +28,7 @@ import { GNAPErrorCode } from '../shared/gnapErrors'
 describe('Access Token Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let trx: Knex.Transaction
+  const trx: Knex.Transaction = undefined as unknown as Knex.Transaction
   let accessTokenRoutes: AccessTokenRoutes
   let accessTokenService: AccessTokenService
   let grantService: GrantService

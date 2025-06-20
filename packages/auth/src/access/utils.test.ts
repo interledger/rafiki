@@ -21,7 +21,7 @@ import { compareRequestAndGrantAccessItems } from './utils'
 describe('Access utilities', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let trx: Knex.Transaction
+  const trx: Knex.Transaction = undefined as unknown as Knex.Transaction
   let identifier: string
   let grant: Grant
   let grantAccessItem: Access

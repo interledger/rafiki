@@ -13,6 +13,7 @@ import { GrantService } from '../grant/service'
 import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
 import { generateRouteLogs } from '../shared/utils'
 import { AccessItem } from '@interledger/open-payments'
+import { SubjectItem } from '../subject/types'
 
 export type TokenHttpSigContext = AppContext & {
   accessToken: AccessToken & {
@@ -39,6 +40,7 @@ type ManagementContext = Exclude<TokenHttpSigContext, 'request'> & {
 interface IntrospectBody {
   access_token: string
   access?: AccessItem[]
+  subjects?: SubjectItem[]
 }
 export type IntrospectContext = TokenContext<IntrospectBody>
 export type RevokeContext = ManagementContext

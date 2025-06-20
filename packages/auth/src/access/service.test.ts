@@ -19,7 +19,7 @@ describe('Access Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let accessService: AccessService
-  let trx: Knex.Transaction
+  const trx: Knex.Transaction = null as unknown as Knex.Transaction
   let grant: Grant
 
   const generateBaseGrant = () => ({

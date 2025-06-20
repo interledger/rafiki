@@ -60,7 +60,7 @@ describe('Signature Service', (): void => {
     let grant: Grant
     let interaction: Interaction
     let token: AccessToken
-    let trx: Knex.Transaction
+    const trx: Knex.Transaction = null as unknown as Knex.Transaction
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let next: () => Promise<any>
     let managementId: string
