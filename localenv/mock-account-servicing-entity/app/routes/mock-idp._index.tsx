@@ -81,6 +81,15 @@ function ConsentScreenBody({
           </div>
         </div>
         <div className='row mt-2'>
+          <div className='col-12'>
+            {!price && !costToUser && (
+              <p>
+                {thirdPartyName} is requesting grant for an unlimited amount
+              </p>
+            )}
+          </div>
+        </div>
+        <div className='row mt-2'>
           <div className='col-12'>Do you consent?</div>
         </div>
         <div className='row mt-2'>
@@ -298,19 +307,19 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
             returnUrlObject.searchParams.append(
               'currencyDisplayCode',
               outgoingPaymentAccess && outgoingPaymentAccess.limits
-                ? outgoingPaymentAccess.limits.debitAmount.assetCode
+                ? outgoingPaymentAccess.limits.debitAmount?.assetCode
                 : null
             )
             returnUrlObject.searchParams.append(
               'sendAmountValue',
               outgoingPaymentAccess && outgoingPaymentAccess.limits
-                ? outgoingPaymentAccess.limits.debitAmount.value
+                ? outgoingPaymentAccess.limits.debitAmount?.value
                 : null
             )
             returnUrlObject.searchParams.append(
               'sendAmountScale',
               outgoingPaymentAccess && outgoingPaymentAccess.limits
-                ? outgoingPaymentAccess.limits.debitAmount.assetScale
+                ? outgoingPaymentAccess.limits.debitAmount?.assetScale
                 : null
             )
             setCtx({
@@ -340,46 +349,40 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
       !ctx.price &&
       !ctx.costToUser
     ) {
-      if (
-        ctx.outgoingPaymentAccess.limits?.debitAmount &&
-        ctx.outgoingPaymentAccess.limits.receiveAmount
-      ) {
-        setCtx({
-          ...ctx,
-          errors: [
-            new Error('only one of receiveAmount or debitAmount allowed')
-          ]
-        })
-      } else if (
-        ctx.outgoingPaymentAccess.limits &&
-        (ctx.outgoingPaymentAccess.limits?.debitAmount ||
-          ctx.outgoingPaymentAccess.limits?.receiveAmount)
-      ) {
-        const { receiveAmount, debitAmount } = ctx.outgoingPaymentAccess.limits
-        setCtx({
-          ...ctx,
-          ...(receiveAmount && {
-            price: {
-              amount:
-                Number(receiveAmount.value) /
-                Math.pow(10, receiveAmount.assetScale),
-              currencyDisplayCode: receiveAmount.assetCode
-            }
-          }),
-          ...(debitAmount && {
-            costToUser: {
-              amount:
-                Number(debitAmount.value) /
-                Math.pow(10, debitAmount.assetScale),
-              currencyDisplayCode: debitAmount.assetCode
-            }
+      if (ctx.outgoingPaymentAccess.limits) {
+        if (
+          ctx.outgoingPaymentAccess.limits.debitAmount &&
+          ctx.outgoingPaymentAccess.limits.receiveAmount
+        ) {
+          setCtx({
+            ...ctx,
+            errors: [
+              new Error('only one of receiveAmount or debitAmount allowed')
+            ]
           })
-        })
-      } else {
-        setCtx({
-          ...ctx,
-          errors: [new Error('missing or incomplete outgoing payment access')]
-        })
+        } else {
+          const { receiveAmount, debitAmount } =
+            ctx.outgoingPaymentAccess.limits
+          setCtx({
+            ...ctx,
+            ...(receiveAmount && {
+              price: {
+                amount:
+                  Number(receiveAmount.value) /
+                  Math.pow(10, receiveAmount.assetScale),
+                currencyDisplayCode: receiveAmount.assetCode
+              }
+            }),
+            ...(debitAmount && {
+              costToUser: {
+                amount:
+                  Number(debitAmount.value) /
+                  Math.pow(10, debitAmount.assetScale),
+                currencyDisplayCode: debitAmount.assetCode
+              }
+            })
+          })
+        }
       }
     }
   }, [ctx, setCtx])
@@ -395,7 +398,7 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
         </div>
         {ctx.ready ? (
           <>
-            {ctx.errors.length > 0 || (!ctx.price && !ctx.costToUser) ? (
+            {ctx.errors.length > 0 ? (
               <>
                 <h2 className='display-6'>Failed</h2>
                 <ul>

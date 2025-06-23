@@ -41,8 +41,11 @@ function AuthorizedView({
         </div>
         <div>
           <p>
-            You gave {thirdPartyName} permission to send {currencyDisplayCode}{' '}
-            {amount.toFixed(2)} out of your account.
+            You gave {thirdPartyName} permission to send{' '}
+            {amount
+              ? currencyDisplayCode + ' ' + amount.toFixed(2)
+              : 'an unlimited amount'}
+            out of your account.
           </p>
         </div>
       </div>
