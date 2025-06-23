@@ -45,8 +45,8 @@ function ConsentScreenBody({
 }: {
   _thirdPartyUri: string
   thirdPartyName: string
-  price: GrantAmount
-  costToUser: GrantAmount
+  price: GrantAmount | null
+  costToUser: GrantAmount | null
   interactId: string
   nonce: string
   returnUrl: string
@@ -337,7 +337,8 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
       ctx.errors.length === 0 &&
       ctx.ready &&
       ctx.outgoingPaymentAccess &&
-      (!ctx.price || !ctx.costToUser)
+      !ctx.price &&
+      !ctx.costToUser
     ) {
       if (
         ctx.outgoingPaymentAccess.limits?.debitAmount &&
@@ -394,7 +395,7 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
         </div>
         {ctx.ready ? (
           <>
-            {ctx.errors.length > 0 || !ctx.price || !ctx.costToUser ? (
+            {ctx.errors.length > 0 || (!ctx.price && !ctx.costToUser) ? (
               <>
                 <h2 className='display-6'>Failed</h2>
                 <ul>
