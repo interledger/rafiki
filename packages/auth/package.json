@@ -46,6 +46,7 @@
     "koa-session": "^6.4.0",
     "objection": "^3.1.5",
     "objection-db-errors": "^1.1.2",
+    "@opentelemetry/api": "^1.8.0",
     "pg": "^8.11.3",
     "pino": "^8.19.0",
     "token-introspection": "workspace:*",
