@@ -26,10 +26,10 @@ import {
   createStreamAddressMiddleware,
   createStreamController
 } from './core'
+//import { createIlpTimingMiddleware } from './core/middleware/ilp-timing'
 import { TelemetryService } from '../../../telemetry/service'
 import { TenantSettingService } from '../../../tenants/settings/service'
 import { IAppConfig } from '../../../config/app'
-import { createRoutingMiddleware } from './core/middleware/routing'
 import { RouterService } from './ilp-routing/service'
 
 interface ServiceDependencies extends BaseService {
@@ -77,11 +77,11 @@ export async function createConnectorService({
       tenantSettingService
     },
     compose([
+      //createIlpTimingMiddleware(),
+      
       // Incoming Rules
       createIncomingErrorHandlerMiddleware(ilpAddress),
       createStreamAddressMiddleware(),
-      // Routing
-      createRoutingMiddleware({ routerService }),
 
       createAccountMiddleware(),
       createIncomingMaxPacketAmountMiddleware(),

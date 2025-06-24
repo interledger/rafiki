@@ -1,8 +1,8 @@
 assets:
   - code: USD
     scale: 2
-    liquidity: 1000000000000
-    liquidityThreshold: 10000000
+    liquidity: 10000000000
+    liquidityThreshold: 100000000
   # - code: EUR
   #   scale: 2
   #   liquidity: 10000000000
@@ -23,17 +23,12 @@ peers:
     liquidityThreshold: 1000000
     tokens:
       incoming: 
-        - test-USD-global-bank-happy-life-bank
-      outgoing: test-USD-happy-life-bank-global-bank
-  - initialLiquidity: '1000000000000'
-    peerUrl: http://global-bank-backend:3002
-    peerIlpAddress: test.global-bank.bc293b79-8609-47bd-b914-6438b470aff8
-    liquidityThreshold: 1000000
-    tokens:
-      incoming: 
-        - test-USD-cloud-ten-wallet-happy-life-bank
-      outgoing: test-USD-happy-life-bank-cloud-ten-wallet
-    routes: []
+        - global-bank-to-happy-life
+      outgoing: happy-life-to-global-bank
+    routes:
+      - "test.global-bank"
+      - "test.cloud-nine-wallet"
+      #- "test.cloud-nine-wallet.bc293b79-8609-47bd-b914-6438b470aff8"
 accounts:
   - name: 'Philip Fry'
     path: accounts/pfry

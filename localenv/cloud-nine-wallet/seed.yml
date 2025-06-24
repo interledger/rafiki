@@ -23,11 +23,11 @@ peers:
     liquidityThreshold: 1000000
     tokens:
       incoming:
-        - test-USD-global-bank-cloud-nine-wallet
-      outgoing: test-USD-cloud-nine-wallet-global-bank
+        - global-bank-to-cloud-nine
+      outgoing: cloud-nine-to-global-bank
     routes: 
+      - "test.global-bank"
       - "test.happy-life-bank"
-      #- "test.global-bank"
 accounts:
   - name: 'Grace Franklin'
     path: accounts/gfranklin

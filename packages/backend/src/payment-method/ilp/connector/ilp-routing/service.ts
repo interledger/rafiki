@@ -2,16 +2,21 @@ import { CacheDataStore } from '../../../../middleware/cache/data-stores'
 import { BaseService } from '../../../../shared/baseService'
 import { IAppConfig } from '../../../../config/app'
 
+interface RouteEntry {
+  peerId: string
+  assetId: string
+}
+
 export interface RouterService extends BaseService {
-  addStaticRoute(prefix: string, peerId: string): Promise<void>
-  removeStaticRoute(prefix: string, peerId: string): Promise<void>
-  getNextHop(destination: string): Promise<string | undefined>
+  addStaticRoute(prefix: string, peerId: string, tenantId: string, assetId: string): Promise<void>
+  removeStaticRoute(prefix: string, peerId: string, tenantId: string, assetId: string): Promise<void>
+  getNextHop(destination: string, tenantId: string, assetId?: string): Promise<string | undefined>
   getOwnAddress(): string
 }
 
 export interface RouterServiceDependencies extends BaseService {
   staticIlpAddress: string
-  staticRoutes: CacheDataStore<string[]>
+  staticRoutes: CacheDataStore<RouteEntry[]>
   config: IAppConfig
 }
 
@@ -35,14 +40,19 @@ export async function createRouterService({
   async function addStaticRoute(
     deps: RouterServiceDependencies,
     destination: string,
-    peerId: string
+    peerId: string,
+    tenantId: string,
+    assetId: string
   ) {
-    const existingPeers = (await deps.staticRoutes.get(destination)) || []
-    if (!existingPeers.includes(peerId)) {
-      existingPeers.push(peerId)
-      await deps.staticRoutes.set(destination, existingPeers)
+    const key = `${tenantId}:${destination}`
+    const existingRoutes = (await deps.staticRoutes.get(key)) || []
+    const existingRoute = existingRoutes.find(route => route.peerId === peerId)
+    
+    if (!existingRoute) {
+      existingRoutes.push({ peerId, assetId })
+      await deps.staticRoutes.set(key, existingRoutes)
       deps.logger.debug(
-        { prefix: destination, peerId, totalPeers: existingPeers.length },
+        { prefix: destination, peerId, assetId, tenantId },
         'added static route'
       )
     }
@@ -51,18 +61,23 @@ export async function createRouterService({
   async function removeStaticRoute(
     deps: RouterServiceDependencies,
     destination: string,
-    peerId: string
+    peerId: string,
+    tenantId: string,
+    assetId: string
   ) {
-    const existingPeers = await deps.staticRoutes.get(destination)
-    if (existingPeers) {
-      const updatedPeers = existingPeers.filter((id) => id !== peerId)
-      if (updatedPeers.length > 0) {
-        await deps.staticRoutes.set(destination, updatedPeers)
+    const key = `${tenantId}:${destination}`
+    const existingRoutes = await deps.staticRoutes.get(key)
+    if (existingRoutes) {
+      const updatedRoutes = existingRoutes.filter((route) => 
+        !(route.peerId === peerId && route.assetId === assetId)
+      )
+      if (updatedRoutes.length > 0) {
+        await deps.staticRoutes.set(key, updatedRoutes)
       } else {
-        await deps.staticRoutes.delete(destination)
+        await deps.staticRoutes.delete(key)
       }
       deps.logger.debug(
-        { destination, peerId, remainingPeers: updatedPeers.length },
+        { destination, peerId, assetId, tenantId },
         'removed static route'
       )
     }
@@ -70,27 +85,37 @@ export async function createRouterService({
 
   async function getNextHop(
     deps: RouterServiceDependencies,
-    destination: string
+    destination: string,
+    tenantId: string,
+    assetId?: string
   ): Promise<string | undefined> {
     const segments = destination.split('.')
     for (let i = segments.length; i > 0; i--) {
       const prefix = segments.slice(0, i).join('.')
-      const peerIds = await deps.staticRoutes.get(prefix)
+      const key = `${tenantId}:${prefix}`
+      const routes = await deps.staticRoutes.get(key)
 
-      if (peerIds && peerIds.length > 0) {
-        // If multiple peers are found as next hops, we select one randomly since we currently don't have weights for each route
-        const selectedPeer =
-          peerIds.length === 1
-            ? peerIds[0]
-            : peerIds[Math.floor(Math.random() * peerIds.length)]
-        deps.logger.debug(
-          { destination, prefix, selectedPeer, availablePeers: peerIds.length },
-          'found next hop'
-        )
-        return selectedPeer
+      if (routes && routes.length > 0) {
+        const filteredRoutes = assetId 
+          ? routes.filter(route => route.assetId === assetId)
+          : routes
+
+        if (filteredRoutes.length > 0) {
+          // If multiple routes are found, select one randomly
+          const selectedRoute =
+            filteredRoutes.length === 1
+              ? filteredRoutes[0]
+              : filteredRoutes[Math.floor(Math.random() * filteredRoutes.length)]
+          
+          deps.logger.debug(
+            { destination, prefix, tenantId, assetId, selectedPeer: selectedRoute.peerId },
+            'found next hop'
+          )
+          return selectedRoute.peerId
+        }
       }
     }
-    deps.logger.debug({ destination }, 'no static route found')
+    deps.logger.debug({ destination, tenantId, assetId }, 'no static route found')
     return undefined
   }
 
@@ -100,11 +125,11 @@ export async function createRouterService({
 
   return {
     logger: log,
-    addStaticRoute: (destination, peerId) =>
-      addStaticRoute(deps, destination, peerId),
-    removeStaticRoute: (destination, peerId) =>
-      removeStaticRoute(deps, destination, peerId),
-    getNextHop: (destination) => getNextHop(deps, destination),
+    addStaticRoute: (destination, peerId, tenantId, assetId) =>
+      addStaticRoute(deps, destination, peerId, tenantId, assetId),
+    removeStaticRoute: (destination, peerId, tenantId, assetId) =>
+      removeStaticRoute(deps, destination, peerId, tenantId, assetId),
+    getNextHop: (destination, tenantId, assetId) => getNextHop(deps, destination, tenantId, assetId),
     getOwnAddress: () => getOwnAddress(deps)
   }
 }

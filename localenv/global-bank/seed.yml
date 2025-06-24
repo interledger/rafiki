@@ -20,16 +20,31 @@ peers:
   - initialLiquidity: '1000000000000'
     peerUrl: http://cloud-nine-wallet-backend:3002
     peerIlpAddress: test.cloud-nine-wallet
-    incomingToken: cloud-to-global
-    outgoingToken: global-to-cloud
     liquidityThreshold: 1000000
-    routes: []
+    tokens:
+      incoming:
+        - cloud-nine-to-global-bank
+      outgoing: global-bank-to-cloud-nine
+    routes: 
+      - "test.cloud-nine-wallet"
+  - initialLiquidity: '1000000000000'
+    peerUrl: http://cloud-nine-wallet-backend:3002
+    peerIlpAddress: test.cloud-nine-wallet.bc293b79-8609-47bd-b914-6438b470aff8
+    liquidityThreshold: 1000000
+    tokens:
+      incoming:
+        - cloud-ten-to-global-bank
+      outgoing: global-bank-to-cloud-ten
+    routes: 
+      - "test.cloud-nine-wallet.bc293b79-8609-47bd-b914-6438b470aff8"
   - initialLiquidity: '1000000000000'
     peerUrl: http://happy-life-bank-backend:3002
     peerIlpAddress: test.happy-life-bank
-    incomingToken: happy-to-global
-    outgoingToken: global-to-happy
     liquidityThreshold: 1000000
+    tokens:
+      incoming:
+        - happy-life-to-global-bank
+      outgoing: global-bank-to-happy-life
     routes: 
       - "test.happy-life-bank"
 accounts:

@@ -761,7 +761,7 @@ const loadRoutesFromDatabase = async (
     // If no routes are set, we use the static address of our peers as the only routes
     const routes = peer.routes || [peer.staticIlpAddress]
     for (const route of routes) {
-      await routerService.addStaticRoute(route, peer.id)
+      await routerService.addStaticRoute(route, peer.id, peer.tenantId, peer.assetId)
     }
   }
 }

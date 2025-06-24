@@ -2,7 +2,6 @@ import {
   ForeignKeyViolationError,
   UniqueViolationError,
   NotFoundError,
-  raw,
   Transaction,
   TransactionOrKnex
 } from 'objection'
@@ -22,7 +21,6 @@ import { BaseService } from '../../../shared/baseService'
 import { isValidHttpUrl } from '../../../shared/utils'
 import { v4 as uuid } from 'uuid'
 import { TransferError } from '../../../accounting/errors'
-import PrefixMap from '../connector/ilp-routing/lib/prefix-map'
 import { RouterService } from '../connector/ilp-routing/service'
 
 export interface HttpOptions {
@@ -365,65 +363,16 @@ async function addIncomingHttpTokens({
 async function getPeerByDestinationAddress(
   deps: ServiceDependencies,
   destinationAddress: string,
-  tenantId?: string,
+  tenantId: string,
   assetId?: string
 ): Promise<Peer | undefined> {
-  // This query does the equivalent of the following regex
-  // for `staticIlpAddress`s in the accounts table:
-  // new RegExp('^' + staticIlpAddress + '($|\\.)')).test(destinationAddress)
-  const peerQuery = Peer.query(deps.knex)
-    .where(
-      raw('?', [destinationAddress]),
-      'like',
-      // "_" is a Postgres pattern wildcard (matching any one character), and must be escaped.
-      // See: https://www.postgresql.org/docs/current/functions-matching.html#FUNCTIONS-LIKE
-      raw("REPLACE(REPLACE(??, '_', '\\\\_'), '%', '\\\\%') || '%'", [
-        'staticIlpAddress'
-      ])
-    )
-    .andWhere((builder) => {
-      builder
-        .where(
-          raw('length(??)', ['staticIlpAddress']),
-          destinationAddress.length
-        )
-        .orWhere(
-          raw('substring(?, length(??)+1, 1)', [
-            destinationAddress,
-            'staticIlpAddress'
-          ]),
-          '.'
-        )
-    })
-
-  if (assetId) {
-    peerQuery.andWhere('assetId', assetId)
+  const nextHop = await deps.routerService.getNextHop(destinationAddress, tenantId, assetId)
+  if (nextHop) {
+    const peer = await getPeer(deps, nextHop, tenantId)
+    if (peer) {
+      return peer
+    }
   }
-
-  if (tenantId) {
-    peerQuery.andWhere('tenantId', tenantId)
-  }
-
-  const peers = await peerQuery
-  const peer = getByLongestPrefixMatch(peers, destinationAddress)
-
-  if (peer) {
-    const asset = await deps.assetService.get(peer.assetId)
-    if (asset) peer.asset = asset
-  }
-  return peer || undefined
-}
-
-function getByLongestPrefixMatch(
-  peers: Peer[],
-  destinationAddress: string
-): Peer | undefined {
-  const map = new PrefixMap<Peer>()
-  for (const peer of peers) {
-    map.insert(peer.staticIlpAddress, peer)
-  }
-
-  return map.resolve(destinationAddress)
 }
 
 async function getPeerByIncomingToken(
@@ -490,13 +439,13 @@ async function syncPeerRoutesToMemory(
   deps: ServiceDependencies,
   peer: Peer
 ): Promise<void> {
-  if (!peer.routes || peer.routes.length === 0) {
-    await deps.routerService.addStaticRoute(peer.staticIlpAddress, peer.id)
-    return
-  }
-
-  for (const route of peer.routes) {
-    await deps.routerService.addStaticRoute(route, peer.id)
+  // Always add the static ILP address
+  await deps.routerService.addStaticRoute(peer.staticIlpAddress, peer.id, peer.tenantId, peer.assetId)
+  
+  if (peer.routes && peer.routes.length > 0) {
+    for (const route of peer.routes) {
+      await deps.routerService.addStaticRoute(route, peer.id, peer.tenantId, peer.assetId)
+    }
   }
 }
 
@@ -506,6 +455,6 @@ async function clearPeerRoutesFromMemory(
 ): Promise<void> {
   const routes = peer.routes || [peer.staticIlpAddress]
   for (const route of routes) {
-    await deps.routerService.removeStaticRoute(route, peer.id)
+    await deps.routerService.removeStaticRoute(route, peer.id, peer.tenantId, peer.assetId)
   }
 }
