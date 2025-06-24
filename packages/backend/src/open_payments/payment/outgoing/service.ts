@@ -342,14 +342,13 @@ async function createOutgoingPayment(
         stopTimerPeer()
 
         const payment = await OutgoingPayment.transaction(async (trx) => {
-          let existingOutgoingPaymentGrant: OutgoingPaymentGrant | undefined
+          let existingGrant: OutgoingPaymentGrant | undefined
 
           if (grantId) {
-            const existingGrant =
+            existingGrant =
               await OutgoingPaymentGrant.query(trx).findById(grantId)
 
             if (!existingGrant) {
-              // TODO: insert w/ interval
               await OutgoingPaymentGrant.query(trx)
                 .insert({ id: grantId })
                 .onConflict('id')
@@ -402,7 +401,7 @@ async function createOutgoingPayment(
                 grant: options.grant,
                 trx,
                 callback: options.callback,
-                isExistingGrant: Boolean(existingOutgoingPaymentGrant),
+                isExistingGrant: Boolean(existingGrant),
                 grantLockTimeoutMs: options.grantLockTimeoutMs
               }
             )
@@ -504,22 +503,6 @@ function validateAccessLimits(
     }
   }
 }
-
-// function validatePaymentInterval({
-//   limits,
-//   payment
-// }: {
-//   limits: PaymentLimits
-//   payment: OutgoingPayment
-// }): boolean {
-//   return (
-//     !limits.paymentInterval ||
-//     (limits.paymentInterval.start !== null &&
-//       limits.paymentInterval.start.toMillis() <= payment.createdAt.getTime() &&
-//       limits.paymentInterval.end !== null &&
-//       payment.createdAt.getTime() < limits.paymentInterval.end.toMillis())
-//   )
-// }
 
 type IntervalClassification = 'previous' | 'current' | 'next' | 'unrestricted'
 
