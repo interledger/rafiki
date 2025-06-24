@@ -46,7 +46,9 @@ export async function createRouterService({
   ) {
     const key = `${tenantId}:${destination}`
     const existingRoutes = (await deps.staticRoutes.get(key)) || []
-    const existingRoute = existingRoutes.find(route => route.peerId === peerId)
+    const existingRoute = existingRoutes.find(route => 
+      route.peerId === peerId && route.assetId === assetId
+    )
     
     if (!existingRoute) {
       existingRoutes.push({ peerId, assetId })
