@@ -251,7 +251,7 @@ describe('Grant Routes', (): void => {
                             access_token: {
                               value: createdGrant.continueToken
                             },
-                            uri: `${config.authServerUrl}/${tenant.id}/continue/${createdGrant.continueId}`
+                            uri: `${config.authServerUrl}/continue/${createdGrant.continueId}`
                           }
                         })
                       }
@@ -325,7 +325,7 @@ describe('Grant Routes', (): void => {
             access_token: {
               value: createdGrant.continueToken
             },
-            uri: `${config.authServerUrl}/${tenant.id}/continue/${createdGrant.continueId}`,
+            uri: `${config.authServerUrl}/continue/${createdGrant.continueId}`,
             wait: Config.waitTimeSeconds
           }
         })
@@ -663,7 +663,7 @@ describe('Grant Routes', (): void => {
             access_token: {
               value: createdGrant.continueToken
             },
-            uri: `${config.authServerUrl}/${tenant.id}/continue/${createdGrant.continueId}`
+            uri: `${config.authServerUrl}/continue/${createdGrant.continueId}`
           }
         })
       })
@@ -855,57 +855,6 @@ describe('Grant Routes', (): void => {
           status: 401,
           code: GNAPErrorCode.InvalidRequest,
           message: 'missing interaction reference'
-        })
-      })
-
-      test('Cannot continue if tenant id is not provided', async (): Promise<void> => {
-        const ctx = createContext<ContinueContext>(
-          {
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
-              Authorization: `GNAP ${grant.continueToken}`
-            }
-          },
-          {
-            id: grant.continueId
-          }
-        )
-
-        ctx.request.body = {
-          interact_ref: interaction.ref
-        }
-
-        await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
-          status: 404,
-          code: GNAPErrorCode.InvalidContinuation,
-          message: 'grant not found'
-        })
-      })
-
-      test('Cannot continue if tenant does not exist', async (): Promise<void> => {
-        const ctx = createContext<ContinueContext>(
-          {
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
-              Authorization: `GNAP ${grant.continueToken}`
-            }
-          },
-          {
-            id: grant.continueId,
-            tenantId: v4()
-          }
-        )
-
-        ctx.request.body = {
-          interact_ref: interaction.ref
-        }
-
-        await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
-          status: 404,
-          code: GNAPErrorCode.InvalidContinuation,
-          message: 'grant not found'
         })
       })
 
