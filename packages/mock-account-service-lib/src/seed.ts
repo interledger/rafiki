@@ -114,7 +114,7 @@ export async function setupFromSeed(
           peer.routes || [],
           peer.liquidityThreshold,
           peer.tokens.incoming,
-          peer.tokens.outgoing,
+          peer.tokens.outgoing
         ).then((response) => response.peer || null)
       }
       if (!peerResponse) {

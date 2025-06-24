@@ -366,7 +366,11 @@ async function getPeerByDestinationAddress(
   tenantId: string,
   assetId?: string
 ): Promise<Peer | undefined> {
-  const nextHop = await deps.routerService.getNextHop(destinationAddress, tenantId, assetId)
+  const nextHop = await deps.routerService.getNextHop(
+    destinationAddress,
+    tenantId,
+    assetId
+  )
   if (nextHop) {
     const peer = await getPeer(deps, nextHop, tenantId)
     if (peer) {
@@ -440,11 +444,21 @@ async function syncPeerRoutesToMemory(
   peer: Peer
 ): Promise<void> {
   // Always add the static ILP address
-  await deps.routerService.addStaticRoute(peer.staticIlpAddress, peer.id, peer.tenantId, peer.assetId)
-  
+  await deps.routerService.addStaticRoute(
+    peer.staticIlpAddress,
+    peer.id,
+    peer.tenantId,
+    peer.assetId
+  )
+
   if (peer.routes && peer.routes.length > 0) {
     for (const route of peer.routes) {
-      await deps.routerService.addStaticRoute(route, peer.id, peer.tenantId, peer.assetId)
+      await deps.routerService.addStaticRoute(
+        route,
+        peer.id,
+        peer.tenantId,
+        peer.assetId
+      )
     }
   }
 }
@@ -455,6 +469,11 @@ async function clearPeerRoutesFromMemory(
 ): Promise<void> {
   const routes = peer.routes || [peer.staticIlpAddress]
   for (const route of routes) {
-    await deps.routerService.removeStaticRoute(route, peer.id, peer.tenantId, peer.assetId)
+    await deps.routerService.removeStaticRoute(
+      route,
+      peer.id,
+      peer.tenantId,
+      peer.assetId
+    )
   }
 }

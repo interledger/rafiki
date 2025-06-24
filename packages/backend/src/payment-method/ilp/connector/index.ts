@@ -78,7 +78,7 @@ export async function createConnectorService({
     },
     compose([
       //createIlpTimingMiddleware(),
-      
+
       // Incoming Rules
       createIncomingErrorHandlerMiddleware(ilpAddress),
       createStreamAddressMiddleware(),

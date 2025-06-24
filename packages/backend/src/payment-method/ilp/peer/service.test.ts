@@ -106,7 +106,11 @@ describe('Peer Service', (): void => {
         if (!retrievedPeer) throw new Error('peer not found')
         expect(retrievedPeer).toEqual(peer)
 
-        const nextHop = await routerService.getNextHop(options.staticIlpAddress, peer.tenantId, peer.assetId)
+        const nextHop = await routerService.getNextHop(
+          options.staticIlpAddress,
+          peer.tenantId,
+          peer.assetId
+        )
         expect(nextHop).toBe(peer.id)
       }
     )
@@ -128,7 +132,11 @@ describe('Peer Service', (): void => {
       if (!retrievedPeer) throw new Error('peer not found')
       expect(retrievedPeer).toEqual(peer)
 
-      const nextHop = await routerService.getNextHop(options.staticIlpAddress, peer.tenantId, peer.assetId)
+      const nextHop = await routerService.getNextHop(
+        options.staticIlpAddress,
+        peer.tenantId,
+        peer.assetId
+      )
       expect(nextHop).toBe(peer.id)
     })
 
@@ -250,18 +258,30 @@ describe('Peer Service', (): void => {
     test('Create peer with custom routes', async (): Promise<void> => {
       const staticIlpAddress = 'test.peer1'
       const customRoutes = ['g.custom1', 'g.custom2']
-      const options = randomPeer({ 
+      const options = randomPeer({
         staticIlpAddress,
         routes: customRoutes
       })
-      
+
       const peer = await peerService.create(options)
       assert.ok(!isPeerError(peer))
 
-      const nextHop1 = await routerService.getNextHop(staticIlpAddress, peer.tenantId, peer.assetId)
-      const nextHop2 = await routerService.getNextHop('g.custom1', peer.tenantId, peer.assetId)
-      const nextHop3 = await routerService.getNextHop('g.custom2', peer.tenantId, peer.assetId)
-      
+      const nextHop1 = await routerService.getNextHop(
+        staticIlpAddress,
+        peer.tenantId,
+        peer.assetId
+      )
+      const nextHop2 = await routerService.getNextHop(
+        'g.custom1',
+        peer.tenantId,
+        peer.assetId
+      )
+      const nextHop3 = await routerService.getNextHop(
+        'g.custom2',
+        peer.tenantId,
+        peer.assetId
+      )
+
       expect(nextHop1).toBe(peer.id)
       expect(nextHop2).toBe(peer.id)
       expect(nextHop3).toBe(peer.id)
@@ -269,33 +289,41 @@ describe('Peer Service', (): void => {
 
     test('Isolate routes between tenants', async (): Promise<void> => {
       const staticIlpAddress = 'test.peer1'
-      
+
       const tenant1 = await createTenant(deps)
       const tenant2 = await createTenant(deps)
-      
+
       const asset1 = await createAsset(deps, { tenantId: tenant1.id })
       const asset2 = await createAsset(deps, { tenantId: tenant2.id })
-      
-      const options1 = randomPeer({ 
+
+      const options1 = randomPeer({
         staticIlpAddress,
         tenantId: tenant1.id,
         assetId: asset1.id
       })
-      const options2 = randomPeer({ 
+      const options2 = randomPeer({
         staticIlpAddress,
         tenantId: tenant2.id,
         assetId: asset2.id
       })
-      
+
       const peer1 = await peerService.create(options1)
       const peer2 = await peerService.create(options2)
-      
+
       assert.ok(!isPeerError(peer1))
       assert.ok(!isPeerError(peer2))
 
-      const nextHop1 = await routerService.getNextHop(staticIlpAddress, tenant1.id, peer1.assetId)
-      const nextHop2 = await routerService.getNextHop(staticIlpAddress, tenant2.id, peer2.assetId)
-      
+      const nextHop1 = await routerService.getNextHop(
+        staticIlpAddress,
+        tenant1.id,
+        peer1.assetId
+      )
+      const nextHop2 = await routerService.getNextHop(
+        staticIlpAddress,
+        tenant2.id,
+        peer2.assetId
+      )
+
       expect(nextHop1).toBe(peer1.id)
       expect(nextHop2).toBe(peer2.id)
     })
@@ -340,7 +368,11 @@ describe('Peer Service', (): void => {
           peerOrError
         )
 
-        const nextHop = await routerService.getNextHop(staticIlpAddress, peer.tenantId, peer.assetId)
+        const nextHop = await routerService.getNextHop(
+          staticIlpAddress,
+          peer.tenantId,
+          peer.assetId
+        )
         expect(nextHop).toBe(peer.id)
       }
     )
@@ -446,7 +478,7 @@ describe('Peer Service', (): void => {
     test('Updates peer routes in router service', async (): Promise<void> => {
       const peer = await createPeer(deps)
       const newRoutes = ['g.new1', 'g.new2']
-      
+
       const updateOptions: UpdateOptions = {
         id: peer.id,
         routes: newRoutes,
@@ -456,9 +488,17 @@ describe('Peer Service', (): void => {
       const updatedPeer = await peerService.update(updateOptions)
       assert.ok(!isPeerError(updatedPeer))
 
-      const nextHop1 = await routerService.getNextHop('g.new1', peer.tenantId, peer.assetId)
-      const nextHop2 = await routerService.getNextHop('g.new2', peer.tenantId, peer.assetId)
-      
+      const nextHop1 = await routerService.getNextHop(
+        'g.new1',
+        peer.tenantId,
+        peer.assetId
+      )
+      const nextHop2 = await routerService.getNextHop(
+        'g.new2',
+        peer.tenantId,
+        peer.assetId
+      )
+
       expect(nextHop1).toBe(peer.id)
       expect(nextHop2).toBe(peer.id)
     })
@@ -467,7 +507,7 @@ describe('Peer Service', (): void => {
       const peer = await createPeer(deps)
       const newStaticIlpAddress = 'test.newpeer'
       const newRoutes = ['g.new1', 'g.new2']
-      
+
       const updateOptions: UpdateOptions = {
         id: peer.id,
         staticIlpAddress: newStaticIlpAddress,
@@ -478,10 +518,22 @@ describe('Peer Service', (): void => {
       const updatedPeer = await peerService.update(updateOptions)
       assert.ok(!isPeerError(updatedPeer))
 
-      const nextHop1 = await routerService.getNextHop(newStaticIlpAddress, peer.tenantId, peer.assetId)
-      const nextHop2 = await routerService.getNextHop('g.new1', peer.tenantId, peer.assetId)
-      const nextHop3 = await routerService.getNextHop('g.new2', peer.tenantId, peer.assetId)
-      
+      const nextHop1 = await routerService.getNextHop(
+        newStaticIlpAddress,
+        peer.tenantId,
+        peer.assetId
+      )
+      const nextHop2 = await routerService.getNextHop(
+        'g.new1',
+        peer.tenantId,
+        peer.assetId
+      )
+      const nextHop3 = await routerService.getNextHop(
+        'g.new2',
+        peer.tenantId,
+        peer.assetId
+      )
+
       expect(nextHop1).toBe(peer.id)
       expect(nextHop2).toBe(peer.id)
       expect(nextHop3).toBe(peer.id)
@@ -491,7 +543,7 @@ describe('Peer Service', (): void => {
       const peer = await createPeer(deps, {
         routes: ['g.custom1', 'g.custom2']
       })
-      
+
       const updateOptions: UpdateOptions = {
         id: peer.id,
         routes: [],
@@ -501,10 +553,22 @@ describe('Peer Service', (): void => {
       const updatedPeer = await peerService.update(updateOptions)
       assert.ok(!isPeerError(updatedPeer))
 
-      const nextHop1 = await routerService.getNextHop(peer.staticIlpAddress, peer.tenantId, peer.assetId)
-      const nextHop2 = await routerService.getNextHop('g.custom1', peer.tenantId, peer.assetId)
-      const nextHop3 = await routerService.getNextHop('g.custom2', peer.tenantId, peer.assetId)
-      
+      const nextHop1 = await routerService.getNextHop(
+        peer.staticIlpAddress,
+        peer.tenantId,
+        peer.assetId
+      )
+      const nextHop2 = await routerService.getNextHop(
+        'g.custom1',
+        peer.tenantId,
+        peer.assetId
+      )
+      const nextHop3 = await routerService.getNextHop(
+        'g.custom2',
+        peer.tenantId,
+        peer.assetId
+      )
+
       expect(nextHop1).toBe(peer.id)
       expect(nextHop2).toBeUndefined()
       expect(nextHop3).toBeUndefined()
@@ -513,7 +577,7 @@ describe('Peer Service', (): void => {
     test('Maintains tenant isolation during route updates', async (): Promise<void> => {
       const tenant1 = await createTenant(deps)
       const tenant2 = await createTenant(deps)
-      
+
       const peer1 = await createPeer(deps, {
         staticIlpAddress: 'test.shared',
         tenantId: tenant1.id
@@ -531,9 +595,17 @@ describe('Peer Service', (): void => {
 
       await peerService.update(updateOptions)
 
-      const nextHop1 = await routerService.getNextHop('g.tenant1only', tenant1.id, peer1.assetId)
-      const nextHop2 = await routerService.getNextHop('g.tenant1only', tenant2.id, peer2.assetId)
-      
+      const nextHop1 = await routerService.getNextHop(
+        'g.tenant1only',
+        tenant1.id,
+        peer1.assetId
+      )
+      const nextHop2 = await routerService.getNextHop(
+        'g.tenant1only',
+        tenant2.id,
+        peer2.assetId
+      )
+
       expect(nextHop1).toBe(peer1.id)
       expect(nextHop2).toBeUndefined()
     })
@@ -694,10 +766,22 @@ describe('Peer Service', (): void => {
       const deletedPeer = await peerService.delete(peer.id, peer.tenantId)
       expect(deletedPeer).toEqual(peer)
 
-      const nextHop1 = await routerService.getNextHop(peer.staticIlpAddress, peer.tenantId, peer.assetId)
-      const nextHop2 = await routerService.getNextHop('g.custom1', peer.tenantId, peer.assetId)
-      const nextHop3 = await routerService.getNextHop('g.custom2', peer.tenantId, peer.assetId)
-      
+      const nextHop1 = await routerService.getNextHop(
+        peer.staticIlpAddress,
+        peer.tenantId,
+        peer.assetId
+      )
+      const nextHop2 = await routerService.getNextHop(
+        'g.custom1',
+        peer.tenantId,
+        peer.assetId
+      )
+      const nextHop3 = await routerService.getNextHop(
+        'g.custom2',
+        peer.tenantId,
+        peer.assetId
+      )
+
       expect(nextHop1).toBeUndefined()
       expect(nextHop2).toBeUndefined()
       expect(nextHop3).toBeUndefined()
@@ -706,7 +790,7 @@ describe('Peer Service', (): void => {
     test('Maintains tenant isolation during deletion', async (): Promise<void> => {
       const tenant1 = await createTenant(deps)
       const tenant2 = await createTenant(deps)
-      
+
       const peer1 = await createPeer(deps, {
         staticIlpAddress: 'test.shared',
         tenantId: tenant1.id
@@ -718,9 +802,17 @@ describe('Peer Service', (): void => {
 
       await peerService.delete(peer1.id, peer1.tenantId)
 
-      const nextHop1 = await routerService.getNextHop('test.shared', tenant1.id, peer1.assetId)
-      const nextHop2 = await routerService.getNextHop('test.shared', tenant2.id, peer2.assetId)
-      
+      const nextHop1 = await routerService.getNextHop(
+        'test.shared',
+        tenant1.id,
+        peer1.assetId
+      )
+      const nextHop2 = await routerService.getNextHop(
+        'test.shared',
+        tenant2.id,
+        peer2.assetId
+      )
+
       expect(nextHop1).toBeUndefined()
       expect(nextHop2).toBe(peer2.id)
     })

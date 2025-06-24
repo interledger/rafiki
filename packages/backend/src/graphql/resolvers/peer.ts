@@ -84,11 +84,11 @@ export const createPeer: MutationResolvers<TenantedApolloContext>['createPeer'] 
   ): Promise<ResolversTypes['CreatePeerMutationResponse']> => {
     const peerService = await ctx.container.use('peerService')
     const peerOrError = await peerService.create({
-      ...{
-      ...args.input,
-      routes: args.input,
-      tenantId: ctx.isOperator ? undefined : ctx.tenant.id
-    }.routes || []
+      ...({
+        ...args.input,
+        routes: args.input,
+        tenantId: ctx.isOperator ? undefined : ctx.tenant.id
+      }.routes || [])
     })
     if (isPeerError(peerOrError)) {
       throw new GraphQLError(errorToMessage[peerOrError], {
@@ -111,10 +111,10 @@ export const updatePeer: MutationResolvers<TenantedApolloContext>['updatePeer'] 
     const peerService = await ctx.container.use('peerService')
     const peerOrError = await peerService.update({
       ...{
-      ...args.input,
-      routes: args.input,
-      tenantId: ctx.isOperator ? undefined : ctx.tenant.id
-    }.routes
+        ...args.input,
+        routes: args.input,
+        tenantId: ctx.isOperator ? undefined : ctx.tenant.id
+      }.routes
     })
     if (isPeerError(peerOrError)) {
       throw new GraphQLError(errorToMessage[peerOrError], {

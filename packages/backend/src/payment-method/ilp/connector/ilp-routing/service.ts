@@ -8,9 +8,23 @@ interface RouteEntry {
 }
 
 export interface RouterService extends BaseService {
-  addStaticRoute(prefix: string, peerId: string, tenantId: string, assetId: string): Promise<void>
-  removeStaticRoute(prefix: string, peerId: string, tenantId: string, assetId: string): Promise<void>
-  getNextHop(destination: string, tenantId: string, assetId?: string): Promise<string | undefined>
+  addStaticRoute(
+    prefix: string,
+    peerId: string,
+    tenantId: string,
+    assetId: string
+  ): Promise<void>
+  removeStaticRoute(
+    prefix: string,
+    peerId: string,
+    tenantId: string,
+    assetId: string
+  ): Promise<void>
+  getNextHop(
+    destination: string,
+    tenantId: string,
+    assetId?: string
+  ): Promise<string | undefined>
   getOwnAddress(): string
 }
 
@@ -46,10 +60,10 @@ export async function createRouterService({
   ) {
     const key = `${tenantId}:${destination}`
     const existingRoutes = (await deps.staticRoutes.get(key)) || []
-    const existingRoute = existingRoutes.find(route => 
-      route.peerId === peerId && route.assetId === assetId
+    const existingRoute = existingRoutes.find(
+      (route) => route.peerId === peerId && route.assetId === assetId
     )
-    
+
     if (!existingRoute) {
       existingRoutes.push({ peerId, assetId })
       await deps.staticRoutes.set(key, existingRoutes)
@@ -70,8 +84,8 @@ export async function createRouterService({
     const key = `${tenantId}:${destination}`
     const existingRoutes = await deps.staticRoutes.get(key)
     if (existingRoutes) {
-      const updatedRoutes = existingRoutes.filter((route) => 
-        !(route.peerId === peerId && route.assetId === assetId)
+      const updatedRoutes = existingRoutes.filter(
+        (route) => !(route.peerId === peerId && route.assetId === assetId)
       )
       if (updatedRoutes.length > 0) {
         await deps.staticRoutes.set(key, updatedRoutes)
@@ -98,8 +112,8 @@ export async function createRouterService({
       const routes = await deps.staticRoutes.get(key)
 
       if (routes && routes.length > 0) {
-        const filteredRoutes = assetId 
-          ? routes.filter(route => route.assetId === assetId)
+        const filteredRoutes = assetId
+          ? routes.filter((route) => route.assetId === assetId)
           : routes
 
         if (filteredRoutes.length > 0) {
@@ -107,17 +121,28 @@ export async function createRouterService({
           const selectedRoute =
             filteredRoutes.length === 1
               ? filteredRoutes[0]
-              : filteredRoutes[Math.floor(Math.random() * filteredRoutes.length)]
-          
+              : filteredRoutes[
+                  Math.floor(Math.random() * filteredRoutes.length)
+                ]
+
           deps.logger.debug(
-            { destination, prefix, tenantId, assetId, selectedPeer: selectedRoute.peerId },
+            {
+              destination,
+              prefix,
+              tenantId,
+              assetId,
+              selectedPeer: selectedRoute.peerId
+            },
             'found next hop'
           )
           return selectedRoute.peerId
         }
       }
     }
-    deps.logger.debug({ destination, tenantId, assetId }, 'no static route found')
+    deps.logger.debug(
+      { destination, tenantId, assetId },
+      'no static route found'
+    )
     return undefined
   }
 
@@ -131,7 +156,8 @@ export async function createRouterService({
       addStaticRoute(deps, destination, peerId, tenantId, assetId),
     removeStaticRoute: (destination, peerId, tenantId, assetId) =>
       removeStaticRoute(deps, destination, peerId, tenantId, assetId),
-    getNextHop: (destination, tenantId, assetId) => getNextHop(deps, destination, tenantId, assetId),
+    getNextHop: (destination, tenantId, assetId) =>
+      getNextHop(deps, destination, tenantId, assetId),
     getOwnAddress: () => getOwnAddress(deps)
   }
 }

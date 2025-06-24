@@ -15,7 +15,9 @@ export async function createPeer(
   } = {}
 ): Promise<Peer> {
   const peerOptions: CreateOptions = {
-    assetId: options.assetId || (await createAsset(deps, { tenantId: options.tenantId })).id,
+    assetId:
+      options.assetId ||
+      (await createAsset(deps, { tenantId: options.tenantId })).id,
     http: {
       outgoing: options.http?.outgoing || {
         authToken: faker.string.sample(32),
@@ -35,8 +37,11 @@ export async function createPeer(
   }
   if (options.tenantId) {
     peerOptions.tenantId = options.tenantId
-  } 
-  peerOptions.routes = [...(options.routes || []), peerOptions.staticIlpAddress].filter((route, index, arr) => arr.indexOf(route) === index)
+  }
+  peerOptions.routes = [
+    ...(options.routes || []),
+    peerOptions.staticIlpAddress
+  ].filter((route, index, arr) => arr.indexOf(route) === index)
   const peerService = await deps.use('peerService')
   const peer = await peerService.create(peerOptions)
   if (isPeerError(peer)) {

@@ -1,5 +1,4 @@
-import { createRouterService, RouterService } from '../service'
-import { createInMemoryDataStore } from '../../../../../middleware/cache/data-stores/in-memory'
+import { RouterService } from '../service'
 import { Config } from '../../../../../config/app'
 import { createTestApp, TestContainer } from '../../../../../tests/app'
 import { IocContract } from '@adonisjs/fold'
@@ -40,26 +39,42 @@ describe('RouterService', (): void => {
   describe('addStaticRoute', (): void => {
     test('adds route for specific tenant and asset', async (): Promise<void> => {
       await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId1)
-      
-      const nextHop = await routerService.getNextHop(prefix, tenantId1, assetId1)
+
+      const nextHop = await routerService.getNextHop(
+        prefix,
+        tenantId1,
+        assetId1
+      )
       expect(nextHop).toBe(peerId1)
     })
 
     test('adds multiple peers for same prefix, tenant and asset', async (): Promise<void> => {
       await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId1)
       await routerService.addStaticRoute(prefix, peerId2, tenantId1, assetId1)
-      
-      const nextHop = await routerService.getNextHop(prefix, tenantId1, assetId1)
+
+      const nextHop = await routerService.getNextHop(
+        prefix,
+        tenantId1,
+        assetId1
+      )
       expect([peerId1, peerId2]).toContain(nextHop)
     })
 
     test('isolates routes between tenants', async (): Promise<void> => {
       await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId1)
       await routerService.addStaticRoute(prefix, peerId2, tenantId2, assetId1)
-      
-      const nextHop1 = await routerService.getNextHop(prefix, tenantId1, assetId1)
-      const nextHop2 = await routerService.getNextHop(prefix, tenantId2, assetId1)
-      
+
+      const nextHop1 = await routerService.getNextHop(
+        prefix,
+        tenantId1,
+        assetId1
+      )
+      const nextHop2 = await routerService.getNextHop(
+        prefix,
+        tenantId2,
+        assetId1
+      )
+
       expect(nextHop1).toBe(peerId1)
       expect(nextHop2).toBe(peerId2)
     })
@@ -67,10 +82,18 @@ describe('RouterService', (): void => {
     test('isolates routes between assets', async (): Promise<void> => {
       await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId1)
       await routerService.addStaticRoute(prefix, peerId2, tenantId1, assetId2)
-      
-      const nextHop1 = await routerService.getNextHop(prefix, tenantId1, assetId1)
-      const nextHop2 = await routerService.getNextHop(prefix, tenantId1, assetId2)
-      
+
+      const nextHop1 = await routerService.getNextHop(
+        prefix,
+        tenantId1,
+        assetId1
+      )
+      const nextHop2 = await routerService.getNextHop(
+        prefix,
+        tenantId1,
+        assetId2
+      )
+
       expect(nextHop1).toBe(peerId1)
       expect(nextHop2).toBe(peerId2)
     })
@@ -78,10 +101,18 @@ describe('RouterService', (): void => {
     test('allows same peer for different assets', async (): Promise<void> => {
       await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId1)
       await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId2)
-      
-      const nextHop1 = await routerService.getNextHop(prefix, tenantId1, assetId1)
-      const nextHop2 = await routerService.getNextHop(prefix, tenantId1, assetId2)
-      
+
+      const nextHop1 = await routerService.getNextHop(
+        prefix,
+        tenantId1,
+        assetId1
+      )
+      const nextHop2 = await routerService.getNextHop(
+        prefix,
+        tenantId1,
+        assetId2
+      )
+
       expect(nextHop1).toBe(peerId1)
       expect(nextHop2).toBe(peerId1)
     })
@@ -90,36 +121,76 @@ describe('RouterService', (): void => {
   describe('removeStaticRoute', (): void => {
     test('removes route for specific tenant and asset', async (): Promise<void> => {
       await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId1)
-      await routerService.removeStaticRoute(prefix, peerId1, tenantId1, assetId1)
-      
-      const nextHop = await routerService.getNextHop(prefix, tenantId1, assetId1)
+      await routerService.removeStaticRoute(
+        prefix,
+        peerId1,
+        tenantId1,
+        assetId1
+      )
+
+      const nextHop = await routerService.getNextHop(
+        prefix,
+        tenantId1,
+        assetId1
+      )
       expect(nextHop).toBeUndefined()
     })
 
     test('removes only specific peer from tenant and asset', async (): Promise<void> => {
       await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId1)
       await routerService.addStaticRoute(prefix, peerId2, tenantId1, assetId1)
-      await routerService.removeStaticRoute(prefix, peerId1, tenantId1, assetId1)
-      
-      const nextHop = await routerService.getNextHop(prefix, tenantId1, assetId1)
+      await routerService.removeStaticRoute(
+        prefix,
+        peerId1,
+        tenantId1,
+        assetId1
+      )
+
+      const nextHop = await routerService.getNextHop(
+        prefix,
+        tenantId1,
+        assetId1
+      )
       expect(nextHop).toBe(peerId2)
     })
 
     test('handles removing non-existent route gracefully', async (): Promise<void> => {
-      await routerService.removeStaticRoute(prefix, peerId1, tenantId1, assetId1)
-      
-      const nextHop = await routerService.getNextHop(prefix, tenantId1, assetId1)
+      await routerService.removeStaticRoute(
+        prefix,
+        peerId1,
+        tenantId1,
+        assetId1
+      )
+
+      const nextHop = await routerService.getNextHop(
+        prefix,
+        tenantId1,
+        assetId1
+      )
       expect(nextHop).toBeUndefined()
     })
 
     test('removes only specific asset route when peer has multiple assets', async (): Promise<void> => {
       await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId1)
       await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId2)
-      await routerService.removeStaticRoute(prefix, peerId1, tenantId1, assetId1)
-      
-      const nextHop1 = await routerService.getNextHop(prefix, tenantId1, assetId1)
-      const nextHop2 = await routerService.getNextHop(prefix, tenantId1, assetId2)
-      
+      await routerService.removeStaticRoute(
+        prefix,
+        peerId1,
+        tenantId1,
+        assetId1
+      )
+
+      const nextHop1 = await routerService.getNextHop(
+        prefix,
+        tenantId1,
+        assetId1
+      )
+      const nextHop2 = await routerService.getNextHop(
+        prefix,
+        tenantId1,
+        assetId2
+      )
+
       expect(nextHop1).toBeUndefined()
       expect(nextHop2).toBe(peerId1)
     })
@@ -127,9 +198,18 @@ describe('RouterService', (): void => {
     test('does not affect other tenants when removing route', async (): Promise<void> => {
       await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId1)
       await routerService.addStaticRoute(prefix, peerId1, tenantId2, assetId1)
-      await routerService.removeStaticRoute(prefix, peerId1, tenantId1, assetId1)
-      
-      const nextHop2 = await routerService.getNextHop(prefix, tenantId2, assetId1)
+      await routerService.removeStaticRoute(
+        prefix,
+        peerId1,
+        tenantId1,
+        assetId1
+      )
+
+      const nextHop2 = await routerService.getNextHop(
+        prefix,
+        tenantId2,
+        assetId1
+      )
       expect(nextHop2).toBe(peerId1)
     })
   })
@@ -137,8 +217,12 @@ describe('RouterService', (): void => {
   describe('getNextHop - longest prefix match', (): void => {
     test('finds next hop for exact prefix match', async (): Promise<void> => {
       await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId1)
-      
-      const nextHop = await routerService.getNextHop(prefix, tenantId1, assetId1)
+
+      const nextHop = await routerService.getNextHop(
+        prefix,
+        tenantId1,
+        assetId1
+      )
       const sameNextHop = await routerService.getNextHop(prefix, tenantId1)
       expect(nextHop).toBe(peerId1)
       expect(nextHop).toBe(sameNextHop)
@@ -146,25 +230,48 @@ describe('RouterService', (): void => {
 
     test('finds next hop for longer destination using longest prefix match', async (): Promise<void> => {
       await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId1)
-      
-      const nextHop = await routerService.getNextHop(`${prefix}.sub`, tenantId1, assetId1)
-      const sameNextHop = await routerService.getNextHop(`${prefix}.sub`, tenantId1)
+
+      const nextHop = await routerService.getNextHop(
+        `${prefix}.sub`,
+        tenantId1,
+        assetId1
+      )
+      const sameNextHop = await routerService.getNextHop(
+        `${prefix}.sub`,
+        tenantId1
+      )
       expect(nextHop).toBe(peerId1)
       expect(nextHop).toBe(sameNextHop)
     })
 
     test('prefers longer prefix over shorter prefix', async (): Promise<void> => {
       await routerService.addStaticRoute('g', peerId1, tenantId1, assetId1)
-      await routerService.addStaticRoute('g.test1', peerId2, tenantId1, assetId1)
-      
-      const nextHop = await routerService.getNextHop('g.test1.sub', tenantId1, assetId1)
-      const sameNextHop = await routerService.getNextHop('g.test1.sub', tenantId1)
+      await routerService.addStaticRoute(
+        'g.test1',
+        peerId2,
+        tenantId1,
+        assetId1
+      )
+
+      const nextHop = await routerService.getNextHop(
+        'g.test1.sub',
+        tenantId1,
+        assetId1
+      )
+      const sameNextHop = await routerService.getNextHop(
+        'g.test1.sub',
+        tenantId1
+      )
       expect(nextHop).toBe(peerId2)
       expect(nextHop).toBe(sameNextHop)
     })
 
     test('returns undefined for unknown destination', async (): Promise<void> => {
-      const nextHop = await routerService.getNextHop('g.unknown', tenantId1, assetId1)
+      const nextHop = await routerService.getNextHop(
+        'g.unknown',
+        tenantId1,
+        assetId1
+      )
       const sameNextHop = await routerService.getNextHop('g.unknown', tenantId1)
       expect(nextHop).toBeUndefined()
       expect(nextHop).toBe(sameNextHop)
@@ -173,17 +280,29 @@ describe('RouterService', (): void => {
     test('isolates routing between tenants', async (): Promise<void> => {
       await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId1)
       await routerService.addStaticRoute(prefix, peerId2, tenantId2, assetId1)
-      
-      const nextHop1 = await routerService.getNextHop(prefix, tenantId1, assetId1)
-      const nextHop2 = await routerService.getNextHop(prefix, tenantId2, assetId1)
-      
+
+      const nextHop1 = await routerService.getNextHop(
+        prefix,
+        tenantId1,
+        assetId1
+      )
+      const nextHop2 = await routerService.getNextHop(
+        prefix,
+        tenantId2,
+        assetId1
+      )
+
       expect(nextHop1).toBe(peerId1)
       expect(nextHop2).toBe(peerId2)
     })
 
     test('returns undefined for destination of different tenant', async (): Promise<void> => {
       await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId1)
-      const nextHop = await routerService.getNextHop(prefix, tenantId2, assetId1)
+      const nextHop = await routerService.getNextHop(
+        prefix,
+        tenantId2,
+        assetId1
+      )
       const sameNextHop = await routerService.getNextHop(prefix, tenantId2)
 
       expect(nextHop).toBeUndefined()
@@ -194,8 +313,12 @@ describe('RouterService', (): void => {
       await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId1)
       await routerService.addStaticRoute(prefix, peerId2, tenantId1, assetId1)
       await routerService.addStaticRoute(prefix, peerId3, tenantId1, assetId1)
-      
-      const nextHop = await routerService.getNextHop(prefix, tenantId1, assetId1)
+
+      const nextHop = await routerService.getNextHop(
+        prefix,
+        tenantId1,
+        assetId1
+      )
       expect([peerId1, peerId2, peerId3]).toContain(nextHop)
     })
   })
@@ -204,24 +327,36 @@ describe('RouterService', (): void => {
     test('filters routes by asset when multiple assets exist', async (): Promise<void> => {
       await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId1)
       await routerService.addStaticRoute(prefix, peerId2, tenantId1, assetId2)
-      
-      const nextHop1 = await routerService.getNextHop(prefix, tenantId1, assetId1)
-      const nextHop2 = await routerService.getNextHop(prefix, tenantId1, assetId2)
-      
+
+      const nextHop1 = await routerService.getNextHop(
+        prefix,
+        tenantId1,
+        assetId1
+      )
+      const nextHop2 = await routerService.getNextHop(
+        prefix,
+        tenantId1,
+        assetId2
+      )
+
       expect(nextHop1).toBe(peerId1)
       expect(nextHop2).toBe(peerId2)
     })
 
     test('returns undefined when asset does not match', async (): Promise<void> => {
       await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId1)
-      
-      const nextHop = await routerService.getNextHop(prefix, tenantId1, assetId2)
+
+      const nextHop = await routerService.getNextHop(
+        prefix,
+        tenantId1,
+        assetId2
+      )
       expect(nextHop).toBeUndefined()
     })
 
     test('works without assetId parameter', async (): Promise<void> => {
       await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId1)
-      
+
       const nextHop = await routerService.getNextHop(prefix, tenantId1)
       expect(nextHop).toBe(peerId1)
     })
@@ -229,10 +364,18 @@ describe('RouterService', (): void => {
     test('handles multiple assets for same peer', async (): Promise<void> => {
       await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId1)
       await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId2)
-      
-      const nextHop1 = await routerService.getNextHop(prefix, tenantId1, assetId1)
-      const nextHop2 = await routerService.getNextHop(prefix, tenantId1, assetId2)
-      
+
+      const nextHop1 = await routerService.getNextHop(
+        prefix,
+        tenantId1,
+        assetId1
+      )
+      const nextHop2 = await routerService.getNextHop(
+        prefix,
+        tenantId1,
+        assetId2
+      )
+
       expect(nextHop1).toBe(peerId1)
       expect(nextHop2).toBe(peerId1)
     })
@@ -249,7 +392,7 @@ describe('RouterService', (): void => {
 
     test('handles single segment destination', async (): Promise<void> => {
       await routerService.addStaticRoute('g', peerId1, tenantId1, assetId1)
-      
+
       const nextHop = await routerService.getNextHop('g', tenantId1, assetId1)
       const sameNextHop = await routerService.getNextHop('g', tenantId1)
 
@@ -258,9 +401,18 @@ describe('RouterService', (): void => {
     })
 
     test('handles case where no prefix matches with asset', async (): Promise<void> => {
-      await routerService.addStaticRoute('g.test1', peerId1, tenantId1, assetId1)
-      
-      const nextHop = await routerService.getNextHop('h.test1', tenantId1, assetId1)
+      await routerService.addStaticRoute(
+        'g.test1',
+        peerId1,
+        tenantId1,
+        assetId1
+      )
+
+      const nextHop = await routerService.getNextHop(
+        'h.test1',
+        tenantId1,
+        assetId1
+      )
       expect(nextHop).toBeUndefined()
     })
   })
@@ -271,4 +423,4 @@ describe('RouterService', (): void => {
       expect(ownAddress).toBe('test.rafiki')
     })
   })
-}) 
+})
