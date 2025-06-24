@@ -411,7 +411,7 @@ async function continueGrant(
     params,
     headers
   } = ctx
-  const { id: continueId, tenantId } = params
+  const { id: continueId } = params
   const continueToken = (headers['authorization'] as string)?.split('GNAP ')[1]
 
   if (!continueId || !continueToken) {
@@ -442,8 +442,7 @@ async function continueGrant(
   if (
     !interaction ||
     !isContinuableGrant(interaction.grant) ||
-    !isMatchingContinueRequest(continueId, continueToken, interaction.grant) ||
-    interaction.grant.tenantId !== tenantId
+    !isMatchingContinueRequest(continueId, continueToken, interaction.grant)
   ) {
     throw new GNAPServerRouteError(
       404,

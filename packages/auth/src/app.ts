@@ -332,7 +332,7 @@ export class App {
 
     // Grant Continue
     router.post<DefaultState, ContinueContext>(
-      '/:tenantId/continue/:id',
+      '/continue/:id',
       createValidatorMiddleware<ContinueContext>(openApi.authServerSpec, {
         path: '/continue/{id}',
         method: HttpMethod.POST
@@ -343,7 +343,7 @@ export class App {
 
     // Grant Cancel
     router.delete<DefaultState, GrantRevokeContext>(
-      '/:tenantId/continue/:id',
+      '/continue/:id',
       createValidatorMiddleware<GrantRevokeContext>(openApi.authServerSpec, {
         path: '/continue/{id}',
         method: HttpMethod.DELETE

@@ -148,7 +148,7 @@ export function toOpenPaymentPendingGrant(
       access_token: {
         value: grant.continueToken
       },
-      uri: `${authServerUrl}/${grant.tenantId}/continue/${grant.continueId}`,
+      uri: `${authServerUrl}/continue/${grant.continueId}`,
       wait: waitTimeSeconds
     }
   }
@@ -168,7 +168,7 @@ export function toOpenPaymentsGrantContinuation(
       access_token: {
         value: grant.continueToken
       },
-      uri: `${args.authServerUrl}/${grant.tenantId}/continue/${grant.continueId}`,
+      uri: `${args.authServerUrl}/continue/${grant.continueId}`,
       wait: args.waitTimeSeconds
     }
   }
