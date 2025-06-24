@@ -213,7 +213,7 @@ async function createPeer(
         }
       }
 
-      await syncPeerRoutesToMemory(deps, peer)
+      await syncPeerRoutes(deps, peer)
 
       return peer
     })
@@ -285,8 +285,8 @@ async function updatePeer(
         .patchAndFetchById(options.id, updateData)
         .throwIfNotFound()
 
-      await clearPeerRoutesFromMemory(deps, existingPeer)
-      await syncPeerRoutesToMemory(deps, peer)
+      await clearPeerRoutes(deps, existingPeer)
+      await syncPeerRoutes(deps, peer)
 
       const asset = await deps.assetService.get(peer.assetId)
       if (asset) peer.asset = asset
@@ -432,14 +432,14 @@ async function deletePeer(
     .returning('*')
     .first()
   if (peer) {
-    await clearPeerRoutesFromMemory(deps, peer)
+    await clearPeerRoutes(deps, peer)
     const asset = await deps.assetService.get(peer.assetId)
     if (asset) peer.asset = asset
   }
   return peer
 }
 
-async function syncPeerRoutesToMemory(
+async function syncPeerRoutes(
   deps: ServiceDependencies,
   peer: Peer
 ): Promise<void> {
@@ -463,7 +463,7 @@ async function syncPeerRoutesToMemory(
   }
 }
 
-async function clearPeerRoutesFromMemory(
+async function clearPeerRoutes(
   deps: ServiceDependencies,
   peer: Peer
 ): Promise<void> {
