@@ -126,7 +126,7 @@ type Subject implements Model {
   id: ID!
   "Wallet address of the subject's account."
   subId: String!
-  "Format of the subject identifier, which is 'url'."
+  "Format of the subject identifier
   subIdFormat: String!
   "The date and time when the subject was created."
   createdAt: String!
