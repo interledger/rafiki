@@ -1,7 +1,5 @@
 # Helm-related files
-*.tgz
 *.lock
-charts/
 tmpcharts/
 manifests/
 release/
