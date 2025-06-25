@@ -2,7 +2,7 @@ import { Transaction, TransactionOrKnex } from 'objection'
 import { BaseService } from '../shared/baseService'
 import { Subject } from './model'
 import { SubjectRequest } from './types'
-import { GrantError } from '../grant/errors'
+import { GrantError, GrantErrorCode } from '../grant/errors'
 
 export interface SubjectService {
   createSubject(
@@ -68,9 +68,15 @@ function validateSubjectRequest(subject: SubjectRequest): void {
     if (!subject.id.startsWith('https://')) throw 1
     new URL(subject.id)
   } catch {
-    throw new GrantError('Subject id must be a valid https url')
+    throw new GrantError(
+      GrantErrorCode.InvalidRequest,
+      'subject id must be a valid https url'
+    )
   }
   if (subject.format != 'uri') {
-    throw new GrantError('Subject format is invalid')
+    throw new GrantError(
+      GrantErrorCode.InvalidRequest,
+      'subject format is invalid'
+    )
   }
 }

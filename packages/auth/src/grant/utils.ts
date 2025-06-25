@@ -5,6 +5,7 @@ import {
   isQuoteAccessRequest
 } from '../access/types'
 import { AccessAction } from '@interledger/open-payments'
+import { GrantError, GrantErrorCode } from './errors'
 
 export function canSkipInteraction(
   config: IAppConfig,
@@ -14,7 +15,10 @@ export function canSkipInteraction(
   const emptyAccess = (body.access_token?.access?.length ?? 0) === 0
 
   if (emptySubject && emptyAccess) {
-    throw new Error('subject or access_token required')
+    throw new GrantError(
+      GrantErrorCode.InvalidRequest,
+      'subject or access_token required'
+    )
   }
 
   const canSkipAccess =
@@ -30,7 +34,10 @@ export function canSkipInteraction(
             !config.listAllInteraction))
 
       if (!canSkip && (!access.identifier || access.identifier === '')) {
-        throw new Error('access identifier required')
+        throw new GrantError(
+          GrantErrorCode.InvalidRequest,
+          'access identifier required'
+        )
       }
 
       return canSkip

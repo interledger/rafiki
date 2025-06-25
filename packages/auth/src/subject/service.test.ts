@@ -67,6 +67,41 @@ describe('Subject Service', (): void => {
       expect(subject[0].subId).toEqual(subjectRequest.id)
       expect(subject[0].subIdFormat).toEqual(subjectRequest.format)
     })
+
+    describe('validateSubjectRequest throws', (): void => {
+      test('when id is not a valid URI', async (): Promise<void> => {
+        const subjectRequest: SubjectRequest = {
+          id: 'invalid-uri',
+          format: 'uri'
+        }
+
+        await expect(
+          subjectService.createSubject(grant.id, [subjectRequest])
+        ).rejects.toThrow()
+      })
+
+      test('when id is not a https URI', async (): Promise<void> => {
+        const subjectRequest: SubjectRequest = {
+          id: 'http://wallet.com/alice',
+          format: 'uri'
+        }
+
+        await expect(
+          subjectService.createSubject(grant.id, [subjectRequest])
+        ).rejects.toThrow()
+      })
+
+      test('when format is not uri', async (): Promise<void> => {
+        const subjectRequest: SubjectRequest = {
+          id: faker.internet.url({ protocol: 'https' }),
+          format: 'url'
+        }
+
+        await expect(
+          subjectService.createSubject(grant.id, [subjectRequest])
+        ).rejects.toThrow()
+      })
+    })
   })
 
   describe('getByGrant', (): void => {
