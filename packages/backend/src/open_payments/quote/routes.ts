@@ -96,8 +96,9 @@ async function createQuote(
 
   if (isQuoteError(quoteOrErr)) {
     throw new OpenPaymentsServerRouteError(
-      errorToHTTPCode[quoteOrErr],
-      errorToMessage[quoteOrErr]
+      errorToHTTPCode[quoteOrErr.type],
+      errorToMessage[quoteOrErr.type],
+      quoteOrErr.details
     )
   }
 
