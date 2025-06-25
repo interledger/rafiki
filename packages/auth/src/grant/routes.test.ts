@@ -84,7 +84,6 @@ describe('Grant Routes', (): void => {
 
   beforeEach(async (): Promise<void> => {
     grant = await Grant.query().insert(generateBaseGrant())
-
     await Access.query().insert({
       ...BASE_GRANT_ACCESS,
       grantId: grant.id
@@ -317,6 +316,7 @@ describe('Grant Routes', (): void => {
           message: 'internal server error'
         })
       })
+
       test('Fails to initiate a grant w/o interact field', async (): Promise<void> => {
         const ctx = createContext<CreateContext>(
           {

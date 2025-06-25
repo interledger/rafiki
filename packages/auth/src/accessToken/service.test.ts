@@ -24,7 +24,7 @@ import { generateBaseGrant } from '../tests/grant'
 describe('Access Token Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let trx: Knex.Transaction
+  const trx: Knex.Transaction = undefined as unknown as Knex.Transaction
   let accessTokenService: AccessTokenService
 
   beforeAll(async (): Promise<void> => {
@@ -172,7 +172,7 @@ describe('Access Token Service', (): void => {
         accessTokenService.introspect(accessToken.value, [
           outgoingPaymentAccess
         ])
-      ).resolves.toEqual({ grant, access: [grant.access[0]] })
+      ).resolves.toEqual({ grant, access: [grant.access?.[0]] })
     })
 
     test('Can introspect active token with partial access actions', async (): Promise<void> => {
@@ -182,7 +182,7 @@ describe('Access Token Service', (): void => {
       }
       await expect(
         accessTokenService.introspect(accessToken.value, [access])
-      ).resolves.toEqual({ grant, access: [grant.access[0]] })
+      ).resolves.toEqual({ grant, access: [grant.access?.[0]] })
     })
 
     test('Introspection only returns requested access', async (): Promise<void> => {

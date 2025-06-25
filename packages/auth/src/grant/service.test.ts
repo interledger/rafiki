@@ -29,7 +29,7 @@ describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let grantService: GrantService
-  let trx: Knex.Transaction
+  const trx: Knex.Transaction = null as unknown as Knex.Transaction
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
@@ -149,6 +149,7 @@ describe('Grant Service', (): void => {
           type: AccessType.IncomingPayment
         })
       })
+
       test.each`
         type                          | expectedState          | interact
         ${AccessType.IncomingPayment} | ${GrantState.Approved} | ${undefined}
@@ -189,6 +190,28 @@ describe('Grant Service', (): void => {
           })
         }
       )
+
+      it('create a grant with subject in pending state', async () => {
+        const grantRequest: GrantRequest = {
+          ...BASE_GRANT_REQUEST,
+          subject: {
+            sub_ids: [
+              {
+                id: faker.internet.url(),
+                format: 'uri'
+              }
+            ]
+          }
+        }
+
+        const grant = await grantService.create(grantRequest)
+
+        expect(grant).toMatchObject({
+          state: GrantState.Pending,
+          continueId: expect.any(String),
+          continueToken: expect.any(String)
+        })
+      })
     })
 
     describe('pending', (): void => {

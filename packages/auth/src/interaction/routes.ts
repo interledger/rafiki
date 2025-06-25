@@ -19,10 +19,13 @@ import {
 import { toOpenPaymentsAccess } from '../access/model'
 import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
 import { generateRouteLogs } from '../shared/utils'
+import { SubjectService } from '../subject/service'
+import { toOpenPaymentsSubject } from '../subject/model'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
   accessService: AccessService
+  subjectService: SubjectService
   interactionService: InteractionService
   config: IAppConfig
 }
@@ -82,6 +85,7 @@ function isInteractionExpired(interaction: Interaction): boolean {
 export function createInteractionRoutes({
   grantService,
   accessService,
+  subjectService,
   interactionService,
   logger,
   config
@@ -93,6 +97,7 @@ export function createInteractionRoutes({
   const deps = {
     grantService,
     accessService,
+    subjectService,
     interactionService,
     logger: log,
     config
@@ -111,7 +116,7 @@ async function getGrantDetails(
   ctx: GetContext
 ): Promise<void> {
   const secret = ctx.headers?.['x-idp-secret']
-  const { config, interactionService, accessService } = deps
+  const { config, interactionService, accessService, subjectService } = deps
   const { id: interactId, nonce } = ctx.params
   if (
     !secret ||
@@ -136,6 +141,7 @@ async function getGrantDetails(
   }
 
   const access = await accessService.getByGrant(interaction.grantId)
+  const subjects = await subjectService.getByGrant(interaction.grantId)
 
   deps.logger.debug(
     {
@@ -148,6 +154,7 @@ async function getGrantDetails(
   ctx.body = {
     grantId: interaction.grant.id,
     access: access.map(toOpenPaymentsAccess),
+    subjects: subjects.map(toOpenPaymentsSubject),
     state: interaction.state
   }
 }
