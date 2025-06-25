@@ -1207,7 +1207,7 @@
           },
           {
             "name": "subIdFormat",
-            "description": "Format of the subject identifier, which is 'url'.",
+            "description": "Format of the subject identifier",
             "args": [],
             "type": {
               "kind": "NON_NULL",

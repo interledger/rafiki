@@ -219,7 +219,7 @@ export type Subject = Model & {
   id: Scalars['ID']['output'];
   /** Wallet address of the subject's account. */
   subId: Scalars['String']['output'];
-  /** Format of the subject identifier, which is 'url'. */
+  /** Format of the subject identifier */
   subIdFormat: Scalars['String']['output'];
 };
 
