@@ -56,7 +56,7 @@ rafiki-auth:
       database: rafiki_auth
 
   # The public endpoint for your Rafiki instance’s auth server
-  authServerUrl: "http://192.168.122.227/auth-server"
+  authServerUrl: "http://rafiki-auth:3006"
 
   # You either need to start up a separate identity server or for development purposes
   # you can use the Mock Account Servicing Entity (MASE) provided by Rafiki, 
@@ -72,7 +72,7 @@ rafiki-auth:
 
   # The number of pods to run across the cluster.
   # This value is used to set the replica count for the deployment.
-  # replicaCount: 1
+  replicaCount: 1
 
   # NodeSelector can be used to specify the nodes on which the pods should run on your cluster.
   # nodeSelector: {}
@@ -85,12 +85,12 @@ rafiki-auth:
   #   name: ""
 
   # Autoscaling configuration for the deployment.
-  # autoscaling:
-  #   enabled: false
-  #   minReplicas: 2
-  #   maxReplicas: 1
-  #   cpuUtilizationPercentage: 80
-  #   memoryUtilizationPercentage: 80
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 1
+    cpuUtilizationPercentage: 80
+    memoryUtilizationPercentage: 80
 
   # Default configuration for the Services to create. If you have specific
   # requirements you can use this section to redefine the service as you wish
@@ -145,33 +145,41 @@ rafiki-auth:
   # The containers that will be created as part of the deployment. It is recommended that
   # you do not change this but rather use the sidecar and initContainers sections to extend
   # this chart for your purposes.
-  # containers:
-  #   - name: server
-  #     envFrom:
-  #       - configMapRef:
-  #           name: "{{ .Release.Name }}"
-  #       - secretRef:
-  #           name: "{{ .Release.Name }}"
-  #     resources:
-  #       requests:
-  #         memory: 128Mi
-  #         cpu: 200m
-  #       limits:
-  #         memory: 512Mi
-  #         cpu: 400m
-  #     ports:
-  #       - name: auth
-  #         containerPort: 3006
-  #         protocol: TCP
-  #       - name: admin
-  #         containerPort: 3003
-  #         protocol: TCP
-  #       - name: introspection
-  #         containerPort: 3007
-  #         protocol: TCP
-  #       - name: interaction
-  #         containerPort: 3009
-  #         protocol: TCP
+  containers:
+    - name: server
+      envFrom:
+        - configMapRef:
+            name: rafiki-auth
+        - secretRef:
+            name: rafiki-auth
+      readinessProbe:
+        httpGet:
+          path: /healthz
+          port: 3007
+      livenessProbe:
+        httpGet:
+          path: /healthz
+          port: 3007
+      resources:
+        requests:
+          memory: 128Mi
+          cpu: 200m
+        limits:
+          memory: 512Mi
+          cpu: 400m
+      ports:
+        - name: auth
+          containerPort: 3006
+          protocol: TCP
+        - name: admin
+          containerPort: 3003
+          protocol: TCP
+        - name: introspection
+          containerPort: 3007
+          protocol: TCP
+        - name: interaction
+          containerPort: 3009
+          protocol: TCP
 
   # interaction:
   #   # When true, quote grants are interactive.
@@ -232,11 +240,14 @@ rafiki-auth:
   # keep it here for now. This will be fixed in the next release of the chart.
   containers:
     - name: server
-      envFrom:
-        - configMapRef:
-            name: rafiki-auth
-        - secretRef:
-            name: rafiki-auth
+      readinessProbe:
+        httpGet:
+          path: /healthz
+          port: 3007
+      livenessProbe:
+        httpGet:
+          path: /healthz
+          port: 3007
       resources:
         requests:
           memory: 128Mi
@@ -314,11 +325,11 @@ rafiki-backend:
 
   ilp:
     # maps to OPEN_PAYMENTS_URL
-    host: "http://192.168.122.227/open-payments"
+    host: 'http://rafiki-backend:3000'
     # The ILP address of your Rafiki instance. Override this value.
     address: test.rafiki-backend
     # The ILP connector address where ILP packets are received.
-    connector: 'http://192.168.122.227/connector'
+    connector: 'http://rafiki-backend:3002'
     # The seed secret to generate shared STREAM secrets.
     streamSecret: "BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU="  # override this value
 
@@ -326,37 +337,48 @@ rafiki-backend:
   slippage: 0.01
 
   key:
-    # Your Rafiki instance’s client key ID.
+    # Your Rafiki instance’s client key ID. Make this a unique identifier for your
+    # Rafiki instance.
     id: rafiki
-    # The path to your Rafiki instance’s client private key.
-    # You will have to mount this file into the container by customising the container section
-    file: ''
+    # The private key pem file used. Must be provided as base64 encoded version of
+    # the pem file. It will be stored in a secret. Chart will fail if not provided.
+    # Can be generated like this
+    #   openssl genpkey -algorithm Ed25519 -out private.pem
+    #   echo "pvk:"
+    #   echo -n "$(cat private.pem)" | base64 -w0
+    #
+    # Note that the public key can always be derived from the private key like this
+    # openssl pkey -in private.pem -pubout -out public.pem
+    #
+    # If empty string like this is provided, this chart will spawn a job to generate
+    # a new key pair and store it in a secret for you.
+    pvk: ''
 
   # The secret to generate request header signatures for webhook event requests.
   quoteSignatureSecret: 3eSLNoBubCYQZprCAhOaNZ7yZIoe1LrqAzf4cCgy5w4= # OVERRIDE THIS VALUE
 
-  # # The delay in liquidity withdrawal processing.
-  # # Unit ms
-  # withdrawalThrottleDelay: ''
+  # The delay in liquidity withdrawal processing.
+  # Unit ms
+  withdrawalThrottleDelay: ''
 
-  # lifetime:
-  #   # The time, in milliseconds, the exchange rates you provide via the EXCHANGE_RATES_URL 
-  #   # are valid.
-  #   exchangeRate: 15000
-  #   # The time, in milliseconds, an Open Payments quote is valid for.
-  #   quote: 300000
-  #   # The time, in milliseconds, that your Rafiki instance will wait for a 200 response 
-  #   # from your webhook endpoint. If a 200 response is not received, Rafiki will time out
-  #   # and try to send the webhook event again.
-  #   webhook: 200
+  lifetime:
+    # The time, in milliseconds, the exchange rates you provide via the EXCHANGE_RATES_URL
+    # are valid.
+    exchangeRate: 15000
+    # The time, in milliseconds, an Open Payments quote is valid for.
+    quote: 300000
+    # The time, in milliseconds, that your Rafiki instance will wait for a 200 response
+    # from your webhook endpoint. If a 200 response is not received, Rafiki will time out
+    # and try to send the webhook event again.
+    webhook: 200
 
-  # workers:
-  #   # The number of workers processing incoming payment requests.
-  #   incomingPayment: 1
-  #   # The number of workers processing outgoing payment requests.
-  #   outgoingPayment: 1
-  #   paymentPointer: 1
-  #   webhook: 1
+  workers:
+    # The number of workers processing incoming payment requests.
+    incomingPayment: 1
+    # The number of workers processing outgoing payment requests.
+    outgoingPayment: 1
+    paymentPointer: 1
+    webhook: 1
 
   # # The time, in milliseconds, that WEBHOOK_WORKERS will wait until they check the 
   # # empty webhook event queue again.
@@ -421,16 +443,16 @@ rafiki-backend:
   # # Configures the ports on which the containers will listen. It is recommended to
   # # not change these values unless you know what you are doing. Rather use the 
   # # service configuration to change the exposed ports.
-  # port:
-  #   admin: 3001
-  #   connector: 3002
-  #   openPayments: 3000
+  port:
+    admin: 3001
+    connector: 3002
+    openPayments: 3000
 
 
   # Default replica count for the Rafiki Backend deployment.
   # This value is used only when autoscaling is disabled. If autoscaling is enabled,
   # the number of replicas will be managed dynamically based on resource utilization.
-  # replicaCount: 1
+  replicaCount: 1
 
   # Can be used to ensure rafiki-backend is deployed on a specific node or set of nodes.
   # nodeSelector: {}
@@ -502,6 +524,14 @@ rafiki-backend:
         limits:
           memory: 2048Mi
           cpu: 4
+      readinessProbe:
+        httpGet:
+          path: /healthz
+          port: 3000
+      livenessProbe:
+        httpGet:
+          path: /healthz
+          port: 3000
       ports:
         - name: open-payments
           containerPort: 3000
@@ -512,7 +542,11 @@ rafiki-backend:
         - name: connector
           containerPort: 3002
           protocol: TCP
-
+      # See deployment.yaml to see how the mount itself is created
+      volumeMounts:
+        - name: keys
+          mountPath: /mnt/keys
+          readOnly: true
 
 
 rafiki-frontend:
@@ -541,4 +575,3 @@ rafiki-frontend:
         - name: http
           containerPort: 3010
           protocol: TCP
-
