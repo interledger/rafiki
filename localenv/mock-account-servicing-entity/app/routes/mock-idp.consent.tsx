@@ -10,6 +10,7 @@ import { CONFIG as config } from '~/lib/parse_config.server'
 import { Button } from '~/components'
 import { CheckCircleSolid, XCircle } from '~/components/icons'
 import { InstanceConfig } from '~/lib/types'
+import { AmountType } from './mock-idp._index'
 
 export function loader() {
   return json({
@@ -24,7 +25,8 @@ function AuthorizedView({
   amount,
   interactId,
   nonce,
-  authServerDomain
+  authServerDomain,
+  amountType
 }: {
   thirdPartyName: string
   currencyDisplayCode: string
@@ -32,7 +34,22 @@ function AuthorizedView({
   interactId: string
   nonce: string
   authServerDomain: string
+  amountType: string
 }) {
+  let message = `You gave ${thirdPartyName} permission to `
+  switch (amountType) {
+    case AmountType.RECEIVE:
+      message += `receive ${currencyDisplayCode} ${amount.toFixed(2)} in your account.`
+      break
+    case AmountType.DEBIT:
+      message += `send ${currencyDisplayCode} ${amount.toFixed(2)} out of your account.`
+      break
+    case AmountType.UNLIMITED:
+      message += 'have unlimited access to your account.'
+      break
+    default:
+      message = 'Type of authorization is missing'
+  }
   return (
     <div className='bg-white rounded-md p-8 px-16'>
       <div className='row mt-2 flex flex-row items-center justify-around'>
@@ -40,13 +57,7 @@ function AuthorizedView({
           <CheckCircleSolid className='w-16 h-16 text-green-400 flex-shrink-0 mr-6' />
         </div>
         <div>
-          <p>
-            You gave {thirdPartyName} permission to send{' '}
-            {amount
-              ? currencyDisplayCode + ' ' + amount.toFixed(2)
-              : 'an unlimited amount'}
-            out of your account.
-          </p>
+          <p>{message}</p>
         </div>
       </div>
       <div className='row mt-2'>
@@ -117,8 +128,9 @@ export default function Consent() {
     thirdPartyUri: queryParams.get('thirdPartyUri'),
     currencyDisplayCode: queryParams.get('currencyDisplayCode'),
     amount:
-      Number(queryParams.get('sendAmountValue')) /
-      Math.pow(10, Number(queryParams.get('sendAmountScale')))
+      Number(queryParams.get('amountValue')) /
+      Math.pow(10, Number(queryParams.get('amountScale'))),
+    amountType: queryParams.get('amountType')
   })
 
   useEffect(() => {
@@ -171,6 +183,7 @@ export default function Consent() {
           interactId={ctx.interactId}
           nonce={ctx.nonce}
           authServerDomain={authServerDomain}
+          amountType={ctx.amountType || ''}
         />
       ) : (
         <RejectedView

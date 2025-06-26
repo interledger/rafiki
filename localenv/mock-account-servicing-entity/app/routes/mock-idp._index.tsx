@@ -30,6 +30,12 @@ interface GrantAmount {
   currencyDisplayCode: string
 }
 
+export enum AmountType {
+  DEBIT = 'debit',
+  RECEIVE = 'receive',
+  UNLIMITED = 'unlimited'
+}
+
 export function loader() {
   return json({ defaultIdpSecret: CONFIG.idpSecret })
 }
@@ -306,21 +312,29 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
             )
             returnUrlObject.searchParams.append(
               'currencyDisplayCode',
-              outgoingPaymentAccess && outgoingPaymentAccess.limits
-                ? outgoingPaymentAccess.limits.debitAmount?.assetCode
-                : null
+              outgoingPaymentAccess?.limits?.debitAmount?.assetCode ??
+                outgoingPaymentAccess?.limits?.receiveAmount?.assetCode ??
+                null
             )
             returnUrlObject.searchParams.append(
-              'sendAmountValue',
-              outgoingPaymentAccess && outgoingPaymentAccess.limits
-                ? outgoingPaymentAccess.limits.debitAmount?.value
-                : null
+              'amountValue',
+              outgoingPaymentAccess?.limits?.debitAmount?.value ??
+                outgoingPaymentAccess?.limits?.receiveAmount?.value ??
+                null
             )
             returnUrlObject.searchParams.append(
-              'sendAmountScale',
-              outgoingPaymentAccess && outgoingPaymentAccess.limits
-                ? outgoingPaymentAccess.limits.debitAmount?.assetScale
-                : null
+              'amountScale',
+              outgoingPaymentAccess?.limits?.debitAmount?.assetScale ??
+                outgoingPaymentAccess?.limits?.receiveAmount?.assetScale ??
+                null
+            )
+            returnUrlObject.searchParams.append(
+              'amountType',
+              outgoingPaymentAccess?.limits?.receiveAmount
+                ? AmountType.RECEIVE
+                : outgoingPaymentAccess?.limits?.debitAmount
+                  ? AmountType.DEBIT
+                  : AmountType.UNLIMITED
             )
             setCtx({
               ...ctx,
