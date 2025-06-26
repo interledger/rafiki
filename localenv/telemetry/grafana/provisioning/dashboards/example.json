@@ -86,7 +86,7 @@
         "x": 0,
         "y": 0
       },
-      "id": 19,
+      "id": 20,
       "options": {
         "legend": {
           "calcs": [],
@@ -104,13 +104,13 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "rate(transactions_total[1m])",
+          "expr": "rate(create_outgoing_payment_gql_total[1m])",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "TPSv2",
+      "title": "Outgoing Payment Create GQL req/s",
       "type": "timeseries"
     },
     {
@@ -178,7 +178,7 @@
         "x": 0,
         "y": 0
       },
-      "id": 18,
+      "id": 19,
       "options": {
         "legend": {
           "calcs": [],
@@ -195,18 +195,14 @@
       "pluginVersion": "12.0.1",
       "targets": [
         {
-          "disableTextWrap": false,
-          "editorMode": "builder",
-          "expr": "outgoing_payment_lifecycle_completed_ms_sum",
-          "fullMetaSearch": false,
-          "includeNullMetadata": true,
+          "editorMode": "code",
+          "expr": "rate(transactions_total[1m])",
           "legendFormat": "__auto",
           "range": true,
-          "refId": "A",
-          "useBackend": false
+          "refId": "A"
         }
       ],
-      "title": "Outgoing Payment Lifecycle Completed Time (ms)",
+      "title": "TPSv2",
       "type": "timeseries"
     },
     {
@@ -252,7 +248,9 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -306,6 +304,102 @@
     },
     {
       "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 18,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.0.1",
+      "targets": [
+        {
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "outgoing_payment_lifecycle_completed_ms_sum",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A",
+          "useBackend": false
+        }
+      ],
+      "title": "Outgoing Payment Lifecycle Completed Time (ms)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
         "default": false,
         "type": "prometheus",
         "uid": "${PrometheusDS}"
@@ -336,7 +430,7 @@
         "h": 5,
         "w": 5,
         "x": 0,
-        "y": 8
+        "y": 16
       },
       "id": 17,
       "options": {
@@ -346,7 +440,9 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -405,7 +501,7 @@
         "h": 5,
         "w": 9,
         "x": 5,
-        "y": 8
+        "y": 16
       },
       "id": 5,
       "options": {
@@ -415,7 +511,9 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -501,7 +599,7 @@
         "h": 12,
         "w": 12,
         "x": 0,
-        "y": 13
+        "y": 21
       },
       "id": 6,
       "options": {
@@ -518,7 +616,9 @@
         "namePlacement": "auto",
         "orientation": "horizontal",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -582,7 +682,7 @@
         "h": 12,
         "w": 12,
         "x": 12,
-        "y": 13
+        "y": 21
       },
       "id": 4,
       "options": {
@@ -590,7 +690,9 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": ["sum"],
+          "reducer": [
+            "sum"
+          ],
           "show": false
         },
         "showHeader": true,
@@ -619,7 +721,9 @@
               "operator": "=",
               "scope": "resource",
               "tag": "service.name",
-              "value": ["RAFIKI_NETWORK"],
+              "value": [
+                "RAFIKI_NETWORK"
+              ],
               "valueType": "string"
             },
             {
@@ -713,12 +817,14 @@
         "h": 6,
         "w": 12,
         "x": 0,
-        "y": 25
+        "y": 33
       },
       "id": 10,
       "options": {
         "legend": {
-          "calcs": ["p95"],
+          "calcs": [
+            "p95"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -916,12 +1022,14 @@
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 25
+        "y": 33
       },
       "id": 9,
       "options": {
         "legend": {
-          "calcs": ["p95"],
+          "calcs": [
+            "p95"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -1081,12 +1189,14 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 31
+        "y": 39
       },
       "id": 16,
       "options": {
         "legend": {
-          "calcs": ["p95"],
+          "calcs": [
+            "p95"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -1207,12 +1317,14 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 31
+        "y": 39
       },
       "id": 14,
       "options": {
         "legend": {
-          "calcs": ["p95"],
+          "calcs": [
+            "p95"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -1410,12 +1522,14 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 38
+        "y": 46
       },
       "id": 7,
       "options": {
         "legend": {
-          "calcs": ["p95"],
+          "calcs": [
+            "p95"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -1575,7 +1689,9 @@
               "id": "byNames",
               "options": {
                 "mode": "exclude",
-                "names": ["AccountingService:Postgres:getAccountBalances"],
+                "names": [
+                  "AccountingService:Postgres:getAccountBalances"
+                ],
                 "prefix": "All except:",
                 "readOnly": true
               }
@@ -1597,12 +1713,14 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 38
+        "y": 46
       },
       "id": 11,
       "options": {
         "legend": {
-          "calcs": ["p95"],
+          "calcs": [
+            "p95"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -1708,7 +1826,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 45
+        "y": 53
       },
       "id": 2,
       "interval": "15s",
@@ -1809,7 +1927,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 45
+        "y": 53
       },
       "id": 1,
       "interval": "15s",

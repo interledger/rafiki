@@ -110,6 +110,11 @@ export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutg
     const outgoingPaymentOrError = await outgoingPaymentService.create(
       args.input
     )
+    const tel = await ctx.container.use('telemetryService')
+    tel.incrementCounter('create_outgoing_payment_gql_total', 1, {
+      description: 'Count of create outgoing payment gql requests'
+    })
+
     if (isOutgoingPaymentError(outgoingPaymentOrError)) {
       throw new GraphQLError(errorToMessage[outgoingPaymentOrError], {
         extensions: {
