@@ -116,10 +116,15 @@ export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutg
           code: errorToCode[outgoingPaymentOrError]
         }
       })
-    } else
+    } else {
+      const tel = await ctx.container.use('telemetryService')
+      tel.incrementCounter('create_outgoing_payment_gql_total', 1, {
+        description: 'Count of create outgoing payment gql requests'
+      })
       return {
         payment: paymentToGraphql(outgoingPaymentOrError)
       }
+    }
   }
 
 export const createOutgoingPaymentFromIncomingPayment: MutationResolvers<ApolloContext>['createOutgoingPaymentFromIncomingPayment'] =

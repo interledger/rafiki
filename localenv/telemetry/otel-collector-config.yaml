@@ -27,3 +27,6 @@ service:
       receivers: [otlp]
       processors: [batch]
       exporters: [otlp, debug]
+  telemetry:
+    logs:
+      level: error # Options: debug, info, warn, error, none
