@@ -27,7 +27,6 @@ import {
 } from './telemetry'
 import { IAppConfig } from '../../../../config/app'
 import { TenantSettingService } from '../../../../tenants/settings/service'
-import { RouterService } from '../ilp-routing/service'
 
 // Model classes that represent an Interledger sender, receiver, or
 // connector SHOULD implement this ConnectorAccount interface.
@@ -64,7 +63,6 @@ export interface TransferOptions {
 }
 
 export interface RafikiServices {
-  router: RouterService
   accounting: AccountingService
   telemetry: TelemetryService
   walletAddresses: WalletAddressService
@@ -151,9 +149,6 @@ export class Rafiki<T = any> {
       },
       get tenantSettingService(): TenantSettingService {
         return config.tenantSettingService
-      },
-      get router(): RouterService {
-        return config.router
       },
       logger
     }

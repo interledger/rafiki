@@ -75,6 +75,7 @@ services:
       REDIS_URL: redis://shared-redis:6379/4
       WALLET_ADDRESS_URL: ${GLOBAL_BANK_WALLET_ADDRESS_URL:-https://global-bank-backend/.well-known/pay}
       ENABLE_TELEMETRY: true
+      ENABLE_ILP_TIMING: true
       KEY_ID: 53f2d913-e98a-40b9-b270-372d0547f23e
       OPERATOR_TENANT_ID: 53f2d913-e98a-40b9-b270-372d0547f23e
     depends_on:

@@ -1,7 +1,7 @@
 assets:
   - code: USD
     scale: 2
-    liquidity: 10000000000
+    liquidity: 2000000000000
     liquidityThreshold: 10000000
 
 peeringAsset: 'USD'
@@ -9,15 +9,23 @@ peers:
   - initialLiquidity: '1000000000000'
     peerUrl: http://global-bank-backend:3002
     peerIlpAddress: test.global-bank
-    incomingToken: global-to-treasury
-    outgoingToken: treasury-to-global
     liquidityThreshold: 1000000
+    tokens:
+      incoming:
+        - global-to-treasury
+      outgoing: treasury-to-global
+    routes:
+      - "test.global-bank"
   - initialLiquidity: '1000000000000'
     peerUrl: http://happy-life-bank-backend:3002
     peerIlpAddress: test.happy-life-bank
-    incomingToken: happy-to-treasury
-    outgoingToken: treasury-to-happy
     liquidityThreshold: 1000000
+    tokens:
+      incoming:
+        - happy-to-treasury
+      outgoing: treasury-to-happy
+    routes:
+      - "test.happy-life-bank"
 
 accounts:
   - name: 'Treasury Account'
@@ -25,6 +33,18 @@ accounts:
     id: 77a3a431-8ee1-48fc-ac85-70e2f5eba8e7
     initialBalance: 10000000
     brunoEnvVar: treasuryWalletAddress
+    assetCode: USD
+  - name: 'Alice Treasury'
+    path: accounts/alice-treasury
+    id: 123e4567-e89b-12d3-a456-426614174000
+    initialBalance: 5000000
+    brunoEnvVar: aliceTreasuryWalletAddress
+    assetCode: USD
+  - name: 'Bob Treasury'
+    path: accounts/bob-treasury
+    id: 123e4567-e89b-12d3-a456-426614174001
+    initialBalance: 2000000
+    brunoEnvVar: bobTreasuryWalletAddress
     assetCode: USD
 
 rates:
