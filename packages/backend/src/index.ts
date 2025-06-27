@@ -547,8 +547,7 @@ export function initIocContainer(
       ratesService: await deps.use('ratesService'),
       ilpAddress: config.ilpAddress,
       telemetry: await deps.use('telemetry'),
-      tenantSettingService: await deps.use('tenantSettingService'),
-      routerService: await deps.use('routerService')
+      tenantSettingService: await deps.use('tenantSettingService')
     })
   })
 
