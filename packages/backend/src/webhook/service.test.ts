@@ -255,6 +255,26 @@ describe('Webhook Service', (): void => {
       getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
         webhookService.getPage({ pagination, sortOrder })
     })
+
+    test('can filter by tenantId', async () => {
+      await WebhookEvent.query(knex).insertAndFetch({
+        id: uuid(),
+        type: WalletAddressEventType.WalletAddressNotFound,
+        data: {
+          account: {
+            id: uuid()
+          }
+        },
+        tenantId: Config.operatorTenantId
+      })
+
+      await expect(
+        webhookService.getPage({ tenantId: Config.operatorTenantId })
+      ).resolves.toHaveLength(1)
+      await expect(
+        webhookService.getPage({ tenantId: crypto.randomUUID() })
+      ).resolves.toHaveLength(0)
+    })
   })
 
   describe('getWebhookEventsPage', (): void => {
