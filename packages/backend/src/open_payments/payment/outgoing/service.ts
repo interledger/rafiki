@@ -111,9 +111,13 @@ async function getOutgoingPaymentsPage(
   deps: ServiceDependencies,
   options?: GetPageOptions
 ): Promise<OutgoingPayment[]> {
-  const { filter, pagination, sortOrder } = options ?? {}
+  const { filter, pagination, sortOrder, tenantId } = options ?? {}
 
   const query = OutgoingPayment.query(deps.knex).withGraphFetched('quote')
+
+  if (tenantId) {
+    query.where('tenantId', tenantId)
+  }
 
   if (filter?.receiver?.in && filter.receiver.in.length) {
     query
