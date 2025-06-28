@@ -14,6 +14,7 @@ interface GetPageOptions {
   pagination?: Pagination
   filter?: CombinedPaymentFilter
   sortOrder?: SortOrder
+  tenantId?: string
 }
 
 export interface CombinedPaymentService {
@@ -43,9 +44,13 @@ async function getCombinedPaymentsPage(
   deps: ServiceDependencies,
   options?: GetPageOptions
 ) {
-  const { filter, pagination, sortOrder } = options ?? {}
+  const { filter, pagination, sortOrder, tenantId } = options ?? {}
 
   const query = CombinedPayment.query(deps.knex)
+
+  if (tenantId) {
+    query.where('tenantId', tenantId)
+  }
 
   if (filter?.walletAddressId?.in && filter.walletAddressId.in.length) {
     query.whereIn('walletAddressId', filter.walletAddressId.in)
