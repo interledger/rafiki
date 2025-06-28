@@ -206,5 +206,19 @@ describe('Combined Payment Service', (): void => {
         ).resolves.toBeUndefined()
       })
     })
+
+    test('can filter by tenantId', async (): Promise<void> => {
+      await setupPayments(deps)
+      await expect(
+        combinedPaymentService.getPage({
+          tenantId: crypto.randomUUID()
+        })
+      ).resolves.toHaveLength(0)
+      await expect(
+        combinedPaymentService.getPage({
+          tenantId: Config.operatorTenantId
+        })
+      ).resolves.toHaveLength(2)
+    })
   })
 })
