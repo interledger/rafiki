@@ -20,7 +20,7 @@
     "axios": "^1.8.2",
     "class-variance-authority": "^0.7.1",
     "graphql": "^16.11.0",
-    "json-canonicalize": "^1.0.6",
+    "json-canonicalize": "^2.0.0",
     "mock-account-service-lib": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
