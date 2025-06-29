@@ -22,6 +22,7 @@ export function toCombinedPayment(
     id: payment.id,
     walletAddressId: payment.walletAddressId,
     state: payment.state,
+    tenantId: payment.tenantId,
     metadata: payment.metadata,
     client: payment.client,
     createdAt: payment.createdAt,
