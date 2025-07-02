@@ -727,8 +727,8 @@ importers:
   packages/token-introspection:
     dependencies:
       '@interledger/open-payments':
-        specifier: 6.13.2
-        version: 6.13.2
+        specifier: 7.0.0
+        version: 7.0.0
       '@interledger/openapi':
         specifier: 2.0.2
         version: 2.0.2
@@ -3221,6 +3221,7 @@ packages:
   /@envelop/instrumentation@1.0.0:
     resolution: {integrity: sha512-cxgkB66RQB95H3X27jlnxCRNTmPuSTgmBAq6/4n2Dtv4hsk4yz8FadA1ggmd0uZzvKqWD6CR+WFgTjhDqg7eyw==}
     engines: {node: '>=18.0.0'}
+    requiresBuild: true
     dependencies:
       '@whatwg-node/promise-helpers': 1.3.0
       tslib: 2.8.1
@@ -3237,6 +3238,7 @@ packages:
   /@envelop/types@5.2.1:
     resolution: {integrity: sha512-CsFmA3u3c2QoLDTfEpGr4t25fjMU31nyvse7IzWTvb0ZycuPjMjb0fjlheh+PbhBYb9YLugnT2uY6Mwcg1o+Zg==}
     engines: {node: '>=18.0.0'}
+    requiresBuild: true
     dependencies:
       '@whatwg-node/promise-helpers': 1.3.0
       tslib: 2.8.1
@@ -5543,20 +5545,6 @@ packages:
       httpbis-digest-headers: 1.0.0
       jose: 5.4.0
       uuid: 9.0.1
-
-  /@interledger/open-payments@6.13.2:
-    resolution: {integrity: sha512-siAnS+Rp+SEZtm+YSWVHWCA4EJB7a6pKBZ9SR61UV1kgrzVzVHAZ8HA0cNTteLEEdFuW1xqVv8zqz27lxdvLgA==}
-    dependencies:
-      '@interledger/http-signature-utils': 2.0.2
-      '@interledger/openapi': 2.0.2
-      base64url: 3.0.1
-      http-message-signatures: 0.1.2
-      ky: 1.3.0
-      pino: 8.19.0
-      uuid: 9.0.1
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
 
   /@interledger/open-payments@7.0.0:
     resolution: {integrity: sha512-6xPR5d1lStKvOFoQHatchoh5mYSmrbHE2dZotoTq/jhmxU+/Zk56hCJx7VvNcAz4F8Zqkgne/hM8ppcCEDKgtg==}
@@ -8310,6 +8298,7 @@ packages:
     resolution: {integrity: sha512-wq0cICSkRLVaf3UGLMGItu/PtdY7oaXaI/RVU+xliKVOtRna3PRY57ZDfztpDL0n11vfymMUnXv8QwYCO7L1wg==}
     dependencies:
       undici-types: 5.26.5
+    dev: true
 
   /@types/node@20.14.15:
     resolution: {integrity: sha512-Fz1xDMCF/B00/tYSVMlmK7hVeLh7jE5f3B7X1/hmV0MJBwE27KlS7EvD/Yp+z1lm8mVhwV5w+n8jOZG8AfTlKw==}
@@ -9080,6 +9069,7 @@ packages:
   /@whatwg-node/promise-helpers@1.3.0:
     resolution: {integrity: sha512-486CouizxHXucj8Ky153DDragfkMcHtVEToF5Pn/fInhUUSiCmt9Q4JVBa6UK5q4RammFBtGQ4C9qhGlXU9YbA==}
     engines: {node: '>=16.0.0'}
+    requiresBuild: true
     dependencies:
       tslib: 2.8.1
 
