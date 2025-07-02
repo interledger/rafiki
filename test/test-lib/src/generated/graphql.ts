@@ -1333,8 +1333,6 @@ export type Receiver = {
   metadata?: Maybe<Scalars['JSONObject']['output']>;
   /** The total amount that has been paid into the wallet address under this incoming payment. */
   receivedAmount: Amount;
-  /** The date and time that the incoming payment was last updated. */
-  updatedAt: Scalars['String']['output'];
   /** Wallet address URL under which the incoming payment was created. */
   walletAddressUrl: Scalars['String']['output'];
 };
@@ -2368,7 +2366,6 @@ export type ReceiverResolvers<ContextType = any, ParentType extends ResolversPar
   incomingAmount?: Resolver<Maybe<ResolversTypes['Amount']>, ParentType, ContextType>;
   metadata?: Resolver<Maybe<ResolversTypes['JSONObject']>, ParentType, ContextType>;
   receivedAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   walletAddressUrl?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

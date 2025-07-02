@@ -11,6 +11,7 @@ import { AppServices } from '../app'
 import { AccessService } from './service'
 import { Grant, GrantState, StartMethod, FinishMethod } from '../grant/model'
 import { IncomingPaymentRequest, OutgoingPaymentRequest } from './types'
+import { AccessError } from './errors'
 import { generateNonce, generateToken } from '../shared/utils'
 import { AccessType, AccessAction } from '@interledger/open-payments'
 import { Access } from './model'
@@ -75,11 +76,6 @@ describe('Access Service', (): void => {
           assetCode: 'usd',
           assetScale: 9
         },
-        receiveAmount: {
-          value: '2000000000',
-          assetCode: 'usd',
-          assetScale: 9
-        },
         expiresAt: new Date().toISOString(),
         receiver: 'https://wallet.com/alice'
       }
@@ -98,6 +94,38 @@ describe('Access Service', (): void => {
       expect(access[0].grantId).toEqual(grant.id)
       expect(access[0].type).toEqual(AccessType.OutgoingPayment)
       expect(access[0].limits).toEqual(outgoingPaymentLimit)
+    })
+
+    test('Does not create outgoing payment access when both receiveAmount and debitAmount are provided to limits', async (): Promise<void> => {
+      const outgoingPaymentLimit = {
+        debitAmount: {
+          value: '1000000000',
+          assetCode: 'usd',
+          assetScale: 9
+        },
+        receiveAmount: {
+          value: '1000000000',
+          assetCode: 'usd',
+          assetScale: 9
+        },
+        expiresAt: new Date().toISOString(),
+        receiver: 'https://wallet.com/alice'
+      }
+
+      const outgoingPaymentAccess: OutgoingPaymentRequest = {
+        type: 'outgoing-payment',
+        actions: [AccessAction.Create, AccessAction.Read, AccessAction.List],
+        limits: outgoingPaymentLimit
+      }
+
+      try {
+        await accessService.createAccess(grant.id, [outgoingPaymentAccess])
+        fail(
+          'Expected createAccess to throw OnlyOneAccessAmountAllowed, but no error was thrown'
+        )
+      } catch (err) {
+        expect(err).toBe(AccessError.OnlyOneAccessAmountAllowed)
+      }
     })
   })
 
