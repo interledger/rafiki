@@ -276,7 +276,7 @@ async function createOutgoingPayment(
         stopTimerQuote()
 
         if (isQuoteError(quoteOrError)) {
-          return quoteErrorToOutgoingPaymentError[quoteOrError]
+          return quoteErrorToOutgoingPaymentError[quoteOrError.type]
         }
         quoteId = quoteOrError.id
       } else {
