@@ -126,9 +126,7 @@ async function getQuote(
         retryable: false,
         code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount,
         details: {
-          minSendAmount: BigInt(
-            Math.ceil(ilpQuote.highEstimatedExchangeRate.reciprocal().valueOf())
-          )
+          minSendAmount: calculateMinSendAmount(ilpQuote)
         }
       })
     }
@@ -172,9 +170,7 @@ async function getQuote(
         retryable: false,
         code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount,
         details: {
-          minSendAmount: BigInt(
-            Math.ceil(ilpQuote.highEstimatedExchangeRate.reciprocal().valueOf())
-          )
+          minSendAmount: calculateMinSendAmount(ilpQuote)
         }
       })
     }
@@ -205,9 +201,7 @@ async function getQuote(
         retryable: false,
         code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount,
         details: {
-          minSendAmount: BigInt(
-            Math.ceil(ilpQuote.highEstimatedExchangeRate.reciprocal().valueOf())
-          )
+          minSendAmount: calculateMinSendAmount(ilpQuote)
         }
       })
     }
@@ -390,6 +384,14 @@ async function pay(
       )
     }
   }
+}
+
+export function calculateMinSendAmount(quote: Pay.Quote): bigint {
+  const minSendAmount = Math.ceil(
+    quote.highEstimatedExchangeRate.reciprocal().valueOf()
+  )
+
+  return BigInt(Math.max(minSendAmount, 2)) // because of rounding in ILP pay, you must always send at least 2 units of an asset
 }
 
 export function canRetryError(err: Error | Pay.PaymentError): boolean {

@@ -1,4 +1,8 @@
-import { IlpPaymentService, retryableIlpErrors } from './service'
+import {
+  IlpPaymentService,
+  calculateMinSendAmount,
+  retryableIlpErrors
+} from './service'
 import { initIocContainer } from '../../'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IAppConfig, Config } from '../../config/app'
@@ -970,6 +974,34 @@ describe('IlpPaymentService', (): void => {
         )
         expect((error as PaymentMethodHandlerError).retryable).toBe(false)
       }
+    })
+  })
+
+  describe('calculateMinSendAmount', (): void => {
+    test('returns reciprocal of highEstimatedExchangeRate', async (): Promise<void> => {
+      expect(
+        calculateMinSendAmount({
+          highEstimatedExchangeRate: Pay.Ratio.from(0.05)
+        } as Pay.Quote)
+      ).toBe(20n)
+      expect(
+        calculateMinSendAmount({
+          highEstimatedExchangeRate: Pay.Ratio.from(0.01)
+        } as Pay.Quote)
+      ).toBe(100n)
+    })
+
+    test('returns at least 2 even if highEstimatedExchangeRate reciprocal under 2', async (): Promise<void> => {
+      expect(
+        calculateMinSendAmount({
+          highEstimatedExchangeRate: Pay.Ratio.from(1)
+        } as Pay.Quote)
+      ).toBe(2n)
+      expect(
+        calculateMinSendAmount({
+          highEstimatedExchangeRate: Pay.Ratio.from(20)
+        } as Pay.Quote)
+      ).toBe(2n)
     })
   })
 })
