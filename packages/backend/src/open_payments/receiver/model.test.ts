@@ -55,7 +55,6 @@ describe('Receiver Model', (): void => {
         incomingPayment: {
           id: incomingPayment.getUrl(config.openPaymentsUrl),
           walletAddress: walletAddress.address,
-          updatedAt: incomingPayment.updatedAt,
           createdAt: incomingPayment.createdAt,
           completed: incomingPayment.completed,
           receivedAmount: incomingPayment.receivedAmount,

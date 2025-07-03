@@ -972,8 +972,6 @@ type Receiver {
   metadata: JSONObject
   "The date and time that the incoming payment was created."
   createdAt: String!
-  "The date and time that the incoming payment was last updated."
-  updatedAt: String!
 }
 
 enum IncomingPaymentState {

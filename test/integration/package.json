@@ -14,7 +14,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@interledger/open-payments": "6.13.2",
+    "@interledger/open-payments": "7.0.0",
     "@types/node": "^20.14.15",
     "hostile": "^1.4.0",
     "mock-account-service-lib": "workspace:*",

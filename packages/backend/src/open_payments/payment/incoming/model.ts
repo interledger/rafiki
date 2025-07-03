@@ -39,7 +39,6 @@ export interface IncomingPaymentResponse {
   walletAddressId: string
   client?: string
   createdAt: string
-  updatedAt: string
   expiresAt: string
   incomingAmount?: AmountJSON
   receivedAmount: AmountJSON
@@ -196,8 +195,7 @@ export class IncomingPayment
         assetCode: this.asset.code,
         assetScale: this.asset.scale
       },
-      completed: this.completed,
-      updatedAt: new Date(+this.updatedAt).toISOString()
+      completed: this.completed
     }
 
     if (this.incomingAmount) {
@@ -233,7 +231,6 @@ export class IncomingPayment
       completed: this.completed,
       metadata: this.metadata ?? undefined,
       createdAt: this.createdAt.toISOString(),
-      updatedAt: this.updatedAt.toISOString(),
       expiresAt: this.expiresAt.toISOString()
     }
   }

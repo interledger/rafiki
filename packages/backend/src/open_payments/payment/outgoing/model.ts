@@ -186,7 +186,6 @@ export class OutgoingPayment
       },
       stateAttempts: this.stateAttempts,
       createdAt: new Date(+this.createdAt).toISOString(),
-      updatedAt: new Date(+this.updatedAt).toISOString(),
       balance: balance.toString()
     }
     if (this.metadata) {
@@ -219,8 +218,7 @@ export class OutgoingPayment
       receiver: this.receiver,
       failed: this.failed,
       metadata: this.metadata ?? undefined,
-      createdAt: this.createdAt.toISOString(),
-      updatedAt: this.updatedAt.toISOString()
+      createdAt: this.createdAt.toISOString()
     }
   }
 
@@ -281,7 +279,6 @@ export interface OutgoingPaymentResponse {
   receiveAmount: AmountJSON
   metadata?: Record<string, unknown>
   failed: boolean
-  updatedAt: string
   sentAmount: AmountJSON
 }
 

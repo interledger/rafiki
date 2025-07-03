@@ -129,8 +129,7 @@ describe('Outgoing Payment Routes', (): void => {
           receiveAmount: serializeAmount(outgoingPayment.receiveAmount),
           metadata: outgoingPayment.metadata,
           failed,
-          createdAt: outgoingPayment.createdAt.toISOString(),
-          updatedAt: outgoingPayment.updatedAt.toISOString()
+          createdAt: outgoingPayment.createdAt.toISOString()
         }
       },
       list: (ctx) => outgoingPaymentRoutes.list(ctx),
@@ -281,8 +280,7 @@ describe('Outgoing Payment Routes', (): void => {
               assetScale: payment.quote.receiveAmount.assetScale
             },
             failed: false,
-            createdAt: expect.any(String),
-            updatedAt: expect.any(String)
+            createdAt: expect.any(String)
           })
         })
       }

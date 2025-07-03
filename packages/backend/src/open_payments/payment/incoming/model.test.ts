@@ -12,6 +12,7 @@ import {
   IncomingPayment,
   IncomingPaymentEvent,
   IncomingPaymentEventType,
+  IncomingPaymentState,
   IncomingPaymentEventError
 } from './model'
 import { WalletAddress } from '../../wallet_address/model'
@@ -62,7 +63,7 @@ describe('Models', (): void => {
             walletAddress
           )
         ).toEqual({
-          id: `${baseUrl}/${Config.operatorTenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+          id: `${baseUrl}/${incomingPayment.tenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
           walletAddress: walletAddress.address,
           completed: incomingPayment.completed,
           receivedAmount: serializeAmount(incomingPayment.receivedAmount),
@@ -71,7 +72,6 @@ describe('Models', (): void => {
             : undefined,
           expiresAt: incomingPayment.expiresAt.toISOString(),
           metadata: incomingPayment.metadata ?? undefined,
-          updatedAt: incomingPayment.updatedAt.toISOString(),
           createdAt: incomingPayment.createdAt.toISOString()
         })
       })
@@ -94,7 +94,7 @@ describe('Models', (): void => {
             paymentMethods
           )
         ).toEqual({
-          id: `${baseUrl}/${Config.operatorTenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+          id: `${baseUrl}/${incomingPayment.tenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
           walletAddress: walletAddress.address,
           completed: incomingPayment.completed,
           receivedAmount: serializeAmount(incomingPayment.receivedAmount),
@@ -103,7 +103,6 @@ describe('Models', (): void => {
             : undefined,
           expiresAt: incomingPayment.expiresAt.toISOString(),
           metadata: incomingPayment.metadata ?? undefined,
-          updatedAt: incomingPayment.updatedAt.toISOString(),
           createdAt: incomingPayment.createdAt.toISOString(),
           methods: [
             {
@@ -114,6 +113,47 @@ describe('Models', (): void => {
           ]
         })
       })
+
+      test.each([IncomingPaymentState.Completed, IncomingPaymentState.Expired])(
+        'returns incoming payment with existing methods if payment state is %s',
+        async (paymentState): Promise<void> => {
+          incomingPayment.state = paymentState
+
+          const paymentMethods: OpenPaymentsPaymentMethod[] = [
+            {
+              type: 'ilp',
+              ilpAddress: 'test.ilp' as IlpAddress,
+              sharedSecret: ''
+            }
+          ]
+
+          expect(
+            incomingPayment.toOpenPaymentsTypeWithMethods(
+              config.openPaymentsUrl,
+              walletAddress,
+              paymentMethods
+            )
+          ).toMatchObject({
+            id: `${baseUrl}/${incomingPayment.tenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+            walletAddress: walletAddress.address,
+            completed: incomingPayment.completed,
+            receivedAmount: serializeAmount(incomingPayment.receivedAmount),
+            incomingAmount: incomingPayment.incomingAmount
+              ? serializeAmount(incomingPayment.incomingAmount)
+              : undefined,
+            expiresAt: incomingPayment.expiresAt.toISOString(),
+            metadata: incomingPayment.metadata ?? undefined,
+            createdAt: incomingPayment.createdAt.toISOString(),
+            methods: [
+              expect.objectContaining({
+                type: 'ilp',
+                ilpAddress: paymentMethods[0].ilpAddress,
+                sharedSecret: expect.any(String)
+              })
+            ]
+          })
+        }
+      )
     })
   })
 

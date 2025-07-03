@@ -61,6 +61,8 @@ import {
   exchangeRatesSetting
 } from '../../../tests/tenantSettings'
 import { createTenant } from '../../../tests/tenant'
+import { OpenPaymentsPaymentMethod } from '../../../payment-method/provider/service'
+import { IlpAddress } from 'ilp-packet'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -1418,6 +1420,62 @@ describe('OutgoingPaymentService', (): void => {
           )
         })
       }
+    })
+
+    test('fails to create when both debitAmount and receiveAmount are set to grant limits', async () => {
+      withConfigOverride(
+        () => config,
+        { slippage: 0 },
+        async (): Promise<void> => {
+          const debitAmount = {
+            value: BigInt(10),
+            assetCode: receiverWalletAddress.asset.code,
+            assetScale: receiverWalletAddress.asset.scale
+          }
+          const grant: Grant = {
+            id: uuid(),
+            limits: {
+              debitAmount: {
+                value: BigInt(Number.MAX_SAFE_INTEGER),
+                assetCode: receiverWalletAddress.asset.code,
+                assetScale: receiverWalletAddress.asset.scale
+              },
+              receiveAmount: {
+                value: BigInt(Number.MAX_SAFE_INTEGER),
+                assetCode: receiverWalletAddress.asset.code,
+                assetScale: receiverWalletAddress.asset.scale
+              }
+            }
+          }
+          await OutgoingPaymentGrant.query(knex).insertAndFetch({
+            id: grant.id
+          })
+
+          const paymentMethods: OpenPaymentsPaymentMethod[] = [
+            {
+              type: 'ilp',
+              ilpAddress: 'test.ilp' as IlpAddress,
+              sharedSecret: ''
+            }
+          ]
+
+          const options: CreateOutgoingPaymentOptions = {
+            walletAddressId: receiverWalletAddress.id,
+            debitAmount,
+            incomingPayment: incomingPayment.toOpenPaymentsTypeWithMethods(
+              config.openPaymentsUrl,
+              receiverWalletAddress,
+              paymentMethods
+            ).id,
+            tenantId,
+            grant
+          }
+
+          const payment = await outgoingPaymentService.create(options)
+          expect(isOutgoingPaymentError(payment)).toBeTruthy()
+          expect(payment).toBe(OutgoingPaymentError.OnlyOneGrantAmountAllowed)
+        }
+      )
     })
   })
 

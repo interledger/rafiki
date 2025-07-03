@@ -24,6 +24,11 @@ import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
 import { generateRouteLogs } from '../shared/utils'
 import { TenantService } from '../tenant/service'
 import { Tenant, isTenantWithIdp } from '../tenant/model'
+import {
+  errorToGNAPCode,
+  errorToHTTPCode,
+  isAccessError
+} from '../access/errors'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
@@ -156,6 +161,13 @@ async function createApprovedGrant(
     await trx.commit()
   } catch (err) {
     await trx.rollback()
+    if (isAccessError(err)) {
+      throw new GNAPServerRouteError(
+        errorToHTTPCode[err],
+        errorToGNAPCode[err],
+        err
+      )
+    }
     throw new GNAPServerRouteError(
       500,
       GNAPErrorCode.RequestDenied,
@@ -236,6 +248,13 @@ async function createPendingGrant(
     )
   } catch (err) {
     await trx.rollback()
+    if (isAccessError(err)) {
+      throw new GNAPServerRouteError(
+        errorToHTTPCode[err],
+        errorToGNAPCode[err],
+        err
+      )
+    }
     throw new GNAPServerRouteError(
       500,
       GNAPErrorCode.RequestDenied,

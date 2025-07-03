@@ -37,7 +37,7 @@ export async function createGrant(
     }
   }
 
-  return await grantService.create(
+  const grantOrError = await grantService.create(
     {
       ...BASE_GRANT_REQUEST,
       access_token: {
@@ -51,6 +51,8 @@ export async function createGrant(
     },
     tenantId
   )
+
+  return grantOrError
 }
 
 export interface GenerateBaseGrantOptions {

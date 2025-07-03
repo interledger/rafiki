@@ -97,7 +97,6 @@ describe('Receiver Resolver', (): void => {
                     }
                     metadata
                     createdAt
-                    updatedAt
                   }
                 }
               }
@@ -131,8 +130,7 @@ describe('Receiver Resolver', (): void => {
               ...serializeAmount(receiver.incomingPayment.receivedAmount)
             },
             metadata: receiver.incomingPayment?.metadata || null,
-            createdAt: receiver.incomingPayment?.createdAt.toISOString(),
-            updatedAt: receiver.incomingPayment?.updatedAt.toISOString()
+            createdAt: receiver.incomingPayment?.createdAt.toISOString()
           }
         })
       }
@@ -171,7 +169,6 @@ describe('Receiver Resolver', (): void => {
                     }
                     metadata
                     createdAt
-                    updatedAt
                   }
                 }
               }
@@ -231,7 +228,6 @@ describe('Receiver Resolver', (): void => {
                     }
                     metadata
                     createdAt
-                    updatedAt
                   }
                 }
               }
@@ -293,7 +289,6 @@ describe('Receiver Resolver', (): void => {
                 }
                 metadata
                 createdAt
-                updatedAt
               }
             }
           `,
@@ -321,8 +316,7 @@ describe('Receiver Resolver', (): void => {
           ...serializeAmount(receiver.incomingPayment.receivedAmount)
         },
         metadata: receiver.incomingPayment?.metadata || null,
-        createdAt: receiver.incomingPayment?.createdAt.toISOString(),
-        updatedAt: receiver.incomingPayment?.updatedAt.toISOString()
+        createdAt: receiver.incomingPayment?.createdAt.toISOString()
       })
     })
 

@@ -208,7 +208,14 @@ describe('LocalPaymentService', (): void => {
     })
 
     test('fails if debit amount is non-positive', async (): Promise<void> => {
-      expect.assertions(4)
+      jest
+        .spyOn(await deps.use('ratesService'), 'convertDestination')
+        .mockImplementation(() =>
+          Promise.resolve({ amount: 0n, scaledExchangeRate: 1 })
+        )
+
+      expect.assertions(5)
+
       try {
         await localPaymentService.getQuote({
           walletAddress: walletAddressMap['USD'],
@@ -228,6 +235,9 @@ describe('LocalPaymentService', (): void => {
           'debit amount of local quote is non-positive'
         )
         expect((err as PaymentMethodHandlerError).retryable).toBe(false)
+        expect((err as PaymentMethodHandlerError).details).toEqual({
+          minSendAmount: 1n
+        })
       }
     })
     test('fails if receive amount is non-positive', async (): Promise<void> => {
@@ -237,7 +247,7 @@ describe('LocalPaymentService', (): void => {
         .mockImplementation(() =>
           Promise.resolve({ amount: 100n, scaledExchangeRate: 1 })
         )
-      expect.assertions(4)
+      expect.assertions(5)
       try {
         await localPaymentService.getQuote({
           walletAddress: walletAddressMap['USD'],
@@ -257,6 +267,9 @@ describe('LocalPaymentService', (): void => {
           'receive amount of local quote is non-positive'
         )
         expect((err as PaymentMethodHandlerError).retryable).toBe(false)
+        expect((err as PaymentMethodHandlerError).details).toEqual({
+          minSendAmount: 1n
+        })
       }
     })
 

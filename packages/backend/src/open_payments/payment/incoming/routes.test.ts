@@ -115,7 +115,6 @@ describe('Incoming Payment Routes', (): void => {
               serializeAmount(incomingPayment.incomingAmount),
             expiresAt: incomingPayment.expiresAt.toISOString(),
             createdAt: incomingPayment.createdAt.toISOString(),
-            updatedAt: incomingPayment.updatedAt.toISOString(),
             receivedAmount: serializeAmount(incomingPayment.receivedAmount),
             metadata: incomingPayment.metadata
           }
@@ -285,7 +284,6 @@ describe('Incoming Payment Routes', (): void => {
           incomingAmount: incomingAmount ? amount : undefined,
           expiresAt: expiresAt || expect.any(String),
           createdAt: expect.any(String),
-          updatedAt: expect.any(String),
           receivedAmount: {
             value: '0',
             assetCode: asset.code,
@@ -336,7 +334,6 @@ describe('Incoming Payment Routes', (): void => {
         },
         expiresAt: expiresAt.toISOString(),
         createdAt: incomingPayment.createdAt.toISOString(),
-        updatedAt: expect.any(String),
         receivedAmount: {
           value: '0',
           assetCode: asset.code,
