@@ -54,6 +54,7 @@ import { TelemetryService } from '../../../telemetry/service'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { ReceiverService } from '../../receiver/service'
+import { TransactionOrKnex } from 'objection'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -71,7 +72,7 @@ describe('OutgoingPaymentService', (): void => {
   let receiver: string
   let client: string
   let amtDelivered: bigint
-  const trx: Knex.Transaction = null as unknown as Knex.Transaction
+  let trx: TransactionOrKnex
   let config: IAppConfig
   let receiverService: ReceiverService
   let receiverGet: typeof receiverService.get
@@ -266,6 +267,7 @@ describe('OutgoingPaymentService', (): void => {
     config = await deps.use('config')
     knex = appContainer.knex
     receiverService = await deps.use('receiverService')
+    trx = appContainer.knex
   })
 
   beforeEach(async (): Promise<void> => {

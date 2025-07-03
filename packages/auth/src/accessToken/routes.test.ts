@@ -24,11 +24,12 @@ import {
 import { GrantService } from '../grant/service'
 import { AccessTokenService } from './service'
 import { GNAPErrorCode } from '../shared/gnapErrors'
+import { TransactionOrKnex } from 'objection'
 
 describe('Access Token Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  const trx: Knex.Transaction = undefined as unknown as Knex.Transaction
+  let trx: TransactionOrKnex
   let accessTokenRoutes: AccessTokenRoutes
   let accessTokenService: AccessTokenService
   let grantService: GrantService
@@ -40,6 +41,7 @@ describe('Access Token Routes', (): void => {
     grantService = await deps.use('grantService')
     accessTokenService = await deps.use('accessTokenService')
     const openApi = await deps.use('openApi')
+    trx = appContainer.knex
     jestOpenAPI(openApi.authServerSpec)
   })
 

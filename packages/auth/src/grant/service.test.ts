@@ -24,18 +24,19 @@ import { AccessToken } from '../accessToken/model'
 import { Interaction, InteractionState } from '../interaction/model'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { getPageTests } from '../shared/baseModel.test'
+import { TransactionOrKnex } from 'objection'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let grantService: GrantService
-  const trx: Knex.Transaction = null as unknown as Knex.Transaction
+  let trx: TransactionOrKnex
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
-
     grantService = await deps.use('grantService')
+    trx = appContainer.knex
   })
 
   afterEach(async (): Promise<void> => {

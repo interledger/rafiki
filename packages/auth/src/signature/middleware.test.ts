@@ -36,6 +36,7 @@ import { ContinueContext, CreateContext } from '../grant/routes'
 import { Interaction, InteractionState } from '../interaction/model'
 import { generateNonce } from '../shared/utils'
 import { GNAPErrorCode } from '../shared/gnapErrors'
+import { TransactionOrKnex } from 'objection'
 
 describe('Signature Service', (): void => {
   let deps: IocContract<AppServices>
@@ -60,12 +61,16 @@ describe('Signature Service', (): void => {
     let grant: Grant
     let interaction: Interaction
     let token: AccessToken
-    const trx: Knex.Transaction = null as unknown as Knex.Transaction
+    let trx: TransactionOrKnex
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let next: () => Promise<any>
     let managementId: string
     let tokenManagementUrl: string
     let accessTokenService: AccessTokenService
+
+    beforeAll(async (): Promise<void> => {
+      trx = appContainer.knex
+    })
 
     const generateBaseGrant = (overrides?: Partial<Grant>) => ({
       state: GrantState.Pending,

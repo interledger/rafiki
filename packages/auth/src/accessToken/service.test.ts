@@ -20,17 +20,19 @@ import {
   AccessItem
 } from '@interledger/open-payments'
 import { generateBaseGrant } from '../tests/grant'
+import { TransactionOrKnex } from 'objection'
 
 describe('Access Token Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  const trx: Knex.Transaction = undefined as unknown as Knex.Transaction
+  let trx: TransactionOrKnex
   let accessTokenService: AccessTokenService
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     accessTokenService = await deps.use('accessTokenService')
+    trx = appContainer.knex
   })
 
   afterEach(async (): Promise<void> => {

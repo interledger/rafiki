@@ -13,12 +13,13 @@ import { Grant, GrantState, StartMethod, FinishMethod } from '../grant/model'
 import { SubjectRequest } from './types'
 import { generateNonce, generateToken } from '../shared/utils'
 import { Subject } from './model'
+import { TransactionOrKnex } from 'objection'
 
 describe('Subject Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let subjectService: SubjectService
-  const trx: Knex.Transaction = null as unknown as Knex.Transaction
+  let trx: TransactionOrKnex
   let grant: Grant
 
   const generateBaseGrant = () => ({
@@ -40,6 +41,7 @@ describe('Subject Service', (): void => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     subjectService = await deps.use('subjectService')
+    trx = appContainer.knex
   })
 
   afterEach(async (): Promise<void> => {

@@ -17,11 +17,12 @@ import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
 import { generateToken, generateNonce } from '../shared/utils'
 import { compareRequestAndGrantAccessItems } from './utils'
+import { TransactionOrKnex } from 'objection'
 
 describe('Access utilities', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  const trx: Knex.Transaction = undefined as unknown as Knex.Transaction
+  let trx: TransactionOrKnex
   let identifier: string
   let grant: Grant
   let grantAccessItem: Access
@@ -32,6 +33,7 @@ describe('Access utilities', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
+    trx = appContainer.knex
   })
 
   beforeEach(async (): Promise<void> => {
