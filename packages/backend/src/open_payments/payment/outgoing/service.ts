@@ -276,7 +276,7 @@ async function createOutgoingPayment(
         stopTimerQuote()
 
         if (isQuoteError(quoteOrError)) {
-          return quoteErrorToOutgoingPaymentError[quoteOrError]
+          return quoteErrorToOutgoingPaymentError[quoteOrError.type]
         }
         quoteId = quoteOrError.id
       } else {
@@ -518,6 +518,9 @@ function validateAmountAssets(
   payment: OutgoingPayment,
   limits: Limits
 ): boolean {
+  if (limits.debitAmount && limits.receiveAmount) {
+    throw OutgoingPaymentError.OnlyOneGrantAmountAllowed
+  }
   if (
     limits.debitAmount &&
     (limits.debitAmount.assetCode !== payment.asset.code ||

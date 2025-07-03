@@ -32,7 +32,7 @@ When a request comes from a client with an account known to your local instance 
 
 When a request comes from a client registered with another instance of Rafiki, the `auth` service resolves the client's key endpoint (for example, `https://wallet.example.com/alice/jwks.json`) to retrieve the client's public keys, then filters out the correct key using the key id (`kid`) in the client's signature.
 
-Review the <LinkOut href="https://openpayments.dev/introduction/client-keys/">Open Payments documentation</LinkOut> for more information about client keys.
+Review the <LinkOut href="https://openpayments.dev/identity/client-keys/">Open Payments documentation</LinkOut> for more information about client keys.
 
 ## Identity provider (IdP)
 
@@ -44,7 +44,7 @@ You must integrate with an [IdP](/integration/requirements/open-payments/idp) wh
 Rafiki’s [`frontend`](/integration/deployment/services/frontend-service) service requires an IdP for authentication and user management of your [Rafiki Admin](/admin/admin-user-guide) users. Out of the box, Rafiki uses Ory Kratos, a cloud-based user management system. Kratos is for internal use only and **cannot** be used as your customer-facing Open Payments authorization server.
 :::
 
-For more information about interactive grants and how they work with identity providers, review the [Identity Provider](/integration/requirements/open-payments/idp) page and the <LinkOut href="https://openpayments.dev/introduction/grants/">Grant negotiation and authorization</LinkOut> page in the Open Payments docs.
+For more information about interactive grants and how they work with identity providers, review the [Identity Provider](/integration/requirements/open-payments/idp) page and the <LinkOut href="https://openpayments.dev/identity/grants/">Grant negotiation and authorization</LinkOut> page in the Open Payments docs.
 
 ## GraphQL Auth Admin API
 

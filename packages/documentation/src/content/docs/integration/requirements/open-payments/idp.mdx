@@ -24,7 +24,7 @@ We provide Ory Kratos, a cloud-based user management system, for the identity an
 
 In Open Payments, grants indicate a resource owner, such as an account holder, has given a piece of software, such as a mobile app, permission (consent) to act on their behalf.
 
-Rafiki's implementation of an Open Payments authorization server requires that consent is collected via an interactive grant before an <LinkOut href="https://openpayments.dev/introduction/op-concepts/#outgoing-payment">outgoing payment</LinkOut> request is issued. A grant is interactive when explicit interaction by a resource owner (for example, the software's end user) is required to approve or deny the grant. Tapping an _Approve_ button to authorize a payment is an example of an explicit interaction.
+Rafiki's implementation of an Open Payments authorization server requires that consent is collected via an interactive grant before an <LinkOut href="https://openpayments.dev/concepts/resources/#outgoing-payment">outgoing payment</LinkOut> request is issued. A grant is interactive when explicit interaction by a resource owner (for example, the software's end user) is required to approve or deny the grant. Tapping an _Approve_ button to authorize a payment is an example of an explicit interaction.
 
 Interactive grants can be optional for incoming payments and quotes; however, they're enabled by default in Rafiki (the `LIST_ALL_ACCESS_INTERACTION` environment variable is `true`). When a grant request includes a `list-all` action for incoming payments and quotes, the request requires interaction. The `list-all` action is used when the client asks to list resources that it did not create.
 
@@ -33,7 +33,7 @@ If `LIST_ALL_ACCESS_INTERACTION` is `false`, you can still force interactive gra
 - `QUOTE_INTERACTION`
 - `INCOMING_PAYMENT_INTERACTION`
 
-See the <LinkOut href="https://openpayments.dev/introduction/grants/">Open Payments documentation</LinkOut> for more information on grant negotiation and authorization.
+See the <LinkOut href="https://openpayments.dev/identity/grants/">Open Payments documentation</LinkOut> for more information on grant negotiation and authorization.
 
 ## Authorization servers
 

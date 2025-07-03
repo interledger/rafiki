@@ -48,7 +48,7 @@ import { PaymentMethodHandlerService } from '../../../payment-method/handler/ser
 import { PaymentMethodHandlerError } from '../../../payment-method/handler/errors'
 import { mockRatesApi } from '../../../tests/rates'
 import { UnionOmit } from '../../../shared/utils'
-import { QuoteError } from '../../quote/errors'
+import { QuoteError, QuoteErrorCode } from '../../quote/errors'
 import { withConfigOverride } from '../../../tests/helpers'
 import { TelemetryService } from '../../../telemetry/service'
 import { getPageTests } from '../../../shared/baseModel.test'
@@ -747,10 +747,11 @@ describe('OutgoingPaymentService', (): void => {
         assetScale: receiverWalletAddress.asset.scale
       }
 
-      const quoteCreateResponse = QuoteError.InvalidAmount
       const quoteSpy = jest
         .spyOn(quoteService, 'create')
-        .mockImplementationOnce(async () => quoteCreateResponse)
+        .mockImplementationOnce(
+          async () => new QuoteError(QuoteErrorCode.InvalidAmount)
+        )
 
       const payment = await outgoingPaymentService.create({
         walletAddressId,
@@ -759,7 +760,7 @@ describe('OutgoingPaymentService', (): void => {
       })
 
       expect(isOutgoingPaymentError(payment)).toBeTruthy()
-      expect(payment).toBe(quoteCreateResponse)
+      expect(payment).toBe(OutgoingPaymentError.InvalidAmount)
       expect(quoteSpy).toHaveBeenCalledWith({
         walletAddressId,
         receiver: incomingPaymentUrl,
@@ -1300,6 +1301,52 @@ describe('OutgoingPaymentService', (): void => {
           )
         })
       }
+    })
+
+    test('fails to create when both debitAmount and receiveAmount are set to grant limits', async () => {
+      withConfigOverride(
+        () => config,
+        { slippage: 0 },
+        async (): Promise<void> => {
+          const debitAmount = {
+            value: BigInt(10),
+            assetCode: receiverWalletAddress.asset.code,
+            assetScale: receiverWalletAddress.asset.scale
+          }
+          const grant: Grant = {
+            id: uuid(),
+            limits: {
+              debitAmount: {
+                value: BigInt(Number.MAX_SAFE_INTEGER),
+                assetCode: receiverWalletAddress.asset.code,
+                assetScale: receiverWalletAddress.asset.scale
+              },
+              receiveAmount: {
+                value: BigInt(Number.MAX_SAFE_INTEGER),
+                assetCode: receiverWalletAddress.asset.code,
+                assetScale: receiverWalletAddress.asset.scale
+              }
+            }
+          }
+          await OutgoingPaymentGrant.query(knex).insertAndFetch({
+            id: grant.id
+          })
+
+          const options: CreateOutgoingPaymentOptions = {
+            walletAddressId: receiverWalletAddress.id,
+            debitAmount,
+            incomingPayment: incomingPayment.toOpenPaymentsTypeWithMethods(
+              config.openPaymentsUrl,
+              receiverWalletAddress
+            ).id,
+            grant
+          }
+
+          const payment = await outgoingPaymentService.create(options)
+          expect(isOutgoingPaymentError(payment)).toBeTruthy()
+          expect(payment).toBe(OutgoingPaymentError.OnlyOneGrantAmountAllowed)
+        }
+      )
     })
   })
 

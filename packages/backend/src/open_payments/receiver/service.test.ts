@@ -110,7 +110,6 @@ describe('Receiver Service', (): void => {
             metadata: undefined,
             expiresAt: incomingPayment.expiresAt,
             createdAt: incomingPayment.createdAt,
-            updatedAt: incomingPayment.updatedAt,
             methods: [
               {
                 type: 'ilp',
@@ -224,7 +223,6 @@ describe('Receiver Service', (): void => {
               ? new Date(mockedIncomingPayment.expiresAt)
               : undefined,
             createdAt: new Date(mockedIncomingPayment.createdAt),
-            updatedAt: new Date(mockedIncomingPayment.updatedAt),
             methods: [
               {
                 type: 'ilp',
@@ -288,7 +286,6 @@ describe('Receiver Service', (): void => {
               ? new Date(mockedIncomingPayment.expiresAt)
               : undefined,
             createdAt: new Date(mockedIncomingPayment.createdAt),
-            updatedAt: new Date(mockedIncomingPayment.updatedAt),
             methods: [
               {
                 type: 'ilp',
@@ -362,7 +359,6 @@ describe('Receiver Service', (): void => {
               receivedAmount: receiver.incomingPayment?.receivedAmount,
               incomingAmount: receiver.incomingPayment?.incomingAmount,
               metadata: receiver.incomingPayment?.metadata || undefined,
-              updatedAt: receiver.incomingPayment?.updatedAt,
               createdAt: receiver.incomingPayment?.createdAt,
               expiresAt: receiver.incomingPayment?.expiresAt,
               methods: [
@@ -474,7 +470,6 @@ describe('Receiver Service', (): void => {
                 ? new Date(mockedIncomingPayment.expiresAt)
                 : undefined,
               createdAt: new Date(mockedIncomingPayment.createdAt),
-              updatedAt: new Date(mockedIncomingPayment.updatedAt),
               methods: [
                 {
                   type: 'ilp',

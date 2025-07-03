@@ -2,6 +2,7 @@ interface ErrorDetails {
   description: string
   retryable?: boolean
   code?: PaymentMethodHandlerErrorCode
+  details?: Record<string, unknown>
 }
 
 export enum PaymentMethodHandlerErrorCode {
@@ -12,6 +13,7 @@ export class PaymentMethodHandlerError extends Error {
   public description: string
   public retryable?: boolean
   public code?: PaymentMethodHandlerErrorCode
+  public details?: Record<string, unknown>
 
   constructor(message: string, args: ErrorDetails) {
     super(message)
@@ -19,5 +21,6 @@ export class PaymentMethodHandlerError extends Error {
     this.description = args.description
     this.retryable = args.retryable
     this.code = args.code
+    this.details = args.details
   }
 }

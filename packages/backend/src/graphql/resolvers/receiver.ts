@@ -71,7 +71,6 @@ export function receiverToGraphql(receiver: Receiver): SchemaReceiver {
     receivedAmount: receiver.incomingPayment.receivedAmount,
     metadata: receiver.incomingPayment.metadata,
     completed: receiver.incomingPayment.completed,
-    createdAt: receiver.incomingPayment.createdAt.toISOString(),
-    updatedAt: receiver.incomingPayment.updatedAt.toISOString()
+    createdAt: receiver.incomingPayment.createdAt.toISOString()
   }
 }
