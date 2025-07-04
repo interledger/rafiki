@@ -541,6 +541,20 @@ describe('OutgoingPaymentService', (): void => {
           expect.objectContaining({ id: otherOutgoingPayment.id })
         )
       })
+
+      test('can filter by tenantId', async (): Promise<void> => {
+        await expect(
+          outgoingPaymentService.getPage({
+            tenantId: crypto.randomUUID()
+          })
+        ).resolves.toHaveLength(0)
+
+        await expect(
+          outgoingPaymentService.getPage({
+            tenantId: Config.operatorTenantId
+          })
+        ).resolves.toHaveLength(2)
+      })
     })
   })
 

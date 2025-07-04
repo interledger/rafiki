@@ -1,4 +1,4 @@
-import { ApolloContext } from '../../app'
+import { TenantedApolloContext } from '../../app'
 import {
   QueryResolvers,
   ResolversTypes,
@@ -8,20 +8,21 @@ import { getPageInfo } from '../../shared/pagination'
 import { WebhookEvent } from '../../webhook/event/model'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 
-export const getWebhookEvents: QueryResolvers<ApolloContext>['webhookEvents'] =
+export const getWebhookEvents: QueryResolvers<TenantedApolloContext>['webhookEvents'] =
   async (
     parent,
     args,
     ctx
   ): Promise<ResolversTypes['WebhookEventsConnection']> => {
-    const { filter, sortOrder, ...pagination } = args
+    const { filter, sortOrder, tenantId, ...pagination } = args
     const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
     const webhookService = await ctx.container.use('webhookService')
     const getPageFn = (pagination_: Pagination, sortOrder_?: SortOrder) =>
       webhookService.getPage({
         pagination: pagination_,
         filter,
-        sortOrder: sortOrder_
+        sortOrder: sortOrder_,
+        tenantId: ctx.isOperator ? tenantId : ctx.tenant.id
       })
     const webhookEvents = await getPageFn(pagination, order)
     const pageInfo = await getPageInfo({

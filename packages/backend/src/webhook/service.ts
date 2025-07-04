@@ -29,6 +29,7 @@ interface GetPageOptions {
   pagination?: Pagination
   filter?: WebhookEventFilter
   sortOrder?: SortOrder
+  tenantId?: string
 }
 
 export interface WebhookService {
@@ -266,9 +267,13 @@ async function getWebhookEventsPage(
   deps: ServiceDependencies,
   options?: GetPageOptions
 ): Promise<WebhookEvent[]> {
-  const { filter, pagination, sortOrder } = options ?? {}
+  const { filter, pagination, sortOrder, tenantId } = options ?? {}
 
   const query = WebhookEvent.query(deps.knex)
+
+  if (tenantId) {
+    query.where('tenantId', tenantId)
+  }
 
   if (filter?.type?.in && filter.type.in.length > 0) {
     query.whereIn('type', filter.type.in)

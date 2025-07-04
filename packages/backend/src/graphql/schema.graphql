@@ -125,6 +125,8 @@ type Query {
     sortOrder: SortOrder
     "Filter webhook events based on specific criteria."
     filter: WebhookEventFilter
+    "Unique identifier of the tenant associated with the wallet address. Optional, if not provided, the tenantId will be obtained from the signature."
+    tenantId: String
   ): WebhookEventsConnection!
 
   "Fetch a paginated list of combined payments, including incoming and outgoing payments."
