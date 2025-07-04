@@ -60,7 +60,9 @@ export default function WalletAddressesPage() {
           </div>
         </PageHeader>
         <Table>
-          <Table.Head columns={['Wallet address', 'Public name', 'Status']} />
+          <Table.Head
+            columns={['Wallet address', 'Public name', 'Status', 'Tenant']}
+          />
           <Table.Body>
             {walletAddresses.edges.length ? (
               walletAddresses.edges.map((wa) => (
@@ -87,6 +89,26 @@ export default function WalletAddressesPage() {
                     >
                       {wa.node.status}
                     </Badge>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className='flex flex-col'>
+                      <div>
+                        <span className='mr-2'>
+                          {wa.node.tenant.publicName ? (
+                            <span className='font-medium'>
+                              {wa.node.tenant.publicName}
+                            </span>
+                          ) : (
+                            <span className='text-tealish/80'>
+                              No public name
+                            </span>
+                          )}
+                        </span>
+                        <div className='text-tealish/50 text-xs'>
+                          (ID: {wa.node.tenant.id})
+                        </div>
+                      </div>
+                    </div>
                   </Table.Cell>
                 </Table.Row>
               ))
