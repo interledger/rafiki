@@ -54,6 +54,8 @@ export class Peer
 
   public name?: string
 
+  public routes?: string[]
+
   public readonly tenantId!: string
 
   public async onDebit(

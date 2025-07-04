@@ -80,6 +80,7 @@ services:
       WALLET_ADDRESS_URL: ${CLOUD_NINE_WALLET_ADDRESS_URL:-https://cloud-nine-wallet-backend/.well-known/pay}
       ILP_CONNECTOR_URL: ${CLOUD_NINE_CONNECTOR_URL:-http://cloud-nine-wallet-backend:3002}
       ENABLE_TELEMETRY: true
+      ENABLE_ILP_TIMING: true
       KEY_ID: 7097F83B-CB84-469E-96C6-2141C72E22C0
       OPERATOR_TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
     depends_on:

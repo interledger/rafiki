@@ -6,6 +6,7 @@ services:
       LIVENET: false
       OPEN_TELEMETRY_COLLECTOR_URLS: http://otel-collector:4317
       OPEN_TELEMETRY_TRACE_COLLECTOR_URLS: http://otel-collector:4317
+      ENABLE_ILP_TIMING: true
 
   happy-life-backend:
     environment:
@@ -14,6 +15,34 @@ services:
       LIVENET: false
       OPEN_TELEMETRY_COLLECTOR_URLS: http://otel-collector:4317
       OPEN_TELEMETRY_TRACE_COLLECTOR_URLS: http://otel-collector:4317
+      ENABLE_ILP_TIMING: true
+
+  global-bank-backend:
+    environment:
+      ENABLE_TELEMETRY: true
+      ENABLE_TELEMETRY_TRACES: true
+      LIVENET: false
+      OPEN_TELEMETRY_COLLECTOR_URLS: http://otel-collector:4317
+      OPEN_TELEMETRY_TRACE_COLLECTOR_URLS: http://otel-collector:4317
+      ENABLE_ILP_TIMING: true
+
+  intergalactic-bank-backend:
+    environment:
+      ENABLE_TELEMETRY: true
+      ENABLE_TELEMETRY_TRACES: true
+      LIVENET: false
+      OPEN_TELEMETRY_COLLECTOR_URLS: http://otel-collector:4317
+      OPEN_TELEMETRY_TRACE_COLLECTOR_URLS: http://otel-collector:4317
+      ENABLE_ILP_TIMING: true
+
+  us-treasury-backend:
+    environment:
+      ENABLE_TELEMETRY: true
+      ENABLE_TELEMETRY_TRACES: true
+      LIVENET: false
+      OPEN_TELEMETRY_COLLECTOR_URLS: http://otel-collector:4317
+      OPEN_TELEMETRY_TRACE_COLLECTOR_URLS: http://otel-collector:4317
+      ENABLE_ILP_TIMING: true
 
   otel-collector:
     image: otel/opentelemetry-collector:latest
