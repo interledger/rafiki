@@ -1,6 +1,6 @@
 import assert from 'assert'
 import type { MockASE } from 'test-lib'
-import { parseCookies } from '../utils'
+import { parseCookies, urlWithoutTenantId } from '../utils'
 import { WalletAddress, PendingGrant } from '@interledger/open-payments'
 import { AdminActions, createAdminActions } from './admin'
 import { OpenPaymentsActions, createOpenPaymentsActions } from './open-payments'
@@ -53,9 +53,9 @@ async function consentInteraction(
     idpSecret
   )
 
-  // Finish interacton
+  // Finish interaction
   const finishResponse = await fetch(
-    `${senderWalletAddress.authServer}/interact/${interactId}/${nonce}/finish`,
+    `${urlWithoutTenantId(senderWalletAddress.authServer)}/interact/${interactId}/${nonce}/finish`,
     {
       method: 'GET',
       headers: {
@@ -79,9 +79,9 @@ async function consentInteractionWithInteractRef(
     idpSecret
   )
 
-  // Finish interacton
+  // Finish interaction
   const finishResponse = await fetch(
-    `${senderWalletAddress.authServer}/interact/${interactId}/${nonce}/finish`,
+    `${urlWithoutTenantId(senderWalletAddress.authServer)}/interact/${interactId}/${nonce}/finish`,
     {
       method: 'GET',
       headers: {

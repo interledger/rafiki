@@ -7,13 +7,36 @@ import type {
   CreateWalletAddressKeyMutationResponse,
   CreateWalletAddressKeyInput
 } from 'generated/graphql'
-import { apolloClient } from './apolloClient'
+import { apolloClient, generateApolloClient } from './apolloClient'
 import { v4 as uuid } from 'uuid'
+import { TenantOptions } from './types'
+
+export async function listTenants() {
+  const listTenantsQuery = gql`
+    query ListTenantsQuery {
+      tenants {
+        edges {
+          node {
+            id
+            apiSecret
+          }
+        }
+      }
+    }
+  `
+
+  const response = await apolloClient.query({
+    query: listTenantsQuery
+  })
+
+  return response.data.tenants
+}
 
 export async function depositPeerLiquidity(
   peerId: string,
   amount: string,
-  transferUid: string
+  transferUid: string,
+  options?: TenantOptions
 ): Promise<LiquidityMutationResponse> {
   const depositPeerLiquidityMutation = gql`
     mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
@@ -30,7 +53,7 @@ export async function depositPeerLiquidity(
       idempotencyKey: uuid()
     }
   }
-  return apolloClient
+  return generateApolloClient(options)
     .mutate({
       mutation: depositPeerLiquidityMutation,
       variables: depositPeerLiquidityInput
@@ -47,7 +70,8 @@ export async function depositPeerLiquidity(
 export async function depositAssetLiquidity(
   assetId: string,
   amount: number,
-  transferId: string
+  transferId: string,
+  options?: TenantOptions
 ): Promise<LiquidityMutationResponse> {
   const depositAssetLiquidityMutation = gql`
     mutation DepositAssetLiquidity($input: DepositAssetLiquidityInput!) {
@@ -64,7 +88,7 @@ export async function depositAssetLiquidity(
       idempotencyKey: uuid()
     }
   }
-  return apolloClient
+  return generateApolloClient(options)
     .mutate({
       mutation: depositAssetLiquidityMutation,
       variables: depositAssetLiquidityInput
@@ -81,14 +105,15 @@ export async function depositAssetLiquidity(
 export async function createWalletAddress(
   accountName: string,
   accountUrl: string,
-  assetId: string
+  assetId: string,
+  options?: TenantOptions
 ): Promise<WalletAddress> {
   const createWalletAddressMutation = gql`
     mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
       createWalletAddress(input: $input) {
         walletAddress {
           id
-          url
+          address
           publicName
         }
       }
@@ -96,12 +121,12 @@ export async function createWalletAddress(
   `
   const createWalletAddressInput: CreateWalletAddressInput = {
     assetId,
-    url: accountUrl,
+    address: accountUrl,
     publicName: accountName,
     additionalProperties: []
   }
 
-  return apolloClient
+  return generateApolloClient(options)
     .mutate({
       mutation: createWalletAddressMutation,
       variables: {
@@ -121,10 +146,12 @@ export async function createWalletAddress(
 
 export async function createWalletAddressKey({
   walletAddressId,
-  jwk
+  jwk,
+  options
 }: {
   walletAddressId: string
   jwk: string
+  options?: TenantOptions
 }): Promise<CreateWalletAddressKeyMutationResponse> {
   const createWalletAddressKeyMutation = gql`
     mutation CreateWalletAddressKey($input: CreateWalletAddressKeyInput!) {
@@ -141,7 +168,7 @@ export async function createWalletAddressKey({
     jwk: jwk as unknown as JwkInput
   }
 
-  return apolloClient
+  return generateApolloClient(options)
     .mutate({
       mutation: createWalletAddressKeyMutation,
       variables: {
@@ -157,7 +184,8 @@ export async function createWalletAddressKey({
 }
 
 export async function getWalletAddressPayments(
-  walletAddressId: string
+  walletAddressId: string,
+  options?: TenantOptions
 ): Promise<WalletAddress> {
   const query = gql`
     query WalletAddress($id: String!) {
@@ -225,7 +253,7 @@ export async function getWalletAddressPayments(
       }
     }
   `
-  return apolloClient
+  return generateApolloClient(options)
     .query({
       query,
       variables: {

@@ -15,15 +15,15 @@ import {
 } from './errors'
 import { AmountJSON, parseAmount } from '../../amount'
 import { listSubresource } from '../../wallet_address/routes'
-import { StreamCredentialsService } from '../../../payment-method/ilp/stream-credentials/service'
 import { AccessAction } from '@interledger/open-payments'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
+import { PaymentMethodProviderService } from '../../../payment-method/provider/service'
 
 interface ServiceDependencies {
   config: IAppConfig
   logger: Logger
   incomingPaymentService: IncomingPaymentService
-  streamCredentialsService: StreamCredentialsService
+  paymentMethodProviderService: PaymentMethodProviderService
 }
 
 export type ReadContextWithAuthenticatedStatus = ReadContext &
@@ -70,7 +70,8 @@ async function getIncomingPaymentPublic(
 ) {
   const incomingPayment = await deps.incomingPaymentService.get({
     id: ctx.params.id,
-    client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
+    client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
+    tenantId: ctx.params.tenantId
   })
 
   if (!incomingPayment) {
@@ -84,7 +85,7 @@ async function getIncomingPaymentPublic(
   }
 
   ctx.body = incomingPayment.toPublicOpenPaymentsType(
-    deps.config.authServerGrantUrl
+    `${deps.config.authServerGrantUrl}/${incomingPayment?.walletAddress?.tenantId}`
   )
 }
 
@@ -94,7 +95,8 @@ async function getIncomingPaymentPrivate(
 ): Promise<void> {
   const incomingPayment = await deps.incomingPaymentService.get({
     id: ctx.params.id,
-    client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
+    client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
+    tenantId: ctx.params.tenantId
   })
 
   if (!incomingPayment) {
@@ -107,14 +109,14 @@ async function getIncomingPaymentPrivate(
     )
   }
 
-  const streamCredentials = incomingPayment.isExpiredOrComplete()
-    ? undefined
-    : deps.streamCredentialsService.get(incomingPayment)
+  const paymentMethods = incomingPayment.isExpiredOrComplete()
+    ? []
+    : await deps.paymentMethodProviderService.getPaymentMethods(incomingPayment)
 
   ctx.body = incomingPayment.toOpenPaymentsTypeWithMethods(
     deps.config.openPaymentsUrl,
     ctx.walletAddress,
-    streamCredentials
+    paymentMethods
   )
 }
 
@@ -141,7 +143,8 @@ async function createIncomingPayment(
     client: ctx.client,
     metadata: body.metadata,
     expiresAt,
-    incomingAmount: body.incomingAmount && parseAmount(body.incomingAmount)
+    incomingAmount: body.incomingAmount && parseAmount(body.incomingAmount),
+    tenantId: ctx.params.tenantId
   })
 
   if (isIncomingPaymentError(incomingPaymentOrError)) {
@@ -150,15 +153,16 @@ async function createIncomingPayment(
       errorToMessage[incomingPaymentOrError]
     )
   }
+  const paymentMethods =
+    await deps.paymentMethodProviderService.getPaymentMethods(
+      incomingPaymentOrError
+    )
 
   ctx.status = 201
-  const streamCredentials = deps.streamCredentialsService.get(
-    incomingPaymentOrError
-  )
   ctx.body = incomingPaymentOrError.toOpenPaymentsTypeWithMethods(
     deps.config.openPaymentsUrl,
     ctx.walletAddress,
-    streamCredentials
+    paymentMethods
   )
 }
 
@@ -167,7 +171,8 @@ async function completeIncomingPayment(
   ctx: CompleteContext
 ): Promise<void> {
   const incomingPaymentOrError = await deps.incomingPaymentService.complete(
-    ctx.params.id
+    ctx.params.id,
+    ctx.params.tenantId
   )
 
   if (isIncomingPaymentError(incomingPaymentOrError)) {
@@ -189,7 +194,13 @@ async function listIncomingPayments(
 ): Promise<void> {
   await listSubresource({
     ctx,
-    getWalletAddressPage: deps.incomingPaymentService.getWalletAddressPage,
+    getWalletAddressPage: async ({ walletAddressId, pagination, client }) =>
+      deps.incomingPaymentService.getWalletAddressPage({
+        walletAddressId,
+        pagination,
+        client,
+        tenantId: ctx.params.tenantId
+      }),
     toBody: (payment) =>
       payment.toOpenPaymentsType(deps.config.openPaymentsUrl, ctx.walletAddress)
   })

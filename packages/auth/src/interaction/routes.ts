@@ -19,11 +19,14 @@ import {
 import { toOpenPaymentsAccess } from '../access/model'
 import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
 import { generateRouteLogs } from '../shared/utils'
+import { TenantService } from '../tenant/service'
+import { isTenantWithIdp } from '../tenant/model'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
   accessService: AccessService
   interactionService: InteractionService
+  tenantService: TenantService
   config: IAppConfig
 }
 
@@ -83,6 +86,7 @@ export function createInteractionRoutes({
   grantService,
   accessService,
   interactionService,
+  tenantService,
   logger,
   config
 }: ServiceDependencies): InteractionRoutes {
@@ -94,6 +98,7 @@ export function createInteractionRoutes({
     grantService,
     accessService,
     interactionService,
+    tenantService,
     logger: log,
     config
   }
@@ -111,27 +116,38 @@ async function getGrantDetails(
   ctx: GetContext
 ): Promise<void> {
   const secret = ctx.headers?.['x-idp-secret']
-  const { config, interactionService, accessService } = deps
+  const { interactionService, accessService, tenantService } = deps
   const { id: interactId, nonce } = ctx.params
-  if (
-    !secret ||
-    !crypto.timingSafeEqual(
-      Buffer.from(secret as string),
-      Buffer.from(config.identityServerSecret)
-    )
-  ) {
-    throw new GNAPServerRouteError(
-      401,
-      GNAPErrorCode.InvalidRequest,
-      'invalid x-idp-secret'
-    )
-  }
   const interaction = await interactionService.getBySession(interactId, nonce)
   if (!interaction || isRevokedGrant(interaction.grant)) {
     throw new GNAPServerRouteError(
       404,
       GNAPErrorCode.UnknownInteraction,
       'unknown interaction'
+    )
+  }
+
+  // Tenant should exist as it is a foreign key requirement on grants
+  const tenant = await tenantService.get(interaction.grant.tenantId)
+  if (!tenant || !isTenantWithIdp(tenant)) {
+    throw new GNAPServerRouteError(
+      500,
+      GNAPErrorCode.InvalidRequest,
+      'internal server error'
+    )
+  }
+
+  if (
+    !secret ||
+    !crypto.timingSafeEqual(
+      Buffer.from(secret as string),
+      Buffer.from(tenant.idpSecret)
+    )
+  ) {
+    throw new GNAPServerRouteError(
+      401,
+      GNAPErrorCode.InvalidRequest,
+      'invalid x-idp-secret'
     )
   }
 
@@ -165,7 +181,7 @@ async function startInteraction(
   )
   const { id: interactId, nonce } = ctx.params
   const { clientName, clientUri } = ctx.query
-  const { config, interactionService, grantService, logger } = deps
+  const { interactionService, grantService, logger } = deps
   const interaction = await interactionService.getBySession(interactId, nonce)
 
   if (!interaction) {
@@ -199,12 +215,16 @@ async function startInteraction(
 
   const trx = await Interaction.startTransaction()
   try {
-    await grantService.markPending(interaction.id, trx)
+    // Grant and Tenant should exist, as one is a foreign key requirement on interactions and the other a foreign key requirement on that grant.
+    const grant = await grantService.markPending(interaction.grant.id, trx)
     await trx.commit()
+
+    if (!isTenantWithIdp(grant.tenant)) throw new Error('invalid interaction')
+    const { idpConsentUrl } = grant.tenant
 
     ctx.session.nonce = interaction.nonce
 
-    const interactionUrl = new URL(config.identityServerUrl)
+    const interactionUrl = new URL(idpConsentUrl)
     interactionUrl.searchParams.set('interactId', interaction.id)
     interactionUrl.searchParams.set('nonce', interaction.nonce)
     interactionUrl.searchParams.set('clientName', clientName as string)
@@ -243,14 +263,32 @@ async function handleInteractionChoice(
   ctx: ChooseContext
 ): Promise<void> {
   const { id: interactId, nonce, choice } = ctx.params
-  const { config, interactionService, logger } = deps
+  const { interactionService, logger } = deps
   const secret = ctx.headers['x-idp-secret']
+  const interaction = await interactionService.getBySession(interactId, nonce)
+  if (!interaction) {
+    throw new GNAPServerRouteError(
+      404,
+      GNAPErrorCode.UnknownInteraction,
+      'unknown interaction'
+    )
+  }
+
+  const tenant = await deps.tenantService.get(interaction.grant.tenantId)
+
+  if (!tenant || !isTenantWithIdp(tenant)) {
+    throw new GNAPServerRouteError(
+      404,
+      GNAPErrorCode.UnknownInteraction,
+      'unknown interaction'
+    )
+  }
 
   if (
     !secret ||
     !crypto.timingSafeEqual(
       Buffer.from(secret as string),
-      Buffer.from(config.identityServerSecret)
+      Buffer.from(tenant.idpSecret)
     )
   ) {
     throw new GNAPServerRouteError(
@@ -260,67 +298,58 @@ async function handleInteractionChoice(
     )
   }
 
-  const interaction = await interactionService.getBySession(interactId, nonce)
-  if (!interaction) {
+  const { grant } = interaction
+  // If grant was already rejected or revoked
+  if (
+    grant.state === GrantState.Finalized &&
+    grant.finalizationReason !== GrantFinalization.Issued
+  ) {
     throw new GNAPServerRouteError(
-      404,
-      GNAPErrorCode.UnknownInteraction,
-      'unknown interaction'
+      401,
+      GNAPErrorCode.UserDenied,
+      'user denied interaction'
     )
-  } else {
-    const { grant } = interaction
-    // If grant was already rejected or revoked
-    if (
-      grant.state === GrantState.Finalized &&
-      grant.finalizationReason !== GrantFinalization.Issued
-    ) {
-      throw new GNAPServerRouteError(
-        401,
-        GNAPErrorCode.UserDenied,
-        'user denied interaction'
-      )
-    }
-
-    // If grant is otherwise not pending interaction
-    if (
-      interaction.state !== InteractionState.Pending ||
-      isInteractionExpired(interaction)
-    ) {
-      throw new GNAPServerRouteError(
-        400,
-        GNAPErrorCode.InvalidInteraction,
-        'invalid interaction'
-      )
-    }
-
-    if (choice === InteractionChoices.Accept) {
-      logger.debug(
-        {
-          ...generateRouteLogs(ctx),
-          interaction
-        },
-        'interaction approved'
-      )
-      await interactionService.approve(interactId)
-    } else if (choice === InteractionChoices.Reject) {
-      logger.debug(
-        {
-          ...generateRouteLogs(ctx),
-          interaction
-        },
-        'interaction rejected'
-      )
-      await interactionService.deny(interactId)
-    } else {
-      throw new GNAPServerRouteError(
-        400,
-        GNAPErrorCode.InvalidRequest,
-        'invalid interaction choice'
-      )
-    }
-
-    ctx.status = 202
   }
+
+  // If grant is otherwise not pending interaction
+  if (
+    interaction.state !== InteractionState.Pending ||
+    isInteractionExpired(interaction)
+  ) {
+    throw new GNAPServerRouteError(
+      400,
+      GNAPErrorCode.InvalidInteraction,
+      'invalid interaction'
+    )
+  }
+
+  if (choice === InteractionChoices.Accept) {
+    logger.debug(
+      {
+        ...generateRouteLogs(ctx),
+        interaction
+      },
+      'interaction approved'
+    )
+    await interactionService.approve(interactId)
+  } else if (choice === InteractionChoices.Reject) {
+    logger.debug(
+      {
+        ...generateRouteLogs(ctx),
+        interaction
+      },
+      'interaction rejected'
+    )
+    await interactionService.deny(interactId)
+  } else {
+    throw new GNAPServerRouteError(
+      400,
+      GNAPErrorCode.InvalidRequest,
+      'invalid interaction choice'
+    )
+  }
+
+  ctx.status = 202
 }
 
 async function handleFinishableGrant(

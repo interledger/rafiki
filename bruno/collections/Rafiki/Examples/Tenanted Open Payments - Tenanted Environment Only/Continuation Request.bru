@@ -1,0 +1,33 @@
+meta {
+  name: Continuation Request
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{senderTenantOpenPaymentsContinuationUri}}
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: GNAP {{continueToken}}
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  await scripts.addSignatureHeaders();
+}
+
+script:post-response {
+  const scripts = require('./scripts');
+  
+  scripts.storeTokenDetails();
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

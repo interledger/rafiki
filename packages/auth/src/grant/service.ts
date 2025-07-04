@@ -8,7 +8,9 @@ import {
   GrantState,
   GrantFinalization,
   StartMethod,
-  FinishMethod
+  FinishMethod,
+  isGrantWithTenant,
+  GrantWithTenant
 } from './model'
 import { AccessRequest } from '../access/types'
 import { AccessService } from '../access/service'
@@ -24,8 +26,12 @@ interface GrantFilter {
 
 export interface GrantService {
   getByIdWithAccess(grantId: string): Promise<Grant | undefined>
-  create(grantRequest: GrantRequest, trx?: Transaction): Promise<Grant>
-  markPending(grantId: string, trx?: Transaction): Promise<Grant | undefined>
+  create(
+    grantRequest: GrantRequest,
+    tenantId: string,
+    trx?: Transaction
+  ): Promise<Grant>
+  markPending(grantId: string, trx?: Transaction): Promise<GrantWithTenant>
   approve(grantId: string, trx?: Transaction): Promise<Grant>
   finalize(grantId: string, reason: GrantFinalization): Promise<Grant>
   getByContinue(
@@ -33,7 +39,7 @@ export interface GrantService {
     continueToken: string,
     options?: GetByContinueOpts
   ): Promise<Grant | undefined>
-  revokeGrant(grantId: string): Promise<boolean>
+  revokeGrant(grantId: string, tenantId?: string): Promise<boolean>
   getPage(
     pagination?: Pagination,
     filter?: GrantFilter,
@@ -115,8 +121,8 @@ export async function createGrantService({
   }
   return {
     getByIdWithAccess: (grantId: string) => getByIdWithAccess(grantId),
-    create: (grantRequest: GrantRequest, trx?: Transaction) =>
-      create(deps, grantRequest, trx),
+    create: (grantRequest: GrantRequest, tenantId: string, trx?: Transaction) =>
+      create(deps, grantRequest, tenantId, trx),
     markPending: (grantId: string, trx?: Transaction) =>
       markPending(deps, grantId, trx),
     approve: (grantId: string) => approve(grantId),
@@ -126,7 +132,8 @@ export async function createGrantService({
       continueToken: string,
       opts: GetByContinueOpts
     ) => getByContinue(continueId, continueToken, opts),
-    revokeGrant: (grantId) => revokeGrant(deps, grantId),
+    revokeGrant: (grantId: string, tenantId?: string) =>
+      revokeGrant(deps, grantId, tenantId),
     getPage: (pagination?, filter?, sortOrder?) =>
       getGrantsPage(deps, pagination, filter, sortOrder),
     updateLastContinuedAt: (id) => updateLastContinuedAt(id),
@@ -149,12 +156,17 @@ async function markPending(
   deps: ServiceDependencies,
   id: string,
   trx?: Transaction
-): Promise<Grant> {
+): Promise<GrantWithTenant> {
   const grantTrx = trx || (await deps.knex.transaction())
   try {
-    const grant = await Grant.query(trx).patchAndFetchById(id, {
-      state: GrantState.Pending
-    })
+    const grant = await Grant.query(trx)
+      .patchAndFetchById(id, {
+        state: GrantState.Pending
+      })
+      .withGraphFetched('tenant')
+
+    if (!isGrantWithTenant(grant))
+      throw new Error('required graph not returned in query')
 
     if (!trx) {
       await grantTrx.commit()
@@ -176,19 +188,26 @@ async function finalize(id: string, reason: GrantFinalization): Promise<Grant> {
 
 async function revokeGrant(
   deps: ServiceDependencies,
-  grantId: string
+  grantId: string,
+  tenantId?: string
 ): Promise<boolean> {
   const { accessTokenService } = deps
 
   const trx = await deps.knex.transaction()
 
   try {
-    const grant = await Grant.query(trx)
+    const queryBuilder = Grant.query(trx)
       .patchAndFetchById(grantId, {
         state: GrantState.Finalized,
         finalizationReason: GrantFinalization.Revoked
       })
       .first()
+
+    if (tenantId) {
+      queryBuilder.andWhere('tenantId', tenantId)
+    }
+
+    const grant = await queryBuilder
 
     if (!grant) {
       deps.logger.info(
@@ -211,6 +230,7 @@ async function revokeGrant(
 async function create(
   deps: ServiceDependencies,
   grantRequest: GrantRequest,
+  tenantId: string,
   trx?: Transaction
 ): Promise<Grant> {
   const { accessService, knex } = deps
@@ -233,7 +253,8 @@ async function create(
       clientNonce: interact?.finish?.nonce,
       client,
       continueId: v4(),
-      continueToken: generateToken()
+      continueToken: generateToken(),
+      tenantId
     }
 
     const grant = await Grant.query(grantTrx).insert(grantData)

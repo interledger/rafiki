@@ -17,6 +17,7 @@ export const options = {
 
 const CLOUD_NINE_GQL_ENDPOINT = __ENV.CLOUD_NINE_GQL_ENDPOINT
 const CLOUD_NINE_WALLET_ADDRESS = __ENV.CLOUD_NINE_WALLET_ADDRESS
+const CLOUD_NINE_TENANT_ID = '438fa74a-fa7d-4317-9ced-dde32ece1787'
 const HAPPY_LIFE_BANK_WALLET_ADDRESS = __ENV.HAPPY_LIFE_BANK_WALLET_ADDRESS
 const SIGNATURE_SECRET = 'iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964='
 const SIGNATURE_VERSION = '1'
@@ -30,7 +31,8 @@ function generateSignedHeaders(requestPayload) {
 
   return {
     'Content-Type': 'application/json',
-    signature: `t=${timestamp}, v${SIGNATURE_VERSION}=${digest}, n=${uuidv4()}`
+    signature: `t=${timestamp}, v${SIGNATURE_VERSION}=${digest}, n=${uuidv4()}`,
+    'tenant-id': CLOUD_NINE_TENANT_ID
   }
 }
 
@@ -54,7 +56,7 @@ export function setup() {
           edges {
             node {
               id
-              url
+              address
             }
           }
         }
@@ -65,7 +67,7 @@ export function setup() {
   const data = request(query)
   const c9WalletAddresses = data.walletAddresses.edges
   const c9WalletAddress = c9WalletAddresses.find(
-    (edge) => edge.node.url === CLOUD_NINE_WALLET_ADDRESS
+    (edge) => edge.node.address === CLOUD_NINE_WALLET_ADDRESS
   )?.node
   if (!c9WalletAddress) {
     fail(`could not find wallet address: ${CLOUD_NINE_WALLET_ADDRESS}`)

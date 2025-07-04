@@ -4,7 +4,6 @@ import { TestContainer, createTestApp } from '../tests/app'
 import { initIocContainer } from '..'
 import { Config } from '../config/app'
 import { FeeService } from './service'
-import { Knex } from 'knex'
 import { truncateTables } from '../tests/tableManager'
 import { createAsset } from '../tests/asset'
 import { Asset } from '../asset/model'
@@ -18,14 +17,12 @@ import { Pagination, SortOrder } from '../shared/baseModel'
 describe('Fee Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let feeService: FeeService
   let asset: Asset
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = appContainer.knex
     feeService = await deps.use('feeService')
   })
 
@@ -34,7 +31,7 @@ describe('Fee Service', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {

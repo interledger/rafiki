@@ -4,10 +4,11 @@ import { LiquidityAccount, OnCreditOptions } from '../../accounting/service'
 import { ConnectorAccount } from '../../payment-method/ilp/connector/core/rafiki'
 import { Asset } from '../../asset/model'
 import { BaseModel, Pagination, SortOrder } from '../../shared/baseModel'
-import { WebhookEvent } from '../../webhook/model'
+import { WebhookEvent } from '../../webhook/event/model'
 import { WalletAddressKey } from '../../open_payments/wallet_address/key/model'
 import { AmountJSON } from '../amount'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
+import { Tenant } from '../../tenants/model'
 
 export class WalletAddress
   extends BaseModel
@@ -18,6 +19,14 @@ export class WalletAddress
   }
 
   static relationMappings = () => ({
+    tenant: {
+      relation: Model.HasOneRelation,
+      modelClass: Tenant,
+      join: {
+        from: 'walletAddresses.tenantId',
+        to: 'tenants.id'
+      }
+    },
     asset: {
       relation: Model.HasOneRelation,
       modelClass: Asset,
@@ -47,11 +56,13 @@ export class WalletAddress
   public keys?: WalletAddressKey[]
   public additionalProperties?: WalletAddressAdditionalProperty[]
 
-  public url!: string
+  public address!: string
   public publicName?: string
 
   public readonly assetId!: string
   public asset!: Asset
+
+  public readonly tenantId!: string
 
   // The cumulative received amount tracked by
   // `wallet_address.web_monetization` webhook events.
@@ -113,7 +124,7 @@ export class WalletAddress
     resourceServer: string
   }): OpenPaymentsWalletAddress {
     const returnVal: OpenPaymentsWalletAddress = {
-      id: this.url,
+      id: this.address,
       publicName: this.publicName,
       assetCode: this.asset.code,
       assetScale: this.asset.scale,
@@ -180,6 +191,7 @@ export interface GetOptions {
   id: string
   client?: string
   walletAddressId?: string
+  tenantId?: string
 }
 
 export interface ListOptions {
@@ -187,6 +199,7 @@ export interface ListOptions {
   client?: string
   pagination?: Pagination
   sortOrder?: SortOrder
+  tenantId?: string
 }
 
 class SubresourceQueryBuilder<

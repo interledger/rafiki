@@ -68,7 +68,7 @@ describe('Peer Resolvers', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -140,7 +140,9 @@ describe('Peer Resolvers', (): void => {
         liquidityThreshold: peer.liquidityThreshold?.toString()
       })
       delete peer.http.incoming
-      await expect(peerService.get(response.peer.id)).resolves.toMatchObject({
+      await expect(
+        peerService.get(response.peer.id, Config.operatorTenantId)
+      ).resolves.toMatchObject({
         asset,
         http: peer.http,
         maxPacketAmount: peer.maxPacketAmount,
@@ -624,7 +626,9 @@ describe('Peer Resolvers', (): void => {
         name: updateOptions.name,
         liquidityThreshold: '200'
       })
-      await expect(peerService.get(peer.id)).resolves.toMatchObject({
+      await expect(
+        peerService.get(peer.id, peer.tenantId)
+      ).resolves.toMatchObject({
         asset: peer.asset,
         http: {
           outgoing: updateOptions.http.outgoing
@@ -771,7 +775,9 @@ describe('Peer Resolvers', (): void => {
         })
 
       expect(response.success).toBe(true)
-      await expect(peerService.get(peer.id)).resolves.toBeUndefined()
+      await expect(
+        peerService.get(peer.id, peer.tenantId)
+      ).resolves.toBeUndefined()
     })
 
     test('Returns error for unknown peer', async (): Promise<void> => {

@@ -306,6 +306,9 @@ importers:
       '@adonisjs/fold':
         specifier: ^8.2.0
         version: 8.2.0
+      '@apollo/client':
+        specifier: ^3.11.8
+        version: 3.11.8(@types/react@18.2.73)(graphql@16.11.0)(react-dom@18.2.0)(react@18.2.0)
       '@apollo/server':
         specifier: ^4.11.2
         version: 4.11.2(graphql@16.11.0)
@@ -466,9 +469,6 @@ importers:
         specifier: ^9.0.1
         version: 9.0.1
     devDependencies:
-      '@apollo/client':
-        specifier: ^3.11.8
-        version: 3.11.8(@types/react@18.2.73)(graphql@16.11.0)(react-dom@18.2.0)(react@18.2.0)
       '@graphql-codegen/cli':
         specifier: 5.0.4
         version: 5.0.4(@babel/core@7.27.4)(@types/node@20.14.15)(graphql@16.11.0)
@@ -766,6 +766,12 @@ importers:
       test-lib:
         specifier: workspace:*
         version: link:../test-lib
+      uuid:
+        specifier: ^9.0.1
+        version: 9.0.1
+      yaml:
+        specifier: ^2.7.0
+        version: 2.7.0
 
   test/performance:
     dependencies:

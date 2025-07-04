@@ -1,0 +1,35 @@
+meta {
+  name: Get Tenants
+  type: graphql
+  seq: 57
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query GetTenants {
+    tenants {
+      edges {
+        cursor
+        node {
+          id
+          email
+          apiSecret
+          idpConsentUrl
+          idpSecret
+        }
+      }
+    }
+  }
+  
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
+}

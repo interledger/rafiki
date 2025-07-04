@@ -1,11 +1,10 @@
-import * as crypto from 'crypto'
 import { Factory } from 'rosie'
 import { Redis } from 'ioredis'
-import { StreamServer } from '@interledger/stream-receiver'
 import { RafikiServices } from '../rafiki'
 import { MockAccountingService } from '../test/mocks/accounting-service'
 import { TestLoggerFactory } from './test-logger'
 import { MockTelemetryService } from '../../../../../tests/telemetry'
+import { Config } from '../../../../../config/app'
 
 interface MockRafikiServices extends RafikiServices {
   accounting: MockAccountingService
@@ -19,6 +18,9 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
   //  return new InMemoryRouter(peers, { ilpAddress: 'test.rafiki' })
   //})
   .option('ilpAddress', 'test.rafiki')
+  .attr('config', () => {
+    return Config
+  })
   .attr('accounting', () => {
     return new MockAccountingService()
   })
@@ -42,6 +44,26 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
       }
     })
   )
+  .attr('tenantSettingService', () => ({
+    get: async () => {
+      return []
+    },
+    create: async () => {
+      throw new Error('unimplemented')
+    },
+    update: async () => {
+      throw new Error('unimplemented')
+    },
+    delete: async () => {
+      throw new Error('unimplemented')
+    },
+    getPage: async () => {
+      throw new Error('unimplemented')
+    },
+    getSettingsByPrefix: async () => {
+      throw new Error('unimplemented')
+    }
+  }))
   .attr('peers', ['accounting'], (accounting: MockAccountingService) => ({
     getByDestinationAddress: async (address: string) =>
       await accounting._getByDestinationAddress(address),
@@ -68,14 +90,5 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
         // lazyConnect so that tests that don't use Redis don't have to disconnect it when they're finished.
         lazyConnect: true,
         stringNumbers: true
-      })
-  )
-  .attr(
-    'streamServer',
-    ['ilpAddress'],
-    (ilpAddress: string) =>
-      new StreamServer({
-        serverAddress: ilpAddress,
-        serverSecret: crypto.randomBytes(32)
       })
   )
