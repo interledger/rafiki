@@ -218,7 +218,7 @@ export default function PaymentsPage() {
           </div>
         </div>
         <Table>
-          <Table.Head columns={['ID', 'Type', 'State', 'Date']} />
+          <Table.Head columns={['ID', 'Type', 'State', 'Date', 'Tenant']} />
           <Table.Body>
             {payments.edges.length ? (
               payments.edges.map((payment) => (
@@ -245,6 +245,26 @@ export default function PaymentsPage() {
                   </Table.Cell>
                   <Table.Cell>
                     {new Date(payment.node.createdAt).toLocaleString()}
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className='flex flex-col'>
+                      <div>
+                        <span className='mr-2'>
+                          {payment.node.tenant.publicName ? (
+                            <span className='font-medium'>
+                              {payment.node.tenant.publicName}
+                            </span>
+                          ) : (
+                            <span className='text-tealish/80'>
+                              No public name
+                            </span>
+                          )}
+                        </span>
+                        <div className='text-tealish/50 text-xs'>
+                          (ID: {payment.node.tenant.id})
+                        </div>
+                      </div>
+                    </div>
                   </Table.Cell>
                 </Table.Row>
               ))

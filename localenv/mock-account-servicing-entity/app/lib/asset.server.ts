@@ -29,8 +29,11 @@ export const listAssets = async (
               id
               scale
               withdrawalThreshold
-              tenantId
               createdAt
+              tenant {
+                id
+                publicName
+              }
             }
           }
           pageInfo {

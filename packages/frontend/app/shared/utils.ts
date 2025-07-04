@@ -119,3 +119,9 @@ export function removeTrailingAndLeadingSlash(str: string): string {
 
   return str
 }
+
+const UUID_LENGTH = 32
+export function truncateUuid(uuid: string): string {
+  if (uuid.length < UUID_LENGTH) return uuid
+  return uuid.substring(0, 18).concat('...')
+}

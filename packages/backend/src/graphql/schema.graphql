@@ -724,7 +724,8 @@ type Asset implements Model {
   ): FeesConnection
   "The date and time when the asset was created."
   createdAt: String!
-  tenantId: ID!
+  "The tenant that the asset belongs to."
+  tenant: Tenant
 }
 
 enum SortOrder {
@@ -785,7 +786,7 @@ type Peer implements Model {
   "Routes for the peer."
   routes: [String!]!
   "Unique identifier of the tenant associated with the peer."
-  tenantId: ID!
+  tenant: Tenant
 }
 
 input DeletePeerInput {
@@ -904,8 +905,8 @@ type WalletAddress implements Model {
   "Additional properties associated with the wallet address."
   additionalProperties: [AdditionalProperty]
 
-  "Tenant ID of the wallet address."
-  tenantId: String
+  "Tenant of the wallet address."
+  tenant: Tenant
 }
 
 type AdditionalProperty {
@@ -1140,6 +1141,8 @@ type Payment implements BasePayment & Model {
   metadata: JSONObject
   "The date and time that the payment was created."
   createdAt: String!
+  "The tenant associated with the payment."
+  tenant: Tenant
 }
 
 enum PaymentType {
@@ -1468,7 +1471,7 @@ type WebhookEvent implements Model {
   "Unique identifier of the webhook event."
   id: ID!
   "Tenant of the webhook event."
-  tenantId: ID!
+  tenant: Tenant
   "Type of webhook event."
   type: String!
   "Stringified JSON data for the webhook event."
