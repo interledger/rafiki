@@ -78,6 +78,10 @@ export const listWalletAddresses = async (
               publicName
               status
               address
+              tenant {
+                id
+                publicName
+              }
             }
           }
           pageInfo {

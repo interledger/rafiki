@@ -60,21 +60,23 @@ export default function WalletAddressesPage() {
           </div>
         </PageHeader>
         <Table>
-          <Table.Head columns={['Wallet address', 'Public name', 'Status']} />
+          <Table.Head
+            columns={['Wallet address', 'Public name', 'Status', 'Tenant']}
+          />
           <Table.Body>
             {walletAddresses.edges.length ? (
-              walletAddresses.edges.map((pp) => (
+              walletAddresses.edges.map((wa) => (
                 <Table.Row
-                  key={pp.node.id}
+                  key={wa.node.id}
                   className='cursor-pointer'
-                  onClick={() => navigate(`/wallet-addresses/${pp.node.id}`)}
+                  onClick={() => navigate(`/wallet-addresses/${wa.node.id}`)}
                 >
-                  <Table.Cell>{pp.node.address}</Table.Cell>
+                  <Table.Cell>{wa.node.address}</Table.Cell>
                   <Table.Cell>
                     <div className='flex flex-col'>
-                      {pp.node.publicName ? (
+                      {wa.node.publicName ? (
                         <span className='font-medium'>
-                          {pp.node.publicName}
+                          {wa.node.publicName}
                         </span>
                       ) : (
                         <span className='text-tealish/80'>No public name</span>
@@ -83,10 +85,30 @@ export default function WalletAddressesPage() {
                   </Table.Cell>
                   <Table.Cell>
                     <Badge
-                      color={badgeColorByWalletAddressStatus[pp.node.status]}
+                      color={badgeColorByWalletAddressStatus[wa.node.status]}
                     >
-                      {pp.node.status}
+                      {wa.node.status}
                     </Badge>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className='flex flex-col'>
+                      <div>
+                        <span className='mr-2'>
+                          {wa.node.tenant.publicName ? (
+                            <span className='font-medium'>
+                              {wa.node.tenant.publicName}
+                            </span>
+                          ) : (
+                            <span className='text-tealish/80'>
+                              No public name
+                            </span>
+                          )}
+                        </span>
+                        <div className='text-tealish/50 text-xs'>
+                          (ID: {wa.node.tenant.id})
+                        </div>
+                      </div>
+                    </div>
                   </Table.Cell>
                 </Table.Row>
               ))
