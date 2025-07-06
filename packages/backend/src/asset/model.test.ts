@@ -10,7 +10,6 @@ import { randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
 import { Asset, AssetEvent, AssetEventError, AssetEventType } from './model'
 import { isAssetError } from './errors'
-import { createTenant } from '../tests/tenant'
 
 describe('Models', (): void => {
   let deps: IocContract<AppServices>

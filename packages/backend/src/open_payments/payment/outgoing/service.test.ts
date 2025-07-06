@@ -60,7 +60,6 @@ import {
   createTenantSettings,
   exchangeRatesSetting
 } from '../../../tests/tenantSettings'
-import { createTenant } from '../../../tests/tenant'
 import { OpenPaymentsPaymentMethod } from '../../../payment-method/provider/service'
 import { IlpAddress } from 'ilp-packet'
 

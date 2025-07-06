@@ -1,7 +1,6 @@
 import { Knex } from 'knex'
 import { faker } from '@faker-js/faker'
 import { v4 as uuid } from 'uuid'
-import assert from 'assert'
 
 import { PeerService } from './service'
 import { Config } from '../../../config/app'
@@ -14,7 +13,6 @@ import { truncateTables } from '../../../tests/tableManager'
 import { Peer, PeerEvent, PeerEventError, PeerEventType } from './model'
 import { isPeerError } from './errors'
 import { Asset } from '../../../asset/model'
-import { createTenant } from '../../../tests/tenant'
 
 describe('Models', (): void => {
   let deps: IocContract<AppServices>
