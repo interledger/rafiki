@@ -199,7 +199,10 @@ export const Config = {
   localCacheDuration: envInt('LOCAL_CACHE_DURATION_MS', 15_000),
   operatorTenantId: envString('OPERATOR_TENANT_ID'),
   dbSchema: undefined as string | undefined,
-  sendAllWebhooksToOperator: envBool('SEND_ALL_WEBHOOKS_TO_OPERATOR', false)
+  sendTenantWebhooksToOperator: envBool(
+    'SEND_TENANT_WEBHOOKS_TO_OPERATOR',
+    false
+  )
 }
 
 function parseRedisTlsConfig(

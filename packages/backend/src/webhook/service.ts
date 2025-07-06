@@ -290,7 +290,7 @@ export function finalizeWebhookRecipients(
 
   if (
     !tenantIdSet.has(config.operatorTenantId) &&
-    config.sendAllWebhooksToOperator
+    config.sendTenantWebhooksToOperator
   ) {
     tenantIdSet.add(config.operatorTenantId)
   }

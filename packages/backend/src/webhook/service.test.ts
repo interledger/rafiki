@@ -624,7 +624,7 @@ describe('Webhook Service', (): void => {
       'adds operatorTenant as recipient if sendAllWebhooksToOperator is enabled',
       withConfigOverride(
         () => config,
-        { sendAllWebhooksToOperator: true },
+        { sendTenantWebhooksToOperator: true },
         async (): Promise<void> => {
           const tenantId = crypto.randomUUID()
           expect(finalizeWebhookRecipients([tenantId], Config)).toStrictEqual([
@@ -639,7 +639,7 @@ describe('Webhook Service', (): void => {
       'does not adds operatorTenant as recipient if sendAllWebhooksToOperator is disabled',
       withConfigOverride(
         () => config,
-        { sendAllWebhooksToOperator: false },
+        { sendTenantWebhooksToOperator: false },
         async (): Promise<void> => {
           const tenantId = crypto.randomUUID()
           expect(finalizeWebhookRecipients([tenantId], Config)).toStrictEqual([
