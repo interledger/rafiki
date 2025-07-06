@@ -57,7 +57,7 @@ export default function AssetsPage() {
         </PageHeader>
         <Table>
           <Table.Head
-            columns={['ID', 'Code', 'Scale', 'Withdrawal threshold']}
+            columns={['ID', 'Code', 'Scale', 'Withdrawal threshold', 'Tenant']}
           />
           <Table.Body>
             {assets.edges.length ? (
@@ -78,6 +78,26 @@ export default function AssetsPage() {
                         No withdrawal threshold
                       </span>
                     )}
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className='flex flex-col'>
+                      <div>
+                        <span className='mr-2'>
+                          {asset.node.tenant.publicName ? (
+                            <span className='font-medium'>
+                              {asset.node.tenant.publicName}
+                            </span>
+                          ) : (
+                            <span className='text-tealish/80'>
+                              No public name
+                            </span>
+                          )}
+                        </span>
+                        <div className='text-tealish/50 text-xs'>
+                          (ID: {asset.node.tenant.id})
+                        </div>
+                      </div>
+                    </div>
                   </Table.Cell>
                 </Table.Row>
               ))
