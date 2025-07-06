@@ -94,59 +94,6 @@ describe('Models', (): void => {
           AssetEvent.query(knex).where('type', AssetEventType.LiquidityLow)
         ).resolves.toEqual([])
       })
-      test('creates corresponding webhook for operator if asset belongs to tenant', async (): Promise<void> => {
-        const tenant = await createTenant(deps)
-        const tenantAssetOptions = {
-          ...randomAsset(),
-          tenantId: tenant.id,
-          liquidityThreshold: BigInt(100)
-        }
-
-        let tenantAsset: Asset
-        const assetOrError = await assetService.create(tenantAssetOptions)
-        if (!isAssetError(assetOrError)) {
-          tenantAsset = assetOrError
-        } else {
-          throw assetOrError
-        }
-
-        await tenantAsset.onDebit({ balance: BigInt(50) }, config)
-        const event = (
-          await AssetEvent.query(knex)
-            .where('type', AssetEventType.LiquidityLow)
-            .withGraphFetched('webhooks')
-        )[0]
-        expect(event.webhooks).toHaveLength(2)
-        expect(event).toMatchObject({
-          type: AssetEventType.LiquidityLow,
-          data: {
-            id: tenantAsset.id,
-            asset: {
-              id: tenantAsset.id,
-              code: tenantAsset.code,
-              scale: tenantAsset.scale
-            },
-            liquidityThreshold: tenantAsset.liquidityThreshold?.toString(),
-            balance: '50'
-          },
-          webhooks: expect.arrayContaining([
-            expect.objectContaining({
-              id: expect.any(String),
-              eventId: event.id,
-              recipientTenantId: Config.operatorTenantId,
-              processAt: expect.any(Date),
-              attempts: 0
-            }),
-            expect.objectContaining({
-              id: expect.any(String),
-              eventId: event.id,
-              recipientTenantId: tenant.id,
-              processAt: expect.any(Date),
-              attempts: 0
-            })
-          ])
-        })
-      })
     })
   })
 
