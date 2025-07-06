@@ -574,7 +574,7 @@ describe('Open Payments Wallet Address Service', (): void => {
 
     describe('non-existing wallet address', (): void => {
       test(
-        'creates wallet address not found event',
+        'creates wallet address not found event for operator when no matching tenant prefix',
         withConfigOverride(
           () => config,
           { walletAddressLookupTimeoutMs: 0 },
@@ -637,17 +637,12 @@ describe('Open Payments Wallet Address Service', (): void => {
               .withGraphFetched('webhooks')
 
             expect(walletAddressNotFoundEvents).toHaveLength(1)
-            expect(walletAddressNotFoundEvents[0].webhooks).toHaveLength(2)
+            expect(walletAddressNotFoundEvents[0].webhooks).toHaveLength(1)
             expect(walletAddressNotFoundEvents[0]).toMatchObject({
               data: { walletAddressUrl },
               webhooks: expect.arrayContaining([
                 expect.objectContaining({
                   recipientTenantId: tenant.id,
-                  eventId: walletAddressNotFoundEvents[0].id,
-                  processAt: expect.any(Date)
-                }),
-                expect.objectContaining({
-                  recipientTenantId: config.operatorTenantId,
                   eventId: walletAddressNotFoundEvents[0].id,
                   processAt: expect.any(Date)
                 })
@@ -656,6 +651,7 @@ describe('Open Payments Wallet Address Service', (): void => {
           }
         )
       )
+
       test(
         'polls for wallet address',
         withConfigOverride(
@@ -837,50 +833,6 @@ describe('Open Payments Wallet Address Service', (): void => {
         tenantId: Config.operatorTenantId,
         createLiquidityAccount: true
       })
-    })
-
-    test('creates corresponding operator webhook if withdrawal event is for tenant', async (): Promise<void> => {
-      const tenant = await createTenant(deps)
-      const walletAddress = await createWalletAddress(deps, {
-        tenantId: tenant.id,
-        createLiquidityAccount: true
-      })
-
-      accountingService.createDeposit({
-        id: uuid(),
-        account: walletAddress,
-        amount: BigInt(10)
-      })
-
-      await walletAddress.$query(knex).patch({
-        processAt: new Date(),
-        totalEventsAmount: BigInt(0)
-      })
-      await expect(walletAddressService.processNext()).resolves.toBe(
-        walletAddress.id
-      )
-
-      const events = await WalletAddressEvent.query(knex)
-        .where({
-          type: WalletAddressEventType.WalletAddressWebMonetization,
-          withdrawalAccountId: walletAddress.id,
-          withdrawalAssetId: walletAddress.assetId,
-          withdrawalAmount: BigInt(10)
-        })
-        .withGraphFetched('webhooks')
-      expect(events).toHaveLength(1)
-      expect(events[0].webhooks).toEqual([
-        expect.objectContaining({
-          recipientTenantId: walletAddress.tenantId,
-          eventId: events[0].id,
-          processAt: expect.any(Date)
-        }),
-        expect.objectContaining({
-          recipientTenantId: config.operatorTenantId,
-          eventId: events[0].id,
-          processAt: expect.any(Date)
-        })
-      ])
     })
 
     test.each`

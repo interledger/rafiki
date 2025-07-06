@@ -281,3 +281,21 @@ async function getWebhookEventsPage(
 
   return await query.getPage(pagination, sortOrder)
 }
+
+export function finalizeWebhookRecipients(
+  tenantIds: string[],
+  config: IAppConfig
+): Pick<Webhook, 'recipientTenantId'>[] {
+  const tenantIdSet = new Set(tenantIds)
+
+  if (
+    !tenantIdSet.has(config.operatorTenantId) &&
+    config.sendTenantWebhooksToOperator
+  ) {
+    tenantIdSet.add(config.operatorTenantId)
+  }
+
+  return [...tenantIdSet.values()].map((tenantId) => ({
+    recipientTenantId: tenantId
+  }))
+}

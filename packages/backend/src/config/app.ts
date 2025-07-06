@@ -198,7 +198,11 @@ export const Config = {
   walletAddressRedirectHtmlPage: process.env.WALLET_ADDRESS_REDIRECT_HTML_PAGE,
   localCacheDuration: envInt('LOCAL_CACHE_DURATION_MS', 15_000),
   operatorTenantId: envString('OPERATOR_TENANT_ID'),
-  dbSchema: undefined as string | undefined
+  dbSchema: undefined as string | undefined,
+  sendTenantWebhooksToOperator: envBool(
+    'SEND_TENANT_WEBHOOKS_TO_OPERATOR',
+    false
+  )
 }
 
 function parseRedisTlsConfig(
