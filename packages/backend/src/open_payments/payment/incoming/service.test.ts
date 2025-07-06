@@ -26,7 +26,7 @@ import { Amount } from '../../amount'
 import { getTests } from '../../wallet_address/model.test'
 import { WalletAddress } from '../../wallet_address/model'
 import { withConfigOverride } from '../../../tests/helpers'
-import { sleep } from '../../../shared/utils'
+import { poll } from '../../../shared/utils'
 import { createTenant } from '../../../tests/tenant'
 
 describe('Incoming Payment Service', (): void => {
@@ -85,13 +85,18 @@ describe('Incoming Payment Service', (): void => {
       approvedAt?: Date
       cancelledAt?: Date
     }) {
-      await sleep(50)
-      const incomingPaymentEvent = await IncomingPaymentEvent.query(
-        knex
-      ).findOne({
-        type: IncomingPaymentEventType.IncomingPaymentCreated
+      const incomingPaymentEvent = await poll({
+        request: async () =>
+          IncomingPaymentEvent.query(knex).findOne({
+            type: IncomingPaymentEventType.IncomingPaymentCreated
+          }),
+        pollingFrequencyMs: 10,
+        timeoutMs:
+          actionableIncomingPaymentConfigOverride()
+            .incomingPaymentCreatedPollTimeout
       })
-      assert.ok(!!incomingPaymentEvent)
+
+      assert.ok(incomingPaymentEvent)
       await IncomingPayment.query(knex)
         .findById(incomingPaymentEvent.incomingPaymentId as string)
         .patch(options)
