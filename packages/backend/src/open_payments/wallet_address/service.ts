@@ -386,6 +386,10 @@ async function getOrPollByUrl(
     await deps.tenantSettingService.getSettingsByPrefix(url)
   ).map((tenantSetting) => tenantSetting.tenantId)
 
+  if (!webhookRecipients.length) {
+    webhookRecipients.push(deps.config.operatorTenantId)
+  }
+
   await WalletAddressEvent.query(deps.knex).insertGraph({
     type: WalletAddressEventType.WalletAddressNotFound,
     data: {

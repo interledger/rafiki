@@ -574,7 +574,7 @@ describe('Open Payments Wallet Address Service', (): void => {
 
     describe('non-existing wallet address', (): void => {
       test(
-        'creates wallet address not found event',
+        'creates wallet address not found event for operator when no matching tenant prefix',
         withConfigOverride(
           () => config,
           { walletAddressLookupTimeoutMs: 0 },
@@ -637,17 +637,12 @@ describe('Open Payments Wallet Address Service', (): void => {
               .withGraphFetched('webhooks')
 
             expect(walletAddressNotFoundEvents).toHaveLength(1)
-            expect(walletAddressNotFoundEvents[0].webhooks).toHaveLength(2)
+            expect(walletAddressNotFoundEvents[0].webhooks).toHaveLength(1)
             expect(walletAddressNotFoundEvents[0]).toMatchObject({
               data: { walletAddressUrl },
               webhooks: expect.arrayContaining([
                 expect.objectContaining({
                   recipientTenantId: tenant.id,
-                  eventId: walletAddressNotFoundEvents[0].id,
-                  processAt: expect.any(Date)
-                }),
-                expect.objectContaining({
-                  recipientTenantId: config.operatorTenantId,
                   eventId: walletAddressNotFoundEvents[0].id,
                   processAt: expect.any(Date)
                 })
@@ -656,6 +651,7 @@ describe('Open Payments Wallet Address Service', (): void => {
           }
         )
       )
+
       test(
         'polls for wallet address',
         withConfigOverride(
