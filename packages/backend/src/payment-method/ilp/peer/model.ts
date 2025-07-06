@@ -7,6 +7,7 @@ import { BaseModel } from '../../../shared/baseModel'
 import { WebhookEvent } from '../../../webhook/event/model'
 import { join } from 'path'
 import { IAppConfig } from '../../../config/app'
+import { finalizeWebhookRecipients } from '../../../webhook/service'
 
 export class Peer
   extends BaseModel
@@ -62,10 +63,6 @@ export class Peer
   ): Promise<Peer> {
     if (this.liquidityThreshold !== null) {
       if (balance <= this.liquidityThreshold) {
-        const webhooks = [{ recipientTenantId: this.tenantId }]
-        if (this.tenantId !== config.operatorTenantId) {
-          webhooks.push({ recipientTenantId: config.operatorTenantId })
-        }
         await PeerEvent.query().insertGraph({
           peerId: this.id,
           type: PeerEventType.LiquidityLow,
@@ -80,7 +77,7 @@ export class Peer
             balance
           },
           tenantId: this.tenantId,
-          webhooks
+          webhooks: finalizeWebhookRecipients([this.tenantId], config)
         })
       }
     }
