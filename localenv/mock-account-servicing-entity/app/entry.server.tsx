@@ -63,7 +63,7 @@ if (!global.__seeded) {
         url.search = params.toString()
 
         console.log(
-          `Local Dev Setup:\nUse this URL to access the frontend with operator tenant credentials:\n${url}\n`
+          `Local Dev Setup:\nUse this URL to access the frontend with ${process.env.IS_TENANT ? '' : 'operator '} tenant credentials:\n${url}\n`
         )
       }, 2000)
     })
