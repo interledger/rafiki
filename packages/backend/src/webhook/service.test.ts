@@ -650,10 +650,19 @@ describe('Webhook Service', (): void => {
     )
 
     test('prevents adding duplicate recipients', async (): Promise<void> => {
-      const tenantId = crypto.randomUUID()
+      const tenantId1 = crypto.randomUUID()
+      const tenantId2 = crypto.randomUUID()
+      const tenantId3 = crypto.randomUUID()
       expect(
-        finalizeWebhookRecipients([tenantId, tenantId, tenantId], Config)
-      ).toStrictEqual([{ recipientTenantId: tenantId }])
+        finalizeWebhookRecipients(
+          [tenantId1, tenantId1, tenantId2, tenantId2, tenantId3],
+          Config
+        )
+      ).toStrictEqual([
+        { recipientTenantId: tenantId1 },
+        { recipientTenantId: tenantId2 },
+        { recipientTenantId: tenantId3 }
+      ])
     })
   })
 })
