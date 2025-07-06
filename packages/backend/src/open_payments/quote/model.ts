@@ -7,6 +7,7 @@ import {
 import { Asset } from '../../asset/model'
 import { Quote as OpenPaymentsQuote } from '@interledger/open-payments'
 import { Fee } from '../../fee/model'
+import { Tenant } from '../../tenants/model'
 
 export class Quote extends WalletAddressSubresource {
   public static readonly tableName = 'quotes'
@@ -26,6 +27,8 @@ export class Quote extends WalletAddressSubresource {
 
   public debitAmountMinusFees?: bigint
 
+  public tenantId!: string
+
   static get relationMappings() {
     return {
       ...super.relationMappings,
@@ -44,6 +47,14 @@ export class Quote extends WalletAddressSubresource {
           from: 'quotes.feeId',
           to: 'fees.id'
         }
+      },
+      tenant: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: Tenant,
+        join: {
+          from: 'quotes.tenantId',
+          to: 'tenants.id'
+        }
       }
     }
   }
@@ -56,7 +67,7 @@ export class Quote extends WalletAddressSubresource {
 
   public getUrl(resourceServerUrl: string): string {
     resourceServerUrl = resourceServerUrl.replace(/\/+$/, '')
-    return `${resourceServerUrl}${Quote.urlPath}/${this.id}`
+    return `${resourceServerUrl}/${this.tenantId}${Quote.urlPath}/${this.id}`
   }
 
   public get debitAmount(): Amount {
@@ -126,7 +137,7 @@ export class Quote extends WalletAddressSubresource {
   ): OpenPaymentsQuote {
     return {
       id: this.getUrl(resourceServerUrl),
-      walletAddress: walletAddress.url,
+      walletAddress: walletAddress.address,
       receiveAmount: serializeAmount(this.receiveAmount),
       debitAmount: serializeAmount(this.debitAmount),
       receiver: this.receiver,

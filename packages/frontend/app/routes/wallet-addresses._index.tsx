@@ -20,7 +20,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     throw json(null, { status: 400, statusText: 'Invalid pagination.' })
   }
 
-  const walletAddresses = await listWalletAddresses({
+  const walletAddresses = await listWalletAddresses(request, {
     ...pagination.data
   })
 
@@ -69,7 +69,7 @@ export default function WalletAddressesPage() {
                   className='cursor-pointer'
                   onClick={() => navigate(`/wallet-addresses/${pp.node.id}`)}
                 >
-                  <Table.Cell>{pp.node.url}</Table.Cell>
+                  <Table.Cell>{pp.node.address}</Table.Cell>
                   <Table.Cell>
                     <div className='flex flex-col'>
                       {pp.node.publicName ? (

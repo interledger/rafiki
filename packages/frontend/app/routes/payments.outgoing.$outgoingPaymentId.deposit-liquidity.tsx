@@ -45,7 +45,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     })
   }
 
-  const response = await depositOutgoingPaymentLiquidity({
+  const response = await depositOutgoingPaymentLiquidity(request, {
     outgoingPaymentId,
     idempotencyKey: v4()
   })

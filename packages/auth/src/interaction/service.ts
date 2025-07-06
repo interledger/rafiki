@@ -103,11 +103,12 @@ async function getBySession(
   id: string,
   nonce: string
 ): Promise<InteractionWithGrant | undefined> {
-  const interaction = await Interaction.query()
+  const queryBuilder = Interaction.query()
     .findById(id)
     .where('nonce', nonce)
     .withGraphFetched('grant')
 
+  const interaction = await queryBuilder
   if (!interaction || !isInteractionWithGrant(interaction)) {
     return undefined
   }

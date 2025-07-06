@@ -16,6 +16,7 @@ const CLIENT = faker.internet.url({ appendSlash: false })
 
 export async function createGrant(
   deps: IocContract<AppServices>,
+  tenantId: string,
   options?: { identifier?: string }
 ): Promise<Grant> {
   const grantService = await deps.use('grantService')
@@ -36,34 +37,40 @@ export async function createGrant(
     }
   }
 
-  const grantOrError = await grantService.create({
-    ...BASE_GRANT_REQUEST,
-    access_token: {
-      access: [
-        {
-          ...BASE_GRANT_ACCESS,
-          type: AccessType.IncomingPayment
-        }
-      ]
-    }
-  })
+  const grantOrError = await grantService.create(
+    {
+      ...BASE_GRANT_REQUEST,
+      access_token: {
+        access: [
+          {
+            ...BASE_GRANT_ACCESS,
+            type: AccessType.IncomingPayment
+          }
+        ]
+      }
+    },
+    tenantId
+  )
 
   return grantOrError
 }
 
 export interface GenerateBaseGrantOptions {
+  tenantId: string
   state?: GrantState
   finalizationReason?: GrantFinalization
   noFinishMethod?: boolean
 }
 
-export const generateBaseGrant = (options: GenerateBaseGrantOptions = {}) => {
+export const generateBaseGrant = (options: GenerateBaseGrantOptions) => {
   const {
+    tenantId,
     state = GrantState.Processing,
     finalizationReason = undefined,
     noFinishMethod = false
   } = options
   return {
+    tenantId,
     state,
     finalizationReason,
     startMethod: [StartMethod.Redirect],

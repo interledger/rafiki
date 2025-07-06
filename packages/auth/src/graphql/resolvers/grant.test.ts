@@ -20,6 +20,8 @@ import { Grant, Grant as GrantModel } from '../../grant/model'
 import { getPageTests } from './page.test'
 import { createGrant } from '../../tests/grant'
 import { GraphQLErrorCode } from '../errors'
+import { Tenant } from '../../tenant/model'
+import { generateTenant } from '../../tests/tenant'
 
 const responseHandler = (query: ApolloQueryResult<Query>): GrantsConnection => {
   if (query.data) {
@@ -32,10 +34,15 @@ const responseHandler = (query: ApolloQueryResult<Query>): GrantsConnection => {
 describe('Grant Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
+  let tenant: Tenant
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
+  })
+
+  beforeEach(async (): Promise<void> => {
+    tenant = await Tenant.query().insertAndFetch(generateTenant())
   })
 
   afterEach(async (): Promise<void> => {
@@ -50,7 +57,7 @@ describe('Grant Resolvers', (): void => {
   describe('Grants Queries', (): void => {
     getPageTests({
       getClient: () => appContainer.apolloClient,
-      createModel: () => createGrant(deps) as Promise<GrantModel>,
+      createModel: () => createGrant(deps, tenant.id) as Promise<GrantModel>,
       pagedQuery: 'grants'
     })
 
@@ -58,7 +65,7 @@ describe('Grant Resolvers', (): void => {
       const grants: GrantModel[] = []
 
       for (let i = 0; i < 2; i++) {
-        grants[1 - i] = await createGrant(deps)
+        grants[1 - i] = await createGrant(deps, tenant.id)
       }
 
       const query = await appContainer.apolloClient
@@ -106,7 +113,7 @@ describe('Grant Resolvers', (): void => {
           { identifier: 'https://abc.com/xyz' }
         ]
         for (const { identifier } of grantData) {
-          const grant = await createGrant(deps, { identifier })
+          const grant = await createGrant(deps, tenant.id, { identifier })
           grants.push(grant)
         }
       })
@@ -170,7 +177,7 @@ describe('Grant Resolvers', (): void => {
           { identifier: 'https://abc.com/xyz' }
         ]
         for (const { identifier } of grantData) {
-          const grant = await createGrant(deps, { identifier })
+          const grant = await createGrant(deps, tenant.id, { identifier })
           grants.push(grant)
         }
 
@@ -231,7 +238,7 @@ describe('Grant Resolvers', (): void => {
           }
         ]
         for (const patch of grantPatches) {
-          const grant = await createGrant(deps)
+          const grant = await createGrant(deps, tenant.id)
           await grant.$query().patch(patch)
         }
 
@@ -280,7 +287,7 @@ describe('Grant Resolvers', (): void => {
           { state: GrantState.Approved }
         ]
         for (const patch of grantPatches) {
-          const grant = await createGrant(deps)
+          const grant = await createGrant(deps, tenant.id)
           await grant.$query().patch(patch)
         }
 
@@ -339,7 +346,7 @@ describe('Grant Resolvers', (): void => {
           }
         ]
         for (const patch of grantPatches) {
-          const grant = await createGrant(deps)
+          const grant = await createGrant(deps, tenant.id)
           await grant.$query().patch(patch)
         }
 
@@ -402,7 +409,7 @@ describe('Grant Resolvers', (): void => {
           }
         ]
         for (const patch of grantPatches) {
-          const grant = await createGrant(deps)
+          const grant = await createGrant(deps, tenant.id)
           await grant.$query().patch(patch)
         }
 
@@ -454,7 +461,7 @@ describe('Grant Resolvers', (): void => {
   describe('Grant By id Queries', (): void => {
     let grant: GrantModel
     beforeEach(async (): Promise<void> => {
-      grant = await createGrant(deps)
+      grant = await createGrant(deps, tenant.id)
     })
 
     test('Can get a grant', async (): Promise<void> => {
@@ -528,7 +535,7 @@ describe('Grant Resolvers', (): void => {
   describe('Revoke grant', (): void => {
     let grant: GrantModel
     beforeEach(async (): Promise<void> => {
-      grant = await createGrant(deps)
+      grant = await createGrant(deps, tenant.id)
     })
 
     test('Can revoke a grant', async (): Promise<void> => {

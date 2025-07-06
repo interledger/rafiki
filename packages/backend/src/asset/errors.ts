@@ -3,7 +3,8 @@ import { GraphQLErrorCode } from '../graphql/errors'
 export enum AssetError {
   DuplicateAsset = 'DuplicateAsset',
   UnknownAsset = 'UnknownAsset',
-  CannotDeleteInUseAsset = 'CannotDeleteInUseAsset'
+  CannotDeleteInUseAsset = 'CannotDeleteInUseAsset',
+  NoRatesForAsset = 'NoRatesForAsset'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -15,7 +16,8 @@ export const errorToCode: {
 } = {
   [AssetError.UnknownAsset]: GraphQLErrorCode.NotFound,
   [AssetError.DuplicateAsset]: GraphQLErrorCode.Duplicate,
-  [AssetError.CannotDeleteInUseAsset]: GraphQLErrorCode.Forbidden
+  [AssetError.CannotDeleteInUseAsset]: GraphQLErrorCode.Forbidden,
+  [AssetError.NoRatesForAsset]: GraphQLErrorCode.Forbidden
 }
 
 export const errorToMessage: {
@@ -23,5 +25,6 @@ export const errorToMessage: {
 } = {
   [AssetError.UnknownAsset]: 'Asset not found',
   [AssetError.DuplicateAsset]: 'Asset already exists',
-  [AssetError.CannotDeleteInUseAsset]: 'Cannot delete! Asset in use.'
+  [AssetError.CannotDeleteInUseAsset]: 'Cannot delete! Asset in use.',
+  [AssetError.NoRatesForAsset]: 'Cannot create! Exchange rates URL not defined.'
 }

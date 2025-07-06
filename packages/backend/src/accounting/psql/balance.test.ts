@@ -4,7 +4,7 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { Config } from '../../config/app'
 import { initIocContainer } from '../../'
 import { Asset } from '../../asset/model'
-import { randomAsset } from '../../tests/asset'
+import { createAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
 import { LedgerAccount } from './ledger-account/model'
 import { createLedgerAccount } from '../../tests/ledgerAccount'
@@ -12,17 +12,21 @@ import { getAccountBalances } from './balance'
 import { ServiceDependencies } from './service'
 import { LedgerTransferState } from '../service'
 import { createLedgerTransfer } from '../../tests/ledgerTransfer'
+import { IocContract } from '@adonisjs/fold'
+import { AppServices } from '../../app'
 
 describe('Balances', (): void => {
+  let deps: IocContract<AppServices>
   let serviceDeps: ServiceDependencies
   let appContainer: TestContainer
   let knex: Knex
   let asset: Asset
 
   beforeAll(async (): Promise<void> => {
-    const deps = initIocContainer({ ...Config, useTigerBeetle: false })
+    deps = initIocContainer({ ...Config, useTigerBeetle: false })
     appContainer = await createTestApp(deps)
     serviceDeps = {
+      config: await deps.use('config'),
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       telemetry: await deps.use('telemetry')
@@ -31,12 +35,12 @@ describe('Balances', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    asset = await Asset.query().insertAndFetch(randomAsset())
+    asset = await createAsset(deps)
   })
 
   afterEach(async (): Promise<void> => {
     jest.useRealTimers()
-    await truncateTables(knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -48,7 +52,7 @@ describe('Balances', (): void => {
     let peerAccount: LedgerAccount
 
     beforeEach(async (): Promise<void> => {
-      asset = await Asset.query(knex).insertAndFetch(randomAsset())
+      asset = await createAsset(deps)
       ;[account, peerAccount] = await Promise.all([
         createLedgerAccount({ ledger: asset.ledger }, knex),
         createLedgerAccount({ ledger: asset.ledger }, knex)

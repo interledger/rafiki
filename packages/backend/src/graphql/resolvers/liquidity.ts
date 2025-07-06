@@ -12,7 +12,7 @@ import {
   OutgoingPaymentResolvers,
   PaymentResolvers
 } from '../generated/graphql'
-import { ApolloContext } from '../../app'
+import { ApolloContext, TenantedApolloContext } from '../../app'
 import {
   fundingErrorToMessage,
   fundingErrorToCode,
@@ -83,7 +83,7 @@ const getPeerOrAssetLiquidity = async (
   return liquidity
 }
 
-export const depositPeerLiquidity: MutationResolvers<ApolloContext>['depositPeerLiquidity'] =
+export const depositPeerLiquidity: MutationResolvers<TenantedApolloContext>['depositPeerLiquidity'] =
   async (
     parent,
     args,
@@ -100,7 +100,8 @@ export const depositPeerLiquidity: MutationResolvers<ApolloContext>['depositPeer
     const peerOrError = await peerService.depositLiquidity({
       transferId: args.input.id,
       peerId: args.input.peerId,
-      amount: args.input.amount
+      amount: args.input.amount,
+      tenantId: ctx.isOperator ? undefined : ctx.tenant.id
     })
 
     if (peerOrError === PeerError.UnknownPeer) {
@@ -162,7 +163,7 @@ export const depositAssetLiquidity: MutationResolvers<ApolloContext>['depositAss
     }
   }
 
-export const createPeerLiquidityWithdrawal: MutationResolvers<ApolloContext>['createPeerLiquidityWithdrawal'] =
+export const createPeerLiquidityWithdrawal: MutationResolvers<TenantedApolloContext>['createPeerLiquidityWithdrawal'] =
   async (
     parent,
     args,
@@ -177,7 +178,10 @@ export const createPeerLiquidityWithdrawal: MutationResolvers<ApolloContext>['cr
       })
     }
     const peerService = await ctx.container.use('peerService')
-    const peer = await peerService.get(peerId)
+    const peer = await peerService.get(
+      peerId,
+      ctx.isOperator ? undefined : ctx.tenant.id
+    )
     if (!peer) {
       throw new GraphQLError(errorToMessage[LiquidityError.UnknownPeer], {
         extensions: {
@@ -350,7 +354,7 @@ export type DepositEventType = OutgoingPaymentDepositType
 const isDepositEventType = (o: any): o is DepositEventType =>
   Object.values(DepositEventType).includes(o)
 
-export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEventLiquidity'] =
+export const depositEventLiquidity: MutationResolvers<TenantedApolloContext>['depositEventLiquidity'] =
   async (
     parent,
     args,
@@ -377,6 +381,7 @@ export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEve
     )
     const paymentOrErr = await outgoingPaymentService.fund({
       id: event.data.id,
+      tenantId: ctx.tenant.id,
       amount: BigInt(event.data.debitAmount.value),
       transferId: event.id
     })
@@ -434,7 +439,7 @@ export const withdrawEventLiquidity: MutationResolvers<ApolloContext>['withdrawE
     }
   }
 
-export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['depositOutgoingPaymentLiquidity'] =
+export const depositOutgoingPaymentLiquidity: MutationResolvers<TenantedApolloContext>['depositOutgoingPaymentLiquidity'] =
   async (
     parent,
     args,
@@ -478,6 +483,7 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['
       })
       const paymentOrErr = await outgoingPaymentService.fund({
         id: outgoingPaymentId,
+        tenantId: ctx.tenant.id,
         amount: BigInt(event.data.debitAmount.value),
         transferId: event.id
       })

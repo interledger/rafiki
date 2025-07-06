@@ -59,19 +59,27 @@ async function getQuote(
   deps: ServiceDependencies,
   options: GetOptions
 ): Promise<Quote | undefined> {
-  const quote = await Quote.query(deps.knex).get(options)
+  const quote = await Quote.query(deps.knex)
+    .modify((query) => {
+      if (options.tenantId) {
+        query.where({ tenantId: options.tenantId })
+      }
+    })
+    .get(options)
   if (quote) {
     const asset = await deps.assetService.get(quote.assetId)
     if (asset) quote.asset = asset
 
     quote.walletAddress = await deps.walletAddressService.get(
-      quote.walletAddressId
+      quote.walletAddressId,
+      quote.tenantId
     )
   }
   return quote
 }
 
 interface QuoteOptionsBase {
+  tenantId: string
   walletAddressId: string
   receiver: string
   method: 'ilp'
@@ -94,6 +102,7 @@ export type CreateQuoteOptions =
 
 interface UnfinalizedQuote {
   id: string
+  tenantId: string
   walletAddressId: string
   assetId: string
   receiver: string
@@ -118,7 +127,8 @@ async function createQuote(
     return new QuoteError(QuoteErrorCode.InvalidAmount)
   }
   const walletAddress = await deps.walletAddressService.get(
-    options.walletAddressId
+    options.walletAddressId,
+    options.tenantId
   )
   if (!walletAddress) {
     stopTimer()
@@ -247,6 +257,7 @@ async function createQuote(
 
     const unfinalizedQuote: UnfinalizedQuote = {
       id: quoteId,
+      tenantId: options.tenantId,
       walletAddressId: options.walletAddressId,
       assetId: walletAddress.assetId,
       receiver: options.receiver,
@@ -498,13 +509,20 @@ async function getWalletAddressPage(
   deps: ServiceDependencies,
   options: ListOptions
 ): Promise<Quote[]> {
-  const quotes = await Quote.query(deps.knex).list(options)
+  const quotes = await Quote.query(deps.knex)
+    .modify((query) => {
+      if (options.tenantId) {
+        query.where({ tenantId: options.tenantId })
+      }
+    })
+    .list(options)
   for (const quote of quotes) {
     const asset = await deps.assetService.get(quote.assetId)
     if (asset) quote.asset = asset
 
     quote.walletAddress = await deps.walletAddressService.get(
-      quote.walletAddressId
+      quote.walletAddressId,
+      quote.tenantId
     )
   }
   return quotes
