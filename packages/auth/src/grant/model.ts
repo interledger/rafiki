@@ -41,6 +41,7 @@ export class Grant extends BaseModel {
     accessTokens: {
       relation: Model.HasManyRelation,
       modelClass: join(__dirname, '../accessToken/model'),
+      modelPaths: '',
       join: {
         from: 'grants.id',
         to: 'accessTokens.grantId'

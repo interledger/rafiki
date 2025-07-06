@@ -18,7 +18,7 @@ export interface AccessTokenService {
   ): Promise<{ grant: Grant; access: Access[] } | undefined>
   create(grantId: string, trx?: TransactionOrKnex): Promise<AccessToken>
   revoke(id: string, trx?: TransactionOrKnex): Promise<AccessToken | undefined>
-  revokeByGrantId(grantId: string, trx?: TransactionOrKnex): Promise<number>
+  revokeByGrantId(grantId: string, trx?: TransactionOrKnex): Promise<Date>
   rotate(id: string, trx?: TransactionOrKnex): Promise<AccessToken | undefined>
 }
 
@@ -126,12 +126,15 @@ async function revokeByGrantId(
   deps: ServiceDependencies,
   grantId: string,
   trx?: TransactionOrKnex
-): Promise<number> {
-  return await AccessToken.query(trx || deps.knex)
+): Promise<Date> {
+  const revokedAt = new Date()
+  await AccessToken.query(trx || deps.knex)
     .patch({
-      revokedAt: new Date()
+      revokedAt
     })
     .where('grantId', grantId)
+
+  return revokedAt
 }
 async function createAccessToken(
   deps: ServiceDependencies,

@@ -24,16 +24,18 @@ import { AccessToken } from '../accessToken/model'
 import { Interaction, InteractionState } from '../interaction/model'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { getPageTests } from '../shared/baseModel.test'
+import { WebhookEvent } from '../webhook/model'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let grantService: GrantService
-  let trx: Knex.Transaction
+  let knex: Knex
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
+    knex = appContainer.knex
 
     grantService = await deps.use('grantService')
   })
@@ -140,7 +142,7 @@ describe('Grant Service', (): void => {
         })
 
         await expect(
-          Access.query(trx)
+          Access.query(knex)
             .where({
               grantId: grant.id
             })
@@ -179,7 +181,7 @@ describe('Grant Service', (): void => {
           })
 
           await expect(
-            Access.query(trx)
+            Access.query(knex)
               .where({
                 grantId: grant.id
               })
@@ -351,7 +353,7 @@ describe('Grant Service', (): void => {
       test('Can revoke a grant', async (): Promise<void> => {
         await expect(grantService.revokeGrant(grant.id)).resolves.toEqual(true)
 
-        const revokedGrant = await Grant.query(trx).findById(grant.id)
+        const revokedGrant = await Grant.query(knex).findById(grant.id)
         expect(revokedGrant?.state).toEqual(GrantState.Finalized)
         expect(revokedGrant?.finalizationReason).toEqual(
           GrantFinalization.Revoked
@@ -368,10 +370,50 @@ describe('Grant Service', (): void => {
             updatedAt: expect.any(Date)
           }
         ])
+        expect(
+          WebhookEvent.query().where({ grantId: grant.id })
+        ).resolves.toHaveLength(1)
       })
 
       test('Can "revoke" unknown grant', async (): Promise<void> => {
         await expect(grantService.revokeGrant(v4())).resolves.toEqual(false)
+      })
+
+      describe('revoke with webhook disabled', (): void => {
+        beforeAll(async (): Promise<void> => {
+          Config.webhookEnabled = false
+        })
+
+        afterAll(async (): Promise<void> => {
+          Config.webhookEnabled = true
+        })
+
+        test('Can revoke a grant and not save webhook event', async (): Promise<void> => {
+          await expect(grantService.revokeGrant(grant.id)).resolves.toEqual(
+            true
+          )
+
+          const revokedGrant = await Grant.query(knex).findById(grant.id)
+          expect(revokedGrant?.state).toEqual(GrantState.Finalized)
+          expect(revokedGrant?.finalizationReason).toEqual(
+            GrantFinalization.Revoked
+          )
+          expect(Access.query().where({ grantId: grant.id })).resolves.toEqual([
+            { ...access, limits: null }
+          ])
+          expect(
+            AccessToken.query().where({ grantId: grant.id })
+          ).resolves.toEqual([
+            {
+              ...accessToken,
+              revokedAt: expect.any(Date),
+              updatedAt: expect.any(Date)
+            }
+          ])
+          expect(
+            WebhookEvent.query().where({ grantId: grant.id })
+          ).resolves.toHaveLength(0)
+        })
       })
     })
 
@@ -394,10 +436,10 @@ describe('Grant Service', (): void => {
         const timeoutMs = 50
 
         const lock = async (): Promise<void> => {
-          return await Grant.transaction(async (trx) => {
-            await grantService.lock(grant.id, trx, timeoutMs)
+          return await Grant.transaction(async (knex) => {
+            await grantService.lock(grant.id, knex, timeoutMs)
             await new Promise((resolve) => setTimeout(resolve, timeoutMs + 10))
-            await Grant.query(trx).findById(grant.id)
+            await Grant.query(knex).findById(grant.id)
           })
         }
         await expect(Promise.all([lock(), lock()])).rejects.toThrowError(
