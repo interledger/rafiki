@@ -27,7 +27,7 @@ export const Config = {
   enableManualMigrations: envBool('ENABLE_MANUAL_MIGRATIONS', false),
   trustProxy: envBool('TRUST_PROXY', false),
   env: envString('NODE_ENV', 'development'),
-  cardServicePort: envInt('cardServicePort', 3006)
+  cardServicePort: envInt('CARD_SERVICE_PORT', 3007)
 }
 
 export type IAppConfig = typeof Config

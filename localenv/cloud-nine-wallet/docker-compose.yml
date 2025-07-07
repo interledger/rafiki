@@ -1,5 +1,37 @@
 name: c9
 services:
+  cloud-nine-wallet-card-service:
+    hostname: cloud-nine-wallet-card-service
+    image: rafiki-card-service
+    build:
+      context: ../..
+      dockerfile: ./packages/card-service/Dockerfile.dev
+    restart: always
+    networks:
+      - rafiki
+    ports:
+      - '3007:3007'
+    volumes:
+      - type: bind
+        source: ../../packages/card-service/src
+        target: /home/rafiki/packages/card-service/src
+        read_only: true
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      INSTANCE_NAME: CLOUD-NINE
+      TRUST_PROXY: ${TRUST_PROXY}
+      LOG_LEVEL: debug
+      CARD_SERVICE_PORT: 3007
+      DATABASE_URL: postgresql://cloud_nine_wallet_card_service:cloud_nine_wallet_card_service@shared-database/cloud_nine_wallet_card_service
+    depends_on:
+      - shared-database
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:3007/healthz"]
+      start_period: 60s
+      start_interval: 5s
+      interval: 30s
+      retries: 1
+      timeout: 3s
   cloud-nine-mock-ase:
     hostname: cloud-nine-wallet
     image: rafiki-mock-ase

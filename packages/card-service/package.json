@@ -8,7 +8,9 @@
   "scripts": {
     "build": "pnpm clean && tsc --build tsconfig.json",
     "clean": "rm -fr dist/",
-    "test": "jest"
+    "test": "jest",
+    "dev": "ts-node-dev --inspect=0.0.0.0:9229 --respawn --transpile-only src/index.ts",
+    "knex": "knex"
   },
   "dependencies": {
     "@adonisjs/fold": "^8.2.0",
