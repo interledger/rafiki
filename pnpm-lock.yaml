@@ -762,6 +762,19 @@ importers:
       pino:
         specifier: ^8.19.0
         version: 8.19.0
+    devDependencies:
+      '@types/koa':
+        specifier: 2.15.0
+        version: 2.15.0
+      '@types/koa-bodyparser':
+        specifier: ^4.3.12
+        version: 4.3.12
+      '@types/koa__cors':
+        specifier: ^5.0.0
+        version: 5.0.0
+      '@types/koa__router':
+        specifier: ^12.0.4
+        version: 12.0.4
 
   packages/token-introspection:
     dependencies:

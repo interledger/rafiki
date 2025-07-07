@@ -2,7 +2,7 @@ import { Ioc, IocContract } from '@adonisjs/fold'
 import { knex } from 'knex'
 import { Model } from 'objection'
 import { Config } from './config/app'
-import { AppServices } from './app'
+import { App, AppServices } from './app'
 import createLogger from 'pino'
 
 export function initIocContainer(

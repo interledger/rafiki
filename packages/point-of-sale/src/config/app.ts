@@ -31,9 +31,9 @@ export const Config = {
     process.env.NODE_ENV === 'test'
       ? `${process.env.POS_DATABASE_URL}`
       : envString(
-        'POS_DATABASE_URL',
-        'postgresql://postgres:password@localhost:5432/pos_development'
-      ),
+          'POS_DATABASE_URL',
+          'postgresql://postgres:password@localhost:5432/pos_development'
+        ),
   env: envString('NODE_ENV', 'development'),
   port: envInt('PORT', 3020),
   trustProxy: envBool('TRUST_PROXY', false),
