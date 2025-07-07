@@ -1,28 +1,28 @@
 {
-    "name": "card-service",
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
-    "files": [
-        "dist/**/*"
-    ],
-    "scripts": {
-        "build": "pnpm clean && tsc --build tsconfig.json",
-        "clean": "rm -fr dist/",
-        "test": "jest"
-    },
-    "dependencies": {
-        "@adonisjs/fold": "^8.2.0",
-        "@koa/cors": "^5.0.0",
-        "knex": "^3.1.0",
-        "koa": "^2.15.4",
-        "objection": "^3.1.5",
-        "pino": "^8.19.0"
-    },
-    "devDependencies": {
-        "@types/koa": "2.15.0",
-        "@types/koa-bodyparser": "^4.3.12",
-        "@types/koa__cors": "^5.0.0",
-        "@types/koa__router": "^12.0.4",
-        "ts-node-dev": "^2.0.0"
-    }
+  "name": "card-service",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "pnpm clean && tsc --build tsconfig.json",
+    "clean": "rm -fr dist/",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@adonisjs/fold": "^8.2.0",
+    "@koa/cors": "^5.0.0",
+    "knex": "^3.1.0",
+    "koa": "^2.15.4",
+    "objection": "^3.1.5",
+    "pino": "^8.19.0"
+  },
+  "devDependencies": {
+    "@types/koa": "2.15.0",
+    "@types/koa-bodyparser": "^4.3.12",
+    "@types/koa__cors": "^5.0.0",
+    "@types/koa__router": "^12.0.4",
+    "ts-node-dev": "^2.0.0"
+  }
 }
