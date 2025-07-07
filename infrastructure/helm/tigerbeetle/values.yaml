@@ -26,7 +26,7 @@ statefulset:
     repository: ghcr.io/tigerbeetle/tigerbeetle
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "0.16.29"
+    tag: "0.16.49"
 
   proxyImage:
     repository: nginx
