@@ -17,7 +17,7 @@ export class Merchant extends BaseModel {
         to: 'pos_devices.merchantId'
       }
     }
-  }) 
+  })
 
   public name!: string
   public deletedAt!: Date | null
