@@ -1,3 +1,6 @@
+import { ConnectionOptions } from 'tls'
+import * as fs from 'fs'
+
 function envString(name: string, defaultValue?: string): string {
   const envValue = process.env[name]
 
@@ -27,7 +30,38 @@ export const Config = {
   enableManualMigrations: envBool('ENABLE_MANUAL_MIGRATIONS', false),
   trustProxy: envBool('TRUST_PROXY', false),
   env: envString('NODE_ENV', 'development'),
-  cardServicePort: envInt('CARD_SERVICE_PORT', 3007)
+  cardServicePort: envInt('CARD_SERVICE_PORT', 3007),
+  redisUrl: envString('REDIS_URL', 'redis://127.0.0.1:6379'),
+  redisTls: parseRedisTlsConfig(
+    process.env.REDIS_TLS_CA_FILE_PATH,
+    process.env.REDIS_TLS_KEY_FILE_PATH,
+    process.env.REDIS_TLS_CERT_FILE_PATH
+  ),
 }
+
+function parseRedisTlsConfig(
+  caFile?: string,
+  keyFile?: string,
+  certFile?: string
+): ConnectionOptions | undefined {
+  const options: ConnectionOptions = {}
+
+  // self-signed certs.
+  if (caFile) {
+    options.ca = fs.readFileSync(caFile)
+    options.rejectUnauthorized = false
+  }
+
+  if (certFile) {
+    options.cert = fs.readFileSync(certFile)
+  }
+
+  if (keyFile) {
+    options.key = fs.readFileSync(keyFile)
+  }
+
+  return Object.keys(options).length > 0 ? options : undefined
+}
+
 
 export type IAppConfig = typeof Config

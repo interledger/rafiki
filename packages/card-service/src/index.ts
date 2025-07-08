@@ -4,18 +4,22 @@ import { Ioc, IocContract } from '@adonisjs/fold'
 import createLogger from 'pino'
 import { knex } from 'knex'
 import { Model } from 'objection'
+import Redis from 'ioredis'
+import { createPOSStore, PosStoreService } from './pos-store/service'
 
 export function initIocContainer(
   config: typeof Config
 ): IocContract<AppServices> {
   const container: IocContract<AppServices> = new Ioc()
   container.singleton('config', async () => config)
+  
   container.singleton('logger', async (deps: IocContract<AppServices>) => {
     const config = await deps.use('config')
     const logger = createLogger()
     logger.level = config.logLevel
     return logger
   })
+
   container.singleton('knex', async (deps: IocContract<AppServices>) => {
     const logger = await deps.use('logger')
     const config = await deps.use('config')
@@ -56,6 +60,20 @@ export function initIocContainer(
       await db.raw(`CREATE SCHEMA IF NOT EXISTS "${config.dbSchema}"`)
     }
     return db
+  })
+
+  container.singleton('redis', async (deps): Promise<Redis> => {
+    const config = await deps.use('config')
+    return new Redis(config.redisUrl, {
+      tls: config.redisTls,
+      stringNumbers: true
+    })
+  })
+
+  container.singleton('pos-store', async (deps): Promise<PosStoreService> => {
+    const redis = await deps.use('redis')
+    const logger = await deps.use('logger')
+    return createPOSStore({ redis, logger })
   })
 
   return container
