@@ -13,8 +13,4 @@ export class CardPayments extends BaseModel {
   public statusCode?: number
   public outgoingPaymentId?: string
   public terminalId!: string
-
-
-
-
 }
