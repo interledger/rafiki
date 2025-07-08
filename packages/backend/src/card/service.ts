@@ -23,7 +23,7 @@ export async function createCardService(
   deps_: ServiceDependencies
 ): Promise<CardService> {
   const logger = deps_.logger.child({
-    service: 'card-service'
+    service: 'CardService'
   })
   const deps = {
     ...deps_,
