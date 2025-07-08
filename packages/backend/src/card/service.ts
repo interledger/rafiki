@@ -23,13 +23,13 @@ export async function createCardService(
   deps_: ServiceDependencies
 ): Promise<CardService> {
   const logger = deps_.logger.child({
-    service: 'card-service',
+    service: 'card-service'
   })
   const deps = {
     ...deps_,
-    logger,
+    logger
   }
-  
+
   return {
     sendPaymentEvent: (eventDetails: EventDetails) =>
       sendPaymentEvent(deps, eventDetails)
@@ -46,10 +46,7 @@ async function sendPaymentEvent(
   )
 
   if (status !== 200) {
-    deps.logger.error(
-      { status, eventDetails },
-      'Failed to send payment event'
-    )
+    deps.logger.error({ status, eventDetails }, 'Failed to send payment event')
     throw new Error(
       `Failed to send payment event with details ${JSON.stringify(eventDetails)}`
     )
