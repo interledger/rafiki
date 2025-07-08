@@ -2,19 +2,6 @@ import { PaginationArgs } from '@interledger/open-payments'
 
 import { BaseModel, PageInfo, Pagination, SortOrder } from './baseModel'
 
-export function parsePaginationQueryParameters({
-  first,
-  last,
-  cursor
-}: PaginationArgs): Pagination {
-  return {
-    first,
-    last,
-    before: last ? cursor : undefined,
-    after: cursor && !last ? cursor : undefined
-  }
-}
-
 type GetPageInfoArgs<T extends BaseModel> = {
   getPage: (pagination: Pagination, sortOrder?: SortOrder) => Promise<T[]>
   page: T[]
