@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "@adonisjs/fold": "^8.2.0",
-    "@interledger/open-payments": "7.0.0",
     "@koa/cors": "^5.0.0",
     "knex": "^3.1.0",
     "koa": "^2.15.4",
