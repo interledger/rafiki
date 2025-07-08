@@ -2,7 +2,7 @@ import { BaseModel } from '../shared/baseModel'
 
 export class CardPayment extends BaseModel {
   public static get tableName(): string {
-    return 'card_payments'
+    return 'cardPayments'
   }
 
   public requestId!: string
