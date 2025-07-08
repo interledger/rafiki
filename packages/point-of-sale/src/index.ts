@@ -38,7 +38,6 @@ export function initIocContainer(
     logger.level = config.logLevel
     return logger
   })
-
   container.singleton('knex', async (deps: IocContract<AppServices>) => {
     const logger = await deps.use('logger')
     const config = await deps.use('config')

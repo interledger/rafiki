@@ -812,6 +812,7 @@ importers:
       '@koa/router':
         specifier: ^12.0.2
         version: 12.0.2
+<<<<<<< HEAD
       axios:
         specifier: 1.8.2
         version: 1.8.2(debug@4.3.2)
@@ -824,6 +825,11 @@ importers:
       json-canonicalize:
         specifier: ^1.0.6
         version: 1.0.6
+=======
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.4.7
+>>>>>>> b66c9448b (feat: initialize POS service (#3509))
       knex:
         specifier: ^3.1.0
         version: 3.1.0(pg@8.11.3)
@@ -848,6 +854,7 @@ importers:
       ts-node-dev:
         specifier: ^2.0.0
         version: 2.0.0(@swc/core@1.11.29)(@types/node@20.14.15)(typescript@5.8.3)
+<<<<<<< HEAD
       uuid:
         specifier: ^9.0.1
         version: 9.0.1
@@ -870,6 +877,9 @@ importers:
       '@graphql-codegen/typescript-resolvers':
         specifier: 4.4.2
         version: 4.4.2(graphql@16.11.0)
+=======
+    devDependencies:
+>>>>>>> b66c9448b (feat: initialize POS service (#3509))
       '@types/koa':
         specifier: 2.15.0
         version: 2.15.0
@@ -882,6 +892,7 @@ importers:
       '@types/koa__router':
         specifier: ^12.0.4
         version: 12.0.4
+<<<<<<< HEAD
       '@types/tmp':
         specifier: ^0.2.6
         version: 0.2.6
@@ -909,6 +920,8 @@ importers:
       tmp:
         specifier: ^0.2.3
         version: 0.2.3
+=======
+>>>>>>> b66c9448b (feat: initialize POS service (#3509))
 
   packages/token-introspection:
     dependencies:
@@ -1543,7 +1556,11 @@ packages:
       '@babel/traverse': 7.26.7
       '@babel/types': 7.27.0
       convert-source-map: 2.0.0
+<<<<<<< HEAD
       debug: 4.4.1(supports-color@9.4.0)
+=======
+      debug: 4.4.1
+>>>>>>> b66c9448b (feat: initialize POS service (#3509))
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -5864,7 +5881,11 @@ packages:
     resolution: {integrity: sha512-sYcHglGKTxGF+hQ6x67xDfkE9o+NhVlRHBqq6gLywaMc6CojK/5vFZByphdonKinYlMLkEkacm+HEse9HzwgTA==}
     engines: {node: '>= 12'}
     dependencies:
+<<<<<<< HEAD
       debug: 4.4.1(supports-color@9.4.0)
+=======
+      debug: 4.4.1
+>>>>>>> b66c9448b (feat: initialize POS service (#3509))
       http-errors: 2.0.0
       koa-compose: 4.1.0
       methods: 1.1.2
@@ -16025,7 +16046,11 @@ packages:
       content-disposition: 0.5.4
       content-type: 1.0.5
       cookies: 0.9.1
+<<<<<<< HEAD
       debug: 4.4.1(supports-color@9.4.0)
+=======
+      debug: 4.4.1
+>>>>>>> b66c9448b (feat: initialize POS service (#3509))
       delegates: 1.0.0
       destroy: 1.2.0
       encodeurl: 2.0.0
@@ -17539,6 +17564,10 @@ packages:
   /mime-db@1.54.0:
     resolution: {integrity: sha512-aU5EJuIN2WDemCcAp2vFBfp/m4EAhWJnUNSSw0ixs7/kXbd6Pg64EmwJkNdFhB8aWt1sH2CTXrLxo/iAGV3oPQ==}
     engines: {node: '>= 0.6'}
+<<<<<<< HEAD
+=======
+    dev: false
+>>>>>>> b66c9448b (feat: initialize POS service (#3509))
 
   /mime-types@2.1.35:
     resolution: {integrity: sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw==}
@@ -22551,7 +22580,11 @@ packages:
     hasBin: true
     dependencies:
       cac: 6.7.14
+<<<<<<< HEAD
       debug: 4.4.1(supports-color@9.4.0)
+=======
+      debug: 4.4.1
+>>>>>>> b66c9448b (feat: initialize POS service (#3509))
       es-module-lexer: 1.6.0
       pathe: 1.1.2
       vite: 6.2.5(@types/node@18.11.9)(yaml@2.7.0)
@@ -22576,7 +22609,11 @@ packages:
     hasBin: true
     dependencies:
       cac: 6.7.14
+<<<<<<< HEAD
       debug: 4.4.1(supports-color@9.4.0)
+=======
+      debug: 4.4.1
+>>>>>>> b66c9448b (feat: initialize POS service (#3509))
       es-module-lexer: 1.6.0
       pathe: 1.1.2
       vite: 6.2.5(@types/node@20.12.7)(yaml@2.7.0)
