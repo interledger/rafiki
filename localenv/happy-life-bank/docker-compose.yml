@@ -25,6 +25,7 @@ services:
       DATABASE_URL: postgresql://happy_life_bank_card_service:happy_life_bank_card_service@shared-database/happy_life_bank_card_service
     depends_on:
       - shared-database
+      - cloud-nine-wallet-card-service
     healthcheck:
       test: ["CMD", "wget", "--spider", "http://localhost:3007/healthz"]
       start_period: 60s
@@ -56,7 +57,8 @@ services:
       PORT: 4008 
       DATABASE_URL: postgresql://happy_life_bank_point_of_sale:happy_life_bank_point_of_sale@shared-database/happy_life_bank_point_of_sale
     depends_on: 
-      - shared-database 
+      - shared-database
+      - cloud-nine-wallet-point-of-sale
     healthcheck: 
       test: ["CMD", "wget", "--spider", "http://localhost:4008/healthz"] 
       start_period: 60s 
