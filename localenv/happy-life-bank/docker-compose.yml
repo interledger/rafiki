@@ -10,7 +10,7 @@ services:
     networks:
       - rafiki
     ports:
-      - '4007:3007'
+      - '4007:4007'
     volumes:
       - type: bind
         source: ../../packages/card-service/src
@@ -21,7 +21,7 @@ services:
       INSTANCE_NAME: HAPPY-LIFE
       TRUST_PROXY: ${TRUST_PROXY}
       LOG_LEVEL: debug
-      CARD_SERVICE_PORT: 3007
+      CARD_SERVICE_PORT: 4007
       DATABASE_URL: postgresql://happy_life_bank_card_service:happy_life_bank_card_service@shared-database/happy_life_bank_card_service
     depends_on:
       - shared-database
@@ -42,7 +42,7 @@ services:
     networks: 
       - rafiki 
     ports: 
-      - '3007:3007' 
+      - '4008:4008' 
     volumes: 
       - type: bind 
         source: ../../packages/point-of-sale/src 
@@ -53,12 +53,12 @@ services:
       INSTANCE_NAME: HAPPY-LIFE 
       TRUST_PROXY: ${TRUST_PROXY} 
       LOG_LEVEL: debug 
-      CARD_SERVICE_PORT: 3007 
+      PORT: 4008 
       DATABASE_URL: postgresql://happy_life_bank_point_of_sale:happy_life_bank_point_of_sale@shared-database/happy_life_bank_point_of_sale
     depends_on: 
       - shared-database 
     healthcheck: 
-      test: ["CMD", "wget", "--spider", "http://localhost:3007/healthz"] 
+      test: ["CMD", "wget", "--spider", "http://localhost:4008/healthz"] 
       start_period: 60s 
       start_interval: 5s 
       interval: 30s 

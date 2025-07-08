@@ -42,7 +42,7 @@ services:
     networks: 
       - rafiki 
     ports: 
-      - '3007:3007' 
+      - '3008:3008' 
     volumes: 
       - type: bind 
         source: ../../packages/point-of-sale/src 
@@ -53,12 +53,12 @@ services:
       INSTANCE_NAME: CLOUD-NINE 
       TRUST_PROXY: ${TRUST_PROXY} 
       LOG_LEVEL: debug 
-      CARD_SERVICE_PORT: 3007 
+      PORT: 3008
       DATABASE_URL: postgresql://cloud_nine_wallet_point_of_sale:cloud_nine_wallet_point_of_sale@shared-database/cloud_nine_wallet_point_of_sale 
     depends_on: 
       - shared-database 
     healthcheck: 
-      test: ["CMD", "wget", "--spider", "http://localhost:3007/healthz"] 
+      test: ["CMD", "wget", "--spider", "http://localhost:3008/healthz"] 
       start_period: 60s 
       start_interval: 5s 
       interval: 30s 

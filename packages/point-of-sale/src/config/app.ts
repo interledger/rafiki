@@ -27,15 +27,12 @@ dotenv.config({
 
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
-  databaseUrl:
-    process.env.NODE_ENV === 'test'
-      ? `${process.env.POS_DATABASE_URL}`
-      : envString(
-          'POS_DATABASE_URL',
-          'postgresql://postgres:password@localhost:5432/pos_development'
-        ),
+  databaseUrl: envString(
+    'DATABASE_URL',
+    'postgresql://postgres:password@localhost:5432/development'
+  ),
   env: envString('NODE_ENV', 'development'),
-  port: envInt('PORT', 3020),
+  port: envInt('PORT', 3008),
   trustProxy: envBool('TRUST_PROXY', false),
   enableManualMigrations: envBool('ENABLE_MANUAl_MIGRATIONS', false)
 }
