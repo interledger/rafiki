@@ -6,6 +6,10 @@ CREATE USER cloud_nine_wallet_auth WITH PASSWORD 'cloud_nine_wallet_auth';
 CREATE DATABASE cloud_nine_wallet_auth;
 ALTER DATABASE cloud_nine_wallet_auth OWNER TO cloud_nine_wallet_auth;
 
+CREATE USER cloud_nine_wallet_card_service WITH PASSWORD 'cloud_nine_wallet_card_service';
+CREATE DATABASE cloud_nine_wallet_card_service;
+ALTER DATABASE cloud_nine_wallet_card_service OWNER TO cloud_nine_wallet_card_service;
+
 CREATE USER happy_life_bank_backend WITH PASSWORD 'happy_life_bank_backend';
 CREATE DATABASE happy_life_bank_backend;
 ALTER DATABASE happy_life_bank_backend OWNER TO happy_life_bank_backend;
@@ -14,6 +18,7 @@ CREATE USER happy_life_bank_auth WITH PASSWORD 'happy_life_bank_auth';
 CREATE DATABASE happy_life_bank_auth;
 ALTER DATABASE happy_life_bank_auth OWNER TO happy_life_bank_auth;
 
+<<<<<<< HEAD
 CREATE USER cloud_nine_wallet_pos WITH PASSWORD 'cloud_nine_wallet_pos';
 CREATE DATABASE cloud_nine_wallet_pos;
 ALTER DATABASE cloud_nine_wallet_pos OWNER TO cloud_nine_wallet_pos;
@@ -21,3 +26,20 @@ ALTER DATABASE cloud_nine_wallet_pos OWNER TO cloud_nine_wallet_pos;
 CREATE USER happy_life_bank_pos WITH PASSWORD 'happy_life_bank_pos';
 CREATE DATABASE happy_life_bank_pos;
 ALTER DATABASE happy_life_bank_pos OWNER TO happy_life_bank_pos;
+=======
+CREATE USER happy_life_bank_card_service WITH PASSWORD 'happy_life_bank_card_service';
+CREATE DATABASE happy_life_bank_card_service;
+ALTER DATABASE happy_life_bank_card_service OWNER TO happy_life_bank_card_service;
+>>>>>>> pos-card-services
+
+CREATE USER cloud_nine_wallet_pos WITH PASSWORD 'cloud_nine_wallet_pos';
+CREATE DATABASE cloud_nine_wallet_pos;
+ALTER DATABASE cloud_nine_wallet_pos OWNER TO cloud_nine_wallet_pos;
+
+CREATE USER happy_life_bank_pos WITH PASSWORD 'happy_life_bank_pos';
+CREATE DATABASE happy_life_bank_pos;
+ALTER DATABASE happy_life_bank_pos OWNER TO happy_life_bank_pos;
+
+CREATE USER happy_life_bank_card_service WITH PASSWORD 'happy_life_bank_card_service';
+CREATE DATABASE happy_life_bank_card_service;
+ALTER DATABASE happy_life_bank_card_service OWNER TO happy_life_bank_card_service;

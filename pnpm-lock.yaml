@@ -548,6 +548,43 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0(@swc/core@1.11.29)(@types/node@20.14.15)(typescript@5.8.3)
 
+  packages/card-service:
+    dependencies:
+      '@adonisjs/fold':
+        specifier: ^8.2.0
+        version: 8.2.0
+      '@koa/cors':
+        specifier: ^5.0.0
+        version: 5.0.0
+      knex:
+        specifier: ^3.1.0
+        version: 3.1.0(pg@8.11.3)
+      koa:
+        specifier: ^2.15.4
+        version: 2.16.0
+      objection:
+        specifier: ^3.1.5
+        version: 3.1.5(knex@3.1.0)
+      pino:
+        specifier: ^8.19.0
+        version: 8.19.0
+    devDependencies:
+      '@types/koa':
+        specifier: 2.15.0
+        version: 2.15.0
+      '@types/koa-bodyparser':
+        specifier: ^4.3.12
+        version: 4.3.12
+      '@types/koa__cors':
+        specifier: ^5.0.0
+        version: 5.0.0
+      '@types/koa__router':
+        specifier: ^12.0.4
+        version: 12.0.4
+      ts-node-dev:
+        specifier: ^2.0.0
+        version: 2.0.0(@swc/core@1.11.29)(@types/node@20.14.15)(typescript@5.8.3)
+
   packages/documentation:
     dependencies:
       '@astrojs/markdown-remark':
@@ -1415,7 +1452,7 @@ packages:
       '@babel/traverse': 7.25.9
       '@babel/types': 7.26.0
       convert-source-map: 2.0.0
-      debug: 4.4.0(supports-color@9.4.0)
+      debug: 4.4.1
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -3122,7 +3159,7 @@ packages:
       '@babel/parser': 7.26.9
       '@babel/template': 7.26.9
       '@babel/types': 7.26.9
-      debug: 4.4.0(supports-color@9.4.0)
+      debug: 4.4.1
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -4009,7 +4046,7 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dependencies:
       ajv: 6.12.6
-      debug: 4.4.0(supports-color@9.4.0)
+      debug: 4.4.1
       espree: 9.6.1
       globals: 13.19.0
       ignore: 5.2.4
@@ -5163,7 +5200,7 @@ packages:
     deprecated: Use @eslint/config-array instead
     dependencies:
       '@humanwhocodes/object-schema': 2.0.3
-      debug: 4.4.0(supports-color@9.4.0)
+      debug: 4.4.1
       minimatch: 3.1.2
     transitivePeerDependencies:
       - supports-color
@@ -5195,7 +5232,7 @@ packages:
       '@antfu/install-pkg': 0.4.1
       '@antfu/utils': 0.7.10
       '@iconify/types': 2.0.0
-      debug: 4.4.0(supports-color@9.4.0)
+      debug: 4.4.1
       kolorist: 1.8.0
       local-pkg: 0.5.0
       mlly: 1.7.3
@@ -8540,7 +8577,7 @@ packages:
       '@typescript-eslint/scope-manager': 5.60.1
       '@typescript-eslint/type-utils': 5.60.1(eslint@8.57.1)(typescript@5.8.3)
       '@typescript-eslint/utils': 5.60.1(eslint@8.57.1)(typescript@5.8.3)
-      debug: 4.4.0(supports-color@9.4.0)
+      debug: 4.4.1
       eslint: 8.57.1
       grapheme-splitter: 1.0.4
       ignore: 5.2.4
@@ -8594,7 +8631,7 @@ packages:
       '@typescript-eslint/scope-manager': 5.60.1
       '@typescript-eslint/types': 5.60.1
       '@typescript-eslint/typescript-estree': 5.60.1(typescript@5.8.3)
-      debug: 4.4.0(supports-color@9.4.0)
+      debug: 4.4.1
       eslint: 8.57.1
       typescript: 5.8.3
     transitivePeerDependencies:
@@ -8678,7 +8715,7 @@ packages:
     dependencies:
       '@typescript-eslint/typescript-estree': 7.5.0(typescript@5.4.3)
       '@typescript-eslint/utils': 7.5.0(eslint@8.57.1)(typescript@5.4.3)
-      debug: 4.4.0(supports-color@9.4.0)
+      debug: 4.4.1
       eslint: 8.57.1
       ts-api-utils: 1.0.1(typescript@5.4.3)
       typescript: 5.4.3
@@ -8754,7 +8791,7 @@ packages:
     dependencies:
       '@typescript-eslint/types': 7.5.0
       '@typescript-eslint/visitor-keys': 7.5.0
-      debug: 4.4.0(supports-color@9.4.0)
+      debug: 4.4.1
       globby: 11.1.0
       is-glob: 4.0.3
       minimatch: 9.0.3
@@ -9247,17 +9284,6 @@ packages:
     resolution: {integrity: sha512-hCOfMzbFx5IDutmWLAt6MZwOUjIfSM9G9FyVxytmE4Rs/5YDPWQrD/+IR1w+FweD9H2oOZEnv36TmkjhNURBVA==}
     dev: true
 
-  /ajv-formats@2.1.1(ajv@8.12.0):
-    resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
-    peerDependencies:
-      ajv: ^8.0.0
-    peerDependenciesMeta:
-      ajv:
-        optional: true
-    dependencies:
-      ajv: 8.12.0
-    dev: true
-
   /ajv-formats@2.1.1(ajv@8.17.1):
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
     peerDependencies:
@@ -9301,6 +9327,7 @@ packages:
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
       uri-js: 4.4.1
+    dev: false
 
   /ajv@8.17.1:
     resolution: {integrity: sha512-B/gBuNg5SiMTrPkC+A2+cW0RszwxYmn6VYxB/inlBStS5nx6xHIt/ehKRhIMhqusl7a8LjQoZnjCs5vhwxOQ1g==}
@@ -12253,11 +12280,6 @@ packages:
       '@esbuild/win32-ia32': 0.25.2
       '@esbuild/win32-x64': 0.25.2
 
-  /escalade@3.1.1:
-    resolution: {integrity: sha512-k0er2gUkLf8O0zKJiAhmkTnJlTvINGv7ygDNPbeIsX/TJjGJZHuh9B2UxbsaEkmlEo9MfhrSzmhIlhRlI2GXnw==}
-    engines: {node: '>=6'}
-    dev: true
-
   /escalade@3.2.0:
     resolution: {integrity: sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA==}
     engines: {node: '>=6'}
@@ -12311,7 +12333,7 @@ packages:
       eslint: '*'
       eslint-plugin-import: '*'
     dependencies:
-      debug: 4.4.0(supports-color@9.4.0)
+      debug: 4.4.1
       enhanced-resolve: 5.13.0
       eslint: 8.57.1
       eslint-module-utils: 2.7.4(@typescript-eslint/parser@5.60.1)(eslint-import-resolver-node@0.3.7)(eslint-import-resolver-typescript@3.5.5)(eslint@8.57.1)
@@ -15614,7 +15636,7 @@ packages:
       content-disposition: 0.5.4
       content-type: 1.0.5
       cookies: 0.9.1
-      debug: 4.4.0(supports-color@9.4.0)
+      debug: 4.4.1
       delegates: 1.0.0
       depd: 2.0.0
       destroy: 1.2.0
@@ -17797,15 +17819,15 @@ packages:
   /openapi-response-validator@9.3.1:
     resolution: {integrity: sha512-2AOzHAbrwdj5DNL3u+BadhfmL3mlc3mmCv6cSAsEjoMncpOOVd95JyMf0j0XUyJigJ8/ILxnhETfg35vt1pGSQ==}
     dependencies:
-      ajv: 8.12.0
+      ajv: 8.17.1
       openapi-types: 9.3.1
     dev: true
 
   /openapi-schema-validator@9.3.1:
     resolution: {integrity: sha512-5wpFKMoEbUcjiqo16jIen3Cb2+oApSnYZpWn8WQdRO2q/dNQZZl8Pz6ESwCriiyU5AK4i5ZI6+7O3bHQr6+6+g==}
     dependencies:
-      ajv: 8.12.0
-      ajv-formats: 2.1.1(ajv@8.12.0)
+      ajv: 8.17.1
+      ajv-formats: 2.1.1(ajv@8.17.1)
       lodash.merge: 4.6.2
       openapi-types: 9.3.1
     dev: true
@@ -19486,6 +19508,7 @@ packages:
 
   /rimraf@2.7.1:
     resolution: {integrity: sha512-uWjbaKIK3T1OSVptzX7Nl6PvQ3qAGtKEtVRjRuazjfL3Bx5eI409VZSqgND+4UNnmzLVdPj9FqFJNPqBZFve4w==}
+    deprecated: Rimraf versions prior to v4 are no longer supported
     hasBin: true
     dependencies:
       glob: 7.2.3
@@ -22568,7 +22591,7 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       cliui: 7.0.4
-      escalade: 3.1.1
+      escalade: 3.2.0
       get-caller-file: 2.0.5
       require-directory: 2.1.1
       string-width: 4.2.3
