@@ -10,7 +10,7 @@ services:
     networks:
       - rafiki
     ports:
-      - '4007:3007'
+      - '4007:4007'
     volumes:
       - type: bind
         source: ../../packages/card-service/src
@@ -18,10 +18,10 @@ services:
         read_only: true
     environment:
       NODE_ENV: ${NODE_ENV:-development}
-      INSTANCE_NAME: CLOUD-NINE
+      INSTANCE_NAME: HAPPY-LIFE
       TRUST_PROXY: ${TRUST_PROXY}
       LOG_LEVEL: debug
-      CARD_SERVICE_PORT: 3007
+      CARD_SERVICE_PORT: 4007
       DATABASE_URL: postgresql://happy_life_bank_card_service:happy_life_bank_card_service@shared-database/happy_life_bank_card_service
     depends_on:
       - shared-database
@@ -32,6 +32,38 @@ services:
       interval: 30s
       retries: 1
       timeout: 3s
+  happy-life-bank-point-of-sale: 
+    hostname: happy-life-bank-point-of-sale
+    image: rafiki-point-of-sale 
+    build: 
+      context: ../.. 
+      dockerfile: ./packages/point-of-sale/Dockerfile.dev 
+    restart: always 
+    networks: 
+      - rafiki 
+    ports: 
+      - '4008:4008' 
+    volumes: 
+      - type: bind 
+        source: ../../packages/point-of-sale/src 
+        target: /home/rafiki/packages/point-of-sale/src 
+        read_only: true 
+    environment: 
+      NODE_ENV: ${NODE_ENV:-development} 
+      INSTANCE_NAME: HAPPY-LIFE 
+      TRUST_PROXY: ${TRUST_PROXY} 
+      LOG_LEVEL: debug 
+      PORT: 4008 
+      DATABASE_URL: postgresql://happy_life_bank_point_of_sale:happy_life_bank_point_of_sale@shared-database/happy_life_bank_point_of_sale
+    depends_on: 
+      - shared-database 
+    healthcheck: 
+      test: ["CMD", "wget", "--spider", "http://localhost:4008/healthz"] 
+      start_period: 60s 
+      start_interval: 5s 
+      interval: 30s 
+      retries: 1 
+      timeout: 3s 
   happy-life-mock-ase:
     hostname: happy-life-bank
     image: rafiki-mock-ase
