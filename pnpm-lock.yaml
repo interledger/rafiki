@@ -809,6 +809,9 @@ importers:
       ts-node-dev:
         specifier: ^2.0.0
         version: 2.0.0(@swc/core@1.11.29)(@types/node@20.14.15)(typescript@5.8.3)
+      uuid:
+        specifier: ^9.0.1
+        version: 9.0.1
     devDependencies:
       '@types/koa':
         specifier: 2.15.0
@@ -822,6 +825,9 @@ importers:
       '@types/koa__router':
         specifier: ^12.0.4
         version: 12.0.4
+      '@types/uuid':
+        specifier: ^9.0.8
+        version: 9.0.8
 
   packages/token-introspection:
     dependencies:
