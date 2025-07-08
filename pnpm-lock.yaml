@@ -565,9 +565,15 @@ importers:
       objection:
         specifier: ^3.1.5
         version: 3.1.5(knex@3.1.0)
+      objection-db-errors:
+        specifier: ^1.1.2
+        version: 1.1.2(objection@3.1.5)
       pino:
         specifier: ^8.19.0
         version: 8.19.0
+      uuid:
+        specifier: ^9.0.1
+        version: 9.0.1
     devDependencies:
       '@types/koa':
         specifier: 2.15.0
@@ -581,6 +587,9 @@ importers:
       '@types/koa__router':
         specifier: ^12.0.4
         version: 12.0.4
+      '@types/uuid':
+        specifier: ^9.0.8
+        version: 9.0.8
       ts-node-dev:
         specifier: ^2.0.0
         version: 2.0.0(@swc/core@1.11.29)(@types/node@20.14.15)(typescript@5.8.3)

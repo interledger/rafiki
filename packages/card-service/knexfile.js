@@ -13,7 +13,7 @@ module.exports = {
       max: 10
     },
     migrations: {
-      tableName: 'knex_migrations'
+      tableName: 'card_service_knex_migrations'
     }
   },
 
@@ -29,7 +29,7 @@ module.exports = {
       max: 10
     },
     migrations: {
-      tableName: 'knex_migrations'
+      tableName: 'card_service_knex_migrations'
     }
   },
 
@@ -41,7 +41,7 @@ module.exports = {
       max: 10
     },
     migrations: {
-      tableName: 'knex_migrations'
+      tableName: 'card_service_knex_migrations'
     }
   }
 }
