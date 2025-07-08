@@ -1,6 +1,6 @@
 import { BaseModel } from '../shared/baseModel'
 
-export class Merchants extends BaseModel {
+export class Merchant extends BaseModel {
   public static get tableName(): string {
     return 'merchants'
   }

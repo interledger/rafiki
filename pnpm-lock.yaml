@@ -769,9 +769,6 @@ importers:
       '@apollo/server':
         specifier: ^4.11.2
         version: 4.11.2(graphql@16.11.0)
-      '@interledger/open-payments':
-        specifier: 7.0.0
-        version: 7.0.0
       '@koa/cors':
         specifier: ^5.0.0
         version: 5.0.0

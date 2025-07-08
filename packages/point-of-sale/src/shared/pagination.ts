@@ -1,5 +1,3 @@
-import { PaginationArgs } from '@interledger/open-payments'
-
 import { BaseModel, PageInfo, Pagination, SortOrder } from './baseModel'
 
 type GetPageInfoArgs<T extends BaseModel> = {
