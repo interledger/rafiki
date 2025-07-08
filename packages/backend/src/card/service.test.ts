@@ -35,8 +35,10 @@ describe('Card Service', () => {
     }
 
     test('sends payment event to the correct endpoint', async () => {
-      (mockAxios.post as jest.Mock).mockResolvedValueOnce({ status: 200 })
-      await expect(cardService.sendPaymentEvent(eventDetails)).resolves.toBeUndefined()
+      ;(mockAxios.post as jest.Mock).mockResolvedValueOnce({ status: 200 })
+      await expect(
+        cardService.sendPaymentEvent(eventDetails)
+      ).resolves.toBeUndefined()
       expect(mockAxios.post).toHaveBeenCalledWith(
         `${cardServiceHost}/payment-event`,
         eventDetails
@@ -44,20 +46,26 @@ describe('Card Service', () => {
     })
 
     test('propagates errors from axios', async () => {
-      const error = new Error('network error');
-      (mockAxios.post as jest.Mock).mockRejectedValueOnce(error)
-      await expect(cardService.sendPaymentEvent(eventDetails)).rejects.toThrow('network error')
+      const error = new Error('network error')
+      ;(mockAxios.post as jest.Mock).mockRejectedValueOnce(error)
+      await expect(cardService.sendPaymentEvent(eventDetails)).rejects.toThrow(
+        'network error'
+      )
     })
 
     test('logs and throws if response status is not 200', async () => {
-      (mockAxios.post as jest.Mock).mockResolvedValueOnce({ status: 500 })
+      ;(mockAxios.post as jest.Mock).mockResolvedValueOnce({ status: 500 })
       await expect(cardService.sendPaymentEvent(eventDetails)).rejects.toThrow(
         `Failed to send payment event with details ${JSON.stringify(eventDetails)}`
       )
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.objectContaining({ status: 500, eventDetails, serviceName: 'card-service' }),
+        expect.objectContaining({
+          status: 500,
+          eventDetails,
+          serviceName: 'card-service'
+        }),
         'Failed to send payment event'
       )
     })
   })
-}) 
+})
