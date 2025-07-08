@@ -37,13 +37,13 @@ body:graphql {
 body:graphql:vars {
   {
     "input": {
-      "walletAddressId": "{{secondWalletAddressId}}",
+      "walletAddressId": "d4eddfdc-266a-4a08-b0b4-63e849d5818a",
       "receiveAmount": null,
-      "receiver": "{{receiverOpenPaymentsHost}}/incoming-payments/{{incomingPaymentId}}",
+      "receiver": "https://happy-life-bank/incoming-payments/{{incomingPaymentId}}",
       "debitAmount": {
         "assetCode": "USD",
-        "assetScale": 6,
-        "value": 5000000
+        "assetScale": 2,
+        "value": 500
       }
     }
   }
@@ -82,7 +82,7 @@ script:pre-request {
   
   const response = await fetch(`${initialRequest.url}`, postRequest);
   const body = await response.json();
-  bru.setEnvVar("secondWalletAddressId", body.data.createWalletAddress.walletAddress.id);
+  // bru.setEnvVar("secondWalletAddressId", body.data.createWalletAddress.walletAddress.id);
   
   scripts.addApiSignatureHeader();
 }

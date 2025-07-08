@@ -191,6 +191,13 @@ export type CancelOutgoingPaymentInput = {
   reason?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type CardDetailsInput = {
+  /** Expire date */
+  expiry: Scalars['String']['input'];
+  /** Signature */
+  signature: Scalars['String']['input'];
+};
+
 export type CreateAssetInput = {
   /** Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets). */
   code: Scalars['String']['input'];
@@ -278,6 +285,8 @@ export type CreateOutgoingPaymentFromIncomingPaymentInput = {
 };
 
 export type CreateOutgoingPaymentInput = {
+  /** Card Details */
+  cardDetails?: InputMaybe<CardDetailsInput>;
   /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Additional metadata associated with the outgoing payment. */
@@ -1006,6 +1015,8 @@ export type MutationWithdrawEventLiquidityArgs = {
 
 export type OutgoingPayment = BasePayment & Model & {
   __typename?: 'OutgoingPayment';
+  /** Card Details */
+  card?: Maybe<OutgoingPaymentCardDetail>;
   /** Information about the wallet address of the Open Payments client that created the outgoing payment. */
   client?: Maybe<Scalars['String']['output']>;
   /** The date and time that the outgoing payment was created. */
@@ -1038,6 +1049,16 @@ export type OutgoingPayment = BasePayment & Model & {
   tenantId?: Maybe<Scalars['String']['output']>;
   /** Unique identifier of the wallet address under which the outgoing payment was created. */
   walletAddressId: Scalars['ID']['output'];
+};
+
+export type OutgoingPaymentCardDetail = Model & {
+  __typename?: 'OutgoingPaymentCardDetail';
+  createdAt: Scalars['String']['output'];
+  expiry: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  outgoingPaymentId: Scalars['ID']['output'];
+  signature: Scalars['String']['output'];
+  updatedAt: Scalars['String']['output'];
 };
 
 export type OutgoingPaymentConnection = {
@@ -1898,7 +1919,7 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping of interface types */
 export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> = {
   BasePayment: ( Partial<IncomingPayment> ) | ( Partial<OutgoingPayment> ) | ( Partial<Payment> );
-  Model: ( Partial<AccountingTransfer> ) | ( Partial<Asset> ) | ( Partial<Fee> ) | ( Partial<IncomingPayment> ) | ( Partial<OutgoingPayment> ) | ( Partial<Payment> ) | ( Partial<Peer> ) | ( Partial<Tenant> ) | ( Partial<WalletAddress> ) | ( Partial<WalletAddressKey> ) | ( Partial<WebhookEvent> );
+  Model: ( Partial<AccountingTransfer> ) | ( Partial<Asset> ) | ( Partial<Fee> ) | ( Partial<IncomingPayment> ) | ( Partial<OutgoingPayment> ) | ( Partial<OutgoingPaymentCardDetail> ) | ( Partial<Payment> ) | ( Partial<Peer> ) | ( Partial<Tenant> ) | ( Partial<WalletAddress> ) | ( Partial<WalletAddressKey> ) | ( Partial<WebhookEvent> );
 };
 
 /** Mapping between all available schema types and the resolvers types */
@@ -1921,6 +1942,7 @@ export type ResolversTypes = {
   CancelIncomingPaymentInput: ResolverTypeWrapper<Partial<CancelIncomingPaymentInput>>;
   CancelIncomingPaymentResponse: ResolverTypeWrapper<Partial<CancelIncomingPaymentResponse>>;
   CancelOutgoingPaymentInput: ResolverTypeWrapper<Partial<CancelOutgoingPaymentInput>>;
+  CardDetailsInput: ResolverTypeWrapper<Partial<CardDetailsInput>>;
   CreateAssetInput: ResolverTypeWrapper<Partial<CreateAssetInput>>;
   CreateAssetLiquidityWithdrawalInput: ResolverTypeWrapper<Partial<CreateAssetLiquidityWithdrawalInput>>;
   CreateIncomingPaymentInput: ResolverTypeWrapper<Partial<CreateIncomingPaymentInput>>;
@@ -1982,6 +2004,7 @@ export type ResolversTypes = {
   Model: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Model']>;
   Mutation: ResolverTypeWrapper<{}>;
   OutgoingPayment: ResolverTypeWrapper<Partial<OutgoingPayment>>;
+  OutgoingPaymentCardDetail: ResolverTypeWrapper<Partial<OutgoingPaymentCardDetail>>;
   OutgoingPaymentConnection: ResolverTypeWrapper<Partial<OutgoingPaymentConnection>>;
   OutgoingPaymentEdge: ResolverTypeWrapper<Partial<OutgoingPaymentEdge>>;
   OutgoingPaymentFilter: ResolverTypeWrapper<Partial<OutgoingPaymentFilter>>;
@@ -2065,6 +2088,7 @@ export type ResolversParentTypes = {
   CancelIncomingPaymentInput: Partial<CancelIncomingPaymentInput>;
   CancelIncomingPaymentResponse: Partial<CancelIncomingPaymentResponse>;
   CancelOutgoingPaymentInput: Partial<CancelOutgoingPaymentInput>;
+  CardDetailsInput: Partial<CardDetailsInput>;
   CreateAssetInput: Partial<CreateAssetInput>;
   CreateAssetLiquidityWithdrawalInput: Partial<CreateAssetLiquidityWithdrawalInput>;
   CreateIncomingPaymentInput: Partial<CreateIncomingPaymentInput>;
@@ -2121,6 +2145,7 @@ export type ResolversParentTypes = {
   Model: ResolversInterfaceTypes<ResolversParentTypes>['Model'];
   Mutation: {};
   OutgoingPayment: Partial<OutgoingPayment>;
+  OutgoingPaymentCardDetail: Partial<OutgoingPaymentCardDetail>;
   OutgoingPaymentConnection: Partial<OutgoingPaymentConnection>;
   OutgoingPaymentEdge: Partial<OutgoingPaymentEdge>;
   OutgoingPaymentFilter: Partial<OutgoingPaymentFilter>;
@@ -2392,7 +2417,7 @@ export type LiquidityMutationResponseResolvers<ContextType = any, ParentType ext
 };
 
 export type ModelResolvers<ContextType = any, ParentType extends ResolversParentTypes['Model'] = ResolversParentTypes['Model']> = {
-  __resolveType: TypeResolveFn<'AccountingTransfer' | 'Asset' | 'Fee' | 'IncomingPayment' | 'OutgoingPayment' | 'Payment' | 'Peer' | 'Tenant' | 'WalletAddress' | 'WalletAddressKey' | 'WebhookEvent', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'AccountingTransfer' | 'Asset' | 'Fee' | 'IncomingPayment' | 'OutgoingPayment' | 'OutgoingPaymentCardDetail' | 'Payment' | 'Peer' | 'Tenant' | 'WalletAddress' | 'WalletAddressKey' | 'WebhookEvent', ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
 };
@@ -2439,6 +2464,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
 };
 
 export type OutgoingPaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['OutgoingPayment'] = ResolversParentTypes['OutgoingPayment']> = {
+  card?: Resolver<Maybe<ResolversTypes['OutgoingPaymentCardDetail']>, ParentType, ContextType>;
   client?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   debitAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
@@ -2455,6 +2481,16 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   stateAttempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   tenantId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   walletAddressId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type OutgoingPaymentCardDetailResolvers<ContextType = any, ParentType extends ResolversParentTypes['OutgoingPaymentCardDetail'] = ResolversParentTypes['OutgoingPaymentCardDetail']> = {
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  expiry?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  outgoingPaymentId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  signature?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -2792,6 +2828,7 @@ export type Resolvers<ContextType = any> = {
   Model?: ModelResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   OutgoingPayment?: OutgoingPaymentResolvers<ContextType>;
+  OutgoingPaymentCardDetail?: OutgoingPaymentCardDetailResolvers<ContextType>;
   OutgoingPaymentConnection?: OutgoingPaymentConnectionResolvers<ContextType>;
   OutgoingPaymentEdge?: OutgoingPaymentEdgeResolvers<ContextType>;
   OutgoingPaymentResponse?: OutgoingPaymentResponseResolvers<ContextType>;

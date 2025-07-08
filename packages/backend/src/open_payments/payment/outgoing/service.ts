@@ -46,6 +46,7 @@ import { IAppConfig } from '../../../config/app'
 import { AssetService } from '../../../asset/service'
 import { Span, trace } from '@opentelemetry/api'
 import { FeeService } from '../../../fee/service'
+import { OutgoingPaymentsCardDetails } from './card/model'
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
@@ -86,6 +87,7 @@ export async function createOutgoingPaymentService(
   return {
     get: (options) => getOutgoingPayment(deps, options),
     getPage: (options) => getOutgoingPaymentsPage(deps, options),
+    // Add card sig here and add in the webhook
     create: (options) => createOutgoingPayment(deps, options),
     cancel: (options) => cancelOutgoingPayment(deps, options),
     fund: (options) => fundPayment(deps, options),
@@ -201,6 +203,11 @@ export interface CreateFromIncomingPayment extends BaseOptions {
   debitAmount: Amount
 }
 
+export interface CreateFromCardPayment extends CreateFromIncomingPayment {
+  expiry: string
+  signature: string
+}
+
 export type CancelOutgoingPaymentOptions = {
   id: string
   tenantId: string
@@ -210,6 +217,13 @@ export type CancelOutgoingPaymentOptions = {
 export type CreateOutgoingPaymentOptions =
   | CreateFromQuote
   | CreateFromIncomingPayment
+  | CreateFromCardPayment
+
+export function isCreateFromCardPayment(
+  options: CreateOutgoingPaymentOptions
+): options is CreateFromCardPayment {
+  return 'expiry' in options && 'signature' in options
+}
 
 export function isCreateFromIncomingPayment(
   options: CreateOutgoingPaymentOptions
@@ -398,6 +412,23 @@ async function createOutgoingPayment(
             state: OutgoingPaymentState.Funding,
             grantId
           })
+          try {
+            if (isCreateFromCardPayment(options)) {
+              const card = await OutgoingPaymentsCardDetails.query(
+                 trx
+               ).insertAndFetch({
+                 outgoingPaymentId: payment.id,
+                 expiry: options.expiry,
+                 signature: options.signature
+               })
+               payment.card = card
+             }
+          }
+          catch (err) {
+            deps.logger.error('Error inserting card details')
+          }
+         
+
           payment.walletAddress = walletAddress
           payment.quote = quote
           if (asset) payment.quote.asset = asset
@@ -459,7 +490,7 @@ async function createOutgoingPayment(
           )
           stopTimerWebhook()
 
-          return payment
+          return { ...payment, card: undefined }
         })
 
         const stopTimerAddAmount = deps.telemetry.startTimer(

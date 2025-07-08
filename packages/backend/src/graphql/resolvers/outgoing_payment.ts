@@ -4,7 +4,9 @@ import {
   OutgoingPayment as SchemaOutgoingPayment,
   WalletAddressResolvers,
   QueryResolvers,
-  ResolversTypes
+  ResolversTypes,
+  Maybe,
+  OutgoingPaymentCardDetail
 } from '../generated/graphql'
 import {
   isOutgoingPaymentError,
@@ -248,6 +250,21 @@ export function paymentToGraphql(
     createdAt: new Date(+payment.createdAt).toISOString(),
     quote: quoteToGraphql(payment.quote),
     grantId: payment.grantId,
-    tenantId: payment.tenantId
+    tenantId: payment.tenantId,
+    card: cardToGraphql(payment)
   }
 }
+function cardToGraphql(payment: OutgoingPayment): Maybe<OutgoingPaymentCardDetail> | undefined {
+  if (!payment.card) {
+    return undefined
+  }
+  return {
+    id: payment.card.id,
+    outgoingPaymentId: payment.card.outgoingPaymentId,
+    expiry: payment.card.expiry,
+    signature: payment.card.signature,
+    updatedAt: new Date(+payment.card.updatedAt).toISOString(),
+    createdAt: new Date(+payment.card.createdAt).toISOString()
+  }
+}
+

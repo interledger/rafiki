@@ -1051,7 +1051,19 @@ type OutgoingPayment implements BasePayment & Model {
   "Unique identifier of the grant under which the outgoing payment was created."
   grantId: String
   "Tenant ID of the outgoing payment."
-  tenantId: String
+  tenantId: String,
+    "Card Details"
+  card: OutgoingPaymentCardDetail
+}
+
+type OutgoingPaymentCardDetail implements Model {
+  id: ID!
+  outgoingPaymentId: ID!
+  signature: String!
+  expiry: String!
+  createdAt: String!
+  updatedAt: String!
+
 }
 
 enum OutgoingPaymentState {
@@ -1229,6 +1241,15 @@ input CreateOutgoingPaymentInput {
   metadata: JSONObject
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
+  "Card Details"
+  cardDetails: CardDetailsInput
+}
+
+input CardDetailsInput {
+  "Signature"
+  signature: String!
+  "Expire date"
+  expiry: String!
 }
 
 input CancelOutgoingPaymentInput {
