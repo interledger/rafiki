@@ -1,6 +1,6 @@
 import { BaseModel } from '../shared/baseModel'
 
-export class CardPayments extends BaseModel {
+export class CardPayment extends BaseModel {
   public static get tableName(): string {
     return 'card_payments'
   }
