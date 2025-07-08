@@ -129,7 +129,11 @@ export class App {
     })
 
     koa.context.container = this.container
+<<<<<<< HEAD
     koa.context.logger = this.logger
+=======
+    koa.context.logger = await this.container.use('logger')
+>>>>>>> 85393e2a6 (feat: initialize POS service (#3509))
 
     koa.use(
       async (

@@ -29,7 +29,7 @@ services:
     healthcheck: 
       test: ["CMD", "wget", "--spider", "http://localhost:4008/healthz"] 
       start_period: 60s 
-      start_interval: 5s 
+      start_interval: 5s
       interval: 30s 
       retries: 1 
       timeout: 3s 
