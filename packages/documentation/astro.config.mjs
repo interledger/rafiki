@@ -355,7 +355,8 @@ export default defineConfig({
       ],
       plugins: [
         starlightLinksValidator({
-          errorOnLocalLinks: false
+          errorOnLocalLinks: false,
+          errorOnFallbackPages: false
         }),
         starlightFullViewMode()
       ]
