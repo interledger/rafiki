@@ -1,4 +1,4 @@
-import { createPOSStore, StoreDependencies } from './service'
+import { createPOSStore } from './service'
 import Redis from 'ioredis'
 import { Logger } from 'pino'
 
