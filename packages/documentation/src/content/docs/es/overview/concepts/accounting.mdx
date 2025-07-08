@@ -22,7 +22,7 @@ Accounts within Rafiki are your internal [liquidity](#liquidity-accounts) and [s
 
 An asset represents a transferrable item of value. Although the Interledger Protocol (ILP) supports the transfer of any asset deemed to have value, assets are generally denominated in a currency. For example fiat currencies, central bank digital currencies, and branded currencies (such as merchant reward points).
 
-Part of Rafiki's [integration requirements](/integration/requirements/assets) include adding one or more assets that you support.
+Part of Rafiki's [integration requirements](/es/integration/requirements/assets) include adding one or more assets that you support.
 
 An asset is made up of the following properties.
 
@@ -77,14 +77,14 @@ Whenever an outgoing payment/incoming payment is in a different asset than the p
 :::note
 If you and your peer transact in the same asset (there's no currency conversion) and you both provide your customers only with wallet addresses denominated in that asset, then there will be no movement into/from the corresponding asset's liquidity account.
 
-For example, you and your peer transact in USD and only provide your customers with USD wallet addresses. One of your customers sends \$10 to your peer's customer. There's no movement from your USD asset liquidity account because there was no currency conversion. There is, however, an [outgoing payment liquidity account](/overview/concepts/accounting#outgoing-payment-liquidity-accounts) created to support the transaction.
+For example, you and your peer transact in USD and only provide your customers with USD wallet addresses. One of your customers sends \$10 to your peer's customer. There's no movement from your USD asset liquidity account because there was no currency conversion. There is, however, an [outgoing payment liquidity account](/es/overview/concepts/accounting#outgoing-payment-liquidity-accounts) created to support the transaction.
 :::
 
 You can add a liquidity threshold for each asset liquidity account via the [`updateAsset`](https://rafiki.dev/apis/graphql/backend/mutations/#updateasset) mutation's `liquidityThreshold` input argument.
 
-When a threshold is entered, the [`asset.liquidity_low`](/integration/requirements/webhook-events#asset-liquidity-low) webhook event notifies you if an asset account's liquidity drops below the threshold.
+When a threshold is entered, the [`asset.liquidity_low`](/es/integration/requirements/webhook-events#asset-liquidity-low) webhook event notifies you if an asset account's liquidity drops below the threshold.
 
-You should define and adjust asset liquidity based on your liquidity risk profile. You can deposit or withdraw asset liquidity as needed through [Rafiki Admin](/admin/admin-user-guide#edit-asset) or by using the [Backend Admin API](/admin/liquidity/asset-liquidity#manage-asset-liquidity-using-the-backend-admin-api).
+You should define and adjust asset liquidity based on your liquidity risk profile. You can deposit or withdraw asset liquidity as needed through [Rafiki Admin](/es/admin/admin-user-guide#edit-asset) or by using the [Backend Admin API](/es/admin/liquidity/asset-liquidity#manage-asset-liquidity-using-the-backend-admin-api).
 
 <details>
 <summary>Asset liquidity example - cross-currency transactions</summary>
@@ -132,9 +132,9 @@ If a peer’s liquidity is insufficient (for example, they’ve used up their al
 
 You can add a liquidity threshold for each peer liquidity account via the [`updatePeer`](https://rafiki.dev/apis/graphql/backend/mutations/#updatepeer) mutation's `liquidityThreshold` input argument.
 
-When a threshold is entered, the [`peer.liquidity_low`](/integration/requirements/webhook-events#peer-liquidity-low) webhook event notifies you if a peer's liquidity drops below the threshold.
+When a threshold is entered, the [`peer.liquidity_low`](/es/integration/requirements/webhook-events#peer-liquidity-low) webhook event notifies you if a peer's liquidity drops below the threshold.
 
-You should define and adjust each peer's liquidity based on your liquidity risk profile. You can deposit or withdraw peer liquidity as needed through [Rafiki Admin](/admin/admin-user-guide#edit-peer) or by using the [Backend Admin API](/admin/liquidity/peer-liquidity#manage-peer-liquidity-using-the-backend-admin-api).
+You should define and adjust each peer's liquidity based on your liquidity risk profile. You can deposit or withdraw peer liquidity as needed through [Rafiki Admin](/es/admin/admin-user-guide#edit-peer) or by using the [Backend Admin API](/es/admin/liquidity/peer-liquidity#manage-peer-liquidity-using-the-backend-admin-api).
 
 <details>
 <summary>Peer liquidity example</summary>
@@ -160,7 +160,7 @@ Payment liquidity is the amount that's available because of an incoming or outgo
 
 An incoming payment liquidity account represents the value received for an incoming payment. Incoming payments are created via <LinkOut href="https://openpayments.dev/apis/resource-server/operations/create-incoming-payment/">Open Payments</LinkOut>. When the first packet for an incoming payment is received, a corresponding liquidity account is automatically created. You will have one liquidity account per incoming payment.
 
-You are notified of created, completed, and expired incoming payments by listening for the appropriate [webhook events](/integration/requirements/webhook-events/#incoming-payments). Since Rafiki doesn't hold funds, anything you receive must be withdrawn and then credited to the recipient's account on your ledger.
+You are notified of created, completed, and expired incoming payments by listening for the appropriate [webhook events](/es/integration/requirements/webhook-events/#incoming-payments). Since Rafiki doesn't hold funds, anything you receive must be withdrawn and then credited to the recipient's account on your ledger.
 
 The liquidity account isn’t used again after the payment completes, but its record remains in your accounting database. When a new incoming payment occurs, a new liquidity account is created.
 
@@ -168,7 +168,7 @@ The liquidity account isn’t used again after the payment completes, but its re
 
 An outgoing payment liquidity account represents the value available to send in an outgoing payment. When an outgoing payment is created via <LinkOut href="https://openpayments.dev/apis/resource-server/operations/create-outgoing-payment/">Open Payments</LinkOut>, a corresponding liquidity account is automatically created. You will have one liquidity account per outgoing payment.
 
-You are notified of created, completed, and failed outgoing payments by listening for the appropriate [webhook events](/integration/requirements/webhook-events/#outgoing-payments). Liquidity must be deposited into the outgoing payment account before the payment can be processed.
+You are notified of created, completed, and failed outgoing payments by listening for the appropriate [webhook events](/es/integration/requirements/webhook-events/#outgoing-payments). Liquidity must be deposited into the outgoing payment account before the payment can be processed.
 
 You may occasionally have excess liquidity, such as when an outgoing payment only partially completes and a portion of the send-amount remains. Since Rafiki doesn’t hold funds, any excess liquidity that remains after an outgoing payment completes must be withdrawn from the outgoing payment liquidity account. How you choose to handle the excess is up to you. You could, for example, refund the excess to the sender or take the amount as a fee.
 
@@ -176,9 +176,9 @@ The account isn’t used again after the payment completes, but its record remai
 
 ##### Wallet address liquidity accounts
 
-A wallet address liquidity account contains the value received to a wallet address via [SPSP](/overview/concepts/interledger#simple-payment-setup-protocol-spsp). When an incoming payment is created, a corresponding liquidity account is automatically created. You will have one account per wallet address.
+A wallet address liquidity account contains the value received to a wallet address via [SPSP](/es/overview/concepts/interledger#simple-payment-setup-protocol-spsp). When an incoming payment is created, a corresponding liquidity account is automatically created. You will have one account per wallet address.
 
-Since Rafiki doesn’t hold funds, you must withdraw the liquidity when the payment completes and credit the funds to the recipient’s account on your ledger. You are notified to withdraw liquidity by listening for the appropriate [webhook event](/integration/requirements/webhook-events#wallet-addresses).
+Since Rafiki doesn’t hold funds, you must withdraw the liquidity when the payment completes and credit the funds to the recipient’s account on your ledger. You are notified to withdraw liquidity by listening for the appropriate [webhook event](/es/integration/requirements/webhook-events#wallet-addresses).
 
 Unlike the incoming and outgoing payment liquidity accounts, the same wallet address liquidity account will be used for future incoming SPSP payments.
 
@@ -206,9 +206,9 @@ Now, your peer liquidity account's balance is \$9,900 and your USD settlement ac
 
 ### TigerBeetle
 
-TigerBeetle is a high-performance distributed financial accounting database used by Rafiki’s [backend service](/integration/deployment/services/backend-service) to store account balance data. Both liquidity and settlement accounts in Rafiki correspond to TigerBeetle credit and debit accounts, respectively.
+TigerBeetle is a high-performance distributed financial accounting database used by Rafiki’s [backend service](/es/integration/deployment/services/backend-service) to store account balance data. Both liquidity and settlement accounts in Rafiki correspond to TigerBeetle credit and debit accounts, respectively.
 
-TigerBeetle only holds balance data without any additional ILP packet metadata. For detailed information on TigerBeetle, including its consensus mechanism and its limitations, visit the official TigerBeetle <LinkOut href="https://docs.tigerbeetle.com/">documentation</LinkOut> and <LinkOut href="https://tigerbeetle.com/blog/">blog</LinkOut>. For more information about TigerBeetle in a production Rafiki environment, see [Running Rafiki in production](/integration/deployment/helm-k8s).
+TigerBeetle only holds balance data without any additional ILP packet metadata. For detailed information on TigerBeetle, including its consensus mechanism and its limitations, visit the official TigerBeetle <LinkOut href="https://docs.tigerbeetle.com/">documentation</LinkOut> and <LinkOut href="https://tigerbeetle.com/blog/">blog</LinkOut>. For more information about TigerBeetle in a production Rafiki environment, see [Running Rafiki in production](/es/integration/deployment/helm-k8s).
 
 ### Postgres
 
@@ -259,7 +259,7 @@ A two-phase transfer moves funds in two stages.
 
 The name two-phase transfer is a reference to the <LinkOut href="https://en.wikipedia.org/wiki/Two-phase_commit_protocol">two-phase commit protocol</LinkOut> for distributed transactions.
 
-You can [post and commit](/admin/liquidity/two-phase-transfers#post-and-commit-a-successful-transfer) a successful two-phase transfer and [void and roll back](/admin/liquidity/two-phase-transfers#void-and-roll-back-an-unsuccessful-transfer) an unsuccessful two-phase transfer by using the Backend Admin API.
+You can [post and commit](/es/admin/liquidity/two-phase-transfers#post-and-commit-a-successful-transfer) a successful two-phase transfer and [void and roll back](/es/admin/liquidity/two-phase-transfers#void-and-roll-back-an-unsuccessful-transfer) an unsuccessful two-phase transfer by using the Backend Admin API.
 
 ### Intra-Rafiki transfer examples
 
