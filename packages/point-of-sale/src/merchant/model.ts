@@ -7,5 +7,4 @@ export class Merchants extends BaseModel {
 
   public name!: string
   public deletedAt!: Date | null
-
 }
