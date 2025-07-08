@@ -16,6 +16,16 @@ peers:
     routes:
       - "test.cloud-nine-wallet"
   - initialLiquidity: '1000000000000'
+    peerUrl: http://cloud-nine-wallet-backend:3002
+    peerIlpAddress: test.cloud-nine-wallet.bc293b79-8609-47bd-b914-6438b470aff8
+    liquidityThreshold: 1000000
+    tokens:
+      incoming:
+        - cloud-ten-to-intergalactic
+      outgoing: intergalactic-to-cloud-ten
+    routes: 
+      - "test.cloud-nine-wallet.bc293b79-8609-47bd-b914-6438b470aff8"
+  - initialLiquidity: '1000000000000'
     peerUrl: http://global-bank-backend:3002
     peerIlpAddress: test.global-bank
     liquidityThreshold: 1000000
@@ -25,6 +35,7 @@ peers:
       outgoing: intergalactic-to-global
     routes:
       - "test.global-bank"
+      - "test"
 accounts:
   - name: 'Intergalactic Account'
     path: accounts/intergalactic

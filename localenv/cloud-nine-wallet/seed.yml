@@ -3,30 +3,18 @@ assets:
     scale: 2
     liquidity: 1000000000000
     liquidityThreshold: 10000000
-  # - code: EUR
-  #   scale: 2
-  #   liquidity: 100000000
-  #   liquidityThreshold: 10000000
-  # - code: MXN
-  #   scale: 2
-  #   liquidity: 100000000
-  #   liquidityThreshold: 10000000
-  # - code: JPY
-  #   scale: 0
-  #   liquidity: 1000000
-  #   liquidityThreshold: 100000
 peeringAsset: 'USD'
 peers:
   - initialLiquidity: '1000000000000'
-    peerUrl: http://global-bank-backend:3002
-    peerIlpAddress: test.global-bank
+    peerUrl: http://intergalactic-bank-backend:3002
+    peerIlpAddress: test.intergalactic-bank
     liquidityThreshold: 1000000
     tokens:
       incoming:
-        - global-bank-to-cloud-nine
-      outgoing: cloud-nine-to-global-bank
+        - intergalactic-to-cloud-nine
+      outgoing: cloud-nine-to-intergalactic
     routes: 
-      - "test.global-bank"
+      - "test.intergalactic-bank"
       - "test.happy-life-bank"
 accounts:
   - name: 'Grace Franklin'
