@@ -13,7 +13,8 @@ describe('Card Service', () => {
       post: jest.fn()
     }
     mockLogger = {
-      error: jest.fn()
+      error: jest.fn(),
+      child: jest.fn().mockReturnThis()
     }
     cardServiceHost = 'http://card-service.test'
     cardService = await createCardService({
@@ -61,8 +62,7 @@ describe('Card Service', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.objectContaining({
           status: 500,
-          eventDetails,
-          serviceName: 'card-service'
+          eventDetails
         }),
         'Failed to send payment event'
       )

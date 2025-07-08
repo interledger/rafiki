@@ -1,7 +1,6 @@
 import { AxiosInstance } from 'axios'
 import { Logger } from 'pino'
 
-const SERVICE_NAME = 'card-service'
 const PAYMENT_FOUNDED_PATH = '/payment-event'
 
 type EventDetails = {
@@ -21,8 +20,16 @@ interface ServiceDependencies {
 }
 
 export async function createCardService(
-  deps: ServiceDependencies
+  deps_: ServiceDependencies
 ): Promise<CardService> {
+  const logger = deps_.logger.child({
+    service: 'card-service',
+  })
+  const deps = {
+    ...deps_,
+    logger,
+  }
+  
   return {
     sendPaymentEvent: (eventDetails: EventDetails) =>
       sendPaymentEvent(deps, eventDetails)
@@ -40,7 +47,7 @@ async function sendPaymentEvent(
 
   if (status !== 200) {
     deps.logger.error(
-      { status, eventDetails, serviceName: SERVICE_NAME },
+      { status, eventDetails },
       'Failed to send payment event'
     )
     throw new Error(
