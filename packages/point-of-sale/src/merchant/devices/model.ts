@@ -9,7 +9,7 @@ export enum DeviceStatus {
 
 export class PosDevice extends BaseModel {
   public static get tableName(): string {
-    return 'pos_devices'
+    return 'posDevices'
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -18,7 +18,7 @@ export class PosDevice extends BaseModel {
       relation: Model.BelongsToOneRelation,
       modelClass: join(__dirname, '../model'),
       join: {
-        from: 'pos_devices.merchantId',
+        from: 'posDevices.merchantId',
         to: 'merchants.id'
       }
     }

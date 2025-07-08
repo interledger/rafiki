@@ -14,7 +14,7 @@ export class Merchant extends BaseModel {
       modelClass: join(__dirname, './devices/model'),
       join: {
         from: 'merchants.id',
-        to: 'pos_devices.merchantId'
+        to: 'posDevices.merchantId'
       }
     }
   })
