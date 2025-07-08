@@ -7,7 +7,7 @@ import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
 import RafikiLogo from "../components/RafikiLogo.astro";
 ---
 <div class="header sl-flex">
-  <a href={getRelativeLocaleUrl("es")} class="site-logo">
+  <a href={getRelativeLocaleUrl(Astro.currentLocale ?? 'en', '/')} class="site-logo">
     <RafikiLogo />
   </a>
   <div class="secondary-wrap">
@@ -15,8 +15,8 @@ import RafikiLogo from "../components/RafikiLogo.astro";
     <SocialIcons />
     <div class="sl-hidden md:sl-flex">
       <ThemeSelect />
-      <LanguageSelect />
     </div>
+    <LanguageSelect />
   </div>
 </div>
 
