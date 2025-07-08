@@ -54,7 +54,7 @@ services:
       TRUST_PROXY: ${TRUST_PROXY} 
       LOG_LEVEL: debug 
       CARD_SERVICE_PORT: 3007 
-      DATABASE_URL: postgresql://cloud_nine_wallet_point-of-sale:cloud_nine_wallet_point-of-sale@shared-database/cloud_nine_wallet_point-of-sale 
+      DATABASE_URL: postgresql://cloud_nine_wallet_point_of_sale:cloud_nine_wallet_point_of_sale@shared-database/cloud_nine_wallet_point_of_sale 
     depends_on: 
       - shared-database 
     healthcheck: 
