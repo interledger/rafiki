@@ -144,6 +144,17 @@ export const start = async (
   logger.info(`POS Service listening on ${app.getPort()}`)
 }
 
+if (require.main === module) {
+  const container = initIocContainer(Config)
+  const app = new App(container)
+
+  start(container, app).catch(async (e): Promise<void> => {
+    const errInfo = e && typeof e === 'object' && e.stack ? e.stack : e
+    const logger = await container.use('logger')
+    logger.error({ err: errInfo })
+  })
+}
+
 // Used for running migrations in a try loop with exponential backoff
 const callWithRetry: CallableFunction = async (
   fn: CallableFunction,
