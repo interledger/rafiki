@@ -18,13 +18,16 @@
     "knex": "^3.1.0",
     "koa": "^2.15.4",
     "objection": "^3.1.5",
-    "pino": "^8.19.0"
+    "objection-db-errors": "^1.1.2",
+    "pino": "^8.19.0",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@types/koa": "2.15.0",
     "@types/koa-bodyparser": "^4.3.12",
     "@types/koa__cors": "^5.0.0",
     "@types/koa__router": "^12.0.4",
+    "@types/uuid": "^9.0.8",
     "ts-node-dev": "^2.0.0"
   }
 }
