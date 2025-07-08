@@ -69,4 +69,4 @@ describe('POS Store Service', () => {
       )
     })
   })
-}) 
+})
