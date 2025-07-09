@@ -10,7 +10,7 @@ exports.up = function (knex) {
 
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
-    table.timestamp('deletedAt')
+    table.timestamp('deletedAt').nullable()
   })
 }
 
