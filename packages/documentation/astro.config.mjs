@@ -44,7 +44,8 @@ export default defineConfig({
       },
       components: {
         Header: './src/components/Header.astro',
-        PageSidebar: './src/components/PageSidebar.astro'
+        PageSidebar: './src/components/PageSidebar.astro',
+        'starlight/components/Sidebar/SidebarSublist.astro': './src/components/SidebarSublist.astro'
       },
       head: [
         {
@@ -263,21 +264,21 @@ export default defineConfig({
           collapsed: true,
           items: [
             {
-              label: 'GraphQL Admin APIs',
-              link: '/apis/graphql/admin-api-overview'
-            },
-            {
               label: 'Backend Admin API',
-              collapsed: true,
-              autogenerate: {
-                directory: 'apis/graphql/backend'
+              link: '/backend-admin-api',
+              attrs: {
+                target: '_blank',
+                rel: 'noopener noreferrer',
+                'data-icon': 'external'
               }
             },
             {
               label: 'Auth Admin API',
-              collapsed: true,
-              autogenerate: {
-                directory: 'apis/graphql/auth'
+              link: '/auth-admin-api',
+              attrs: {
+                target: '_blank',
+                rel: 'noopener noreferrer',
+                'data-icon': 'external'
               }
             }
           ]
