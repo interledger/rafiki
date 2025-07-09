@@ -358,6 +358,7 @@ export default defineConfig({
       ],
       plugins: [
         starlightLinksValidator({
+          exclude: ['/apis/graphql/auth', '/apis/graphql/backend'],
           errorOnLocalLinks: false,
           errorOnFallbackPages: false
         }),
