@@ -3,7 +3,6 @@ import { GenericContainer, Wait } from 'testcontainers'
 require('./jest.env') // set environment variables
 
 const POSTGRES_PORT = 5432
-const REDIS_PORT = 6379
 
 const setup = async (globalConfig): Promise<void> => {
   const workers = globalConfig.maxWorkers
@@ -34,7 +33,7 @@ const setup = async (globalConfig): Promise<void> => {
         POSTGRES_PORT
       )}/testing`
 
-      global.__BACKEND_POSTGRES__ = postgresContainer
+      global.__POS_POSTGRES__ = postgresContainer
     }
 
     const db = knex({
@@ -66,23 +65,10 @@ const setup = async (globalConfig): Promise<void> => {
       await db.raw(`CREATE DATABASE ${workerDatabaseName} TEMPLATE testing`)
     }
 
-    global.__BACKEND_KNEX__ = db
+    global.__POS_KNEX__ = db
   }
 
-  const setupRedis = async () => {
-    if (!process.env.REDIS_URL) {
-      const redisContainer = await new GenericContainer('redis:7')
-        .withExposedPorts(REDIS_PORT)
-        .start()
-
-      global.__BACKEND_REDIS__ = redisContainer
-      process.env.REDIS_URL = `redis://localhost:${redisContainer.getMappedPort(
-        REDIS_PORT
-      )}`
-    }
-  }
-
-  await Promise.all([setupDatabase(), setupRedis()])
+  await Promise.all([setupDatabase()])
 }
 
 export default setup
