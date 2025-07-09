@@ -263,6 +263,10 @@ export default defineConfig({
           collapsed: true,
           items: [
             {
+              label: 'GraphQL Admin APIs',
+              link: '/apis/graphql/admin-api-overview'
+            },
+            {
               label: 'Backend Admin API',
               link: '/backend-admin-api',
               attrs: {
