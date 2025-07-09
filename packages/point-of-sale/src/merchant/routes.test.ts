@@ -1,6 +1,4 @@
 import { IocContract } from '@adonisjs/fold'
-import { v4 } from 'uuid'
-
 import { createContext } from '../tests/context'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
@@ -13,7 +11,6 @@ import {
   createMerchantRoutes
 } from './routes'
 import { MerchantService } from './service'
-import { Merchant } from './model'
 
 describe('Merchant Routes', (): void => {
   let deps: IocContract<AppServices>

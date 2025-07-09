@@ -1,5 +1,3 @@
-import { ParsedUrlQuery } from 'querystring'
-
 import { AppContext } from '../app'
 import { BaseService } from '../shared/baseService'
 import { MerchantService } from './service'
