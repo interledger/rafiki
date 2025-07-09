@@ -75,19 +75,18 @@ async function updateCardPayment(
   if (!deps.knex) {
     throw new Error('Knex undefined')
   }
+  const existingPayment = await CardPayment.query(deps.knex)
+    .findOne('requestId', requestId)
+    .throwIfNotFound()
 
-  try {
-    const cardPayment = await CardPayment.query(deps.knex)
-      .where('requestId', requestId)
-      .patchAndFetch({
-        finalizedAt,
-        statusCode,
-        outgoingPaymentId
-      })
-      .throwIfNotFound()
+  const cardPayment = await CardPayment.query(deps.knex).patchAndFetchById(
+    existingPayment.id,
+    {
+      finalizedAt,
+      statusCode,
+      outgoingPaymentId
+    }
+  )
 
-    return cardPayment
-  } catch (err) {
-    return undefined
-  }
+  return cardPayment
 }
