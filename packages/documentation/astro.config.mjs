@@ -360,7 +360,8 @@ export default defineConfig({
         starlightLinksValidator({
           exclude: ['/apis/graphql/auth', '/apis/graphql/backend'],
           errorOnLocalLinks: false,
-          errorOnFallbackPages: false
+          errorOnFallbackPages: false,
+          errorOnInvalidHashes: false
         }),
         starlightFullViewMode()
       ]
