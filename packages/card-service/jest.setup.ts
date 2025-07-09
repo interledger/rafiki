@@ -22,7 +22,7 @@ const setup = async (globalConfig): Promise<void> => {
           POSTGRES_PASSWORD: 'password'
         })
         .withHealthCheck({
-          test: ['CMD-SHELL', 'pg_isready -d card_service_testing'],
+          test: ['CMD-SHELL', 'pg_isready -d testing'],
           interval: 10000,
           timeout: 5000,
           retries: 5
@@ -32,7 +32,7 @@ const setup = async (globalConfig): Promise<void> => {
 
       process.env.DATABASE_URL = `postgresql://postgres:password@localhost:${postgresContainer.getMappedPort(
         POSTGRES_PORT
-      )}/card_service_testing`
+      )}/testing`
 
       global.__CARD_SERVICE_POSTGRES__ = postgresContainer
     }
@@ -45,7 +45,7 @@ const setup = async (globalConfig): Promise<void> => {
         max: 10
       },
       migrations: {
-        tableName: 'card_service_knex_migrations'
+        tableName: 'knex_migrations'
       }
     })
 
@@ -60,12 +60,10 @@ const setup = async (globalConfig): Promise<void> => {
     })
 
     for (let i = 1; i <= workers; i++) {
-      const workerDatabaseName = `card_service_testing_${i}`
+      const workerDatabaseName = `testing_${i}`
 
       await db.raw(`DROP DATABASE IF EXISTS ${workerDatabaseName}`)
-      await db.raw(
-        `CREATE DATABASE ${workerDatabaseName} TEMPLATE card_service_testing`
-      )
+      await db.raw(`CREATE DATABASE ${workerDatabaseName} TEMPLATE testing`)
     }
 
     global.__CARD_SERVICE_KNEX__ = db

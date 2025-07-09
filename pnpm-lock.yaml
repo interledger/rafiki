@@ -602,6 +602,9 @@ importers:
       jest-environment-node:
         specifier: ^29.7.0
         version: 29.7.0
+      nock:
+        specifier: 14.0.0-beta.19
+        version: 14.0.0-beta.19
       testcontainers:
         specifier: ^10.16.0
         version: 10.16.0
