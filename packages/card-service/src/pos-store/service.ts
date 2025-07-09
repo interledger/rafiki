@@ -1,6 +1,8 @@
 import Redis from 'ioredis'
 import { Logger } from 'pino'
 
+const POS_TTL = 300 // 5 minutes
+
 export type StoreDependencies = {
   logger: Logger
   redis: Redis
@@ -47,7 +49,7 @@ const addPOS = async (
   requestId: string,
   POSHost: string
 ) => {
-  await deps.redis.set(requestId, POSHost, 'EX', 300)
+  await deps.redis.set(requestId, POSHost, 'EX', POS_TTL)
   deps.logger.info({ requestId, POSHost }, 'POS was added for the given requestId')
 }
 
