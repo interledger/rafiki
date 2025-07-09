@@ -45,7 +45,6 @@ export default defineConfig({
       components: {
         Header: './src/components/Header.astro',
         PageSidebar: './src/components/PageSidebar.astro',
-        'starlight/components/Sidebar/SidebarSublist.astro': './src/components/SidebarSublist.astro'
       },
       head: [
         {
