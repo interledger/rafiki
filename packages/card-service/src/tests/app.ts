@@ -22,7 +22,7 @@ export const createTestApp = async (
   await app.boot()
   await app.startCardServiceServer(config.cardServicePort)
 
-  const knex = global.__CARD_SERVICE_KNEX__
+  const knex = await container.use('knex')
 
   return {
     app,
