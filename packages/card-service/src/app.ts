@@ -6,6 +6,9 @@ import Router from '@koa/router'
 import bodyParser from 'koa-bodyparser'
 import { Server } from 'http'
 import cors from '@koa/cors'
+import { createValidatorMiddleware, HttpMethod } from '@interledger/openapi'
+import { PaymentContext } from './payment/types'
+import { PaymentEventContext } from './payment/types'
 
 export interface AppServices {
   logger: Promise<Logger>
@@ -45,7 +48,26 @@ export class App {
       ctx.status = 200
     })
 
-    // Add routes here...
+    const openApi = await this.container.use('openApi')
+
+    const paymentRoutes = await this.container.use('paymentRoutes')
+    router.post<DefaultState, PaymentContext>(
+      '/payment',
+      createValidatorMiddleware<PaymentContext>(openApi.cardServerSpec, {
+        path: '/payment',
+        method: HttpMethod.POST
+      }),
+      paymentRoutes.create
+    )
+
+    router.post<DefaultState, PaymentEventContext>(
+      '/payment-event',
+      createValidatorMiddleware<PaymentEventContext>(openApi.cardServerSpec, {
+        path: '/payment-event',
+        method: HttpMethod.POST
+      }),
+      paymentRoutes.paymentEvent
+    )
 
     koa.use(cors())
     koa.use(router.routes())

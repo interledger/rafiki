@@ -1,0 +1,103 @@
+openapi: 3.0.3
+info:
+  title: Card Service API
+  version: 1.0.0
+paths:
+  /payment:
+    post:
+      summary: Accept a payment request from POS
+      operationId: createPayment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - requestId
+                - card
+                - merchantWalletAddress
+                - incomingPaymentUrl
+                - date
+                - signature
+                - terminalCert
+                - terminalId
+              properties:
+                requestId:
+                  type: string
+                card:
+                  type: object
+                  required:
+                    - walletAddress
+                    - transactionCounter
+                    - expiry
+                  properties:
+                    walletAddress:
+                      type: string
+                    transactionCounter:
+                      type: integer
+                    expiry:
+                      type: string
+                merchantWalletAddress:
+                  type: string
+                incomingPaymentUrl:
+                  type: string
+                date:
+                  type: string
+                signature:
+                  type: string
+                terminalCert:
+                  type: string
+                terminalId:
+                  type: string
+      responses:
+        '201':
+          description: Payment request accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+        '400':
+          description: Invalid request
+        '500':
+          description: Internal server error
+  /payment-event:
+    post:
+      summary: Handle payment event result from backend
+      operationId: handlePaymentEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - requestId
+                - outgoingPaymentId
+                - result
+              properties:
+                requestId:
+                  type: string
+                outgoingPaymentId:
+                  type: string
+                result:
+                  type: object
+                  required:
+                    - code
+                  properties:
+                    code:
+                      type: string
+                      enum:
+                        - completed
+                        - card_expired
+                        - invalid_signature
+      responses:
+        '202':
+          description: Payment event accepted and forwarded
+        '400':
+          description: Malformed request body
+        '404':
+          description: Request not found
