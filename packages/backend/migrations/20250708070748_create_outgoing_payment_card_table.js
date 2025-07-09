@@ -6,7 +6,7 @@ exports.up = function(knex) {
     return knex.schema.createTable('outgoingPaymentCardDetails', function(table) {
         table.uuid('id').notNullable().primary()
         table.string('signature').notNullable();
-        table.timestamp('expiry').notNullable();
+        table.string('expiry').notNullable();
         table.uuid('outgoingPaymentId').notNullable();
 
         table.foreign('outgoingPaymentId')

@@ -419,7 +419,7 @@ async function createOutgoingPayment(
                 trx
               ).insertAndFetch({
                 outgoingPaymentId: payment.id,
-                expiry: new Date(options.cardDetails?.expiry),
+                expiry: options.cardDetails?.expiry,
                 signature: options.cardDetails?.signature
               })
               payment.cardDetails = card

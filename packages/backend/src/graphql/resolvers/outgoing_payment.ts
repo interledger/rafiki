@@ -259,7 +259,7 @@ function cardToGraphql(payment: OutgoingPayment): OutgoingPaymentCardDetails | u
   return {
     id: payment.cardDetails.id,
     outgoingPaymentId: payment.cardDetails.outgoingPaymentId,
-    expiry: new Date(+payment.cardDetails.expiry).toISOString(),
+    expiry: payment.cardDetails.expiry,
     signature: payment.cardDetails.signature,
     updatedAt: new Date(+payment.cardDetails.updatedAt).toISOString(),
     createdAt: new Date(+payment.cardDetails.createdAt).toISOString()

@@ -6,7 +6,7 @@ export class OutgoingPaymentsCardDetails extends BaseModel {
     return 'outgoingPaymentCardDetails'
   }
 
-  public expiry!: Date
+  public expiry!: string
   public readonly outgoingPaymentId!: string
   public signature!: string
 
