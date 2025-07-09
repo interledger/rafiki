@@ -5,7 +5,7 @@ import { MerchantService } from './service'
 
 import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
-import { Config, IAppConfig } from '../config/app'
+import { Config } from '../config/app'
 
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
