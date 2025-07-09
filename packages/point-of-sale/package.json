@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests --maxWorkers=50%",
     "knex": "knex",
     "dev": "ts-node-dev --inspect=0.0.0.0:9229 --respawn --transpile-only src/index.ts",
     "build": "pnpm build:deps && pnpm clean && tsc --build tsconfig.json",
@@ -19,6 +19,7 @@
     "@apollo/server": "^4.11.2",
     "@koa/cors": "^5.0.0",
     "@koa/router": "^12.0.2",
+    "axios": "1.8.2",
     "dotenv": "^16.4.7",
     "knex": "^3.1.0",
     "koa": "^3.0.0",
@@ -35,6 +36,7 @@
     "@types/koa-bodyparser": "^4.3.12",
     "@types/koa__cors": "^5.0.0",
     "@types/koa__router": "^12.0.4",
-    "@types/uuid": "^9.0.8"
+    "@types/uuid": "^9.0.8",
+    "nock": "14.0.0-beta.19"
   }
 }

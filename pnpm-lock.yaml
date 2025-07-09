@@ -793,6 +793,9 @@ importers:
       '@koa/router':
         specifier: ^12.0.2
         version: 12.0.2
+      axios:
+        specifier: 1.8.2
+        version: 1.8.2(debug@4.3.2)
       dotenv:
         specifier: ^16.4.7
         version: 16.4.7
@@ -839,6 +842,9 @@ importers:
       '@types/uuid':
         specifier: ^9.0.8
         version: 9.0.8
+      nock:
+        specifier: 14.0.0-beta.19
+        version: 14.0.0-beta.19
 
   packages/token-introspection:
     dependencies:

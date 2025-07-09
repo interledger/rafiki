@@ -7,11 +7,13 @@ import Koa, { DefaultState } from 'koa'
 import Router from '@koa/router'
 import bodyParser from 'koa-bodyparser'
 import cors from '@koa/cors'
+import { CardServiceClient } from './card-service-client/client'
 
 export interface AppServices {
   logger: Promise<Logger>
   knex: Promise<Knex>
   config: Promise<IAppConfig>
+  cardServiceClient: Promise<CardServiceClient>
 }
 
 export type AppContainer = IocContract<AppServices>
