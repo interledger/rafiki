@@ -34,5 +34,7 @@ export const Config = {
   env: envString('NODE_ENV', 'development'),
   port: envInt('PORT', 3008),
   trustProxy: envBool('TRUST_PROXY', false),
-  enableManualMigrations: envBool('ENABLE_MANUAl_MIGRATIONS', false)
+  enableManualMigrations: envBool('ENABLE_MANUAl_MIGRATIONS', false),
+  dbSchema: undefined as string | undefined,
+  tigerBeetleClusterId: envInt('TIGERBEETLE_CLUSTER_ID', 0)
 }
