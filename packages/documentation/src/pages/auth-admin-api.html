@@ -1,10 +1,14 @@
-
 <!doctype html>
 <html class="no-js" lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" href="/spectaql/images/favicon.ico" sizes="32x32">
+    <link
+      rel="icon"
+      type="image/png"
+      href="/spectaql/images/favicon.ico"
+      sizes="32x32"
+    />
     <title>Rafiki Auth Admin API</title>
     <link rel="stylesheet" href="/spectaql/stylesheets/spectaql.min.css" />
     <script src="/spectaql/javascripts/spectaql.min.js"></script>
@@ -14,7 +18,10 @@
       <div id="sidebar">
         <div class="sidebar-top-container">
           <div id="logo">
-            <img src="/spectaql/images/logo.svg" title="Rafiki Auth Admin API" />
+            <img
+              src="/spectaql/images/logo.svg"
+              title="Rafiki Auth Admin API"
+            />
           </div>
           <button class="close-button" type="button">
             <span aria-hidden="true">×</span>
@@ -56,23 +63,39 @@
             <ul class="nav-group-items">
               <li><a href="#definition-Access">Access</a></li>
               <li><a href="#definition-Boolean">Boolean</a></li>
-              <li><a href="#definition-FilterFinalizationReason">FilterFinalizationReason</a></li>
-              <li><a href="#definition-FilterGrantState">FilterGrantState</a></li>
+              <li>
+                <a href="#definition-FilterFinalizationReason"
+                  >FilterFinalizationReason</a
+                >
+              </li>
+              <li>
+                <a href="#definition-FilterGrantState">FilterGrantState</a>
+              </li>
               <li><a href="#definition-FilterString">FilterString</a></li>
               <li><a href="#definition-Grant">Grant</a></li>
               <li><a href="#definition-GrantEdge">GrantEdge</a></li>
               <li><a href="#definition-GrantFilter">GrantFilter</a></li>
-              <li><a href="#definition-GrantFinalization">GrantFinalization</a></li>
+              <li>
+                <a href="#definition-GrantFinalization">GrantFinalization</a>
+              </li>
               <li><a href="#definition-GrantState">GrantState</a></li>
-              <li><a href="#definition-GrantsConnection">GrantsConnection</a></li>
+              <li>
+                <a href="#definition-GrantsConnection">GrantsConnection</a>
+              </li>
               <li><a href="#definition-ID">ID</a></li>
               <li><a href="#definition-Int">Int</a></li>
               <li><a href="#definition-LimitData">LimitData</a></li>
               <li><a href="#definition-Model">Model</a></li>
               <li><a href="#definition-PageInfo">PageInfo</a></li>
               <li><a href="#definition-PaymentAmount">PaymentAmount</a></li>
-              <li><a href="#definition-RevokeGrantInput">RevokeGrantInput</a></li>
-              <li><a href="#definition-RevokeGrantMutationResponse">RevokeGrantMutationResponse</a></li>
+              <li>
+                <a href="#definition-RevokeGrantInput">RevokeGrantInput</a>
+              </li>
+              <li>
+                <a href="#definition-RevokeGrantMutationResponse"
+                  >RevokeGrantMutationResponse</a
+                >
+              </li>
               <li><a href="#definition-SortOrder">SortOrder</a></li>
               <li><a href="#definition-String">String</a></li>
               <li><a href="#definition-UInt64">UInt64</a></li>
@@ -93,19 +116,36 @@
           <div id="introduction" data-traverse-target="introduction">
             <div id="welcome" class="doc-row">
               <div class="doc-copy">
-                <p>The Auth Admin API allows you to get information about a grant, such as its status, state, related payment details, and the wallet address of the grantee’s account. The API also allows you to revoke grants.</p>
+                <p>
+                  The Auth Admin API allows you to get information about a
+                  grant, such as its status, state, related payment details, and
+                  the wallet address of the grantee’s account. The API also
+                  allows you to revoke grants.
+                </p>
               </div>
               <div class="doc-examples">
-                <div class="example-section welcome-api-endpoints-section example-section-is-code">
+                <div
+                  class="example-section welcome-api-endpoints-section example-section-is-code"
+                >
                   <h5>API Endpoints</h5>
                   <pre><code>https://my.production.tld/graphql</code></pre>
                 </div>
               </div>
             </div>
           </div>
-          <h1 id="group-Operations-Queries" class="group-heading" data-traverse-target="group-Operations-Queries">Queries</h1>
-          <section id="query-grant" class="operation operation-query" data-traverse-target="query-grant">
-            <h2 class="operation-heading ">
+          <h1
+            id="group-Operations-Queries"
+            class="group-heading"
+            data-traverse-target="group-Operations-Queries"
+          >
+            Queries
+          </h1>
+          <section
+            id="query-grant"
+            class="operation operation-query"
+            data-traverse-target="query-grant"
+          >
+            <h2 class="operation-heading">
               <code>grant</code>
             </h2>
             <div class="doc-row">
@@ -120,7 +160,9 @@
               <div class="doc-copy">
                 <div class="operation-response doc-copy-section">
                   <h5>Response</h5>
-                  <p> Returns a <a href="#definition-Grant"><code>Grant!</code></a>
+                  <p>
+                    Returns a
+                    <a href="#definition-Grant"><code>Grant!</code></a>
                   </p>
                 </div>
                 <div class="operation-arguments doc-copy-section">
@@ -135,9 +177,12 @@
                     <tbody>
                       <tr>
                         <td>
-                          <span class="property-name"><code>id</code></span> - <span class="property-type"><a href="#definition-ID"><code>ID!</code></a></span>
+                          <span class="property-name"><code>id</code></span> -
+                          <span class="property-type"
+                            ><a href="#definition-ID"><code>ID!</code></a></span
+                          >
                         </td>
-                        <td> Unique identifier of the grant. </td>
+                        <td>Unique identifier of the grant.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -145,7 +190,9 @@
               </div>
               <div class="doc-examples">
                 <h4 class="example-heading">Example</h4>
-                <div class="example-section example-section-is-code operation-query-example">
+                <div
+                  class="example-section example-section-is-code operation-query-example"
+                >
                   <h5>Query</h5>
                   <pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">query</span> Grant<span class="hljs-tag">(<span class="hljs-code">$id</span>: ID!)</span> <span class="hljs-tag">{
   <span class="hljs-symbol">grant<span class="hljs-tag">(id: <span class="hljs-code">$id</span>)</span> <span class="hljs-tag">{
@@ -168,12 +215,16 @@
 }</span></span>
 </code></pre>
                 </div>
-                <div class="example-section example-section-is-code operation-variables-example">
+                <div
+                  class="example-section example-section-is-code operation-variables-example"
+                >
                   <h5>Variables</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"4"</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
-                <div class="example-section example-section-is-code operation-response-example">
+                <div
+                  class="example-section example-section-is-code operation-response-example"
+                >
                   <h5>Response</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
@@ -192,11 +243,15 @@
               </div>
             </div>
           </section>
-          <section id="query-grants" class="operation operation-query" data-traverse-target="query-grants">
+          <section
+            id="query-grants"
+            class="operation operation-query"
+            data-traverse-target="query-grants"
+          >
             <div class="operation-group-name">
               <a href="#group-Operations-Queries">Queries</a>
             </div>
-            <h2 class="operation-heading ">
+            <h2 class="operation-heading">
               <code>grants</code>
             </h2>
             <div class="doc-row">
@@ -211,7 +266,11 @@
               <div class="doc-copy">
                 <div class="operation-response doc-copy-section">
                   <h5>Response</h5>
-                  <p> Returns a <a href="#definition-GrantsConnection"><code>GrantsConnection!</code></a>
+                  <p>
+                    Returns a
+                    <a href="#definition-GrantsConnection"
+                      ><code>GrantsConnection!</code></a
+                    >
                   </p>
                 </div>
                 <div class="operation-arguments doc-copy-section">
@@ -226,39 +285,96 @@
                     <tbody>
                       <tr>
                         <td>
-                          <span class="property-name"><code>after</code></span> - <span class="property-type"><a href="#definition-String"><code>String</code></a></span>
+                          <span class="property-name"><code>after</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Forward pagination: Cursor (grant ID) to start retrieving grants after this point. </td>
+                        <td>
+                          Forward pagination: Cursor (grant ID) to start
+                          retrieving grants after this point.
+                        </td>
                       </tr>
                       <tr>
                         <td>
-                          <span class="property-name"><code>before</code></span> - <span class="property-type"><a href="#definition-String"><code>String</code></a></span>
+                          <span class="property-name"><code>before</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Backward pagination: Cursor (grant ID) to start retrieving grants before this point. </td>
+                        <td>
+                          Backward pagination: Cursor (grant ID) to start
+                          retrieving grants before this point.
+                        </td>
                       </tr>
                       <tr>
                         <td>
-                          <span class="property-name"><code>first</code></span> - <span class="property-type"><a href="#definition-Int"><code>Int</code></a></span>
+                          <span class="property-name"><code>first</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-Int"
+                              ><code>Int</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Forward pagination: Limit the result to the first <strong>n</strong> grants after the <code>after</code> cursor. </td>
+                        <td>
+                          Forward pagination: Limit the result to the first
+                          <strong>n</strong> grants after the
+                          <code>after</code> cursor.
+                        </td>
                       </tr>
                       <tr>
                         <td>
-                          <span class="property-name"><code>last</code></span> - <span class="property-type"><a href="#definition-Int"><code>Int</code></a></span>
+                          <span class="property-name"><code>last</code></span> -
+                          <span class="property-type"
+                            ><a href="#definition-Int"
+                              ><code>Int</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Backward pagination: Limit the result to the last <strong>n</strong> grants before the <code>before</code> cursor. </td>
+                        <td>
+                          Backward pagination: Limit the result to the last
+                          <strong>n</strong> grants before the
+                          <code>before</code> cursor.
+                        </td>
                       </tr>
                       <tr>
                         <td>
-                          <span class="property-name"><code>filter</code></span> - <span class="property-type"><a href="#definition-GrantFilter"><code>GrantFilter</code></a></span>
+                          <span class="property-name"><code>filter</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-GrantFilter"
+                              ><code>GrantFilter</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Filter grants based on specified criteria such as ID, state, or finalization reason. </td>
+                        <td>
+                          Filter grants based on specified criteria such as ID,
+                          state, or finalization reason.
+                        </td>
                       </tr>
                       <tr>
                         <td>
-                          <span class="property-name"><code>sortOrder</code></span> - <span class="property-type"><a href="#definition-SortOrder"><code>SortOrder</code></a></span>
+                          <span class="property-name"
+                            ><code>sortOrder</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-SortOrder"
+                              ><code>SortOrder</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Specify the sort order of grants based on their creation date, either ascending or descending. </td>
+                        <td>
+                          Specify the sort order of grants based on their
+                          creation date, either ascending or descending.
+                        </td>
                       </tr>
                     </tbody>
                   </table>
@@ -266,7 +382,9 @@
               </div>
               <div class="doc-examples">
                 <h4 class="example-heading">Example</h4>
-                <div class="example-section example-section-is-code operation-query-example">
+                <div
+                  class="example-section example-section-is-code operation-query-example"
+                >
                   <h5>Query</h5>
                   <pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">query</span> Grants<span class="hljs-tag">(
   <span class="hljs-code">$after</span>:<span class="hljs-type"> String,</span>
@@ -300,7 +418,9 @@
 }</span></span>
 </code></pre>
                 </div>
-                <div class="example-section example-section-is-code operation-variables-example">
+                <div
+                  class="example-section example-section-is-code operation-variables-example"
+                >
                   <h5>Variables</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"after"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
@@ -312,7 +432,9 @@
 <span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
-                <div class="example-section example-section-is-code operation-response-example">
+                <div
+                  class="example-section example-section-is-code operation-response-example"
+                >
                   <h5>Response</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
@@ -327,9 +449,19 @@
               </div>
             </div>
           </section>
-          <h1 id="group-Operations-Mutations" class="group-heading" data-traverse-target="group-Operations-Mutations">Mutations</h1>
-          <section id="mutation-revokeGrant" class="operation operation-mutation" data-traverse-target="mutation-revokeGrant">
-            <h2 class="operation-heading ">
+          <h1
+            id="group-Operations-Mutations"
+            class="group-heading"
+            data-traverse-target="group-Operations-Mutations"
+          >
+            Mutations
+          </h1>
+          <section
+            id="mutation-revokeGrant"
+            class="operation operation-mutation"
+            data-traverse-target="mutation-revokeGrant"
+          >
+            <h2 class="operation-heading">
               <code>revokeGrant</code>
             </h2>
             <div class="doc-row">
@@ -344,7 +476,11 @@
               <div class="doc-copy">
                 <div class="operation-response doc-copy-section">
                   <h5>Response</h5>
-                  <p> Returns a <a href="#definition-RevokeGrantMutationResponse"><code>RevokeGrantMutationResponse!</code></a>
+                  <p>
+                    Returns a
+                    <a href="#definition-RevokeGrantMutationResponse"
+                      ><code>RevokeGrantMutationResponse!</code></a
+                    >
                   </p>
                 </div>
                 <div class="operation-arguments doc-copy-section">
@@ -359,10 +495,15 @@
                     <tbody>
                       <tr>
                         <td>
-                          <span class="property-name"><code>input</code></span> - <span class="property-type"><a href="#definition-RevokeGrantInput"><code>RevokeGrantInput!</code></a></span>
+                          <span class="property-name"><code>input</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-RevokeGrantInput"
+                              ><code>RevokeGrantInput!</code></a
+                            ></span
+                          >
                         </td>
-                        <td>
-                        </td>
+                        <td></td>
                       </tr>
                     </tbody>
                   </table>
@@ -370,7 +511,9 @@
               </div>
               <div class="doc-examples">
                 <h4 class="example-heading">Example</h4>
-                <div class="example-section example-section-is-code operation-query-example">
+                <div
+                  class="example-section example-section-is-code operation-query-example"
+                >
                   <h5>Query</h5>
                   <pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">mutation</span> RevokeGrant<span class="hljs-tag">(<span class="hljs-code">$input</span>:<span class="hljs-type"> RevokeGrantInput!</span>)</span> <span class="hljs-tag">{
   <span class="hljs-symbol">revokeGrant<span class="hljs-tag">(input: <span class="hljs-code">$input</span>)</span> <span class="hljs-tag">{
@@ -379,12 +522,16 @@
 }</span></span>
 </code></pre>
                 </div>
-                <div class="example-section example-section-is-code operation-variables-example">
+                <div
+                  class="example-section example-section-is-code operation-variables-example"
+                >
                   <h5>Variables</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">RevokeGrantInput</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
-                <div class="example-section example-section-is-code operation-response-example">
+                <div
+                  class="example-section example-section-is-code operation-response-example"
+                >
                   <h5>Response</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"revokeGrant"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"4"</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre>
@@ -392,8 +539,18 @@
               </div>
             </div>
           </section>
-          <h1 id="group-Types" class="group-heading" data-traverse-target="group-Types">Types</h1>
-          <section id="definition-Access" class="definition definition-object" data-traverse-target="definition-Access">
+          <h1
+            id="group-Types"
+            class="group-heading"
+            data-traverse-target="group-Types"
+          >
+            Types
+          </h1>
+          <section
+            id="definition-Access"
+            class="definition definition-object"
+            data-traverse-target="definition-Access"
+          >
             <h2 class="definition-heading">Access</h2>
             <div class="doc-row">
               <div class="doc-copy">
@@ -408,34 +565,87 @@
                     </thead>
                     <tbody>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>id</code></span> - <span class="property-type"><a href="#definition-ID"><code>ID!</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"><code>id</code></span> -
+                          <span class="property-type"
+                            ><a href="#definition-ID"><code>ID!</code></a></span
+                          >
                         </td>
-                        <td> Unique identifier of the access object. </td>
+                        <td>Unique identifier of the access object.</td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>identifier</code></span> - <span class="property-type"><a href="#definition-String"><code>String</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>identifier</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Wallet address of the sub-resource (incoming payment, outgoing payment, or quote). </td>
+                        <td>
+                          Wallet address of the sub-resource (incoming payment,
+                          outgoing payment, or quote).
+                        </td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>type</code></span> - <span class="property-type"><a href="#definition-String"><code>String!</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"><code>type</code></span> -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String!</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Type of access (incoming payment, outgoing payment, or quote). </td>
+                        <td>
+                          Type of access (incoming payment, outgoing payment, or
+                          quote).
+                        </td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>actions</code></span> - <span class="property-type"><a href="#definition-String"><code>[String]!</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>actions</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>[String]!</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Actions allowed with this access. </td>
+                        <td>Actions allowed with this access.</td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>limits</code></span> - <span class="property-type"><a href="#definition-LimitData"><code>LimitData</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"><code>limits</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-LimitData"
+                              ><code>LimitData</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Limits for an outgoing payment associated with this access. </td>
+                        <td>
+                          Limits for an outgoing payment associated with this
+                          access.
+                        </td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>createdAt</code></span> - <span class="property-type"><a href="#definition-String"><code>String!</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>createdAt</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String!</code></a
+                            ></span
+                          >
                         </td>
-                        <td> The date and time when the access was created. </td>
+                        <td>The date and time when the access was created.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -457,7 +667,11 @@
               </div>
             </div>
           </section>
-          <section id="definition-Boolean" class="definition definition-scalar" data-traverse-target="definition-Boolean">
+          <section
+            id="definition-Boolean"
+            class="definition definition-scalar"
+            data-traverse-target="definition-Boolean"
+          >
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -466,14 +680,20 @@
               <div class="doc-copy">
                 <div class="definition-description doc-copy-section">
                   <h5>Description</h5>
-                  <p>The <code>Boolean</code> scalar type represents <code>true</code> or <code>false</code>.</p>
+                  <p>
+                    The <code>Boolean</code> scalar type represents
+                    <code>true</code> or <code>false</code>.
+                  </p>
                 </div>
               </div>
-              <div class="doc-examples">
-              </div>
+              <div class="doc-examples"></div>
             </div>
           </section>
-          <section id="definition-FilterFinalizationReason" class="definition definition-input-object" data-traverse-target="definition-FilterFinalizationReason">
+          <section
+            id="definition-FilterFinalizationReason"
+            class="definition definition-input-object"
+            data-traverse-target="definition-FilterFinalizationReason"
+          >
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -492,15 +712,30 @@
                     <tbody>
                       <tr>
                         <td>
-                          <span class="property-name"><code>in</code></span> - <span class="property-type"><a href="#definition-GrantFinalization"><code>[GrantFinalization!]</code></a></span>
+                          <span class="property-name"><code>in</code></span> -
+                          <span class="property-type"
+                            ><a href="#definition-GrantFinalization"
+                              ><code>[GrantFinalization!]</code></a
+                            ></span
+                          >
                         </td>
-                        <td> List of finalization reasons to include in the filter. </td>
+                        <td>
+                          List of finalization reasons to include in the filter.
+                        </td>
                       </tr>
                       <tr>
                         <td>
-                          <span class="property-name"><code>notIn</code></span> - <span class="property-type"><a href="#definition-GrantFinalization"><code>[GrantFinalization!]</code></a></span>
+                          <span class="property-name"><code>notIn</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-GrantFinalization"
+                              ><code>[GrantFinalization!]</code></a
+                            ></span
+                          >
                         </td>
-                        <td> List of finalization reasons to exclude in the filter. </td>
+                        <td>
+                          List of finalization reasons to exclude in the filter.
+                        </td>
                       </tr>
                     </tbody>
                   </table>
@@ -515,7 +750,11 @@
               </div>
             </div>
           </section>
-          <section id="definition-FilterGrantState" class="definition definition-input-object" data-traverse-target="definition-FilterGrantState">
+          <section
+            id="definition-FilterGrantState"
+            class="definition definition-input-object"
+            data-traverse-target="definition-FilterGrantState"
+          >
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -534,15 +773,26 @@
                     <tbody>
                       <tr>
                         <td>
-                          <span class="property-name"><code>in</code></span> - <span class="property-type"><a href="#definition-GrantState"><code>[GrantState!]</code></a></span>
+                          <span class="property-name"><code>in</code></span> -
+                          <span class="property-type"
+                            ><a href="#definition-GrantState"
+                              ><code>[GrantState!]</code></a
+                            ></span
+                          >
                         </td>
-                        <td> List of states to include in the filter. </td>
+                        <td>List of states to include in the filter.</td>
                       </tr>
                       <tr>
                         <td>
-                          <span class="property-name"><code>notIn</code></span> - <span class="property-type"><a href="#definition-GrantState"><code>[GrantState!]</code></a></span>
+                          <span class="property-name"><code>notIn</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-GrantState"
+                              ><code>[GrantState!]</code></a
+                            ></span
+                          >
                         </td>
-                        <td> List of states to exclude in the filter. </td>
+                        <td>List of states to exclude in the filter.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -557,7 +807,11 @@
               </div>
             </div>
           </section>
-          <section id="definition-FilterString" class="definition definition-input-object" data-traverse-target="definition-FilterString">
+          <section
+            id="definition-FilterString"
+            class="definition definition-input-object"
+            data-traverse-target="definition-FilterString"
+          >
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -576,9 +830,14 @@
                     <tbody>
                       <tr>
                         <td>
-                          <span class="property-name"><code>in</code></span> - <span class="property-type"><a href="#definition-String"><code>[String!]</code></a></span>
+                          <span class="property-name"><code>in</code></span> -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>[String!]</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Array of strings to filter by. </td>
+                        <td>Array of strings to filter by.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -593,7 +852,11 @@
               </div>
             </div>
           </section>
-          <section id="definition-Grant" class="definition definition-object" data-traverse-target="definition-Grant">
+          <section
+            id="definition-Grant"
+            class="definition definition-object"
+            data-traverse-target="definition-Grant"
+          >
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -611,34 +874,80 @@
                     </thead>
                     <tbody>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>id</code></span> - <span class="property-type"><a href="#definition-ID"><code>ID!</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"><code>id</code></span> -
+                          <span class="property-type"
+                            ><a href="#definition-ID"><code>ID!</code></a></span
+                          >
                         </td>
-                        <td> Unique identifier of the grant. </td>
+                        <td>Unique identifier of the grant.</td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>client</code></span> - <span class="property-type"><a href="#definition-String"><code>String!</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"><code>client</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String!</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Wallet address of the grantee's account. </td>
+                        <td>Wallet address of the grantee's account.</td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>access</code></span> - <span class="property-type"><a href="#definition-Access"><code>[Access!]!</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"><code>access</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-Access"
+                              ><code>[Access!]!</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Details of the access provided by the grant. </td>
+                        <td>Details of the access provided by the grant.</td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>state</code></span> - <span class="property-type"><a href="#definition-GrantState"><code>GrantState!</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"><code>state</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-GrantState"
+                              ><code>GrantState!</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Current state of the grant. </td>
+                        <td>Current state of the grant.</td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>finalizationReason</code></span> - <span class="property-type"><a href="#definition-GrantFinalization"><code>GrantFinalization</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>finalizationReason</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-GrantFinalization"
+                              ><code>GrantFinalization</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Specific outcome of a finalized grant, indicating whether the grant was issued, revoked, or rejected. </td>
+                        <td>
+                          Specific outcome of a finalized grant, indicating
+                          whether the grant was issued, revoked, or rejected.
+                        </td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>createdAt</code></span> - <span class="property-type"><a href="#definition-String"><code>String!</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>createdAt</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String!</code></a
+                            ></span
+                          >
                         </td>
-                        <td> The date and time when the grant was created. </td>
+                        <td>The date and time when the grant was created.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -660,7 +969,11 @@
               </div>
             </div>
           </section>
-          <section id="definition-GrantEdge" class="definition definition-object" data-traverse-target="definition-GrantEdge">
+          <section
+            id="definition-GrantEdge"
+            class="definition definition-object"
+            data-traverse-target="definition-GrantEdge"
+          >
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -678,14 +991,27 @@
                     </thead>
                     <tbody>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>node</code></span> - <span class="property-type"><a href="#definition-Grant"><code>Grant!</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"><code>node</code></span> -
+                          <span class="property-type"
+                            ><a href="#definition-Grant"
+                              ><code>Grant!</code></a
+                            ></span
+                          >
                         </td>
-                        <td> A grant node in the list. </td>
+                        <td>A grant node in the list.</td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>cursor</code></span> - <span class="property-type"><a href="#definition-String"><code>String!</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"><code>cursor</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String!</code></a
+                            ></span
+                          >
                         </td>
-                        <td> A cursor for paginating through the grants. </td>
+                        <td>A cursor for paginating through the grants.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -703,7 +1029,11 @@
               </div>
             </div>
           </section>
-          <section id="definition-GrantFilter" class="definition definition-input-object" data-traverse-target="definition-GrantFilter">
+          <section
+            id="definition-GrantFilter"
+            class="definition definition-input-object"
+            data-traverse-target="definition-GrantFilter"
+          >
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -722,21 +1052,43 @@
                     <tbody>
                       <tr>
                         <td>
-                          <span class="property-name"><code>identifier</code></span> - <span class="property-type"><a href="#definition-FilterString"><code>FilterString</code></a></span>
+                          <span class="property-name"
+                            ><code>identifier</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-FilterString"
+                              ><code>FilterString</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Filter grants by their unique identifier. </td>
+                        <td>Filter grants by their unique identifier.</td>
                       </tr>
                       <tr>
                         <td>
-                          <span class="property-name"><code>state</code></span> - <span class="property-type"><a href="#definition-FilterGrantState"><code>FilterGrantState</code></a></span>
+                          <span class="property-name"><code>state</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-FilterGrantState"
+                              ><code>FilterGrantState</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Filter grants by their state. </td>
+                        <td>Filter grants by their state.</td>
                       </tr>
                       <tr>
                         <td>
-                          <span class="property-name"><code>finalizationReason</code></span> - <span class="property-type"><a href="#definition-FilterFinalizationReason"><code>FilterFinalizationReason</code></a></span>
+                          <span class="property-name"
+                            ><code>finalizationReason</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-FilterFinalizationReason"
+                              ><code>FilterFinalizationReason</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Filter grants by their finalization reason. </td>
+                        <td>Filter grants by their finalization reason.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -755,7 +1107,11 @@
               </div>
             </div>
           </section>
-          <section id="definition-GrantFinalization" class="definition definition-enum" data-traverse-target="definition-GrantFinalization">
+          <section
+            id="definition-GrantFinalization"
+            class="definition definition-enum"
+            data-traverse-target="definition-GrantFinalization"
+          >
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -776,19 +1132,19 @@
                         <td>
                           <p><code>ISSUED</code></p>
                         </td>
-                        <td> The grant was issued successfully. </td>
+                        <td>The grant was issued successfully.</td>
                       </tr>
                       <tr>
                         <td>
                           <p><code>REVOKED</code></p>
                         </td>
-                        <td> The grant was revoked. </td>
+                        <td>The grant was revoked.</td>
                       </tr>
                       <tr>
                         <td>
                           <p><code>REJECTED</code></p>
                         </td>
-                        <td> The grant request was rejected. </td>
+                        <td>The grant request was rejected.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -803,7 +1159,11 @@
               </div>
             </div>
           </section>
-          <section id="definition-GrantState" class="definition definition-enum" data-traverse-target="definition-GrantState">
+          <section
+            id="definition-GrantState"
+            class="definition definition-enum"
+            data-traverse-target="definition-GrantState"
+          >
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -824,25 +1184,28 @@
                         <td>
                           <p><code>PROCESSING</code></p>
                         </td>
-                        <td> The grant request is processing. </td>
+                        <td>The grant request is processing.</td>
                       </tr>
                       <tr>
                         <td>
                           <p><code>PENDING</code></p>
                         </td>
-                        <td> The grant request is awaiting interaction. </td>
+                        <td>The grant request is awaiting interaction.</td>
                       </tr>
                       <tr>
                         <td>
                           <p><code>APPROVED</code></p>
                         </td>
-                        <td> The grant request has been approved. </td>
+                        <td>The grant request has been approved.</td>
                       </tr>
                       <tr>
                         <td>
                           <p><code>FINALIZED</code></p>
                         </td>
-                        <td> The grant request has been finalized, and no more access tokens or interactions can be made. </td>
+                        <td>
+                          The grant request has been finalized, and no more
+                          access tokens or interactions can be made.
+                        </td>
                       </tr>
                     </tbody>
                   </table>
@@ -857,7 +1220,11 @@
               </div>
             </div>
           </section>
-          <section id="definition-GrantsConnection" class="definition definition-object" data-traverse-target="definition-GrantsConnection">
+          <section
+            id="definition-GrantsConnection"
+            class="definition definition-object"
+            data-traverse-target="definition-GrantsConnection"
+          >
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -875,14 +1242,33 @@
                     </thead>
                     <tbody>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>pageInfo</code></span> - <span class="property-type"><a href="#definition-PageInfo"><code>PageInfo!</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>pageInfo</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-PageInfo"
+                              ><code>PageInfo!</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Information to aid in pagination. </td>
+                        <td>Information to aid in pagination.</td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>edges</code></span> - <span class="property-type"><a href="#definition-GrantEdge"><code>[GrantEdge!]!</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"><code>edges</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-GrantEdge"
+                              ><code>[GrantEdge!]!</code></a
+                            ></span
+                          >
                         </td>
-                        <td> A list of edges representing grants and cursors for pagination. </td>
+                        <td>
+                          A list of edges representing grants and cursors for
+                          pagination.
+                        </td>
                       </tr>
                     </tbody>
                   </table>
@@ -900,7 +1286,11 @@
               </div>
             </div>
           </section>
-          <section id="definition-ID" class="definition definition-scalar" data-traverse-target="definition-ID">
+          <section
+            id="definition-ID"
+            class="definition definition-scalar"
+            data-traverse-target="definition-ID"
+          >
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -909,7 +1299,15 @@
               <div class="doc-copy">
                 <div class="definition-description doc-copy-section">
                   <h5>Description</h5>
-                  <p>The <code>ID</code> scalar type represents a unique identifier, often used to refetch an object or as key for a cache. The ID type appears in a JSON response as a String; however, it is not intended to be human-readable. When expected as an input type, any string (such as <code>&quot;4&quot;</code>) or integer (such as <code>4</code>) input value will be accepted as an ID.</p>
+                  <p>
+                    The <code>ID</code> scalar type represents a unique
+                    identifier, often used to refetch an object or as key for a
+                    cache. The ID type appears in a JSON response as a String;
+                    however, it is not intended to be human-readable. When
+                    expected as an input type, any string (such as
+                    <code>&quot;4&quot;</code>) or integer (such as
+                    <code>4</code>) input value will be accepted as an ID.
+                  </p>
                 </div>
               </div>
               <div class="doc-examples">
@@ -921,7 +1319,11 @@
               </div>
             </div>
           </section>
-          <section id="definition-Int" class="definition definition-scalar" data-traverse-target="definition-Int">
+          <section
+            id="definition-Int"
+            class="definition definition-scalar"
+            data-traverse-target="definition-Int"
+          >
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -930,7 +1332,11 @@
               <div class="doc-copy">
                 <div class="definition-description doc-copy-section">
                   <h5>Description</h5>
-                  <p>The <code>Int</code> scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1.</p>
+                  <p>
+                    The <code>Int</code> scalar type represents non-fractional
+                    signed whole numeric values. Int can represent values
+                    between -(2^31) and 2^31 - 1.
+                  </p>
                 </div>
               </div>
               <div class="doc-examples">
@@ -942,7 +1348,11 @@
               </div>
             </div>
           </section>
-          <section id="definition-LimitData" class="definition definition-object" data-traverse-target="definition-LimitData">
+          <section
+            id="definition-LimitData"
+            class="definition definition-object"
+            data-traverse-target="definition-LimitData"
+          >
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -960,24 +1370,60 @@
                     </thead>
                     <tbody>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>receiver</code></span> - <span class="property-type"><a href="#definition-String"><code>String</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>receiver</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Wallet address URL of the receiver. </td>
+                        <td>Wallet address URL of the receiver.</td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>debitAmount</code></span> - <span class="property-type"><a href="#definition-PaymentAmount"><code>PaymentAmount</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>debitAmount</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-PaymentAmount"
+                              ><code>PaymentAmount</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Amount to debit. </td>
+                        <td>Amount to debit.</td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>receiveAmount</code></span> - <span class="property-type"><a href="#definition-PaymentAmount"><code>PaymentAmount</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>receiveAmount</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-PaymentAmount"
+                              ><code>PaymentAmount</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Amount to receive. </td>
+                        <td>Amount to receive.</td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>interval</code></span> - <span class="property-type"><a href="#definition-String"><code>String</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>interval</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Interval between payments. </td>
+                        <td>Interval between payments.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -997,14 +1443,20 @@
               </div>
             </div>
           </section>
-          <section id="definition-Model" class="definition definition-interface" data-traverse-target="definition-Model">
+          <section
+            id="definition-Model"
+            class="definition definition-interface"
+            data-traverse-target="definition-Model"
+          >
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
             <h2 class="definition-heading">Model</h2>
             <div class="doc-row">
               <div class="doc-copy">
-                <div class="definition-properties definition-fields doc-copy-section">
+                <div
+                  class="definition-properties definition-fields doc-copy-section"
+                >
                   <h5>Fields</h5>
                   <table>
                     <thead>
@@ -1015,19 +1467,34 @@
                     </thead>
                     <tbody>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>id</code></span> - <span class="property-type"><a href="#definition-ID"><code>ID!</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"><code>id</code></span> -
+                          <span class="property-type"
+                            ><a href="#definition-ID"><code>ID!</code></a></span
+                          >
                         </td>
-                        <td> Unique identifier for the model. </td>
+                        <td>Unique identifier for the model.</td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>createdAt</code></span> - <span class="property-type"><a href="#definition-String"><code>String!</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>createdAt</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String!</code></a
+                            ></span
+                          >
                         </td>
-                        <td> The date and time when the model was created. </td>
+                        <td>The date and time when the model was created.</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
-                <div class="definition-properties definition-possible-types doc-copy-section">
+                <div
+                  class="definition-properties definition-possible-types doc-copy-section"
+                >
                   <h5>Possible Types</h5>
                   <table>
                     <thead>
@@ -1038,12 +1505,16 @@
                     <tbody>
                       <tr>
                         <td>
-                          <p><a href="#definition-Grant"><code>Grant</code></a></p>
+                          <p>
+                            <a href="#definition-Grant"><code>Grant</code></a>
+                          </p>
                         </td>
                       </tr>
                       <tr>
                         <td>
-                          <p><a href="#definition-Access"><code>Access</code></a></p>
+                          <p>
+                            <a href="#definition-Access"><code>Access</code></a>
+                          </p>
                         </td>
                       </tr>
                     </tbody>
@@ -1062,7 +1533,11 @@
               </div>
             </div>
           </section>
-          <section id="definition-PageInfo" class="definition definition-object" data-traverse-target="definition-PageInfo">
+          <section
+            id="definition-PageInfo"
+            class="definition definition-object"
+            data-traverse-target="definition-PageInfo"
+          >
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -1080,24 +1555,72 @@
                     </thead>
                     <tbody>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>endCursor</code></span> - <span class="property-type"><a href="#definition-String"><code>String</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>endCursor</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String</code></a
+                            ></span
+                          >
                         </td>
-                        <td> The cursor used to fetch the next page when paginating forward. </td>
+                        <td>
+                          The cursor used to fetch the next page when paginating
+                          forward.
+                        </td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>hasNextPage</code></span> - <span class="property-type"><a href="#definition-Boolean"><code>Boolean!</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>hasNextPage</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-Boolean"
+                              ><code>Boolean!</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Indicates if there are more pages when paginating forward. </td>
+                        <td>
+                          Indicates if there are more pages when paginating
+                          forward.
+                        </td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>hasPreviousPage</code></span> - <span class="property-type"><a href="#definition-Boolean"><code>Boolean!</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>hasPreviousPage</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-Boolean"
+                              ><code>Boolean!</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Indicates if there are more pages when paginating backward. </td>
+                        <td>
+                          Indicates if there are more pages when paginating
+                          backward.
+                        </td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>startCursor</code></span> - <span class="property-type"><a href="#definition-String"><code>String</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>startCursor</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String</code></a
+                            ></span
+                          >
                         </td>
-                        <td> The cursor used to fetch the next page when paginating backward. </td>
+                        <td>
+                          The cursor used to fetch the next page when paginating
+                          backward.
+                        </td>
                       </tr>
                     </tbody>
                   </table>
@@ -1117,7 +1640,11 @@
               </div>
             </div>
           </section>
-          <section id="definition-PaymentAmount" class="definition definition-object" data-traverse-target="definition-PaymentAmount">
+          <section
+            id="definition-PaymentAmount"
+            class="definition definition-object"
+            data-traverse-target="definition-PaymentAmount"
+          >
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -1135,19 +1662,54 @@
                     </thead>
                     <tbody>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>value</code></span> - <span class="property-type"><a href="#definition-UInt64"><code>UInt64!</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"><code>value</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-UInt64"
+                              ><code>UInt64!</code></a
+                            ></span
+                          >
                         </td>
-                        <td> The value of the payment amount. </td>
+                        <td>The value of the payment amount.</td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>assetCode</code></span> - <span class="property-type"><a href="#definition-String"><code>String!</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>assetCode</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String!</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Should be an ISO 4217 currency code whenever possible, e.g. <code>USD</code>. For more information, refer to <a href="https://rafiki.dev/overview/concepts/accounting/#assets">assets</a>. </td>
+                        <td>
+                          Should be an ISO 4217 currency code whenever possible,
+                          e.g. <code>USD</code>. For more information, refer to
+                          <a
+                            href="https://rafiki.dev/overview/concepts/accounting/#assets"
+                            >assets</a
+                          >.
+                        </td>
                       </tr>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>assetScale</code></span> - <span class="property-type"><a href="#definition-UInt8"><code>UInt8!</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>assetScale</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-UInt8"
+                              ><code>UInt8!</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit. </td>
+                        <td>
+                          Difference in orders of magnitude between the standard
+                          unit of an asset and a corresponding fractional unit.
+                        </td>
                       </tr>
                     </tbody>
                   </table>
@@ -1166,7 +1728,11 @@
               </div>
             </div>
           </section>
-          <section id="definition-RevokeGrantInput" class="definition definition-input-object" data-traverse-target="definition-RevokeGrantInput">
+          <section
+            id="definition-RevokeGrantInput"
+            class="definition definition-input-object"
+            data-traverse-target="definition-RevokeGrantInput"
+          >
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -1185,9 +1751,17 @@
                     <tbody>
                       <tr>
                         <td>
-                          <span class="property-name"><code>grantId</code></span> - <span class="property-type"><a href="#definition-String"><code>String!</code></a></span>
+                          <span class="property-name"
+                            ><code>grantId</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String!</code></a
+                            ></span
+                          >
                         </td>
-                        <td> Unique identifier of the grant to revoke. </td>
+                        <td>Unique identifier of the grant to revoke.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -1202,7 +1776,11 @@
               </div>
             </div>
           </section>
-          <section id="definition-RevokeGrantMutationResponse" class="definition definition-object" data-traverse-target="definition-RevokeGrantMutationResponse">
+          <section
+            id="definition-RevokeGrantMutationResponse"
+            class="definition definition-object"
+            data-traverse-target="definition-RevokeGrantMutationResponse"
+          >
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -1220,9 +1798,13 @@
                     </thead>
                     <tbody>
                       <tr>
-                        <td data-property-name=""><span class="property-name"><code>id</code></span> - <span class="property-type"><a href="#definition-ID"><code>ID!</code></a></span>
+                        <td data-property-name="">
+                          <span class="property-name"><code>id</code></span> -
+                          <span class="property-type"
+                            ><a href="#definition-ID"><code>ID!</code></a></span
+                          >
                         </td>
-                        <td> Unique identifier of the revoked grant. </td>
+                        <td>Unique identifier of the revoked grant.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -1237,7 +1819,11 @@
               </div>
             </div>
           </section>
-          <section id="definition-SortOrder" class="definition definition-enum" data-traverse-target="definition-SortOrder">
+          <section
+            id="definition-SortOrder"
+            class="definition definition-enum"
+            data-traverse-target="definition-SortOrder"
+          >
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -1258,13 +1844,13 @@
                         <td>
                           <p><code>ASC</code></p>
                         </td>
-                        <td> Sort the results in ascending order. </td>
+                        <td>Sort the results in ascending order.</td>
                       </tr>
                       <tr>
                         <td>
                           <p><code>DESC</code></p>
                         </td>
-                        <td> Sort the results in descending order. </td>
+                        <td>Sort the results in descending order.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -1279,7 +1865,11 @@
               </div>
             </div>
           </section>
-          <section id="definition-String" class="definition definition-scalar" data-traverse-target="definition-String">
+          <section
+            id="definition-String"
+            class="definition definition-scalar"
+            data-traverse-target="definition-String"
+          >
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -1288,7 +1878,12 @@
               <div class="doc-copy">
                 <div class="definition-description doc-copy-section">
                   <h5>Description</h5>
-                  <p>The <code>String</code> scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.</p>
+                  <p>
+                    The <code>String</code> scalar type represents textual data,
+                    represented as UTF-8 character sequences. The String type is
+                    most often used by GraphQL to represent free-form
+                    human-readable text.
+                  </p>
                 </div>
               </div>
               <div class="doc-examples">
@@ -1300,7 +1895,11 @@
               </div>
             </div>
           </section>
-          <section id="definition-UInt64" class="definition definition-scalar" data-traverse-target="definition-UInt64">
+          <section
+            id="definition-UInt64"
+            class="definition definition-scalar"
+            data-traverse-target="definition-UInt64"
+          >
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -1309,7 +1908,12 @@
               <div class="doc-copy">
                 <div class="definition-description doc-copy-section">
                   <h5>Description</h5>
-                  <p>The <code>UInt64</code> scalar type represents unsigned 64-bit whole numeric values. It is capable of handling values that are larger than the JavaScript <code>Number</code> type limit (greater than 2^53).</p>
+                  <p>
+                    The <code>UInt64</code> scalar type represents unsigned
+                    64-bit whole numeric values. It is capable of handling
+                    values that are larger than the JavaScript
+                    <code>Number</code> type limit (greater than 2^53).
+                  </p>
                 </div>
               </div>
               <div class="doc-examples">
@@ -1321,7 +1925,11 @@
               </div>
             </div>
           </section>
-          <section id="definition-UInt8" class="definition definition-scalar" data-traverse-target="definition-UInt8">
+          <section
+            id="definition-UInt8"
+            class="definition definition-scalar"
+            data-traverse-target="definition-UInt8"
+          >
             <div class="definition-group-name">
               <a href="#group-Types">Types</a>
             </div>
@@ -1330,7 +1938,10 @@
               <div class="doc-copy">
                 <div class="definition-description doc-copy-section">
                   <h5>Description</h5>
-                  <p>The <code>UInt8</code> scalar type represents unsigned 8-bit whole numeric values, ranging from 0 to 255.</p>
+                  <p>
+                    The <code>UInt8</code> scalar type represents unsigned 8-bit
+                    whole numeric values, ranging from 0 to 255.
+                  </p>
                 </div>
               </div>
               <div class="doc-examples">
@@ -1344,7 +1955,9 @@
           </section>
           <div class="doc-row no-margin">
             <div class="doc-copy doc-separator">
-              <a class="powered-by" href="https://github.com/anvilco/spectaql">Documentation by <span>Anvil SpectaQL</span></a>
+              <a class="powered-by" href="https://github.com/anvilco/spectaql"
+                >Documentation by <span>Anvil SpectaQL</span></a
+              >
             </div>
           </div>
         </article>
