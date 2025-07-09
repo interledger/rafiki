@@ -1,4 +1,4 @@
-import { Model, ModelOptions, QueryContext } from 'objection'
+import { Model, ModelOptions, Pojo, QueryContext } from 'objection'
 import { DbErrors } from 'objection-db-errors'
 
 import { LiquidityAccount } from '../../../accounting/service'
@@ -16,6 +16,7 @@ import {
   OutgoingPaymentWithSpentAmounts
 } from '@interledger/open-payments'
 import { Tenant } from '../../../tenants/model'
+import { OutgoingPaymentsCardDetails } from './card/model'
 
 export class OutgoingPaymentGrant extends DbErrors(Model) {
   public static get modelPaths(): string[] {
@@ -101,6 +102,8 @@ export class OutgoingPayment
 
   public metadata?: Record<string, unknown>
 
+  public cardDetails?: OutgoingPaymentsCardDetails;
+
   public quote!: Quote
 
   public get assetId(): string {
@@ -146,7 +149,16 @@ export class OutgoingPayment
           from: 'outgoingPayments.tenantId',
           to: 'tenants.id'
         }
-      }
+      },
+      cardDetails: {
+        relation: Model.HasOneRelation,
+        modelClass: OutgoingPaymentsCardDetails,
+        join: {
+          from: 'outgoingPayments.id',
+          to: 'outgoingPaymentsCardDetails.outgoingPaymentId'
+
+        }
+      },
     }
   }
 
@@ -316,4 +328,13 @@ export class OutgoingPaymentEvent extends WebhookEvent {
       throw new Error(OutgoingPaymentEventError.OutgoingPaymentIdRequired)
     }
   }
-}
+
+    $formatJson(json: Pojo): Pojo {
+      json = super.$formatJson(json)
+      return {
+        ...json,
+        cardDetails: new OutgoingPaymentsCardDetails().$formatJson(json.card),
+      }
+    }
+  }
+
