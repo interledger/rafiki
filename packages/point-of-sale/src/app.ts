@@ -7,11 +7,13 @@ import Koa, { DefaultState } from 'koa'
 import Router from '@koa/router'
 import bodyParser from 'koa-bodyparser'
 import cors from '@koa/cors'
+import { CreateMerchantContext, MerchantRoutes } from './merchant/routes'
 
 export interface AppServices {
   logger: Promise<Logger>
   knex: Promise<Knex>
   config: Promise<IAppConfig>
+  merchantRoutes: Promise<MerchantRoutes>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -24,6 +26,13 @@ export interface AppContextData {
 }
 
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
+
+export type AppRequest<ParamsT extends string = string> = Omit<
+  AppContext['request'],
+  'params'
+> & {
+  params: Record<ParamsT, string>
+}
 
 export class App {
   private posServer!: Server
@@ -46,6 +55,15 @@ export class App {
     router.get('/healthz', (ctx: AppContext): void => {
       ctx.status = 200
     })
+
+    const merchantRoutes = await this.container.use('merchantRoutes')
+
+    // POST /merchants
+    // Create merchant
+    router.post<DefaultState, CreateMerchantContext>(
+      '/merchants',
+      merchantRoutes.create
+    )
 
     koa.use(cors())
     koa.use(router.routes())

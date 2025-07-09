@@ -45,6 +45,7 @@
     "jest-openapi": "^0.14.2",
     "testcontainers": "^10.16.0",
     "tmp": "^0.2.3",
-    "@types/tmp": "^0.2.6"
+    "@types/tmp": "^0.2.6",
+    "node-mocks-http": "^1.16.2"
   }
 }
