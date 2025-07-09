@@ -4,6 +4,7 @@ import { Model } from 'objection'
 import { Config } from './config/app'
 import { App, AppServices } from './app'
 import createLogger from 'pino'
+import { CardServiceClient } from './card-service-client/client'
 
 export function initIocContainer(
   config: typeof Config
@@ -54,6 +55,10 @@ export function initIocContainer(
       BigInt
     )
     return db
+  })
+
+  container.singleton('cardServiceClient', async () => {
+    return new CardServiceClient()
   })
   return container
 }
