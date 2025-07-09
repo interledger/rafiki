@@ -27,10 +27,29 @@ describe('POS Store Service', () => {
   describe('addPOS', () => {
     it('should add a POS for a requestId', async () => {
       await service.addPOS(requestId, POSHost)
-      expect(redis.set).toHaveBeenCalledWith(requestId, POSHost)
+      expect(redis.set).toHaveBeenCalledWith(requestId, POSHost, 'EX', 300)
       expect(logger.info).toHaveBeenCalledWith(
-        `POS ${POSHost} was added for requestId: ${requestId}`
+        { requestId, POSHost },
+        'POS was added for the given requestId'
       )
+    })
+
+    it('should clear the POS after 5 minutes (TTL)', async () => {
+      jest.useFakeTimers()
+      redis.set.mockResolvedValue('OK')
+      redis.get.mockResolvedValueOnce(POSHost) // Before TTL
+      redis.get.mockResolvedValueOnce(null)    // After TTL
+
+      await service.addPOS(requestId, POSHost)
+      expect(redis.set).toHaveBeenCalledWith(requestId, POSHost, 'EX', 300)
+
+      await expect(service.getPOS(requestId)).resolves.toBe(POSHost)
+
+      jest.advanceTimersByTime(300 * 1000)
+      await expect(service.getPOS(requestId)).rejects.toThrow(
+        `No POS found for requestId: ${requestId}`
+      )
+      jest.useRealTimers()
     })
   })
 
@@ -45,7 +64,8 @@ describe('POS Store Service', () => {
         `No POS found for requestId: ${requestId}`
       )
       expect(logger.error).toHaveBeenCalledWith(
-        `No POS found for requestId: ${requestId}`
+        { requestId: 'req-123' },
+        'No POS found for requestId'
       )
     })
   })
