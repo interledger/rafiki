@@ -557,18 +557,27 @@ importers:
       '@koa/cors':
         specifier: ^5.0.0
         version: 5.0.0
+      '@koa/router':
+        specifier: ^12.0.2
+        version: 12.0.2
       knex:
         specifier: ^3.1.0
         version: 3.1.0(pg@8.11.3)
       koa:
         specifier: ^2.15.4
         version: 2.16.0
+      koa-bodyparser:
+        specifier: ^4.4.1
+        version: 4.4.1
       objection:
         specifier: ^3.1.5
         version: 3.1.5(knex@3.1.0)
       objection-db-errors:
         specifier: ^1.1.2
         version: 1.1.2(objection@3.1.5)
+      pg:
+        specifier: ^8.11.3
+        version: 8.11.3
       pino:
         specifier: ^8.19.0
         version: 8.19.0
