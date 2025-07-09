@@ -3,7 +3,6 @@ import starlight from '@astrojs/starlight'
 
 import remarkMath from 'remark-math'
 import rehypeMathjax from 'rehype-mathjax'
-import GraphQL from 'astro-graphql-plugin'
 import starlightLinksValidator from 'starlight-links-validator'
 import starlightFullViewMode from 'starlight-fullview-mode'
 import { rehypeHeadingIds } from '@astrojs/markdown-remark'
@@ -308,16 +307,20 @@ export default defineConfig({
             },
             {
               label: 'Backend Admin API',
-              collapsed: true,
-              autogenerate: {
-                directory: 'apis/graphql/backend'
+              link: '/apis/graphql/backend',
+              attrs: {
+                target: '_blank',
+                rel: 'noopener noreferrer',
+                'data-icon': 'external'
               }
             },
             {
               label: 'Auth Admin API',
-              collapsed: true,
-              autogenerate: {
-                directory: 'apis/graphql/auth'
+              link: '/apis/graphql/auth',
+              attrs: {
+                target: '_blank',
+                rel: 'noopener noreferrer',
+                'data-icon': 'external'
               }
             }
           ]
@@ -360,16 +363,6 @@ export default defineConfig({
         }),
         starlightFullViewMode()
       ]
-    }),
-    GraphQL({
-      schema: '../backend/src/graphql/schema.graphql',
-      output: './src/content/docs/apis/graphql/backend/',
-      linkPrefix: '/apis/graphql/backend/'
-    }),
-    GraphQL({
-      schema: '../auth/src/graphql/schema.graphql',
-      output: './src/content/docs/apis/graphql/auth/',
-      linkPrefix: '/apis/graphql/auth/'
     })
   ],
   server: {

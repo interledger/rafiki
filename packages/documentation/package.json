@@ -13,12 +13,11 @@
     "@astrojs/starlight": "^0.34.4",
     "@interledger/docs-design-system": "^0.8.0",
     "astro": "5.11.0",
-    "astro-graphql-plugin": "^0.4.2",
-    "graphql": "16.11.0",
     "mermaid": "^11.8.1",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-mathjax": "^7.1.0",
     "remark-math": "^6.0.0",
+    "spectaql": "^3.0.4",
     "starlight-fullview-mode": "^0.2.3",
     "starlight-links-validator": "^0.17.0"
   }
