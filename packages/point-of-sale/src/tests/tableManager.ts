@@ -11,16 +11,18 @@ export async function truncateTable(
 }
 
 export async function truncateTables(
-  deps: IocContract<AppServices>,
-  options?: { truncateTenants?: boolean }
+  deps: IocContract<AppServices>
 ): Promise<void> {
   const knex = await deps.use('knex')
   const config = await deps.use('config')
   const dbSchema = config.dbSchema ?? 'public'
 
-  const truncateTenants = options?.truncateTenants ?? false
-
-  const ignoreTables = ['knex_migrations', 'knex_migrations_lock']
+  const ignoreTables = [
+    'knex_migrations',
+    'knex_migrations_lock',
+    'pos_knex_migrations',
+    'pos_knex_migrations_lock'
+  ]
   const tables = await getTables(knex, dbSchema, ignoreTables)
   const RAW = `TRUNCATE TABLE "${tables}" RESTART IDENTITY`
   await knex.raw(RAW)

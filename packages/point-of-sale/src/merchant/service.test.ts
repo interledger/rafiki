@@ -1,5 +1,3 @@
-import { Knex } from 'knex'
-import { v4 as uuid } from 'uuid'
 import { IocContract } from '@adonisjs/fold'
 
 import { Merchant } from './model'
@@ -14,18 +12,15 @@ import { AppServices } from '../app'
 
 describe('Merchant Service', (): void => {
   let deps: IocContract<AppServices>
-  let config: IAppConfig
   let appContainer: TestContainer
   let merchantService: MerchantService
-  let knex: Knex
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
       ...Config
     })
-    config = await deps.use('config')
+
     appContainer = await createTestApp(deps)
-    knex = appContainer.knex
     merchantService = await deps.use('merchantService')
   })
 
