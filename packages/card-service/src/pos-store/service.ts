@@ -37,7 +37,7 @@ const getPOS = async (
 ): Promise<string> => {
   const POSHost = await deps.redis.get(requestId)
   if (!POSHost) {
-    deps.logger.error({requestId}, `No POS found for requestId`)
+    deps.logger.error({ requestId }, `No POS found for requestId`)
     throw new Error(`No POS found for requestId: ${requestId}`)
   }
 
@@ -50,7 +50,10 @@ const addPOS = async (
   POSHost: string
 ) => {
   await deps.redis.set(requestId, POSHost, 'EX', POS_TTL)
-  deps.logger.info({ requestId, POSHost }, 'POS was added for the given requestId')
+  deps.logger.info(
+    { requestId, POSHost },
+    'POS was added for the given requestId'
+  )
 }
 
 const deletePOS = async (deps: StoreDependencies, requestId: string) => {

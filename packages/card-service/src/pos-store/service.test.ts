@@ -38,7 +38,7 @@ describe('POS Store Service', () => {
       jest.useFakeTimers()
       redis.set.mockResolvedValue('OK')
       redis.get.mockResolvedValueOnce(POSHost) // Before TTL
-      redis.get.mockResolvedValueOnce(null)    // After TTL
+      redis.get.mockResolvedValueOnce(null) // After TTL
 
       await service.addPOS(requestId, POSHost)
       expect(redis.set).toHaveBeenCalledWith(requestId, POSHost, 'EX', 300)
