@@ -559,18 +559,33 @@ importers:
       ioredis:
         specifier: ^5.3.2
         version: 5.3.2
+      '@koa/router':
+        specifier: ^12.0.2
+        version: 12.0.2
       knex:
         specifier: ^3.1.0
         version: 3.1.0(pg@8.11.3)
       koa:
         specifier: ^2.15.4
         version: 2.16.0
+      koa-bodyparser:
+        specifier: ^4.4.1
+        version: 4.4.1
       objection:
         specifier: ^3.1.5
         version: 3.1.5(knex@3.1.0)
+      objection-db-errors:
+        specifier: ^1.1.2
+        version: 1.1.2(objection@3.1.5)
+      pg:
+        specifier: ^8.11.3
+        version: 8.11.3
       pino:
         specifier: ^8.19.0
         version: 8.19.0
+      uuid:
+        specifier: ^9.0.1
+        version: 9.0.1
     devDependencies:
       '@types/koa':
         specifier: 2.15.0
@@ -584,6 +599,9 @@ importers:
       '@types/koa__router':
         specifier: ^12.0.4
         version: 12.0.4
+      '@types/uuid':
+        specifier: ^9.0.8
+        version: 9.0.8
       ts-node-dev:
         specifier: ^2.0.0
         version: 2.0.0(@swc/core@1.11.29)(@types/node@20.14.15)(typescript@5.8.3)
@@ -805,6 +823,9 @@ importers:
       ts-node-dev:
         specifier: ^2.0.0
         version: 2.0.0(@swc/core@1.11.29)(@types/node@20.14.15)(typescript@5.8.3)
+      uuid:
+        specifier: ^9.0.1
+        version: 9.0.1
     devDependencies:
       '@types/koa':
         specifier: 2.15.0
@@ -818,6 +839,9 @@ importers:
       '@types/koa__router':
         specifier: ^12.0.4
         version: 12.0.4
+      '@types/uuid':
+        specifier: ^9.0.8
+        version: 9.0.8
 
   packages/token-introspection:
     dependencies:
