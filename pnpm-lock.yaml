@@ -600,6 +600,15 @@ importers:
       '@types/uuid':
         specifier: ^9.0.8
         version: 9.0.8
+      jest-environment-node:
+        specifier: ^29.7.0
+        version: 29.7.0
+      nock:
+        specifier: 14.0.0-beta.19
+        version: 14.0.0-beta.19
+      testcontainers:
+        specifier: ^10.16.0
+        version: 10.16.0
       ts-node-dev:
         specifier: ^2.0.0
         version: 2.0.0(@swc/core@1.11.29)(@types/node@20.14.15)(typescript@5.8.3)
@@ -13544,10 +13553,6 @@ packages:
     resolution: {integrity: sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg==}
     engines: {node: '>= 0.4'}
 
-  /graceful-fs@4.2.10:
-    resolution: {integrity: sha512-9ByhssR2fPVsNZj478qUUbKfmL0+t5BDVyjShtyZZLiK7ZDAArFFfopyOTj0M05wE2tJPisA4iTnnXl2YoPvOA==}
-    dev: true
-
   /graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
 
@@ -15571,7 +15576,7 @@ packages:
       '@types/node': 20.14.15
       chalk: 4.1.2
       ci-info: 3.8.0
-      graceful-fs: 4.2.10
+      graceful-fs: 4.2.11
       picomatch: 2.3.1
     dev: true
 
