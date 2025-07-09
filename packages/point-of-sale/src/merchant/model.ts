@@ -6,5 +6,5 @@ export class Merchant extends BaseModel {
   }
 
   public name!: string
-  public deletedAt!: Date | null
+  public deletedAt?: Date | null
 }
