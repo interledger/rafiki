@@ -658,6 +658,151 @@ function extractClearKeyFromTR31KeyBlock(
   }
 }
 
+// PIN block format ISO-0:
+// Format: 0PPPPPPPPPPPPPPP ^ FFFFFFFFCCCCCCCC
+// Where:
+// 0 - Control field (0 for ISO-0)
+// P - PIN (right-padded with F if less than 14 digits)
+// F - Padding of 'F'
+// C - Account number (rightmost 12 digits excluding check digit)
+function formatPinBlockISO0(pin: string, pan: string): string {
+  if (pin.length < 4 || pin.length > 14) {
+    throw new Error('PIN must be between 4 and 14 digits')
+  }
+  if (!/^\d+$/.test(pin)) {
+    throw new Error('PIN must contain only digits')
+  }
+  if (!/^\d+$/.test(pan)) {
+    throw new Error('PAN must contain only digits')
+  }
+
+  // Format PIN block: 0 + PIN + padding with 'F'
+  const pinPart = '0' + pin.padEnd(14, 'F')
+
+  // Format PAN block: 12 rightmost digits of PAN excluding check digit
+  const panPart = '0000' + pan.slice(-13, -1).padStart(12, '0')
+
+  // XOR the PIN and PAN parts
+  const pinBlock = Buffer.from(pinPart, 'hex')
+  const panBlock = Buffer.from(panPart, 'hex')
+  const result = xorBuffers(pinBlock, panBlock)
+
+  return result.toString('hex').toUpperCase()
+}
+
+// PIN block format ISO-1:
+// Format: 1PPPPPPPPPPPPPPP ^ FFFFFFFFCCCCCCCC
+// Where:
+// 1 - Control field (1 for ISO-1)
+// P - PIN (right-padded with F if less than 14 digits)
+// F - Padding of 'F'
+// C - Account number (rightmost 12 digits excluding check digit)
+function formatPinBlockISO1(pin: string, pan: string): string {
+  if (pin.length < 4 || pin.length > 14) {
+    throw new Error('PIN must be between 4 and 14 digits')
+  }
+  if (!/^\d+$/.test(pin)) {
+    throw new Error('PIN must contain only digits')
+  }
+  if (!/^\d+$/.test(pan)) {
+    throw new Error('PAN must contain only digits')
+  }
+
+  // Format PIN block: 1 + PIN + padding with 'F'
+  const pinPart = '1' + pin.padEnd(14, 'F')
+
+  // Format PAN block: 12 rightmost digits of PAN excluding check digit
+  const panPart = '0000' + pan.slice(-13, -1).padStart(12, '0')
+
+  // XOR the PIN and PAN parts
+  const pinBlock = Buffer.from(pinPart, 'hex')
+  const panBlock = Buffer.from(panPart, 'hex')
+  const result = xorBuffers(pinBlock, panBlock)
+
+  return result.toString('hex').toUpperCase()
+}
+
+// Parse PIN block format ISO-0 or ISO-1
+function parsePinBlock(
+  pinBlock: string,
+  pan: string,
+  format: 'ISO-0' | 'ISO-1'
+): string {
+  if (pinBlock.length !== 16) {
+    throw new Error('PIN block must be 16 hexadecimal characters')
+  }
+  if (!/^[0-9A-Fa-f]+$/.test(pinBlock)) {
+    throw new Error('PIN block must contain only hexadecimal characters')
+  }
+  if (!/^\d+$/.test(pan)) {
+    throw new Error('PAN must contain only digits')
+  }
+
+  // Format PAN block: 12 rightmost digits of PAN excluding check digit
+  const panPart = '0000' + pan.slice(-13, -1).padStart(12, '0')
+
+  // XOR the PIN block with the PAN block to get the PIN part
+  const pinBlockBuffer = Buffer.from(pinBlock, 'hex')
+  const panBlockBuffer = Buffer.from(panPart, 'hex')
+  const pinPartBuffer = xorBuffers(pinBlockBuffer, panBlockBuffer)
+  const pinPart = pinPartBuffer.toString('hex').toUpperCase()
+
+  // Check the format
+  const controlField = pinPart.charAt(0)
+  const expectedControlField = format === 'ISO-0' ? '0' : '1'
+  if (controlField !== expectedControlField) {
+    throw new Error(
+      `Invalid PIN block format. Expected ${format} (control field ${expectedControlField}), but got ${controlField}`
+    )
+  }
+
+  // Extract the PIN
+  const pinWithPadding = pinPart.substring(1)
+  const pin = pinWithPadding.split('F')[0]
+
+  if (pin.length < 4 || pin.length > 14) {
+    throw new Error('Invalid PIN length in PIN block')
+  }
+
+  return pin
+}
+
+// Translate PIN from one format to another
+function translatePin(
+  pinBlock: string,
+  sourcePan: string,
+  sourceFormat: 'ISO-0' | 'ISO-1',
+  targetPan: string,
+  targetFormat: 'ISO-0' | 'ISO-1',
+  pinEncryptionKey: string
+): string {
+  // Parse the PIN block to get the clear PIN
+  const pin = parsePinBlock(pinBlock, sourcePan, sourceFormat)
+
+  // Format the PIN block in the target format
+  const newPinBlock =
+    targetFormat === 'ISO-0'
+      ? formatPinBlockISO0(pin, targetPan)
+      : formatPinBlockISO1(pin, targetPan)
+
+  return newPinBlock
+}
+
+// Verify PIN
+function verifyPin(
+  pinBlock: string,
+  pan: string,
+  format: 'ISO-0' | 'ISO-1',
+  expectedPin: string,
+  pinEncryptionKey: string
+): boolean {
+  // Parse the PIN block to get the clear PIN
+  const pin = parsePinBlock(pinBlock, pan, format)
+
+  // Compare with the expected PIN
+  return pin === expectedPin
+}
+
 export {
   generate3DESKeyFromComponents,
   import3DESKeyFromComponents,
@@ -669,6 +814,11 @@ export {
   importTMK,
   generateCardKey,
   importCardKey,
+  formatPinBlockISO0,
+  formatPinBlockISO1,
+  parsePinBlock,
+  translatePin,
+  verifyPin,
   AES_MERCHANT_ASE_LMK_HEX,
   AES_CUSTOMER_ASE_LMK_HEX,
   AES_KAI_LMK_HEX,

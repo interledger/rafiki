@@ -15,7 +15,12 @@ import {
   KeyUsage,
   Tr31Intent,
   generateCardKey,
-  importCardKey
+  importCardKey,
+  formatPinBlockISO0,
+  formatPinBlockISO1,
+  parsePinBlock,
+  translatePin,
+  verifyPin
 } from './card-hsm'
 
 export function createApp(port: number) {
@@ -262,6 +267,103 @@ export function createApp(port: number) {
       })
     }
   )
+
+  // Add PIN translation endpoint
+  app.post('/hsm/translate-pin', async function handler(ffReq, ffReply) {
+    const requestBody = JSON.parse(JSON.stringify(ffReq.body))
+    const {
+      pinBlock,
+      sourcePan,
+      sourceFormat,
+      targetPan,
+      targetFormat,
+      pinEncryptionKey
+    } = requestBody
+
+    try {
+      // Validate input
+      if (
+        !pinBlock ||
+        !sourcePan ||
+        !sourceFormat ||
+        !targetPan ||
+        !targetFormat
+      ) {
+        throw new Error('Missing required parameters')
+      }
+
+      if (sourceFormat !== 'ISO-0' && sourceFormat !== 'ISO-1') {
+        throw new Error('Source format must be ISO-0 or ISO-1')
+      }
+
+      if (targetFormat !== 'ISO-0' && targetFormat !== 'ISO-1') {
+        throw new Error('Target format must be ISO-0 or ISO-1')
+      }
+
+      // Translate the PIN
+      const translatedPinBlock = translatePin(
+        pinBlock,
+        sourcePan,
+        sourceFormat,
+        targetPan,
+        targetFormat,
+        pinEncryptionKey
+      )
+
+      logger.info(
+        `Translated PIN block from ${sourceFormat} to ${targetFormat}`
+      )
+
+      ffReply.code(200).send({
+        translatedPinBlock,
+        sourceFormat,
+        targetFormat
+      })
+    } catch (error) {
+      logger.error(`PIN translation error: ${error.message}`)
+      ffReply.code(400).send({
+        error: error.message
+      })
+    }
+  })
+
+  // Add PIN verification endpoint
+  app.post('/hsm/verify-pin', async function handler(ffReq, ffReply) {
+    const requestBody = JSON.parse(JSON.stringify(ffReq.body))
+    const { pinBlock, pan, format, expectedPin, pinEncryptionKey } = requestBody
+
+    try {
+      // Validate input
+      if (!pinBlock || !pan || !format || !expectedPin) {
+        throw new Error('Missing required parameters')
+      }
+
+      if (format !== 'ISO-0' && format !== 'ISO-1') {
+        throw new Error('Format must be ISO-0 or ISO-1')
+      }
+
+      // Verify the PIN
+      const isValid = verifyPin(
+        pinBlock,
+        pan,
+        format,
+        expectedPin,
+        pinEncryptionKey
+      )
+
+      logger.info(`PIN verification result: ${isValid ? 'Valid' : 'Invalid'}`)
+
+      ffReply.code(200).send({
+        isValid,
+        format
+      })
+    } catch (error) {
+      logger.error(`PIN verification error: ${error.message}`)
+      ffReply.code(400).send({
+        error: error.message
+      })
+    }
+  })
 
   return async () => {
     await app.listen({ port, host: '0.0.0.0' })
