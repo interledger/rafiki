@@ -1,7 +1,7 @@
 import { AppContext } from '../app'
 import { BaseService } from '../shared/baseService'
 import { MerchantService } from './service'
-import { POSMerchantRouteError } from './errors'
+import { MerchantRouteError } from './errors'
 
 interface ServiceDependencies extends BaseService {
   merchantService: MerchantService
@@ -61,7 +61,9 @@ async function createMerchant(
     ctx.status = 200
     ctx.body = { id: merchant.id, name: merchant.name }
   } catch (err) {
-    throw new POSMerchantRouteError(400, 'Could not create merchant', { err })
+    throw new MerchantRouteError(400, 'Could not create merchant', undefined, {
+      err
+    })
   }
 }
 
