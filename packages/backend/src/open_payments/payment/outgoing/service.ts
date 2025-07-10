@@ -337,7 +337,7 @@ async function createOutgoingPayment(
         const ilpPaymentMethod = receiver.paymentMethods.find(
           (method) => method.type === 'ilp'
         )
-        const peer = ilpPaymentMethod
+        const peer = ilpPaymentMethod && ilpPaymentMethod.type === 'ilp'
           ? await deps.peerService.getByDestinationAddress(
               ilpPaymentMethod.ilpAddress
             )

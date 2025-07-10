@@ -20,8 +20,15 @@ import { Transaction } from 'objection'
 import { Receiver } from '../../open_payments/receiver/model'
 import { IlpAddress, isValidIlpAddress } from 'ilp-packet'
 import base64url from 'base64url'
+import { OpenPaymentsPaymentMethod } from '../provider/service'
 
 const MAX_INT64 = BigInt('9223372036854775807')
+//TODO Temporary
+function isIlpPaymentMethod(
+  method: OpenPaymentsPaymentMethod
+): method is OpenPaymentsPaymentMethod & { type: 'ilp'; ilpAddress: string; sharedSecret: string } {
+  return method.type === 'ilp'
+}
 
 export interface IlpPaymentService extends PaymentMethodService {}
 
@@ -402,7 +409,7 @@ export function resolveIlpDestination(receiver: Receiver): Pay.ResolvedPayment {
     (method) => method.type === 'ilp'
   )
 
-  if (!ilpPaymentMethod) {
+  if (!ilpPaymentMethod || !isIlpPaymentMethod(ilpPaymentMethod)) {
     throw new PaymentMethodHandlerError(
       'Invalid ILP payment method on receiver',
       {
