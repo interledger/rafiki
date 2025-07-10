@@ -7,7 +7,6 @@ import Koa, { DefaultState } from 'koa'
 import Router from '@koa/router'
 import bodyParser from 'koa-bodyparser'
 import cors from '@koa/cors'
-<<<<<<< HEAD
 import {
   CreateMerchantContext,
   DeleteMerchantContext,
@@ -20,21 +19,16 @@ import {
 import { PosDeviceService } from './merchant/devices/service'
 import { MerchantService } from './merchant/service'
 import { PaymentContext, PaymentRoutes } from './payments/routes'
-=======
->>>>>>> b66c9448b (feat: initialize POS service (#3509))
 
 export interface AppServices {
   logger: Promise<Logger>
   knex: Promise<Knex>
   config: Promise<IAppConfig>
-<<<<<<< HEAD
   merchantRoutes: Promise<MerchantRoutes>
   posDeviceRoutes: Promise<PosDeviceRoutes>
   posDeviceService: Promise<PosDeviceService>
   merchantService: Promise<MerchantService>
   paymentRoutes: Promise<PaymentRoutes>
-=======
->>>>>>> b66c9448b (feat: initialize POS service (#3509))
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -48,7 +42,6 @@ export interface AppContextData {
 
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
 
-<<<<<<< HEAD
 export type AppRequest<ParamsT extends string = string> = Omit<
   AppContext['request'],
   'params'
@@ -56,8 +49,6 @@ export type AppRequest<ParamsT extends string = string> = Omit<
   params: Record<ParamsT, string>
 }
 
-=======
->>>>>>> b66c9448b (feat: initialize POS service (#3509))
 export class App {
   private posServer!: Server
   public isShuttingDown = false
@@ -149,11 +140,7 @@ export class App {
     })
 
     koa.context.container = this.container
-<<<<<<< HEAD
     koa.context.logger = this.logger
-=======
-    koa.context.logger = await this.container.use('logger')
->>>>>>> b66c9448b (feat: initialize POS service (#3509))
 
     koa.use(
       async (
