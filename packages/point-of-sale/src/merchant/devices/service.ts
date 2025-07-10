@@ -12,6 +12,8 @@ export interface PosDeviceService {
   getByKeyId(keyId: string): Promise<PosDevice | void>
 
   revoke(id: string): Promise<PosDevice | PosDeviceError>
+
+  revokeAllByMerchantId(merchantId: string): Promise<number>
 }
 
 export interface CreateOptions {
@@ -43,7 +45,9 @@ export async function createPosDeviceService({
   return {
     registerDevice: (options) => registerDevice(deps, options),
     getByKeyId: (keyId) => getByKeyId(deps, keyId),
-    revoke: (id) => revoke(deps, id)
+    revoke: (id) => revoke(deps, id),
+    revokeAllByMerchantId: (merchantId) =>
+      revokeAllByMerchantId(deps, merchantId)
   }
 }
 
@@ -98,6 +102,21 @@ async function revoke(
     }
     throw err
   }
+}
+
+async function revokeAllByMerchantId(
+  deps: ServiceDependencies,
+  merchantId: string
+): Promise<number> {
+  const revokedCount = await PosDevice.query(deps.knex)
+    .patch({
+      status: DeviceStatus.Revoked,
+      deletedAt: new Date()
+    })
+    .where('merchantId', merchantId)
+    .whereNull('deletedAt')
+
+  return revokedCount
 }
 
 function generateKeyId(deviceName: string): string {
