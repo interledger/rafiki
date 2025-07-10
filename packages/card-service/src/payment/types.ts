@@ -22,7 +22,11 @@ export type PaymentContext = Omit<AppContext, 'request'> & {
   }
 }
 
-export enum PaymentEventEnum {
+export enum PaymentResultEnum {
+  Approved = 'approved'
+}
+
+export enum PaymentEventResultEnum {
   Completed = 'completed',
   CardExpired = 'card_expired',
   InvalidSignature = 'invalid_signature'
@@ -32,7 +36,7 @@ export interface PaymentEventBody {
   requestId: string
   outgoingPaymentId: string
   result: {
-    code: PaymentEventEnum
+    code: PaymentEventResultEnum
   }
 }
 

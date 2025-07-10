@@ -1,5 +1,9 @@
 import { Logger } from 'pino'
-import { PaymentContext, PaymentEventEnum } from './types'
+import {
+  PaymentContext,
+  PaymentEventResultEnum,
+  PaymentResultEnum
+} from './types'
 import { PaymentEventContext } from './types'
 import { PaymentService, PaymentTimeoutError } from './service'
 import { paymentWaitMap } from './wait-map'
@@ -21,19 +25,19 @@ export function createPaymentRoutes(deps: ServiceDependencies): PaymentRoutes {
         const result = await deps.paymentService.create(ctx.request.body)
 
         switch (result.result.code) {
-          case PaymentEventEnum.CardExpired:
+          case PaymentEventResultEnum.CardExpired:
             ctx.status = 401
             ctx.body = { error: 'Card expired' }
             return
 
-          case PaymentEventEnum.InvalidSignature:
+          case PaymentEventResultEnum.InvalidSignature:
             ctx.status = 401
             ctx.body = { error: 'Invalid signature' }
             return
         }
 
         ctx.status = 201
-        ctx.body = result
+        ctx.body = { result: PaymentResultEnum.Approved }
       } catch (err) {
         if (err instanceof PaymentTimeoutError) {
           ctx.status = err.statusCode
