@@ -13,298 +13,298 @@ on:
       - release/v*
 
 jobs:
-  prerequisite:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-    - uses: actions/checkout@v4
-    - uses: ./.github/workflows/rafiki/env-setup
-    - run: pnpm checks
+  # prerequisite:
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 5
+  #   steps:
+  #   - uses: actions/checkout@v4
+  #   - uses: ./.github/workflows/rafiki/env-setup
+  #   - run: pnpm checks
 
-  backend:
-    runs-on: ubuntu-latest
-    needs: prerequisite
-    timeout-minutes: 25
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter backend build:deps
-      - run: NODE_OPTIONS="--max-old-space-size=4096" pnpm --filter backend test:ci
-      - name: AsyncAPI extension
-        run: |
-          echo "{\"extends\":[\"spectral:oas\",\"spectral:asyncapi\"]}" >> .spectral.json
-      - name: Validate Open API specs
-        run: |
-          npx @stoplight/spectral-cli lint ./packages/backend/src/openapi/specs/*.yaml
+  # backend:
+  #   runs-on: ubuntu-latest
+  #   needs: prerequisite
+  #   timeout-minutes: 25
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: ./.github/workflows/rafiki/env-setup
+  #     - run: pnpm --filter backend build:deps
+  #     - run: NODE_OPTIONS="--max-old-space-size=4096" pnpm --filter backend test:ci
+  #     - name: AsyncAPI extension
+  #       run: |
+  #         echo "{\"extends\":[\"spectral:oas\",\"spectral:asyncapi\"]}" >> .spectral.json
+  #     - name: Validate Open API specs
+  #       run: |
+  #         npx @stoplight/spectral-cli lint ./packages/backend/src/openapi/specs/*.yaml
 
-  frontend:
-    runs-on: ubuntu-latest
-    needs: prerequisite
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter frontend typecheck
-      - run: pnpm --filter frontend build
+  # frontend:
+  #   runs-on: ubuntu-latest
+  #   needs: prerequisite
+  #   timeout-minutes: 5
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: ./.github/workflows/rafiki/env-setup
+  #     - run: pnpm --filter frontend typecheck
+  #     - run: pnpm --filter frontend build
 
-  auth:
-    runs-on: ubuntu-latest
-    needs: prerequisite
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter auth build:deps
-      - run: pnpm --filter auth test
-      - name: AsyncAPI extension
-        run: |
-          echo "{\"extends\":[\"spectral:oas\",\"spectral:asyncapi\"]}" >> .spectral.json
-      - name: Validate Open API specs
-        run: |
-          npx @stoplight/spectral-cli lint ./packages/auth/src/openapi/specs/*.yaml
+  # auth:
+  #   runs-on: ubuntu-latest
+  #   needs: prerequisite
+  #   timeout-minutes: 5
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: ./.github/workflows/rafiki/env-setup
+  #     - run: pnpm --filter auth build:deps
+  #     - run: pnpm --filter auth test
+  #     - name: AsyncAPI extension
+  #       run: |
+  #         echo "{\"extends\":[\"spectral:oas\",\"spectral:asyncapi\"]}" >> .spectral.json
+  #     - name: Validate Open API specs
+  #       run: |
+  #         npx @stoplight/spectral-cli lint ./packages/auth/src/openapi/specs/*.yaml
 
-  token-introspection:
-    runs-on: ubuntu-latest
-    needs: prerequisite
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter token-introspection test
-      - name: AsyncAPI extension
-        run: |
-          echo "{\"extends\":[\"spectral:oas\",\"spectral:asyncapi\"]}" >> .spectral.json
-      - name: Validate Open API specs
-        run: |
-          npx @stoplight/spectral-cli lint ./packages/token-introspection/src/openapi/specs/*.yaml
+  # token-introspection:
+  #   runs-on: ubuntu-latest
+  #   needs: prerequisite
+  #   timeout-minutes: 5
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: ./.github/workflows/rafiki/env-setup
+  #     - run: pnpm --filter token-introspection test
+  #     - name: AsyncAPI extension
+  #       run: |
+  #         echo "{\"extends\":[\"spectral:oas\",\"spectral:asyncapi\"]}" >> .spectral.json
+  #     - name: Validate Open API specs
+  #       run: |
+  #         npx @stoplight/spectral-cli lint ./packages/token-introspection/src/openapi/specs/*.yaml
 
-  mock-account-servicing-entity:
-    runs-on: ubuntu-latest
-    needs: prerequisite
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter mock-account-servicing-entity build
-      - run: pnpm --filter mock-account-servicing-entity typecheck
+  # mock-account-servicing-entity:
+  #   runs-on: ubuntu-latest
+  #   needs: prerequisite
+  #   timeout-minutes: 5
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: ./.github/workflows/rafiki/env-setup
+  #     - run: pnpm --filter mock-account-servicing-entity build
+  #     - run: pnpm --filter mock-account-servicing-entity typecheck
 
-  graphql:
-    runs-on: ubuntu-latest
-    needs: prerequisite
-    strategy:
-      matrix:
-        package: [auth, backend]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/workflows/rafiki/env-setup
-      - name: generate ${{ matrix.package }} graphql
-        run: pnpm --filter ${{ matrix.package }} generate
-      - name: verify changed files
-        uses: tj-actions/verify-changed-files@v19
-        id: verify-changed-files
-        with:
-          files: |
-            **/generated/graphql.*
+  # graphql:
+  #   runs-on: ubuntu-latest
+  #   needs: prerequisite
+  #   strategy:
+  #     matrix:
+  #       package: [auth, backend]
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: ./.github/workflows/rafiki/env-setup
+  #     - name: generate ${{ matrix.package }} graphql
+  #       run: pnpm --filter ${{ matrix.package }} generate
+  #     - name: verify changed files
+  #       uses: tj-actions/verify-changed-files@v19
+  #       id: verify-changed-files
+  #       with:
+  #         files: |
+  #           **/generated/graphql.*
 
-      - name: fail if GraphQL was generated
-        if: steps.verify-changed-files.outputs.files_changed == 'true'
-        run: exit 1
+  #     - name: fail if GraphQL was generated
+  #       if: steps.verify-changed-files.outputs.files_changed == 'true'
+  #       run: exit 1
   
-  codeql-analyze:
-    runs-on: ubuntu-latest
-    needs: prerequisite
-    timeout-minutes: 5
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'javascript' ]
-        config:
-          - './.github/codeql/source.yml'
-          - './.github/codeql/tests.yml'
-    steps:
-     - uses: actions/checkout@v4
-     - uses: ./.github/workflows/rafiki/env-setup
-     - name: Initialize CodeQL
-       uses: github/codeql-action/init@v3
-       with:
-         languages: ${{ matrix.language }}
-         config-file: ${{ matrix.config }}
-     - name: Perform CodeQL Analysis
-       uses: github/codeql-action/analyze@v3
+  # codeql-analyze:
+  #   runs-on: ubuntu-latest
+  #   needs: prerequisite
+  #   timeout-minutes: 5
+  #   permissions:
+  #     actions: read
+  #     contents: read
+  #     security-events: write
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       language: [ 'javascript' ]
+  #       config:
+  #         - './.github/codeql/source.yml'
+  #         - './.github/codeql/tests.yml'
+  #   steps:
+  #    - uses: actions/checkout@v4
+  #    - uses: ./.github/workflows/rafiki/env-setup
+  #    - name: Initialize CodeQL
+  #      uses: github/codeql-action/init@v3
+  #      with:
+  #        languages: ${{ matrix.language }}
+  #        config-file: ${{ matrix.config }}
+  #    - name: Perform CodeQL Analysis
+  #      uses: github/codeql-action/analyze@v3
 
-  integration-test:
-    runs-on: ubuntu-22.04
-    needs: prerequisite
-    timeout-minutes: 5
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # integration-test:
+  #   runs-on: ubuntu-22.04
+  #   needs: prerequisite
+  #   timeout-minutes: 5
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      - name: Setup environment
-        uses: ./.github/workflows/rafiki/env-setup
+  #     - name: Setup environment
+  #       uses: ./.github/workflows/rafiki/env-setup
 
-      - name: Setup hosts
-        run: |
-          echo "127.0.0.1 cloud-nine-wallet-test-backend" | sudo tee -a /etc/hosts
-          echo "127.0.0.1 cloud-nine-wallet-test-auth" | sudo tee -a /etc/hosts
-          echo "127.0.0.1 happy-life-bank-test-backend" | sudo tee -a /etc/hosts
-          echo "127.0.0.1 happy-life-bank-test-auth" | sudo tee -a /etc/hosts
-      - name: Build dependencies
-        run: pnpm --filter integration build:deps
+  #     - name: Setup hosts
+  #       run: |
+  #         echo "127.0.0.1 cloud-nine-wallet-test-backend" | sudo tee -a /etc/hosts
+  #         echo "127.0.0.1 cloud-nine-wallet-test-auth" | sudo tee -a /etc/hosts
+  #         echo "127.0.0.1 happy-life-bank-test-backend" | sudo tee -a /etc/hosts
+  #         echo "127.0.0.1 happy-life-bank-test-auth" | sudo tee -a /etc/hosts
+  #     - name: Build dependencies
+  #       run: pnpm --filter integration build:deps
 
-      - name: Run tests
-        run: pnpm --filter integration run-tests
+  #     - name: Run tests
+  #       run: pnpm --filter integration run-tests
 
-  performance-test:
-    runs-on: ubuntu-22.04
-    needs: prerequisite
-    timeout-minutes: 5
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # performance-test:
+  #   runs-on: ubuntu-22.04
+  #   needs: prerequisite
+  #   timeout-minutes: 5
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      - name: Setup environment
-        uses: ./.github/workflows/rafiki/env-setup
+  #     - name: Setup environment
+  #       uses: ./.github/workflows/rafiki/env-setup
 
-      - name: Set up k6
-        uses: grafana/setup-k6-action@v1
+  #     - name: Set up k6
+  #       uses: grafana/setup-k6-action@v1
 
-      - name: Setup hosts
-        run: |
-          echo "127.0.0.1 cloud-nine-wallet-test-backend" | sudo tee -a /etc/hosts
-          echo "127.0.0.1 cloud-nine-wallet-test-auth" | sudo tee -a /etc/hosts
-          echo "127.0.0.1 happy-life-bank-test-backend" | sudo tee -a /etc/hosts
-          echo "127.0.0.1 happy-life-bank-test-auth" | sudo tee -a /etc/hosts
+  #     - name: Setup hosts
+  #       run: |
+  #         echo "127.0.0.1 cloud-nine-wallet-test-backend" | sudo tee -a /etc/hosts
+  #         echo "127.0.0.1 cloud-nine-wallet-test-auth" | sudo tee -a /etc/hosts
+  #         echo "127.0.0.1 happy-life-bank-test-backend" | sudo tee -a /etc/hosts
+  #         echo "127.0.0.1 happy-life-bank-test-auth" | sudo tee -a /etc/hosts
 
-      - name: Build dependencies
-        run: pnpm --filter performance build:deps
+  #     - name: Build dependencies
+  #       run: pnpm --filter performance build:deps
 
-      - name: Bundle
-        run: pnpm --filter performance bundle
+  #     - name: Bundle
+  #       run: pnpm --filter performance bundle
 
-      - name: Start test environment
-        run: pnpm --filter performance testenv:compose up --wait --build -d
+  #     - name: Start test environment
+  #       run: pnpm --filter performance testenv:compose up --wait --build -d
 
-      - name: Start Mock Account Entity Services
-        run: |
-          pnpm --filter performance start-mases > mases.log 2>&1 &
-          MASES_PID=$!
-          sleep 5
-          if ! ps -p $MASES_PID > /dev/null; then
-            echo "Mock Account Entity Services failed to start. Check logs:"
-            cat mases.log
-            exit 1
-          fi
+  #     - name: Start Mock Account Entity Services
+  #       run: |
+  #         pnpm --filter performance start-mases > mases.log 2>&1 &
+  #         MASES_PID=$!
+  #         sleep 5
+  #         if ! ps -p $MASES_PID > /dev/null; then
+  #           echo "Mock Account Entity Services failed to start. Check logs:"
+  #           cat mases.log
+  #           exit 1
+  #         fi
 
-      - name: Run performance tests
-        id: perf_test
-        run: |
-          pnpm --filter performance run-tests:testenv -k -q --vus 4 --duration 1m | tee performance.log
+  #     - name: Run performance tests
+  #       id: perf_test
+  #       run: |
+  #         pnpm --filter performance run-tests:testenv -k -q --vus 4 --duration 1m | tee performance.log
 
-      - name: Post/Update Performance Test Results as PR Comment
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const pr = context.payload.pull_request;
-            if (!pr) {
-              console.log("No PR detected, skipping comment.");
-              return;
-            }
+  #     - name: Post/Update Performance Test Results as PR Comment
+  #       if: ${{ github.event_name == 'pull_request' }}
+  #       uses: actions/github-script@v7
+  #       with:
+  #         github-token: ${{ secrets.GITHUB_TOKEN }}
+  #         script: |
+  #           const pr = context.payload.pull_request;
+  #           if (!pr) {
+  #             console.log("No PR detected, skipping comment.");
+  #             return;
+  #           }
 
-            const sourceOwner = pr.head.repo.owner.login;
-            const targetOwner = pr.base.repo.owner.login;
+  #           const sourceOwner = pr.head.repo.owner.login;
+  #           const targetOwner = pr.base.repo.owner.login;
 
-            if (sourceOwner !== targetOwner) {
-              console.log("PR is from a fork, skipping automatic comment for security reasons.");
-              return;
-            }
+  #           if (sourceOwner !== targetOwner) {
+  #             console.log("PR is from a fork, skipping automatic comment for security reasons.");
+  #             return;
+  #           }
 
-            const fs = require('fs');
-            const summaryPath = './test/performance/k6-test-summary.txt';
-            const logPath = './performance.log';
-            let summaryContent = '';
-            let logContent = '';
+  #           const fs = require('fs');
+  #           const summaryPath = './test/performance/k6-test-summary.txt';
+  #           const logPath = './performance.log';
+  #           let summaryContent = '';
+  #           let logContent = '';
 
-            // Read the k6 summary file
-            if (fs.existsSync(summaryPath)) {
-              summaryContent = fs.readFileSync(summaryPath, 'utf8');
-            } else {
-              summaryContent = 'Performance test summary not found.';
-            }
+  #           // Read the k6 summary file
+  #           if (fs.existsSync(summaryPath)) {
+  #             summaryContent = fs.readFileSync(summaryPath, 'utf8');
+  #           } else {
+  #             summaryContent = 'Performance test summary not found.';
+  #           }
 
-            // Read the full logs
-            if (fs.existsSync(logPath)) {
-              logContent = fs.readFileSync(logPath, 'utf8');
-            } else {
-              logContent = 'Performance log not found.';
-            }
+  #           // Read the full logs
+  #           if (fs.existsSync(logPath)) {
+  #             logContent = fs.readFileSync(logPath, 'utf8');
+  #           } else {
+  #             logContent = 'Performance log not found.';
+  #           }
 
-            // Limit in case large file size to avoid error posting comment (65kb limit)
-            // https://github.com/orgs/community/discussions/41331
-            const maxLogSize = 60000;
-            const truncatedLogs = logContent.length > maxLogSize ? `...(truncated)...\n${logContent.slice(-maxLogSize)}` : logContent;
+  #           // Limit in case large file size to avoid error posting comment (65kb limit)
+  #           // https://github.com/orgs/community/discussions/41331
+  #           const maxLogSize = 60000;
+  #           const truncatedLogs = logContent.length > maxLogSize ? `...(truncated)...\n${logContent.slice(-maxLogSize)}` : logContent;
 
-            const commentBody = `
-            ### 🚀 Performance Test Results  
+  #           const commentBody = `
+  #           ### 🚀 Performance Test Results  
 
-            ${summaryContent}
+  #           ${summaryContent}
 
-            <details>
-            <summary>📜 Logs</summary>
+  #           <details>
+  #           <summary>📜 Logs</summary>
 
-            \`\`\`
-            ${truncatedLogs}
-            \`\`\`
+  #           \`\`\`
+  #           ${truncatedLogs}
+  #           \`\`\`
 
-            </details>
-            `;
+  #           </details>
+  #           `;
 
-            const { owner, repo } = context.repo;
-            const prNumber = context.payload.pull_request?.number;
+  #           const { owner, repo } = context.repo;
+  #           const prNumber = context.payload.pull_request?.number;
 
-            if (prNumber) {
-              const comments = await github.rest.issues.listComments({
-                owner,
-                repo,
-                issue_number: prNumber
-              });
+  #           if (prNumber) {
+  #             const comments = await github.rest.issues.listComments({
+  #               owner,
+  #               repo,
+  #               issue_number: prNumber
+  #             });
 
-              // Identify existing comment via title
-              const existingComment = comments.data.find(comment => comment.body.includes('🚀 Performance Test Results'));
+  #             // Identify existing comment via title
+  #             const existingComment = comments.data.find(comment => comment.body.includes('🚀 Performance Test Results'));
 
-              if (existingComment) { // upsert comment
-                await github.rest.issues.updateComment({
-                  owner,
-                  repo,
-                  comment_id: existingComment.id,
-                  body: commentBody
-                });
-              } else {
-                await github.rest.issues.createComment({
-                  owner,
-                  repo,
-                  issue_number: prNumber,
-                  body: commentBody
-                });
-              }
-            } else {
-              console.log("No PR detected, skipping comment.");
-            }
+  #             if (existingComment) { // upsert comment
+  #               await github.rest.issues.updateComment({
+  #                 owner,
+  #                 repo,
+  #                 comment_id: existingComment.id,
+  #                 body: commentBody
+  #               });
+  #             } else {
+  #               await github.rest.issues.createComment({
+  #                 owner,
+  #                 repo,
+  #                 issue_number: prNumber,
+  #                 body: commentBody
+  #               });
+  #             }
+  #           } else {
+  #             console.log("No PR detected, skipping comment.");
+  #           }
 
-  node-build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    needs: [auth, backend, frontend, token-introspection, mock-account-servicing-entity, graphql, codeql-analyze, integration-test]
-    steps: 
-      - uses: actions/checkout@v4
-      - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm build
+  # node-build:
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 5
+  #   needs: [auth, backend, frontend, token-introspection, mock-account-servicing-entity, graphql, codeql-analyze, integration-test]
+  #   steps: 
+  #     - uses: actions/checkout@v4
+  #     - uses: ./.github/workflows/rafiki/env-setup
+  #     - run: pnpm build
 
   version-generator:
     runs-on: ubuntu-latest
@@ -413,77 +413,77 @@ jobs:
           path: /tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
           key: ${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}
   
-  docker-grype:
-    name: Docker Grype Scan
-    needs: [version-generator, docker-build]
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    strategy:
-      matrix:
-        platform:
-          - arch: linux/amd64
-            name: amd64
-          - arch: linux/arm64
-            name: arm64
-        package:
-          - auth
-          - backend
-          - frontend
-    steps:
-      - uses: actions/checkout@v4
-      - name: Fetch docker image from cache
-        uses: actions/cache/restore@v4
-        with:
-          path: /tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
-          key: ${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}
-          fail-on-cache-miss: true
-      - name: Docker list
-        run: |
-          docker images
-      - name: Scan docker image
-        uses: anchore/scan-action@v3
-        with:
-          image: /tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
-          fail-build: true
-          only-fixed: true
-          severity-cutoff: high
-          output-format: table
+  # docker-grype:
+  #   name: Docker Grype Scan
+  #   needs: [version-generator, docker-build]
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 5
+  #   strategy:
+  #     matrix:
+  #       platform:
+  #         - arch: linux/amd64
+  #           name: amd64
+  #         - arch: linux/arm64
+  #           name: arm64
+  #       package:
+  #         - auth
+  #         - backend
+  #         - frontend
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Fetch docker image from cache
+  #       uses: actions/cache/restore@v4
+  #       with:
+  #         path: /tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
+  #         key: ${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}
+  #         fail-on-cache-miss: true
+  #     - name: Docker list
+  #       run: |
+  #         docker images
+  #     - name: Scan docker image
+  #       uses: anchore/scan-action@v3
+  #       with:
+  #         image: /tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
+  #         fail-build: true
+  #         only-fixed: true
+  #         severity-cutoff: high
+  #         output-format: table
 
-  docker-trivy:
-    name: Docker Trivy Scan
-    needs: [version-generator, docker-build]
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    strategy:
-      matrix:
-        platform:
-          - arch: linux/amd64
-            name: amd64
-          - arch: linux/arm64
-            name: arm64
-        package:
-          - auth
-          - backend
-          - frontend
-    steps:
-      - uses: actions/checkout@v4
-      - name: Fetch docker image from cache
-        uses: actions/cache/restore@v4
-        with:
-          path: /tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
-          key: ${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}
-          fail-on-cache-miss: true
-      - name: Download Trivy
-        run: |
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /tmp
-      - name: Scan docker image
-        run: |
-          docker images
-          /tmp/trivy image --db-repository ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db --java-db-repository ghcr.io/aquasecurity/trivy-java-db,public.ecr.aws/aquasecurity/trivy-java-db --ignore-unfixed --format table --vuln-type os,library --exit-code 1 --severity HIGH --input /tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
+  # docker-trivy:
+  #   name: Docker Trivy Scan
+  #   needs: [version-generator, docker-build]
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 5
+  #   strategy:
+  #     matrix:
+  #       platform:
+  #         - arch: linux/amd64
+  #           name: amd64
+  #         - arch: linux/arm64
+  #           name: arm64
+  #       package:
+  #         - auth
+  #         - backend
+  #         - frontend
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Fetch docker image from cache
+  #       uses: actions/cache/restore@v4
+  #       with:
+  #         path: /tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
+  #         key: ${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}
+  #         fail-on-cache-miss: true
+  #     - name: Download Trivy
+  #       run: |
+  #         curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /tmp
+  #     - name: Scan docker image
+  #       run: |
+  #         docker images
+  #         /tmp/trivy image --db-repository ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db --java-db-repository ghcr.io/aquasecurity/trivy-java-db,public.ecr.aws/aquasecurity/trivy-java-db --ignore-unfixed --format table --vuln-type os,library --exit-code 1 --severity HIGH --input /tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
 
   push:
     name: Push to registry
-    needs: [version-generator, docker-grype, docker-trivy, node-build]
+    needs: [version-generator, docker-build]
     runs-on: ubuntu-latest
     if: needs.version-generator.outputs.dockerPush == 'true'
     strategy:
@@ -528,28 +528,28 @@ jobs:
           gh_token: ${{ secrets.GITHUB_TOKEN }}
           version: ${{ needs.version-generator.outputs.version }}
   
-  generate-release:
-    runs-on: ubuntu-latest
-    needs: [push-manifest, version-generator]
-    if: needs.version-generator.outputs.generateRelease == 'true'
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-      - name: Generate CHANGELOG data
-        id: changelog
-        uses: requarks/changelog-action@v1
-        with:
-          token: ${{ github.token }}
-          tag: ${{ needs.version-generator.outputs.version }}
-          includeRefIssues: false
-      - name: Create Release
-        uses: ncipollo/release-action@v1.16.0
-        with:
-          allowUpdates: true
-          draft: false
-          makeLatest: true
-          prerelease: endsWith(needs.version-generator.outputs.version, '-alpha') 
-          name: ${{ needs.version-generator.outputs.version }}
-          body: ${{ steps.changelog.outputs.changes }}
-          tag: ${{ needs.version-generator.outputs.version }}
-          token: ${{ github.token }}
+  # generate-release:
+  #   runs-on: ubuntu-latest
+  #   needs: [push-manifest, version-generator]
+  #   if: needs.version-generator.outputs.generateRelease == 'true'
+  #   steps:
+  #     - name: Checkout Code
+  #       uses: actions/checkout@v4
+  #     - name: Generate CHANGELOG data
+  #       id: changelog
+  #       uses: requarks/changelog-action@v1
+  #       with:
+  #         token: ${{ github.token }}
+  #         tag: ${{ needs.version-generator.outputs.version }}
+  #         includeRefIssues: false
+  #     - name: Create Release
+  #       uses: ncipollo/release-action@v1.16.0
+  #       with:
+  #         allowUpdates: true
+  #         draft: false
+  #         makeLatest: true
+  #         prerelease: endsWith(needs.version-generator.outputs.version, '-alpha') 
+  #         name: ${{ needs.version-generator.outputs.version }}
+  #         body: ${{ steps.changelog.outputs.changes }}
+  #         tag: ${{ needs.version-generator.outputs.version }}
+  #         token: ${{ github.token }}
