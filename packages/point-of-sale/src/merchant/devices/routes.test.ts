@@ -83,7 +83,5 @@ describe('POS Device Routes', () => {
         message: errorToMessage[PosDeviceError.UnknownMerchant]
       })
     })
-
-    function createContextWithMerchantId(merchantId: string) {}
   })
 })

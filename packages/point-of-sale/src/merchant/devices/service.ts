@@ -1,5 +1,4 @@
 import { NotFoundError, TransactionOrKnex } from 'objection'
-import { IAppConfig } from '../../config/app'
 import { BaseService } from '../../shared/baseService'
 import { Merchant } from '../model'
 import { PosDeviceError } from './errors'
