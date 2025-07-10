@@ -1,64 +1,61 @@
-import { Logger } from 'pino'
 import {
   PaymentContext,
   PaymentEventResultEnum,
   PaymentResultEnum
 } from './types'
 import { PaymentEventContext } from './types'
-import { PaymentService, PaymentTimeoutError } from './service'
+import { PaymentService } from './service'
 import { paymentWaitMap } from './wait-map'
+import { BaseService } from '../shared/baseService'
+import { PaymentRouteError } from './errors'
 
-interface ServiceDependencies {
-  logger: Logger
+interface ServiceDependencies extends BaseService {
   paymentService: PaymentService
 }
 
 export interface PaymentRoutes {
   create(ctx: PaymentContext): Promise<void>
-  paymentEvent(ctx: PaymentEventContext): Promise<void>
+  handlePaymentEvent(ctx: PaymentEventContext): Promise<void>
 }
 
 export function createPaymentRoutes(deps: ServiceDependencies): PaymentRoutes {
   return {
-    create: async (ctx: PaymentContext) => {
-      try {
-        const result = await deps.paymentService.create(ctx.request.body)
+    create: (ctx: PaymentContext) => create(deps, ctx),
+    handlePaymentEvent: (ctx: PaymentEventContext) => handlePaymentEvent(ctx)
+  }
+}
 
-        switch (result.result.code) {
-          case PaymentEventResultEnum.CardExpired:
-            ctx.status = 401
-            ctx.body = { error: 'Card expired' }
-            return
+async function create(deps: ServiceDependencies, ctx: PaymentContext) {
+  try {
+    const result = await deps.paymentService.create(ctx.request.body)
 
-          case PaymentEventResultEnum.InvalidSignature:
-            ctx.status = 401
-            ctx.body = { error: 'Invalid signature' }
-            return
-        }
+    switch (result.result.code) {
+      case PaymentEventResultEnum.CardExpired:
+        throw new PaymentRouteError(401, 'Card expired')
 
-        ctx.status = 201
-        ctx.body = { result: PaymentResultEnum.Approved }
-      } catch (err) {
-        if (err instanceof PaymentTimeoutError) {
-          ctx.status = err.statusCode
-        } else {
-          ctx.status = 500
-        }
-        ctx.body = {
-          error: err instanceof Error ? err.message : 'Internal server error'
-        }
-      }
-    },
-    paymentEvent: async (ctx: PaymentEventContext) => {
-      const body = ctx.request.body
-      const deferred = paymentWaitMap.get(body.requestId)
-      if (deferred) {
-        deferred.resolve(body)
-        ctx.status = 202
-      } else {
-        ctx.status = 404
-        ctx.body = { error: 'No ongoing payment for this requestId' }
-      }
+      case PaymentEventResultEnum.InvalidSignature:
+        throw new PaymentRouteError(401, 'Invalid signature')
     }
+
+    ctx.status = 201
+    ctx.body = { result: PaymentResultEnum.Approved }
+  } catch (err) {
+    if (err instanceof PaymentRouteError) {
+      throw err
+    }
+
+    const message = err instanceof Error ? err.message : 'Internal server error'
+    throw new PaymentRouteError(500, message)
+  }
+}
+
+async function handlePaymentEvent(ctx: PaymentEventContext) {
+  const body = ctx.request.body
+  const deferred = paymentWaitMap.get(body.requestId)
+  if (deferred) {
+    deferred.resolve(body)
+    ctx.status = 202
+  } else {
+    throw new PaymentRouteError(404, 'No ongoing payment for this requestId')
   }
 }

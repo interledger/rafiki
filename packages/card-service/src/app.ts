@@ -66,7 +66,7 @@ export class App {
         path: '/payment-event',
         method: HttpMethod.POST
       }),
-      paymentRoutes.paymentEvent
+      paymentRoutes.handlePaymentEvent
     )
 
     koa.use(cors())

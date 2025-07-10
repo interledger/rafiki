@@ -1,18 +1,11 @@
 import { PaymentBody, PaymentEventBody } from './types'
 import { IAppConfig } from '../config/app'
 import { Deferred } from '../utils/deferred'
-import { Logger } from 'pino'
 import { paymentWaitMap } from './wait-map'
+import { BaseService } from '../shared/baseService'
+import { PaymentTimeoutError } from './errors'
 
-export class PaymentTimeoutError extends Error {
-  statusCode = 504
-  constructor(message = 'Timeout waiting for payment-event') {
-    super(message)
-  }
-}
-
-interface ServiceDependencies {
-  logger: Logger
+interface ServiceDependencies extends BaseService {
   config: IAppConfig
 }
 

@@ -1,4 +1,3 @@
-import { PaymentTimeoutError } from './service'
 import { paymentWaitMap } from './wait-map'
 import { Deferred } from '../utils/deferred'
 import {
@@ -16,6 +15,7 @@ import { AppServices } from '../app'
 import { IocContract } from '@adonisjs/fold'
 import { PaymentRoutes } from './routes'
 import { createContext } from '../tests/context'
+import { PaymentTimeoutError } from './errors'
 
 describe('PaymentRoutes', () => {
   const method = 'POST'
@@ -90,9 +90,11 @@ describe('PaymentRoutes', () => {
       jest
         .spyOn(paymentService, 'create')
         .mockRejectedValue(new PaymentTimeoutError())
-      await expect(routes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(504)
-      expect(ctx.body).toEqual({ error: 'Timeout waiting for payment-event' })
+
+      await expect(routes.create(ctx)).rejects.toMatchObject({
+        status: 504,
+        message: 'Timeout waiting for payment-event'
+      })
     })
 
     test('returns 500 on unknown error', async () => {
@@ -105,9 +107,11 @@ describe('PaymentRoutes', () => {
 
       const paymentService = await deps.use('paymentService')
       jest.spyOn(paymentService, 'create').mockRejectedValue(new Error('fail'))
-      await expect(routes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(500)
-      expect(ctx.body).toEqual({ error: 'fail' })
+
+      await expect(routes.create(ctx)).rejects.toMatchObject({
+        status: 500,
+        message: 'fail'
+      })
     })
 
     test('returns 401 and error on card expired', async () => {
@@ -123,9 +127,11 @@ describe('PaymentRoutes', () => {
         ...paymentEventFixture,
         result: { code: PaymentEventResultEnum.CardExpired }
       })
-      await expect(routes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(401)
-      expect(ctx.body).toEqual({ error: 'Card expired' })
+
+      await expect(routes.create(ctx)).rejects.toMatchObject({
+        status: 401,
+        message: 'Card expired'
+      })
     })
 
     test('returns 401 and error on invalid signature', async () => {
@@ -141,9 +147,11 @@ describe('PaymentRoutes', () => {
         ...paymentEventFixture,
         result: { code: PaymentEventResultEnum.InvalidSignature }
       })
-      await expect(routes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(401)
-      expect(ctx.body).toEqual({ error: 'Invalid signature' })
+
+      await expect(routes.create(ctx)).rejects.toMatchObject({
+        status: 401,
+        message: 'Invalid signature'
+      })
     })
   })
 
@@ -161,7 +169,7 @@ describe('PaymentRoutes', () => {
       const deferred = new Deferred<PaymentEventBody>()
       const resolveSpy = jest.spyOn(deferred, 'resolve')
       paymentWaitMap.set(uuid, deferred)
-      await expect(routes.paymentEvent(ctx)).resolves.toBeUndefined()
+      await expect(routes.handlePaymentEvent(ctx)).resolves.toBeUndefined()
       expect(resolveSpy).toHaveBeenCalledWith(ctx.request.body)
       expect(ctx.status).toBe(202)
     })
@@ -177,10 +185,9 @@ describe('PaymentRoutes', () => {
         requestId: 'bar-uuid-0000-0000-0000-000000000000'
       }
 
-      await expect(routes.paymentEvent(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(404)
-      expect(ctx.body).toEqual({
-        error: 'No ongoing payment for this requestId'
+      await expect(routes.handlePaymentEvent(ctx)).rejects.toMatchObject({
+        status: 404,
+        message: 'No ongoing payment for this requestId'
       })
     })
   })
