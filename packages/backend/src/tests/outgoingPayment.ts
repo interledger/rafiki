@@ -12,6 +12,7 @@ import { WalletAddress } from '../open_payments/wallet_address/model'
 import { CreateIncomingPaymentOptions } from '../open_payments/payment/incoming/service'
 import { IncomingPayment } from '../open_payments/payment/incoming/model'
 import { createIncomingPayment } from './incomingPayment'
+import { OpenPaymentsPaymentMethod } from '../payment-method/provider/service'
 import assert from 'assert'
 
 export type CreateTestQuoteAndOutgoingPaymentOptions = Omit<
@@ -37,11 +38,11 @@ export async function createOutgoingPayment(
   const outgoingPaymentService = await deps.use('outgoingPaymentService')
   const config = await deps.use('config')
   const receiverService = await deps.use('receiverService')
+  const paymentMethodProviderService = await deps.use(
+    'paymentMethodProviderService'
+  )
   if (options.validDestination === false) {
     const walletAddressService = await deps.use('walletAddressService')
-    const streamServer = await deps.use('streamServer')
-    const streamCredentials = streamServer.generateCredentials()
-
     const incomingPayment = await createIncomingPayment(deps, {
       walletAddressId: options.walletAddressId
     })
@@ -57,7 +58,9 @@ export async function createOutgoingPayment(
           incomingPayment.toOpenPaymentsTypeWithMethods(
             config.openPaymentsUrl,
             walletAddress,
-            streamCredentials
+            await paymentMethodProviderService.getPaymentMethods(
+              incomingPayment
+            )
           ),
           false
         )
@@ -92,6 +95,7 @@ interface CreateOutgoingPaymentWithReceiverArgs {
   >
   sendingWalletAddress: WalletAddress
   fundOutgoingPayment?: boolean
+  receiverPaymentMethods?: OpenPaymentsPaymentMethod[]
 }
 
 interface CreateOutgoingPaymentWithReceiverResponse {
@@ -121,14 +125,16 @@ export async function createOutgoingPaymentWithReceiver(
   })
 
   const config = await deps.use('config')
-  const streamCredentialsService = await deps.use('streamCredentialsService')
-  const streamCredentials = await streamCredentialsService.get(incomingPayment)
+  const paymentMethodProviderService = await deps.use(
+    'paymentMethodProviderService'
+  )
 
   const receiver = new Receiver(
     incomingPayment.toOpenPaymentsTypeWithMethods(
       config.openPaymentsUrl,
       args.receivingWalletAddress,
-      streamCredentials
+      args.receiverPaymentMethods ||
+        (await paymentMethodProviderService.getPaymentMethods(incomingPayment))
     ),
     false
   )

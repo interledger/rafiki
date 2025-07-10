@@ -23,6 +23,7 @@ import { Asset } from '../../../asset/model'
 import { IncomingPaymentError, errorToHTTPCode, errorToMessage } from './errors'
 import { IncomingPaymentService } from './service'
 import { IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethods } from '@interledger/open-payments'
+import { PaymentMethodProviderService } from '../../../payment-method/provider/service'
 
 describe('Incoming Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -30,6 +31,7 @@ describe('Incoming Payment Routes', (): void => {
   let config: IAppConfig
   let incomingPaymentRoutes: IncomingPaymentRoutes
   let incomingPaymentService: IncomingPaymentService
+  let paymentMethodProviderService: PaymentMethodProviderService
 
   beforeAll(async (): Promise<void> => {
     config = Config
@@ -50,6 +52,9 @@ describe('Incoming Payment Routes', (): void => {
     config = await deps.use('config')
     incomingPaymentRoutes = await deps.use('incomingPaymentRoutes')
     incomingPaymentService = await deps.use('incomingPaymentService')
+    paymentMethodProviderService = await deps.use(
+      'paymentMethodProviderService'
+    )
 
     expiresAt = new Date(Date.now() + 30_000)
     asset = await createAsset(deps)
@@ -87,8 +92,14 @@ describe('Incoming Payment Routes', (): void => {
           incomingAmount,
           metadata
         }),
-      get: (ctx) =>
-        incomingPaymentRoutes.get(ctx as ReadContextWithAuthenticatedStatus),
+      get: (ctx) => {
+        jest
+          .spyOn(paymentMethodProviderService, 'getPaymentMethods')
+          .mockResolvedValueOnce([])
+        return incomingPaymentRoutes.get(
+          ctx as ReadContextWithAuthenticatedStatus
+        )
+      },
       getBody: (incomingPayment, list) => {
         const response: Partial<OpenPaymentsIncomingPaymentWithPaymentMethods> =
           {
@@ -105,15 +116,7 @@ describe('Incoming Payment Routes', (): void => {
           }
 
         if (!list) {
-          response.methods = [
-            {
-              type: 'ilp',
-              ilpAddress: expect.stringMatching(
-                /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
-              ),
-              sharedSecret: expect.any(String)
-            }
-          ]
+          response.methods = []
         }
         return response
       },
@@ -143,6 +146,10 @@ describe('Incoming Payment Routes', (): void => {
           },
           walletAddress
         })
+
+        jest
+        .spyOn(paymentMethodProviderService, 'getPaymentMethods')
+        .mockResolvedValueOnce([])
 
         await expect(incomingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
 
@@ -210,6 +217,9 @@ describe('Incoming Payment Routes', (): void => {
         })
         const incomingPaymentService = await deps.use('incomingPaymentService')
         const createSpy = jest.spyOn(incomingPaymentService, 'create')
+        jest
+          .spyOn(paymentMethodProviderService, 'getPaymentMethods')
+          .mockResolvedValueOnce([])
         await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
         expect(createSpy).toHaveBeenCalledWith({
           walletAddressId: walletAddress.id,
@@ -238,15 +248,7 @@ describe('Incoming Payment Routes', (): void => {
           },
           metadata,
           completed: false,
-          methods: [
-            {
-              type: 'ilp',
-              ilpAddress: expect.stringMatching(
-                /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
-              ),
-              sharedSecret: expect.any(String)
-            }
-          ]
+          methods: []
         })
       }
     )

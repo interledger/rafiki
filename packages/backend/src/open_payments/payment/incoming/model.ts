@@ -1,7 +1,6 @@
 import { Model, QueryContext } from 'objection'
 
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
-import { IlpStreamCredentials } from '../../../payment-method/ilp/stream-credentials/service'
 import {
   WalletAddress,
   WalletAddressSubresource
@@ -14,7 +13,7 @@ import {
   IncomingPayment as OpenPaymentsIncomingPayment,
   IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethod
 } from '@interledger/open-payments'
-import base64url from 'base64url'
+import { OpenPaymentsPaymentMethod } from '../../../payment-method/provider/service'
 
 export enum IncomingPaymentEventType {
   IncomingPaymentCreated = 'incoming_payment.created',
@@ -238,19 +237,11 @@ export class IncomingPayment
   public toOpenPaymentsTypeWithMethods(
     resourceServerUrl: string,
     walletAddress: WalletAddress,
-    ilpStreamCredentials?: IlpStreamCredentials
+    paymentMethods: OpenPaymentsPaymentMethod[]
   ): OpenPaymentsIncomingPaymentWithPaymentMethod {
     return {
       ...this.toOpenPaymentsType(resourceServerUrl, walletAddress),
-      methods: !ilpStreamCredentials
-        ? []
-        : [
-            {
-              type: 'ilp',
-              ilpAddress: ilpStreamCredentials.ilpAddress,
-              sharedSecret: base64url(ilpStreamCredentials.sharedSecret)
-            }
-          ]
+      methods: paymentMethods as any
     }
   }
 

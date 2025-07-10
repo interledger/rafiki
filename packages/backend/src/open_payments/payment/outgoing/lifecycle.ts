@@ -234,10 +234,40 @@ export async function sendWebhookEvent(
       }
     : undefined
 
+  // Determine payment method type
+  let paymentMethodType: string | undefined
+  try {
+    const receiver = await deps.receiverService.get(payment.receiver)
+    if (receiver) {
+      if (receiver.isLocal) {
+        paymentMethodType = 'LOCAL'
+      } else {
+        const ilpMethod = receiver.paymentMethods?.find(
+          (method) => method.type === 'ilp'
+        )
+        const sepaMethod = receiver.paymentMethods?.find(
+          (method) => method.type === 'sepa'
+        )
+        
+        if (sepaMethod) {
+          paymentMethodType = 'SEPA'
+        } else if (ilpMethod) {
+          paymentMethodType = 'ILP'
+        }
+      }
+    }
+  } catch (error) {
+    // If we can't determine the payment method type, continue without it
+    deps.logger.warn(
+      { error, paymentId: payment.id },
+      'Could not determine payment method type for webhook event'
+    )
+  }
+
   await OutgoingPaymentEvent.query(trx || deps.knex).insert({
     outgoingPaymentId: payment.id,
     type,
-    data: payment.toData({ amountSent, balance }),
+    data: payment.toData({ amountSent, balance, paymentMethodType }),
     withdrawal
   })
   stopTimer()

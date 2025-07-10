@@ -5,6 +5,7 @@ import { Receiver } from '../../open_payments/receiver/model'
 import { BaseService } from '../../shared/baseService'
 import { IlpPaymentService } from '../ilp/service'
 import { LocalPaymentService } from '../local/service'
+import { SepaPaymentService } from '../sepa/service'
 import { Transaction } from 'objection'
 
 export interface StartQuoteOptions {
@@ -38,7 +39,7 @@ export interface PaymentMethodService {
   pay(payOptions: PayOptions): Promise<void>
 }
 
-export type PaymentMethod = 'ILP' | 'LOCAL'
+export type PaymentMethod = 'ILP' | 'LOCAL' | 'SEPA'
 
 export interface PaymentMethodHandlerService {
   getQuote(
@@ -52,13 +53,15 @@ export interface PaymentMethodHandlerService {
 interface ServiceDependencies extends BaseService {
   ilpPaymentService: IlpPaymentService
   localPaymentService: LocalPaymentService
+  sepaPaymentService: SepaPaymentService
 }
 
 export async function createPaymentMethodHandlerService({
   logger,
   knex,
   ilpPaymentService,
-  localPaymentService
+  localPaymentService,
+  sepaPaymentService
 }: ServiceDependencies): Promise<PaymentMethodHandlerService> {
   const log = logger.child({
     service: 'PaymentMethodHandlerService'
@@ -67,12 +70,14 @@ export async function createPaymentMethodHandlerService({
     logger: log,
     knex,
     ilpPaymentService,
-    localPaymentService
+    localPaymentService,
+    sepaPaymentService
   }
 
   const paymentMethods: { [key in PaymentMethod]: PaymentMethodService } = {
     ILP: deps.ilpPaymentService,
-    LOCAL: deps.localPaymentService
+    LOCAL: deps.localPaymentService,
+    SEPA: deps.sepaPaymentService
   }
 
   return {

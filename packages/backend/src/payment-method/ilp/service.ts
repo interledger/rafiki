@@ -17,6 +17,9 @@ import {
 import { TelemetryService } from '../../telemetry/service'
 import { IlpQuoteDetails } from './quote-details/model'
 import { Transaction } from 'objection'
+import { Receiver } from '../../open_payments/receiver/model'
+import { IlpAddress, isValidIlpAddress } from 'ilp-packet'
+import base64url from 'base64url'
 
 const MAX_INT64 = BigInt('9223372036854775807')
 
@@ -86,7 +89,7 @@ async function getQuote(
     unfulfillable: true
   })
   stopTimerPlugin()
-  const destination = options.receiver.toResolvedPayment()
+  const destination = resolveIlpDestination(options.receiver)
 
   try {
     const stopTimerConnect = deps.telemetry.startTimer(
@@ -331,7 +334,7 @@ async function pay(
     sourceAccount: outgoingPayment
   })
 
-  const destination = receiver.toResolvedPayment()
+  const destination = resolveIlpDestination(options.receiver)
 
   try {
     const receipt = await Pay.pay({ plugin, destination, quote })
@@ -392,6 +395,39 @@ export function calculateMinSendAmount(quote: Pay.Quote): bigint {
   )
 
   return BigInt(Math.max(minSendAmount, 2)) // because of rounding in ILP pay, you must always send at least 2 units of an asset
+}
+
+export function resolveIlpDestination(receiver: Receiver): Pay.ResolvedPayment {
+  const ilpPaymentMethod = receiver.paymentMethods.find(
+    (method) => method.type === 'ilp'
+  )
+
+  if (!ilpPaymentMethod) {
+    throw new PaymentMethodHandlerError(
+      'Invalid ILP payment method on receiver',
+      {
+        description: 'No ILP payment method found in receiver',
+        retryable: false
+      }
+    )
+  }
+
+  if (!isValidIlpAddress(ilpPaymentMethod.ilpAddress)) {
+    throw new PaymentMethodHandlerError(
+      'Invalid ILP payment method on receiver',
+      {
+        description: 'Invalid ILP address for ILP payment method',
+        retryable: false
+      }
+    )
+  }
+
+  return {
+    destinationAddress: ilpPaymentMethod.ilpAddress as IlpAddress,
+    destinationAsset: receiver.asset,
+    sharedSecret: base64url.toBuffer(ilpPaymentMethod.sharedSecret),
+    requestCounter: Pay.Counter.from(0) as Pay.Counter
+  }
 }
 
 export function canRetryError(err: Error | Pay.PaymentError): boolean {

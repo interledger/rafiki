@@ -13,7 +13,8 @@ import {
 } from '../wallet_address/service'
 import {
   PaymentMethodHandlerService,
-  PaymentQuote
+  PaymentQuote,
+  PaymentMethod
 } from '../../payment-method/handler/service'
 import { IAppConfig } from '../../config/app'
 import { FeeService } from '../../fee/service'
@@ -74,7 +75,7 @@ async function getQuote(
 interface QuoteOptionsBase {
   walletAddressId: string
   receiver: string
-  method: 'ilp'
+  method: 'ilp' | 'sepa'
   client?: string
 }
 
@@ -156,7 +157,9 @@ async function createQuote(
     const receiver = await resolveReceiver(deps, options)
     stopTimerReceiver()
 
-    const paymentMethod = receiver.isLocal ? 'LOCAL' : 'ILP'
+    
+    // TODO TBD multi tenancy local SEPA between different tenants
+    const paymentMethod = receiver.isLocal ? 'LOCAL' : (options.method === 'sepa' ? 'SEPA' : 'ILP')
     const quoteId = uuid()
 
     const stopTimerFee = deps.telemetry.startTimer(
@@ -166,6 +169,8 @@ async function createQuote(
         description: 'Time to getLatestFee'
       }
     )
+
+    //TODO Specify payment method when querying for fees
     const sendingFee = await deps.feeService.getLatestFee(
       walletAddress.assetId,
       FeeType.Sending

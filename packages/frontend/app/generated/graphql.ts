@@ -190,6 +190,35 @@ export type CancelOutgoingPaymentInput = {
   reason?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type CompleteSepaPaymentInput = {
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
+  idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  /** Optional metadata associated with the payment completion. */
+  metadata?: InputMaybe<Scalars['JSONObject']['input']>;
+  /** Unique identifier of the payment to be completed. */
+  paymentId: Scalars['ID']['input'];
+  /** Type of payment to complete: 'incoming' or 'outgoing'. */
+  paymentType: Scalars['String']['input'];
+  /** Amount that was received for this payment. */
+  receivedAmount: AmountInput;
+};
+
+export type CompleteSepaPaymentResponse = {
+  __typename?: 'CompleteSepaPaymentResponse';
+  /** A message describing the completion result. */
+  message: Scalars['String']['output'];
+  /** Optional metadata associated with the payment completion. */
+  metadata?: Maybe<Scalars['JSONObject']['output']>;
+  /** The ID of the payment that was completed. */
+  paymentId: Scalars['ID']['output'];
+  /** The type of payment that was completed ('incoming' or 'outgoing'). */
+  paymentType: Scalars['String']['output'];
+  /** The amount that was received for this payment. */
+  receivedAmount: Amount;
+  /** Indicates whether the SEPA payment completion was successful. */
+  success: Scalars['Boolean']['output'];
+};
+
 export type CreateAssetInput = {
   /** Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets). */
   code: Scalars['String']['input'];
@@ -337,6 +366,8 @@ export type CreateQuoteInput = {
   debitAmount?: InputMaybe<AmountInput>;
   /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  /** Payment method to use for the quote. Defaults to 'ilp' if not specified. */
+  method?: InputMaybe<QuoteMethod>;
   /** Amount to receive (fixed receive). */
   receiveAmount?: InputMaybe<AmountInput>;
   /** Wallet address URL of the receiver. */
@@ -697,6 +728,8 @@ export type Mutation = {
   cancelIncomingPayment: CancelIncomingPaymentResponse;
   /** Cancel an outgoing payment. */
   cancelOutgoingPayment: OutgoingPaymentResponse;
+  /** Complete a SEPA payment (incoming or outgoing) by marking it as completed */
+  completeSepaPayment: CompleteSepaPaymentResponse;
   /** Create a new asset. */
   createAsset: AssetMutationResponse;
   /** Withdraw asset liquidity. */
@@ -780,6 +813,11 @@ export type MutationCancelIncomingPaymentArgs = {
 
 export type MutationCancelOutgoingPaymentArgs = {
   input: CancelOutgoingPaymentInput;
+};
+
+
+export type MutationCompleteSepaPaymentArgs = {
+  input: CompleteSepaPaymentInput;
 };
 
 
@@ -1311,6 +1349,13 @@ export type QuoteEdge = {
   node: Quote;
 };
 
+export enum QuoteMethod {
+  /** Use ILP (Interledger Protocol) for the quote. */
+  Ilp = 'ILP',
+  /** Use SEPA (Single Euro Payments Area) for the quote. */
+  Sepa = 'SEPA'
+}
+
 export type QuoteResponse = {
   __typename?: 'QuoteResponse';
   /** The quote object returned in the response. */
@@ -1739,6 +1784,8 @@ export type ResolversTypes = {
   CancelIncomingPaymentInput: ResolverTypeWrapper<Partial<CancelIncomingPaymentInput>>;
   CancelIncomingPaymentResponse: ResolverTypeWrapper<Partial<CancelIncomingPaymentResponse>>;
   CancelOutgoingPaymentInput: ResolverTypeWrapper<Partial<CancelOutgoingPaymentInput>>;
+  CompleteSepaPaymentInput: ResolverTypeWrapper<Partial<CompleteSepaPaymentInput>>;
+  CompleteSepaPaymentResponse: ResolverTypeWrapper<Partial<CompleteSepaPaymentResponse>>;
   CreateAssetInput: ResolverTypeWrapper<Partial<CreateAssetInput>>;
   CreateAssetLiquidityWithdrawalInput: ResolverTypeWrapper<Partial<CreateAssetLiquidityWithdrawalInput>>;
   CreateIncomingPaymentInput: ResolverTypeWrapper<Partial<CreateIncomingPaymentInput>>;
@@ -1815,6 +1862,7 @@ export type ResolversTypes = {
   Quote: ResolverTypeWrapper<Partial<Quote>>;
   QuoteConnection: ResolverTypeWrapper<Partial<QuoteConnection>>;
   QuoteEdge: ResolverTypeWrapper<Partial<QuoteEdge>>;
+  QuoteMethod: ResolverTypeWrapper<Partial<QuoteMethod>>;
   QuoteResponse: ResolverTypeWrapper<Partial<QuoteResponse>>;
   Receiver: ResolverTypeWrapper<Partial<Receiver>>;
   RevokeWalletAddressKeyInput: ResolverTypeWrapper<Partial<RevokeWalletAddressKeyInput>>;
@@ -1871,6 +1919,8 @@ export type ResolversParentTypes = {
   CancelIncomingPaymentInput: Partial<CancelIncomingPaymentInput>;
   CancelIncomingPaymentResponse: Partial<CancelIncomingPaymentResponse>;
   CancelOutgoingPaymentInput: Partial<CancelOutgoingPaymentInput>;
+  CompleteSepaPaymentInput: Partial<CompleteSepaPaymentInput>;
+  CompleteSepaPaymentResponse: Partial<CompleteSepaPaymentResponse>;
   CreateAssetInput: Partial<CreateAssetInput>;
   CreateAssetLiquidityWithdrawalInput: Partial<CreateAssetLiquidityWithdrawalInput>;
   CreateIncomingPaymentInput: Partial<CreateIncomingPaymentInput>;
@@ -2056,6 +2106,16 @@ export type CancelIncomingPaymentResponseResolvers<ContextType = any, ParentType
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type CompleteSepaPaymentResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['CompleteSepaPaymentResponse'] = ResolversParentTypes['CompleteSepaPaymentResponse']> = {
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  metadata?: Resolver<Maybe<ResolversTypes['JSONObject']>, ParentType, ContextType>;
+  paymentId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  paymentType?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  receivedAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type CreateOrUpdatePeerByUrlMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['CreateOrUpdatePeerByUrlMutationResponse'] = ResolversParentTypes['CreateOrUpdatePeerByUrlMutationResponse']> = {
   peer?: Resolver<Maybe<ResolversTypes['Peer']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -2183,6 +2243,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   approveIncomingPayment?: Resolver<ResolversTypes['ApproveIncomingPaymentResponse'], ParentType, ContextType, RequireFields<MutationApproveIncomingPaymentArgs, 'input'>>;
   cancelIncomingPayment?: Resolver<ResolversTypes['CancelIncomingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCancelIncomingPaymentArgs, 'input'>>;
   cancelOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCancelOutgoingPaymentArgs, 'input'>>;
+  completeSepaPayment?: Resolver<ResolversTypes['CompleteSepaPaymentResponse'], ParentType, ContextType, RequireFields<MutationCompleteSepaPaymentArgs, 'input'>>;
   createAsset?: Resolver<ResolversTypes['AssetMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateAssetArgs, 'input'>>;
   createAssetLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreateAssetLiquidityWithdrawalArgs, 'input'>>;
   createIncomingPayment?: Resolver<ResolversTypes['IncomingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCreateIncomingPaymentArgs, 'input'>>;
@@ -2496,6 +2557,7 @@ export type Resolvers<ContextType = any> = {
   AssetsConnection?: AssetsConnectionResolvers<ContextType>;
   BasePayment?: BasePaymentResolvers<ContextType>;
   CancelIncomingPaymentResponse?: CancelIncomingPaymentResponseResolvers<ContextType>;
+  CompleteSepaPaymentResponse?: CompleteSepaPaymentResponseResolvers<ContextType>;
   CreateOrUpdatePeerByUrlMutationResponse?: CreateOrUpdatePeerByUrlMutationResponseResolvers<ContextType>;
   CreatePeerMutationResponse?: CreatePeerMutationResponseResolvers<ContextType>;
   CreateReceiverResponse?: CreateReceiverResponseResolvers<ContextType>;

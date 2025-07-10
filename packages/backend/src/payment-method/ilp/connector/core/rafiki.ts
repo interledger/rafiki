@@ -1,6 +1,5 @@
 import * as http from 'http'
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { StreamServer } from '@interledger/stream-receiver'
 import { Errors } from 'ilp-packet'
 import { Redis } from 'ioredis'
 import Koa, { Middleware } from 'koa'
@@ -26,6 +25,7 @@ import {
   incrementFulfillOrRejectPacketCount,
   incrementAmount
 } from './telemetry'
+import { IAppConfig } from '../../../../config/app'
 
 // Model classes that represent an Interledger sender, receiver, or
 // connector SHOULD implement this ConnectorAccount interface.
@@ -61,7 +61,6 @@ export interface TransferOptions {
 }
 
 export interface RafikiServices {
-  //router: Router
   accounting: AccountingService
   telemetry: TelemetryService
   walletAddresses: WalletAddressService
@@ -70,7 +69,7 @@ export interface RafikiServices {
   peers: PeerService
   rates: RatesService
   redis: Redis
-  streamServer: StreamServer
+  config: IAppConfig
 }
 
 export type HttpContextMixin = {
@@ -106,7 +105,6 @@ export type ILPContext<T = any> = {
 }
 
 export class Rafiki<T = any> {
-  private streamServer: StreamServer
   private redis: Redis
 
   private publicServer: Koa<T, HttpContextMixin> = new Koa()
@@ -118,10 +116,12 @@ export class Rafiki<T = any> {
     this.redis = config.redis
     const logger = config.logger
 
-    this.streamServer = config.streamServer
-    const { redis, streamServer } = this
+    const { redis } = this
     // Set global context that exposes services
     this.publicServer.context.services = {
+      get config(): IAppConfig {
+        return config.config
+      },
       get incomingPayments(): IncomingPaymentService {
         return config.incomingPayments
       },
@@ -133,9 +133,6 @@ export class Rafiki<T = any> {
       },
       get redis(): Redis {
         return redis
-      },
-      get streamServer(): StreamServer {
-        return streamServer
       },
       get accounting(): AccountingService {
         return config.accounting

@@ -100,8 +100,11 @@ import {
 
 import { LoggingPlugin } from './graphql/plugin'
 import { LocalPaymentService } from './payment-method/local/service'
+import { SepaPaymentService } from './payment-method/sepa/service'
 import { GrantService } from './open_payments/grant/service'
 import { AuthServerService } from './open_payments/authServer/service'
+import { StreamCredentialsService } from './payment-method/ilp/stream-credentials/service'
+import { PaymentMethodProviderService } from './payment-method/provider/service'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -254,9 +257,12 @@ export interface AppServices {
   autoPeeringRoutes: Promise<AutoPeeringRoutes>
   connectorApp: Promise<ConnectorApp>
   tigerBeetle?: Promise<TigerbeetleClient>
+  streamCredentialsService: Promise<StreamCredentialsService>
   paymentMethodHandlerService: Promise<PaymentMethodHandlerService>
+  paymentMethodProviderService: Promise<PaymentMethodProviderService>
   ilpPaymentService: Promise<IlpPaymentService>
   localPaymentService: Promise<LocalPaymentService>
+  sepaPaymentService: Promise<SepaPaymentService>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -430,6 +436,7 @@ export class App {
       'outgoingPaymentRoutes'
     )
     const quoteRoutes = await this.container.use('quoteRoutes')
+
     const { resourceServerSpec, walletAddressServerSpec } =
       await this.container.use('openApi')
 

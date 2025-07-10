@@ -617,7 +617,8 @@ describe('OutgoingPaymentService', (): void => {
       const walletAddressId = receiverWalletAddress.id
       const incomingPaymentUrl = incomingPayment.toOpenPaymentsTypeWithMethods(
         config.openPaymentsUrl,
-        receiverWalletAddress
+        receiverWalletAddress,
+        []
       ).id
       const debitAmount = {
         value: BigInt(123),
@@ -672,7 +673,8 @@ describe('OutgoingPaymentService', (): void => {
             debitAmount,
             incomingPayment: incomingPayment.toOpenPaymentsTypeWithMethods(
               config.openPaymentsUrl,
-              receiverWalletAddress
+              receiverWalletAddress,
+              []
             ).id,
             grant
           }
@@ -718,7 +720,8 @@ describe('OutgoingPaymentService', (): void => {
             debitAmount,
             incomingPayment: incomingPayment.toOpenPaymentsTypeWithMethods(
               config.openPaymentsUrl,
-              receiverWalletAddress
+              receiverWalletAddress,
+              []
             ).id,
             grant
           }
@@ -739,7 +742,8 @@ describe('OutgoingPaymentService', (): void => {
       const walletAddressId = receiverWalletAddress.id
       const incomingPaymentUrl = incomingPayment.toOpenPaymentsTypeWithMethods(
         config.openPaymentsUrl,
-        receiverWalletAddress
+        receiverWalletAddress,
+        []
       ).id
       const debitAmount = {
         value: BigInt(123),
@@ -1337,7 +1341,8 @@ describe('OutgoingPaymentService', (): void => {
             debitAmount,
             incomingPayment: incomingPayment.toOpenPaymentsTypeWithMethods(
               config.openPaymentsUrl,
-              receiverWalletAddress
+              receiverWalletAddress,
+              []
             ).id,
             grant
           }

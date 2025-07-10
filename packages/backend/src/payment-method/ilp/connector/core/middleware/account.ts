@@ -10,12 +10,13 @@ import {
   OutgoingAccount
 } from '../rafiki'
 import { AuthState } from './auth'
+import { StreamState } from './stream-address'
 
 const UUID_LENGTH = 36
 
 export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
   return async function account(
-    ctx: ILPContext<AuthState & { streamDestination?: string }>,
+    ctx: ILPContext<AuthState & StreamState>,
     next: () => Promise<void>
   ): Promise<void> {
     const createLiquidityAccount = async (

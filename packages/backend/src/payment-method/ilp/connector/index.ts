@@ -1,4 +1,3 @@
-import { StreamServer } from '@interledger/stream-receiver'
 import { Redis } from 'ioredis'
 
 import { AccountingService } from '../../../accounting/service'
@@ -28,20 +27,22 @@ import {
   createStreamController
 } from './core'
 import { TelemetryService } from '../../../telemetry/service'
+import { IAppConfig } from '../../../config/app'
 
 interface ServiceDependencies extends BaseService {
+  config: IAppConfig
   redis: Redis
   ratesService: RatesService
   accountingService: AccountingService
   walletAddressService: WalletAddressService
   incomingPaymentService: IncomingPaymentService
   peerService: PeerService
-  streamServer: StreamServer
   ilpAddress: string
   telemetry: TelemetryService
 }
 
 export async function createConnectorService({
+  config,
   logger,
   redis,
   ratesService,
@@ -49,23 +50,21 @@ export async function createConnectorService({
   walletAddressService,
   incomingPaymentService,
   peerService,
-  streamServer,
   ilpAddress,
   telemetry
 }: ServiceDependencies): Promise<Rafiki> {
   return createApp(
     {
-      //router: router,
       logger: logger.child({
         service: 'ConnectorService'
       }),
+      config,
       accounting: accountingService,
       walletAddresses: walletAddressService,
       incomingPayments: incomingPaymentService,
       peers: peerService,
       redis,
       rates: ratesService,
-      streamServer,
       telemetry
     },
     compose([

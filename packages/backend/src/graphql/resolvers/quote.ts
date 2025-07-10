@@ -3,7 +3,7 @@ import {
   Quote as SchemaQuote,
   WalletAddressResolvers,
   QueryResolvers,
-  ResolversTypes
+  ResolversTypes,
 } from '../generated/graphql'
 import {
   isQuoteError,
@@ -43,7 +43,7 @@ export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
     const options: CreateQuoteOptions = {
       walletAddressId: args.input.walletAddressId,
       receiver: args.input.receiver,
-      method: 'ilp'
+      method: (args.input.method?.toLowerCase() as 'ilp' | 'sepa') || 'ilp'
     }
     if (args.input.debitAmount) options.debitAmount = args.input.debitAmount
     if (args.input.receiveAmount)

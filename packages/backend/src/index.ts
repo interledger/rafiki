@@ -61,6 +61,9 @@ import {
 } from './telemetry/service'
 import { createWebhookService } from './webhook/service'
 import { createInMemoryDataStore } from './middleware/cache/data-stores/in-memory'
+import { createPaymentMethodProviderService } from './payment-method/provider/service'
+import { createSepaPaymentService } from './payment-method/sepa/service'
+import { createSepaScheduler } from './payment-method/sepa/scheduler'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -131,6 +134,32 @@ export function initIocContainer(
     })
   })
 
+  container.singleton('paymentMethodProviderService', async (deps) => {
+    return await createPaymentMethodProviderService({
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex'),
+      config: await deps.use('config'),
+      streamCredentialsService: await deps.use('streamCredentialsService'),
+      sepaPaymentService: await deps.use('sepaPaymentService')
+    })
+  })
+
+  container.singleton('sepaPaymentService', async (deps) => {
+    return await createSepaPaymentService({
+      logger: await deps.use('logger'),
+      feeService: await deps.use('feeService'),
+      config: await deps.use('config'),
+      axios: await deps.use('axios'),
+      ratesService: await deps.use('ratesService')
+    })
+  })
+
+  container.singleton('sepaScheduler', async (deps) => {
+    return await createSepaScheduler({
+      logger: await deps.use('logger'),
+      sepaPaymentService: await deps.use('sepaPaymentService')
+    })
+  })
   container.singleton('ratesService', async (deps) => {
     const config = await deps.use('config')
     return createRatesService({
@@ -331,7 +360,9 @@ export function initIocContainer(
       config: await deps.use('config'),
       logger: await deps.use('logger'),
       incomingPaymentService: await deps.use('incomingPaymentService'),
-      streamCredentialsService: await deps.use('streamCredentialsService')
+      paymentMethodProviderService: await deps.use(
+        'paymentMethodProviderService'
+      )
     })
   })
   container.singleton('walletAddressRoutes', async (deps) => {
@@ -349,24 +380,24 @@ export function initIocContainer(
     })
   })
   container.singleton('streamCredentialsService', async (deps) => {
-    const config = await deps.use('config')
     return await createStreamCredentialsService({
       logger: await deps.use('logger'),
-      openPaymentsUrl: config.openPaymentsUrl,
-      streamServer: await deps.use('streamServer')
+      config: await deps.use('config')
     })
   })
   container.singleton('receiverService', async (deps) => {
     return await createReceiverService({
       logger: await deps.use('logger'),
       config: await deps.use('config'),
-      streamCredentialsService: await deps.use('streamCredentialsService'),
       incomingPaymentService: await deps.use('incomingPaymentService'),
       walletAddressService: await deps.use('walletAddressService'),
       remoteIncomingPaymentService: await deps.use(
         'remoteIncomingPaymentService'
       ),
-      telemetry: await deps.use('telemetry')
+      telemetry: await deps.use('telemetry'),
+      paymentMethodProviderService: await deps.use(
+        'paymentMethodProviderService'
+      )
     })
   })
 
@@ -380,6 +411,7 @@ export function initIocContainer(
   container.singleton('connectorApp', async (deps) => {
     const config = await deps.use('config')
     return await createConnectorService({
+      config: await deps.use('config'),
       logger: await deps.use('logger'),
       redis: await deps.use('redis'),
       accountingService: await deps.use('accountingService'),
@@ -387,7 +419,6 @@ export function initIocContainer(
       incomingPaymentService: await deps.use('incomingPaymentService'),
       peerService: await deps.use('peerService'),
       ratesService: await deps.use('ratesService'),
-      streamServer: await deps.use('streamServer'),
       ilpAddress: config.ilpAddress,
       telemetry: await deps.use('telemetry')
     })
@@ -469,11 +500,12 @@ export function initIocContainer(
   })
 
   container.singleton('paymentMethodHandlerService', async (deps) => {
-    return createPaymentMethodHandlerService({
+    return await createPaymentMethodHandlerService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       ilpPaymentService: await deps.use('ilpPaymentService'),
-      localPaymentService: await deps.use('localPaymentService')
+      localPaymentService: await deps.use('localPaymentService'),
+      sepaPaymentService: await deps.use('sepaPaymentService')
     })
   })
 
@@ -671,6 +703,10 @@ export const start = async (
       `Auto-peering server listening on ${config.autoPeeringServerPort}`
     )
   }
+
+  // TODO Fees are hardcoded for now
+  // const sepaScheduler = await container.use('sepaScheduler')
+  // sepaScheduler.start();
 }
 
 // If this script is run directly, start the server

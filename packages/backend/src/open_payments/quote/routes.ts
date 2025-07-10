@@ -53,7 +53,7 @@ async function getQuote(
 interface CreateBodyBase {
   walletAddress: string
   receiver: string
-  method: 'ilp'
+  method: 'ilp' | 'sepa'
 }
 
 interface CreateBodyWithDebitAmount extends CreateBodyBase {

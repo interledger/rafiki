@@ -306,6 +306,11 @@ type Mutation {
   cancelIncomingPayment(
     input: CancelIncomingPaymentInput!
   ): CancelIncomingPaymentResponse!
+
+  "Complete a SEPA payment (incoming or outgoing) by marking it as completed"
+  completeSepaPayment(
+    input: CompleteSepaPaymentInput!
+  ): CompleteSepaPaymentResponse!
 }
 
 type PageInfo {
@@ -341,6 +346,19 @@ input ApproveIncomingPaymentInput {
 input CancelIncomingPaymentInput {
   "Unique identifier of the incoming payment to be canceled. Note: incoming payment must be PENDING."
   id: ID!
+}
+
+input CompleteSepaPaymentInput {
+  "Unique identifier of the payment to be completed."
+  paymentId: ID!
+  "Type of payment to complete: 'incoming' or 'outgoing'."
+  paymentType: String!
+  "Amount that was received for this payment."
+  receivedAmount: AmountInput!
+  "Optional metadata associated with the payment completion."
+  metadata: JSONObject
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String
 }
 
 input CreateAssetInput {
@@ -1033,6 +1051,13 @@ enum PaymentType {
   OUTGOING
 }
 
+enum QuoteMethod {
+  "Use ILP (Interledger Protocol) for the quote."
+  ILP
+  "Use SEPA (Single Euro Payments Area) for the quote."
+  SEPA
+}
+
 input PaymentFilter {
   "Filter for payments based on their type."
   type: FilterString
@@ -1135,6 +1160,8 @@ input CreateQuoteInput {
   receiveAmount: AmountInput
   "Wallet address URL of the receiver."
   receiver: String!
+  "Payment method to use for the quote. Defaults to 'ilp' if not specified."
+  method: QuoteMethod
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
 }
@@ -1489,6 +1516,21 @@ type ApproveIncomingPaymentResponse {
 type CancelIncomingPaymentResponse {
   "The incoming payment that was canceled."
   payment: IncomingPayment
+}
+
+type CompleteSepaPaymentResponse {
+  "Indicates whether the SEPA payment completion was successful."
+  success: Boolean!
+  "The ID of the payment that was completed."
+  paymentId: ID!
+  "The type of payment that was completed ('incoming' or 'outgoing')."
+  paymentType: String!
+  "The amount that was received for this payment."
+  receivedAmount: Amount!
+  "Optional metadata associated with the payment completion."
+  metadata: JSONObject
+  "A message describing the completion result."
+  message: String!
 }
 
 """

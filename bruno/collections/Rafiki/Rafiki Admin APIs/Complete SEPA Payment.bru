@@ -1,0 +1,62 @@
+meta {
+  name: Complete SEPA Payment
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/graphql
+  body: json {
+    {
+      "query": "mutation CompleteSepaPayment($input: CompleteSepaPaymentInput!) { completeSepaPayment(input: $input) { success paymentId paymentType receivedAmount { value assetCode assetScale } metadata message } }",
+      "variables": {
+        "input": {
+          "paymentId": "{{paymentId}}",
+          "paymentType": "{{paymentType}}",
+          "receivedAmount": {
+            "value": "1000",
+            "assetCode": "USD",
+            "assetScale": 2
+          },
+          "metadata": {
+            "sepaReference": "SEPA123456789",
+          },
+          "idempotencyKey": "{{$uuid}}"
+        }
+      }
+    }
+  }
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+  signature: {{generateBackendApiSignature(body)}}
+}
+
+docs {
+  # Complete SEPA Payment
+
+  This GraphQL mutation completes a SEPA payment by marking it as completed.
+
+  ## Parameters
+
+  - `paymentId`: The unique identifier of the payment to complete
+  - `paymentType`: Either "incoming" or "outgoing"
+  - `receivedAmount`: The amount that was received for this payment
+  - `metadata`: Optional metadata associated with the payment completion
+  - `idempotencyKey`: Unique key to ensure duplicate requests are processed only once
+
+  ## Response
+
+  Returns a `CompleteSepaPaymentResponse` with:
+  - `success`: Boolean indicating if the operation was successful
+  - `paymentId`: The ID of the completed payment
+  - `paymentType`: The type of payment that was completed
+  - `receivedAmount`: The amount that was received
+  - `metadata`: Optional metadata
+
+  ## Authentication
+
+  This endpoint requires admin API signature authentication using the `signature` header.
+} 

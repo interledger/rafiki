@@ -150,10 +150,12 @@ export class OutgoingPayment
 
   public toData({
     amountSent,
-    balance
+    balance,
+    paymentMethodType
   }: {
     amountSent: bigint
     balance: bigint
+    paymentMethodType?: string
   }): PaymentData {
     const data: PaymentData = {
       id: this.id,
@@ -190,6 +192,11 @@ export class OutgoingPayment
     if (this.grantId) {
       data.grantId = this.grantId
     }
+
+    if (paymentMethodType) {
+      data.paymentMethodType = paymentMethodType
+    }
+
     return data
   }
 
@@ -278,6 +285,7 @@ export type PaymentData = Omit<OutgoingPaymentResponse, 'failed'> & {
   balance: string
   peerId?: string
   grantId?: string
+  paymentMethodType?: string
 }
 
 export const isOutgoingPaymentEventType = (

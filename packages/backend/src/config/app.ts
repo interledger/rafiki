@@ -145,6 +145,8 @@ export const Config = {
     1000
   ), // milliseconds
 
+  //sepaDetailsUrl: envString('SEPA_DETAILS_URL', ''), // optional
+
   webhookWorkers: envInt('WEBHOOK_WORKERS', 1),
   webhookWorkerIdle: envInt('WEBHOOK_WORKER_IDLE', 200), // milliseconds
   webhookUrl: envString('WEBHOOK_URL'),
