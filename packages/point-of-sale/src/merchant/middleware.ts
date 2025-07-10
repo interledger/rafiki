@@ -8,7 +8,7 @@ import {
 
 import { AppContext } from '../app'
 import { CreateMerchantContext } from './routes'
-import { POSMerchantRouteError, RouteErrorCode } from './errors'
+import { MerchantRouteError, RouteErrorCode } from './errors'
 
 function contextToRequestLike(ctx: AppContext): RequestLike {
   return {
@@ -24,19 +24,19 @@ export async function validatePosSignatureMiddleware(
   next: () => Promise<any>
 ): Promise<void> {
   if (!validateSignatureHeaders(contextToRequestLike(ctx))) {
-    throw new POSMerchantRouteError(
+    throw new MerchantRouteError(
       401,
       'invalid signature headers',
-      RouteErrorCode.InvalidClient
+      RouteErrorCode.InvalidSignature
     )
   }
 
   const sigVerified = await verifySigFromClient(ctx)
   if (!sigVerified) {
-    throw new POSMerchantRouteError(
+    throw new MerchantRouteError(
       401,
       'invalid signature',
-      RouteErrorCode.InvalidClient
+      RouteErrorCode.InvalidSignature
     )
   }
   await next()
@@ -46,20 +46,20 @@ async function verifySigFromClient(ctx: AppContext): Promise<boolean> {
   const sigInput = ctx.headers['signature-input'] as string
   const keyId = getKeyId(sigInput)
   if (!keyId) {
-    throw new POSMerchantRouteError(
+    throw new MerchantRouteError(
       401,
       'invalid signature input',
-      RouteErrorCode.InvalidClient
+      RouteErrorCode.InvalidSignature
     )
   }
 
-  const posService = await ctx.container.use('posService')
-  const clientKey = await posService.getByKeyId({
+  const posDeviceService = await ctx.container.use('posDeviceService')
+  const clientKey = await posDeviceService.getByKeyId({
     keyId
   })
 
   if (!clientKey) {
-    throw new POSMerchantRouteError(
+    throw new MerchantRouteError(
       400,
       'could not determine client',
       RouteErrorCode.InvalidClient

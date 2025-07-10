@@ -1,9 +1,9 @@
 export enum RouteErrorCode {
-  InvalidRequest = 'invalid_request',
+  InvalidSignature = 'invalid_signature',
   InvalidClient = 'invalid_client'
 }
 
-export class POSMerchantRouteError extends Error {
+export class MerchantRouteError extends Error {
   public status: number
   public code?: RouteErrorCode
   public details?: Record<string, unknown>
@@ -15,7 +15,7 @@ export class POSMerchantRouteError extends Error {
     details?: Record<string, unknown>
   ) {
     super(message)
-    this.name = 'POSMerchantRouteError'
+    this.name = 'MerchantRouteError'
     this.status = status
     this.code = code ?? undefined
     this.details = details

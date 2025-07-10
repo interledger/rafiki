@@ -63,7 +63,6 @@ export class App {
     // Create merchant
     router.post<DefaultState, CreateMerchantContext>(
       '/merchants',
-      validatePosSignatureMiddleware,
       merchantRoutes.create
     )
 
