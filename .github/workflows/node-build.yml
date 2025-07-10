@@ -78,6 +78,25 @@ jobs:
         run: |
           npx @stoplight/spectral-cli lint ./packages/token-introspection/src/openapi/specs/*.yaml
 
+  card-service:
+    runs-on: ubuntu-latest
+    needs: prerequisite
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/workflows/rafiki/env-setup
+      - run: pnpm --filter card-service test:ci
+
+  point-of-sale:
+    runs-on: ubuntu-latest
+    needs: prerequisite
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/workflows/rafiki/env-setup
+      - run: pnpm --filter point-of-sale build:deps
+      - run: pnpm --filter point-of-sale test:ci
+
   mock-account-servicing-entity:
     runs-on: ubuntu-latest
     needs: prerequisite
@@ -300,7 +319,7 @@ jobs:
   node-build:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [auth, backend, frontend, token-introspection, mock-account-servicing-entity, graphql, codeql-analyze, integration-test]
+    needs: [auth, backend, frontend, token-introspection, card-service, point-of-sale, mock-account-servicing-entity, graphql, codeql-analyze, integration-test]
     steps: 
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
