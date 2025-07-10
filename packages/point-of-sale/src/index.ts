@@ -4,6 +4,8 @@ import { Model } from 'objection'
 import { Config } from './config/app'
 import { App, AppServices } from './app'
 import createLogger from 'pino'
+import { createMerchantService } from './merchant/service'
+import { createMerchantRoutes } from './merchant/routes'
 
 export function initIocContainer(
   config: typeof Config
@@ -55,6 +57,22 @@ export function initIocContainer(
     )
     return db
   })
+
+  container.singleton('merchantService', async (deps) => {
+    const [logger, knex] = await Promise.all([
+      deps.use('logger'),
+      deps.use('knex')
+    ])
+    return createMerchantService({ logger, knex })
+  })
+
+  container.singleton('merchantRoutes', async (deps) => {
+    return createMerchantRoutes({
+      logger: await deps.use('logger'),
+      merchantService: await deps.use('merchantService')
+    })
+  })
+
   return container
 }
 
