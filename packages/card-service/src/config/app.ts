@@ -31,9 +31,7 @@ export const Config = {
   trustProxy: envBool('TRUST_PROXY', false),
   env: envString('NODE_ENV', 'development'),
   cardServicePort: envInt('CARD_SERVICE_PORT', 3007),
-  cardServiceUrl: envString(
-    'CARD_SERVICE_URL',
-    'http://localhost:3007'),
+  cardServiceUrl: envString('CARD_SERVICE_URL', 'http://localhost:3007'),
   redisUrl: envString('REDIS_URL', 'redis://127.0.0.1:6379'),
   redisTls: parseRedisTlsConfig(
     process.env.REDIS_TLS_CA_FILE_PATH,
