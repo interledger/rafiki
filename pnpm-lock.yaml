@@ -869,6 +869,9 @@ importers:
       nock:
         specifier: 14.0.0-beta.19
         version: 14.0.0-beta.19
+      node-mocks-http:
+        specifier: ^1.16.2
+        version: 1.16.2(@types/node@20.14.15)
       testcontainers:
         specifier: ^10.16.0
         version: 10.16.0

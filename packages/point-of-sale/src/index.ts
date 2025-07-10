@@ -9,6 +9,7 @@ import { onError } from '@apollo/client/link/error'
 import { setContext } from '@apollo/client/link/context'
 import { print } from 'graphql'
 import { createMerchantService } from './merchant/service'
+import { createMerchantRoutes } from './merchant/routes'
 
 export function initIocContainer(
   config: typeof Config
@@ -70,6 +71,13 @@ export function initIocContainer(
       deps.use('knex')
     ])
     return createMerchantService({ logger, knex })
+  })
+
+  container.singleton('merchantRoutes', async (deps) => {
+    return createMerchantRoutes({
+      logger: await deps.use('logger'),
+      merchantService: await deps.use('merchantService')
+    })
   })
 
 

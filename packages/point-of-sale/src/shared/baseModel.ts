@@ -127,6 +127,8 @@ export abstract class BaseModel extends PaginationModel {
   public $beforeInsert(context: QueryContext): void {
     super.$beforeInsert(context)
     this.id = this.id || uuid()
+    this.createdAt = new Date()
+    this.updatedAt = new Date()
   }
 
   public $beforeUpdate(_opts: ModelOptions, _queryContext: QueryContext): void {
