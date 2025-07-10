@@ -26,7 +26,6 @@ services:
       DATABASE_URL: postgresql://happy_life_bank_test_backend:happy_life_bank_test_backend@shared-database/happy_life_bank_test_backend
       AUTH_SERVER_GRANT_URL: http://happy-life-bank-test-auth:4106
       AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-test-auth:4107
-      CARD_SERVICE_HOST: http://happy-life-bank-card-service:3007
       CARD_SERVICE_URL: http://happy-life-bank-card-service:3007
       AUTH_ADMIN_API_URL: 'http://happy-life-bank-test-auth:4003/graphql'
       AUTH_ADMIN_API_SECRET: 'test-secret'
