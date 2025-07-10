@@ -112,6 +112,78 @@ describe('POS Device Service', () => {
     })
   })
 
+  describe('revokeAllByMerchantId', () => {
+    test('revokes all devices for a merchant', async () => {
+      const merchant = await merchantService.create('Test Merchant')
+
+      const device1 = await posDeviceService.registerDevice({
+        merchantId: merchant.id,
+        publicKey: 'publicKey1',
+        deviceName: 'device1',
+        walletAddress: 'walletAddress1',
+        algorithm: 'ecdsa-p256-sha256'
+      })
+
+      const device2 = await posDeviceService.registerDevice({
+        merchantId: merchant.id,
+        publicKey: 'publicKey2',
+        deviceName: 'device2',
+        walletAddress: 'walletAddress2',
+        algorithm: 'ecdsa-p256-sha256'
+      })
+
+      assert(!isPosDeviceError(device1))
+      assert(!isPosDeviceError(device2))
+      expect(device1.status).toBe(DeviceStatus.Active)
+      expect(device2.status).toBe(DeviceStatus.Active)
+
+      const revokedCount = await posDeviceService.revokeAllByMerchantId(
+        merchant.id
+      )
+      expect(revokedCount).toBe(2)
+
+      const knex = await deps.use('knex')
+      const revokedDevices = await PosDevice.query(knex)
+        .where('merchantId', merchant.id)
+        .whereNotNull('deletedAt')
+
+      expect(revokedDevices).toHaveLength(2)
+      expect(revokedDevices[0].status).toBe(DeviceStatus.Revoked)
+      expect(revokedDevices[0].deletedAt).toBeDefined()
+      expect(revokedDevices[1].status).toBe(DeviceStatus.Revoked)
+      expect(revokedDevices[1].deletedAt).toBeDefined()
+    })
+
+    test('returns 0 when no devices exist for merchant', async () => {
+      const merchant = await merchantService.create('Test Merchant')
+      const revokedCount = await posDeviceService.revokeAllByMerchantId(
+        merchant.id
+      )
+      expect(revokedCount).toBe(0)
+    })
+
+    test('returns 0 when all devices are already revoked', async () => {
+      const merchant = await merchantService.create('Test Merchant')
+
+      const device = await posDeviceService.registerDevice({
+        merchantId: merchant.id,
+        publicKey: 'publicKey',
+        deviceName: 'device',
+        walletAddress: 'walletAddress',
+        algorithm: 'ecdsa-p256-sha256'
+      })
+
+      assert(!isPosDeviceError(device))
+
+      await posDeviceService.revoke(device.id)
+
+      const revokedCount = await posDeviceService.revokeAllByMerchantId(
+        merchant.id
+      )
+      expect(revokedCount).toBe(0)
+    })
+  })
+
   async function createDeviceWithMerchant(): Promise<PosDevice> {
     const merchant = await merchantService.create('merchant')
     const createOptions: CreateOptions = {

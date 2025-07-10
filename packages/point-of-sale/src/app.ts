@@ -7,7 +7,11 @@ import Koa, { DefaultState } from 'koa'
 import Router from '@koa/router'
 import bodyParser from 'koa-bodyparser'
 import cors from '@koa/cors'
-import { CreateMerchantContext, MerchantRoutes } from './merchant/routes'
+import {
+  CreateMerchantContext,
+  DeleteMerchantContext,
+  MerchantRoutes
+} from './merchant/routes'
 import {
   PosDeviceRoutes,
   RegisterDeviceContext
@@ -73,6 +77,13 @@ export class App {
     router.post<DefaultState, CreateMerchantContext>(
       '/merchants',
       merchantRoutes.create
+    )
+
+    // DELETE /merchants/:merchantId
+    // Delete merchant
+    router.delete<DefaultState, DeleteMerchantContext>(
+      '/merchants/:merchantId',
+      merchantRoutes.delete
     )
 
     // POST /merchant/:merchantId/devices

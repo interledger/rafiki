@@ -61,11 +61,12 @@ export function initIocContainer(
   })
 
   container.singleton('merchantService', async (deps) => {
-    const [logger, knex] = await Promise.all([
+    const [logger, knex, posDeviceService] = await Promise.all([
       deps.use('logger'),
-      deps.use('knex')
+      deps.use('knex'),
+      deps.use('posDeviceService')
     ])
-    return createMerchantService({ logger, knex })
+    return createMerchantService({ logger, knex, posDeviceService })
   })
 
   container.singleton('merchantRoutes', async (deps) => {
