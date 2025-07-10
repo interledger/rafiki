@@ -5,7 +5,7 @@ import {
   WalletAddressResolvers,
   QueryResolvers,
   ResolversTypes,
-  OutgoingPaymentCardDetails
+  OutgoingPaymentCardDetails as SchemaOutgoingPaymentCardDetails
 } from '../generated/graphql'
 import {
   isOutgoingPaymentError,
@@ -18,6 +18,7 @@ import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { GraphQLError } from 'graphql'
 import { GraphQLErrorCode } from '../errors'
+import { OutgoingPaymentCardDetails } from '../../open_payments/payment/outgoing/card/model'
 
 export const getOutgoingPayment: QueryResolvers<TenantedApolloContext>['outgoingPayment'] =
   async (parent, args, ctx): Promise<ResolversTypes['OutgoingPayment']> => {
@@ -250,19 +251,19 @@ export function paymentToGraphql(
     quote: quoteToGraphql(payment.quote),
     grantId: payment.grantId,
     tenantId: payment.tenantId,
-    cardDetails: cardToGraphql(payment)
+    cardDetails: cardDetailsToGraphql(payment.cardDetails)
   }
 }
-function cardToGraphql(
-  payment: OutgoingPayment
-): OutgoingPaymentCardDetails | undefined {
-  if (!payment.cardDetails) return undefined
+function cardDetailsToGraphql(
+  cardDetails?: OutgoingPaymentCardDetails
+): SchemaOutgoingPaymentCardDetails | undefined {
+  if (!cardDetails) return undefined
   return {
-    id: payment.cardDetails.id,
-    outgoingPaymentId: payment.cardDetails.outgoingPaymentId,
-    expiry: payment.cardDetails.expiry,
-    signature: payment.cardDetails.signature,
-    updatedAt: new Date(+payment.cardDetails.updatedAt).toISOString(),
-    createdAt: new Date(+payment.cardDetails.createdAt).toISOString()
+    id: cardDetails.id,
+    outgoingPaymentId: cardDetails.outgoingPaymentId,
+    expiry: cardDetails.expiry,
+    signature: cardDetails.signature,
+    createdAt: new Date(+cardDetails.createdAt).toISOString(),
+    updatedAt: new Date(+cardDetails.updatedAt).toISOString()
   }
 }

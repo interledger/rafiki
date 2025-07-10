@@ -1,20 +1,28 @@
-import { Pojo } from 'objection'
 import { BaseModel } from '../../../../shared/baseModel'
 
-export class OutgoingPaymentsCardDetails extends BaseModel {
-  public static get tableName(): string {
+type OutgoingPaymentCardDetailsTableName = 'outgoingPaymentCardDetails'
+type OutgoingPaymentId = 'outgoingPaymentId'
+type OutgoingPaymentIdRelation =
+  `${OutgoingPaymentCardDetailsTableName}.${OutgoingPaymentId}`
+export const outgoingPaymentCardDetailsRelation: OutgoingPaymentIdRelation =
+  'outgoingPaymentCardDetails.outgoingPaymentId'
+
+type OutgoingPaymentCardDetailsType = {
+  expiry: string
+  signature: string
+} & {
+  [key in OutgoingPaymentId]: string
+}
+
+export class OutgoingPaymentCardDetails
+  extends BaseModel
+  implements OutgoingPaymentCardDetailsType
+{
+  public static get tableName(): OutgoingPaymentCardDetailsTableName {
     return 'outgoingPaymentCardDetails'
   }
 
   public expiry!: string
   public readonly outgoingPaymentId!: string
   public signature!: string
-
-  $formatJson(json: Pojo): Pojo {
-    json = super.$formatJson(json)
-    return {
-      ...json,
-      expiry: json.expiry.toISOString()
-    }
-  }
 }

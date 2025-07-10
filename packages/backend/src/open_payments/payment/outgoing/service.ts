@@ -46,7 +46,7 @@ import { IAppConfig } from '../../../config/app'
 import { AssetService } from '../../../asset/service'
 import { Span, trace } from '@opentelemetry/api'
 import { FeeService } from '../../../fee/service'
-import { OutgoingPaymentsCardDetails } from './card/model'
+import { OutgoingPaymentCardDetails } from './card/model'
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
@@ -424,7 +424,7 @@ async function createOutgoingPayment(
             if (!isExpiryFormat(expiry))
               throw OutgoingPaymentError.InvalidCardExpiry
 
-            payment.cardDetails = await OutgoingPaymentsCardDetails.query(
+            payment.cardDetails = await OutgoingPaymentCardDetails.query(
               trx
             ).insertAndFetch({
               outgoingPaymentId: payment.id,

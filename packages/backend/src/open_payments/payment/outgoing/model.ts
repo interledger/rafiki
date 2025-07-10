@@ -16,7 +16,10 @@ import {
   OutgoingPaymentWithSpentAmounts
 } from '@interledger/open-payments'
 import { Tenant } from '../../../tenants/model'
-import { OutgoingPaymentsCardDetails } from './card/model'
+import {
+  OutgoingPaymentCardDetails,
+  outgoingPaymentCardDetailsRelation
+} from './card/model'
 
 export class OutgoingPaymentGrant extends DbErrors(Model) {
   public static get modelPaths(): string[] {
@@ -102,7 +105,7 @@ export class OutgoingPayment
 
   public metadata?: Record<string, unknown>
 
-  public cardDetails?: OutgoingPaymentsCardDetails
+  public cardDetails?: OutgoingPaymentCardDetails
 
   public quote!: Quote
 
@@ -152,10 +155,10 @@ export class OutgoingPayment
       },
       cardDetails: {
         relation: Model.HasOneRelation,
-        modelClass: OutgoingPaymentsCardDetails,
+        modelClass: OutgoingPaymentCardDetails,
         join: {
           from: 'outgoingPayments.id',
-          to: 'outgoingPaymentsCardDetails.outgoingPaymentId'
+          to: outgoingPaymentCardDetailsRelation
         }
       }
     }
@@ -325,14 +328,6 @@ export class OutgoingPaymentEvent extends WebhookEvent {
 
     if (!this.outgoingPaymentId) {
       throw new Error(OutgoingPaymentEventError.OutgoingPaymentIdRequired)
-    }
-  }
-
-  $formatJson(json: Pojo): Pojo {
-    json = super.$formatJson(json)
-    return {
-      ...json,
-      cardDetails: new OutgoingPaymentsCardDetails().$formatJson(json.card)
     }
   }
 }
