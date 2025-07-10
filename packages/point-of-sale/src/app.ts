@@ -6,6 +6,7 @@ import Koa, { DefaultState } from 'koa'
 import Router from '@koa/router'
 import bodyParser from 'koa-bodyparser'
 import cors from '@koa/cors'
+<<<<<<< HEAD
 import {
   GetPaymentsContext,
   PaymentContext,
@@ -16,12 +17,19 @@ import {
   WebhookHandlerRoutes
 } from './webhook-handlers/routes'
 import { webhookHttpSigMiddleware } from './webhook-handlers/middleware'
+=======
+import { CreateMerchantContext, MerchantRoutes } from './merchant/routes'
+>>>>>>> a20fa7ae9 (feat(pos): create merchant route (#3538))
 
 export interface AppServices {
   logger: Promise<Logger>
   config: Promise<IAppConfig>
+<<<<<<< HEAD
   paymentRoutes: Promise<PaymentRoutes>
   webhookHandlerRoutes: Promise<WebhookHandlerRoutes>
+=======
+  merchantRoutes: Promise<MerchantRoutes>
+>>>>>>> a20fa7ae9 (feat(pos): create merchant route (#3538))
 }
 
 export type AppContainer = IocContract<AppServices>
