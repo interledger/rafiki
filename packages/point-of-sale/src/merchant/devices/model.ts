@@ -25,10 +25,10 @@ export class PosDevice extends BaseModel {
   })
 
   public merchantId!: string // foreign key on merchants table
-  public walletAddressId!: string
+  public walletAddress!: string // wallet address url
 
   public publicKey?: string // PEM format
-  public keyId?: string
+  public keyId!: string // generated on creation
   public algorithm!: string // ecdsa-p256-sha256
   public status!: DeviceStatus // enum "ACTIVE" | "REVOKED"
 
