@@ -16,12 +16,10 @@ import { AppServices } from '../app'
 
 describe('AuditLogService', (): void => {
   let deps: IocContract<AppServices>
-  let appContainer: TestContainer
   let auditLogService: AuditLogService
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
-    appContainer = await createTestApp(deps)
     auditLogService = await createAuditLogService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex')
@@ -30,10 +28,6 @@ describe('AuditLogService', (): void => {
 
   afterEach(async (): Promise<void> => {
     await truncateTables(deps)
-  })
-
-  afterAll(async (): Promise<void> => {
-    await appContainer.shutdown()
   })
 
   describe('create', (): void => {
