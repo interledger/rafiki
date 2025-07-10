@@ -39,12 +39,20 @@ describe('POS Device Service', () => {
         merchantId: merchant.id,
         publicKey: 'publicKey',
         deviceName: 'device',
-        walletAddress: 'walletAddress'
+        walletAddress: 'walletAddress',
+        algorithm: 'ecdsa-p256-sha256'
       }
 
       const device = await posDeviceService.registerDevice(createOptions)
       assert(!isPosDeviceError(device))
-      expect(device).toMatchObject(createOptions)
+      expect(device).toMatchObject({
+        merchantId: merchant.id,
+        publicKey: 'publicKey',
+        deviceName: 'device',
+        walletAddress: 'walletAddress',
+        algorithm: 'ecdsa-p256-sha256',
+        keyId: expect.stringMatching(/^pos:device[a-zA-Z0-9-]{6}$/)
+      })
     })
 
     test('returns error if merchant does not exist', async () => {
@@ -52,7 +60,8 @@ describe('POS Device Service', () => {
         merchantId: uuid(),
         publicKey: 'publicKey',
         deviceName: 'device',
-        walletAddress: 'walletAddress'
+        walletAddress: 'walletAddress',
+        algorithm: 'ecdsa-p256-sha256'
       }
 
       const device = await posDeviceService.registerDevice(createOptions)
@@ -109,7 +118,8 @@ describe('POS Device Service', () => {
       merchantId: merchant.id,
       publicKey: 'publicKey',
       deviceName: 'device',
-      walletAddress: 'walletAddress'
+      walletAddress: 'walletAddress',
+      algorithm: 'ecdsa-p256-sha256'
     }
 
     const device = await posDeviceService.registerDevice(createOptions)

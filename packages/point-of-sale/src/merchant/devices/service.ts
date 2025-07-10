@@ -19,6 +19,7 @@ export interface CreateOptions {
   publicKey: string
   deviceName: string
   walletAddress: string
+  algorithm: string
 }
 
 interface ServiceDependencies extends BaseService {
@@ -48,7 +49,7 @@ export async function createPosDeviceService({
 
 async function registerDevice(
   deps: ServiceDependencies,
-  { merchantId, publicKey, deviceName, walletAddress }: CreateOptions
+  { merchantId, publicKey, deviceName, walletAddress, algorithm }: CreateOptions
 ): Promise<PosDevice | PosDeviceError> {
   const merchant = await Merchant.query(deps.knex).findById(merchantId)
   if (!merchant) {
@@ -61,7 +62,8 @@ async function registerDevice(
     publicKey,
     deviceName,
     status: DeviceStatus.Active,
-    keyId: generateKeyId(deviceName)
+    keyId: generateKeyId(deviceName),
+    algorithm
   })
   return device
 }

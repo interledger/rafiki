@@ -15,7 +15,7 @@ exports.up = function (knex) {
     table.string('walletAddress').notNullable()
     table.string('deviceName').notNullable()
     table.string('publicKey')
-    table.string('keyId').notNullable()
+    table.string('keyId').notNullable().unique()
     table.string('algorithm')
 
     table.string('status').notNullable()
