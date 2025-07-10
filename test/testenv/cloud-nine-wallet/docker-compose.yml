@@ -31,6 +31,7 @@ services:
       PRIVATE_KEY_FILE: /workspace/private-key.pem
       AUTH_SERVER_INTROSPECTION_URL: http://cloud-nine-wallet-test-auth:3107
       CARD_SERVICE_HOST: http://cloud-nine-wallet-card-service:3007
+      CARD_SERVICE_URL: http://happy-life-bank-card-service:3007
       AUTH_SERVER_GRANT_URL: http://cloud-nine-wallet-test-auth:3106
       AUTH_ADMIN_API_URL: 'http://cloud-nine-wallet-test-auth:3003/graphql'
       AUTH_ADMIN_API_SECRET: 'test-secret'

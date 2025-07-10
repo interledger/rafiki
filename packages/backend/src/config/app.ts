@@ -203,7 +203,8 @@ export const Config = {
     'SEND_TENANT_WEBHOOKS_TO_OPERATOR',
     false
   ),
-  cardServiceHost: envString('CARD_SERVICE_HOST')
+  cardServiceHost: envString('CARD_SERVICE_HOST'),
+  cardServiceUrl: envString('CARD_SERVICE_URL')
 }
 
 function parseRedisTlsConfig(
