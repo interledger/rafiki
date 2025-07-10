@@ -5,10 +5,10 @@
 exports.up = function (knex) {
   return knex.schema.createTable('cardPayments', function (table) {
     table.uuid('id').notNullable().primary()
-    table.uuid('requestId').notNullable()
+    table.uuid('requestId').notNullable().unique()
 
     table.timestamp('requestedAt').defaultTo(knex.fn.now())
-    table.timestamp('finalizedAt').defaultTo(knex.fn.now())
+    table.timestamp('finalizedAt').nullable()
 
     table.string('cardWalletAddress').notNullable()
     table.string('incomingPaymentUrl').notNullable()
@@ -21,6 +21,7 @@ exports.up = function (knex) {
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
 
+    table.index('requestId')
     table.index('cardWalletAddress')
   })
 }
