@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client';
+import { gql } from '@apollo/client'
 
 export const CREATE_INCOMING_PAYMENT = gql`
   mutation CreateIncomingPayment($input: CreateIncomingPaymentInput!) {
@@ -23,4 +23,4 @@ export const CREATE_INCOMING_PAYMENT = gql`
       }
     }
   }
-`;
+`

@@ -6,7 +6,7 @@ import { IAppConfig } from '../config/app'
 
 const mockLogger = {
   child: jest.fn().mockReturnThis(),
-  error: jest.fn(),
+  error: jest.fn()
 } as unknown as Logger
 
 const mockConfig = {}
@@ -37,23 +37,36 @@ describe('createPaymentService', () => {
     })
     const service = createPaymentService(deps)
     const walletAddressId = 'wallet-123'
-    const incomingAmount: AmountInput = { value: 1000n, assetCode: 'USD', assetScale: 2 }
-    const result = await service.createIncomingPayment(walletAddressId, incomingAmount)
+    const incomingAmount: AmountInput = {
+      value: 1000n,
+      assetCode: 'USD',
+      assetScale: 2
+    }
+    const result = await service.createIncomingPayment(
+      walletAddressId,
+      incomingAmount
+    )
     expect(result).toBe(expectedUrl)
     expect(mockApolloClient.mutate).toHaveBeenCalled()
   })
 
   it('should throw and log error if payment creation fails', async () => {
-    mockApolloClient.mutate = jest.fn().mockResolvedValue({ data: { payment: { client: undefined } } })
+    mockApolloClient.mutate = jest
+      .fn()
+      .mockResolvedValue({ data: { payment: { client: undefined } } })
     const service = createPaymentService(deps)
     const walletAddressId = 'wallet-123'
-    const incomingAmount: AmountInput = { value: 1000n, assetCode: 'USD', assetScale: 2 }
-    await expect(service.createIncomingPayment(walletAddressId, incomingAmount)).rejects.toThrow(
-      /Failed to create incoming payment/
-    )
+    const incomingAmount: AmountInput = {
+      value: 1000n,
+      assetCode: 'USD',
+      assetScale: 2
+    }
+    await expect(
+      service.createIncomingPayment(walletAddressId, incomingAmount)
+    ).rejects.toThrow(/Failed to create incoming payment/)
     expect(mockLogger.error).toHaveBeenCalledWith(
       { walletAddressId },
       'Failed to create incoming payment for given walletAddressId'
     )
   })
-}) 
+})

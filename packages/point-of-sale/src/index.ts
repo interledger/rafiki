@@ -4,7 +4,12 @@ import { Model } from 'objection'
 import { Config } from './config/app'
 import { App, AppServices } from './app'
 import createLogger from 'pino'
-import { ApolloClient, ApolloLink, createHttpLink, InMemoryCache } from '@apollo/client'
+import {
+  ApolloClient,
+  ApolloLink,
+  createHttpLink,
+  InMemoryCache
+} from '@apollo/client'
 import { onError } from '@apollo/client/link/error'
 import { setContext } from '@apollo/client/link/context'
 import { print } from 'graphql'
@@ -131,12 +136,12 @@ export function initIocContainer(
       const link = {
         headers: {
           ...headers,
-          "tenant-id": `${config.tenantId}`,
+          'tenant-id': `${config.tenantId}`,
           signature: `t=${timestamp}, v${version}=${digest}`
         }
       }
 
-      return link;
+      return link
     })
 
     const link = ApolloLink.from([errorLink, authLink, httpLink])
@@ -160,11 +165,11 @@ export function initIocContainer(
     return client
   })
 
-  container.singleton('paymentClient', async (deps) => {   
+  container.singleton('paymentClient', async (deps) => {
     return createPaymentService({
-      apolloClient: await deps.use("apolloClient"),
-      logger: await deps.use("logger"),
-      config: await deps.use("config")
+      apolloClient: await deps.use('apolloClient'),
+      logger: await deps.use('logger'),
+      config: await deps.use('config')
     })
   })
 
@@ -177,7 +182,7 @@ export function initIocContainer(
       return await createPosDeviceService({ config, logger, knex })
     }
   )
-  
+
   return container
 }
 
