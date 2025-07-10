@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client';
 
-const CREATE_INCOMING_PAYMENT = gql`
+export const CREATE_INCOMING_PAYMENT = gql`
   mutation CreateIncomingPayment($input: CreateIncomingPaymentInput!) {
     createIncomingPayment(input: $input) {
       payment {
