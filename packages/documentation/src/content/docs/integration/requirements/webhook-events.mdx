@@ -5,7 +5,7 @@ tableOfContents:
 ---
 
 import { Badge, Tabs, TabItem, Steps } from '@astrojs/starlight/components'
-import { Mermaid, CodeBlock, LinkOut } from '@interledger/docs-design-system'
+import { Mermaid, LinkOut } from '@interledger/docs-design-system'
 
 The main communication channel between you and your Rafiki instance is composed of the Backend Admin API and a set of webhook events.
 
@@ -145,13 +145,9 @@ Each webhook request includes a `Rafiki-Signature` header with a timestamp, vers
 
 The `Rafiki-Signature` header in each webhook request has the following format:
 
-<CodeBlock title="Rafiki-Signature header">
-
-```
+```bash title="Rafiki-Signature header"
 Rafiki-Signature: t=<timestamp>, v<version>=<signature_digest>
 ```
-
-</CodeBlock>
 
 - `t=<timestamp>`: The UNIX timestamp (in seconds) when the signature was generated.
 - `v<version>=<digest>`: The versioned HMAC SHA-256 signature digest. The default version is `v1`.
@@ -178,9 +174,7 @@ Finally, compare the signature in the header to the expected signature you gener
 
 Below is an example in JavaScript to verify Rafiki's webhook signature:
 
-<CodeBlock title="Verify webhook signature example">
-
-```js
+```js title="Verify webhook signature example"
 function verifyWebhookSignature(request: Request): boolean {
   const signatureParts = request.headers['Rafiki-Signature'].split(', ')
   const timestamp = signatureParts[0].split('=')[1]
@@ -197,8 +191,6 @@ function verifyWebhookSignature(request: Request): boolean {
   return digest === signatureDigest
 }
 ```
-
-</CodeBlock>
 
 ## Event handling
 
