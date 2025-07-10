@@ -415,15 +415,17 @@ async function createOutgoingPayment(
           })
 
           if (isCreateFromCardPayment(options)) {
-            const card = await OutgoingPaymentsCardDetails.query(
-                trx
-              ).insertAndFetch({
-                outgoingPaymentId: payment.id,
-                expiry: options.cardDetails?.expiry,
-                signature: options.cardDetails?.signature
-              })
-              payment.cardDetails = card
-            }
+            const { expiry, signature } = options.cardDetails;
+          
+            if (!isExpiryFormat(expiry)) 
+              throw OutgoingPaymentError.InvalidCardExpiry;
+          
+            payment.cardDetails = await OutgoingPaymentsCardDetails.query(trx).insertAndFetch({
+              outgoingPaymentId: payment.id,
+              expiry,
+              signature
+            });
+          }
 
           payment.walletAddress = walletAddress
           payment.quote = quote
@@ -845,3 +847,9 @@ function validateSentAmount(
   )
   throw new Error(errorMessage)
 }
+
+function isExpiryFormat(expiry: string): boolean {
+  return !!expiry.match(/^(0[1-9]|1[0-2])\/(\d{2})$/)
+
+}
+
