@@ -67,7 +67,7 @@ describe('PaymentService', () => {
     test('throws PaymentTimeoutError on timeout', async () => {
       const timeoutFixture = {
         ...paymentFixture,
-        requestId: 'timeout-uuid-0000-0000-0000-000000000000'
+        requestId: '0000-0000-0000-000000000000'
       }
       await expect(service.create(timeoutFixture)).rejects.toThrow(
         PaymentTimeoutError

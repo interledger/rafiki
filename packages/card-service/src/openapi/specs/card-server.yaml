@@ -20,7 +20,7 @@ paths:
                 - incomingPaymentUrl
                 - date
                 - signature
-                - terminalCert
+                #                - terminalCert
                 - terminalId
               properties:
                 requestId:
@@ -54,8 +54,8 @@ paths:
                   format: date-time
                 signature:
                   type: string
-                terminalCert:
-                  type: string
+                #                terminalCert:
+                #                  type: string
                 terminalId:
                   type: string
                   format: uuid

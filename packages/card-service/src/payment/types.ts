@@ -12,7 +12,7 @@ export interface PaymentBody {
   incomingPaymentUrl: string
   date: string
   signature: string
-  terminalCert: string
+  //  terminalCert: string
   terminalId: string
 }
 

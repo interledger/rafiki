@@ -69,7 +69,10 @@ async function waitForPaymentEvent(
   return Promise.race([
     deferred.promise,
     new Promise<void>((_, reject) =>
-      setTimeout(() => reject(new PaymentTimeoutError()), config.paymentTimeout)
+      setTimeout(
+        () => reject(new PaymentTimeoutError()),
+        config.cardPaymentTimeout
+      )
     )
   ])
 }
