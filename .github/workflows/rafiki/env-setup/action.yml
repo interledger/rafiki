@@ -7,7 +7,7 @@ runs:
     - uses: pnpm/action-setup@v3
     - uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '20.19.3'
         cache: 'pnpm'
     - name: Install dependencies
       shell: bash
