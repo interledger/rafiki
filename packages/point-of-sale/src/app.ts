@@ -8,6 +8,7 @@ import Router from '@koa/router'
 import bodyParser from 'koa-bodyparser'
 import cors from '@koa/cors'
 import { CreateMerchantContext, MerchantRoutes } from './merchant/routes'
+import { validatePosSignatureMiddleware } from './merchant/middleware'
 
 export interface AppServices {
   logger: Promise<Logger>
@@ -62,6 +63,7 @@ export class App {
     // Create merchant
     router.post<DefaultState, CreateMerchantContext>(
       '/merchants',
+      validatePosSignatureMiddleware,
       merchantRoutes.create
     )
 

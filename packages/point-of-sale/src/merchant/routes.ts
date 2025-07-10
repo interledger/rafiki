@@ -49,6 +49,11 @@ async function createMerchant(
     ctx.status = 200
     ctx.body = { id: merchant.id, name: merchant.name }
   } catch (err) {
-    throw new POSMerchantRouteError(400, 'Could not create merchant', { err })
+    throw new POSMerchantRouteError(
+      400,
+      'Could not create merchant',
+      undefined,
+      { err }
+    )
   }
 }
