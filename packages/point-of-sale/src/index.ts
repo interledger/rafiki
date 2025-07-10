@@ -97,7 +97,7 @@ export function initIocContainer(
     ])
 
     const httpLink = createHttpLink({
-      uri: config.authAdminApiUrl
+      uri: config.graphqlUrl
     })
 
     const errorLink = onError(({ graphQLErrors }) => {

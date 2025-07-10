@@ -35,9 +35,9 @@ export const Config = {
   port: envInt('PORT', 3008),
   trustProxy: envBool('TRUST_PROXY', false),
   enableManualMigrations: envBool('ENABLE_MANUAl_MIGRATIONS', false),
-  authAdminApiUrl: envString('AUTH_ADMIN_API_URL'),
   dbSchema: undefined as string | undefined,
   tenantId: envString('TENANT_ID'),
   tenantSecret: envString('TENANT_SECRET'),
-  tenantSignatureVersion: envString('TENANT_SIGNATURE_VERSION')
+  tenantSignatureVersion: envString('TENANT_SIGNATURE_VERSION'),
+  graphqlUrl: envString('GRAPHQL_URL')
 }
