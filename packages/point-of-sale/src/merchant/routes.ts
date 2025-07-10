@@ -17,8 +17,19 @@ export type CreateMerchantContext = Exclude<AppContext, 'request'> & {
   request: CreateMerchantRequest
 }
 
+type DeleteMerchantRequest = Exclude<AppContext['request'], 'params'> & {
+  params: {
+    merchantId: string
+  }
+}
+
+export type DeleteMerchantContext = Exclude<AppContext, 'request'> & {
+  request: DeleteMerchantRequest
+}
+
 export interface MerchantRoutes {
   create(ctx: CreateMerchantContext): Promise<void>
+  delete(ctx: DeleteMerchantContext): Promise<void>
 }
 
 export function createMerchantRoutes(
@@ -34,7 +45,8 @@ export function createMerchantRoutes(
   }
 
   return {
-    create: (ctx: CreateMerchantContext) => createMerchant(deps, ctx)
+    create: (ctx: CreateMerchantContext) => createMerchant(deps, ctx),
+    delete: (ctx: DeleteMerchantContext) => deleteMerchant(deps, ctx)
   }
 }
 
@@ -50,5 +62,26 @@ async function createMerchant(
     ctx.body = { id: merchant.id, name: merchant.name }
   } catch (err) {
     throw new POSMerchantRouteError(400, 'Could not create merchant', { err })
+  }
+}
+
+async function deleteMerchant(
+  deps: ServiceDependencies,
+  ctx: DeleteMerchantContext
+): Promise<void> {
+  const { merchantId } = ctx.request.params
+  try {
+    const deleted = await deps.merchantService.delete(merchantId)
+
+    if (!deleted) {
+      throw new POSMerchantRouteError(404, 'Merchant not found')
+    }
+
+    ctx.status = 204
+  } catch (err) {
+    if (err instanceof POSMerchantRouteError) {
+      throw err
+    }
+    throw new POSMerchantRouteError(400, 'Could not delete merchant', { err })
   }
 }

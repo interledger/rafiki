@@ -1,11 +1,16 @@
 import { IocContract } from '@adonisjs/fold'
 
+import { v4 as uuid } from 'uuid'
+
+import { isPosDeviceError } from './devices/errors'
+import { DeviceStatus, PosDevice } from './devices/model'
+import { PosDeviceService } from './devices/service'
 import { Merchant } from './model'
 import { MerchantService } from './service'
 
+import { Config } from '../config/app'
 import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
-import { Config } from '../config/app'
 
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
@@ -14,6 +19,7 @@ describe('Merchant Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let merchantService: MerchantService
+  let posDeviceService: PosDeviceService
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
@@ -22,6 +28,7 @@ describe('Merchant Service', (): void => {
 
     appContainer = await createTestApp(deps)
     merchantService = await deps.use('merchantService')
+    posDeviceService = await deps.use('posDeviceService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -66,6 +73,60 @@ describe('Merchant Service', (): void => {
       await merchantService.delete(created.id)
       const secondDelete = await merchantService.delete(created.id)
       expect(secondDelete).toBe(false)
+    })
+
+    test('soft deletes and revokes associated devices when deleting merchant', async (): Promise<void> => {
+      const knex = await deps.use('knex')
+      const created = await merchantService.create('Test merchant')
+
+      const device1Result = await posDeviceService.registerDevice({
+        merchantId: created.id,
+        walletAddress: 'wallet1',
+        algorithm: 'ecdsa-p256-sha256',
+        deviceName: 'Device 1',
+        publicKey: 'test-public-key-1'
+      })
+
+      const device2Result = await posDeviceService.registerDevice({
+        merchantId: created.id,
+        walletAddress: 'wallet2',
+        algorithm: 'ecdsa-p256-sha256',
+        deviceName: 'Device 2',
+        publicKey: 'test-public-key-2'
+      })
+
+      expect(isPosDeviceError(device1Result)).toBe(false)
+      expect(isPosDeviceError(device2Result)).toBe(false)
+      if (!isPosDeviceError(device1Result)) {
+        expect(device1Result.status).toBe(DeviceStatus.Active)
+      }
+      if (!isPosDeviceError(device2Result)) {
+        expect(device2Result.status).toBe(DeviceStatus.Active)
+      }
+
+      const result = await merchantService.delete(created.id)
+      expect(result).toBe(true)
+
+      const deletedMerchant = await Merchant.query(knex)
+        .findById(created.id)
+        .whereNotNull('deletedAt')
+      expect(deletedMerchant).toBeDefined()
+      expect(deletedMerchant?.deletedAt).toBeDefined()
+
+      const deletedDevices = await PosDevice.query(knex)
+        .where('merchantId', created.id)
+        .whereNotNull('deletedAt')
+
+      expect(deletedDevices).toHaveLength(2)
+      expect(deletedDevices[0].status).toBe(DeviceStatus.Revoked)
+      expect(deletedDevices[0].deletedAt).toBeDefined()
+      expect(deletedDevices[1].status).toBe(DeviceStatus.Revoked)
+      expect(deletedDevices[1].deletedAt).toBeDefined()
+    })
+
+    test('returns false for non-existent merchant', async (): Promise<void> => {
+      const result = await merchantService.delete(uuid())
+      expect(result).toBe(false)
     })
   })
 })
