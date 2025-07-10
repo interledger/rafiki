@@ -845,9 +845,27 @@ importers:
       '@types/koa__router':
         specifier: ^12.0.4
         version: 12.0.4
+      '@types/tmp':
+        specifier: ^0.2.6
+        version: 0.2.6
       '@types/uuid':
         specifier: ^9.0.8
         version: 9.0.8
+      jest-environment-node:
+        specifier: ^29.7.0
+        version: 29.7.0
+      jest-openapi:
+        specifier: ^0.14.2
+        version: 0.14.2
+      nock:
+        specifier: 14.0.0-beta.19
+        version: 14.0.0-beta.19
+      testcontainers:
+        specifier: ^10.16.0
+        version: 10.16.0
+      tmp:
+        specifier: ^0.2.3
+        version: 0.2.3
 
   packages/token-introspection:
     dependencies:
