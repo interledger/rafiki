@@ -171,10 +171,27 @@ async function createQuote(
     )
 
     //TODO Specify payment method when querying for fees
-    const sendingFee = await deps.feeService.getLatestFee(
-      walletAddress.assetId,
-      FeeType.Sending
-    )
+    let sendingFee: Fee | undefined
+    if(paymentMethod === 'SEPA') {
+      // For SEPA, create a zero-fee object that satisfies the Fee interface
+      sendingFee = {
+        id: 'sepa-zero-fee',
+        assetId: walletAddress.assetId,
+        type: FeeType.Sending,
+        fixedFee: 0n,
+        basisPointFee: 0,
+        asset: walletAddress.asset,
+        calculate: (principal: bigint) => 0n,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      } as Fee
+    } else {
+      sendingFee = await deps.feeService.getLatestFee(
+        walletAddress.assetId,
+        FeeType.Sending
+      )
+    } 
+
     stopTimerFee()
 
     // Calculate fee for fixed debit amount
