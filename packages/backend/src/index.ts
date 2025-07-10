@@ -600,7 +600,7 @@ export function initIocContainer(
     return createCardService({
       axios: await deps.use('axios'),
       logger: await deps.use('logger'),
-      cardServiceHost: config.cardServiceHost
+      cardServiceUrl: config.cardServiceUrl
     })
   })
 
