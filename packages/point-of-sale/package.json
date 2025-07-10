@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests --maxWorkers=50%",
+    "test:ci": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests --maxWorkers=2",
+    "test:cov": "pnpm test -- --coverage",
+    "test:sincemain": "pnpm test -- --changedSince=main",
+    "test:sincemain:cov": "pnpm test:sincemain --coverage",
     "knex": "knex",
     "dev": "ts-node-dev --inspect=0.0.0.0:9229 --respawn --transpile-only src/index.ts",
     "build": "pnpm build:deps && pnpm clean && tsc --build tsconfig.json",
@@ -38,6 +42,12 @@
     "@types/koa__cors": "^5.0.0",
     "@types/koa__router": "^12.0.4",
     "@types/uuid": "^9.0.8",
-    "cross-fetch": "^4.1.0"
+    "cross-fetch": "^4.1.0",
+    "nock": "14.0.0-beta.19",
+    "jest-environment-node": "^29.7.0",
+    "jest-openapi": "^0.14.2",
+    "testcontainers": "^10.16.0",
+    "tmp": "^0.2.3",
+    "@types/tmp": "^0.2.6"
   }
 }

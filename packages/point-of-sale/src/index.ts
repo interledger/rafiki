@@ -8,6 +8,7 @@ import { ApolloClient, ApolloLink, createHttpLink, InMemoryCache } from '@apollo
 import { onError } from '@apollo/client/link/error'
 import { setContext } from '@apollo/client/link/context'
 import { print } from 'graphql'
+import { createMerchantService } from './merchant/service'
 
 export function initIocContainer(
   config: typeof Config
@@ -62,6 +63,15 @@ export function initIocContainer(
     )
     return db
   })
+
+  container.singleton('merchantService', async (deps) => {
+    const [logger, knex] = await Promise.all([
+      deps.use('logger'),
+      deps.use('knex')
+    ])
+    return createMerchantService({ logger, knex })
+  })
+
 
   container.singleton('apolloClient', async (deps) => {
     const [logger, config] = await Promise.all([
