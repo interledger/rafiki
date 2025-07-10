@@ -70,7 +70,8 @@ export const errorToCode: {
   [OutgoingPaymentError.InvalidAmount]: GraphQLErrorCode.BadUserInput,
   [OutgoingPaymentError.NegativeReceiveAmount]: GraphQLErrorCode.BadUserInput,
   [OutgoingPaymentError.InvalidReceiver]: GraphQLErrorCode.BadUserInput,
-  [OutgoingPaymentError.OnlyOneGrantAmountAllowed]: GraphQLErrorCode.BadUserInput,
+  [OutgoingPaymentError.OnlyOneGrantAmountAllowed]:
+    GraphQLErrorCode.BadUserInput,
   [OutgoingPaymentError.InvalidCardExpiry]: GraphQLErrorCode.BadUserInput
 }
 
@@ -87,7 +88,8 @@ export const errorToMessage: {
   [OutgoingPaymentError.InvalidAmount]: 'invalid amount',
   [OutgoingPaymentError.NegativeReceiveAmount]: 'negative receive amount',
   [OutgoingPaymentError.InvalidReceiver]: 'invalid receiver',
-  [OutgoingPaymentError.OnlyOneGrantAmountAllowed]: 'only one of receiveAmount or debitAmount allowed',
+  [OutgoingPaymentError.OnlyOneGrantAmountAllowed]:
+    'only one of receiveAmount or debitAmount allowed',
   [OutgoingPaymentError.InvalidCardExpiry]: 'expired card format MM/YY'
 }
 

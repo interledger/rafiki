@@ -1051,7 +1051,7 @@ type OutgoingPayment implements BasePayment & Model {
   "Unique identifier of the grant under which the outgoing payment was created."
   grantId: String
   "Tenant ID of the outgoing payment."
-  tenantId: String,
+  tenantId: String
   "Used for the card service to provide the card expiry and signature"
   cardDetails: OutgoingPaymentCardDetails
 }
@@ -1063,7 +1063,6 @@ type OutgoingPaymentCardDetails implements Model {
   expiry: String!
   createdAt: String!
   updatedAt: String!
-
 }
 
 enum OutgoingPaymentState {

@@ -223,7 +223,11 @@ export type CreateOutgoingPaymentOptions =
 export function isCreateFromCardPayment(
   options: CreateOutgoingPaymentOptions
 ): options is CreateFromCardPayment {
-  return  'cardDetails' in options && 'expiry' in options.cardDetails && 'signature' in options.cardDetails
+  return (
+    'cardDetails' in options &&
+    'expiry' in options.cardDetails &&
+    'signature' in options.cardDetails
+  )
 }
 
 export function isCreateFromIncomingPayment(
@@ -415,16 +419,18 @@ async function createOutgoingPayment(
           })
 
           if (isCreateFromCardPayment(options)) {
-            const { expiry, signature } = options.cardDetails;
-          
-            if (!isExpiryFormat(expiry)) 
-              throw OutgoingPaymentError.InvalidCardExpiry;
-          
-            payment.cardDetails = await OutgoingPaymentsCardDetails.query(trx).insertAndFetch({
+            const { expiry, signature } = options.cardDetails
+
+            if (!isExpiryFormat(expiry))
+              throw OutgoingPaymentError.InvalidCardExpiry
+
+            payment.cardDetails = await OutgoingPaymentsCardDetails.query(
+              trx
+            ).insertAndFetch({
               outgoingPaymentId: payment.id,
               expiry,
               signature
-            });
+            })
           }
 
           payment.walletAddress = walletAddress
@@ -850,6 +856,4 @@ function validateSentAmount(
 
 function isExpiryFormat(expiry: string): boolean {
   return !!expiry.match(/^(0[1-9]|1[0-2])\/(\d{2})$/)
-
 }
-

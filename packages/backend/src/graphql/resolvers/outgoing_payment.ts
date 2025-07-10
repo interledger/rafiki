@@ -253,9 +253,10 @@ export function paymentToGraphql(
     cardDetails: cardToGraphql(payment)
   }
 }
-function cardToGraphql(payment: OutgoingPayment): OutgoingPaymentCardDetails | undefined {
-  if (!payment.cardDetails) 
-    return undefined
+function cardToGraphql(
+  payment: OutgoingPayment
+): OutgoingPaymentCardDetails | undefined {
+  if (!payment.cardDetails) return undefined
   return {
     id: payment.cardDetails.id,
     outgoingPaymentId: payment.cardDetails.outgoingPaymentId,
@@ -265,4 +266,3 @@ function cardToGraphql(payment: OutgoingPayment): OutgoingPaymentCardDetails | u
     createdAt: new Date(+payment.cardDetails.createdAt).toISOString()
   }
 }
-

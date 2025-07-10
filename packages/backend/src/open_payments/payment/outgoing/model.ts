@@ -102,7 +102,7 @@ export class OutgoingPayment
 
   public metadata?: Record<string, unknown>
 
-  public cardDetails?: OutgoingPaymentsCardDetails;
+  public cardDetails?: OutgoingPaymentsCardDetails
 
   public quote!: Quote
 
@@ -156,9 +156,8 @@ export class OutgoingPayment
         join: {
           from: 'outgoingPayments.id',
           to: 'outgoingPaymentsCardDetails.outgoingPaymentId'
-
         }
-      },
+      }
     }
   }
 
@@ -329,12 +328,11 @@ export class OutgoingPaymentEvent extends WebhookEvent {
     }
   }
 
-    $formatJson(json: Pojo): Pojo {
-      json = super.$formatJson(json)
-      return {
-        ...json,
-        cardDetails: new OutgoingPaymentsCardDetails().$formatJson(json.card),
-      }
+  $formatJson(json: Pojo): Pojo {
+    json = super.$formatJson(json)
+    return {
+      ...json,
+      cardDetails: new OutgoingPaymentsCardDetails().$formatJson(json.card)
     }
   }
-
+}
