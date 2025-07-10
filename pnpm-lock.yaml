@@ -796,6 +796,9 @@ importers:
       dotenv:
         specifier: ^16.4.7
         version: 16.4.7
+      graphql:
+        specifier: ^16.11.0
+        version: 16.11.0
       knex:
         specifier: ^3.1.0
         version: 3.1.0(pg@8.11.3)
@@ -824,6 +827,9 @@ importers:
         specifier: ^9.0.1
         version: 9.0.1
     devDependencies:
+      '@apollo/client':
+        specifier: ^3.11.8
+        version: 3.11.8(@types/react@18.2.73)(graphql@16.11.0)(react-dom@18.2.0)(react@18.2.0)
       '@types/koa':
         specifier: 2.15.0
         version: 2.15.0
@@ -839,6 +845,9 @@ importers:
       '@types/uuid':
         specifier: ^9.0.8
         version: 9.0.8
+      cross-fetch:
+        specifier: ^4.1.0
+        version: 4.1.0
 
   packages/token-introspection:
     dependencies:
