@@ -12,11 +12,10 @@ exports.up = function (knex) {
       .onDelete('CASCADE')
       .index()
 
-    table.uuid('walletAddressId').notNullable()
-
+    table.string('walletAddress').notNullable()
     table.string('deviceName').notNullable()
     table.string('publicKey')
-    table.string('keyId')
+    table.string('keyId').notNullable().unique()
     table.string('algorithm')
 
     table.string('status').notNullable()
