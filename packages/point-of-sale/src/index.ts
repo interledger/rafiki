@@ -153,13 +153,6 @@ export function initIocContainer(
     })
   })
 
-  container.singleton('merchantRoutes', async (deps) => {
-    return createMerchantRoutes({
-      logger: await deps.use('logger'),
-      merchantService: await deps.use('merchantService')
-    })
-  })
-
   return container
 }
 
