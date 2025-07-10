@@ -11,6 +11,7 @@ import { print } from 'graphql'
 import { canonicalize } from 'json-canonicalize'
 import { createHmac } from 'crypto'
 import { createMerchantService } from './merchant/service'
+import { createPosDeviceService } from './merchant/devices/service'
 import { createMerchantRoutes } from './merchant/routes'
 import { createPaymentService } from './payments/service'
 
@@ -69,11 +70,12 @@ export function initIocContainer(
   })
 
   container.singleton('merchantService', async (deps) => {
-    const [logger, knex] = await Promise.all([
+    const [logger, knex, posDeviceService] = await Promise.all([
       deps.use('logger'),
-      deps.use('knex')
+      deps.use('knex'),
+      deps.use('posDeviceService')
     ])
-    return createMerchantService({ logger, knex })
+    return createMerchantService({ logger, knex, posDeviceService })
   })
 
   container.singleton('merchantRoutes', async (deps) => {
@@ -82,7 +84,6 @@ export function initIocContainer(
       merchantService: await deps.use('merchantService')
     })
   })
-
 
   container.singleton('apolloClient', async (deps) => {
     const [logger, config] = await Promise.all([
@@ -167,6 +168,16 @@ export function initIocContainer(
     })
   })
 
+  container.singleton(
+    'posDeviceService',
+    async (deps: IocContract<AppServices>) => {
+      const config = await deps.use('config')
+      const logger = await deps.use('logger')
+      const knex = await deps.use('knex')
+      return await createPosDeviceService({ config, logger, knex })
+    }
+  )
+  
   return container
 }
 

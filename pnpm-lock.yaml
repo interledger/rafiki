@@ -8469,7 +8469,15 @@ packages:
   /@types/pg-pool@2.0.4:
     resolution: {integrity: sha512-qZAvkv1K3QbmHHFYSNRYPkRjOWRLBYrL4B9c+wG0GSVGBw0NtJwPcgx/DSddeDJvRGMHCEQ4VMEVfuJ/0gZ3XQ==}
     dependencies:
-      '@types/pg': 8.6.1
+      '@types/pg': 8.15.4
+    dev: false
+
+  /@types/pg@8.15.4:
+    resolution: {integrity: sha512-I6UNVBAoYbvuWkkU3oosC8yxqH21f4/Jc4DK71JLG3dT2mdlGe1z+ep/LQGXaKaOgcvUrsQoPRqfgtMcvZiJhg==}
+    dependencies:
+      '@types/node': 20.14.15
+      pg-protocol: 1.6.0
+      pg-types: 2.2.0
     dev: false
 
   /@types/pg@8.6.1:

@@ -4,7 +4,7 @@ import { Logger } from 'pino'
 
 describe('Card Service', () => {
   let mockAxios: Partial<AxiosInstance>
-  let cardServiceHost: string
+  let cardServiceUrl: string
   let mockLogger: Partial<Logger>
   let cardService: Awaited<ReturnType<typeof createCardService>>
 
@@ -16,10 +16,10 @@ describe('Card Service', () => {
       error: jest.fn(),
       child: jest.fn().mockReturnThis()
     }
-    cardServiceHost = 'http://card-service.test'
+    cardServiceUrl = 'http://card-service.test'
     cardService = await createCardService({
       axios: mockAxios as AxiosInstance,
-      cardServiceHost,
+      cardServiceUrl,
       logger: mockLogger as Logger
     })
   })
@@ -41,7 +41,7 @@ describe('Card Service', () => {
         cardService.sendPaymentEvent(eventDetails)
       ).resolves.toBeUndefined()
       expect(mockAxios.post).toHaveBeenCalledWith(
-        `${cardServiceHost}/payment-event`,
+        `${cardServiceUrl}/payment-event`,
         eventDetails
       )
     })
