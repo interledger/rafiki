@@ -2,7 +2,7 @@
 title: Environment variables
 ---
 
-import { LinkOut, CodeBlock } from '@interledger/docs-design-system'
+import { LinkOut } from '@interledger/docs-design-system'
 import BackEnv from '/src/partials/backend-variables.mdx'
 import AuthEnv from '/src/partials/auth-variables.mdx'
 import FrontEnv from '/src/partials/frontend-variables.mdx'
@@ -12,13 +12,9 @@ Environment variables are key value pairs used to configure how your Rafiki inst
 
 Each environment variable name is uppercase, followed by an equal sign and the value of the variable.
 
-<CodeBlock title='Environment variable example'>
-
-```
+```bash title='Environment variable example'
 WEBHOOKS_URL=http://my-business/webhooks
 ```
-
-</CodeBlock>
 
 The environment variable in the preceding example specifies the HTTP endpoint at which you want your Rafiki instance to send you notifications of webhook events.
 

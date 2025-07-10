@@ -37,7 +37,7 @@ describe('Wallet Address Keys Routes', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -46,7 +46,9 @@ describe('Wallet Address Keys Routes', (): void => {
 
   describe('get', (): void => {
     test('returns 200 with all keys for a wallet address', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
 
       const keyOption = {
         walletAddressId: walletAddress.id,
@@ -59,7 +61,7 @@ describe('Wallet Address Keys Routes', (): void => {
         headers: { Accept: 'application/json' },
         url: `/jwks.json`
       })
-      ctx.walletAddressUrl = walletAddress.url
+      ctx.walletAddressUrl = walletAddress.address
 
       await expect(walletAddressKeyRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
@@ -69,13 +71,15 @@ describe('Wallet Address Keys Routes', (): void => {
     })
 
     test('returns 200 with empty array if no keys for a wallet address', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
 
       const ctx = createContext<WalletAddressUrlContext>({
         headers: { Accept: 'application/json' },
         url: `/jwks.json`
       })
-      ctx.walletAddressUrl = walletAddress.url
+      ctx.walletAddressUrl = walletAddress.address
 
       await expect(walletAddressKeyRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.body).toEqual({
@@ -121,14 +125,16 @@ describe('Wallet Address Keys Routes', (): void => {
     })
 
     test('throws 404 error for inactive wallet address', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
 
       await walletAddress.$query().patch({ deactivatedAt: new Date() })
 
       const ctx = createContext<WalletAddressUrlContext>({
         headers: { Accept: 'application/json' }
       })
-      ctx.walletAddressUrl = walletAddress.url
+      ctx.walletAddressUrl = walletAddress.address
 
       const getOrPollByUrlSpy = jest.spyOn(
         walletAddressService,

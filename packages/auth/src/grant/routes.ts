@@ -22,6 +22,8 @@ import { InteractionService } from '../interaction/service'
 import { canSkipInteraction } from './utils'
 import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
 import { generateRouteLogs } from '../shared/utils'
+import { TenantService } from '../tenant/service'
+import { Tenant, isTenantWithIdp } from '../tenant/model'
 import {
   errorToGNAPCode,
   errorToHTTPCode,
@@ -34,6 +36,7 @@ interface ServiceDependencies extends BaseService {
   accessTokenService: AccessTokenService
   accessService: AccessService
   interactionService: InteractionService
+  tenantService: TenantService
   config: IAppConfig
 }
 
@@ -77,6 +80,7 @@ export function createGrantRoutes({
   accessTokenService,
   accessService,
   interactionService,
+  tenantService,
   logger,
   config
 }: ServiceDependencies): GrantRoutes {
@@ -99,6 +103,7 @@ export function createGrantRoutes({
     accessTokenService,
     accessService,
     interactionService,
+    tenantService,
     logger: log,
     config
   }
@@ -113,6 +118,16 @@ async function createGrant(
   deps: ServiceDependencies,
   ctx: CreateContext
 ): Promise<void> {
+  const { tenantId } = ctx.params
+  const tenant = tenantId ? await deps.tenantService.get(tenantId) : undefined
+
+  if (!tenant) {
+    throw new GNAPServerRouteError(
+      404,
+      GNAPErrorCode.InvalidRequest,
+      'Not Found'
+    )
+  }
   let noInteractionRequired: boolean
   try {
     noInteractionRequired = canSkipInteraction(deps.config, ctx.request.body)
@@ -124,14 +139,15 @@ async function createGrant(
     )
   }
   if (noInteractionRequired) {
-    await createApprovedGrant(deps, ctx)
+    await createApprovedGrant(deps, tenantId, ctx)
   } else {
-    await createPendingGrant(deps, ctx)
+    await createPendingGrant(deps, tenant, ctx)
   }
 }
 
 async function createApprovedGrant(
   deps: ServiceDependencies,
+  tenantId: string,
   ctx: CreateContext
 ): Promise<void> {
   const { body } = ctx.request
@@ -140,7 +156,7 @@ async function createApprovedGrant(
   let grant: Grant
   let accessToken: AccessToken
   try {
-    grant = await grantService.create(body, trx)
+    grant = await grantService.create(body, tenantId, trx)
     accessToken = await deps.accessTokenService.create(grant.id, trx)
     await trx.commit()
   } catch (err) {
@@ -179,6 +195,7 @@ async function createApprovedGrant(
 
 async function createPendingGrant(
   deps: ServiceDependencies,
+  tenant: Tenant,
   ctx: CreateContext
 ): Promise<void> {
   const { body } = ctx.request
@@ -188,6 +205,14 @@ async function createPendingGrant(
       400,
       GNAPErrorCode.InvalidRequest,
       "missing required request field 'interact'"
+    )
+  }
+
+  if (!isTenantWithIdp(tenant)) {
+    throw new GNAPServerRouteError(
+      400,
+      GNAPErrorCode.InvalidRequest,
+      'invalid tenant'
     )
   }
 
@@ -203,7 +228,7 @@ async function createPendingGrant(
   const trx = await Grant.startTransaction()
 
   try {
-    const grant = await grantService.create(body, trx)
+    const grant = await grantService.create(body, tenant.id, trx)
     const interaction = await interactionService.create(grant.id, trx)
     await trx.commit()
 
@@ -454,7 +479,7 @@ async function revokeGrant(
   deps: ServiceDependencies,
   ctx: RevokeContext
 ): Promise<void> {
-  const { id: continueId } = ctx.params
+  const { id: continueId, tenantId } = ctx.params
   const { grantService, logger } = deps
   const continueToken = (ctx.headers['authorization'] as string)?.split(
     'GNAP '
@@ -475,7 +500,7 @@ async function revokeGrant(
     )
   }
 
-  const revoked = await grantService.revokeGrant(grant.id)
+  const revoked = await grantService.revokeGrant(grant.id, tenantId)
   if (!revoked) {
     throw new GNAPServerRouteError(
       404,

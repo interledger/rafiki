@@ -58,7 +58,7 @@ export const setup = <
     options.params
   )
   ctx.walletAddress = options.walletAddress
-  ctx.walletAddressUrl = options.walletAddress.url
+  ctx.walletAddressUrl = options.walletAddress.address
   ctx.grant = options.grant
   ctx.client = options.client
   ctx.accessAction = options.accessAction
@@ -377,7 +377,7 @@ describe('Models', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -413,7 +413,9 @@ describe('Models', (): void => {
       test.each(deactivatedAtCases)(
         '$description',
         async ({ value, expectedIsActive }) => {
-          const walletAddress = await createWalletAddress(deps)
+          const walletAddress = await createWalletAddress(deps, {
+            tenantId: Config.operatorTenantId
+          })
           if (value) {
             await walletAddress
               .$query(appContainer.knex)

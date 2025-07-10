@@ -22,6 +22,7 @@ export function toCombinedPayment(
     id: payment.id,
     walletAddressId: payment.walletAddressId,
     state: payment.state,
+    tenantId: payment.tenantId,
     metadata: payment.metadata,
     client: payment.client,
     createdAt: payment.createdAt,
@@ -40,19 +41,25 @@ export async function createCombinedPayment(
   const sendAsset = await createAsset(deps)
   const receiveAsset = await createAsset(deps)
   const sendWalletAddressId = (
-    await createWalletAddress(deps, { assetId: sendAsset.id })
+    await createWalletAddress(deps, {
+      assetId: sendAsset.id,
+      tenantId: sendAsset.tenantId
+    })
   ).id
   const receiveWalletAddress = await createWalletAddress(deps, {
-    assetId: receiveAsset.id
+    assetId: receiveAsset.id,
+    tenantId: sendAsset.tenantId
   })
 
   const type = Math.random() < 0.5 ? PaymentType.Incoming : PaymentType.Outgoing
   const payment =
     type === PaymentType.Incoming
       ? await createIncomingPayment(deps, {
-          walletAddressId: receiveWalletAddress.id
+          walletAddressId: receiveWalletAddress.id,
+          tenantId: receiveWalletAddress.tenantId
         })
       : await createOutgoingPayment(deps, {
+          tenantId: Config.operatorTenantId,
           walletAddressId: sendWalletAddressId,
           method: 'ilp',
           receiver: `${Config.openPaymentsUrl}/${uuid()}`,

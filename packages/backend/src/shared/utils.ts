@@ -4,6 +4,7 @@ import { createHmac } from 'crypto'
 import { canonicalize } from 'json-canonicalize'
 import { IAppConfig } from '../config/app'
 import { AppContext } from '../app'
+import { Tenant } from '../tenants/model'
 
 export function validateId(id: string): boolean {
   return validate(id) && version(id) === 4
@@ -97,7 +98,7 @@ export async function poll<T>(args: PollArgs<T>): Promise<T> {
 }
 
 /**
- * Omit distrubuted to all types in a union.
+ * Omit distributed to all types in a union.
  * @example
  * type WithoutA = UnionOmit<{ a: number; c: number } | { b: number }, 'a'> // { c: number } | { b: number }
  * const withoutAOK: WithoutA = { c: 1 } // OK
@@ -113,20 +114,17 @@ function getSignatureParts(signature: string) {
   const signatureParts = signature.split(', ')
   const timestamp = signatureParts[0].split('=')[1]
   const signatureVersionAndDigest = signatureParts[1].split('=')
-  const signatureVersion = signatureVersionAndDigest[0].replace('v', '')
-  const signatureDigest = signatureVersionAndDigest[1]
+  const version = signatureVersionAndDigest[0].replace('v', '')
+  const digest = signatureVersionAndDigest[1]
 
-  return {
-    timestamp,
-    version: signatureVersion,
-    digest: signatureDigest
-  }
+  return { timestamp, version, digest }
 }
 
 function verifyApiSignatureDigest(
   signature: string,
   request: AppContext['request'],
-  config: IAppConfig
+  adminApiSignatureVersion: number,
+  secret: string
 ): boolean {
   const { body } = request
   const {
@@ -135,12 +133,12 @@ function verifyApiSignatureDigest(
     timestamp
   } = getSignatureParts(signature as string)
 
-  if (Number(signatureVersion) !== config.adminApiSignatureVersion) {
+  if (Number(signatureVersion) !== adminApiSignatureVersion) {
     return false
   }
 
   const payload = `${timestamp}.${canonicalize(body)}`
-  const hmac = createHmac('sha256', config.adminApiSecret as string)
+  const hmac = createHmac('sha256', secret)
   hmac.update(payload)
   const digest = hmac.digest('hex')
 
@@ -171,6 +169,53 @@ async function canApiSignatureBeProcessed(
   return true
 }
 
+export interface TenantApiSignatureResult {
+  tenant: Tenant
+  isOperator: boolean
+}
+
+/*
+  Verifies http signatures by first attempting to replicate it with a secret
+  associated with a tenant id in the headers.
+
+  If a tenant secret can replicate the signature, the request is tenanted to that particular tenant.
+  If the environment admin secret matches the tenant's secret, then it is an operator request with elevated permissions.
+  If neither can replicate the signature then it is unauthorized.
+*/
+export async function getTenantFromApiSignature(
+  ctx: AppContext,
+  config: IAppConfig
+): Promise<TenantApiSignatureResult | undefined> {
+  const { headers } = ctx.request
+  const signature = headers['signature']
+  if (!signature) {
+    return undefined
+  }
+
+  const tenantService = await ctx.container.use('tenantService')
+  const tenantId = headers['tenant-id'] as string
+  const tenant = tenantId ? await tenantService.get(tenantId) : undefined
+
+  if (!tenant) return undefined
+
+  if (!(await canApiSignatureBeProcessed(signature as string, ctx, config)))
+    return undefined
+
+  if (
+    tenant.apiSecret &&
+    verifyApiSignatureDigest(
+      signature as string,
+      ctx.request,
+      config.adminApiSignatureVersion,
+      tenant.apiSecret
+    )
+  ) {
+    return { tenant, isOperator: tenant.apiSecret === config.adminApiSecret }
+  }
+
+  return undefined
+}
+
 export async function verifyApiSignature(
   ctx: AppContext,
   config: IAppConfig
@@ -184,5 +229,23 @@ export async function verifyApiSignature(
   if (!(await canApiSignatureBeProcessed(signature as string, ctx, config)))
     return false
 
-  return verifyApiSignatureDigest(signature as string, ctx.request, config)
+  return verifyApiSignatureDigest(
+    signature as string,
+    ctx.request,
+    config.adminApiSignatureVersion,
+    config.adminApiSecret as string
+  )
+}
+
+export function ensureTrailingSlash(str: string): string {
+  if (!str.endsWith('/')) return `${str}/`
+  return str
+}
+
+/**
+ * @param url remove the tenant id from the {url}
+ */
+export function urlWithoutTenantId(url: string): string {
+  if (url.length > 36 && validateId(url.slice(-36))) return url.slice(0, -37)
+  return url
 }

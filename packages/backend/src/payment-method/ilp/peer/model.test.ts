@@ -33,7 +33,7 @@ describe('Models', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -58,7 +58,8 @@ describe('Models', (): void => {
           maxPacketAmount: BigInt(100),
           staticIlpAddress: 'test.' + uuid(),
           name: faker.person.fullName(),
-          liquidityThreshold: BigInt(100)
+          liquidityThreshold: BigInt(100),
+          tenantId: Config.operatorTenantId
         }
         const peerOrError = await peerService.create(options)
         if (!isPeerError(peerOrError)) {
@@ -73,12 +74,11 @@ describe('Models', (): void => {
       `(
         'creates webhook event if balance=$balance <= liquidityThreshold',
         async ({ balance }): Promise<void> => {
-          await peer.onDebit({ balance })
+          await peer.onDebit({ balance }, Config)
           const event = (
-            await PeerEvent.query(knex).where(
-              'type',
-              PeerEventType.LiquidityLow
-            )
+            await PeerEvent.query(knex)
+              .where('type', PeerEventType.LiquidityLow)
+              .withGraphFetched('webhooks')
           )[0]
           expect(event).toMatchObject({
             type: PeerEventType.LiquidityLow,
@@ -91,12 +91,25 @@ describe('Models', (): void => {
               },
               liquidityThreshold: peer.liquidityThreshold?.toString(),
               balance: balance.toString()
-            }
+            },
+            tenantId: Config.operatorTenantId,
+            webhooks: [
+              expect.objectContaining({
+                recipientTenantId: peer.tenantId,
+                attempts: 0,
+                processAt: expect.any(Date)
+              })
+            ]
           })
         }
       )
       test('does not create webhook event if balance > liquidityThreshold', async (): Promise<void> => {
-        await peer.onDebit({ balance: BigInt(110) })
+        await peer.onDebit(
+          {
+            balance: BigInt(110)
+          },
+          Config
+        )
         await expect(
           PeerEvent.query(knex).where('type', PeerEventType.LiquidityLow)
         ).resolves.toEqual([])

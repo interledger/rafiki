@@ -1,4 +1,3 @@
-import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 import { RemoteIncomingPaymentService } from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
@@ -26,7 +25,6 @@ describe('Remote Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let remoteIncomingPaymentService: RemoteIncomingPaymentService
-  let knex: Knex
   let openPaymentsClient: OpenPaymentsClient
   let grantService: GrantService
 
@@ -35,7 +33,6 @@ describe('Remote Incoming Payment Service', (): void => {
     appContainer = await createTestApp(deps)
     openPaymentsClient = await deps.use('openPaymentsClient')
     grantService = await deps.use('grantService')
-    knex = appContainer.knex
     remoteIncomingPaymentService = await deps.use(
       'remoteIncomingPaymentService'
     )
@@ -43,7 +40,7 @@ describe('Remote Incoming Payment Service', (): void => {
 
   afterEach(async (): Promise<void> => {
     jest.useRealTimers()
-    await truncateTables(knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {

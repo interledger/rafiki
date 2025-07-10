@@ -19,7 +19,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     throw json(null, { status: 400, statusText: 'Invalid pagination.' })
   }
 
-  const peers = await listPeers({
+  const peers = await listPeers(request, {
     ...pagination.data
   })
 

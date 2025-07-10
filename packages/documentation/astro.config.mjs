@@ -46,6 +46,16 @@ export default defineConfig({
         Header: './src/components/Header.astro',
         PageSidebar: './src/components/PageSidebar.astro'
       },
+      defaultLocale: 'root',
+      locales: {
+        root: {
+          label: 'English',
+          lang: 'en'
+        },
+        es: {
+          label: 'Español'
+        }
+      },
       head: [
         {
           tag: 'script',
@@ -77,41 +87,71 @@ export default defineConfig({
       sidebar: [
         {
           label: 'Overview',
+          translations: {
+            es: 'Introducción'
+          },
           items: [
             {
               label: 'Introducing Rafiki',
+              translations: {
+                es: 'Sobre Rafiki'
+              },
               link: '/overview/overview'
             },
             {
               label: 'Concepts',
+              translations: {
+                es: 'Conceptos'
+              },
               collapsed: true,
               items: [
                 {
                   label: 'Account servicing entity',
+                  translations: {
+                    es: 'Servicio de Cuentas de Entidad (ASE)'
+                  },
                   link: '/overview/concepts/account-servicing-entity'
                 },
                 {
                   label: 'Accounting',
+                  translations: {
+                    es: 'Transacciones en Rafiki'
+                  },
                   link: '/overview/concepts/accounting'
                 },
                 {
                   label: 'Clearing and settlement',
+                  translations: {
+                    es: 'Compensación y liquidación'
+                  },
                   link: '/overview/concepts/clearing-settlement'
                 },
                 {
                   label: 'Interledger',
+                  translations: {
+                    es: 'Interledger'
+                  },
                   link: '/overview/concepts/interledger'
                 },
                 {
                   label: 'Open Payments',
+                  translations: {
+                    es: 'Pagos Abiertos'
+                  },
                   link: '/overview/concepts/open-payments'
                 },
                 {
                   label: 'Payment pointers and wallet addresses',
+                  translations: {
+                    es: 'Apuntadores de pago y direcciones de billeteras'
+                  },
                   link: '/overview/concepts/payment-pointers'
                 },
                 {
                   label: 'Telemetry',
+                  translations: {
+                    es: 'Telemetría'
+                  },
                   link: '/overview/concepts/telemetry'
                 }
               ]
@@ -315,7 +355,8 @@ export default defineConfig({
       ],
       plugins: [
         starlightLinksValidator({
-          errorOnLocalLinks: false
+          errorOnLocalLinks: false,
+          errorOnFallbackPages: false
         }),
         starlightFullViewMode()
       ]

@@ -1,6 +1,6 @@
 import { ResolversTypes, MutationResolvers } from '../generated/graphql'
 import { Peer } from '../../payment-method/ilp/peer/model'
-import { ApolloContext } from '../../app'
+import { TenantedApolloContext } from '../../app'
 import {
   AutoPeeringError,
   errorToCode,
@@ -10,7 +10,7 @@ import {
 import { peerToGraphql } from './peer'
 import { GraphQLError } from 'graphql'
 
-export const createOrUpdatePeerByUrl: MutationResolvers<ApolloContext>['createOrUpdatePeerByUrl'] =
+export const createOrUpdatePeerByUrl: MutationResolvers<TenantedApolloContext>['createOrUpdatePeerByUrl'] =
   async (
     _,
     args,
@@ -18,7 +18,10 @@ export const createOrUpdatePeerByUrl: MutationResolvers<ApolloContext>['createOr
   ): Promise<ResolversTypes['CreateOrUpdatePeerByUrlMutationResponse']> => {
     const autoPeeringService = await ctx.container.use('autoPeeringService')
     const peerOrError: Peer | AutoPeeringError =
-      await autoPeeringService.initiatePeeringRequest(args.input)
+      await autoPeeringService.initiatePeeringRequest({
+        ...args.input,
+        tenantId: ctx.tenant.id
+      })
     if (isAutoPeeringError(peerOrError)) {
       throw new GraphQLError(errorToMessage[peerOrError], {
         extensions: {

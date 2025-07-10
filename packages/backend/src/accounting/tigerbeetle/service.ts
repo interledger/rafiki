@@ -32,6 +32,7 @@ import {
 } from './transfers'
 import { toTigerBeetleId } from './utils'
 import { TelemetryService } from '../../telemetry/service'
+import { IAppConfig } from '../../config/app'
 
 export enum TigerBeetleAccountCode {
   LIQUIDITY_WEB_MONETIZATION = 1,
@@ -68,6 +69,7 @@ export const convertToTigerBeetleTransferCode: {
 }
 
 export interface ServiceDependencies extends BaseService {
+  config: IAppConfig
   tigerBeetle: Client
   telemetry: TelemetryService
   withdrawalThrottleDelay?: number
