@@ -6,7 +6,8 @@ import {
   PaymentBody,
   PaymentEventResultEnum,
   PaymentContext,
-  PaymentEventContext
+  PaymentEventContext,
+  PaymentResultEnum
 } from './types'
 import { initIocContainer } from '../index'
 import { createTestApp, TestContainer } from '../tests/app'
@@ -38,7 +39,6 @@ describe('PaymentRoutes', () => {
     incomingPaymentUrl: uri,
     date: dateTime,
     signature: 'sig',
-    terminalCert: 'cert',
     terminalId: uuid
   }
 
@@ -75,7 +75,7 @@ describe('PaymentRoutes', () => {
         .mockResolvedValue(paymentEventFixture)
       await expect(routes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(201)
-      // expect(ctx.body as any).toEqual({ ok: true })
+      expect(ctx.body).toEqual({ result: PaymentResultEnum.Approved })
     })
 
     test('returns 504 on PaymentTimeoutError', async () => {
@@ -92,7 +92,7 @@ describe('PaymentRoutes', () => {
         .mockRejectedValue(new PaymentTimeoutError())
       await expect(routes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(504)
-      // expect((ctx.body).error).toMatch(/Timeout/)
+      expect(ctx.body).toEqual({ error: 'Timeout waiting for payment-event' })
     })
 
     test('returns 500 on unknown error', async () => {
@@ -107,7 +107,7 @@ describe('PaymentRoutes', () => {
       jest.spyOn(paymentService, 'create').mockRejectedValue(new Error('fail'))
       await expect(routes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(500)
-      // expect((ctx.body).error).toMatch(/fail/)
+      expect(ctx.body).toEqual({ error: 'fail' })
     })
 
     test('returns 401 and error on card expired', async () => {
@@ -179,7 +179,9 @@ describe('PaymentRoutes', () => {
 
       await expect(routes.paymentEvent(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(404)
-      // expect((ctx.body).error).toMatch(/No ongoing payment/)
+      expect(ctx.body).toEqual({
+        error: 'No ongoing payment for this requestId'
+      })
     })
   })
 })
