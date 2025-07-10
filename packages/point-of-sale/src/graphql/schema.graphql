@@ -1,0 +1,1674 @@
+type Query {
+  "Fetch an asset by its ID."
+  asset("Unique identifier of the asset." id: String!): Asset
+
+  "Get an asset based on its currency code and scale if it exists."
+  assetByCodeAndScale(
+    "ISO 4217 currency code."
+    code: String!
+    "Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit."
+    scale: UInt8!
+  ): Asset
+
+  "Fetch a paginated list of assets."
+  assets(
+    "Forward pagination: Cursor (asset ID) to start retrieving assets after this point."
+    after: String
+    "Backward pagination: Cursor (asset ID) to start retrieving assets before this point."
+    before: String
+    "Forward pagination: Limit the result to the first **n** assets after the `after` cursor."
+    first: Int
+    "Backward pagination: Limit the result to the last **n** assets before the `before` cursor."
+    last: Int
+    "Specify the sort order of assets based on their creation data, either ascending or descending."
+    sortOrder: SortOrder
+    "Unique identifier of the tenant associated with the wallet address. Optional, if not provided, the tenantId will be obtained from the signature."
+    tenantId: String
+  ): AssetsConnection!
+
+  "Fetch a peer by its ID."
+  peer("Unique identifier of the peer." id: String!): Peer
+
+  "Get a peer based on its ILP address and asset ID if it exists."
+  peerByAddressAndAsset(
+    "ILP address of the peer."
+    staticIlpAddress: String!
+    "Asset ID of peering relationship."
+    assetId: String!
+  ): Peer
+
+  "Fetch a paginated list of peers."
+  peers(
+    "Forward pagination: Cursor (peer ID) to start retrieving peers after this point."
+    after: String
+    "Backward pagination: Cursor (peer ID) to start retrieving peers before this point."
+    before: String
+    "Forward pagination: Limit the result to the first **n** peers after the `after` cursor."
+    first: Int
+    "Backward pagination: Limit the result to the last **n** peers before the `before` cursor."
+    last: Int
+    "Specify the sort order of peers based on their creation date, either ascending or descending."
+    sortOrder: SortOrder
+    "Unique identifier of the tenant associated with the peer."
+    tenantId: ID
+  ): PeersConnection!
+
+  "Fetch a wallet address by its ID."
+  walletAddress(
+    "Unique identifier of the wallet address."
+    id: String!
+  ): WalletAddress
+
+  "Get a wallet address by its url if it exists"
+  walletAddressByUrl("Wallet Address URL." url: String!): WalletAddress
+
+  "Fetch a paginated list of wallet addresses."
+  walletAddresses(
+    "Forward pagination: Cursor (wallet address ID) to start retrieving wallet addresses after this point."
+    after: String
+    "Backward pagination: Cursor (wallet address ID) to start retrieving wallet addresses before this point."
+    before: String
+    "Forward pagination: Limit the result to the first **n** wallet addresses after the `after` cursor."
+    first: Int
+    "Backward pagination: Limit the result to the last **n** wallet addresses before the `before` cursor."
+    last: Int
+    "Specify the sort order of wallet addresses based on their creation date, either ascending or descending."
+    sortOrder: SortOrder
+    "Unique identifier of the tenant associated with the wallet address. Optional, if not provided, the tenantId will be obtained from the signature."
+    tenantId: String
+  ): WalletAddressesConnection!
+
+  "Fetch an Open Payments quote by its ID."
+  quote("Unique identifier of the quote." id: String!): Quote
+
+  "Fetch an Open Payments outgoing payment by its ID."
+  outgoingPayment(
+    "Unique identifier of the outgoing payment."
+    id: String!
+  ): OutgoingPayment
+
+  "Fetch a paginated list of outgoing payments by receiver."
+  outgoingPayments(
+    "Forward pagination: Cursor (outgoing payment ID) to start retrieving outgoing payments after this point."
+    after: String
+    "Backward pagination: Cursor (outgoing payment ID) to start retrieving outgoing payments before this point."
+    before: String
+    "Forward pagination: Limit the result to the first **n** outgoing payments after the `after` cursor."
+    first: Int
+    "Backward pagination: Limit the result to the last **n** outgoing payments before the `before` cursor."
+    last: Int
+    "Specify the sort order of outgoing payments based on their creation date, either ascending or descending."
+    sortOrder: SortOrder
+    "Filter outgoing payments based on specific criteria such as receiver, wallet address ID, or state."
+    filter: OutgoingPaymentFilter
+    "Unique identifier of the tenant associated with the wallet address. Optional, if not provided, the tenantId will be obtained from the signature."
+    tenantId: String
+  ): OutgoingPaymentConnection!
+
+  "Fetch an Open Payments incoming payment by its ID."
+  incomingPayment(
+    "Unique identifier of the incoming payment."
+    id: String!
+  ): IncomingPayment
+
+  "Fetch a paginated list of webhook events."
+  webhookEvents(
+    "Forward pagination: Cursor (webhook event ID) to start retrieving webhook events after this point."
+    after: String
+    "Backward pagination: Cursor (webhook event ID) to start retrieving webhook events before this point."
+    before: String
+    "Forward pagination: Limit the result to the first **n** webhook events after the `after` cursor."
+    first: Int
+    "Backward pagination: Limit the result to the last **n** webhook events before the `before` cursor."
+    last: Int
+    "Specify the sort order of webhook events based on their creation date, either ascending or descending."
+    sortOrder: SortOrder
+    "Filter webhook events based on specific criteria."
+    filter: WebhookEventFilter
+    "Unique identifier of the tenant associated with the wallet address. Optional, if not provided, the tenantId will be obtained from the signature."
+    tenantId: String
+  ): WebhookEventsConnection!
+
+  "Fetch a paginated list of combined payments, including incoming and outgoing payments."
+  payments(
+    "Forward pagination: Cursor (payment ID) to start retrieving payments after this point."
+    after: String
+    "Backward pagination: Cursor (payment ID) to start retrieving payments before this point."
+    before: String
+    "Forward pagination: Limit the result to the first **n** payments after the `after` cursor."
+    first: Int
+    "Backward pagination: Limit the result to the last **n** payments before the `before` cursor."
+    last: Int
+    "Specify the sort order of payments based on their creation date, either ascending or descending."
+    sortOrder: SortOrder
+    "Filter payment events based on specific criteria such as payment type or wallet address ID."
+    filter: PaymentFilter
+    "Unique identifier of the tenant associated with the wallet address. Optional, if not provided, the tenantId will be obtained from the signature."
+    tenantId: String
+  ): PaymentConnection!
+
+  "Fetch a paginated list of accounting transfers for a given account."
+  accountingTransfers(
+    "Unique identifier of the account."
+    id: String!
+    "Limit the number of results returned. If no limit is provided, the default limit is 20."
+    limit: Int
+  ): AccountingTransferConnection!
+
+  "Retrieve an Open Payments incoming payment by receiver ID. The receiver's wallet address can be hosted on this server or a remote Open Payments resource server."
+  receiver(
+    "Unique identifier of the receiver (incoming payment URL)."
+    id: String!
+  ): Receiver
+
+  "Retrieve a tenant of the instance."
+  tenant("Unique identifier of the tenant." id: String!): Tenant!
+
+  "As an operator, fetch a paginated list of tenants on the instance."
+  tenants(
+    "Forward pagination: Cursor (tenant ID) to start retrieving tenants after this point."
+    after: String
+    "Backward pagination: Cursor (tenant ID) to start retrieving tenants before this point."
+    before: String
+    "Forward pagination: Limit the result to the first **n** tenants after the `after` cursor."
+    first: Int
+    "Backward pagination: Limit the result to the last **n** tenants before the `before` cursor."
+    last: Int
+    "Specify the sort order of tenants based on their creation date, either ascending or descending."
+    sortOrder: SortOrder
+  ): TenantsConnection!
+
+  "Determine if the requester has operator permissions"
+  whoami: WhoamiResponse!
+}
+
+type Mutation {
+  "Create a new asset."
+  createAsset(input: CreateAssetInput!): AssetMutationResponse!
+
+  "Update an existing asset."
+  updateAsset(input: UpdateAssetInput!): AssetMutationResponse!
+
+  "Delete an asset."
+  deleteAsset(input: DeleteAssetInput!): DeleteAssetMutationResponse!
+
+  "Deposit asset liquidity."
+  depositAssetLiquidity(
+    input: DepositAssetLiquidityInput!
+  ): LiquidityMutationResponse
+
+  "Withdraw asset liquidity."
+  createAssetLiquidityWithdrawal(
+    input: CreateAssetLiquidityWithdrawalInput!
+  ): LiquidityMutationResponse
+
+  "Create a new peer."
+  createPeer(input: CreatePeerInput!): CreatePeerMutationResponse!
+
+  "Create or update a peer using a URL."
+  createOrUpdatePeerByUrl(
+    input: CreateOrUpdatePeerByUrlInput!
+  ): CreateOrUpdatePeerByUrlMutationResponse!
+
+  "Update an existing peer."
+  updatePeer(input: UpdatePeerInput!): UpdatePeerMutationResponse!
+
+  "Delete a peer."
+  deletePeer(input: DeletePeerInput!): DeletePeerMutationResponse!
+
+  "Deposit peer liquidity."
+  depositPeerLiquidity(
+    input: DepositPeerLiquidityInput!
+  ): LiquidityMutationResponse
+
+  "Withdraw peer liquidity."
+  createPeerLiquidityWithdrawal(
+    input: CreatePeerLiquidityWithdrawalInput!
+  ): LiquidityMutationResponse
+
+  "Post liquidity withdrawal. Withdrawals are two-phase commits and are committed via this mutation."
+  postLiquidityWithdrawal(
+    input: PostLiquidityWithdrawalInput!
+  ): LiquidityMutationResponse
+
+  "Void liquidity withdrawal. Withdrawals are two-phase commits and are rolled back via this mutation."
+  voidLiquidityWithdrawal(
+    input: VoidLiquidityWithdrawalInput!
+  ): LiquidityMutationResponse
+
+  "Create a new wallet address."
+  createWalletAddress(
+    input: CreateWalletAddressInput!
+  ): CreateWalletAddressMutationResponse!
+
+  "Update an existing wallet address."
+  updateWalletAddress(
+    input: UpdateWalletAddressInput!
+  ): UpdateWalletAddressMutationResponse!
+
+  "Add a public key to a wallet address that is used to verify Open Payments requests."
+  createWalletAddressKey(
+    input: CreateWalletAddressKeyInput!
+  ): CreateWalletAddressKeyMutationResponse
+
+  createTenantSettings(
+    input: CreateTenantSettingsInput!
+  ): CreateTenantSettingsMutationResponse
+
+  "Revoke a public key associated with a wallet address. Open Payment requests using this key for request signatures will be denied going forward."
+  revokeWalletAddressKey(
+    input: RevokeWalletAddressKeyInput!
+  ): RevokeWalletAddressKeyMutationResponse
+
+  "Create an internal Open Payments incoming payment. The receiver has a wallet address on this Rafiki instance."
+  createIncomingPayment(
+    input: CreateIncomingPaymentInput!
+  ): IncomingPaymentResponse!
+
+  "Create an internal or external Open Payments incoming payment. The receiver has a wallet address on either this or another Open Payments resource server."
+  createReceiver(input: CreateReceiverInput!): CreateReceiverResponse!
+
+  "Update an existing incoming payment."
+  updateIncomingPayment(
+    input: UpdateIncomingPaymentInput!
+  ): IncomingPaymentResponse!
+
+  "Create an Open Payments quote."
+  createQuote(input: CreateQuoteInput!): QuoteResponse!
+
+  "Create an Open Payments outgoing payment."
+  createOutgoingPayment(
+    input: CreateOutgoingPaymentInput!
+  ): OutgoingPaymentResponse!
+
+  "Cancel an outgoing payment."
+  cancelOutgoingPayment(
+    input: CancelOutgoingPaymentInput!
+  ): OutgoingPaymentResponse!
+
+  "Create an Open Payments outgoing payment from an incoming payment."
+  createOutgoingPaymentFromIncomingPayment(
+    input: CreateOutgoingPaymentFromIncomingPaymentInput!
+  ): OutgoingPaymentResponse!
+
+  "Deposit webhook event liquidity (deprecated)."
+  depositEventLiquidity(
+    input: DepositEventLiquidityInput!
+  ): LiquidityMutationResponse
+    @deprecated(reason: "Use `depositOutgoingPaymentLiquidity`")
+
+  "Withdraw webhook event liquidity (deprecated)."
+  withdrawEventLiquidity(
+    input: WithdrawEventLiquidityInput!
+  ): LiquidityMutationResponse
+    @deprecated(
+      reason: "Use `createOutgoingPaymentWithdrawal, createIncomingPaymentWithdrawal, or createWalletAddressWithdrawal`"
+    )
+
+  "Withdraw incoming payment liquidity."
+  createIncomingPaymentWithdrawal(
+    input: CreateIncomingPaymentWithdrawalInput!
+  ): LiquidityMutationResponse
+
+  "Withdraw outgoing payment liquidity."
+  createOutgoingPaymentWithdrawal(
+    input: CreateOutgoingPaymentWithdrawalInput!
+  ): LiquidityMutationResponse
+
+  "Deposit outgoing payment liquidity."
+  depositOutgoingPaymentLiquidity(
+    input: DepositOutgoingPaymentLiquidityInput!
+  ): LiquidityMutationResponse
+
+  "Withdraw liquidity from a wallet address received via Web Monetization."
+  createWalletAddressWithdrawal(
+    input: CreateWalletAddressWithdrawalInput!
+  ): WalletAddressWithdrawalMutationResponse
+
+  "If automatic withdrawal of funds received via Web Monetization by the wallet address are disabled, this mutation can be used to trigger up to **n** withdrawal events."
+  triggerWalletAddressEvents(
+    input: TriggerWalletAddressEventsInput!
+  ): TriggerWalletAddressEventsMutationResponse!
+
+  "Set the fee structure on an asset."
+  setFee(input: SetFeeInput!): SetFeeResponse!
+
+  "Approves the incoming payment if the incoming payment is in the PENDING state"
+  approveIncomingPayment(
+    input: ApproveIncomingPaymentInput!
+  ): ApproveIncomingPaymentResponse!
+
+  "Cancel the incoming payment if the incoming payment is in the PENDING state"
+  cancelIncomingPayment(
+    input: CancelIncomingPaymentInput!
+  ): CancelIncomingPaymentResponse!
+
+  "As an operator, create a tenant."
+  createTenant(input: CreateTenantInput!): TenantMutationResponse!
+
+  "Update a tenant."
+  updateTenant(input: UpdateTenantInput!): TenantMutationResponse!
+
+  "Delete a tenant."
+  deleteTenant(id: String!): DeleteTenantMutationResponse!
+}
+
+type PageInfo {
+  "The cursor used to fetch the next page when paginating forwards."
+  endCursor: String
+  "Indicates if there are more pages when paginating forwards."
+  hasNextPage: Boolean!
+  "Indicates if there are more pages when paginating backwards."
+  hasPreviousPage: Boolean!
+  "The cursor used to fetch the next page when paginating backwards."
+  startCursor: String
+}
+
+type WhoamiResponse {
+  id: String!
+  isOperator: Boolean!
+}
+
+type AssetsConnection {
+  "Information to aid in pagination."
+  pageInfo: PageInfo!
+  "A list of edges representing assets and cursors for pagination."
+  edges: [AssetEdge!]!
+}
+
+type AssetEdge {
+  "An asset node in the list."
+  node: Asset!
+  "A cursor for paginating through the assets."
+  cursor: String!
+}
+
+input ApproveIncomingPaymentInput {
+  "Unique identifier of the incoming payment to be approved. Note: incoming payment must be PENDING."
+  id: ID!
+}
+
+input CancelIncomingPaymentInput {
+  "Unique identifier of the incoming payment to be canceled. Note: incoming payment must be PENDING."
+  id: ID!
+}
+
+input CreateAssetInput {
+  "Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets)."
+  code: String!
+  "Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit."
+  scale: UInt8!
+  "Minimum amount of liquidity that can be withdrawn from the asset."
+  withdrawalThreshold: UInt64
+  "A webhook event will notify the Account Servicing Entity if liquidity falls below this value."
+  liquidityThreshold: UInt64
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String
+  "Unique identifier of the tenant associated with the asset. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature."
+  tenantId: ID
+}
+
+input UpdateAssetInput {
+  "Unique identifier of the asset to update."
+  id: String!
+  "New minimum amount of liquidity that can be withdrawn from the asset."
+  withdrawalThreshold: UInt64
+  "A webhook event will notify the Account Servicing Entity if liquidity falls below this new value."
+  liquidityThreshold: UInt64
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String
+}
+
+input DeleteAssetInput {
+  "Unique identifier of the asset to delete."
+  id: ID!
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String
+}
+
+type PeersConnection {
+  "Information to aid in pagination."
+  pageInfo: PageInfo!
+  "A list of edges representing peers and cursors for pagination."
+  edges: [PeerEdge!]!
+}
+
+type PeerEdge {
+  "A peer node in the list."
+  node: Peer!
+  "A cursor for paginating through the peers."
+  cursor: String!
+}
+
+input CreatePeerInput {
+  "Maximum packet amount that the peer accepts."
+  maxPacketAmount: UInt64
+  "Peering connection details."
+  http: HttpInput!
+  "Unique identifier of the asset associated with the peering relationship."
+  assetId: String!
+  "ILP address of the peer."
+  staticIlpAddress: String!
+  "Internal name of the peer."
+  name: String
+  "A webhook event will notify the Account Servicing Entity if peer liquidity falls below this value."
+  liquidityThreshold: UInt64
+  "Initial amount of liquidity to deposit for the peer."
+  initialLiquidity: UInt64
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String
+}
+
+input CreateOrUpdatePeerByUrlInput {
+  "Maximum packet amount that the peer accepts."
+  maxPacketAmount: UInt64
+  "Unique identifier of the asset associated with the peering relationship."
+  assetId: String!
+  "Peer's URL address, where auto-peering requests are accepted."
+  peerUrl: String!
+  "Internal name for the peer, used to override auto-peering default names."
+  name: String
+  "A webhook event will notify the Account Servicing Entity if peer liquidity falls below this value."
+  liquidityThreshold: UInt64
+  "Amount of liquidity to deposit for the peer."
+  liquidityToDeposit: UInt64
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String
+}
+
+input UpdatePeerInput {
+  "Unique identifier of the peer to update."
+  id: String!
+  "New maximum packet amount that the peer accepts."
+  maxPacketAmount: UInt64
+  "New peering connection details."
+  http: HttpInput
+  "New ILP address for the peer."
+  staticIlpAddress: String
+  "New public name for the peer."
+  name: String
+  "A webhook event will notify the Account Servicing Entity if peer liquidity falls below this new value."
+  liquidityThreshold: UInt64
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String
+}
+
+input HttpInput {
+  "Incoming connection details."
+  incoming: HttpIncomingInput
+  "Outgoing connection details."
+  outgoing: HttpOutgoingInput!
+}
+
+input HttpIncomingInput {
+  "Array of authorization tokens accepted by this Rafiki instance."
+  authTokens: [String!]!
+}
+
+input HttpOutgoingInput {
+  "Authorization token to present at the peer's Rafiki instance."
+  authToken: String!
+  "Connection endpoint of the peer."
+  endpoint: String!
+}
+
+input DepositPeerLiquidityInput {
+  "Unique identifier of the peer to deposit liquidity into."
+  peerId: String!
+  "Amount of liquidity to deposit."
+  amount: UInt64!
+  "Unique identifier of the liquidity transfer."
+  id: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String!
+}
+
+input DepositAssetLiquidityInput {
+  "Unique identifier of the asset to deposit liquidity into."
+  assetId: String!
+  "Amount of liquidity to deposit."
+  amount: UInt64!
+  "Unique identifier of the liquidity transfer."
+  id: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String!
+}
+
+input CreatePeerLiquidityWithdrawalInput {
+  "Unique identifier of the peer to create the withdrawal for."
+  peerId: String!
+  "Amount of liquidity to withdraw."
+  amount: UInt64!
+  "Unique identifier of the withdrawal."
+  id: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String!
+  "Interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer."
+  timeoutSeconds: UInt64!
+}
+
+input CreateAssetLiquidityWithdrawalInput {
+  "Unique identifier of the asset to create the withdrawal for."
+  assetId: String!
+  "Amount of liquidity to withdraw."
+  amount: UInt64!
+  "Unique identifier of the withdrawal."
+  id: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String!
+  "Interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer."
+  timeoutSeconds: UInt64!
+}
+
+input PostLiquidityWithdrawalInput {
+  "Unique identifier of the liquidity withdrawal to post."
+  withdrawalId: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String!
+}
+
+input VoidLiquidityWithdrawalInput {
+  "Unique identifier of the liquidity withdrawal to void."
+  withdrawalId: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String!
+}
+
+input DepositOutgoingPaymentLiquidityInput {
+  "Unique identifier of the outgoing payment to deposit liquidity into."
+  outgoingPaymentId: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String!
+}
+
+input CreateIncomingPaymentWithdrawalInput {
+  "Unique identifier of the incoming payment to withdraw liquidity from."
+  incomingPaymentId: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String!
+  "Interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer."
+  timeoutSeconds: UInt64!
+}
+
+input CreateOutgoingPaymentWithdrawalInput {
+  "Unique identifier of the outgoing payment to withdraw liquidity from."
+  outgoingPaymentId: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String!
+  "Interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer."
+  timeoutSeconds: UInt64!
+}
+
+input DepositEventLiquidityInput {
+  "Unique identifier of the event to deposit liquidity into."
+  eventId: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String!
+}
+
+input WithdrawEventLiquidityInput {
+  "Unique identifier of the event to withdraw liquidity from."
+  eventId: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String!
+}
+
+input CreateWalletAddressWithdrawalInput {
+  "Unique identifier of the Open Payments wallet address to create the withdrawal for."
+  walletAddressId: String!
+  "Unique identifier of the withdrawal."
+  id: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String!
+  "Interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer."
+  timeoutSeconds: UInt64!
+}
+
+input JwkInput {
+  "Unique identifier for the key."
+  kid: String!
+  "Base64 url-encoded public key."
+  x: String!
+  "Cryptographic algorithm used with the key. The only allowed value is `EdDSA`."
+  alg: Alg!
+  "Key type. The only allowed value is `OKP`."
+  kty: Kty!
+  "Cryptographic curve that the key pair is derived from. The only allowed value is `Ed25519`."
+  crv: Crv!
+}
+
+input CreateWalletAddressKeyInput {
+  "Unique identifier of the wallet address to associate with the key."
+  walletAddressId: String!
+  "Public key in JSON Web Key (JWK) format."
+  jwk: JwkInput!
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String
+}
+
+input CreateTenantSettingsInput {
+  "List of a settings for a tenant."
+  settings: [TenantSettingInput!]!
+}
+
+input TenantSettingInput {
+  "Key for this setting."
+  key: String!
+  "Value of a setting for this key."
+  value: String!
+}
+
+input RevokeWalletAddressKeyInput {
+  "Internal unique identifier of the key to revoke."
+  id: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String
+}
+
+type Asset implements Model {
+  "Unique identifier of the asset."
+  id: ID!
+  "Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets)."
+  code: String!
+  "Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit."
+  scale: UInt8!
+  "Available liquidity"
+  liquidity: UInt64
+  "Minimum amount of liquidity that can be withdrawn from the asset."
+  withdrawalThreshold: UInt64
+  "A webhook event will notify the Account Servicing Entity if liquidity falls below this value."
+  liquidityThreshold: UInt64
+  "The receiving fee structure for the asset."
+  receivingFee: Fee
+  "The sending fee structure for the asset."
+  sendingFee: Fee
+  "Fetches a paginated list of fees associated with this asset."
+  fees(
+    "Forward pagination: Cursor (fee ID) to start retrieving fees after this point."
+    after: String
+    "Backward pagination: Cursor (fee ID) to start retrieving fees before this point."
+    before: String
+    "Forward pagination: Limit the result to the first **n** fees after the `after` cursor."
+    first: Int
+    "Backward pagination: Limit the result to the last **n** fees before the `before` cursor."
+    last: Int
+    "Specify the sort order of fees based on their creation data, either ascending or descending."
+    sortOrder: SortOrder
+  ): FeesConnection
+  "The date and time when the asset was created."
+  createdAt: String!
+  tenantId: ID!
+}
+
+enum SortOrder {
+  "Sort the results in ascending order."
+  ASC
+  "Sort the results in descending order."
+  DESC
+}
+
+enum LiquidityError {
+  "The transfer has already been posted."
+  AlreadyPosted
+  "The transfer has already been voided."
+  AlreadyVoided
+  "The amount specified for the transfer is zero."
+  AmountZero
+  "Insufficient balance to complete the transfer."
+  InsufficientBalance
+  "The provided ID for the transfer is invalid."
+  InvalidId
+  "A transfer with the same ID already exists."
+  TransferExists
+  "The specified asset could not be found."
+  UnknownAsset
+  "The specified incoming payment could not be found."
+  UnknownIncomingPayment
+  "The specified payment could not be found."
+  UnknownPayment
+  "The specified wallet address could not be found."
+  UnknownWalletAddress
+  "The specified peer could not be found."
+  UnknownPeer
+  "The specified transfer could not be found."
+  UnknownTransfer
+}
+
+type Peer implements Model {
+  "Unique identifier of the peer."
+  id: ID!
+  "Maximum packet amount that the peer accepts."
+  maxPacketAmount: UInt64
+  "Peering connection details."
+  http: Http!
+  "Asset of peering relationship."
+  asset: Asset!
+  "ILP address of the peer."
+  staticIlpAddress: String!
+  "Public name for the peer."
+  name: String
+  "A webhook event will notify the Account Servicing Entity if liquidity falls below this value."
+  liquidityThreshold: UInt64
+  "Current amount of peer liquidity available."
+  liquidity: UInt64
+  "The date and time when the peer was created."
+  createdAt: String!
+  "Unique identifier of the tenant associated with the peer."
+  tenantId: ID!
+}
+
+input DeletePeerInput {
+  "Unique identifier of the peer to be deleted."
+  id: ID!
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String
+}
+
+type Http {
+  "Details of the outgoing connection for peering."
+  outgoing: HttpOutgoing!
+}
+
+type HttpOutgoing {
+  "Authorization token to be presented to the peer's Rafiki instance."
+  authToken: String!
+  "Connection endpoint of the peer."
+  endpoint: String!
+}
+
+type WalletAddressesConnection {
+  "Pagination information for the wallet addresses."
+  pageInfo: PageInfo!
+  "A list of wallet address edges, containing wallet address nodes and cursors for pagination."
+  edges: [WalletAddressEdge!]!
+}
+
+type WalletAddressEdge {
+  "A wallet address node in the list."
+  node: WalletAddress!
+  "A cursor for paginating through the wallet addresses."
+  cursor: String!
+}
+
+type WalletAddress implements Model {
+  "Unique identifier of the wallet address."
+  id: ID!
+
+  "Asset of the wallet address."
+  asset: Asset!
+
+  "Current amount of liquidity available for this wallet address."
+  liquidity: UInt64
+
+  "Wallet Address."
+  address: String!
+
+  "Public name associated with the wallet address. This is visible to anyone with the wallet address URL."
+  publicName: String
+
+  "List of incoming payments received by this wallet address"
+  incomingPayments(
+    "Forward pagination: Cursor (incoming payment ID) to start retrieving incoming payments after this point."
+    after: String
+    "Backward pagination: Cursor (incoming payment ID) to start retrieving incoming payments before this point."
+    before: String
+    "Forward pagination: Limit the result to the first **n** incoming payments after the `after` cursor."
+    first: Int
+    "Backward pagination: Limit the result to the last **n** incoming payments before the `before` cursor."
+    last: Int
+    "Specify the sort order of incoming payments based on their creation date, either ascending or descending."
+    sortOrder: SortOrder
+  ): IncomingPaymentConnection
+
+  "List of quotes created at this wallet address"
+  quotes(
+    "Forward pagination: Cursor (quote ID) to start retrieving quotes after this point."
+    after: String
+    "Backward pagination: Cursor (quote ID) to start retrieving quotes before this point."
+    before: String
+    "Forward pagination: Limit the result to the first **n** quotes after the `after` cursor."
+    first: Int
+    "Backward pagination: Limit the result to the last **n** quotes before the `before` cursor."
+    last: Int
+    "Specify the sort order of quotes based on their creation data, either ascending or descending."
+    sortOrder: SortOrder
+  ): QuoteConnection
+
+  "List of outgoing payments sent from this wallet address"
+  outgoingPayments(
+    "Forward pagination: Cursor (outgoing payment ID) to start retrieving outgoing payments after this point."
+    after: String
+    "Backward pagination: Cursor (outgoing payment ID) to start retrieving outgoing payments before this point."
+    before: String
+    "Forward pagination: Limit the result to the first **n** outgoing payments after the `after` cursor."
+    first: Int
+    "Backward pagination: Limit the result to the last **n** outgoing payments before the `before` cursor."
+    last: Int
+    "Specify the sort order of outgoing payments based on their creation date, either ascending or descending."
+    sortOrder: SortOrder
+  ): OutgoingPaymentConnection
+
+  "The date and time when the wallet address was created."
+  createdAt: String!
+
+  "The current status of the wallet, either active or inactive."
+  status: WalletAddressStatus!
+
+  "List of keys associated with this wallet address"
+  walletAddressKeys(
+    "Forward pagination: Cursor (wallet address key ID) to start retrieving keys after this point."
+    after: String
+    "Backward pagination: Cursor (wallet address key ID) to start retrieving keys before this point."
+    before: String
+    "Forward pagination: Limit the result to the first **n** keys after the `after` cursor."
+    first: Int
+    "Backward pagination: Limit the result to the last **n** keys before the `before` cursor."
+    last: Int
+    "Specify the sort order of keys based on their creation data, either ascending or descending."
+    sortOrder: SortOrder
+  ): WalletAddressKeyConnection
+
+  "Additional properties associated with the wallet address."
+  additionalProperties: [AdditionalProperty]
+
+  "Tenant ID of the wallet address."
+  tenantId: String
+}
+
+type AdditionalProperty {
+  "Key for the additional property."
+  key: String!
+  "Value for the additional property."
+  value: String!
+  "Indicates whether the property is visible in Open Payments wallet address requests."
+  visibleInOpenPayments: Boolean!
+}
+
+type WalletAddressKeyConnection {
+  "Pagination information for wallet address keys."
+  pageInfo: PageInfo!
+  "A list of wallet address key edges, containing wallet address key nodes and cursors for pagination."
+  edges: [WalletAddressKeyEdge!]!
+}
+
+type WalletAddressKeyEdge {
+  "A wallet address key node in the list."
+  node: WalletAddressKey!
+  "A cursor for paginating through the wallet address keys."
+  cursor: String!
+}
+
+enum WalletAddressStatus {
+  "The status after deactivating a wallet address."
+  INACTIVE
+  "The default status of a wallet address."
+  ACTIVE
+}
+
+type IncomingPaymentConnection {
+  "Pagination information for the incoming payments."
+  pageInfo: PageInfo!
+  "A list of incoming payment edges, containing incoming payment nodes and cursors for pagination."
+  edges: [IncomingPaymentEdge!]!
+}
+
+type IncomingPaymentEdge {
+  "An incoming payment node in the list."
+  node: IncomingPayment!
+  "A cursor for paginating through the incoming payments."
+  cursor: String!
+}
+
+interface BasePayment {
+  "Unique identifier for the payment."
+  id: ID!
+  "Unique identifier of the wallet address under which the payment was created."
+  walletAddressId: ID!
+  "Additional metadata associated with the payment."
+  metadata: JSONObject
+  "The date and time that the payment was created."
+  createdAt: String!
+  "Information about the wallet address of the Open Payments client that created the payment."
+  client: String
+}
+
+type IncomingPayment implements BasePayment & Model {
+  "Unique identifier of the incoming payment."
+  id: ID!
+  "Unique identifier of the wallet address under which the incoming payment was created."
+  walletAddressId: ID!
+  "Information about the wallet address of the Open Payments client that created the incoming payment."
+  client: String
+  "Current amount of liquidity available for this incoming payment."
+  liquidity: UInt64
+  "State of the incoming payment."
+  state: IncomingPaymentState!
+  "Date and time that the incoming payment will expire. After this time, the incoming payment will not accept further payments made to it."
+  expiresAt: String!
+  "The maximum amount that should be paid into the wallet address under this incoming payment."
+  incomingAmount: Amount
+  "The total amount that has been paid into the wallet address under this incoming payment."
+  receivedAmount: Amount!
+  "Additional metadata associated with the incoming payment."
+  metadata: JSONObject
+  "The date and time that the incoming payment was created."
+  createdAt: String!
+  "The tenant UUID associated with the incoming payment. If not provided, it will be obtained from the signature."
+  tenantId: String
+}
+
+type Receiver {
+  "Unique identifier of the receiver (incoming payment URL)."
+  id: String!
+  "Wallet address URL under which the incoming payment was created."
+  walletAddressUrl: String!
+  "Indicates whether the incoming payment has completed receiving funds."
+  completed: Boolean!
+  "The maximum amount that should be paid into the wallet address under this incoming payment."
+  incomingAmount: Amount
+  "The total amount that has been paid into the wallet address under this incoming payment."
+  receivedAmount: Amount!
+  "Date and time that the incoming payment will expire. After this time, the incoming payment will not accept further payments made to it."
+  expiresAt: String
+  "Additional metadata associated with the incoming payment."
+  metadata: JSONObject
+  "The date and time that the incoming payment was created."
+  createdAt: String!
+}
+
+enum IncomingPaymentState {
+  "The payment is pending when it is initially created and has not started processing."
+  PENDING
+  "The payment is being processed after funds have started clearing into the account."
+  PROCESSING
+  "The payment is completed automatically once the expected `incomingAmount` is received or manually via an API call."
+  COMPLETED
+  "The payment has expired before completion, and no further funds will be accepted."
+  EXPIRED
+}
+
+type Amount {
+  "Numerical value."
+  value: UInt64!
+  "Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets)."
+  assetCode: String!
+  "Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit."
+  assetScale: UInt8!
+}
+
+type OutgoingPaymentConnection {
+  "Pagination information for the outgoing payments."
+  pageInfo: PageInfo!
+  "A list of outgoing payment edges, containing outgoing payment nodes and cursors for pagination."
+  edges: [OutgoingPaymentEdge!]!
+}
+
+type OutgoingPaymentEdge {
+  "An outgoing payment node in the list."
+  node: OutgoingPayment!
+  "A cursor for paginating through the outgoing payments."
+  cursor: String!
+}
+
+input OutgoingPaymentFilter {
+  "Filter for outgoing payments based on the receiver's details."
+  receiver: FilterString
+  "Filter for outgoing payments based on the wallet address ID."
+  walletAddressId: FilterString
+  "Filter for outgoing payments based on their state."
+  state: FilterString
+}
+
+type OutgoingPayment implements BasePayment & Model {
+  "Unique identifier of the outgoing payment."
+  id: ID!
+  "Unique identifier of the wallet address under which the outgoing payment was created."
+  walletAddressId: ID!
+  "Information about the wallet address of the Open Payments client that created the outgoing payment."
+  client: String
+  "Current amount of liquidity available for this outgoing payment."
+  liquidity: UInt64
+  "State of the outgoing payment."
+  state: OutgoingPaymentState!
+  "Any error encountered during the payment process."
+  error: String
+  "Number of attempts made to send an outgoing payment."
+  stateAttempts: Int!
+  "Amount to send (fixed send)."
+  debitAmount: Amount!
+  "Amount to receive (fixed receive)."
+  receiveAmount: Amount!
+  "Wallet address URL of the receiver."
+  receiver: String!
+  "Additional metadata associated with the outgoing payment."
+  metadata: JSONObject
+  "Corresponding quote for the outgoing payment."
+  quote: Quote
+  "Amount already sent."
+  sentAmount: Amount!
+  "The date and time that the outgoing payment was created."
+  createdAt: String!
+  "Unique identifier of the grant under which the outgoing payment was created."
+  grantId: String
+  "Tenant ID of the outgoing payment."
+  tenantId: String
+}
+
+enum OutgoingPaymentState {
+  "The payment is reserving funds and will transition to `SENDING` once funds are secured."
+  FUNDING
+  "The payment is in progress and will transition to `COMPLETED` upon success."
+  SENDING
+  "The payment has been successfully completed."
+  COMPLETED
+  "The payment has failed."
+  FAILED
+  "The payment has been canceled."
+  CANCELLED
+}
+
+type PaymentConnection {
+  "Pagination information for the payments."
+  pageInfo: PageInfo!
+  "A list of payment edges, containing payment nodes and cursors for pagination."
+  edges: [PaymentEdge!]!
+}
+
+type PaymentEdge {
+  "A payment node in the list."
+  node: Payment!
+  "A cursor for paginating through the payments."
+  cursor: String!
+}
+
+type Payment implements BasePayment & Model {
+  "Unique identifier of the payment."
+  id: ID!
+  "Type of payment, either incoming or outgoing."
+  type: PaymentType!
+  "Unique identifier of the wallet address under which the payment was created."
+  walletAddressId: ID!
+  "Information about the wallet address of the Open Payments client that created the payment."
+  client: String
+  "State of the payment, either `IncomingPaymentState` or `OutgoingPaymentState` according to payment type"
+  state: String!
+  "Current amount of liquidity available for this payment."
+  liquidity: UInt64
+  "Additional metadata associated with the payment."
+  metadata: JSONObject
+  "The date and time that the payment was created."
+  createdAt: String!
+}
+
+enum PaymentType {
+  "Represents an incoming payment."
+  INCOMING
+  "Represents an outgoing payment."
+  OUTGOING
+}
+
+input PaymentFilter {
+  "Filter for payments based on their type."
+  type: FilterString
+  "Filter for payments based on the wallet address ID."
+  walletAddressId: FilterString
+}
+
+type AccountingTransferConnection {
+  debits: [AccountingTransfer!]!
+  credits: [AccountingTransfer!]!
+}
+
+type AccountingTransfer implements Model {
+  "Unique identifier for the accounting transfer."
+  id: ID!
+  "Unique identifier for the debit account."
+  debitAccountId: ID!
+  "Unique identifier for the credit account."
+  creditAccountId: ID!
+  "Amount sent (fixed send)."
+  amount: UInt64!
+  "Type of the accounting transfer."
+  transferType: TransferType!
+  "Identifier that partitions the sets of accounts that can transact with each other."
+  ledger: UInt8!
+  "The date and time that the accounting transfer was created."
+  createdAt: String!
+  "The state of the accounting transfer."
+  state: TransferState!
+  "The date and time that the accounting transfer will expire."
+  expiresAt: String
+}
+
+enum TransferState {
+  "The accounting transfer is pending"
+  PENDING
+  "The accounting transfer is posted"
+  POSTED
+  "The accounting transfer is voided"
+  VOIDED
+}
+
+enum TransferType {
+  "Represents a deposit transfer."
+  DEPOSIT
+  "Represents a withdrawal transfer."
+  WITHDRAWAL
+  "Represents a generic transfer within Rafiki."
+  TRANSFER
+}
+
+type QuoteConnection {
+  "Pagination information for quotes."
+  pageInfo: PageInfo!
+  "A list of quote edges, containing quote nodes and cursors for pagination."
+  edges: [QuoteEdge!]!
+}
+
+type QuoteEdge {
+  "A quote node in the list."
+  node: Quote!
+  "A cursor for paginating through the quotes."
+  cursor: String!
+}
+
+type Quote {
+  "Unique identifier of the quote."
+  id: ID!
+  "Unique identifier of the tenant under which the quote was created."
+  tenantId: ID!
+  "Unique identifier of the wallet address under which the quote was created."
+  walletAddressId: ID!
+  "Wallet address URL of the receiver."
+  receiver: String!
+  "Amount to send (fixed send)."
+  debitAmount: Amount!
+  "Amount to receive (fixed receive)."
+  receiveAmount: Amount!
+  "The date and time that the quote was created."
+  createdAt: String!
+  "The date and time that the quote will expire."
+  expiresAt: String!
+  "Estimated exchange rate for this quote."
+  estimatedExchangeRate: Float
+}
+
+input AmountInput {
+  "Numerical value."
+  value: UInt64!
+  "Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets)."
+  assetCode: String!
+  "Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit."
+  assetScale: UInt8!
+}
+
+input CreateQuoteInput {
+  "Unique identifier of the wallet address under which the quote will be created."
+  walletAddressId: String!
+  "Amount to send (fixed send)."
+  debitAmount: AmountInput
+  "Amount to receive (fixed receive)."
+  receiveAmount: AmountInput
+  "Wallet address URL of the receiver."
+  receiver: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String
+}
+
+type QuoteResponse {
+  "The quote object returned in the response."
+  quote: Quote
+}
+
+input CreateOutgoingPaymentInput {
+  "Unique identifier of the wallet address under which the outgoing payment will be created."
+  walletAddressId: String!
+  "Unique identifier of the corresponding quote for that outgoing payment."
+  quoteId: String!
+  "Additional metadata associated with the outgoing payment."
+  metadata: JSONObject
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String
+}
+
+input CancelOutgoingPaymentInput {
+  "Unique identifier of the outgoing payment to cancel."
+  id: ID!
+  "Reason why this outgoing payment has been canceled. This value will be publicly visible in the metadata field if this outgoing payment is requested through Open Payments."
+  reason: String
+}
+
+input CreateOutgoingPaymentFromIncomingPaymentInput {
+  "Unique identifier of the wallet address under which the outgoing payment will be created."
+  walletAddressId: String!
+  "Incoming payment URL to create the outgoing payment from."
+  incomingPayment: String!
+  "Amount to send (fixed send)."
+  debitAmount: AmountInput!
+  "Additional metadata associated with the outgoing payment."
+  metadata: JSONObject
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String
+}
+
+input CreateIncomingPaymentInput {
+  "Unique identifier of the wallet address under which the incoming payment will be created."
+  walletAddressId: String!
+  "Date and time that the incoming payment will expire."
+  expiresAt: String
+  "Additional metadata associated with the incoming payment."
+  metadata: JSONObject
+  "Maximum amount to be received for this incoming payment."
+  incomingAmount: AmountInput
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String
+}
+
+input CreateReceiverInput {
+  "Receiving wallet address URL."
+  walletAddressUrl: String!
+  "Date and time that the incoming payment expires for the receiver."
+  expiresAt: String
+  "Maximum amount to be received for this incoming payment."
+  incomingAmount: AmountInput
+  "Additional metadata associated with the incoming payment."
+  metadata: JSONObject
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String
+}
+
+input UpdateIncomingPaymentInput {
+  "Unique identifier of the incoming payment to update."
+  id: ID!
+  "The new metadata object to save for the incoming payment. It will overwrite any existing metadata."
+  metadata: JSONObject!
+}
+
+type OutgoingPaymentResponse {
+  "The outgoing payment object returned in the response."
+  payment: OutgoingPayment
+}
+
+type IncomingPaymentResponse {
+  "The incoming payment object returned in the response."
+  payment: IncomingPayment
+}
+
+type CreateReceiverResponse {
+  "The receiver object returned in the response."
+  receiver: Receiver
+}
+
+input CreateWalletAddressInput {
+  "Unique identifier of the tenant associated with the wallet address. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature."
+  tenantId: ID
+  "Unique identifier of the asset associated with the wallet address. This cannot be changed."
+  assetId: String!
+  "Wallet address. This cannot be changed."
+  address: String!
+  "Public name associated with the wallet address. This is visible to anyone with the wallet address URL."
+  publicName: String
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String
+  "Additional properties associated with the wallet address."
+  additionalProperties: [AdditionalPropertyInput!]
+}
+
+input AdditionalPropertyInput {
+  "Key for the additional property."
+  key: String!
+  "Value for the additional property."
+  value: String!
+  "Indicates whether the property is visible in Open Payments wallet address requests."
+  visibleInOpenPayments: Boolean!
+}
+
+input UpdateWalletAddressInput {
+  "Unique identifier of the wallet address to update. This cannot be changed."
+  id: ID!
+  "New public name for the wallet address. This is visible to anyone with the wallet address URL."
+  publicName: String
+  "New status to set the wallet address to, either active or inactive."
+  status: WalletAddressStatus
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String
+  "Additional properties associated with this wallet address."
+  additionalProperties: [AdditionalPropertyInput!]
+}
+
+enum Alg {
+  "EdDSA cryptographic algorithm."
+  EdDSA
+}
+
+enum Kty {
+  "Octet Key Pair (OKP) key type."
+  OKP
+}
+
+enum Crv {
+  "Elliptic curve `Ed25519`, used in EdDSA."
+  Ed25519
+}
+
+type Jwk {
+  "Unique identifier for the key."
+  kid: String!
+  "Base64 url-encoded public key."
+  x: String!
+  "Cryptographic algorithm used with the key. The only allowed value is `EdDSA`."
+  alg: Alg!
+  "Key type. The only allowed value is `OKP`."
+  kty: Kty!
+  "Cryptographic curve that the key pair is derived from. The only allowed value is `Ed25519`."
+  crv: Crv!
+}
+
+type WalletAddressKey implements Model {
+  "Unique internal identifier for the wallet address key."
+  id: ID!
+  "Unique identifier of the wallet address to associate with the key."
+  walletAddressId: ID!
+  "The public key object in JSON Web Key (JWK) format."
+  jwk: Jwk!
+  "Indicator of whether the key has been revoked."
+  revoked: Boolean!
+  "The date and time that this wallet address key was created."
+  createdAt: String!
+}
+
+input TriggerWalletAddressEventsInput {
+  "Maximum number of events being triggered (n)."
+  limit: Int!
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String
+}
+
+type WalletAddressWithdrawal {
+  "Unique identifier for the withdrawal."
+  id: ID!
+  "Amount to be withdrawn."
+  amount: UInt64!
+  "Details about the wallet address from which the withdrawal is made."
+  walletAddress: WalletAddress!
+}
+
+type WebhookEvent implements Model {
+  "Unique identifier of the webhook event."
+  id: ID!
+  "Tenant of the webhook event."
+  tenantId: ID!
+  "Type of webhook event."
+  type: String!
+  "Stringified JSON data for the webhook event."
+  data: JSONObject!
+  "The date and time when the webhook event was created."
+  createdAt: String!
+}
+
+type WebhookEventsConnection {
+  "Pagination information for webhook events."
+  pageInfo: PageInfo!
+  "A list of webhook event edges, containing event nodes and cursors for pagination."
+  edges: [WebhookEventsEdge!]!
+}
+
+type WebhookEventsEdge {
+  "A webhook event node in the list."
+  node: WebhookEvent!
+  "A cursor for paginating through the webhook events."
+  cursor: String!
+}
+
+enum FeeType {
+  "The sender is responsible for paying the fees."
+  SENDING
+  "The receiver is responsible for paying the fees."
+  RECEIVING
+}
+
+type Fee implements Model {
+  "Unique identifier of the fee."
+  id: ID!
+  "Unique identifier of the asset associated with the fee."
+  assetId: ID!
+  "Type of fee, either sending or receiving."
+  type: FeeType!
+  "Amount of the flat, fixed fee to charge."
+  fixed: UInt64!
+  "Basis points fee is a variable fee charged based on the total amount. Should be between 0 and 10000 (inclusive). 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100%."
+  basisPoints: Int!
+  "The date and time that this fee was created."
+  createdAt: String!
+}
+
+input SetFeeInput {
+  "Unique identifier of the asset id to add the fees to."
+  assetId: ID!
+  "Type of fee, either sending or receiving."
+  type: FeeType!
+  "Fee values"
+  fee: FeeDetails!
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
+  idempotencyKey: String
+}
+
+input FeeDetails {
+  "Amount of the flat, fixed fee to charge."
+  fixed: UInt64!
+  "Basis points fee is a variable fee charged based on the total amount. Should be between 0 and 10000 (inclusive). 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100%."
+  basisPoints: Int!
+}
+
+type FeesConnection {
+  "Pagination information for fees."
+  pageInfo: PageInfo!
+  "A list of fee edges, containing fee nodes and cursors for pagination."
+  edges: [FeeEdge!]!
+}
+
+type FeeEdge {
+  "A fee node in the list."
+  node: Fee!
+  "A cursor for paginating through the fees."
+  cursor: String!
+}
+
+input WebhookEventFilter {
+  "Filter for webhook events based on their type."
+  type: FilterString
+}
+
+input FilterString {
+  "Array of strings to filter by."
+  in: [String!]!
+}
+
+interface Model {
+  "Unique identifier for the entity."
+  id: ID!
+  "The date and time that the entity was created."
+  createdAt: String!
+}
+
+type CreateWalletAddressMutationResponse {
+  "The newly created wallet address."
+  walletAddress: WalletAddress
+}
+
+type UpdateWalletAddressMutationResponse {
+  "The updated wallet address."
+  walletAddress: WalletAddress
+}
+
+type TriggerWalletAddressEventsMutationResponse {
+  "The number of events that were triggered."
+  count: Int
+}
+
+type AssetMutationResponse {
+  "The asset affected by the mutation."
+  asset: Asset
+}
+
+type DeleteAssetMutationResponse {
+  "The asset that was deleted."
+  asset: Asset
+}
+
+type CreatePeerMutationResponse {
+  "The peer created by the mutation."
+  peer: Peer
+}
+
+type CreateOrUpdatePeerByUrlMutationResponse {
+  "The peer created or updated based on a URL."
+  peer: Peer
+}
+
+type UpdatePeerMutationResponse {
+  "The peer that was updated."
+  peer: Peer
+}
+
+type DeletePeerMutationResponse {
+  "Indicates whether the peer deletion was successful."
+  success: Boolean!
+}
+
+type LiquidityMutationResponse {
+  "Indicates whether the liquidity operation was successful."
+  success: Boolean!
+}
+
+type WalletAddressWithdrawalMutationResponse {
+  "The wallet address withdrawal that was processed."
+  withdrawal: WalletAddressWithdrawal
+}
+
+type CreateWalletAddressKeyMutationResponse {
+  "The wallet address key that was created."
+  walletAddressKey: WalletAddressKey
+}
+
+type CreateTenantSettingsMutationResponse {
+  "New tenant settings."
+  settings: [TenantSetting!]!
+}
+
+type RevokeWalletAddressKeyMutationResponse {
+  "The wallet address key that was revoked."
+  walletAddressKey: WalletAddressKey
+}
+
+type SetFeeResponse {
+  "The fee that was set."
+  fee: Fee
+}
+
+type ApproveIncomingPaymentResponse {
+  "The incoming payment that was approved."
+  payment: IncomingPayment
+}
+
+type CancelIncomingPaymentResponse {
+  "The incoming payment that was canceled."
+  payment: IncomingPayment
+}
+
+type Tenant implements Model {
+  "Unique identifier of the tenant."
+  id: ID!
+  "Contact email of the tenant owner."
+  email: String
+  "Secret used to secure requests made for this tenant."
+  apiSecret: String!
+  "URL of the tenant's identity provider's consent screen."
+  idpConsentUrl: String
+  "Secret used to secure requests from the tenant's identity provider."
+  idpSecret: String
+  "Public name for the tenant."
+  publicName: String
+  "The date and time that this tenant was created."
+  createdAt: String!
+  "The date and time that this tenant was deleted."
+  deletedAt: String
+  "List of settings for the tenant."
+  settings: [TenantSetting!]!
+}
+
+type TenantsConnection {
+  "Information to aid in pagination."
+  pageInfo: PageInfo!
+  "A list of edges representing tenants and cursors for pagination."
+  edges: [TenantEdge!]!
+}
+
+type TenantEdge {
+  "A tenant node in the list."
+  node: Tenant!
+  "A cursor for paginating through the tenants."
+  cursor: String!
+}
+
+type TenantSetting {
+  "Key for this setting."
+  key: String!
+  "Value of a setting for this key."
+  value: String!
+}
+
+input CreateTenantInput {
+  "Unique identifier of the tenant. Must be compliant with uuid v4. Will be generated automatically if not provided."
+  id: ID
+  "Contact email of the tenant owner."
+  email: String
+  "Secret used to secure requests made for this tenant."
+  apiSecret: String!
+  "URL of the tenant's identity provider's consent screen."
+  idpConsentUrl: String
+  "Secret used to secure requests from the tenant's identity provider."
+  idpSecret: String
+  "Public name for the tenant."
+  publicName: String
+  "Initial settings for tenant."
+  settings: [TenantSettingInput!]
+}
+
+input UpdateTenantInput {
+  "Unique identifier of the tenant."
+  id: ID!
+  "Contact email of the tenant owner."
+  email: String
+  "Secret used to secure requests made for this tenant."
+  apiSecret: String
+  "URL of the tenant's identity provider's consent screen."
+  idpConsentUrl: String
+  "Secret used to secure requests from the tenant's identity provider."
+  idpSecret: String
+  "Public name for the tenant."
+  publicName: String
+}
+
+type TenantMutationResponse {
+  tenant: Tenant!
+}
+
+type DeleteTenantMutationResponse {
+  success: Boolean!
+}
+
+"""
+The `UInt8` scalar type represents unsigned 8-bit whole numeric values, ranging from 0 to 255.
+"""
+scalar UInt8
+
+"""
+The `UInt64` scalar type represents unsigned 64-bit whole numeric values. It is capable of handling values that are larger than the JavaScript `Number` type limit (greater than 2^53).
+"""
+scalar UInt64
+
+"""
+The `JSONObject` scalar type represents JSON objects as specified by the [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf) standard.
+"""
+scalar JSONObject
