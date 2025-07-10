@@ -1,18 +1,17 @@
 import { v4 as uuid } from 'uuid'
 
+import { IocContract } from '@adonisjs/fold'
+import { initIocContainer } from '../'
+import { AppServices } from '../app'
+import { Config } from '../config/app'
+import { createCardPayment, randomCardPayment } from '../tests/cardPayment'
+import { truncateTables } from '../tests/tableManager'
+import { CardPayment } from './model'
 import {
   AuditLogService,
   createAuditLogService,
   UpdateCardPaymentOptions
 } from './service'
-import { CardPayment } from './model'
-import { createTestApp, TestContainer } from '../tests/app'
-import { createCardPayment, randomCardPayment } from '../tests/cardPayment'
-import { truncateTables } from '../tests/tableManager'
-import { Config } from '../config/app'
-import { IocContract } from '@adonisjs/fold'
-import { initIocContainer } from '../'
-import { AppServices } from '../app'
 
 describe('AuditLogService', (): void => {
   let deps: IocContract<AppServices>
