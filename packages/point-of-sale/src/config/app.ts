@@ -36,5 +36,8 @@ export const Config = {
   trustProxy: envBool('TRUST_PROXY', false),
   enableManualMigrations: envBool('ENABLE_MANUAl_MIGRATIONS', false),
   authAdminApiUrl: envString('AUTH_ADMIN_API_URL'),
-  dbSchema: undefined as string | undefined
+  dbSchema: undefined as string | undefined,
+  tenantId: envString("TENANT_ID"),
+  tenantSecret: envString('TENANT_SECRET'),
+  tenantSignatureVersion: envString('TENANT_SIGNATURE_VERSION'),
 }

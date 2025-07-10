@@ -4,6 +4,7 @@ import { IAppConfig } from "../config/app";
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 import { AmountInput, CreateIncomingPaymentInput, type Mutation } from "./generated/graphql";
 import { FnWithDeps } from "../shared/types";
+import { v4 } from "uuid";
 
 type ServiceDependencies = {
   logger: Logger,
@@ -36,8 +37,8 @@ const createIncomingPayment: FnWithDeps<ServiceDependencies, GraphQLService["cre
     mutation: CREATE_INCOMING_PAYMENT,
     variables: {
       walletAddressId,
-      incomingAmount
-      // ? idempotency key ?
+      incomingAmount,
+      idempotencyKey: v4()
     }
   });
 

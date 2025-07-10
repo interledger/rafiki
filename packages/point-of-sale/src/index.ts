@@ -8,8 +8,11 @@ import { ApolloClient, ApolloLink, createHttpLink, InMemoryCache } from '@apollo
 import { onError } from '@apollo/client/link/error'
 import { setContext } from '@apollo/client/link/context'
 import { print } from 'graphql'
+import { canonicalize } from 'json-canonicalize'
+import { createHmac } from 'crypto'
 import { createMerchantService } from './merchant/service'
 import { createMerchantRoutes } from './merchant/routes'
+import { createGraphQLService } from './graphql/service'
 
 export function initIocContainer(
   config: typeof Config
@@ -91,48 +94,51 @@ export function initIocContainer(
       uri: config.authAdminApiUrl
     })
 
-    // const errorLink = onError(({ graphQLErrors }) => {
-    //   if (graphQLErrors) {
-    //     logger.error(graphQLErrors)
-    //     graphQLErrors.map(({ extensions }) => {
-    //       if (extensions && extensions.code === 'UNAUTHENTICATED') {
-    //         logger.error('UNAUTHENTICATED')
-    //       }
+    const errorLink = onError(({ graphQLErrors }) => {
+      if (graphQLErrors) {
+        logger.error(graphQLErrors)
+        graphQLErrors.map(({ extensions }) => {
+          if (extensions && extensions.code === 'UNAUTHENTICATED') {
+            logger.error('UNAUTHENTICATED')
+          }
 
-    //       if (extensions && extensions.code === 'FORBIDDEN') {
-    //         logger.error('FORBIDDEN')
-    //       }
-    //     })
-    //   }
-    // })
+          if (extensions && extensions.code === 'FORBIDDEN') {
+            logger.error('FORBIDDEN')
+          }
+        })
+      }
+    })
 
-    // const authLink = setContext((request, { headers }) => {
-    //   if (!config.authAdminApiSecret || !config.authAdminApiSignatureVersion)
-    //     return { headers }
-    //   const timestamp = Date.now()
-    //   const version = config.authAdminApiSignatureVersion
+    const authLink = setContext((request, { headers }) => {
+      if (!config.tenantSecret || !config.tenantSignatureVersion)
+        return { headers }
+      const timestamp = Date.now()
+      const version = config.tenantSignatureVersion
 
-    //   const { query, variables, operationName } = request
-    //   const formattedRequest = {
-    //     variables,
-    //     operationName,
-    //     query: print(query)
-    //   }
+      const { query, variables, operationName } = request
+      const formattedRequest = {
+        variables,
+        operationName,
+        query: print(query)
+      }
 
-    //   const payload = `${timestamp}.${canonicalize(formattedRequest)}`
-    //   const hmac = createHmac('sha256', config.authAdminApiSecret)
-    //   hmac.update(payload)
-    //   const digest = hmac.digest('hex')
+      const payload = `${timestamp}.${canonicalize(formattedRequest)}`
+      const hmac = createHmac('sha256', config.tenantSecret)
+      hmac.update(payload)
+      const digest = hmac.digest('hex')
 
-    //   return {
-    //     headers: {
-    //       ...headers,
-    //       signature: `t=${timestamp}, v${version}=${digest}`
-    //     }
-    //   }
-    // })
+      const link = {
+        headers: {
+          ...headers,
+          "tenant-id": `${config.tenantId}`,
+          signature: `t=${timestamp}, v${version}=${digest}`
+        }
+      }
 
-    const link = ApolloLink.from([httpLink])
+      return link;
+    })
+
+    const link = ApolloLink.from([errorLink, authLink, httpLink])
 
     const client = new ApolloClient({
       cache: new InMemoryCache({}),
@@ -151,6 +157,14 @@ export function initIocContainer(
     })
 
     return client
+  })
+
+  container.singleton('paymentClient', async (deps) => {   
+    return createGraphQLService({
+      apolloClient: await deps.use("apolloClient"),
+      logger: await deps.use("logger"),
+      config: await deps.use("config")
+    })
   })
 
   return container
