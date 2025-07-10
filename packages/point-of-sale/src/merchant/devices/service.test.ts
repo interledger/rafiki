@@ -1,0 +1,129 @@
+import { IocContract } from '@adonisjs/fold'
+import { AppServices } from '../../app'
+import { Config } from '../../config/app'
+import { CreateOptions, PosDeviceService } from './service'
+import { initIocContainer } from '../..'
+import { PosDeviceError, isPosDeviceError } from './errors'
+import { v4 as uuid } from 'uuid'
+import { TestContainer, createTestApp } from '../../tests/app'
+import { truncateTables } from '../../tests/tableManager'
+import { MerchantService } from '../service'
+import { DeviceStatus, PosDevice } from './model'
+import assert from 'assert'
+
+describe('POS Device Service', () => {
+  let deps: IocContract<AppServices>
+  let posDeviceService: PosDeviceService
+  let merchantService: MerchantService
+  let appContainer: TestContainer
+
+  beforeAll(async () => {
+    deps = initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+    posDeviceService = await deps.use('posDeviceService')
+    merchantService = await deps.use('merchantService')
+  })
+
+  afterEach(async (): Promise<void> => {
+    await truncateTables(deps)
+  })
+
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+  })
+
+  describe('create', () => {
+    test('device can be created and fetched', async () => {
+      const merchant = await merchantService.create('merchant')
+      const createOptions: CreateOptions = {
+        merchantId: merchant.id,
+        publicKey: 'publicKey',
+        deviceName: 'device',
+        walletAddress: 'walletAddress',
+        algorithm: 'ecdsa-p256-sha256'
+      }
+
+      const device = await posDeviceService.registerDevice(createOptions)
+      assert(!isPosDeviceError(device))
+      expect(device).toMatchObject({
+        merchantId: merchant.id,
+        publicKey: 'publicKey',
+        deviceName: 'device',
+        walletAddress: 'walletAddress',
+        algorithm: 'ecdsa-p256-sha256',
+        keyId: expect.stringMatching(/^pos:device[a-zA-Z0-9-]{6}$/)
+      })
+    })
+
+    test('returns error if merchant does not exist', async () => {
+      const createOptions: CreateOptions = {
+        merchantId: uuid(),
+        publicKey: 'publicKey',
+        deviceName: 'device',
+        walletAddress: 'walletAddress',
+        algorithm: 'ecdsa-p256-sha256'
+      }
+
+      const device = await posDeviceService.registerDevice(createOptions)
+      assert(isPosDeviceError(device))
+      expect(device).toBe(PosDeviceError.UnknownMerchant)
+    })
+  })
+
+  describe('getByKeyId', () => {
+    test('returns device by keyId', async () => {
+      const createdDevice = await createDeviceWithMerchant()
+      const foundDevice = await posDeviceService.getByKeyId(createdDevice.keyId)
+      expect(foundDevice).toBeDefined()
+    })
+
+    test('returns undefined when no device with the given keyId exists', async () => {
+      const foundDevice = await posDeviceService.getByKeyId(uuid())
+      expect(foundDevice).toBeUndefined()
+    })
+  })
+
+  describe('revoke', () => {
+    test('returns device with revoked status', async () => {
+      const createdDevice = await createDeviceWithMerchant()
+      expect(createdDevice).toMatchObject({
+        status: DeviceStatus.Active,
+        deletedAt: null
+      })
+      const revokedDevice = await posDeviceService.revoke(createdDevice.id)
+      assert(!isPosDeviceError(revokedDevice))
+      expect(revokedDevice).toMatchObject({
+        status: DeviceStatus.Revoked,
+        deletedAt: expect.any(Date)
+      })
+
+      // Checking if it was deleted recently
+      assert(revokedDevice.deletedAt)
+      expect(
+        Math.abs(revokedDevice.deletedAt.getTime() - new Date().getTime())
+      ).toBeLessThan(5000)
+    })
+
+    test('returns error when there is no device with the given id', async () => {
+      await createDeviceWithMerchant()
+      const revokedDevice = await posDeviceService.revoke(uuid())
+      assert(isPosDeviceError(revokedDevice))
+      expect(revokedDevice).toBe(PosDeviceError.UnknownPosDevice)
+    })
+  })
+
+  async function createDeviceWithMerchant(): Promise<PosDevice> {
+    const merchant = await merchantService.create('merchant')
+    const createOptions: CreateOptions = {
+      merchantId: merchant.id,
+      publicKey: 'publicKey',
+      deviceName: 'device',
+      walletAddress: 'walletAddress',
+      algorithm: 'ecdsa-p256-sha256'
+    }
+
+    const device = await posDeviceService.registerDevice(createOptions)
+    assert(!isPosDeviceError(device))
+    return device
+  }
+})
