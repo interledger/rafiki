@@ -18,7 +18,7 @@ describe('POS Device Service', () => {
   let appContainer: TestContainer
 
   beforeAll(async () => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer({ ...Config })
     appContainer = await createTestApp(deps)
     posDeviceService = await deps.use('posDeviceService')
     merchantService = await deps.use('merchantService')

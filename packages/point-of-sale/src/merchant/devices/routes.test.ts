@@ -1,9 +1,14 @@
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { TestContainer, createTestApp } from '../../tests/app'
-import { Config, IAppConfig } from '../../config/app'
+import { Config } from '../../config/app'
 import { initIocContainer } from '../..'
-import { CreateBody, PosDeviceRoutes, RegisterDeviceContext } from './routes'
+import {
+  CreateBody,
+  PosDeviceRoutes,
+  RegisterDeviceContext,
+  createPosDeviceRoutes
+} from './routes'
 import { truncateTables } from '../../tests/tableManager'
 import { createContext } from '../../tests/context'
 import { faker } from '@faker-js/faker'
@@ -14,10 +19,8 @@ import { PosDeviceError, errorToMessage } from './errors'
 describe('POS Device Routes', () => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let config: IAppConfig
   let posDeviceRoutes: PosDeviceRoutes
   let merchantService: MerchantService
-  let merchantId: string
 
   const CREATE_BODY: CreateBody = {
     publicKey: 'public-key',
@@ -27,16 +30,15 @@ describe('POS Device Routes', () => {
   }
 
   beforeAll(async (): Promise<void> => {
-    config = Config
-    deps = initIocContainer(config)
+    deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    config = await deps.use('config')
-    posDeviceRoutes = await deps.use('posDeviceRoutes')
     merchantService = await deps.use('merchantService')
-  })
-
-  beforeEach(async () => {
-    merchantId = (await createMerchant()).id
+    const logger = await deps.use('logger')
+    const posDeviceService = await deps.use('posDeviceService')
+    posDeviceRoutes = createPosDeviceRoutes({
+      logger,
+      posDeviceService
+    })
   })
 
   afterEach(async (): Promise<void> => {
@@ -49,8 +51,15 @@ describe('POS Device Routes', () => {
 
   describe('create', () => {
     test('returns the keyId and algorithm of the device on success', async () => {
-      const ctx = createContextWithMerchantId()
-
+      const { id: merchantId } = await merchantService.create('Merchant')
+      const ctx = createContext<RegisterDeviceContext>({
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json'
+        }
+      })
+      ctx.request.body = CREATE_BODY
+      ctx.params.merchantId = merchantId
       await posDeviceRoutes.register(ctx)
 
       expect(ctx.response.status).toBe(201)
@@ -61,15 +70,6 @@ describe('POS Device Routes', () => {
     })
 
     test('throws error when merchant does not exist', async () => {
-      const ctx = createContextWithMerchantId(uuid())
-
-      await expect(posDeviceRoutes.register(ctx)).rejects.toMatchObject({
-        status: 400,
-        message: errorToMessage[PosDeviceError.UnknownMerchant]
-      })
-    })
-
-    function createContextWithMerchantId(withMerchantId?: string) {
       const ctx = createContext<RegisterDeviceContext>({
         headers: {
           Accept: 'application/json',
@@ -77,12 +77,13 @@ describe('POS Device Routes', () => {
         }
       })
       ctx.request.body = CREATE_BODY
-      ctx.params.merchantId = withMerchantId ?? merchantId
-      return ctx
-    }
-  })
+      ctx.params.merchantId = uuid()
+      await expect(posDeviceRoutes.register(ctx)).rejects.toMatchObject({
+        status: 400,
+        message: errorToMessage[PosDeviceError.UnknownMerchant]
+      })
+    })
 
-  async function createMerchant(name?: string) {
-    return await merchantService.create(name ?? 'Merchant')
-  }
+    function createContextWithMerchantId(merchantId: string) {}
+  })
 })

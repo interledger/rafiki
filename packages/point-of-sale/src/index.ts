@@ -78,10 +78,12 @@ export function initIocContainer(
   container.singleton(
     'posDeviceService',
     async (deps: IocContract<AppServices>) => {
-      const config = await deps.use('config')
       const logger = await deps.use('logger')
       const knex = await deps.use('knex')
-      return await createPosDeviceService({ config, logger, knex })
+      return await createPosDeviceService({
+        logger,
+        knex
+      })
     }
   )
 
