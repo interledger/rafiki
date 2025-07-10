@@ -1,7 +1,7 @@
-import { createGraphQLService } from './service'
+import { createPaymentService } from './service'
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 import { Logger } from 'pino'
-import { AmountInput, Mutation } from './generated/graphql'
+import { AmountInput } from '../graphql/generated/graphql'
 import { IAppConfig } from '../config/app'
 
 const mockLogger = {
@@ -21,7 +21,7 @@ const deps = {
   apolloClient: mockApolloClient
 }
 
-describe('createGraphQLService', () => {
+describe('createPaymentService', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
@@ -35,7 +35,7 @@ describe('createGraphQLService', () => {
         }
       }
     })
-    const service = createGraphQLService(deps)
+    const service = createPaymentService(deps)
     const walletAddressId = 'wallet-123'
     const incomingAmount: AmountInput = { value: 1000n, assetCode: 'USD', assetScale: 2 }
     const result = await service.createIncomingPayment(walletAddressId, incomingAmount)
@@ -45,7 +45,7 @@ describe('createGraphQLService', () => {
 
   it('should throw and log error if payment creation fails', async () => {
     mockApolloClient.mutate = jest.fn().mockResolvedValue({ data: { payment: { client: undefined } } })
-    const service = createGraphQLService(deps)
+    const service = createPaymentService(deps)
     const walletAddressId = 'wallet-123'
     const incomingAmount: AmountInput = { value: 1000n, assetCode: 'USD', assetScale: 2 }
     await expect(service.createIncomingPayment(walletAddressId, incomingAmount)).rejects.toThrow(

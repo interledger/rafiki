@@ -12,7 +12,7 @@ import { canonicalize } from 'json-canonicalize'
 import { createHmac } from 'crypto'
 import { createMerchantService } from './merchant/service'
 import { createMerchantRoutes } from './merchant/routes'
-import { createGraphQLService } from './graphql/service'
+import { createPaymentService } from './payments/service'
 
 export function initIocContainer(
   config: typeof Config
@@ -160,7 +160,7 @@ export function initIocContainer(
   })
 
   container.singleton('paymentClient', async (deps) => {   
-    return createGraphQLService({
+    return createPaymentService({
       apolloClient: await deps.use("apolloClient"),
       logger: await deps.use("logger"),
       config: await deps.use("config")
