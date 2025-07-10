@@ -270,7 +270,7 @@ async function createOutgoingPayment(
         const quoteOrError = await deps.quoteService.create({
           receiver: incomingPayment,
           debitAmount,
-          method: 'ilp',
+          method: 'sepa',
           walletAddressId
         })
         stopTimerQuote()
