@@ -4,7 +4,7 @@ import { Deferred } from '../utils/deferred'
 import {
   PaymentEventBody,
   PaymentBody,
-  PaymentEventEnum,
+  PaymentEventResultEnum,
   PaymentContext,
   PaymentEventContext
 } from './types'
@@ -17,32 +17,35 @@ import { PaymentRoutes } from './routes'
 import { createContext } from '../tests/context'
 
 describe('PaymentRoutes', () => {
-  const url = '/payment'
   const method = 'POST'
 
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let routes: PaymentRoutes
 
+  const uuid = '123e4567-e89b-12d3-a456-426614174000'
+  const uri = 'https://example.com/wallet/123'
+  const dateTime = '2024-01-01T00:00:00Z'
+
   const paymentFixture: PaymentBody = {
-    requestId: 'foo',
+    requestId: uuid,
     card: {
-      walletAddress: 'wallet123',
+      walletAddress: uri,
       transactionCounter: 1,
-      expiry: '2025-12-31'
+      expiry: '12/25'
     },
-    merchantWalletAddress: 'merchant456',
-    incomingPaymentUrl: 'https://example.com/incoming',
-    date: '2024-01-01T00:00:00Z',
+    merchantWalletAddress: uri,
+    incomingPaymentUrl: uri,
+    date: dateTime,
     signature: 'sig',
     terminalCert: 'cert',
-    terminalId: 'terminal789'
+    terminalId: uuid
   }
 
   const paymentEventFixture: PaymentEventBody = {
-    requestId: 'foo',
-    outgoingPaymentId: 'bar',
-    result: { code: PaymentEventEnum.Completed }
+    requestId: uuid,
+    outgoingPaymentId: uuid,
+    result: { code: PaymentEventResultEnum.Completed }
   }
 
   beforeAll(async () => {
@@ -56,6 +59,8 @@ describe('PaymentRoutes', () => {
   })
 
   describe('POST /payment', () => {
+    const url = '/payment'
+
     test('returns 201 and result on success', async () => {
       const ctx: PaymentContext = createContext<PaymentContext>(
         { method, url },
@@ -116,7 +121,7 @@ describe('PaymentRoutes', () => {
       const paymentService = await deps.use('paymentService')
       jest.spyOn(paymentService, 'create').mockResolvedValue({
         ...paymentEventFixture,
-        result: { code: PaymentEventEnum.CardExpired }
+        result: { code: PaymentEventResultEnum.CardExpired }
       })
       await expect(routes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(401)
@@ -134,7 +139,7 @@ describe('PaymentRoutes', () => {
       const paymentService = await deps.use('paymentService')
       jest.spyOn(paymentService, 'create').mockResolvedValue({
         ...paymentEventFixture,
-        result: { code: PaymentEventEnum.InvalidSignature }
+        result: { code: PaymentEventResultEnum.InvalidSignature }
       })
       await expect(routes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(401)
@@ -143,6 +148,8 @@ describe('PaymentRoutes', () => {
   })
 
   describe('POST /payment-event', () => {
+    const url = '/payment-event'
+
     test('returns 202 on paymentEvent with known requestId', async () => {
       const ctx: PaymentEventContext = createContext<PaymentEventContext>(
         { method, url },
@@ -153,7 +160,7 @@ describe('PaymentRoutes', () => {
 
       const deferred = new Deferred<PaymentEventBody>()
       const resolveSpy = jest.spyOn(deferred, 'resolve')
-      paymentWaitMap.set('foo', deferred)
+      paymentWaitMap.set(uuid, deferred)
       await expect(routes.paymentEvent(ctx)).resolves.toBeUndefined()
       expect(resolveSpy).toHaveBeenCalledWith(ctx.request.body)
       expect(ctx.status).toBe(202)
@@ -165,7 +172,10 @@ describe('PaymentRoutes', () => {
         {},
         deps
       )
-      ctx.request.body = { ...paymentEventFixture, requestId: 'bar' }
+      ctx.request.body = {
+        ...paymentEventFixture,
+        requestId: 'bar-uuid-0000-0000-0000-000000000000'
+      }
 
       await expect(routes.paymentEvent(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(404)

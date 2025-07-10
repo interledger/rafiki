@@ -1,11 +1,15 @@
 import { createPaymentService, PaymentTimeoutError } from './service'
 import { paymentWaitMap } from './wait-map'
-import { PaymentEventEnum, PaymentBody } from './types'
+import { PaymentEventResultEnum, PaymentBody } from './types'
 import { initIocContainer } from '../index'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
 import { AppServices } from '../app'
 import { IocContract } from '@adonisjs/fold'
+
+const uuid = '123e4567-e89b-12d3-a456-426614174000'
+const uri = 'https://example.com/wallet/123'
+const dateTime = '2024-01-01T00:00:00Z'
 
 describe('PaymentService', () => {
   let deps: IocContract<AppServices>
@@ -13,18 +17,18 @@ describe('PaymentService', () => {
   let service: Awaited<ReturnType<typeof createPaymentService>>
 
   const paymentFixture: PaymentBody = {
-    requestId: 'foo',
+    requestId: uuid,
     card: {
-      walletAddress: 'wallet123',
+      walletAddress: uri,
       transactionCounter: 1,
-      expiry: '2025-12-31'
+      expiry: '12/25'
     },
-    merchantWalletAddress: 'merchant456',
-    incomingPaymentUrl: 'https://example.com/incoming',
-    date: '2024-01-01T00:00:00Z',
+    merchantWalletAddress: uri,
+    incomingPaymentUrl: uri,
+    date: dateTime,
     signature: 'sig',
     terminalCert: 'cert',
-    terminalId: 'terminal789'
+    terminalId: uuid
   }
 
   beforeAll(async () => {
@@ -44,24 +48,27 @@ describe('PaymentService', () => {
   describe('create', () => {
     test('resolves when paymentEvent is received', async () => {
       setTimeout(() => {
-        const d = paymentWaitMap.get('foo')
+        const d = paymentWaitMap.get(uuid)
         d?.resolve({
-          requestId: 'foo',
-          outgoingPaymentId: 'bar',
-          result: { code: PaymentEventEnum.Completed }
+          requestId: uuid,
+          outgoingPaymentId: uuid,
+          result: { code: PaymentEventResultEnum.Completed }
         })
       }, 10)
 
       const result = await service.create(paymentFixture)
       expect(result).toEqual({
-        requestId: 'foo',
-        outgoingPaymentId: 'bar',
-        result: { code: PaymentEventEnum.Completed }
+        requestId: uuid,
+        outgoingPaymentId: uuid,
+        result: { code: PaymentEventResultEnum.Completed }
       })
     })
 
     test('throws PaymentTimeoutError on timeout', async () => {
-      const timeoutFixture = { ...paymentFixture, requestId: 'timeout' }
+      const timeoutFixture = {
+        ...paymentFixture,
+        requestId: 'timeout-uuid-0000-0000-0000-000000000000'
+      }
       await expect(service.create(timeoutFixture)).rejects.toThrow(
         PaymentTimeoutError
       )

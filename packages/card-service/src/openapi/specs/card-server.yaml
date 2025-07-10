@@ -25,6 +25,7 @@ paths:
               properties:
                 requestId:
                   type: string
+                  format: uuid
                 card:
                   type: object
                   required:
@@ -34,22 +35,30 @@ paths:
                   properties:
                     walletAddress:
                       type: string
+                      format: uri
                     transactionCounter:
                       type: integer
                     expiry:
                       type: string
+                      pattern: '^(0[1-9]|1[0-2])\/\d{2,4}$'
+                      example: '12/25'
+                      description: 'Card expiry in MM/YY or MM/YYYY format'
                 merchantWalletAddress:
                   type: string
+                  format: uri
                 incomingPaymentUrl:
                   type: string
+                  format: uri
                 date:
                   type: string
+                  format: date-time
                 signature:
                   type: string
                 terminalCert:
                   type: string
                 terminalId:
                   type: string
+                  format: uuid
       responses:
         '201':
           description: Payment request accepted
@@ -58,10 +67,16 @@ paths:
               schema:
                 type: object
                 properties:
-                  ok:
-                    type: boolean
+                  requestId:
+                    type: string
+                  result:
+                    type: string
+                    enum:
+                      - approved
         '400':
           description: Invalid request
+        '401':
+          description: Card expired or invalid signature
         '500':
           description: Internal server error
   /payment-event:
@@ -81,8 +96,10 @@ paths:
               properties:
                 requestId:
                   type: string
+                  format: uuid
                 outgoingPaymentId:
                   type: string
+                  format: uuid
                 result:
                   type: object
                   required:
