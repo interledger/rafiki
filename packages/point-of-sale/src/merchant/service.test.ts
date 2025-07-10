@@ -36,7 +36,13 @@ describe('Merchant Service', (): void => {
   describe('create', (): void => {
     test('creates a merchant', async (): Promise<void> => {
       const merchant = await merchantService.create('Test merchant')
-      expect(merchant).toEqual({ id: merchant.id, name: 'Test merchant' })
+      expect(merchant).toMatchObject({
+        name: 'Test merchant',
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date)
+      })
+      expect(typeof merchant.id).toBe('string')
+      expect(merchant.deletedAt).toBeUndefined()
     })
   })
 
