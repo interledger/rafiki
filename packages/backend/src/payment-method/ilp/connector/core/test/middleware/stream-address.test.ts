@@ -1,13 +1,9 @@
 import { createILPContext } from '../../utils'
-import {
-  AuthState,
-  ILPContext,
-  ZeroCopyIlpPrepare
-} from '../..'
+import { AuthState, ILPContext, ZeroCopyIlpPrepare } from '../..'
 import { IlpPrepareFactory, RafikiServicesFactory } from '../../factories'
 import {
   StreamState,
-  createStreamAddressMiddleware,
+  createStreamAddressMiddleware
 } from '../../middleware/stream-address'
 import { StreamServer } from '@interledger/stream-receiver'
 

@@ -241,7 +241,8 @@ export class IncomingPayment
   ): OpenPaymentsIncomingPaymentWithPaymentMethod {
     return {
       ...this.toOpenPaymentsType(resourceServerUrl, walletAddress),
-      methods: paymentMethods as any
+      methods:
+        paymentMethods as unknown as OpenPaymentsIncomingPaymentWithPaymentMethod['methods']
     }
   }
 

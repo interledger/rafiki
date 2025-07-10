@@ -34,7 +34,6 @@ export class Receiver {
       : undefined
     const receivedAmount = parseAmount(incomingPayment.receivedAmount)
 
-    
     this.assetCode = incomingPayment.receivedAmount.assetCode
     this.assetScale = incomingPayment.receivedAmount.assetScale
 

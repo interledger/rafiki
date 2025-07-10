@@ -337,11 +337,12 @@ async function createOutgoingPayment(
         const ilpPaymentMethod = receiver.paymentMethods.find(
           (method) => method.type === 'ilp'
         )
-        const peer = ilpPaymentMethod && ilpPaymentMethod.type === 'ilp'
-          ? await deps.peerService.getByDestinationAddress(
-              ilpPaymentMethod.ilpAddress
-            )
-          : undefined
+        const peer =
+          ilpPaymentMethod && ilpPaymentMethod.type === 'ilp'
+            ? await deps.peerService.getByDestinationAddress(
+                ilpPaymentMethod.ilpAddress
+              )
+            : undefined
         stopTimerPeer()
 
         const payment = await OutgoingPayment.transaction(async (trx) => {

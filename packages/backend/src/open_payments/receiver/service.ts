@@ -216,7 +216,7 @@ export async function getLocalIncomingPayment(
   }
 
   const paymentMethods =
-  await deps.paymentMethodProviderService.getPaymentMethods(incomingPayment)
+    await deps.paymentMethodProviderService.getPaymentMethods(incomingPayment)
 
   return incomingPayment.toOpenPaymentsTypeWithMethods(
     deps.config.openPaymentsUrl,

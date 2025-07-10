@@ -248,7 +248,7 @@ export async function sendWebhookEvent(
         const sepaMethod = receiver.paymentMethods?.find(
           (method) => method.type === 'sepa'
         )
-        
+
         if (sepaMethod) {
           paymentMethodType = 'SEPA'
         } else if (ilpMethod) {

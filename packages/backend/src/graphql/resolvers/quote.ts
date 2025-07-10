@@ -3,7 +3,7 @@ import {
   Quote as SchemaQuote,
   WalletAddressResolvers,
   QueryResolvers,
-  ResolversTypes,
+  ResolversTypes
 } from '../generated/graphql'
 import {
   isQuoteError,

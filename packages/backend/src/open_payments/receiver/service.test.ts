@@ -343,7 +343,7 @@ describe('Receiver Service', (): void => {
                 sharedSecret: 'secret'
               }
             ])
-          
+
           const receiver = await receiverService.create({
             walletAddressUrl: walletAddress.url,
             incomingAmount,

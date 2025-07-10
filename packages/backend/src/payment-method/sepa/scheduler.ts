@@ -70,4 +70,4 @@ function stopScheduler(
   } else {
     deps.logger.warn('SEPA scheduler is not running')
   }
-} 
+}

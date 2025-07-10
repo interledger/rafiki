@@ -9,9 +9,7 @@ import {
 } from '../handler/service'
 import { FeeService } from '../../fee/service'
 import { FeeType } from '../../fee/model'
-import {
-  PaymentMethodHandlerError,
-} from '../handler/errors'
+import { PaymentMethodHandlerError } from '../handler/errors'
 import { Transaction } from 'objection'
 import {
   ConvertError,
@@ -32,7 +30,10 @@ export interface SepaFees {
 }
 
 export interface SepaPaymentService extends PaymentMethodService {
-  getSepaDetails(walletAddress: string, paymentMethodType: string): Promise<SepaDetails | undefined>
+  getSepaDetails(
+    walletAddress: string,
+    paymentMethodType: string
+  ): Promise<SepaDetails | undefined>
   getSepaFees(assetCode: string): Promise<SepaFees | undefined>
   refreshFees(): Promise<void>
 }
@@ -51,9 +52,9 @@ export async function createSepaPaymentService({
   axios,
   ratesService
 }: ServiceDependencies): Promise<SepaPaymentService> {
-      const log = logger.child({
-      service: 'SepaPaymentService'
-    })
+  const log = logger.child({
+    service: 'SepaPaymentService'
+  })
 
   const deps: ServiceDependencies = {
     logger: log,
@@ -66,7 +67,8 @@ export async function createSepaPaymentService({
   return {
     getQuote: (quoteOptions, trx) => getQuote(deps, quoteOptions, trx),
     pay: (payOptions) => pay(deps, payOptions),
-    getSepaDetails: (walletAddress, paymentMethodType) => getSepaDetails(deps, walletAddress, paymentMethodType),
+    getSepaDetails: (walletAddress, paymentMethodType) =>
+      getSepaDetails(deps, walletAddress, paymentMethodType),
     getSepaFees: (assetCode) => getSepaFees(deps, assetCode),
     refreshFees: () => refreshFees(deps)
   }
@@ -75,7 +77,7 @@ export async function createSepaPaymentService({
 async function getQuote(
   deps: ServiceDependencies,
   quoteOptions: StartQuoteOptions,
-  trx?: Transaction
+  _trx?: Transaction
 ): Promise<PaymentQuote> {
   const { walletAddress, receiver, debitAmount, receiveAmount } = quoteOptions
 
@@ -201,7 +203,8 @@ async function getQuote(
     receiveAmount: {
       value: finalReceiveAmount,
       assetCode: receiver.incomingAmount?.assetCode || walletAddress.asset.code,
-      assetScale: receiver.incomingAmount?.assetScale || walletAddress.asset.scale
+      assetScale:
+        receiver.incomingAmount?.assetScale || walletAddress.asset.scale
     },
     estimatedExchangeRate: exchangeRate
   }
@@ -211,8 +214,9 @@ async function pay(
   deps: ServiceDependencies,
   payOptions: PayOptions
 ): Promise<void> {
-  const { outgoingPayment, receiver, finalDebitAmount, finalReceiveAmount } = payOptions
-  
+  const { outgoingPayment, receiver, finalDebitAmount, finalReceiveAmount } =
+    payOptions
+
   deps.logger.info(
     {
       outgoingPaymentId: outgoingPayment.id,
@@ -226,7 +230,7 @@ async function pay(
   // TODO In a general implementation:
   // 1. Trigger SEPA payment
   // 2. Update the outgoing payment status based on the SEPA response
-  
+
   // For now, we'll just log the payment and consider it successful since SEPA is an external payment method
 }
 
@@ -275,8 +279,8 @@ async function getSepaDetails(
       }
 
       deps.logger.error(
-        { 
-          walletAddress, 
+        {
+          walletAddress,
           paymentMethodType,
           status: error.response?.status,
           statusText: error.response?.statusText,
@@ -286,8 +290,8 @@ async function getSepaDetails(
       )
     } else {
       deps.logger.error(
-        { 
-          walletAddress, 
+        {
+          walletAddress,
           paymentMethodType,
           errorMessage: error instanceof Error ? error.message : error
         },
@@ -308,14 +312,13 @@ async function getSepaFees(
   // }
 
   try {
-
     //TODO Using hardcoded fee for now
 
     const data = {}
     // const { data }: { data: SepaFees } = await deps.axios.get(
     //   `${deps.config.sepaDetailsUrl}/fees/${assetCode}`
     // )
-    
+
     deps.logger.debug(
       { assetCode, feeStructure: data },
       'Received SEPA fees from external service'
@@ -333,8 +336,8 @@ async function getSepaFees(
       }
 
       deps.logger.error(
-        { 
-          assetCode, 
+        {
+          assetCode,
           status: error.response?.status,
           statusText: error.response?.statusText,
           message: error.message
@@ -343,8 +346,8 @@ async function getSepaFees(
       )
     } else {
       deps.logger.error(
-        { 
-          assetCode, 
+        {
+          assetCode,
           errorMessage: error instanceof Error ? error.message : error
         },
         'Error fetching SEPA fees'
@@ -378,7 +381,7 @@ async function refreshFees(deps: ServiceDependencies): Promise<void> {
       }
 
       deps.logger.error(
-        { 
+        {
           status: error.response?.status,
           statusText: error.response?.statusText,
           message: error.message
@@ -387,11 +390,11 @@ async function refreshFees(deps: ServiceDependencies): Promise<void> {
       )
     } else {
       deps.logger.error(
-        { 
+        {
           errorMessage: error instanceof Error ? error.message : error
         },
         'Error refreshing SEPA fees'
       )
     }
   }
-} 
+}

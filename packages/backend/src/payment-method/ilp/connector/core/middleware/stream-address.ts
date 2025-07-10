@@ -18,7 +18,7 @@ export function createStreamAddressMiddleware(): ILPMiddleware {
         callName: 'createStreamAddressMiddleware:decodePaymentTag'
       }
     )
-    let ilpAddress = ctx.services.config.ilpAddress
+    const ilpAddress = ctx.services.config.ilpAddress
     ctx.state.streamServer = ilpAddress
       ? new StreamServer({
           serverSecret: ctx.services.config.streamSecret,

@@ -148,8 +148,8 @@ describe('Incoming Payment Routes', (): void => {
         })
 
         jest
-        .spyOn(paymentMethodProviderService, 'getPaymentMethods')
-        .mockResolvedValueOnce([])
+          .spyOn(paymentMethodProviderService, 'getPaymentMethods')
+          .mockResolvedValueOnce([])
 
         await expect(incomingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
 

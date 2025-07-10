@@ -51,16 +51,16 @@ describe('Stream Credentials Service', (): void => {
           scale: 2
         }
       }
-     
-        expect(
-          streamCredentialsService.get({ ...args, ilpAddress: 'test.rafiki' })
-            ?.ilpAddress
-        ).not.toEqual(
-          streamCredentialsService.get({
-            ...args,
-            ilpAddress: 'test.rafiki.sub-account'
-          })?.ilpAddress
-        )
+
+      expect(
+        streamCredentialsService.get({ ...args, ilpAddress: 'test.rafiki' })
+          ?.ilpAddress
+      ).not.toEqual(
+        streamCredentialsService.get({
+          ...args,
+          ilpAddress: 'test.rafiki.sub-account'
+        })?.ilpAddress
+      )
     })
   })
 })

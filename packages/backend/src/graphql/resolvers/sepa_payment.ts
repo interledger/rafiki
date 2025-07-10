@@ -1,8 +1,8 @@
+import { ResolversTypes, MutationResolvers } from '../generated/graphql'
 import {
-  ResolversTypes,
-  MutationResolvers
-} from '../generated/graphql'
-import { isIncomingPaymentError, errorToMessage } from '../../open_payments/payment/incoming/errors'
+  isIncomingPaymentError,
+  errorToMessage
+} from '../../open_payments/payment/incoming/errors'
 import { parseAmount } from '../../open_payments/amount'
 import { OutgoingPaymentState } from '../../open_payments/payment/outgoing/model'
 import { ApolloContext } from '../../app'
@@ -15,8 +15,12 @@ export const completeSepaPayment: MutationResolvers<ApolloContext>['completeSepa
     args,
     ctx
   ): Promise<ResolversTypes['CompleteSepaPaymentResponse']> => {
-    const incomingPaymentService = await ctx.container.use('incomingPaymentService')
-    const outgoingPaymentService = await ctx.container.use('outgoingPaymentService')
+    const incomingPaymentService = await ctx.container.use(
+      'incomingPaymentService'
+    )
+    const outgoingPaymentService = await ctx.container.use(
+      'outgoingPaymentService'
+    )
     const logger = await ctx.container.use('logger')
 
     const { paymentId, paymentType, receivedAmount, metadata } = args.input
@@ -39,7 +43,8 @@ export const completeSepaPayment: MutationResolvers<ApolloContext>['completeSepa
 
     if (paymentType === 'incoming') {
       // Handle incoming payment completion (recipient instance)
-      const incomingPaymentOrError = await incomingPaymentService.complete(paymentId)
+      const incomingPaymentOrError =
+        await incomingPaymentService.complete(paymentId)
 
       if (isIncomingPaymentError(incomingPaymentOrError)) {
         logger.error(
@@ -78,8 +83,10 @@ export const completeSepaPayment: MutationResolvers<ApolloContext>['completeSepa
     } else if (paymentType === 'outgoing') {
       // Handle outgoing payment completion (sender instance)
       // Get the outgoing payment first
-      const outgoingPayment = await outgoingPaymentService.get({ id: paymentId })
-      
+      const outgoingPayment = await outgoingPaymentService.get({
+        id: paymentId
+      })
+
       if (!outgoingPayment) {
         logger.error(
           {
@@ -96,7 +103,10 @@ export const completeSepaPayment: MutationResolvers<ApolloContext>['completeSepa
       }
 
       // Check if payment is in a valid state to be completed
-      if (outgoingPayment.state !== OutgoingPaymentState.Sending && outgoingPayment.state !== OutgoingPaymentState.Funding) {
+      if (
+        outgoingPayment.state !== OutgoingPaymentState.Sending &&
+        outgoingPayment.state !== OutgoingPaymentState.Funding
+      ) {
         logger.error(
           {
             paymentId,
@@ -105,18 +115,23 @@ export const completeSepaPayment: MutationResolvers<ApolloContext>['completeSepa
           },
           'Outgoing payment is not in a valid state for completion via GraphQL'
         )
-        throw new GraphQLError(`Outgoing payment is in ${outgoingPayment.state} state and cannot be completed`, {
-          extensions: {
-            code: GraphQLErrorCode.BadUserInput
+        throw new GraphQLError(
+          `Outgoing payment is in ${outgoingPayment.state} state and cannot be completed`,
+          {
+            extensions: {
+              code: GraphQLErrorCode.BadUserInput
+            }
           }
-        })
+        )
       }
 
       await outgoingPayment.$query().patch({
         state: OutgoingPaymentState.Completed
       })
 
-      const updatedOutgoingPayment = await outgoingPaymentService.get({ id: paymentId })
+      const updatedOutgoingPayment = await outgoingPaymentService.get({
+        id: paymentId
+      })
 
       logger.info(
         {
@@ -144,10 +159,13 @@ export const completeSepaPayment: MutationResolvers<ApolloContext>['completeSepa
         },
         'Invalid payment type for SEPA completion via GraphQL'
       )
-      throw new GraphQLError('Invalid payment type. Must be "incoming" or "outgoing"', {
-        extensions: {
-          code: GraphQLErrorCode.BadUserInput
+      throw new GraphQLError(
+        'Invalid payment type. Must be "incoming" or "outgoing"',
+        {
+          extensions: {
+            code: GraphQLErrorCode.BadUserInput
+          }
         }
-      })
+      )
     }
-  } 
+  }

@@ -51,7 +51,7 @@ describe('PaymentMethodProviderService', (): void => {
         assetId: asset.id
       })
       incomingPayment = await createIncomingPayment(deps, {
-        walletAddressId: walletAddress.id,
+        walletAddressId: walletAddress.id
       })
     })
 
@@ -69,7 +69,7 @@ describe('PaymentMethodProviderService', (): void => {
 
       await expect(
         paymentMethodProviderService.getPaymentMethods({
-          ...incomingPayment,
+          ...incomingPayment
         } as IncomingPayment)
       ).resolves.toEqual([
         {
@@ -94,7 +94,6 @@ describe('PaymentMethodProviderService', (): void => {
       )
 
       //TODO for SEPA
-
     })
 
     test('does not return payment methods when failed to generate stream credentials', async (): Promise<void> => {

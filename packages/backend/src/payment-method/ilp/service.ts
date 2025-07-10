@@ -26,7 +26,11 @@ const MAX_INT64 = BigInt('9223372036854775807')
 //TODO Temporary
 function isIlpPaymentMethod(
   method: OpenPaymentsPaymentMethod
-): method is OpenPaymentsPaymentMethod & { type: 'ilp'; ilpAddress: string; sharedSecret: string } {
+): method is OpenPaymentsPaymentMethod & {
+  type: 'ilp'
+  ilpAddress: string
+  sharedSecret: string
+} {
   return method.type === 'ilp'
 }
 
@@ -289,8 +293,7 @@ async function pay(
   deps: ServiceDependencies,
   options: PayOptions
 ): Promise<void> {
-  const { receiver, outgoingPayment, finalDebitAmount, finalReceiveAmount } =
-    options
+  const { outgoingPayment, finalDebitAmount, finalReceiveAmount } = options
 
   if (finalReceiveAmount <= 0n) {
     throw new PaymentMethodHandlerError('Could not start ILP streaming', {

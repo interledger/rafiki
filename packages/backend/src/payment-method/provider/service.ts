@@ -40,7 +40,7 @@ export async function createPaymentMethodProviderService({
   knex,
   config,
   streamCredentialsService,
-  sepaPaymentService,
+  sepaPaymentService
 }: ServiceDependencies): Promise<PaymentMethodProviderService> {
   const log = logger.child({
     service: 'PaymentMethodProvider'
@@ -50,7 +50,7 @@ export async function createPaymentMethodProviderService({
     knex,
     config,
     streamCredentialsService,
-    sepaPaymentService,
+    sepaPaymentService
   }
 
   return {
@@ -72,7 +72,10 @@ async function getPaymentMethods(
   }
 
   // Generate SEPA payment method
-  const sepaPaymentMethod = await generateSepaPaymentMethod(deps, incomingPayment)
+  const sepaPaymentMethod = await generateSepaPaymentMethod(
+    deps,
+    incomingPayment
+  )
   if (sepaPaymentMethod) {
     paymentMethods.push(sepaPaymentMethod)
   }
@@ -118,7 +121,7 @@ async function generateSepaPaymentMethod(
     incomingPayment.walletAddressId,
     'sepa'
   )
-  
+
   if (!sepaDetails) {
     deps.logger.debug(
       {

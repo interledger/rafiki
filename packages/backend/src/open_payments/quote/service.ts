@@ -13,8 +13,7 @@ import {
 } from '../wallet_address/service'
 import {
   PaymentMethodHandlerService,
-  PaymentQuote,
-  PaymentMethod
+  PaymentQuote
 } from '../../payment-method/handler/service'
 import { IAppConfig } from '../../config/app'
 import { FeeService } from '../../fee/service'
@@ -157,9 +156,12 @@ async function createQuote(
     const receiver = await resolveReceiver(deps, options)
     stopTimerReceiver()
 
-    
     // TODO TBD multi tenancy local SEPA between different tenants
-    const paymentMethod = receiver.isLocal ? 'LOCAL' : (options.method === 'sepa' ? 'SEPA' : 'ILP')
+    const paymentMethod = receiver.isLocal
+      ? 'LOCAL'
+      : options.method === 'sepa'
+        ? 'SEPA'
+        : 'ILP'
     const quoteId = uuid()
 
     const stopTimerFee = deps.telemetry.startTimer(
@@ -172,7 +174,7 @@ async function createQuote(
 
     //TODO Specify payment method when querying for fees
     let sendingFee: Fee | undefined
-    if(paymentMethod === 'SEPA') {
+    if (paymentMethod === 'SEPA') {
       // For SEPA, create a zero-fee object that satisfies the Fee interface
       sendingFee = {
         id: 'sepa-zero-fee',
@@ -181,7 +183,7 @@ async function createQuote(
         fixedFee: 0n,
         basisPointFee: 0,
         asset: walletAddress.asset,
-        calculate: (principal: bigint) => 0n,
+        calculate: (_principal: bigint) => 0n,
         createdAt: new Date(),
         updatedAt: new Date()
       } as Fee
@@ -190,7 +192,7 @@ async function createQuote(
         walletAddress.assetId,
         FeeType.Sending
       )
-    } 
+    }
 
     stopTimerFee()
 
