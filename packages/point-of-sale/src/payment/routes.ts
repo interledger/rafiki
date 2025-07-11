@@ -42,11 +42,11 @@ function payment(
   deps: ServiceDependencies,
   ctx: PaymentContext
 ): Promise<void> {
-  // 1. Call Rafiki BE to create an incoming payment
+  // 1. Get the walletAddress by walletAddressUrl
+
+  // 2. Call Rafiki BE to create an incoming payment
   //    ! will be defined => incomingPaymentUrl
   const incomingPaymentUrl = ''
-  // 2. Get the cardServiceUrl from Rafiki
-
   // 3. Call card service client
 
   throw new Error('')
