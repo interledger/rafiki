@@ -803,6 +803,9 @@ importers:
       '@apollo/server':
         specifier: ^4.11.2
         version: 4.11.2(graphql@16.11.0)
+      '@faker-js/faker':
+        specifier: ^8.4.1
+        version: 8.4.1
       '@koa/cors':
         specifier: ^5.0.0
         version: 5.0.0
