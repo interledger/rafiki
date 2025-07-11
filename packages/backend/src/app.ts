@@ -55,7 +55,6 @@ import {
 } from './open_payments/payment/outgoing/routes'
 import { OutgoingPaymentService } from './open_payments/payment/outgoing/service'
 import { IlpPlugin, IlpPluginOptions } from './payment-method/ilp/ilp_plugin'
-import { createValidatorMiddleware, HttpMethod } from '@interledger/openapi'
 import { WalletAddressKeyService } from './open_payments/wallet_address/key/service'
 import {
   AccessAction,
@@ -209,12 +208,12 @@ export interface SPSPContext extends AppContext {
   asset: AssetOptions
 }
 
-type ContextType<T> = T extends (
-  ctx: infer Context
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-) => any
-  ? Context
-  : never
+// type ContextType<T> = T extends (
+//   ctx: infer Context
+//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// ) => any
+//   ? Context
+//   : never
 
 const WALLET_ADDRESS_PATH = '/:walletAddressPath+'
 
@@ -437,28 +436,18 @@ export class App {
     )
     const quoteRoutes = await this.container.use('quoteRoutes')
 
-    const { resourceServerSpec, walletAddressServerSpec } =
-      await this.container.use('openApi')
+    // const { resourceServerSpec, walletAddressServerSpec } =
+    //   await this.container.use('openApi')
 
-    const validatorMiddlewareOptions = {
-      validateRequest: true,
-      validateResponse: process.env.NODE_ENV !== 'production'
-    }
+    // const validatorMiddlewareOptions = {
+    //   validateRequest: true,
+    //   validateResponse: process.env.NODE_ENV !== 'production'
+    // }
 
     // POST /incoming-payments
     // Create incoming payment
     router.post<DefaultState, SignedCollectionContext<IncomingCreateBody>>(
       '/incoming-payments',
-      createValidatorMiddleware<
-        ContextType<SignedCollectionContext<IncomingCreateBody>>
-      >(
-        resourceServerSpec,
-        {
-          path: '/incoming-payments',
-          method: HttpMethod.POST
-        },
-        validatorMiddlewareOptions
-      ),
       getWalletAddressUrlFromRequestBody,
       createTokenIntrospectionMiddleware({
         requestType: AccessType.IncomingPayment,
@@ -476,16 +465,6 @@ export class App {
       SignedCollectionContext<never, GetCollectionQuery>
     >(
       '/incoming-payments',
-      createValidatorMiddleware<
-        ContextType<SignedCollectionContext<never, GetCollectionQuery>>
-      >(
-        resourceServerSpec,
-        {
-          path: '/incoming-payments',
-          method: HttpMethod.GET
-        },
-        validatorMiddlewareOptions
-      ),
       getWalletAddressUrlFromQueryParams,
       createTokenIntrospectionMiddleware({
         requestType: AccessType.IncomingPayment,
@@ -500,16 +479,6 @@ export class App {
     // Create outgoing payment
     router.post<DefaultState, SignedCollectionContext<OutgoingCreateBody>>(
       '/outgoing-payments',
-      createValidatorMiddleware<
-        ContextType<SignedCollectionContext<OutgoingCreateBody>>
-      >(
-        resourceServerSpec,
-        {
-          path: '/outgoing-payments',
-          method: HttpMethod.POST
-        },
-        validatorMiddlewareOptions
-      ),
       getWalletAddressUrlFromRequestBody,
       createTokenIntrospectionMiddleware({
         requestType: AccessType.OutgoingPayment,
@@ -527,16 +496,6 @@ export class App {
       SignedCollectionContext<never, GetCollectionQuery>
     >(
       '/outgoing-payments',
-      createValidatorMiddleware<
-        ContextType<SignedCollectionContext<never, GetCollectionQuery>>
-      >(
-        resourceServerSpec,
-        {
-          path: '/outgoing-payments',
-          method: HttpMethod.GET
-        },
-        validatorMiddlewareOptions
-      ),
       getWalletAddressUrlFromQueryParams,
       createTokenIntrospectionMiddleware({
         requestType: AccessType.OutgoingPayment,
@@ -551,16 +510,6 @@ export class App {
     // Create quote
     router.post<DefaultState, SignedCollectionContext<QuoteCreateBody>>(
       '/quotes',
-      createValidatorMiddleware<
-        ContextType<SignedCollectionContext<QuoteCreateBody>>
-      >(
-        resourceServerSpec,
-        {
-          path: '/quotes',
-          method: HttpMethod.POST
-        },
-        validatorMiddlewareOptions
-      ),
       getWalletAddressUrlFromRequestBody,
       createTokenIntrospectionMiddleware({
         requestType: AccessType.Quote,
@@ -575,16 +524,6 @@ export class App {
     // Read incoming payment
     router.get<DefaultState, SubresourceContextWithAuthenticatedStatus>(
       '/incoming-payments/:id',
-      createValidatorMiddleware<
-        ContextType<SubresourceContextWithAuthenticatedStatus>
-      >(
-        resourceServerSpec,
-        {
-          path: '/incoming-payments/{id}',
-          method: HttpMethod.GET
-        },
-        validatorMiddlewareOptions
-      ),
       getWalletAddressUrlFromIncomingPayment,
       createTokenIntrospectionMiddleware({
         requestType: AccessType.IncomingPayment,
@@ -600,14 +539,6 @@ export class App {
     // Complete incoming payment
     router.post<DefaultState, SignedSubresourceContext>(
       '/incoming-payments/:id/complete',
-      createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
-        resourceServerSpec,
-        {
-          path: '/incoming-payments/{id}/complete',
-          method: HttpMethod.POST
-        },
-        validatorMiddlewareOptions
-      ),
       getWalletAddressUrlFromIncomingPayment,
       createTokenIntrospectionMiddleware({
         requestType: AccessType.IncomingPayment,
@@ -622,14 +553,6 @@ export class App {
     // Read outgoing payment
     router.get<DefaultState, SignedSubresourceContext>(
       '/outgoing-payments/:id',
-      createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
-        resourceServerSpec,
-        {
-          path: '/outgoing-payments/{id}',
-          method: HttpMethod.GET
-        },
-        validatorMiddlewareOptions
-      ),
       getWalletAddressUrlFromOutgoingPayment,
       createTokenIntrospectionMiddleware({
         requestType: AccessType.OutgoingPayment,
@@ -644,14 +567,6 @@ export class App {
     // Read quote
     router.get<DefaultState, SignedSubresourceContext>(
       '/quotes/:id',
-      createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
-        resourceServerSpec,
-        {
-          path: '/quotes/{id}',
-          method: HttpMethod.GET
-        },
-        validatorMiddlewareOptions
-      ),
       getWalletAddressUrlFromQuote,
       createTokenIntrospectionMiddleware({
         requestType: AccessType.Quote,
@@ -664,14 +579,6 @@ export class App {
 
     router.get(
       WALLET_ADDRESS_PATH + '/jwks.json',
-      createValidatorMiddleware(
-        walletAddressServerSpec,
-        {
-          path: '/jwks.json',
-          method: HttpMethod.GET
-        },
-        validatorMiddlewareOptions
-      ),
       getWalletAddressUrlFromPath,
       walletAddressKeyRoutes.get
     )
@@ -683,14 +590,6 @@ export class App {
       getWalletAddressUrlFromPath,
       redirectIfBrowserAcceptsHtml,
       createSpspMiddleware(this.config.enableSpspPaymentPointers),
-      createValidatorMiddleware(
-        walletAddressServerSpec,
-        {
-          path: '/',
-          method: HttpMethod.GET
-        },
-        validatorMiddlewareOptions
-      ),
       walletAddressRoutes.get
     )
 
