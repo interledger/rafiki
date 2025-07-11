@@ -251,11 +251,13 @@ export function paymentToGraphql(
     quote: quoteToGraphql(payment.quote),
     grantId: payment.grantId,
     tenantId: payment.tenantId,
-    cardDetails: cardDetailsToGraphql(payment.cardDetails)
+    cardDetails: payment.cardDetails
+      ? cardDetailsToGraphql(payment.cardDetails)
+      : undefined
   }
 }
 function cardDetailsToGraphql(
-  cardDetails?: OutgoingPaymentCardDetails
+  cardDetails: OutgoingPaymentCardDetails
 ): SchemaOutgoingPaymentCardDetails | undefined {
   if (!cardDetails) return undefined
   return {

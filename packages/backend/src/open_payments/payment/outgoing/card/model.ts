@@ -1,9 +1,9 @@
 import { BaseModel } from '../../../../shared/baseModel'
 
 type OutgoingPaymentCardDetailsTableName = 'outgoingPaymentCardDetails'
-type OutgoingPaymentId = 'outgoingPaymentId'
+type OutgoingPaymentIdColumnName = 'outgoingPaymentId'
 type OutgoingPaymentIdRelation =
-  `${OutgoingPaymentCardDetailsTableName}.${OutgoingPaymentId}`
+  `${OutgoingPaymentCardDetailsTableName}.${OutgoingPaymentIdColumnName}`
 export const outgoingPaymentCardDetailsRelation: OutgoingPaymentIdRelation =
   'outgoingPaymentCardDetails.outgoingPaymentId'
 
@@ -11,7 +11,7 @@ type OutgoingPaymentCardDetailsType = {
   expiry: string
   signature: string
 } & {
-  [key in OutgoingPaymentId]: string
+  [key in OutgoingPaymentIdColumnName]: string
 }
 
 export class OutgoingPaymentCardDetails
