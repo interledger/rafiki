@@ -12,12 +12,14 @@ import {
   DeleteMerchantContext,
   MerchantRoutes
 } from './merchant/routes'
+import { PaymentContext, PaymentRoutes } from './payment/routes'
 
 export interface AppServices {
   logger: Promise<Logger>
   knex: Promise<Knex>
   config: Promise<IAppConfig>
   merchantRoutes: Promise<MerchantRoutes>
+  paymentRoutes: Promise<PaymentRoutes>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -61,6 +63,7 @@ export class App {
     })
 
     const merchantRoutes = await this.container.use('merchantRoutes')
+    const paymentRoutes = await this.container.use('paymentRoutes')
 
     // POST /merchants
     // Create merchant
@@ -75,6 +78,10 @@ export class App {
       '/merchants/:merchantId',
       merchantRoutes.delete
     )
+
+    // POST /payment
+    // Initiate a payment
+    router.post<DefaultState, PaymentContext>('/payment', paymentRoutes.payment)
 
     koa.use(cors())
     koa.use(router.routes())

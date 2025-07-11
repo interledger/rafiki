@@ -7,6 +7,7 @@ import createLogger from 'pino'
 import { createMerchantService } from './merchant/service'
 import { createPosDeviceService } from './merchant/devices/service'
 import { createMerchantRoutes } from './merchant/routes'
+import { createPaymentRoutes } from './payment/routes'
 
 export function initIocContainer(
   config: typeof Config
@@ -84,6 +85,13 @@ export function initIocContainer(
       return await createPosDeviceService({ config, logger, knex })
     }
   )
+
+  container.singleton('paymentRoutes', async (deps) => {
+    return createPaymentRoutes({
+      logger: await deps.use('logger')
+      // TODO: Add paymentService
+    })
+  })
   return container
 }
 
