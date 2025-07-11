@@ -1,8 +1,15 @@
-export enum PosDeviceError {
-  UnknownMerchant = 'UnknownMerchant',
-  UnknownPosDevice = 'UnknownPosDevice'
-}
+export class POSDeviceError extends Error {
+  public status: number
+  public details?: Record<string, unknown>
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-export const isPosDeviceError = (o: any): o is PosDeviceError =>
-  Object.values(PosDeviceError).includes(o)
+  constructor(
+    status: number,
+    message: string,
+    details?: Record<string, unknown>
+  ) {
+    super(message)
+    this.name = 'POSDeviceError'
+    this.status = status
+    this.details = details
+  }
+}

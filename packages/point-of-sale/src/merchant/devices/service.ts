@@ -2,16 +2,16 @@ import { NotFoundError } from 'objection'
 import { IAppConfig } from '../../config/app'
 import { BaseService } from '../../shared/baseService'
 import { Merchant } from '../model'
-import { PosDeviceError } from './errors'
+import { POSDeviceError } from './errors'
 import { DeviceStatus, PosDevice } from './model'
 import { v4 as uuid } from 'uuid'
 
 export interface PosDeviceService {
-  registerDevice(options: CreateOptions): Promise<PosDevice | PosDeviceError>
+  registerDevice(options: CreateOptions): Promise<PosDevice>
 
   getByKeyId(keyId: string): Promise<PosDevice | void>
 
-  revoke(id: string): Promise<PosDevice | PosDeviceError>
+  revoke(id: string): Promise<PosDevice>
 
   revokeAllByMerchantId(merchantId: string): Promise<number>
 }
@@ -54,10 +54,10 @@ export async function createPosDeviceService({
 async function registerDevice(
   deps: ServiceDependencies,
   { merchantId, publicKey, deviceName, walletAddress, algorithm }: CreateOptions
-): Promise<PosDevice | PosDeviceError> {
+): Promise<PosDevice> {
   const merchant = await Merchant.query(deps.knex).findById(merchantId)
   if (!merchant) {
-    return PosDeviceError.UnknownMerchant
+    throw new POSDeviceError(404, 'Unknown merchant')
   }
 
   const device = await PosDevice.query(deps.knex).insertAndFetch({
@@ -87,7 +87,7 @@ async function getByKeyId(
 async function revoke(
   deps: ServiceDependencies,
   id: string
-): Promise<PosDevice | PosDeviceError> {
+): Promise<PosDevice> {
   try {
     const device = await PosDevice.query(deps.knex)
       .patchAndFetchById(id, {
@@ -98,7 +98,7 @@ async function revoke(
     return device
   } catch (err) {
     if (err instanceof NotFoundError) {
-      return PosDeviceError.UnknownPosDevice
+      throw new POSDeviceError(404, 'Unknown POS device')
     }
     throw err
   }

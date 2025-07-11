@@ -1,10 +1,15 @@
 import { AppContext } from '../app'
 import { BaseService } from '../shared/baseService'
 import { MerchantService } from './service'
-import { POSMerchantRouteError } from './errors'
+import { POSMerchantError } from './errors'
+import { createDeviceRoutes, DeviceRoutes } from './devices/routes'
+import { PosDeviceService } from './devices/service'
+import { TransactionOrKnex } from 'objection'
 
 interface ServiceDependencies extends BaseService {
   merchantService: MerchantService
+  posDeviceService: PosDeviceService
+  knex: TransactionOrKnex
 }
 
 type CreateMerchantRequest = Exclude<AppContext['request'], 'body'> & {
@@ -30,6 +35,7 @@ export type DeleteMerchantContext = Exclude<AppContext, 'request'> & {
 export interface MerchantRoutes {
   create(ctx: CreateMerchantContext): Promise<void>
   delete(ctx: DeleteMerchantContext): Promise<void>
+  devices: DeviceRoutes
 }
 
 export function createMerchantRoutes(
@@ -46,7 +52,8 @@ export function createMerchantRoutes(
 
   return {
     create: (ctx: CreateMerchantContext) => createMerchant(deps, ctx),
-    delete: (ctx: DeleteMerchantContext) => deleteMerchant(deps, ctx)
+    delete: (ctx: DeleteMerchantContext) => deleteMerchant(deps, ctx),
+    devices: createDeviceRoutes(deps)
   }
 }
 
@@ -61,7 +68,7 @@ async function createMerchant(
     ctx.status = 200
     ctx.body = { id: merchant.id, name: merchant.name }
   } catch (err) {
-    throw new POSMerchantRouteError(400, 'Could not create merchant', { err })
+    throw new POSMerchantError(400, 'Could not create merchant', { err })
   }
 }
 
@@ -74,14 +81,14 @@ async function deleteMerchant(
     const deleted = await deps.merchantService.delete(merchantId)
 
     if (!deleted) {
-      throw new POSMerchantRouteError(404, 'Merchant not found')
+      throw new POSMerchantError(404, 'Merchant not found')
     }
 
     ctx.status = 204
   } catch (err) {
-    if (err instanceof POSMerchantRouteError) {
+    if (err instanceof POSMerchantError) {
       throw err
     }
-    throw new POSMerchantRouteError(400, 'Could not delete merchant', { err })
+    throw new POSMerchantError(400, 'Could not delete merchant', { err })
   }
 }
