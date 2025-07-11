@@ -1,0 +1,23 @@
+meta {
+  name: Create Merchant
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:3008/merchants
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Test Merchant"
+  }
+}
+
+script:post-response {
+  const body = res.getBody()
+  
+  bru.setEnvVar('merchantId', body.id)
+}
