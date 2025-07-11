@@ -26,44 +26,31 @@ describe('createPaymentService', () => {
     jest.clearAllMocks()
   })
 
-  it('should create an incoming payment and return the wallet address url', async () => {
-    const expectedUrl = 'https://wallet.example.com/address/123'
+  it('should create an incoming payment and return the incoming payment url (id)', async () => {
+    const expectedUrl = 'https://api.example.com/incoming-payments/abc123'
     mockApolloClient.mutate = jest.fn().mockResolvedValue({
       data: {
         payment: {
-          client: expectedUrl
+          id: expectedUrl
         }
       }
     })
     const service = createPaymentService(deps)
     const walletAddressId = 'wallet-123'
-    const incomingAmount: AmountInput = {
-      value: 1000n,
-      assetCode: 'USD',
-      assetScale: 2
-    }
-    const result = await service.createIncomingPayment(
-      walletAddressId,
-      incomingAmount
-    )
+    const incomingAmount: AmountInput = { value: 1000n, assetCode: 'USD', assetScale: 2 }
+    const result = await service.createIncomingPayment(walletAddressId, incomingAmount)
     expect(result).toBe(expectedUrl)
     expect(mockApolloClient.mutate).toHaveBeenCalled()
   })
 
-  it('should throw and log error if payment creation fails', async () => {
-    mockApolloClient.mutate = jest
-      .fn()
-      .mockResolvedValue({ data: { payment: { client: undefined } } })
+  it('should throw and log error if payment creation fails (no id)', async () => {
+    mockApolloClient.mutate = jest.fn().mockResolvedValue({ data: { payment: { id: undefined } } })
     const service = createPaymentService(deps)
     const walletAddressId = 'wallet-123'
-    const incomingAmount: AmountInput = {
-      value: 1000n,
-      assetCode: 'USD',
-      assetScale: 2
-    }
-    await expect(
-      service.createIncomingPayment(walletAddressId, incomingAmount)
-    ).rejects.toThrow(/Failed to create incoming payment/)
+    const incomingAmount: AmountInput = { value: 1000n, assetCode: 'USD', assetScale: 2 }
+    await expect(service.createIncomingPayment(walletAddressId, incomingAmount)).rejects.toThrow(
+      /Failed to create incoming payment/
+    )
     expect(mockLogger.error).toHaveBeenCalledWith(
       { walletAddressId },
       'Failed to create incoming payment for given walletAddressId'

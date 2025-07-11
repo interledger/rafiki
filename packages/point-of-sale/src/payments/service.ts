@@ -59,8 +59,8 @@ const createIncomingPayment: FnWithDeps<
     }
   })
 
-  const walletAddressUrl = data?.payment?.client
-  if (!walletAddressUrl) {
+  const incomingPaymentUrl = data?.payment?.id
+  if (!incomingPaymentUrl) {
     deps.logger.error(
       { walletAddressId },
       'Failed to create incoming payment for given walletAddressId'
@@ -70,5 +70,5 @@ const createIncomingPayment: FnWithDeps<
     )
   }
 
-  return walletAddressUrl
+  return incomingPaymentUrl
 }
