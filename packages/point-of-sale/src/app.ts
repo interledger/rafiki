@@ -89,7 +89,7 @@ export class App {
     // POST /merchant/:merchantId/devices
     // Register a device
     router.post<DefaultState, RegisterDeviceContext>(
-      '/merchant/:merchantId/devices',
+      '/merchants/:merchantId/devices',
       posDeviceRoutes.register
     )
 
