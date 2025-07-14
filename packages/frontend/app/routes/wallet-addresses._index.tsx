@@ -94,7 +94,7 @@ export default function WalletAddressesPage() {
                     <div className='flex flex-col'>
                       <div>
                         <span className='mr-2'>
-                          {wa.node.tenant.publicName ? (
+                          {wa.node.tenant?.publicName ? (
                             <span className='font-medium'>
                               {wa.node.tenant.publicName}
                             </span>
@@ -105,7 +105,7 @@ export default function WalletAddressesPage() {
                           )}
                         </span>
                         <div className='text-tealish/50 text-xs'>
-                          (ID: {wa.node.tenant.id})
+                          (ID: {wa.node.tenant?.id})
                         </div>
                       </div>
                     </div>

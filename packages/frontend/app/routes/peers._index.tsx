@@ -95,7 +95,7 @@ export default function PeersPage() {
                     <div className='flex flex-col'>
                       <div>
                         <span className='mr-2'>
-                          {peer.node.tenant.publicName ? (
+                          {peer.node.tenant?.publicName ? (
                             <span className='font-medium'>
                               {peer.node.tenant.publicName}
                             </span>
@@ -106,7 +106,7 @@ export default function PeersPage() {
                           )}
                         </span>
                         <div className='text-tealish/50 text-xs'>
-                          (ID: {truncateUuid(peer.node.tenant.id)})
+                          (ID: {truncateUuid(peer.node.tenant?.id as string)})
                         </div>
                       </div>
                     </div>
