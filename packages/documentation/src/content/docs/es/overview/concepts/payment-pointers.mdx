@@ -1,0 +1,55 @@
+---
+title: Apuntadores de pago y direcciones de billeteras
+---
+
+## Payment pointers
+
+A payment pointer is a standardized identifier for a payment account that supports Interledger payments. Each payment pointer must resolve to an HTTPS URL that serves as an [SPSP](/overview/concepts/interledger#simple-payment-setup-protocol-spsp) endpoint to facilitate sending and receiving ILP packets.
+
+You can determine whether a URL is a payment pointer by sending a `GET` request to the URL with an `accept: application/spsp4+json` header.
+
+```http title="Example request"
+curl --request GET \
+ --url https://wallet.example.com/alice/ \
+ --header 'accept: application/spsp4+json'
+```
+
+A response from an SPSP server means the URL is a payment pointer.
+
+```http title="Example response"
+{
+ "destination_account":"example.0.cloudnine.ind.alice.cdfa5e16-e759",
+ "shared_secret":"7h0s7EpQDqcgzqmX-mwrNHFHinPvJq8Jw",
+}
+```
+
+Payment pointers are often written out using the `$` shorthand. For example, `$wallet.example.com/alice`, which resolves to `https://wallet.example.com/alice/`.
+
+Rafiki assigns each of your customers' accounts with a payment pointer. This payment pointer is also a wallet address because Rafiki supports both Interledger and Open Payments.
+
+## Wallet addresses
+
+A wallet address is a secure, unique URL for a payment account that supports Open Payments. It acts as an entry point into the Open Payments APIs, facilitating interactions like sending and receiving payments.
+
+You can determine whether a URL is a wallet address by sending a `GET` request to the URL with an `accept: application/json` header.
+
+```http title="Example request"
+curl --request GET \
+ --url https://wallet.example.com/alice \
+ --header 'accept: application/json'
+```
+
+A valid response means the URL is a wallet address.
+
+```http title="Example response"
+{
+  "id": "https://wallet.example.com/alice",
+  "publicName": "Alice",
+  "assetCode": "USD",
+  "assetScale": 2,
+  "authServer": "https://auth.wallet.example.com",
+  "resourceServer": "https://wallet.example.com",
+}
+```
+
+Rafiki assigns each of your customers' accounts with a wallet address. This wallet address is also a payment pointer because Rafiki supports Open Payments and Interledger. See the integration requirements for [wallet addresses](/integration/requirements/wallet-addresses) for more information.

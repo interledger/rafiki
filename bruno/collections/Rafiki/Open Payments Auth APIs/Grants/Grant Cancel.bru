@@ -1,0 +1,21 @@
+meta {
+  name: Grant Cancel
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{continueUri}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: GNAP {{continueToken}}
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  await scripts.addSignatureHeaders();
+}

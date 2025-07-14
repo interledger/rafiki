@@ -1,0 +1,38 @@
+---
+title: Pagos Abiertos
+tableOfContents:
+  maxHeadingLevel: 2
+---
+
+import { LinkOut } from '@interledger/docs-design-system'
+
+Rafiki follows the <LinkOut href='https://openpayments.dev'>Open Payments</LinkOut> standard to enable third-party clients to securely retrieve account information and initiate payments from your customers’ accounts with their consent. The standard describes a uniform way to create and manage grants and resources for <LinkOut href='https://openpayments.dev/concepts/resources/#resource-types'>incoming payments, quotes, and outgoing payments</LinkOut>.
+
+### Example use case - retrieve account information
+
+Some of your customers use a third-party application that allows them to create budgets and monitor their spending. The application can call the Open Payments APIs, enabling it to communicate with any account servicing entity that implements the Open Payments standard. When your customers give the app permission to retrieve their transaction history, the app communicates with your Rafiki instance via the Open Payments APIs to obtain grants from your authorization server and transaction history from your resource server.
+
+### Further reading
+
+We strongly encourage you to familiarize yourself with the Open Payments standard. Extensive documentation is available on the <LinkOut href="https://openpayments.dev">Open Payments</LinkOut> website. We recommend you start by reviewing all the pages within the _Intro to Open Payments_ section. Here are a few links to get you started.
+
+- <LinkOut href='https://openpayments.dev/overview/getting-started/'>
+    Getting started with Open Payments
+  </LinkOut>
+- <LinkOut href='https://openpayments.dev/identity/client-keys/'>
+    Client keys
+  </LinkOut>
+- <LinkOut href='https://openpayments.dev/identity/http-signatures/'>
+    HTTP message signatures
+  </LinkOut>
+- <LinkOut href='https://openpayments.dev/identity/grants/'>
+    Grant negotiation and authorization
+  </LinkOut>
+
+## Rafiki's backend service
+
+Rafiki’s [`backend`](/integration/deployment/services/backend-service) service is the main service for handling business logic and external communication. The service is responsible for, among other things, exposing the endpoints of the Open Payments APIs for clients to perform account management tasks. Every request and response is validated against the <LinkOut href="https://github.com/interledger/open-payments/tree/main/openapi">Open Payments specification</LinkOut>.
+
+## Rafiki's auth service
+
+Rafiki’s [`auth`](/integration/deployment/services/auth-service) service is a reference implementation of an opinionated Open Payments authorization server. The authorization server is responsible for delegating authorization (via grants) to clients to use the Open Payments APIs, resolving <LinkOut href="https://openpayments.dev/identity/client-keys/">clients’ public keys</LinkOut> to authenticate and authorize incoming requests, and creating payments and quotes on the backend. Open Payments leverages the Grant Negotiation and Authorization Protocol (GNAP) for delegating authorization. You can learn more about the protocol by reviewing its <LinkOut href="https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol">specification</LinkOut>.

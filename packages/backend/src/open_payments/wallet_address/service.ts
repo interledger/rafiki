@@ -23,7 +23,10 @@ import {
 } from '../payment/incoming/model'
 import { IAppConfig } from '../../config/app'
 import { Pagination, SortOrder } from '../../shared/baseModel'
-import { WebhookService } from '../../webhook/service'
+import {
+  finalizeWebhookRecipients,
+  WebhookService
+} from '../../webhook/service'
 import { poll } from '../../shared/utils'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
 import { AssetService } from '../../asset/service'
@@ -379,17 +382,13 @@ async function getOrPollByUrl(
   const existingWalletAddress = await getWalletAddressByUrl(deps, url)
   if (existingWalletAddress) return existingWalletAddress
 
-  let containsOperatorTenant = false
   const webhookRecipients = (
     await deps.tenantSettingService.getSettingsByPrefix(url)
-  ).map((tenantSetting) => {
-    if (tenantSetting.tenantId === deps.config.operatorTenantId)
-      containsOperatorTenant = true
-    return { recipientTenantId: tenantSetting.tenantId }
-  })
+  ).map((tenantSetting) => tenantSetting.tenantId)
 
-  if (!containsOperatorTenant)
-    webhookRecipients.push({ recipientTenantId: deps.config.operatorTenantId })
+  if (!webhookRecipients.length) {
+    webhookRecipients.push(deps.config.operatorTenantId)
+  }
 
   await WalletAddressEvent.query(deps.knex).insertGraph({
     type: WalletAddressEventType.WalletAddressNotFound,
@@ -397,7 +396,7 @@ async function getOrPollByUrl(
       walletAddressUrl: url
     },
     tenantId: deps.config.operatorTenantId,
-    webhooks: webhookRecipients
+    webhooks: finalizeWebhookRecipients(webhookRecipients, deps.config)
   })
 
   deps.logger.debug(
@@ -534,10 +533,6 @@ async function createWithdrawalEvent(
 
   deps.logger.trace({ amount }, 'creating webhook withdrawal event')
 
-  const webhooks = [{ recipientTenantId: walletAddress.tenantId }]
-  if (walletAddress.tenantId !== deps.config.operatorTenantId) {
-    webhooks.push({ recipientTenantId: deps.config.operatorTenantId })
-  }
   await WalletAddressEvent.query(deps.knex).insertGraph({
     walletAddressId: walletAddress.id,
     type: WalletAddressEventType.WalletAddressWebMonetization,
@@ -548,7 +543,7 @@ async function createWithdrawalEvent(
       amount
     },
     tenantId: walletAddress.tenantId,
-    webhooks
+    webhooks: finalizeWebhookRecipients([walletAddress.tenantId], deps.config)
   })
 
   await walletAddress.$query(deps.knex).patch({

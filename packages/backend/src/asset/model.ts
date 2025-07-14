@@ -3,6 +3,7 @@ import { LiquidityAccount, OnDebitOptions } from '../accounting/service'
 import { BaseModel } from '../shared/baseModel'
 import { WebhookEvent } from '../webhook/event/model'
 import { IAppConfig } from '../config/app'
+import { finalizeWebhookRecipients } from '../webhook/service'
 
 export class Asset extends BaseModel implements LiquidityAccount {
   public static get tableName(): string {
@@ -36,10 +37,6 @@ export class Asset extends BaseModel implements LiquidityAccount {
   ): Promise<Asset> {
     if (this.liquidityThreshold !== null) {
       if (balance <= this.liquidityThreshold) {
-        const webhooks = [{ recipientTenantId: this.tenantId }]
-        if (this.tenantId !== config.operatorTenantId) {
-          webhooks.push({ recipientTenantId: config.operatorTenantId })
-        }
         await AssetEvent.query().insertGraph({
           assetId: this.id,
           type: AssetEventType.LiquidityLow,
@@ -54,7 +51,7 @@ export class Asset extends BaseModel implements LiquidityAccount {
             balance
           },
           tenantId: this.tenantId,
-          webhooks
+          webhooks: finalizeWebhookRecipients([this.tenantId], config)
         })
       }
     }

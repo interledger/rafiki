@@ -142,7 +142,6 @@ components:
             - id
             - walletAddressId
             - createdAt
-            - updatedAt
             - expiresAt
             - receivedAmount
             - completed
@@ -166,9 +165,6 @@ components:
               type: object
               additionalProperties: true
             createdAt:
-              type: string
-              format: date-time
-            updatedAt:
               type: string
               format: date-time
             expiresAt:
@@ -196,7 +192,6 @@ components:
             - id
             - walletAddressId
             - createdAt
-            - updatedAt
             - expiresAt
             - debitAmount
             - receiveAmount
@@ -232,9 +227,6 @@ components:
               type: object
               additionalProperties: true
             createdAt:
-              type: string
-              format: date-time
-            updatedAt:
               type: string
               format: date-time
             expiresAt:

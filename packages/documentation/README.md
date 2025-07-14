@@ -60,7 +60,6 @@ Refer to the Starlight documentation on [authoring content](https://starlight.as
 
 We have extracted some commonly repeated patterns within the documentation pages into custom docs components that can be reused. There are components which are shared across all our Starlight documentation sites and those which are specific to this project only. This will determine what the import path is.
 
-- CodeBlock (Shared)
 - Hidden (Shared)
 - LargeImg (Shared)
 - LinkOut (Shared)
@@ -68,10 +67,10 @@ We have extracted some commonly repeated patterns within the documentation pages
 - StylishHeader (Shared)
 - Tooltip (Shared)
 
-For the shared components, if you are using both `CodeBlock` and `LinkOut` on the same page, you can import them both like so:
+For the shared components, if you are using both `LinkOut` and `MermaidWrapper` on the same page, you can import them both like so:
 
 ```jsx
-import { CodeBlock, LinkOut } from '@interledger/docs-design-system'
+import { LinkOut, MermaidWrapper } from '@interledger/docs-design-system'
 ```
 
 For more information about importing things in Javascript, please refer to [import on MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import).

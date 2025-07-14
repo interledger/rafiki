@@ -574,7 +574,7 @@ describe('Open Payments Wallet Address Service', (): void => {
 
     describe('non-existing wallet address', (): void => {
       test(
-        'creates wallet address not found event',
+        'creates wallet address not found event for operator when no matching tenant prefix',
         withConfigOverride(
           () => config,
           { walletAddressLookupTimeoutMs: 0 },
@@ -601,6 +601,52 @@ describe('Open Payments Wallet Address Service', (): void => {
                   processAt: expect.any(Date)
                 })
               ]
+            })
+          }
+        )
+      )
+
+      test(
+        'creates wallet address not found event for tenant with matching prefix',
+        withConfigOverride(
+          () => config,
+          { walletAddressLookupTimeoutMs: 0 },
+          async (): Promise<void> => {
+            const walletAddressUrl = `https://${faker.internet.domainName()}/.well-known/pay`
+            const tenant = await createTenant(deps)
+            await createTenantSettings(deps, {
+              tenantId: tenant.id,
+              setting: [
+                {
+                  key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+                  value: `${walletAddressUrl}/${uuid()}`
+                }
+              ]
+            })
+
+            await expect(
+              walletAddressService.getOrPollByUrl(walletAddressUrl)
+            ).resolves.toBeUndefined()
+
+            const walletAddressNotFoundEvents = await WalletAddressEvent.query(
+              knex
+            )
+              .where({
+                type: WalletAddressEventType.WalletAddressNotFound
+              })
+              .withGraphFetched('webhooks')
+
+            expect(walletAddressNotFoundEvents).toHaveLength(1)
+            expect(walletAddressNotFoundEvents[0].webhooks).toHaveLength(1)
+            expect(walletAddressNotFoundEvents[0]).toMatchObject({
+              data: { walletAddressUrl },
+              webhooks: expect.arrayContaining([
+                expect.objectContaining({
+                  recipientTenantId: tenant.id,
+                  eventId: walletAddressNotFoundEvents[0].id,
+                  processAt: expect.any(Date)
+                })
+              ])
             })
           }
         )

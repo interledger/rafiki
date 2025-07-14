@@ -29,7 +29,7 @@ You must also set the environment variables for the `backend` service.
 
 The `backend` service exposes the Open Payments APIs, which are auth-protected using an opinionated version of the Grant Negotiation and Authorization Protocol (GNAP). Review the [`auth`](/integration/deployment/services/auth-service) service page for more details about grant authorization and authentication.
 
-The `backend` service allows you to manage Open Payments <LinkOut href="https://openpayments.dev/introduction/op-concepts/#incoming-payment">incoming payments</LinkOut>, <LinkOut href="https://openpayments.dev/introduction/op-concepts/#quote">quotes</LinkOut>, and <LinkOut href='https://openpayments.dev/introduction/op-concepts/#outgoing-payment'>outgoing payments</LinkOut>. Quotes and outgoing payments call the ILP connector, described in the next section, to send ILP packets. Quoting sends unfulfillable probe packets, for example to determine a transaction’s cost before executing the payment. Outgoing payments send packets as part of executing the payment.
+The `backend` service allows you to manage Open Payments <LinkOut href="https://openpayments.dev/concepts/resources/#incoming-payment">incoming payments</LinkOut>, <LinkOut href="https://openpayments.dev/concepts/resources/#quote">quotes</LinkOut>, and <LinkOut href='https://openpayments.dev/concepts/resources/#outgoing-payment'>outgoing payments</LinkOut>. Quotes and outgoing payments call the ILP connector, described in the next section, to send ILP packets. Quoting sends unfulfillable probe packets, for example to determine a transaction’s cost before executing the payment. Outgoing payments send packets as part of executing the payment.
 
 ## Interledger connector
 

@@ -18,6 +18,7 @@ import { IncomingPaymentError } from './errors'
 import { IAppConfig } from '../../../config/app'
 import { poll } from '../../../shared/utils'
 import { AssetService } from '../../../asset/service'
+import { finalizeWebhookRecipients } from '../../../webhook/service'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -197,16 +198,12 @@ async function createIncomingPayment(
     incomingPayment.walletAddressId
   )
 
-  const webhooks = [{ recipientTenantId: incomingPayment.tenantId }]
-  if (incomingPayment.tenantId !== deps.config.operatorTenantId) {
-    webhooks.push({ recipientTenantId: deps.config.operatorTenantId })
-  }
   await IncomingPaymentEvent.query(trx || deps.knex).insertGraph({
     incomingPaymentId: incomingPayment.id,
     type: IncomingPaymentEventType.IncomingPaymentCreated,
     data: incomingPayment.toData(0n),
     tenantId: incomingPayment.tenantId,
-    webhooks
+    webhooks: finalizeWebhookRecipients([incomingPayment.tenantId], deps.config)
   })
 
   incomingPayment = await addReceivedAmount(deps, incomingPayment, BigInt(0))
@@ -363,10 +360,6 @@ async function handleDeactivated(
         : IncomingPaymentEventType.IncomingPaymentCompleted
     deps.logger.trace({ type }, 'creating incoming payment webhook event')
 
-    const webhooks = [{ recipientTenantId: incomingPayment.tenantId }]
-    if (incomingPayment.tenantId !== deps.config.operatorTenantId) {
-      webhooks.push({ recipientTenantId: deps.config.operatorTenantId })
-    }
     await IncomingPaymentEvent.query(deps.knex).insertGraph({
       incomingPaymentId: incomingPayment.id,
       type,
@@ -377,7 +370,10 @@ async function handleDeactivated(
         amount: amountReceived
       },
       tenantId: incomingPayment.tenantId,
-      webhooks
+      webhooks: finalizeWebhookRecipients(
+        [incomingPayment.tenantId],
+        deps.config
+      )
     })
 
     await incomingPayment.$query(deps.knex).patch({

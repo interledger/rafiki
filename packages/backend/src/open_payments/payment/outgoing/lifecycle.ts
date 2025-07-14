@@ -9,6 +9,7 @@ import { ServiceDependencies } from './service'
 import { Receiver } from '../../receiver/model'
 import { TransactionOrKnex } from 'objection'
 import { ValueType } from '@opentelemetry/api'
+import { finalizeWebhookRecipients } from '../../../webhook/service'
 
 // "payment" is locked by the "deps.knex" transaction.
 export async function handleSending(
@@ -235,17 +236,13 @@ export async function sendWebhookEvent(
       }
     : undefined
 
-  const webhooks = [{ recipientTenantId: payment.tenantId }]
-  if (payment.tenantId !== deps.config.operatorTenantId) {
-    webhooks.push({ recipientTenantId: deps.config.operatorTenantId })
-  }
   await OutgoingPaymentEvent.query(trx || deps.knex).insertGraph({
     outgoingPaymentId: payment.id,
     type,
     data: payment.toData({ amountSent, balance }),
     withdrawal,
     tenantId: payment.tenantId,
-    webhooks
+    webhooks: finalizeWebhookRecipients([payment.tenantId], deps.config)
   })
   stopTimer()
 }

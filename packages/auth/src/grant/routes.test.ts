@@ -43,6 +43,7 @@ import { generateBaseInteraction } from '../tests/interaction'
 import { GNAPErrorCode } from '../shared/gnapErrors'
 import { Tenant } from '../tenant/model'
 import { generateTenant } from '../tests/tenant'
+import { AccessError } from '../access/errors'
 
 export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
@@ -528,6 +529,68 @@ describe('Grant Routes', (): void => {
           code: GNAPErrorCode.InvalidClient,
           message: "missing required request field 'client'"
         })
+      })
+
+      test('Fails to create a grant with at least one access having both receiveAmount and debitAmount as limits', async (): Promise<void> => {
+        const scope = nock(CLIENT)
+          .get('/')
+          .reply(200, {
+            id: CLIENT,
+            publicName: TEST_CLIENT_DISPLAY.name,
+            assetCode: 'USD',
+            assetScale: 2,
+            authServer: Config.authServerUrl,
+            resourceServer: faker.internet.url({ appendSlash: false })
+          })
+
+        const ctx = createContext<CreateContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            },
+            url,
+            method
+          },
+          {
+            tenantId: tenant.id
+          }
+        )
+        ctx.request.body = {
+          ...BASE_GRANT_REQUEST,
+          access_token: {
+            access: [
+              {
+                type: 'outgoing-payment',
+                actions: [
+                  AccessAction.Create,
+                  AccessAction.Read,
+                  AccessAction.List
+                ],
+                identifier: `https://example.com/${v4()}`,
+                limits: {
+                  receiver: '',
+                  debitAmount: {
+                    value: '1000',
+                    assetCode: 'USD',
+                    assetScale: 1
+                  },
+                  receiveAmount: {
+                    value: '1000',
+                    assetCode: 'USD',
+                    assetScale: 1
+                  }
+                }
+              }
+            ]
+          }
+        }
+        await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
+          status: 400,
+          code: GNAPErrorCode.InvalidRequest,
+          message: AccessError.OnlyOneAccessAmountAllowed
+        })
+        scope.done()
       })
 
       test('Fails to initiate a grant without providing a tenant id', async (): Promise<void> => {

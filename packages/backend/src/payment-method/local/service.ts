@@ -183,7 +183,11 @@ async function getQuote(
   if (debitAmountValue <= BigInt(0)) {
     throw new PaymentMethodHandlerError('Received error during local quoting', {
       description: 'debit amount of local quote is non-positive',
-      retryable: false
+      retryable: false,
+      code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount,
+      details: {
+        minSendAmount: BigInt(Math.ceil(1 / exchangeRate))
+      }
     })
   }
 

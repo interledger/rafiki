@@ -9,14 +9,15 @@ import { Webhook } from './model'
 import {
   WebhookService,
   generateWebhookSignature,
-  RETRY_BACKOFF_MS
+  RETRY_BACKOFF_MS,
+  finalizeWebhookRecipients
 } from './service'
 import { AccountingService } from '../accounting/service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { AccountFactory } from '../tests/accountFactory'
 import { createAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
-import { Config } from '../config/app'
+import { Config, IAppConfig } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
@@ -34,6 +35,7 @@ import {
 import { createOutgoingPayment } from '../tests/outgoingPayment'
 import { TenantSetting, TenantSettingKeys } from '../tenants/settings/model'
 import { faker } from '@faker-js/faker'
+import { withConfigOverride } from '../tests/helpers'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -45,6 +47,7 @@ describe('Webhook Service', (): void => {
   let knex: Knex
   let webhookUrl: URL
   let event: WebhookEvent
+  let config: IAppConfig
   const WEBHOOK_SECRET = 'test secret'
 
   async function makeWithdrawalEvent(event: WebhookEvent): Promise<void> {
@@ -72,6 +75,7 @@ describe('Webhook Service', (): void => {
     knex = appContainer.knex
     webhookService = await deps.use('webhookService')
     accountingService = await deps.use('accountingService')
+    config = await deps.use('config')
     webhookUrl = new URL(Config.webhookUrl)
   })
 
@@ -612,6 +616,53 @@ describe('Webhook Service', (): void => {
       })
 
       scope.done()
+    })
+  })
+
+  describe('finalizeWebhookRecipients', (): void => {
+    test(
+      'adds operatorTenant as recipient if sendAllWebhooksToOperator is enabled',
+      withConfigOverride(
+        () => config,
+        { sendTenantWebhooksToOperator: true },
+        async (): Promise<void> => {
+          const tenantId = crypto.randomUUID()
+          expect(finalizeWebhookRecipients([tenantId], Config)).toStrictEqual([
+            { recipientTenantId: tenantId },
+            { recipientTenantId: Config.operatorTenantId }
+          ])
+        }
+      )
+    )
+
+    test(
+      'does not adds operatorTenant as recipient if sendAllWebhooksToOperator is disabled',
+      withConfigOverride(
+        () => config,
+        { sendTenantWebhooksToOperator: false },
+        async (): Promise<void> => {
+          const tenantId = crypto.randomUUID()
+          expect(finalizeWebhookRecipients([tenantId], Config)).toStrictEqual([
+            { recipientTenantId: tenantId }
+          ])
+        }
+      )
+    )
+
+    test('prevents adding duplicate recipients', async (): Promise<void> => {
+      const tenantId1 = crypto.randomUUID()
+      const tenantId2 = crypto.randomUUID()
+      const tenantId3 = crypto.randomUUID()
+      expect(
+        finalizeWebhookRecipients(
+          [tenantId1, tenantId1, tenantId2, tenantId2, tenantId3],
+          Config
+        )
+      ).toStrictEqual([
+        { recipientTenantId: tenantId1 },
+        { recipientTenantId: tenantId2 },
+        { recipientTenantId: tenantId3 }
+      ])
     })
   })
 })
