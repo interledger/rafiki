@@ -83,7 +83,7 @@ export default function AssetsPage() {
                     <div className='flex flex-col'>
                       <div>
                         <span className='mr-2'>
-                          {asset.node.tenant.publicName ? (
+                          {asset.node.tenant?.publicName ? (
                             <span className='font-medium'>
                               {asset.node.tenant.publicName}
                             </span>
@@ -94,7 +94,7 @@ export default function AssetsPage() {
                           )}
                         </span>
                         <div className='text-tealish/50 text-xs'>
-                          (ID: {asset.node.tenant.id})
+                          (ID: {asset.node.tenant?.id})
                         </div>
                       </div>
                     </div>

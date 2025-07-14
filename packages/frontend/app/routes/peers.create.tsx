@@ -47,7 +47,7 @@ export default function CreatePeerPage() {
 
   const getAssetsOfTenant = (): SelectOption[] => {
     const assetsOfTenant = assets.filter(
-      (asset) => asset.node.tenant.id === tenantId?.value
+      (asset) => asset.node.tenant?.id === tenantId?.value
     )
     return assetsOfTenant.map((asset) => ({
       value: asset.node.id,
