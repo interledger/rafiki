@@ -250,7 +250,7 @@ export default function PaymentsPage() {
                     <div className='flex flex-col'>
                       <div>
                         <span className='mr-2'>
-                          {payment.node.tenant.publicName ? (
+                          {payment.node.tenant?.publicName ? (
                             <span className='font-medium'>
                               {payment.node.tenant.publicName}
                             </span>
@@ -261,7 +261,7 @@ export default function PaymentsPage() {
                           )}
                         </span>
                         <div className='text-tealish/50 text-xs'>
-                          (ID: {payment.node.tenant.id})
+                          (ID: {payment.node.tenant?.id})
                         </div>
                       </div>
                     </div>
