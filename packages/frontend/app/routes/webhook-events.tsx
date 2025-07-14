@@ -134,7 +134,7 @@ export default function WebhookEventsPage() {
                       <span>
                         <div>
                           <span className='mr-2'>
-                            {webhook.node.tenant.publicName ? (
+                            {webhook.node.tenant?.publicName ? (
                               <span className='font-medium'>
                                 {webhook.node.tenant.publicName}
                               </span>
@@ -145,7 +145,8 @@ export default function WebhookEventsPage() {
                             )}
                           </span>
                           <div className='text-tealish/50 text-xs'>
-                            (ID: {truncateUuid(webhook.node.tenant.id)})
+                            (ID:{' '}
+                            {truncateUuid(webhook.node.tenant?.id as string)})
                           </div>
                         </div>
                       </span>
@@ -156,7 +157,7 @@ export default function WebhookEventsPage() {
                         state={{
                           data: {
                             ...webhook.node.data,
-                            tenantId: webhook.node.tenant.id
+                            tenantId: webhook.node.tenant?.id
                           }
                         }}
                         to={`/webhook-events/data${
