@@ -12,6 +12,7 @@ import {
   IncomingPayment,
   IncomingPaymentEvent,
   IncomingPaymentEventType,
+  IncomingPaymentState,
   IncomingPaymentEventError
 } from './model'
 import { IncomingPaymentInitiationReason } from './types'

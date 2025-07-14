@@ -81,5 +81,6 @@ export const webhookEventToGraphql = (
   id: webhookEvent.id,
   type: webhookEvent.type,
   data: webhookEvent.data,
+  tenantId: webhookEvent.tenantId,
   createdAt: new Date(webhookEvent.createdAt).toISOString()
 })
