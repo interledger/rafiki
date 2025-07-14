@@ -125,7 +125,7 @@ export type Asset = Model & {
   /** The sending fee structure for the asset. */
   sendingFee?: Maybe<Fee>;
   /** The tenant that the asset belongs to. */
-  tenant: Tenant;
+  tenant?: Maybe<Tenant>;
   /** Minimum amount of liquidity that can be withdrawn from the asset. */
   withdrawalThreshold?: Maybe<Scalars['UInt64']['output']>;
 };
@@ -620,7 +620,7 @@ export type IncomingPayment = BasePayment & Model & {
   /** State of the incoming payment. */
   state: IncomingPaymentState;
   /** The tenant associated with the incoming payment. If not provided, it will be obtained from the signature. */
-  tenant: Tenant;
+  tenant?: Maybe<Tenant>;
   /** Unique identifier of the wallet address under which the incoming payment was created. */
   walletAddressId: Scalars['ID']['output'];
 };
@@ -1036,7 +1036,7 @@ export type OutgoingPayment = BasePayment & Model & {
   /** Number of attempts made to send an outgoing payment. */
   stateAttempts: Scalars['Int']['output'];
   /** Tenant of the outgoing payment. */
-  tenant: Tenant;
+  tenant?: Maybe<Tenant>;
   /** Unique identifier of the wallet address under which the outgoing payment was created. */
   walletAddressId: Scalars['ID']['output'];
 };
@@ -1112,7 +1112,7 @@ export type Payment = BasePayment & Model & {
   /** State of the payment, either `IncomingPaymentState` or `OutgoingPaymentState` according to payment type */
   state: Scalars['String']['output'];
   /** The tenant associated with the payment. */
-  tenant: Tenant;
+  tenant?: Maybe<Tenant>;
   /** Type of payment, either incoming or outgoing. */
   type: PaymentType;
   /** Unique identifier of the wallet address under which the payment was created. */
@@ -1170,7 +1170,7 @@ export type Peer = Model & {
   /** ILP address of the peer. */
   staticIlpAddress: Scalars['String']['output'];
   /** Unique identifier of the tenant associated with the peer. */
-  tenant: Tenant;
+  tenant?: Maybe<Tenant>;
 };
 
 export type PeerEdge = {
@@ -1672,7 +1672,7 @@ export type WalletAddress = Model & {
   /** The current status of the wallet, either active or inactive. */
   status: WalletAddressStatus;
   /** Tenant of the wallet address. */
-  tenant: Tenant;
+  tenant?: Maybe<Tenant>;
   /** List of keys associated with this wallet address */
   walletAddressKeys?: Maybe<WalletAddressKeyConnection>;
 };
@@ -1791,7 +1791,7 @@ export type WebhookEvent = Model & {
   /** Unique identifier of the webhook event. */
   id: Scalars['ID']['output'];
   /** Tenant of the webhook event. */
-  tenant: Tenant;
+  tenant?: Maybe<Tenant>;
   /** Type of webhook event. */
   type: Scalars['String']['output'];
 };
@@ -2230,7 +2230,7 @@ export type AssetResolvers<ContextType = any, ParentType extends ResolversParent
   receivingFee?: Resolver<Maybe<ResolversTypes['Fee']>, ParentType, ContextType>;
   scale?: Resolver<ResolversTypes['UInt8'], ParentType, ContextType>;
   sendingFee?: Resolver<Maybe<ResolversTypes['Fee']>, ParentType, ContextType>;
-  tenant?: Resolver<ResolversTypes['Tenant'], ParentType, ContextType>;
+  tenant?: Resolver<Maybe<ResolversTypes['Tenant']>, ParentType, ContextType>;
   withdrawalThreshold?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -2354,7 +2354,7 @@ export type IncomingPaymentResolvers<ContextType = any, ParentType extends Resol
   metadata?: Resolver<Maybe<ResolversTypes['JSONObject']>, ParentType, ContextType>;
   receivedAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['IncomingPaymentState'], ParentType, ContextType>;
-  tenant?: Resolver<ResolversTypes['Tenant'], ParentType, ContextType>;
+  tenant?: Resolver<Maybe<ResolversTypes['Tenant']>, ParentType, ContextType>;
   walletAddressId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -2456,7 +2456,7 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   sentAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['OutgoingPaymentState'], ParentType, ContextType>;
   stateAttempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  tenant?: Resolver<ResolversTypes['Tenant'], ParentType, ContextType>;
+  tenant?: Resolver<Maybe<ResolversTypes['Tenant']>, ParentType, ContextType>;
   walletAddressId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -2493,7 +2493,7 @@ export type PaymentResolvers<ContextType = any, ParentType extends ResolversPare
   liquidity?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   metadata?: Resolver<Maybe<ResolversTypes['JSONObject']>, ParentType, ContextType>;
   state?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  tenant?: Resolver<ResolversTypes['Tenant'], ParentType, ContextType>;
+  tenant?: Resolver<Maybe<ResolversTypes['Tenant']>, ParentType, ContextType>;
   type?: Resolver<ResolversTypes['PaymentType'], ParentType, ContextType>;
   walletAddressId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -2521,7 +2521,7 @@ export type PeerResolvers<ContextType = any, ParentType extends ResolversParentT
   maxPacketAmount?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   staticIlpAddress?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  tenant?: Resolver<ResolversTypes['Tenant'], ParentType, ContextType>;
+  tenant?: Resolver<Maybe<ResolversTypes['Tenant']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -2683,7 +2683,7 @@ export type WalletAddressResolvers<ContextType = any, ParentType extends Resolve
   publicName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   quotes?: Resolver<Maybe<ResolversTypes['QuoteConnection']>, ParentType, ContextType, Partial<WalletAddressQuotesArgs>>;
   status?: Resolver<ResolversTypes['WalletAddressStatus'], ParentType, ContextType>;
-  tenant?: Resolver<ResolversTypes['Tenant'], ParentType, ContextType>;
+  tenant?: Resolver<Maybe<ResolversTypes['Tenant']>, ParentType, ContextType>;
   walletAddressKeys?: Resolver<Maybe<ResolversTypes['WalletAddressKeyConnection']>, ParentType, ContextType, Partial<WalletAddressWalletAddressKeysArgs>>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -2737,7 +2737,7 @@ export type WebhookEventResolvers<ContextType = any, ParentType extends Resolver
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   data?: Resolver<ResolversTypes['JSONObject'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  tenant?: Resolver<ResolversTypes['Tenant'], ParentType, ContextType>;
+  tenant?: Resolver<Maybe<ResolversTypes['Tenant']>, ParentType, ContextType>;
   type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
