@@ -142,6 +142,9 @@ export const resolvers: Resolvers = {
   Tenant: {
     settings: getTenantSettings
   },
+  Tenant: {
+    settings: getTenantSettings
+  },
   IncomingPayment: {
     liquidity: getIncomingPaymentLiquidity
   },
