@@ -1,0 +1,39 @@
+meta {
+  name: 6: Merchant ASE - Derive IPEK
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{hsmEmulatorHost}}/hsm/ase-merchant/derive-ipek
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "tr31BdkUnderLmk": "{{bdk_tr31_lmk_ilf}}",
+    "tr31TmkUnderLmk": "{{tmk_tr31_lmk_ilf}}",
+    "ksnHex": "ffff9876543210e00000"
+  }
+}
+
+script:post-response {
+  const body = res.getBody();
+  
+  if (body?.tr31IpekUnderLmk) bru.setEnvVar("ipek_tr31_lmk_ilf", body.tr31IpekUnderLmk);
+  if (body?.tr31IpekUnderTmk) bru.setEnvVar("ipek_tr31_tmk", body.tr31IpekUnderTmk);
+  if (body?.kcv) bru.setEnvVar("ipek_kcv", body.kcv);
+  
+  
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
