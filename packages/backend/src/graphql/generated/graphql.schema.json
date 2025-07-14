@@ -734,9 +734,13 @@
             "description": "The tenant that the asset belongs to.",
             "args": [],
             "type": {
-              "kind": "OBJECT",
-              "name": "Tenant",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Tenant",
+                "ofType": null
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -3861,13 +3865,17 @@
             "deprecationReason": null
           },
           {
-            "name": "tenantId",
-            "description": "The tenant UUID associated with the incoming payment. If not provided, it will be obtained from the signature.",
+            "name": "tenant",
+            "description": "The tenant associated with the incoming payment. If not provided, it will be obtained from the signature.",
             "args": [],
             "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Tenant",
+                "ofType": null
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -5956,13 +5964,17 @@
             "deprecationReason": null
           },
           {
-            "name": "tenantId",
-            "description": "Tenant ID of the outgoing payment.",
+            "name": "tenant",
+            "description": "Tenant of the outgoing payment.",
             "args": [],
             "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Tenant",
+                "ofType": null
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -6373,9 +6385,13 @@
             "description": "The tenant associated with the payment.",
             "args": [],
             "type": {
-              "kind": "OBJECT",
-              "name": "Tenant",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Tenant",
+                "ofType": null
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -6724,9 +6740,13 @@
             "description": "Unique identifier of the tenant associated with the peer.",
             "args": [],
             "type": {
-              "kind": "OBJECT",
-              "name": "Tenant",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Tenant",
+                "ofType": null
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -10044,9 +10064,13 @@
             "description": "Tenant of the wallet address.",
             "args": [],
             "type": {
-              "kind": "OBJECT",
-              "name": "Tenant",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Tenant",
+                "ofType": null
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -10593,9 +10617,13 @@
             "description": "Tenant of the webhook event.",
             "args": [],
             "type": {
-              "kind": "OBJECT",
-              "name": "Tenant",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Tenant",
+                "ofType": null
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
