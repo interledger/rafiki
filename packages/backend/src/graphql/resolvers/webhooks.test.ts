@@ -68,6 +68,9 @@ describe('Webhook Events Query', (): void => {
                   id
                   type
                   data
+                  tenant {
+                    id
+                  }
                 }
                 cursor
               }
@@ -92,7 +95,11 @@ describe('Webhook Events Query', (): void => {
         __typename: 'WebhookEvent',
         id: webhookEvent.id,
         type: webhookEvent.type,
-        data: webhookEvent.data
+        data: webhookEvent.data,
+        tenant: {
+          __typename: 'Tenant',
+          id: webhookEvent.tenantId
+        }
       })
     })
   })
