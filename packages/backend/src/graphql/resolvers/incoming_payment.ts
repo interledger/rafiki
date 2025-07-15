@@ -4,14 +4,16 @@ import {
   MutationResolvers,
   IncomingPayment as SchemaIncomingPayment,
   QueryResolvers,
-  IncomingPaymentFilter
+  IncomingPaymentFilter,
+  IncomingPaymentResolvers
 } from '../generated/graphql'
 import { IncomingPayment } from '../../open_payments/payment/incoming/model'
 import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/types'
 import {
   isIncomingPaymentError,
   errorToCode,
-  errorToMessage
+  errorToMessage,
+  IncomingPaymentError
 } from '../../open_payments/payment/incoming/errors'
 import { ForTenantIdContext, TenantedApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
@@ -19,6 +21,7 @@ import { Pagination, SortOrder } from '../../shared/baseModel'
 import { GraphQLError } from 'graphql'
 import { GraphQLErrorCode } from '../errors'
 import { IAppConfig } from '../../config/app'
+import { tenantToGraphQl } from './tenant'
 
 export const getIncomingPayment: QueryResolvers<TenantedApolloContext>['incomingPayment'] =
   async (parent, args, ctx): Promise<ResolversTypes['IncomingPayment']> => {
@@ -264,6 +267,30 @@ export const cancelIncomingPayment: MutationResolvers<TenantedApolloContext>['ca
     return {
       payment: paymentToGraphql(incomingPaymentOrError, config)
     }
+  }
+
+export const getIncomingPaymentTenant: IncomingPaymentResolvers<TenantedApolloContext>['tenant'] =
+  async (parent, args, ctx): Promise<ResolversTypes['Tenant'] | null> => {
+    if (!parent.id)
+      throw new GraphQLError('"id" required in request to resolve "tenant".')
+    const incomingPaymentService = await ctx.container.use(
+      'incomingPaymentService'
+    )
+    const incomingPayment = await incomingPaymentService.get({ id: parent.id })
+    if (!incomingPayment)
+      throw new GraphQLError(
+        errorToMessage[IncomingPaymentError.UnknownPayment],
+        {
+          extensions: {
+            code: errorToCode[IncomingPaymentError.UnknownPayment]
+          }
+        }
+      )
+
+    const tenantService = await ctx.container.use('tenantService')
+    const tenant = await tenantService.get(incomingPayment.tenantId)
+    if (!tenant) return null
+    return tenantToGraphQl(tenant)
   }
 
 export function paymentToGraphql(
