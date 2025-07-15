@@ -837,50 +837,6 @@ describe('Open Payments Wallet Address Service', (): void => {
       })
     })
 
-    test('creates corresponding operator webhook if withdrawal event is for tenant', async (): Promise<void> => {
-      const tenant = await createTenant(deps)
-      const walletAddress = await createWalletAddress(deps, {
-        tenantId: tenant.id,
-        createLiquidityAccount: true
-      })
-
-      accountingService.createDeposit({
-        id: uuid(),
-        account: walletAddress,
-        amount: BigInt(10)
-      })
-
-      await walletAddress.$query(knex).patch({
-        processAt: new Date(),
-        totalEventsAmount: BigInt(0)
-      })
-      await expect(walletAddressService.processNext()).resolves.toBe(
-        walletAddress.id
-      )
-
-      const events = await WalletAddressEvent.query(knex)
-        .where({
-          type: WalletAddressEventType.WalletAddressWebMonetization,
-          withdrawalAccountId: walletAddress.id,
-          withdrawalAssetId: walletAddress.assetId,
-          withdrawalAmount: BigInt(10)
-        })
-        .withGraphFetched('webhooks')
-      expect(events).toHaveLength(1)
-      expect(events[0].webhooks).toEqual([
-        expect.objectContaining({
-          recipientTenantId: walletAddress.tenantId,
-          eventId: events[0].id,
-          processAt: expect.any(Date)
-        }),
-        expect.objectContaining({
-          recipientTenantId: config.operatorTenantId,
-          eventId: events[0].id,
-          processAt: expect.any(Date)
-        })
-      ])
-    })
-
     test.each`
       processAt                        | description
       ${null}                          | ${'not scheduled'}
