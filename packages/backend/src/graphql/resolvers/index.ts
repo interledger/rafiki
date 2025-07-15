@@ -26,7 +26,8 @@ import {
   getIncomingPayment,
   updateIncomingPayment,
   approveIncomingPayment,
-  cancelIncomingPayment
+  cancelIncomingPayment,
+  getIncomingPaymentTenant
 } from './incoming_payment'
 import { getQuote, createQuote, getWalletAddressQuotes } from './quote'
 import {
@@ -35,7 +36,8 @@ import {
   createOutgoingPayment,
   getWalletAddressOutgoingPayments,
   createOutgoingPaymentFromIncomingPayment,
-  cancelOutgoingPayment
+  cancelOutgoingPayment,
+  getOutgoingPaymentTenant
 } from './outgoing_payment'
 import {
   getPeer,
@@ -140,10 +142,12 @@ export const resolvers: Resolvers = {
     settings: getTenantSettings
   },
   IncomingPayment: {
-    liquidity: getIncomingPaymentLiquidity
+    liquidity: getIncomingPaymentLiquidity,
+    tenant: getIncomingPaymentTenant
   },
   OutgoingPayment: {
-    liquidity: getOutgoingPaymentLiquidity
+    liquidity: getOutgoingPaymentLiquidity,
+    tenant: getOutgoingPaymentTenant
   },
   Payment: {
     liquidity: getPaymentLiquidity,
