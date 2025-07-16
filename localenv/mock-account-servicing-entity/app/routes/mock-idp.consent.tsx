@@ -15,6 +15,7 @@ import { AmountType } from './mock-idp._index'
 export function loader() {
   return json({
     authServerDomain: config.authServerDomain,
+    authIdpServiceDomain: config.authIdpServiceDomain,
     idpSecret: config.idpSecret // In production, ensure that secrets are handled securely and are not exposed to the client-side code.
   })
 }
@@ -114,7 +115,8 @@ function RejectedView({
 }
 
 export default function Consent() {
-  const { idpSecret, authServerDomain } = useLoaderData<typeof loader>()
+  const { idpSecret, authServerDomain, authIdpServiceDomain } =
+    useLoaderData<typeof loader>()
   const location = useLocation()
   const instanceConfig: InstanceConfig = useOutletContext()
   const queryParams = new URLSearchParams(location.search)
@@ -143,6 +145,7 @@ export default function Consent() {
         const acceptanceDecision =
           !!decision && decision.toLowerCase() === 'accept'
         ApiClient.chooseConsent(
+          authIdpServiceDomain,
           interactId,
           nonce,
           acceptanceDecision,

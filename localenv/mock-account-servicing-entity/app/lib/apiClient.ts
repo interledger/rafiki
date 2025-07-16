@@ -34,12 +34,13 @@ export class ApiClient {
 
   public static async getGrant(
     params: Record<string, string>,
+    idpServiceDomain: string,
     idpSecret: string
   ): Promise<ApiResponse> {
     // get grant --> GET /grant/:id/:nonce
     const { interactId, nonce } = params
     const response = await axios.get(
-      `http://localhost:3009/grant/${interactId}/${nonce}`,
+      `${idpServiceDomain}/grant/${interactId}/${nonce}`,
       {
         headers: {
           'x-idp-secret': idpSecret
@@ -63,6 +64,7 @@ export class ApiClient {
   }
 
   public static async chooseConsent(
+    idpServiceDomain: string,
     interactId: string,
     nonce: string,
     acceptanceDecision: boolean,
@@ -72,7 +74,7 @@ export class ApiClient {
     const acceptanceSubPath = acceptanceDecision ? 'accept' : 'reject'
 
     const response = await axios.post(
-      `http://localhost:3009/grant/${interactId}/${nonce}/${acceptanceSubPath}`,
+      `${idpServiceDomain}/grant/${interactId}/${nonce}/${acceptanceSubPath}`,
       {},
       {
         headers: {

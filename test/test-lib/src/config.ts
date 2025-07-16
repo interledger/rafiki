@@ -29,6 +29,8 @@ type EnvConfig = {
   SIGNATURE_VERSION: string
   OPERATOR_TENANT_ID: string
   IS_TENANT: string
+  AUTH_IDP_SERVICE_DOMAIN: string
+  INTERACTION_RETURN_URL: string
 }
 
 const REQUIRED_KEYS: (keyof EnvConfig)[] = [
@@ -84,7 +86,9 @@ const createConfig = (name: string): TestConfig => {
     signatureSecret: env.SIGNATURE_SECRET,
     signatureVersion: env.SIGNATURE_VERSION,
     operatorTenantId: env.OPERATOR_TENANT_ID,
-    isTenant: env.IS_TENANT === 'true'
+    isTenant: env.IS_TENANT === 'true',
+    authIdpServiceDomain: env.AUTH_IDP_SERVICE_DOMAIN,
+    interactionReturnUrl: env.INTERACTION_RETURN_URL
   }
 }
 
