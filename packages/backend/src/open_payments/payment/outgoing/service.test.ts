@@ -9,7 +9,11 @@ import {
   OutgoingPaymentError,
   isOutgoingPaymentError
 } from './errors'
-import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
+import {
+  CreateFromCardPayment,
+  CreateOutgoingPaymentOptions,
+  OutgoingPaymentService
+} from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config, IAppConfig } from '../../../config/app'
 import { Grant } from '../../auth/middleware'
@@ -1489,6 +1493,39 @@ describe('OutgoingPaymentService', (): void => {
           expect(payment).toBe(OutgoingPaymentError.OnlyOneGrantAmountAllowed)
         }
       )
+    })
+    test('failed to create when expiry is not valid', async () => {
+      const paymentMethods: OpenPaymentsPaymentMethod[] = [
+        {
+          type: 'ilp',
+          ilpAddress: 'test.ilp' as IlpAddress,
+          sharedSecret: ''
+        }
+      ]
+      const debitAmount = {
+        value: BigInt(123),
+        assetCode: receiverWalletAddress.asset.code,
+        assetScale: receiverWalletAddress.asset.scale
+      }
+      const options: CreateFromCardPayment = {
+        walletAddressId: receiverWalletAddress.id,
+        debitAmount,
+        incomingPayment: incomingPayment.toOpenPaymentsTypeWithMethods(
+          config.openPaymentsUrl,
+          receiverWalletAddress,
+
+          paymentMethods
+        ).id,
+        tenantId,
+        cardDetails: {
+          expiry: 'invalid',
+          signature: 'test'
+        }
+      }
+
+      const payment = await outgoingPaymentService.create(options)
+      expect(isOutgoingPaymentError(payment)).toBeTruthy()
+      expect(payment).toBe(OutgoingPaymentError.InvalidCardExpiry)
     })
   })
 
