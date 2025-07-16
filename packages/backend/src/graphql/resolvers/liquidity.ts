@@ -509,7 +509,7 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<TenantedApolloCo
     }
   }
 
-export const createIncomingPaymentWithdrawal: MutationResolvers<ApolloContext>['createIncomingPaymentWithdrawal'] =
+export const createIncomingPaymentWithdrawal: MutationResolvers<TenantedApolloContext>['createIncomingPaymentWithdrawal'] =
   async (
     parent,
     args,
@@ -520,7 +520,8 @@ export const createIncomingPaymentWithdrawal: MutationResolvers<ApolloContext>['
       'incomingPaymentService'
     )
     const incomingPayment = await incomingPaymentService.get({
-      id: incomingPaymentId
+      id: incomingPaymentId,
+      tenantId: ctx.tenant.id
     })
     const webhookService = await ctx.container.use('webhookService')
     const event = await webhookService.getLatestByResourceId({
@@ -561,7 +562,7 @@ export const createIncomingPaymentWithdrawal: MutationResolvers<ApolloContext>['
     }
   }
 
-export const createOutgoingPaymentWithdrawal: MutationResolvers<ApolloContext>['createOutgoingPaymentWithdrawal'] =
+export const createOutgoingPaymentWithdrawal: MutationResolvers<TenantedApolloContext>['createOutgoingPaymentWithdrawal'] =
   async (
     parent,
     args,
@@ -572,7 +573,8 @@ export const createOutgoingPaymentWithdrawal: MutationResolvers<ApolloContext>['
       'outgoingPaymentService'
     )
     const outgoingPayment = await outgoingPaymentService.get({
-      id: outgoingPaymentId
+      id: outgoingPaymentId,
+      tenantId: ctx.tenant.id
     })
     const webhookService = await ctx.container.use('webhookService')
     const event = await webhookService.getLatestByResourceId({
