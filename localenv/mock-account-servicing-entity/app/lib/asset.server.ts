@@ -31,6 +31,10 @@ export const listAssets = async (
               withdrawalThreshold
               tenantId
               createdAt
+              tenant {
+                id
+                publicName
+              }
             }
           }
           pageInfo {

@@ -2,11 +2,15 @@ import { TenantedApolloContext } from '../../app'
 import {
   QueryResolvers,
   ResolversTypes,
-  WebhookEvent as SchemaWebhookEvent
+  WebhookEvent as SchemaWebhookEvent,
+  WebhookEventResolvers
 } from '../generated/graphql'
 import { getPageInfo } from '../../shared/pagination'
 import { WebhookEvent } from '../../webhook/event/model'
 import { Pagination, SortOrder } from '../../shared/baseModel'
+import { tenantToGraphQl } from './tenant'
+import { GraphQLError } from 'graphql'
+import { errorToCode, errorToMessage, WebhookError } from '../../webhook/errors'
 
 export const getWebhookEvents: QueryResolvers<TenantedApolloContext>['webhookEvents'] =
   async (
@@ -40,12 +44,28 @@ export const getWebhookEvents: QueryResolvers<TenantedApolloContext>['webhookEve
     }
   }
 
+export const getWebhookEventTenant: WebhookEventResolvers<TenantedApolloContext>['tenant'] =
+  async (parent, args, ctx): Promise<ResolversTypes['Tenant'] | null> => {
+    if (!parent.id) return null
+    const webhookService = await ctx.container.use('webhookService')
+    const webhookEvent = await webhookService.getEvent(parent.id)
+    if (!webhookEvent)
+      throw new GraphQLError(errorToMessage[WebhookError.UnknownWebhookEvent], {
+        extensions: {
+          code: errorToCode[WebhookError.UnknownWebhookEvent]
+        }
+      })
+    const tenantService = await ctx.container.use('tenantService')
+    const tenant = await tenantService.get(webhookEvent.tenantId)
+    if (!tenant) return null
+    return tenantToGraphQl(tenant)
+  }
+
 export const webhookEventToGraphql = (
   webhookEvent: WebhookEvent
 ): SchemaWebhookEvent => ({
   id: webhookEvent.id,
   type: webhookEvent.type,
   data: webhookEvent.data,
-  tenantId: webhookEvent.tenantId,
   createdAt: new Date(webhookEvent.createdAt).toISOString()
 })
