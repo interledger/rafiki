@@ -3,7 +3,7 @@ import { AppServices } from '../../app'
 import { Config } from '../../config/app'
 import { CreateOptions, PosDeviceService } from './service'
 import { initIocContainer } from '../..'
-import { POSDeviceError } from './errors'
+import { DeviceServiceError } from './errors'
 import { v4 as uuid } from 'uuid'
 import { TestContainer, createTestApp } from '../../tests/app'
 import { truncateTables } from '../../tests/tableManager'
@@ -65,7 +65,7 @@ describe('POS Device Service', () => {
 
       await expect(
         posDeviceService.registerDevice(createOptions)
-      ).rejects.toThrow(POSDeviceError)
+      ).rejects.toThrow(DeviceServiceError)
       await expect(
         posDeviceService.registerDevice(createOptions)
       ).rejects.toThrow('Unknown merchant')
@@ -108,7 +108,7 @@ describe('POS Device Service', () => {
     test('throws error when there is no device with the given id', async () => {
       await createDeviceWithMerchant()
       await expect(posDeviceService.revoke(uuid())).rejects.toThrow(
-        POSDeviceError
+        DeviceServiceError
       )
       await expect(posDeviceService.revoke(uuid())).rejects.toThrow(
         'Unknown POS device'

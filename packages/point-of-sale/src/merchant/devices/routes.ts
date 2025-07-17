@@ -49,7 +49,7 @@ async function revokeDevice(
       merchantId,
       deviceId
     )
-    if (!device) {
+    if (!device || device.deletedAt) {
       throw new DeviceServiceError(DeviceError.DeviceNotFound)
     }
 
