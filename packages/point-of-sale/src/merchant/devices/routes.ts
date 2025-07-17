@@ -1,10 +1,8 @@
 import { TransactionOrKnex } from 'objection'
 import { AppContext } from '../../app'
 import { BaseService } from '../../shared/baseService'
-import { POSMerchantError } from '../errors'
-import { PosDevice } from './model'
+import { DeviceError, DeviceServiceError, POSDeviceError } from './errors'
 import { PosDeviceService } from './service'
-import { POSDeviceError } from './errors'
 
 interface ServiceDependencies extends BaseService {
   posDeviceService: PosDeviceService
@@ -47,26 +45,21 @@ async function revokeDevice(
 ): Promise<void> {
   const { merchantId, deviceId } = ctx.request.params
   try {
-    // device belongs to merchant
-    const device = await PosDevice.query(deps.knex)
-      .where({
-        id: deviceId,
-        merchantId: merchantId
-      })
-      .whereNull('deletedAt')
-      .first()
-
+    const device = await deps.posDeviceService.getMerchantDevice(
+      merchantId,
+      deviceId
+    )
     if (!device) {
-      throw new POSMerchantError(404, 'Device not found')
+      throw new DeviceServiceError(DeviceError.DeviceNotFound)
     }
 
     await deps.posDeviceService.revoke(deviceId)
 
     ctx.status = 204
   } catch (err) {
-    if (err instanceof POSMerchantError || err instanceof POSDeviceError) {
-      throw err
+    if (err instanceof DeviceServiceError) {
+      throw new POSDeviceError(err)
     }
-    throw new POSMerchantError(400, 'Could not revoke device', { err })
+    throw new POSDeviceError(400, 'Could not revoke device', { err })
   }
 }

@@ -1,10 +1,10 @@
 import { NotFoundError } from 'objection'
+import { v4 as uuid } from 'uuid'
 import { IAppConfig } from '../../config/app'
 import { BaseService } from '../../shared/baseService'
 import { Merchant } from '../model'
-import { POSDeviceError } from './errors'
+import { DeviceError, DeviceServiceError } from './errors'
 import { DeviceStatus, PosDevice } from './model'
-import { v4 as uuid } from 'uuid'
 
 export interface PosDeviceService {
   registerDevice(options: CreateOptions): Promise<PosDevice>
@@ -14,6 +14,8 @@ export interface PosDeviceService {
   revoke(id: string): Promise<PosDevice>
 
   revokeAllByMerchantId(merchantId: string): Promise<number>
+
+  getMerchantDevice(merchantId: string, deviceId: string): Promise<PosDevice | undefined>
 }
 
 export interface CreateOptions {
@@ -47,7 +49,9 @@ export async function createPosDeviceService({
     getByKeyId: (keyId) => getByKeyId(deps, keyId),
     revoke: (id) => revoke(deps, id),
     revokeAllByMerchantId: (merchantId) =>
-      revokeAllByMerchantId(deps, merchantId)
+      revokeAllByMerchantId(deps, merchantId),
+    getMerchantDevice: (merchantId, deviceId) =>
+      getMerchantDevice(deps, deviceId, merchantId)
   }
 }
 
@@ -57,7 +61,7 @@ async function registerDevice(
 ): Promise<PosDevice> {
   const merchant = await Merchant.query(deps.knex).findById(merchantId)
   if (!merchant) {
-    throw new POSDeviceError(404, 'Unknown merchant')
+    throw new DeviceServiceError(DeviceError.UnknownMerchant)
   }
 
   const device = await PosDevice.query(deps.knex).insertAndFetch({
@@ -98,7 +102,7 @@ async function revoke(
     return device
   } catch (err) {
     if (err instanceof NotFoundError) {
-      throw new POSDeviceError(404, 'Unknown POS device')
+      throw new DeviceServiceError(DeviceError.UnknownDevice)
     }
     throw err
   }
@@ -117,6 +121,18 @@ async function revokeAllByMerchantId(
     .whereNull('deletedAt')
 
   return revokedCount
+}
+
+async function getMerchantDevice(
+  deps: ServiceDependencies,
+  id: string,
+  merchantId: string
+): Promise<PosDevice | undefined> {
+  const device = await PosDevice.query(deps.knex).findById(id)
+  if (device?.merchantId !== merchantId) {
+    return undefined
+  }
+  return device
 }
 
 function generateKeyId(deviceName: string): string {
