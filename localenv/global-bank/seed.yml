@@ -1,0 +1,106 @@
+assets:
+  - code: USD
+    scale: 2
+    liquidity: 2000000000000
+    liquidityThreshold: 10000000
+  # - code: EUR
+  #   scale: 2
+  #   liquidity: 10000000000
+  #   liquidityThreshold: 1000000
+  # - code: MXN
+  #   scale: 2
+  #   liquidity: 10000000000
+  #   liquidityThreshold: 10000000
+  # - code: JPY
+  #   scale: 0
+  #   liquidity: 1000000000
+  #   liquidityThreshold: 1000000
+peeringAsset: 'USD'
+peers:
+  - initialLiquidity: '1000000000000'
+    peerUrl: http://intergalactic-bank-backend:3002
+    peerIlpAddress: test.intergalactic-bank
+    liquidityThreshold: 1000000
+    tokens:
+      incoming:
+        - intergalactic-to-global
+      outgoing: global-to-intergalactic
+    routes: 
+      - "test.intergalactic-bank"
+      - "test"
+  - initialLiquidity: '1000000000000'
+    peerUrl: http://us-treasury-backend:3002
+    peerIlpAddress: test.us-treasury
+    liquidityThreshold: 1000000
+    tokens:
+      incoming:
+        - treasury-to-global
+      outgoing: global-to-treasury
+    routes: 
+      - "test.us-treasury"
+      - "test"
+accounts:
+  - name: 'John Doe'
+    path: accounts/jdoe
+    id: 77a3a431-8ee1-48fc-ac85-70e2f5eba8e6
+    initialBalance: 1000000
+    brunoEnvVar: jdoeWalletAddress
+    assetCode: USD
+  - name: 'Global Corp'
+    id: 4455cc54-b583-455b-836a-e5275c5c05b8
+    initialBalance: 5000000
+    path: accounts/gcorp
+    brunoEnvVar: gcorpWalletAddress
+    assetCode: USD
+  - name: 'Jane Smith'
+    path: accounts/jsmith
+    id: 447ac10b-58cc-4372-a567-0e02b2c3d480
+    initialBalance: 2000000
+    brunoEnvVar: jsmithWalletAddress
+    assetCode: USD
+  - name: 'Maria Garcia'
+    path: accounts/mgarcia
+    id: dd4ecbc9-205d-4ecd-a030-507d6ce2bde7
+    initialBalance: 3000000
+    brunoEnvVar: mgarciaWalletAddress
+    assetCode: EUR
+  - name: 'Carlos Rodriguez'
+    path: accounts/crodriguez
+    id: 90257507-3191-4507-9d77-9071fd6b3c31
+    initialBalance: 4000000
+    brunoEnvVar: crodriguezWalletAddress
+    assetCode: MXN
+rates:
+  EUR:
+    MXN: 18.78
+    USD: 1.10
+    JPY: 157.83
+  USD:
+    MXN: 17.07
+    EUR: 0.91
+    JPY: 147.71
+  MXN:
+    USD: 0.059
+    EUR: 0.054
+    JPY: 8.65
+  JPY:
+    USD: 0.007
+    EUR: 0.006
+    MXN: 0.12
+fees:
+  - fixed: 100
+    basisPoints: 200
+    asset: USD
+    scale: 2
+  - fixed: 100
+    basisPoints: 200
+    asset: EUR
+    scale: 2
+  - fixed: 100
+    basisPoints: 200
+    asset: MXN
+    scale: 2
+  - fixed: 1
+    basisPoints: 200
+    asset: JPY
+    scale: 0 

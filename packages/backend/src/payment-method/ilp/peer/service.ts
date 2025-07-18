@@ -2,7 +2,6 @@ import {
   ForeignKeyViolationError,
   UniqueViolationError,
   NotFoundError,
-  raw,
   Transaction,
   TransactionOrKnex
 } from 'objection'
@@ -22,7 +21,7 @@ import { BaseService } from '../../../shared/baseService'
 import { isValidHttpUrl } from '../../../shared/utils'
 import { v4 as uuid } from 'uuid'
 import { TransferError } from '../../../accounting/errors'
-import PrefixMap from '../connector/ilp-routing/lib/prefix-map'
+import { RouterService } from '../connector/ilp-routing/service'
 
 export interface HttpOptions {
   incoming?: {
@@ -41,6 +40,7 @@ export type Options = {
   name?: string
   liquidityThreshold?: bigint
   initialLiquidity?: bigint
+  routes?: string[]
 }
 
 export type CreateOptions = Options & {
@@ -86,6 +86,7 @@ interface ServiceDependencies extends BaseService {
   assetService: AssetService
   httpTokenService: HttpTokenService
   knex: TransactionOrKnex
+  routerService: RouterService
 }
 
 export async function createPeerService({
@@ -93,7 +94,8 @@ export async function createPeerService({
   knex,
   accountingService,
   assetService,
-  httpTokenService
+  httpTokenService,
+  routerService
 }: ServiceDependencies): Promise<PeerService> {
   const log = logger.child({
     service: 'PeerService'
@@ -103,7 +105,8 @@ export async function createPeerService({
     knex,
     accountingService,
     assetService,
-    httpTokenService
+    httpTokenService,
+    routerService
   }
   return {
     get: (id, tenantId) => getPeer(deps, id, tenantId),
@@ -155,6 +158,11 @@ async function createPeer(
 
   try {
     return await Peer.transaction(deps.knex, async (trx) => {
+      const routes = [options.staticIlpAddress]
+      if (options.routes) {
+        routes.push(...options.routes)
+      }
+
       const peer = await Peer.query(trx).insertAndFetch({
         assetId: options.assetId,
         http: options.http,
@@ -162,7 +170,8 @@ async function createPeer(
         staticIlpAddress: options.staticIlpAddress,
         name: options.name,
         liquidityThreshold: options.liquidityThreshold,
-        tenantId: asset.tenantId
+        tenantId: asset.tenantId,
+        routes
       })
       peer.asset = asset
 
@@ -204,6 +213,8 @@ async function createPeer(
         }
       }
 
+      await syncPeerRoutes(deps, peer)
+
       return peer
     })
   } catch (err) {
@@ -244,6 +255,11 @@ async function updatePeer(
 
   try {
     return await Peer.transaction(deps.knex, async (trx) => {
+      const existingPeer = await Peer.query(trx).findById(options.id)
+      if (!existingPeer) {
+        return PeerError.UnknownPeer
+      }
+
       if (options.http?.incoming) {
         await deps.httpTokenService.deleteByPeer(options.id, trx)
         const err = await addIncomingHttpTokens({
@@ -257,9 +273,21 @@ async function updatePeer(
         }
       }
 
+      const updateData = { ...options }
+
+      if (options.routes !== undefined) {
+        const staticIlpAddress =
+          options.staticIlpAddress ?? existingPeer.staticIlpAddress
+        updateData.routes = [staticIlpAddress, ...options.routes]
+      }
+
       const peer = await Peer.query(trx)
-        .patchAndFetchById(options.id, options)
+        .patchAndFetchById(options.id, updateData)
         .throwIfNotFound()
+
+      await clearPeerRoutes(deps, existingPeer)
+      await syncPeerRoutes(deps, peer)
+
       const asset = await deps.assetService.get(peer.assetId)
       if (asset) peer.asset = asset
       return peer
@@ -335,65 +363,20 @@ async function addIncomingHttpTokens({
 async function getPeerByDestinationAddress(
   deps: ServiceDependencies,
   destinationAddress: string,
-  tenantId?: string,
+  tenantId: string,
   assetId?: string
 ): Promise<Peer | undefined> {
-  // This query does the equivalent of the following regex
-  // for `staticIlpAddress`s in the accounts table:
-  // new RegExp('^' + staticIlpAddress + '($|\\.)')).test(destinationAddress)
-  const peerQuery = Peer.query(deps.knex)
-    .where(
-      raw('?', [destinationAddress]),
-      'like',
-      // "_" is a Postgres pattern wildcard (matching any one character), and must be escaped.
-      // See: https://www.postgresql.org/docs/current/functions-matching.html#FUNCTIONS-LIKE
-      raw("REPLACE(REPLACE(??, '_', '\\\\_'), '%', '\\\\%') || '%'", [
-        'staticIlpAddress'
-      ])
-    )
-    .andWhere((builder) => {
-      builder
-        .where(
-          raw('length(??)', ['staticIlpAddress']),
-          destinationAddress.length
-        )
-        .orWhere(
-          raw('substring(?, length(??)+1, 1)', [
-            destinationAddress,
-            'staticIlpAddress'
-          ]),
-          '.'
-        )
-    })
-
-  if (assetId) {
-    peerQuery.andWhere('assetId', assetId)
+  const nextHop = await deps.routerService.getNextHop(
+    destinationAddress,
+    tenantId,
+    assetId
+  )
+  if (nextHop) {
+    const peer = await getPeer(deps, nextHop, tenantId)
+    if (peer) {
+      return peer
+    }
   }
-
-  if (tenantId) {
-    peerQuery.andWhere('tenantId', tenantId)
-  }
-
-  const peers = await peerQuery
-  const peer = getByLongestPrefixMatch(peers, destinationAddress)
-
-  if (peer) {
-    const asset = await deps.assetService.get(peer.assetId)
-    if (asset) peer.asset = asset
-  }
-  return peer || undefined
-}
-
-function getByLongestPrefixMatch(
-  peers: Peer[],
-  destinationAddress: string
-): Peer | undefined {
-  const map = new PrefixMap<Peer>()
-  for (const peer of peers) {
-    map.insert(peer.staticIlpAddress, peer)
-  }
-
-  return map.resolve(destinationAddress)
 }
 
 async function getPeerByIncomingToken(
@@ -449,8 +432,48 @@ async function deletePeer(
     .returning('*')
     .first()
   if (peer) {
+    await clearPeerRoutes(deps, peer)
     const asset = await deps.assetService.get(peer.assetId)
     if (asset) peer.asset = asset
   }
   return peer
+}
+
+async function syncPeerRoutes(
+  deps: ServiceDependencies,
+  peer: Peer
+): Promise<void> {
+  // Always add the static ILP address
+  await deps.routerService.addStaticRoute(
+    peer.staticIlpAddress,
+    peer.id,
+    peer.tenantId,
+    peer.assetId
+  )
+
+  if (peer.routes && peer.routes.length > 0) {
+    for (const route of peer.routes) {
+      await deps.routerService.addStaticRoute(
+        route,
+        peer.id,
+        peer.tenantId,
+        peer.assetId
+      )
+    }
+  }
+}
+
+async function clearPeerRoutes(
+  deps: ServiceDependencies,
+  peer: Peer
+): Promise<void> {
+  const routes = peer.routes || [peer.staticIlpAddress]
+  for (const route of routes) {
+    await deps.routerService.removeStaticRoute(
+      route,
+      peer.id,
+      peer.tenantId,
+      peer.assetId
+    )
+  }
 }
