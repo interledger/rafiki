@@ -1,5 +1,10 @@
 import assert from 'assert'
-import { gql, ApolloError } from '@apollo/client'
+import {
+  gql,
+  ApolloError,
+  NormalizedCacheObject,
+  ApolloClient
+} from '@apollo/client'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
@@ -1166,6 +1171,158 @@ describe('Wallet Address Resolvers', (): void => {
           address: walletAddress.address,
           publicName: walletAddress.publicName
         })
+      })
+    })
+
+    describe('pagination tenant boundaries', (): void => {
+      let operatorWalletAddress: WalletAddressModel
+      let tenantWalletAddress: WalletAddressModel
+      let secondTenantWalletAddress: WalletAddressModel
+      let tenantedApolloClient: ApolloClient<NormalizedCacheObject>
+
+      const pageQuery = gql`
+        query WalletAddresses($tenantId: String) {
+          walletAddresses(tenantId: $tenantId) {
+            edges {
+              node {
+                id
+              }
+            }
+          }
+        }
+      `
+
+      beforeEach(async (): Promise<void> => {
+        operatorWalletAddress = await createWalletAddress(deps)
+        const tenant = await createTenant(deps)
+        tenantedApolloClient = await createApolloClient(
+          appContainer.container,
+          appContainer.app,
+          tenant.id
+        )
+        tenantWalletAddress = await createWalletAddress(deps, {
+          tenantId: tenant.id
+        })
+        secondTenantWalletAddress = await createWalletAddress(deps, {
+          tenantId: tenant.id
+        })
+      })
+
+      test('Operator can get all wallet addresses across all tenants', async (): Promise<void> => {
+        const query = await appContainer.apolloClient
+          .query({
+            query: pageQuery
+          })
+          .then((query): WalletAddressesConnection => {
+            if (query.data) {
+              return query.data.walletAddresses
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(query.edges).toHaveLength(3)
+        expect(query.edges).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              node: expect.objectContaining({ id: operatorWalletAddress.id })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({ id: tenantWalletAddress.id })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: secondTenantWalletAddress.id
+              })
+            })
+          ])
+        )
+      })
+
+      test('Tenant cannot get all wallet addresses across all tenants', async (): Promise<void> => {
+        const query = await tenantedApolloClient
+          .query({
+            query: pageQuery
+          })
+          .then((query): WalletAddressesConnection => {
+            if (query.data) {
+              return query.data.walletAddresses
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(query.edges).toHaveLength(2)
+        expect(query.edges).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              node: expect.objectContaining({ id: tenantWalletAddress.id })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: secondTenantWalletAddress.id
+              })
+            })
+          ])
+        )
+      })
+
+      test('Operator can filter wallet addresses across all tenants', async (): Promise<void> => {
+        const query = await appContainer.apolloClient
+          .query({
+            query: pageQuery,
+            variables: { tenantId: tenantWalletAddress.tenantId }
+          })
+          .then((query): WalletAddressesConnection => {
+            if (query.data) {
+              return query.data.walletAddresses
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(query.edges).toHaveLength(2)
+        expect(query.edges).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              node: expect.objectContaining({ id: tenantWalletAddress.id })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: secondTenantWalletAddress.id
+              })
+            })
+          ])
+        )
+      })
+
+      test('Tenant cannot get all wallet addresses across all tenants', async (): Promise<void> => {
+        const query = await tenantedApolloClient
+          .query({
+            query: pageQuery,
+            variables: { tenantId: operatorWalletAddress.tenantId }
+          })
+          .then((query): WalletAddressesConnection => {
+            if (query.data) {
+              return query.data.walletAddresses
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(query.edges).toHaveLength(2)
+        expect(query.edges).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              node: expect.objectContaining({ id: tenantWalletAddress.id })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: secondTenantWalletAddress.id
+              })
+            })
+          ])
+        )
       })
     })
   })

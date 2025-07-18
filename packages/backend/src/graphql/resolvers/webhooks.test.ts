@@ -1,6 +1,10 @@
-import { gql } from '@apollo/client'
+import { ApolloClient, gql, NormalizedCacheObject } from '@apollo/client'
 import { getPageTests } from './page.test'
-import { createTestApp, TestContainer } from '../../tests/app'
+import {
+  createApolloClient,
+  createTestApp,
+  TestContainer
+} from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
@@ -9,6 +13,7 @@ import { truncateTables } from '../../tests/tableManager'
 import { WebhookEventsConnection } from '../generated/graphql'
 import { createWebhookEvent, webhookEventTypes } from '../../tests/webhook'
 import { WebhookEvent } from '../../webhook/event/model'
+import { createTenant } from '../../tests/tenant'
 
 describe('Webhook Events Query', (): void => {
   let deps: IocContract<AppServices>
@@ -89,6 +94,168 @@ describe('Webhook Events Query', (): void => {
         type: webhookEvent.type,
         data: webhookEvent.data
       })
+    })
+  })
+
+  describe('tenant boundaries', (): void => {
+    let operatorWebhookEvent: WebhookEvent
+    let tenantWebhookEvent: WebhookEvent
+    let secondTenantWebhookEvent: WebhookEvent
+    let tenantedApolloClient: ApolloClient<NormalizedCacheObject>
+
+    const pageQuery = gql`
+      query WebhookEvents($tenantId: String) {
+        webhookEvents(tenantId: $tenantId) {
+          edges {
+            node {
+              id
+              type
+              data
+              tenantId
+            }
+            cursor
+          }
+        }
+      }
+    `
+
+    beforeEach(async (): Promise<void> => {
+      operatorWebhookEvent = await createWebhookEvent(deps)
+      const tenant = await createTenant(deps)
+      tenantedApolloClient = await createApolloClient(
+        appContainer.container,
+        appContainer.app,
+        tenant.id
+      )
+      tenantWebhookEvent = await createWebhookEvent(deps, {
+        tenantId: tenant.id
+      })
+      secondTenantWebhookEvent = await createWebhookEvent(deps, {
+        tenantId: tenant.id
+      })
+    })
+
+    test('Can get webhooks across tenants as operator', async (): Promise<void> => {
+      const query = await appContainer.apolloClient
+        .query({
+          query: pageQuery
+        })
+        .then((query): WebhookEventsConnection => {
+          if (query.data) {
+            return query.data.webhookEvents
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(query.edges).toHaveLength(3)
+      expect(query.edges).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            node: expect.objectContaining({
+              id: operatorWebhookEvent.id
+            })
+          }),
+          expect.objectContaining({
+            node: expect.objectContaining({
+              id: tenantWebhookEvent.id
+            })
+          }),
+          expect.objectContaining({
+            node: expect.objectContaining({
+              id: secondTenantWebhookEvent.id
+            })
+          })
+        ])
+      )
+    })
+
+    test('Cannot get webhooks across tenants as tenant', async (): Promise<void> => {
+      const query = await tenantedApolloClient
+        .query({
+          query: pageQuery
+        })
+        .then((query): WebhookEventsConnection => {
+          if (query.data) {
+            return query.data.webhookEvents
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(query.edges).toHaveLength(2)
+      expect(query.edges).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            node: expect.objectContaining({ id: tenantWebhookEvent.id })
+          }),
+          expect.objectContaining({
+            node: expect.objectContaining({ id: secondTenantWebhookEvent.id })
+          })
+        ])
+      )
+    })
+
+    test('can filter webhooks by tenant as operator', async (): Promise<void> => {
+      const query = await appContainer.apolloClient
+        .query({
+          query: pageQuery,
+          variables: { tenantId: tenantWebhookEvent.tenantId }
+        })
+        .then((query): WebhookEventsConnection => {
+          if (query.data) {
+            return query.data.webhookEvents
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(query.edges).toHaveLength(2)
+      expect(query.edges).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            node: expect.objectContaining({
+              id: tenantWebhookEvent.id
+            })
+          }),
+          expect.objectContaining({
+            node: expect.objectContaining({
+              id: secondTenantWebhookEvent.id
+            })
+          })
+        ])
+      )
+    })
+
+    test('cannot filter webhooks by tenant as tenant', async (): Promise<void> => {
+      const query = await tenantedApolloClient
+        .query({
+          query: pageQuery,
+          variables: { tenantId: operatorWebhookEvent.tenantId }
+        })
+        .then((query): WebhookEventsConnection => {
+          if (query.data) {
+            return query.data.webhookEvents
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(query.edges).toHaveLength(2)
+      expect(query.edges).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            node: expect.objectContaining({
+              id: tenantWebhookEvent.id
+            })
+          }),
+          expect.objectContaining({
+            node: expect.objectContaining({
+              id: secondTenantWebhookEvent.id
+            })
+          })
+        ])
+      )
     })
   })
 })
