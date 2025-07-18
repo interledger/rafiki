@@ -3,36 +3,19 @@ assets:
     scale: 2
     liquidity: 10000000000
     liquidityThreshold: 100000000
-  - code: EUR
-    scale: 2
-    liquidity: 10000000000
-    liquidityThreshold: 1000000
-  - code: MXN
-    scale: 2
-    liquidity: 10000000000
-    liquidityThreshold: 10000000
-  - code: JPY
-    scale: 0
-    liquidity: 1000000000
-    liquidityThreshold: 1000000
 peeringAsset: 'USD'
 peers:
-  - initialLiquidity: '1000000000000'
-    peerUrl: http://cloud-nine-wallet-backend:3002
-    peerIlpAddress: test.cloud-nine-wallet
+  - initialLiquidity: '1000000000'
+    peerUrl: http://us-treasury-backend:3002
+    peerIlpAddress: test.us-treasury
     liquidityThreshold: 1000000
     tokens:
-      incoming: 
-        - test-USD-cloud-nine-wallet-happy-life-bank
-      outgoing: test-USD-happy-life-bank-cloud-nine-wallet
-  - initialLiquidity: '1000000000000'
-    peerUrl: http://cloud-nine-wallet-backend:3002
-    peerIlpAddress: test.cloud-nine-wallet.bc293b79-8609-47bd-b914-6438b470aff8
-    liquidityThreshold: 1000000
-    tokens:
-      incoming: 
-        - test-USD-cloud-ten-wallet-happy-life-bank
-      outgoing: test-USD-happy-life-bank-cloud-ten-wallet
+      incoming:
+        - treasury-to-happy
+      outgoing: happy-to-treasury
+    routes: 
+      - "test.us-treasury"
+      - "test"
 accounts:
   - name: 'Philip Fry'
     path: accounts/pfry

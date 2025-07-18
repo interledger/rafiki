@@ -101,6 +101,7 @@ export function createAccountMiddleware(): ILPMiddleware {
           return walletAddress
         }
       }
+
       const address = ctx.request.prepare.destination
       const peer = await peers.getByDestinationAddress(
         address,

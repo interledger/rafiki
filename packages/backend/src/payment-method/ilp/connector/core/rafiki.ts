@@ -63,7 +63,6 @@ export interface TransferOptions {
 }
 
 export interface RafikiServices {
-  //router: Router
   accounting: AccountingService
   telemetry: TelemetryService
   walletAddresses: WalletAddressService
@@ -101,6 +100,7 @@ export type ILPContext<T = any> = {
   request: {
     prepare: ZeroCopyIlpPrepare
     rawPrepare: Buffer
+    nextHop?: string
   }
   response: IlpResponse
   throw: (status: number, msg: string) => never
