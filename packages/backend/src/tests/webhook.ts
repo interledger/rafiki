@@ -8,7 +8,9 @@ import { EventPayload } from '../webhook/service'
 import { createAsset } from './asset'
 
 export const webhookEventTypes = ['event1', 'event2', 'event3'] as const
-type WebhookEventPayload = EventPayload & { assetId: string }
+type WebhookEventPayload = EventPayload & { assetId: string } & {
+  tenantId: string
+}
 
 export async function createWebhookEvent(
   deps: IocContract<AppServices>,
