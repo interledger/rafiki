@@ -41,7 +41,7 @@ export function createPosDeviceRoutes(
   deps_: ServiceDependencies
 ): PosDeviceRoutes {
   const log = deps_.logger.child({
-    service: 'DeviceRoutes'
+    service: 'PosDeviceRoutes'
   })
 
   const deps = {
