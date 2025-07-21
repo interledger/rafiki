@@ -1,15 +1,15 @@
 import { IocContract } from '@adonisjs/fold'
+import assert from 'assert'
+import { v4 as uuid } from 'uuid'
+import { initIocContainer } from '../..'
 import { AppServices } from '../../app'
 import { Config } from '../../config/app'
-import { CreateOptions, PosDeviceService } from './service'
-import { initIocContainer } from '../..'
-import { DeviceServiceError } from './errors'
-import { v4 as uuid } from 'uuid'
 import { TestContainer, createTestApp } from '../../tests/app'
 import { truncateTables } from '../../tests/tableManager'
 import { MerchantService } from '../service'
+import { DeviceServiceError } from './errors'
 import { DeviceStatus, PosDevice } from './model'
-import assert from 'assert'
+import { CreateOptions, PosDeviceService } from './service'
 
 describe('POS Device Service', () => {
   let deps: IocContract<AppServices>

@@ -1,5 +1,4 @@
 import { IocContract } from '@adonisjs/fold'
-import assert from 'assert'
 import { v4 as uuid } from 'uuid'
 import { initIocContainer } from '../..'
 import { AppServices } from '../../app'

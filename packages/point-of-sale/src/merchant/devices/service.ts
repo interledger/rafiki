@@ -128,11 +128,7 @@ async function getMerchantDevice(
   id: string,
   merchantId: string
 ): Promise<PosDevice | undefined> {
-  const device = await PosDevice.query(deps.knex).findById(id)
-  if (device?.merchantId !== merchantId) {
-    return undefined
-  }
-  return device
+  return await PosDevice.query(deps.knex).where({ id, merchantId }).first()
 }
 
 function generateKeyId(deviceName: string): string {
