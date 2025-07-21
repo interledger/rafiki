@@ -24,7 +24,7 @@
     "class-variance-authority": "^0.7.1",
     "graphql": "^16.11.0",
     "ilp-packet": "3.1.4-alpha.2",
-    "isbot": "^5.1.23",
+    "isbot": "^5.1.28",
     "json-canonicalize": "^1.0.6",
     "pino": "^8.19.0",
     "qs": "^6.11.2",
