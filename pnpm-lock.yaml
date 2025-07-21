@@ -799,9 +799,6 @@ importers:
       '@apollo/server':
         specifier: ^4.11.2
         version: 4.11.2(graphql@16.11.0)
-      '@faker-js/faker':
-        specifier: ^8.4.1
-        version: 8.4.1
       '@koa/cors':
         specifier: ^5.0.0
         version: 5.0.0
@@ -848,6 +845,9 @@ importers:
       '@apollo/client':
         specifier: ^3.11.8
         version: 3.11.8(@types/react@18.2.73)(graphql@16.11.0)(react-dom@18.2.0)(react@18.2.0)
+      '@faker-js/faker':
+        specifier: ^8.4.1
+        version: 8.4.1
       '@graphql-codegen/cli':
         specifier: 5.0.4
         version: 5.0.4(@babel/core@7.27.4)(@types/node@20.14.15)(graphql@16.11.0)
