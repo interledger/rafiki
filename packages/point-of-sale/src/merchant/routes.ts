@@ -4,12 +4,10 @@ import { MerchantService } from './service'
 import { POSMerchantError } from './errors'
 import { createPosDeviceRoutes, PosDeviceRoutes } from './devices/routes'
 import { PosDeviceService } from './devices/service'
-import { TransactionOrKnex } from 'objection'
 
 interface ServiceDependencies extends BaseService {
   merchantService: MerchantService
   posDeviceService: PosDeviceService
-  knex: TransactionOrKnex
 }
 
 type CreateMerchantRequest = Exclude<AppContext['request'], 'body'> & {

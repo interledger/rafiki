@@ -89,7 +89,6 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       merchantService: await deps.use('merchantService'),
       posDeviceService: await deps.use('posDeviceService'),
-      knex: await deps.use('knex')
     })
   })
 
