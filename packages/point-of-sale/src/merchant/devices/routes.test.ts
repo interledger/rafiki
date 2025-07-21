@@ -7,7 +7,7 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { createContext } from '../../tests/context'
 import { truncateTables } from '../../tests/tableManager'
 import { MerchantService } from '../service'
-import { CreateBody, createPosDeviceRouts, PosDeviceRoutes, RegisterDeviceContext, RevokeDeviceContext } from './routes'
+import { CreateBody, createPosDeviceRoutes, PosDeviceRoutes, RegisterDeviceContext, RevokeDeviceContext } from './routes'
 import { PosDeviceService } from './service'
 import { faker } from '@faker-js/faker'
 
@@ -34,7 +34,7 @@ describe('POS Device Routes', (): void => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
 
-    posDeviceRoutes = createPosDeviceRouts({
+    posDeviceRoutes = createPosDeviceRoutes({
       posDeviceService,
       knex,
       logger
@@ -153,6 +153,9 @@ describe('POS Device Routes', (): void => {
       }
 
       await expect(posDeviceRoutes.revoke(ctx)).rejects.toThrow('Device not found')
+    })
+  })
+
   describe('create', () => {
     test('returns the keyId and algorithm of the device on success', async () => {
       const { id: merchantId } = await merchantService.create('Merchant')
@@ -182,11 +185,7 @@ describe('POS Device Routes', (): void => {
       })
       ctx.request.body = CREATE_BODY
       ctx.params.merchantId = uuid()
-      //TODO: fix this
-      // await expect(posDeviceRoutes.register(ctx)).rejects.toMatchObject({
-      //   status: 400,
-      //   message: errorToMessage[PosDeviceError.UnknownMerchant]
-      // })
+      await expect(posDeviceRoutes.register(ctx)).rejects.toThrow('Unknown merchant')
     })
   })
 })

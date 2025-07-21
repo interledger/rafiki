@@ -2,7 +2,7 @@ import { AppContext } from '../app'
 import { BaseService } from '../shared/baseService'
 import { MerchantService } from './service'
 import { POSMerchantError } from './errors'
-import { createDeviceRoutes, DeviceRoutes } from './devices/routes'
+import { createPosDeviceRoutes, PosDeviceRoutes } from './devices/routes'
 import { PosDeviceService } from './devices/service'
 import { TransactionOrKnex } from 'objection'
 
@@ -35,7 +35,7 @@ export type DeleteMerchantContext = Exclude<AppContext, 'request'> & {
 export interface MerchantRoutes {
   create(ctx: CreateMerchantContext): Promise<void>
   delete(ctx: DeleteMerchantContext): Promise<void>
-  devices: DeviceRoutes
+  devices: PosDeviceRoutes
 }
 
 export function createMerchantRoutes(
@@ -53,7 +53,7 @@ export function createMerchantRoutes(
   return {
     create: (ctx: CreateMerchantContext) => createMerchant(deps, ctx),
     delete: (ctx: DeleteMerchantContext) => deleteMerchant(deps, ctx),
-    devices: createDeviceRoutes(deps)
+    devices: createPosDeviceRoutes(deps)
   }
 }
 

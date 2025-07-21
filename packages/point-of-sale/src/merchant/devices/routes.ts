@@ -1,4 +1,3 @@
-import { TransactionOrKnex } from 'objection'
 import { AppContext } from '../../app'
 import { BaseService } from '../../shared/baseService'
 import { DeviceError, DeviceServiceError, POSDeviceError } from './errors'
@@ -6,7 +5,6 @@ import { CreateOptions, PosDeviceService } from './service'
 
 interface ServiceDependencies extends BaseService {
   posDeviceService: PosDeviceService
-  knex: TransactionOrKnex
 }
 
 type RevokeDeviceRequest = Exclude<AppContext['request'], 'params'> & {
@@ -34,14 +32,14 @@ export type RegisterDeviceContext = Exclude<AppContext, 'request'> & {
   request: RegisterDeviceRequest
 }
 
-
-
 export interface PosDeviceRoutes {
   revoke(ctx: RevokeDeviceContext): Promise<void>
   register(ctx: RegisterDeviceContext): Promise<void>
 }
 
-export function createPosDeviceRouts(deps_: ServiceDependencies): PosDeviceRoutes {
+export function createPosDeviceRoutes(
+  deps_: ServiceDependencies
+): PosDeviceRoutes {
   const log = deps_.logger.child({
     service: 'DeviceRoutes'
   })
@@ -95,16 +93,18 @@ async function registerDevice(
     walletAddress: body.walletAddress,
     algorithm: body.algorithm
   }
-  const posDeviceOrError = await deps.posDeviceService.registerDevice(options)
-
-  //TODO: fix this
-  // if (isPosDeviceError(posDeviceOrError))
-  //   throw new POSDeviceError(posDeviceOrError)
-
-  const { keyId, algorithm } = posDeviceOrError
-  ctx.status = 201
-  ctx.body = {
-    keyId,
-    algorithm
+  try {
+    const posDevice = await deps.posDeviceService.registerDevice(options)
+    const { keyId, algorithm } = posDevice
+    ctx.status = 201
+    ctx.body = {
+      keyId,
+      algorithm
+    }
+  } catch (err) {
+    if (err instanceof DeviceServiceError) {
+      throw new POSDeviceError(err)
+    }
+    throw new POSDeviceError(400, 'Could not register device', { err })
   }
 }

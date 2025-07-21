@@ -191,7 +191,7 @@ export function initIocContainer(
   container.singleton('posDeviceRoutes', async (deps) =>
     createPosDeviceRoutes({
       logger: await deps.use('logger'),
-      posDeviceService: await deps.use('posDeviceService')
+      posDeviceService: await deps.use('posDeviceService'),
     })
   )
 
