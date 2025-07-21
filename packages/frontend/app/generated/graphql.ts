@@ -3044,7 +3044,7 @@ export type GetTenantQueryVariables = Exact<{
 }>;
 
 
-export type GetTenantQuery = { __typename?: 'Query', tenant: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null, createdAt: string, deletedAt?: string | null } };
+export type GetTenantQuery = { __typename?: 'Query', tenant: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null, createdAt: string, deletedAt?: string | null, settings: Array<{ __typename?: 'TenantSetting', key: string, value: string }> } };
 
 export type GetWalletAddressQueryVariables = Exact<{
   id: Scalars['String']['input'];

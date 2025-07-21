@@ -20,23 +20,32 @@ import {
 } from '~/shared/utils'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
-import { whoAmI, loadTenants } from '~/lib/api/tenant.server'
+import { whoAmI, loadTenants, getTenantInfo } from '~/lib/api/tenant.server'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
   await checkAuthAndRedirect(request.url, cookies)
 
   const assets = await loadAssets(request)
-  const { isOperator } = await whoAmI(request)
+  const { id, isOperator } = await whoAmI(request)
   let tenants
+  let tenantWAPrefix
   if (isOperator) {
     tenants = await loadTenants(request)
+  } else {
+    const tenant = await getTenantInfo(request, { id })
+    const waPrefixSetting = tenant.settings.find(
+      (setting) => setting.key === 'WALLET_ADDRESS_URL'
+    )
+    if (!waPrefixSetting)
+      throw new Error('Wallet Address Prefix not configured!')
+    tenantWAPrefix = waPrefixSetting.value
   }
-  return json({ assets, tenants })
+  return json({ assets, tenants, tenantWAPrefix })
 }
 
 export default function CreateWalletAddressPage() {
-  const { assets, tenants } = useLoaderData<typeof loader>()
+  const { assets, tenants, tenantWAPrefix } = useLoaderData<typeof loader>()
   const response = useActionData<typeof action>()
   const { state } = useNavigation()
   const isSubmitting = state === 'submitting'
@@ -77,7 +86,7 @@ export default function CreateWalletAddressPage() {
                 <div className='w-full p-4 space-y-3'>
                   <Input
                     required
-                    addOn={getOpenPaymentsUrl()}
+                    addOn={tenantWAPrefix ?? getOpenPaymentsUrl()}
                     name='name'
                     label='Wallet address name'
                     placeholder='jdoe'

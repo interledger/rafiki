@@ -178,6 +178,10 @@ export const getTenantInfo = async (
           publicName
           createdAt
           deletedAt
+          settings {
+            key
+            value
+          }
         }
       }
     `,
