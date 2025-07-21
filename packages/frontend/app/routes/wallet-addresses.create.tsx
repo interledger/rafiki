@@ -20,7 +20,25 @@ import {
 } from '~/shared/utils'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
+import type { listTenants } from '~/lib/api/tenant.server'
 import { whoAmI, loadTenants, getTenantInfo } from '~/lib/api/tenant.server'
+
+const WALLET_ADDRESS_URL_KEY = 'WALLET_ADDRESS_URL'
+
+const findWASetting = (
+  tenantSettings: Awaited<ReturnType<typeof getTenantInfo>>['settings']
+) => {
+  return tenantSettings.find(
+    (setting) => setting.key === WALLET_ADDRESS_URL_KEY
+  )?.value
+}
+
+const findTenant = (
+  tenants: Awaited<ReturnType<typeof listTenants>>['edges'],
+  tenantId: string
+) => {
+  return tenants.find((tenant) => tenant.node.id === tenantId)
+}
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
@@ -31,15 +49,16 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   let tenants
   let tenantWAPrefix
   if (isOperator) {
-    tenants = await loadTenants(request)
+    const loadedTenants = await loadTenants(request)
+    tenants = loadedTenants.filter(
+      (tenant) => findWASetting(tenant.node.settings) || tenant.node.id === id
+    )
   } else {
     const tenant = await getTenantInfo(request, { id })
-    const waPrefixSetting = tenant.settings.find(
-      (setting) => setting.key === 'WALLET_ADDRESS_URL'
-    )
+    const waPrefixSetting = findWASetting(tenant.settings)
     if (!waPrefixSetting)
       throw new Error('Wallet Address Prefix not configured!')
-    tenantWAPrefix = waPrefixSetting.value
+    tenantWAPrefix = waPrefixSetting
   }
   return json({ assets, tenants, tenantWAPrefix })
 }
@@ -60,6 +79,12 @@ export default function CreateWalletAddressPage() {
       label: `${asset.node.code} (Scale: ${asset.node.scale})`
     }))
   }
+
+  const currentTenant =
+    tenants && tenantId ? findTenant(tenants, tenantId.value) : null
+  const waPrefix = currentTenant
+    ? findWASetting(currentTenant.node.settings)
+    : tenantWAPrefix
 
   return (
     <div className='pt-4 flex flex-col space-y-4'>
@@ -85,8 +110,13 @@ export default function CreateWalletAddressPage() {
               <div className='md:col-span-2 bg-white rounded-md shadow-md'>
                 <div className='w-full p-4 space-y-3'>
                   <Input
+                    name='waPrefix'
+                    value={waPrefix ?? getOpenPaymentsUrl()}
+                    type={'hidden'}
+                  />
+                  <Input
                     required
-                    addOn={tenantWAPrefix ?? getOpenPaymentsUrl()}
+                    addOn={waPrefix ?? getOpenPaymentsUrl()}
                     name='name'
                     label='Wallet address name'
                     placeholder='jdoe'
@@ -167,7 +197,7 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  const baseUrl = removeTrailingAndLeadingSlash(getOpenPaymentsUrl())
+  const baseUrl = removeTrailingAndLeadingSlash(result.data.waPrefix)
   const path = removeTrailingAndLeadingSlash(result.data.name)
 
   const response = await createWalletAddress(request, {

@@ -59,6 +59,10 @@ export const listTenants = async (request: Request, args: QueryTenantsArgs) => {
               publicName
               createdAt
               deletedAt
+              settings {
+                key
+                value
+              }
             }
           }
           pageInfo {
