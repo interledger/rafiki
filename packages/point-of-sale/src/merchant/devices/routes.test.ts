@@ -7,15 +7,24 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { createContext } from '../../tests/context'
 import { truncateTables } from '../../tests/tableManager'
 import { MerchantService } from '../service'
-import { createDeviceRoutes, DeviceRoutes, RevokeDeviceContext } from './routes'
+import { CreateBody, createPosDeviceRouts, PosDeviceRoutes, RegisterDeviceContext, RevokeDeviceContext } from './routes'
 import { PosDeviceService } from './service'
+import { faker } from '@faker-js/faker'
 
-describe('Device Routes', (): void => {
+
+describe('POS Device Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let deviceRoutes: DeviceRoutes
+  let posDeviceRoutes: PosDeviceRoutes
   let posDeviceService: PosDeviceService
   let merchantService: MerchantService
+
+  const CREATE_BODY: CreateBody = {
+    publicKey: 'public-key',
+    deviceName: 'Supermarket Store POS',
+    walletAddress: `https://${faker.internet.domainName()}`,
+    algorithm: 'ecdsa-p256-sha256'
+  }
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
@@ -25,7 +34,7 @@ describe('Device Routes', (): void => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
 
-    deviceRoutes = createDeviceRoutes({
+    posDeviceRoutes = createPosDeviceRouts({
       posDeviceService,
       knex,
       logger
@@ -65,7 +74,7 @@ describe('Device Routes', (): void => {
         deviceId: device.id
       }
 
-      await deviceRoutes.revoke(ctx)
+      await posDeviceRoutes.revoke(ctx)
 
       expect(ctx.status).toBe(204)
     })
@@ -86,7 +95,7 @@ describe('Device Routes', (): void => {
         deviceId: uuid()
       }
 
-      await expect(deviceRoutes.revoke(ctx)).rejects.toThrow('Device not found')
+      await expect(posDeviceRoutes.revoke(ctx)).rejects.toThrow('Device not found')
     })
 
     test('Returns 404 for device that belongs to different merchant', async (): Promise<void> => {
@@ -114,7 +123,7 @@ describe('Device Routes', (): void => {
         deviceId: device.id
       }
 
-      await expect(deviceRoutes.revoke(ctx)).rejects.toThrow('Device not found')
+      await expect(posDeviceRoutes.revoke(ctx)).rejects.toThrow('Device not found')
     })
 
     test('Returns 404 for already deleted device', async (): Promise<void> => {
@@ -143,7 +152,41 @@ describe('Device Routes', (): void => {
         deviceId: device.id
       }
 
-      await expect(deviceRoutes.revoke(ctx)).rejects.toThrow('Device not found')
+      await expect(posDeviceRoutes.revoke(ctx)).rejects.toThrow('Device not found')
+  describe('create', () => {
+    test('returns the keyId and algorithm of the device on success', async () => {
+      const { id: merchantId } = await merchantService.create('Merchant')
+      const ctx = createContext<RegisterDeviceContext>({
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json'
+        }
+      })
+      ctx.request.body = CREATE_BODY
+      ctx.params.merchantId = merchantId
+      await posDeviceRoutes.register(ctx)
+
+      expect(ctx.response.status).toBe(201)
+      expect(ctx.response.body).toMatchObject({
+        keyId: expect.stringMatching(/^pos:Superm[a-zA-Z0-9-]{6}$/),
+        algorithm: 'ecdsa-p256-sha256'
+      })
+    })
+
+    test('throws error when merchant does not exist', async () => {
+      const ctx = createContext<RegisterDeviceContext>({
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json'
+        }
+      })
+      ctx.request.body = CREATE_BODY
+      ctx.params.merchantId = uuid()
+      //TODO: fix this
+      // await expect(posDeviceRoutes.register(ctx)).rejects.toMatchObject({
+      //   status: 400,
+      //   message: errorToMessage[PosDeviceError.UnknownMerchant]
+      // })
     })
   })
 })

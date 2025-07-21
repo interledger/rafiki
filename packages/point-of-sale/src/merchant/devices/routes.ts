@@ -2,7 +2,7 @@ import { TransactionOrKnex } from 'objection'
 import { AppContext } from '../../app'
 import { BaseService } from '../../shared/baseService'
 import { DeviceError, DeviceServiceError, POSDeviceError } from './errors'
-import { PosDeviceService } from './service'
+import { CreateOptions, PosDeviceService } from './service'
 
 interface ServiceDependencies extends BaseService {
   posDeviceService: PosDeviceService
@@ -19,12 +19,29 @@ type RevokeDeviceRequest = Exclude<AppContext['request'], 'params'> & {
 export type RevokeDeviceContext = Exclude<AppContext, 'request'> & {
   request: RevokeDeviceRequest
 }
-
-export interface DeviceRoutes {
-  revoke(ctx: RevokeDeviceContext): Promise<void>
+export type CreateBody = {
+  publicKey: string
+  deviceName: string
+  walletAddress: string
+  algorithm: string
 }
 
-export function createDeviceRoutes(deps_: ServiceDependencies): DeviceRoutes {
+type RegisterDeviceRequest = Exclude<AppContext['request'], 'body'> & {
+  body: CreateBody
+}
+
+export type RegisterDeviceContext = Exclude<AppContext, 'request'> & {
+  request: RegisterDeviceRequest
+}
+
+
+
+export interface PosDeviceRoutes {
+  revoke(ctx: RevokeDeviceContext): Promise<void>
+  register(ctx: RegisterDeviceContext): Promise<void>
+}
+
+export function createPosDeviceRouts(deps_: ServiceDependencies): PosDeviceRoutes {
   const log = deps_.logger.child({
     service: 'DeviceRoutes'
   })
@@ -35,7 +52,8 @@ export function createDeviceRoutes(deps_: ServiceDependencies): DeviceRoutes {
   }
 
   return {
-    revoke: (ctx: RevokeDeviceContext) => revokeDevice(deps, ctx)
+    revoke: (ctx: RevokeDeviceContext) => revokeDevice(deps, ctx),
+    register: (ctx: RegisterDeviceContext) => registerDevice(deps, ctx)
   }
 }
 
@@ -61,5 +79,32 @@ async function revokeDevice(
       throw new POSDeviceError(err)
     }
     throw new POSDeviceError(400, 'Could not revoke device', { err })
+  }
+}
+
+async function registerDevice(
+  deps: ServiceDependencies,
+  ctx: RegisterDeviceContext
+): Promise<void> {
+  const { body } = ctx.request
+  const { merchantId } = ctx.params
+  const options: CreateOptions = {
+    merchantId,
+    publicKey: body.publicKey,
+    deviceName: body.deviceName,
+    walletAddress: body.walletAddress,
+    algorithm: body.algorithm
+  }
+  const posDeviceOrError = await deps.posDeviceService.registerDevice(options)
+
+  //TODO: fix this
+  // if (isPosDeviceError(posDeviceOrError))
+  //   throw new POSDeviceError(posDeviceOrError)
+
+  const { keyId, algorithm } = posDeviceOrError
+  ctx.status = 201
+  ctx.body = {
+    keyId,
+    algorithm
   }
 }

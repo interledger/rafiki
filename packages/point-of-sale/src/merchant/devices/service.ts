@@ -1,6 +1,5 @@
-import { NotFoundError } from 'objection'
 import { v4 as uuid } from 'uuid'
-import { IAppConfig } from '../../config/app'
+import { NotFoundError, TransactionOrKnex } from 'objection'
 import { BaseService } from '../../shared/baseService'
 import { Merchant } from '../model'
 import { DeviceError, DeviceServiceError } from './errors'
@@ -27,11 +26,10 @@ export interface CreateOptions {
 }
 
 interface ServiceDependencies extends BaseService {
-  config: IAppConfig
+  knex: TransactionOrKnex
 }
 
 export async function createPosDeviceService({
-  config,
   logger,
   knex
 }: ServiceDependencies): Promise<PosDeviceService> {
@@ -39,7 +37,6 @@ export async function createPosDeviceService({
     service: 'PosDeviceService'
   })
   const deps: ServiceDependencies = {
-    config,
     logger: log,
     knex
   }

@@ -16,6 +16,7 @@ export const createTestApp = async (
   container: IocContract<AppServices>
 ): Promise<TestContainer> => {
   const config = await container.use('config')
+  config.port = 0
 
   const testConfig = {
     ...config,

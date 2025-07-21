@@ -64,3 +64,16 @@ generates:
       scalars:
         UInt8: number
         UInt64: bigint
+  ../point-of-sale/src/graphql/generated/graphql.ts:
+    plugins:
+      - 'typescript'
+      - 'typescript-resolvers'
+      - 'typescript-operations'
+    documents: ../point-of-sale/src/graphql/**/*.{ts,tsx,graphql}
+    config:
+      omitOperationSuffix: true
+      defaultMapper: Partial<{T}>
+      inputMaybeValue: T | undefined
+      scalars:
+        UInt8: number
+        UInt64: bigint
