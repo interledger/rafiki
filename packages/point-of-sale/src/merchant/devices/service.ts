@@ -14,7 +14,10 @@ export interface PosDeviceService {
 
   revokeAllByMerchantId(merchantId: string): Promise<number>
 
-  getMerchantDevice(merchantId: string, deviceId: string): Promise<PosDevice | undefined>
+  getMerchantDevice(
+    merchantId: string,
+    deviceId: string
+  ): Promise<PosDevice | undefined>
 }
 
 export interface CreateOptions {

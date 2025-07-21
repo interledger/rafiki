@@ -7,10 +7,15 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { createContext } from '../../tests/context'
 import { truncateTables } from '../../tests/tableManager'
 import { MerchantService } from '../service'
-import { CreateBody, createPosDeviceRoutes, PosDeviceRoutes, RegisterDeviceContext, RevokeDeviceContext } from './routes'
+import {
+  CreateBody,
+  createPosDeviceRoutes,
+  PosDeviceRoutes,
+  RegisterDeviceContext,
+  RevokeDeviceContext
+} from './routes'
 import { PosDeviceService } from './service'
 import { faker } from '@faker-js/faker'
-
 
 describe('POS Device Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -95,7 +100,9 @@ describe('POS Device Routes', (): void => {
         deviceId: uuid()
       }
 
-      await expect(posDeviceRoutes.revoke(ctx)).rejects.toThrow('Device not found')
+      await expect(posDeviceRoutes.revoke(ctx)).rejects.toThrow(
+        'Device not found'
+      )
     })
 
     test('Returns 404 for device that belongs to different merchant', async (): Promise<void> => {
@@ -123,7 +130,9 @@ describe('POS Device Routes', (): void => {
         deviceId: device.id
       }
 
-      await expect(posDeviceRoutes.revoke(ctx)).rejects.toThrow('Device not found')
+      await expect(posDeviceRoutes.revoke(ctx)).rejects.toThrow(
+        'Device not found'
+      )
     })
 
     test('Returns 404 for already deleted device', async (): Promise<void> => {
@@ -152,7 +161,9 @@ describe('POS Device Routes', (): void => {
         deviceId: device.id
       }
 
-      await expect(posDeviceRoutes.revoke(ctx)).rejects.toThrow('Device not found')
+      await expect(posDeviceRoutes.revoke(ctx)).rejects.toThrow(
+        'Device not found'
+      )
     })
   })
 
@@ -185,7 +196,9 @@ describe('POS Device Routes', (): void => {
       })
       ctx.request.body = CREATE_BODY
       ctx.params.merchantId = uuid()
-      await expect(posDeviceRoutes.register(ctx)).rejects.toThrow('Unknown merchant')
+      await expect(posDeviceRoutes.register(ctx)).rejects.toThrow(
+        'Unknown merchant'
+      )
     })
   })
 })
