@@ -25,7 +25,7 @@
     "openapi-typescript": "^6.7.6"
   },
   "dependencies": {
-    "@interledger/open-payments": "7.0.0",
+    "@interledger/open-payments": "7.1.1",
     "@interledger/openapi": "2.0.2",
     "axios": "^1.8.2",
     "pino": "^8.19.0"

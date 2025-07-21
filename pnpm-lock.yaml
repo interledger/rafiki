@@ -180,8 +180,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/open-payments':
-        specifier: 7.0.0
-        version: 7.0.0
+        specifier: 7.1.1
+        version: 7.1.1
       '@interledger/openapi':
         specifier: 2.0.2
         version: 2.0.2
@@ -334,8 +334,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/open-payments':
-        specifier: 7.0.0
-        version: 7.0.0
+        specifier: 7.1.1
+        version: 7.1.1
       '@interledger/openapi':
         specifier: 2.0.2
         version: 2.0.2
@@ -724,8 +724,8 @@ importers:
   packages/token-introspection:
     dependencies:
       '@interledger/open-payments':
-        specifier: 7.0.0
-        version: 7.0.0
+        specifier: 7.1.1
+        version: 7.1.1
       '@interledger/openapi':
         specifier: 2.0.2
         version: 2.0.2
@@ -749,8 +749,8 @@ importers:
   test/integration:
     devDependencies:
       '@interledger/open-payments':
-        specifier: 7.0.0
-        version: 7.0.0
+        specifier: 7.1.1
+        version: 7.1.1
       '@types/node':
         specifier: ^20.14.15
         version: 20.14.15
@@ -813,8 +813,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/open-payments':
-        specifier: 7.0.0
-        version: 7.0.0
+        specifier: 7.1.1
+        version: 7.1.1
       '@koa/bodyparser':
         specifier: ^5.1.1
         version: 5.1.1(koa@2.15.3)
@@ -5274,8 +5274,8 @@ packages:
       jose: 5.4.0
       uuid: 9.0.1
 
-  /@interledger/open-payments@7.0.0:
-    resolution: {integrity: sha512-6xPR5d1lStKvOFoQHatchoh5mYSmrbHE2dZotoTq/jhmxU+/Zk56hCJx7VvNcAz4F8Zqkgne/hM8ppcCEDKgtg==}
+  /@interledger/open-payments@7.1.1:
+    resolution: {integrity: sha512-eXZ1tHDGhj2m3Sj4NPKc/p+ZlPtsyRgvdSU0wEm0P7RHBaflufRNvxXwxX7US3uJyJwy90ncVyLZ/VupwrQ1bA==}
     dependencies:
       '@interledger/http-signature-utils': 2.0.3
       '@interledger/openapi': 2.0.3

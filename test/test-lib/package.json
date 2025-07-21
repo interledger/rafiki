@@ -15,7 +15,7 @@
   "devDependencies": {
     "@apollo/client": "^3.11.8",
     "@interledger/http-signature-utils": "2.0.2",
-    "@interledger/open-payments": "7.0.0",
+    "@interledger/open-payments": "7.1.1",
     "@koa/bodyparser": "^5.1.1",
     "@types/koa": "2.15.0",
     "@types/koa-bodyparser": "^4.3.12",
