@@ -2,7 +2,6 @@ import { IocContract } from '@adonisjs/fold'
 
 import { v4 as uuid } from 'uuid'
 
-import { isPosDeviceError } from './devices/errors'
 import { DeviceStatus, PosDevice } from './devices/model'
 import { PosDeviceService } from './devices/service'
 import { Merchant } from './model'
@@ -95,14 +94,8 @@ describe('Merchant Service', (): void => {
         publicKey: 'test-public-key-2'
       })
 
-      expect(isPosDeviceError(device1Result)).toBe(false)
-      expect(isPosDeviceError(device2Result)).toBe(false)
-      if (!isPosDeviceError(device1Result)) {
-        expect(device1Result.status).toBe(DeviceStatus.Active)
-      }
-      if (!isPosDeviceError(device2Result)) {
-        expect(device2Result.status).toBe(DeviceStatus.Active)
-      }
+      expect(device1Result.status).toBe(DeviceStatus.Active)
+      expect(device2Result.status).toBe(DeviceStatus.Active)
 
       const result = await merchantService.delete(created.id)
       expect(result).toBe(true)

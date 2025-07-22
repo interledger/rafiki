@@ -1,15 +1,15 @@
 import { IocContract } from '@adonisjs/fold'
+import assert from 'assert'
+import { v4 as uuid } from 'uuid'
+import { initIocContainer } from '../..'
 import { AppServices } from '../../app'
 import { Config } from '../../config/app'
-import { CreateOptions, PosDeviceService } from './service'
-import { initIocContainer } from '../..'
-import { PosDeviceError, isPosDeviceError } from './errors'
-import { v4 as uuid } from 'uuid'
 import { TestContainer, createTestApp } from '../../tests/app'
 import { truncateTables } from '../../tests/tableManager'
 import { MerchantService } from '../service'
+import { DeviceServiceError } from './errors'
 import { DeviceStatus, PosDevice } from './model'
-import assert from 'assert'
+import { CreateOptions, PosDeviceService } from './service'
 
 describe('POS Device Service', () => {
   let deps: IocContract<AppServices>
@@ -44,7 +44,6 @@ describe('POS Device Service', () => {
       }
 
       const device = await posDeviceService.registerDevice(createOptions)
-      assert(!isPosDeviceError(device))
       expect(device).toMatchObject({
         merchantId: merchant.id,
         publicKey: 'publicKey',
@@ -55,7 +54,7 @@ describe('POS Device Service', () => {
       })
     })
 
-    test('returns error if merchant does not exist', async () => {
+    test('throws error if merchant does not exist', async () => {
       const createOptions: CreateOptions = {
         merchantId: uuid(),
         publicKey: 'publicKey',
@@ -64,9 +63,12 @@ describe('POS Device Service', () => {
         algorithm: 'ecdsa-p256-sha256'
       }
 
-      const device = await posDeviceService.registerDevice(createOptions)
-      assert(isPosDeviceError(device))
-      expect(device).toBe(PosDeviceError.UnknownMerchant)
+      await expect(
+        posDeviceService.registerDevice(createOptions)
+      ).rejects.toThrow(DeviceServiceError)
+      await expect(
+        posDeviceService.registerDevice(createOptions)
+      ).rejects.toThrow('Unknown merchant')
     })
   })
 
@@ -91,7 +93,6 @@ describe('POS Device Service', () => {
         deletedAt: null
       })
       const revokedDevice = await posDeviceService.revoke(createdDevice.id)
-      assert(!isPosDeviceError(revokedDevice))
       expect(revokedDevice).toMatchObject({
         status: DeviceStatus.Revoked,
         deletedAt: expect.any(Date)
@@ -104,11 +105,14 @@ describe('POS Device Service', () => {
       ).toBeLessThan(5000)
     })
 
-    test('returns error when there is no device with the given id', async () => {
+    test('throws error when there is no device with the given id', async () => {
       await createDeviceWithMerchant()
-      const revokedDevice = await posDeviceService.revoke(uuid())
-      assert(isPosDeviceError(revokedDevice))
-      expect(revokedDevice).toBe(PosDeviceError.UnknownPosDevice)
+      await expect(posDeviceService.revoke(uuid())).rejects.toThrow(
+        DeviceServiceError
+      )
+      await expect(posDeviceService.revoke(uuid())).rejects.toThrow(
+        'Unknown POS device'
+      )
     })
   })
 
@@ -132,8 +136,6 @@ describe('POS Device Service', () => {
         algorithm: 'ecdsa-p256-sha256'
       })
 
-      assert(!isPosDeviceError(device1))
-      assert(!isPosDeviceError(device2))
       expect(device1.status).toBe(DeviceStatus.Active)
       expect(device2.status).toBe(DeviceStatus.Active)
 
@@ -173,8 +175,6 @@ describe('POS Device Service', () => {
         algorithm: 'ecdsa-p256-sha256'
       })
 
-      assert(!isPosDeviceError(device))
-
       await posDeviceService.revoke(device.id)
 
       const revokedCount = await posDeviceService.revokeAllByMerchantId(
@@ -195,7 +195,6 @@ describe('POS Device Service', () => {
     }
 
     const device = await posDeviceService.registerDevice(createOptions)
-    assert(!isPosDeviceError(device))
     return device
   }
 })

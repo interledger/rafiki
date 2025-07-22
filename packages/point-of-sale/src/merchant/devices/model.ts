@@ -1,6 +1,6 @@
-import { BaseModel } from '../../shared/baseModel'
 import { Model } from 'objection'
 import { join } from 'path'
+import { BaseModel } from '../../shared/baseModel'
 
 export enum DeviceStatus {
   Active = 'ACTIVE',
