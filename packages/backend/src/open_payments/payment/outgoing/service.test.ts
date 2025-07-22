@@ -9,7 +9,12 @@ import {
   OutgoingPaymentError,
   isOutgoingPaymentError
 } from './errors'
-import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
+import {
+  classifyPaymentInterval,
+  CreateOutgoingPaymentOptions,
+  OutgoingPaymentService,
+  PaymentLimits
+} from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config, IAppConfig } from '../../../config/app'
 import { Grant } from '../../auth/middleware'
@@ -55,6 +60,7 @@ import { TelemetryService } from '../../../telemetry/service'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { ReceiverService } from '../../receiver/service'
+import { Interval } from 'luxon'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -2291,6 +2297,76 @@ describe('OutgoingPaymentService', (): void => {
           id: payment.id
         })
         expect(after?.state).toBe(startState)
+      })
+    })
+  })
+
+  describe.only('classifyPaymentInterval', (): void => {
+    const cases = [
+      {
+        description: 'returns unrestricted when no payment interval is defined',
+        interval: undefined,
+        payment: { createdAt: new Date('2022-07-15T10:00:00Z') },
+        expected: 'unrestricted'
+      },
+      {
+        description: 'returns current when payment is at interval start',
+        interval: '2022-07-01T13:00:00Z/P1M',
+        payment: { createdAt: new Date('2022-07-01T13:00:00Z') },
+        expected: 'current'
+      },
+      {
+        description: 'returns current when payment is within interval',
+        interval: '2022-07-01T13:00:00Z/P1M',
+        payment: { createdAt: new Date('2022-07-15T10:00:00Z') },
+        expected: 'current'
+      },
+      {
+        description: 'returns previous when payment is at interval end',
+        interval: '2022-07-01T13:00:00Z/2022-08-01T13:00:00Z',
+        payment: { createdAt: new Date('2022-08-01T13:00:00Z') },
+        expected: 'previous'
+      },
+      {
+        description: 'returns previous when payment is after interval',
+        interval: '2022-07-01T13:00:00Z/P1M',
+        payment: { createdAt: new Date('2022-08-15T10:00:00Z') },
+        expected: 'previous'
+      },
+      {
+        description: 'returns next when payment is before interval start',
+        interval: '2022-07-01T13:00:00Z/P1M',
+        payment: { createdAt: new Date('2022-06-30T12:59:59Z') },
+        expected: 'next'
+      }
+      // Open intervals
+      // We (actually Luxon) don't support these. Our interval parsing interprets
+      // these as no start OR end inteval. Guess this is not part of the
+      // base ISO spec but is in an extension: ISO 8601-2:2019
+      // https://en.wikipedia.org/wiki/ISO_8601#Standardised_extensions
+      // {
+      //   description: 'returns current with open-ended interval',
+      //   interval: '2022-07-01T13:00:00Z/',
+      //   payment: { createdAt: new Date('2025-01-01T00:00:00Z') },
+      //   expected: 'current'
+      // },
+      // {
+      //   description: 'returns previous with open-start interval',
+      //   interval: '/2022-07-01T13:00:00Z',
+      //   payment: { createdAt: new Date('2022-08-01T00:00:00Z') },
+      //   expected: 'previous'
+      // }
+    ]
+
+    cases.forEach(({ description, interval, payment, expected }) => {
+      test(description, () => {
+        const classification = classifyPaymentInterval({
+          limits: {
+            paymentInterval: interval ? Interval.fromISO(interval) : undefined
+          } as PaymentLimits,
+          payment: { ...payment, id: uuid() } as OutgoingPayment
+        })
+        expect(classification).toBe(expected)
       })
     })
   })

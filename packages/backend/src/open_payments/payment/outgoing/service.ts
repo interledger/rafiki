@@ -506,7 +506,7 @@ function validateAccessLimits(
 
 type IntervalClassification = 'previous' | 'current' | 'next' | 'unrestricted'
 
-function classifyPaymentInterval({
+export function classifyPaymentInterval({
   limits,
   payment
 }: {
@@ -550,7 +550,7 @@ function validateAmountAssets(
   )
 }
 
-interface PaymentLimits extends Limits {
+export interface PaymentLimits extends Limits {
   paymentInterval?: Interval
 }
 
