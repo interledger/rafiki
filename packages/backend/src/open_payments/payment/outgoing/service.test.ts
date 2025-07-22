@@ -2339,23 +2339,6 @@ describe('OutgoingPaymentService', (): void => {
         payment: { createdAt: new Date('2022-06-30T12:59:59Z') },
         expected: 'next'
       }
-      // Open intervals
-      // We (actually Luxon) don't support these. Our interval parsing interprets
-      // these as no start OR end inteval. Guess this is not part of the
-      // base ISO spec but is in an extension: ISO 8601-2:2019
-      // https://en.wikipedia.org/wiki/ISO_8601#Standardised_extensions
-      // {
-      //   description: 'returns current with open-ended interval',
-      //   interval: '2022-07-01T13:00:00Z/',
-      //   payment: { createdAt: new Date('2025-01-01T00:00:00Z') },
-      //   expected: 'current'
-      // },
-      // {
-      //   description: 'returns previous with open-start interval',
-      //   interval: '/2022-07-01T13:00:00Z',
-      //   payment: { createdAt: new Date('2022-08-01T00:00:00Z') },
-      //   expected: 'previous'
-      // }
     ]
 
     cases.forEach(({ description, interval, payment, expected }) => {
