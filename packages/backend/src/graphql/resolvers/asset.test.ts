@@ -749,6 +749,11 @@ describe('Asset Resolvers', (): void => {
               node: expect.objectContaining({
                 id: tenantAsset.id
               })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: secondTenantAsset.id
+              })
             })
           ])
         )
