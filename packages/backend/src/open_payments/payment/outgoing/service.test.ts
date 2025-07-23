@@ -1152,28 +1152,39 @@ describe('OutgoingPaymentService', (): void => {
             ).resolves.toEqual(OutgoingPaymentError.InsufficientGrant)
           })
           test.each`
-            limits                                                                         | description
-            ${{ debitAmount: { assetCode: 'EUR', assetScale: asset.scale } }}              | ${'debitAmount asset code'}
-            ${{ debitAmount: { assetCode: asset.code, assetScale: 2 } }}                   | ${'debitAmount asset scale'}
-            ${{ receiveAmount: { assetCode: 'EUR', assetScale: destinationAsset.scale } }} | ${'receiveAmount asset code'}
-            ${{ receiveAmount: { assetCode: destinationAsset.code, assetScale: 2 } }}      | ${'receiveAmount asset scale'}
+            limits                                                                         | withInterval | description
+            ${{ debitAmount: { assetCode: 'EUR', assetScale: asset.scale } }}              | ${true}      | ${'debitAmount asset code with interval'}
+            ${{ debitAmount: { assetCode: asset.code, assetScale: 2 } }}                   | ${true}      | ${'debitAmount asset scale with interval'}
+            ${{ receiveAmount: { assetCode: 'EUR', assetScale: destinationAsset.scale } }} | ${true}      | ${'receiveAmount asset code with interval'}
+            ${{ receiveAmount: { assetCode: destinationAsset.code, assetScale: 2 } }}      | ${true}      | ${'receiveAmount asset scale with interval'}
+            ${{ debitAmount: { assetCode: 'EUR', assetScale: asset.scale } }}              | ${false}     | ${'debitAmount asset code without interval'}
+            ${{ debitAmount: { assetCode: asset.code, assetScale: 2 } }}                   | ${false}     | ${'debitAmount asset scale without interval'}
+            ${{ receiveAmount: { assetCode: 'EUR', assetScale: destinationAsset.scale } }} | ${false}     | ${'receiveAmount asset code without interval'}
+            ${{ receiveAmount: { assetCode: destinationAsset.code, assetScale: 2 } }}      | ${false}     | ${'receiveAmount asset scale without interval'}
           `(
             'fails if grant limits do not match payment - $description',
-            async ({ limits }): Promise<void> => {
+            async ({ limits, withInterval }): Promise<void> => {
               assert.ok(grant)
-              grant.limits = { ...limits, interval }
+              const grantLimits = { ...limits }
+              if (withInterval) {
+                grantLimits.interval = interval
+              }
+              grant.limits = grantLimits
+
               await expect(
                 outgoingPaymentService.create({ ...options, grant })
               ).resolves.toEqual(OutgoingPaymentError.InsufficientGrant)
             }
           )
           test.each`
-            debitAmount | description
-            ${true}     | ${'debitAmount'}
-            ${false}    | ${'receiveAmount'}
+            debitAmount | withInterval | description
+            ${true}     | ${true}      | ${'debitAmount with interval'}
+            ${false}    | ${true}      | ${'receiveAmount with interval'}
+            ${true}     | ${false}     | ${'debitAmount without interval'}
+            ${false}    | ${false}     | ${'receiveAmount without interval'}
           `(
             'fails if grant limit $description is not enough for payment',
-            async ({ debitAmount }): Promise<void> => {
+            async ({ debitAmount, withInterval }): Promise<void> => {
               const amount = {
                 value: BigInt(12),
                 assetCode: debitAmount
@@ -1184,29 +1195,33 @@ describe('OutgoingPaymentService', (): void => {
                   : quote.receiveAmount.assetScale
               }
               assert.ok(grant)
-              grant.limits = debitAmount
-                ? {
-                    debitAmount: amount,
-                    interval
-                  }
-                : {
-                    receiveAmount: amount,
-                    interval
-                  }
+              const limits: Grant['limits'] = debitAmount
+                ? { debitAmount: amount }
+                : { receiveAmount: amount }
+
+              if (withInterval) {
+                limits.interval = interval
+              }
+
+              grant.limits = limits
               await expect(
                 outgoingPaymentService.create({ ...options, grant })
               ).resolves.toEqual(OutgoingPaymentError.InsufficientGrant)
             }
           )
           test.each`
-            debitAmount | failed   | description
-            ${true}     | ${false} | ${'debitAmount'}
-            ${false}    | ${false} | ${'receiveAmount'}
-            ${true}     | ${true}  | ${'debitAmount, failed first payment'}
-            ${false}    | ${true}  | ${'receiveAmount, failed first payment'}
+            debitAmount | failed   | withInterval | description
+            ${true}     | ${false} | ${true}      | ${'debitAmount with interval'}
+            ${false}    | ${false} | ${true}      | ${'receiveAmount with interval'}
+            ${true}     | ${true}  | ${true}      | ${'debitAmount, failed first payment with interval'}
+            ${false}    | ${true}  | ${true}      | ${'receiveAmount, failed first payment with interval'}
+            ${true}     | ${false} | ${false}     | ${'debitAmount without interval'}
+            ${false}    | ${false} | ${false}     | ${'receiveAmount without interval'}
+            ${true}     | ${true}  | ${false}     | ${'debitAmount, failed first payment without interval'}
+            ${false}    | ${true}  | ${false}     | ${'receiveAmount, failed first payment without interval'}
           `(
             'fails if limit was already used up - $description',
-            async ({ debitAmount, failed }): Promise<void> => {
+            async ({ debitAmount, failed, withInterval }): Promise<void> => {
               const grantAmount = {
                 value: BigInt(200),
                 assetCode: debitAmount
@@ -1216,29 +1231,37 @@ describe('OutgoingPaymentService', (): void => {
                   ? quote.asset.scale
                   : quote.receiveAmount.assetScale
               }
+
               assert.ok(grant)
-              grant.limits = {
-                debitAmount: debitAmount ? grantAmount : undefined,
-                receiveAmount: debitAmount ? undefined : grantAmount,
-                interval
+
+              const grantLimits: Grant['limits'] = debitAmount
+                ? { debitAmount: grantAmount }
+                : { receiveAmount: grantAmount }
+
+              if (withInterval) {
+                grantLimits.interval = interval
               }
+
+              grant.limits = grantLimits
+
               const paymentAmount = {
                 ...grantAmount,
                 value: BigInt(190)
               }
+
               const firstPayment = await createOutgoingPayment(deps, {
                 walletAddressId,
                 client,
-                receiver: `${
-                  Config.openPaymentsUrl
-                }/incoming-payments/${uuid()}`,
+                receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
                 debitAmount: debitAmount ? paymentAmount : undefined,
                 receiveAmount: debitAmount ? undefined : paymentAmount,
                 grant,
                 validDestination: false,
                 method: 'ilp'
               })
+
               assert.ok(firstPayment)
+
               if (failed) {
                 await firstPayment
                   .$query(knex)
@@ -1272,22 +1295,31 @@ describe('OutgoingPaymentService', (): void => {
           )
 
           test.each`
-            debitAmount | competingPayment | failed       | half     | description
-            ${true}     | ${false}         | ${undefined} | ${false} | ${'debitAmount w/o competing payment'}
-            ${false}    | ${false}         | ${undefined} | ${false} | ${'receiveAmount w/o competing payment'}
-            ${true}     | ${true}          | ${false}     | ${false} | ${'debitAmount w/ competing payment'}
-            ${false}    | ${true}          | ${false}     | ${false} | ${'receiveAmount w/ competing payment'}
-            ${true}     | ${true}          | ${true}      | ${false} | ${'debitAmount w/ failed competing payment'}
-            ${false}    | ${true}          | ${true}      | ${false} | ${'receiveAmount w/ failed competing payment'}
-            ${true}     | ${true}          | ${true}      | ${true}  | ${'debitAmount w/ half-way failed competing payment'}
-            ${false}    | ${true}          | ${true}      | ${true}  | ${'receiveAmount half-way w/ failed competing payment'}
+            debitAmount | competingPayment | failed       | half     | withInterval | description
+            ${true}     | ${false}         | ${undefined} | ${false} | ${true}      | ${'debitAmount w/o competing payment with interval'}
+            ${false}    | ${false}         | ${undefined} | ${false} | ${true}      | ${'receiveAmount w/o competing payment with interval'}
+            ${true}     | ${true}          | ${false}     | ${false} | ${true}      | ${'debitAmount w/ competing payment with interval'}
+            ${false}    | ${true}          | ${false}     | ${false} | ${true}      | ${'receiveAmount w/ competing payment with interval'}
+            ${true}     | ${true}          | ${true}      | ${false} | ${true}      | ${'debitAmount w/ failed competing payment with interval'}
+            ${false}    | ${true}          | ${true}      | ${false} | ${true}      | ${'receiveAmount w/ failed competing payment with interval'}
+            ${true}     | ${true}          | ${true}      | ${true}  | ${true}      | ${'debitAmount w/ half-way failed competing payment with interval'}
+            ${false}    | ${true}          | ${true}      | ${true}  | ${true}      | ${'receiveAmount half-way w/ failed competing payment with interval'}
+            ${true}     | ${false}         | ${undefined} | ${false} | ${false}     | ${'debitAmount w/o competing payment without interval'}
+            ${false}    | ${false}         | ${undefined} | ${false} | ${false}     | ${'receiveAmount w/o competing payment without interval'}
+            ${true}     | ${true}          | ${false}     | ${false} | ${false}     | ${'debitAmount w/ competing payment without interval'}
+            ${false}    | ${true}          | ${false}     | ${false} | ${false}     | ${'receiveAmount w/ competing payment without interval'}
+            ${true}     | ${true}          | ${true}      | ${false} | ${false}     | ${'debitAmount w/ failed competing payment without interval'}
+            ${false}    | ${true}          | ${true}      | ${false} | ${false}     | ${'receiveAmount w/ failed competing payment without interval'}
+            ${true}     | ${true}          | ${true}      | ${true}  | ${false}     | ${'debitAmount w/ half-way failed competing payment without interval'}
+            ${false}    | ${true}          | ${true}      | ${true}  | ${false}     | ${'receiveAmount half-way w/ failed competing payment without interval'}
           `(
             'succeeds if grant limit is enough for payment - $description',
             async ({
               debitAmount,
               competingPayment,
               failed,
-              half
+              half,
+              withInterval
             }): Promise<void> => {
               const grantAmount = {
                 value: BigInt(1234567),
@@ -1298,38 +1330,43 @@ describe('OutgoingPaymentService', (): void => {
                   ? quote.asset.scale
                   : quote.receiveAmount.assetScale
               }
+
               assert.ok(grant)
-              grant.limits = debitAmount
-                ? {
-                    debitAmount: grantAmount,
-                    interval
-                  }
-                : {
-                    receiveAmount: grantAmount,
-                    interval
-                  }
+
+              const limits: Grant['limits'] = debitAmount
+                ? { debitAmount: grantAmount }
+                : { receiveAmount: grantAmount }
+
+              if (withInterval) {
+                limits.interval = interval
+              }
+
+              grant.limits = limits
+
               if (competingPayment) {
                 const paymentAmount = {
                   ...grantAmount,
                   value: BigInt(7)
                 }
+
                 const firstPayment = await createOutgoingPayment(deps, {
                   walletAddressId,
                   client,
-                  receiver: `${
-                    Config.openPaymentsUrl
-                  }/incoming-payments/${uuid()}`,
+                  receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
                   debitAmount: debitAmount ? paymentAmount : undefined,
                   receiveAmount: debitAmount ? undefined : paymentAmount,
                   grant,
                   validDestination: false,
                   method: 'ilp'
                 })
+
                 assert.ok(firstPayment)
+
                 if (failed) {
                   await firstPayment
                     .$query(knex)
                     .patch({ state: OutgoingPaymentState.Failed })
+
                   if (half) {
                     jest
                       .spyOn(accountingService, 'getTotalSent')
@@ -1337,6 +1374,7 @@ describe('OutgoingPaymentService', (): void => {
                   }
                 }
               }
+
               await expect(
                 outgoingPaymentService.create({ ...options, grant })
               ).resolves.toBeInstanceOf(OutgoingPayment)
