@@ -504,19 +504,23 @@ function validateAccessLimits(
   }
 }
 
-type IntervalClassification = 'previous' | 'current' | 'next' | 'unrestricted'
+export enum IntervalStatus {
+  Previous = 'previous',
+  Current = 'current',
+  Next = 'next'
+}
 
-export function classifyPaymentInterval({
+export function getPaymentIntervalStatus({
   limits,
   payment
 }: {
   limits: PaymentLimits
   payment: OutgoingPayment
-}): IntervalClassification {
+}): IntervalStatus | null {
   const interval = limits.paymentInterval
 
   if (!interval) {
-    return 'unrestricted'
+    return null
   }
 
   const createdTime = payment.createdAt.getTime()
@@ -524,11 +528,11 @@ export function classifyPaymentInterval({
   const end = interval.end?.toMillis() ?? Infinity
 
   if (createdTime < start) {
-    return 'next'
+    return IntervalStatus.Previous
   } else if (createdTime >= end) {
-    return 'previous'
+    return IntervalStatus.Next
   } else {
-    return 'current'
+    return IntervalStatus.Current
   }
 }
 
@@ -646,7 +650,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
       const asset = await deps.assetService.get(grantPayment.quote.assetId)
       if (asset) grantPayment.quote.asset = asset
 
-      const intervalStatus = classifyPaymentInterval({
+      const intervalStatus = getPaymentIntervalStatus({
         limits: paymentLimits,
         payment: grantPayment
       })
@@ -670,7 +674,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
           grantPayment.debitAmount.value
         newSpentAmounts.received.value += estimatedReceived
 
-        if (intervalStatus === 'current') {
+        if (intervalStatus === IntervalStatus.Current) {
           updateIntervalAmounts(newSpentAmounts, totalSent, estimatedReceived)
         }
       } else {
@@ -688,7 +692,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
       }
     }
   } else {
-    const intervalStatus = classifyPaymentInterval({
+    const intervalStatus = getPaymentIntervalStatus({
       limits: paymentLimits,
       payment
     })
@@ -728,12 +732,12 @@ async function validateGrantAndAddSpentAmountsToPayment(
         intervalSent: {
           assetCode: startingSpendAmounts.debitAmountCode,
           assetScale: startingSpendAmounts.debitAmountScale,
-          value: intervalStatus === 'next' ? 0n : intervalDebitValue
+          value: intervalStatus === 'previous' ? 0n : intervalDebitValue
         },
         intervalReceived: {
           assetCode: startingSpendAmounts.receiveAmountCode,
           assetScale: startingSpendAmounts.receiveAmountScale,
-          value: intervalStatus === 'next' ? 0n : intervalReceiveValue
+          value: intervalStatus === 'previous' ? 0n : intervalReceiveValue
         }
       } as SpentAmountsWithInterval
     } else {

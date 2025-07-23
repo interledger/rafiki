@@ -10,8 +10,9 @@ import {
   isOutgoingPaymentError
 } from './errors'
 import {
-  classifyPaymentInterval,
   CreateOutgoingPaymentOptions,
+  getPaymentIntervalStatus,
+  IntervalStatus,
   OutgoingPaymentService,
   PaymentLimits
 } from './service'
@@ -2301,55 +2302,55 @@ describe('OutgoingPaymentService', (): void => {
     })
   })
 
-  describe.only('classifyPaymentInterval', (): void => {
+  describe('getPaymentIntervalStatus', (): void => {
     const cases = [
       {
         description: 'returns unrestricted when no payment interval is defined',
         interval: undefined,
         payment: { createdAt: new Date('2022-07-15T10:00:00Z') },
-        expected: 'unrestricted'
+        expected: null
       },
       {
         description: 'returns current when payment is at interval start',
         interval: '2022-07-01T13:00:00Z/P1M',
         payment: { createdAt: new Date('2022-07-01T13:00:00Z') },
-        expected: 'current'
+        expected: IntervalStatus.Current
       },
       {
         description: 'returns current when payment is within interval',
         interval: '2022-07-01T13:00:00Z/P1M',
         payment: { createdAt: new Date('2022-07-15T10:00:00Z') },
-        expected: 'current'
+        expected: IntervalStatus.Current
       },
       {
         description: 'returns previous when payment is at interval end',
         interval: '2022-07-01T13:00:00Z/2022-08-01T13:00:00Z',
         payment: { createdAt: new Date('2022-08-01T13:00:00Z') },
-        expected: 'previous'
+        expected: IntervalStatus.Next
       },
       {
         description: 'returns previous when payment is after interval',
         interval: '2022-07-01T13:00:00Z/P1M',
         payment: { createdAt: new Date('2022-08-15T10:00:00Z') },
-        expected: 'previous'
+        expected: IntervalStatus.Next
       },
       {
         description: 'returns next when payment is before interval start',
         interval: '2022-07-01T13:00:00Z/P1M',
         payment: { createdAt: new Date('2022-06-30T12:59:59Z') },
-        expected: 'next'
+        expected: IntervalStatus.Previous
       }
     ]
 
     cases.forEach(({ description, interval, payment, expected }) => {
       test(description, () => {
-        const classification = classifyPaymentInterval({
+        const status = getPaymentIntervalStatus({
           limits: {
             paymentInterval: interval ? Interval.fromISO(interval) : undefined
           } as PaymentLimits,
           payment: { ...payment, id: uuid() } as OutgoingPayment
         })
-        expect(classification).toBe(expected)
+        expect(status).toBe(expected)
       })
     })
   })
