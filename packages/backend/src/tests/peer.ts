@@ -15,7 +15,9 @@ export async function createPeer(
   } = {}
 ): Promise<Peer> {
   const peerOptions: CreateOptions = {
-    assetId: options.assetId || (await createAsset(deps)).id,
+    assetId:
+      options.assetId ||
+      (await createAsset(deps, { tenantId: options.tenantId })).id,
     http: {
       outgoing: options.http?.outgoing || {
         authToken: faker.string.sample(32),

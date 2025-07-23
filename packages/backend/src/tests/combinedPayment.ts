@@ -30,22 +30,25 @@ export function toCombinedPayment(
   })
 }
 
+interface TestCombinedPaymentsOptions {
+  tenantId?: string
+}
+
 /**
  * Creates a random payment (incoming or outgoing) and returns a combined payment object that represents it.
  * @param deps - the app service dependency container.
  * @returns A CombinedPayment object that represents the created payment.
  */
 export async function createCombinedPayment(
-  deps: IocContract<AppServices>
+  deps: IocContract<AppServices>,
+  options?: TestCombinedPaymentsOptions
 ): Promise<CombinedPayment> {
-  const sendAsset = await createAsset(deps)
-  const receiveAsset = await createAsset(deps)
-  const sendWalletAddressId = (
-    await createWalletAddress(deps, {
-      assetId: sendAsset.id,
-      tenantId: sendAsset.tenantId
-    })
-  ).id
+  const sendAsset = await createAsset(deps, options)
+  const receiveAsset = await createAsset(deps, options)
+  const sendWalletAddress = await createWalletAddress(deps, {
+    assetId: sendAsset.id,
+    tenantId: sendAsset.tenantId
+  })
   const receiveWalletAddress = await createWalletAddress(deps, {
     assetId: receiveAsset.id,
     tenantId: sendAsset.tenantId
@@ -59,8 +62,8 @@ export async function createCombinedPayment(
           tenantId: receiveWalletAddress.tenantId
         })
       : await createOutgoingPayment(deps, {
-          tenantId: Config.operatorTenantId,
-          walletAddressId: sendWalletAddressId,
+          tenantId: sendWalletAddress.tenantId,
+          walletAddressId: sendWalletAddress.id,
           method: 'ilp',
           receiver: `${Config.openPaymentsUrl}/${uuid()}`,
           validDestination: false
