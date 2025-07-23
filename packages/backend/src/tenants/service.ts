@@ -118,7 +118,10 @@ async function createTenant(
       idpConsentUrl
     })
 
-    const createInitialTenantSettingsOptions = {
+    const createInitialTenantSettingsOptions: {
+      tenantId: string
+      setting: ReturnType<typeof TenantSetting.default>
+    } = {
       tenantId: tenant.id,
       setting: TenantSetting.default()
     }
@@ -130,10 +133,24 @@ async function createTenant(
 
     createInitialTenantSettingsOptions.setting.push(defaultIlpAddressSetting)
 
-    if (settings) {
+    if (
+      settings &&
+      !settings.find(
+        (setting) => setting.key === TenantSettingKeys.ILP_ADDRESS.name
+      )
+    ) {
       createInitialTenantSettingsOptions.setting =
         createInitialTenantSettingsOptions.setting.concat(settings)
+    } else {
+      createInitialTenantSettingsOptions.setting = settings ?? []
     }
+
+    deps.logger.info(
+      {
+        createInitialTenantSettingsOptions
+      },
+      'initial options'
+    )
 
     await deps.tenantSettingService.create(createInitialTenantSettingsOptions, {
       trx
