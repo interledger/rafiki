@@ -10,11 +10,12 @@ import {
 } from '../../wallet_address/model'
 import { Quote } from '../../quote/model'
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
-import { WebhookEvent } from '../../../webhook/model'
+import { WebhookEvent } from '../../../webhook/event/model'
 import {
   OutgoingPayment as OpenPaymentsOutgoingPayment,
   OutgoingPaymentWithSpentAmounts
 } from '@interledger/open-payments'
+import { Tenant } from '../../../tenants/model'
 
 export class OutgoingPaymentGrant extends DbErrors(Model) {
   public static get modelPaths(): string[] {
@@ -108,7 +109,7 @@ export class OutgoingPayment
 
   public getUrl(resourceServerUrl: string): string {
     resourceServerUrl = resourceServerUrl.replace(/\/+$/, '')
-    return `${resourceServerUrl}${OutgoingPayment.urlPath}/${this.id}`
+    return `${resourceServerUrl}/${this.tenantId}${OutgoingPayment.urlPath}/${this.id}`
   }
 
   public get asset(): Asset {
@@ -125,6 +126,8 @@ export class OutgoingPayment
   // Outgoing peer
   public peerId?: string
 
+  public tenantId!: string
+
   static get relationMappings() {
     return {
       ...super.relationMappings,
@@ -134,6 +137,14 @@ export class OutgoingPayment
         join: {
           from: 'outgoingPayments.id',
           to: 'quotes.id'
+        }
+      },
+      tenant: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: Tenant,
+        join: {
+          from: 'outgoingPayments.tenantId',
+          to: 'tenants.id'
         }
       }
     }
@@ -175,7 +186,6 @@ export class OutgoingPayment
       },
       stateAttempts: this.stateAttempts,
       createdAt: new Date(+this.createdAt).toISOString(),
-      updatedAt: new Date(+this.updatedAt).toISOString(),
       balance: balance.toString()
     }
     if (this.metadata) {
@@ -200,7 +210,7 @@ export class OutgoingPayment
   ): OpenPaymentsOutgoingPayment {
     return {
       id: this.getUrl(resourceServerUrl),
-      walletAddress: walletAddress.url,
+      walletAddress: walletAddress.address,
       quoteId: this.quote?.getUrl(resourceServerUrl) ?? undefined,
       receiveAmount: serializeAmount(this.receiveAmount),
       debitAmount: serializeAmount(this.debitAmount),
@@ -208,8 +218,7 @@ export class OutgoingPayment
       receiver: this.receiver,
       failed: this.failed,
       metadata: this.metadata ?? undefined,
-      createdAt: this.createdAt.toISOString(),
-      updatedAt: this.updatedAt.toISOString()
+      createdAt: this.createdAt.toISOString()
     }
   }
 
@@ -270,7 +279,6 @@ export interface OutgoingPaymentResponse {
   receiveAmount: AmountJSON
   metadata?: Record<string, unknown>
   failed: boolean
-  updatedAt: string
   sentAmount: AmountJSON
 }
 

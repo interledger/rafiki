@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{receiverOpenPaymentsAuthHost}}/
+  url: {{receiverOpenPaymentsAuthHost}}
   body: json
   auth: none
 }
@@ -28,11 +28,6 @@ body:json {
                   "identifier": "{{senderWalletAddress}}",
                   "limits": {
                       "debitAmount": {
-                          "value": "8000",
-                          "assetCode": "USD",
-                          "assetScale": 2
-                      },
-                      "receiveAmount": {
                           "value": "8000",
                           "assetCode": "USD",
                           "assetScale": 2
@@ -66,4 +61,12 @@ script:post-response {
   const scripts = require('./scripts');
   
   scripts.storeTokenDetails();
+  
+  // save continue uri
+  const responseJson = res.body;
+  if (res?.body?.continue?.uri) {
+    bru.setEnvVar('continueUri', res.body.continue.uri);
+  } else {
+    console.warn('continue.uri not found in response');
+  }
 }

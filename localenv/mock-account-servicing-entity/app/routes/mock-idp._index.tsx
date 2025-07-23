@@ -30,8 +30,17 @@ interface GrantAmount {
   currencyDisplayCode: string
 }
 
+export enum AmountType {
+  DEBIT = 'debit',
+  RECEIVE = 'receive',
+  UNLIMITED = 'unlimited'
+}
+
 export function loader() {
-  return json({ defaultIdpSecret: CONFIG.idpSecret })
+  return json({
+    defaultIdpSecret: CONFIG.idpSecret,
+    isTenant: process.env.IS_TENANT === 'true'
+  })
 }
 
 function ConsentScreenBody({
@@ -45,8 +54,8 @@ function ConsentScreenBody({
 }: {
   _thirdPartyUri: string
   thirdPartyName: string
-  price: GrantAmount
-  costToUser: GrantAmount
+  price: GrantAmount | null
+  costToUser: GrantAmount | null
   interactId: string
   nonce: string
   returnUrl: string
@@ -76,6 +85,15 @@ function ConsentScreenBody({
               <p>
                 This will cost you {costToUser.currencyDisplayCode}{' '}
                 {costToUser.amount.toFixed(2)}
+              </p>
+            )}
+          </div>
+        </div>
+        <div className='row mt-2'>
+          <div className='col-12'>
+            {!price && !costToUser && (
+              <p>
+                {thirdPartyName} is requesting grant for an unlimited amount
               </p>
             )}
           </div>
@@ -207,13 +225,14 @@ type ConsentScreenProps = {
 
 // In production, ensure that secrets are handled securely and are not exposed to the client-side code.
 export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
+  const { defaultIdpSecret, isTenant } = useLoaderData<typeof loader>()
   const [ctx, setCtx] = useState({
     ready: false,
     thirdPartyName: '',
     thirdPartyUri: '',
     interactId: 'demo-interact-id',
     nonce: 'demo-interact-nonce',
-    returnUrl: 'http://localhost:3030/mock-idp/consent?',
+    returnUrl: `http://localhost:${isTenant ? 5030 : 3030}/mock-idp/consent?`,
     //TODO returnUrl: 'http://localhost:3030/mock-idp/consent?interactid=demo-interact-id&nonce=demo-interact-nonce',
     accesses: null,
     outgoingPaymentAccess: null,
@@ -225,7 +244,6 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
   const queryParams = new URLSearchParams(location.search)
   const instanceConfig: InstanceConfig = useOutletContext()
 
-  const { defaultIdpSecret } = useLoaderData<typeof loader>()
   const idpSecret = idpSecretParam ? idpSecretParam : defaultIdpSecret
 
   useEffect(() => {
@@ -297,21 +315,29 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
             )
             returnUrlObject.searchParams.append(
               'currencyDisplayCode',
-              outgoingPaymentAccess && outgoingPaymentAccess.limits
-                ? outgoingPaymentAccess.limits.debitAmount.assetCode
-                : null
+              outgoingPaymentAccess?.limits?.debitAmount?.assetCode ??
+                outgoingPaymentAccess?.limits?.receiveAmount?.assetCode ??
+                null
             )
             returnUrlObject.searchParams.append(
-              'sendAmountValue',
-              outgoingPaymentAccess && outgoingPaymentAccess.limits
-                ? outgoingPaymentAccess.limits.debitAmount.value
-                : null
+              'amountValue',
+              outgoingPaymentAccess?.limits?.debitAmount?.value ??
+                outgoingPaymentAccess?.limits?.receiveAmount?.value ??
+                null
             )
             returnUrlObject.searchParams.append(
-              'sendAmountScale',
-              outgoingPaymentAccess && outgoingPaymentAccess.limits
-                ? outgoingPaymentAccess.limits.debitAmount.assetScale
-                : null
+              'amountScale',
+              outgoingPaymentAccess?.limits?.debitAmount?.assetScale ??
+                outgoingPaymentAccess?.limits?.receiveAmount?.assetScale ??
+                null
+            )
+            returnUrlObject.searchParams.append(
+              'amountType',
+              outgoingPaymentAccess?.limits?.receiveAmount
+                ? AmountType.RECEIVE
+                : outgoingPaymentAccess?.limits?.debitAmount
+                  ? AmountType.DEBIT
+                  : AmountType.UNLIMITED
             )
             setCtx({
               ...ctx,
@@ -337,33 +363,43 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
       ctx.errors.length === 0 &&
       ctx.ready &&
       ctx.outgoingPaymentAccess &&
-      (!ctx.price || !ctx.costToUser)
+      !ctx.price &&
+      !ctx.costToUser
     ) {
-      if (
-        ctx.outgoingPaymentAccess.limits &&
-        ctx.outgoingPaymentAccess.limits.debitAmount &&
-        ctx.outgoingPaymentAccess.limits.receiveAmount
-      ) {
-        const { receiveAmount, debitAmount } = ctx.outgoingPaymentAccess.limits
-        setCtx({
-          ...ctx,
-          price: {
-            amount:
-              Number(receiveAmount.value) /
-              Math.pow(10, receiveAmount.assetScale),
-            currencyDisplayCode: receiveAmount.assetCode
-          },
-          costToUser: {
-            amount:
-              Number(debitAmount.value) / Math.pow(10, debitAmount.assetScale),
-            currencyDisplayCode: debitAmount.assetCode
-          }
-        })
-      } else {
-        setCtx({
-          ...ctx,
-          errors: [new Error('missing or incomplete outgoing payment access')]
-        })
+      if (ctx.outgoingPaymentAccess.limits) {
+        if (
+          ctx.outgoingPaymentAccess.limits.debitAmount &&
+          ctx.outgoingPaymentAccess.limits.receiveAmount
+        ) {
+          setCtx({
+            ...ctx,
+            errors: [
+              new Error('only one of receiveAmount or debitAmount allowed')
+            ]
+          })
+        } else {
+          const { receiveAmount, debitAmount } =
+            ctx.outgoingPaymentAccess.limits
+          setCtx({
+            ...ctx,
+            ...(receiveAmount && {
+              price: {
+                amount:
+                  Number(receiveAmount.value) /
+                  Math.pow(10, receiveAmount.assetScale),
+                currencyDisplayCode: receiveAmount.assetCode
+              }
+            }),
+            ...(debitAmount && {
+              costToUser: {
+                amount:
+                  Number(debitAmount.value) /
+                  Math.pow(10, debitAmount.assetScale),
+                currencyDisplayCode: debitAmount.assetCode
+              }
+            })
+          })
+        }
       }
     }
   }, [ctx, setCtx])
@@ -379,7 +415,7 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
         </div>
         {ctx.ready ? (
           <>
-            {ctx.errors.length > 0 || !ctx.price || !ctx.costToUser ? (
+            {ctx.errors.length > 0 ? (
               <>
                 <h2 className='display-6'>Failed</h2>
                 <ul>

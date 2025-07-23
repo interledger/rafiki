@@ -2,7 +2,6 @@ import crypto from 'crypto'
 import nock from 'nock'
 import { faker } from '@faker-js/faker'
 import { v4 } from 'uuid'
-import { Knex } from 'knex'
 import {
   JWK,
   generateTestKeys,
@@ -37,6 +36,8 @@ import { Interaction, InteractionState } from '../interaction/model'
 import { generateNonce } from '../shared/utils'
 import { GNAPErrorCode } from '../shared/gnapErrors'
 import { TransactionOrKnex } from 'objection'
+import { Tenant } from '../tenant/model'
+import { generateTenant } from '../tests/tenant'
 
 describe('Signature Service', (): void => {
   let deps: IocContract<AppServices>
@@ -67,6 +68,7 @@ describe('Signature Service', (): void => {
     let managementId: string
     let tokenManagementUrl: string
     let accessTokenService: AccessTokenService
+    let tenant: Tenant
 
     beforeAll(async (): Promise<void> => {
       trx = appContainer.knex
@@ -117,7 +119,10 @@ describe('Signature Service', (): void => {
     })
 
     beforeEach(async (): Promise<void> => {
-      grant = await Grant.query(trx).insertAndFetch(generateBaseGrant())
+      tenant = await Tenant.query(trx).insertAndFetch(generateTenant())
+      grant = await Grant.query(trx).insertAndFetch(
+        generateBaseGrant({ tenantId: tenant.id })
+      )
       await Access.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_ACCESS
@@ -343,12 +348,13 @@ describe('Signature Service', (): void => {
     })
 
     test('middleware fails if grant is revoked', async (): Promise<void> => {
-      const grant = await Grant.query().insert({
-        ...generateBaseGrant({
+      const grant = await Grant.query().insert(
+        generateBaseGrant({
+          tenantId: tenant.id,
           state: GrantState.Finalized,
           finalizationReason: GrantFinalization.Revoked
         })
-      })
+      )
 
       const ctx = await createContextWithSigHeaders<ContinueContext>(
         {

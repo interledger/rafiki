@@ -10,6 +10,7 @@ import {
 import { AccessToken, toOpenPaymentsAccessToken } from '../accessToken/model'
 import { Interaction } from '../interaction/model'
 import { Subject, toOpenPaymentsSubject } from '../subject/model'
+import { Tenant } from '../tenant/model'
 
 export enum StartMethod {
   Redirect = 'redirect'
@@ -70,6 +71,14 @@ export class Grant extends BaseModel {
         from: 'grants.id',
         to: 'interactions.grantId'
       }
+    },
+    tenant: {
+      relation: Model.HasOneRelation,
+      modelClass: join(__dirname, '../tenant/model'),
+      join: {
+        from: 'grants.tenantId',
+        to: 'tenants.id'
+      }
     }
   })
   public access?: Access[]
@@ -88,6 +97,10 @@ export class Grant extends BaseModel {
   public clientNonce?: string // client-generated nonce for post-interaction hash
 
   public lastContinuedAt!: Date
+
+  public tenantId!: string
+
+  public tenant?: Tenant
 
   public $beforeInsert(context: QueryContext): void {
     super.$beforeInsert(context)
@@ -207,4 +220,12 @@ export function isRevokedGrant(grant: Grant): boolean {
     grant.state === GrantState.Finalized &&
     grant.finalizationReason === GrantFinalization.Revoked
   )
+}
+
+export interface GrantWithTenant extends Grant {
+  tenant: NonNullable<Grant['tenant']>
+}
+
+export function isGrantWithTenant(grant: Grant): grant is GrantWithTenant {
+  return !!grant.tenant
 }

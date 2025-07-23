@@ -4,8 +4,10 @@ import { Asset } from '../../../asset/model'
 import { ConnectorAccount } from '../connector/core/rafiki'
 import { HttpToken } from '../peer-http-token/model'
 import { BaseModel } from '../../../shared/baseModel'
-import { WebhookEvent } from '../../../webhook/model'
+import { WebhookEvent } from '../../../webhook/event/model'
 import { join } from 'path'
+import { IAppConfig } from '../../../config/app'
+import { finalizeWebhookRecipients } from '../../../webhook/service'
 
 export class Peer
   extends BaseModel
@@ -53,10 +55,15 @@ export class Peer
 
   public name?: string
 
-  public async onDebit({ balance }: OnDebitOptions): Promise<Peer> {
+  public readonly tenantId!: string
+
+  public async onDebit(
+    { balance }: OnDebitOptions,
+    config: IAppConfig
+  ): Promise<Peer> {
     if (this.liquidityThreshold !== null) {
       if (balance <= this.liquidityThreshold) {
-        await PeerEvent.query().insert({
+        await PeerEvent.query().insertGraph({
           peerId: this.id,
           type: PeerEventType.LiquidityLow,
           data: {
@@ -68,7 +75,9 @@ export class Peer
             },
             liquidityThreshold: this.liquidityThreshold,
             balance
-          }
+          },
+          tenantId: this.tenantId,
+          webhooks: finalizeWebhookRecipients([this.tenantId], config)
         })
       }
     }

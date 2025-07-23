@@ -38,6 +38,7 @@ describe('Incoming Payment Resolver', (): void => {
   let incomingPaymentService: IncomingPaymentService
   let accountingService: AccountingService
   let asset: Asset
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -45,18 +46,23 @@ describe('Incoming Payment Resolver', (): void => {
     incomingPaymentService = await deps.use('incomingPaymentService')
     accountingService = await deps.use('accountingService')
     asset = await createAsset(deps)
+    tenantId = Config.operatorTenantId
   })
 
   afterAll(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
     await appContainer.apolloClient.stop()
     await appContainer.shutdown()
   })
 
   describe('Wallet address incoming payments', (): void => {
     beforeEach(async (): Promise<void> => {
-      walletAddressId = (await createWalletAddress(deps, { assetId: asset.id }))
-        .id
+      walletAddressId = (
+        await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
+          assetId: asset.id
+        })
+      ).id
     })
 
     getPageTests({
@@ -74,7 +80,8 @@ describe('Incoming Payment Resolver', (): void => {
           metadata: {
             description: `IncomingPayment`,
             externalRef: '#123'
-          }
+          },
+          tenantId
         }),
       pagedQuery: 'incomingPayments',
       parent: {
@@ -106,6 +113,7 @@ describe('Incoming Payment Resolver', (): void => {
       async ({ metadata, expiresAt, withAmount }): Promise<void> => {
         const incomingAmount = withAmount ? amount : undefined
         const { id: walletAddressId } = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           assetId: asset.id
         })
         const payment = await createIncomingPayment(deps, {
@@ -113,7 +121,8 @@ describe('Incoming Payment Resolver', (): void => {
           client,
           metadata,
           expiresAt,
-          incomingAmount
+          incomingAmount,
+          tenantId
         })
 
         const createSpy = jest
@@ -162,7 +171,7 @@ describe('Incoming Payment Resolver', (): void => {
               query.data?.createIncomingPayment
           )
 
-        expect(createSpy).toHaveBeenCalledWith(input)
+        expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
         expect(query).toEqual({
           __typename: 'IncomingPaymentResponse',
           payment: {
@@ -232,7 +241,7 @@ describe('Incoming Payment Resolver', (): void => {
           })
         )
       }
-      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
     })
 
     test('Internal server error', async (): Promise<void> => {
@@ -277,7 +286,10 @@ describe('Incoming Payment Resolver', (): void => {
           })
         )
       }
-      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith({
+        ...input,
+        tenantId
+      })
     })
   })
 
@@ -294,7 +306,8 @@ describe('Incoming Payment Resolver', (): void => {
           value: BigInt(56),
           assetCode: asset.code,
           assetScale: asset.scale
-        }
+        },
+        tenantId
       })
     }
 
@@ -305,6 +318,7 @@ describe('Incoming Payment Resolver', (): void => {
       }
       beforeEach(async (): Promise<void> => {
         const { id: walletAddressId } = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           assetId: asset.id
         })
         payment = await createPayment({ walletAddressId, metadata })
@@ -462,13 +476,15 @@ describe('Incoming Payment Resolver', (): void => {
       async ({ metadata }): Promise<void> => {
         const incomingAmount = amount ? amount : undefined
         const { id: walletAddressId } = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           assetId: asset.id
         })
         const payment = await createIncomingPayment(deps, {
           walletAddressId,
           metadata,
           expiresAt,
-          incomingAmount
+          incomingAmount,
+          tenantId
         })
         const input = {
           id: payment.id,
@@ -503,7 +519,7 @@ describe('Incoming Payment Resolver', (): void => {
               query.data?.updateIncomingPayment
           )
 
-        expect(createSpy).toHaveBeenCalledWith(input)
+        expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
         expect(query).toEqual({
           __typename: 'IncomingPaymentResponse',
           payment: {
@@ -558,7 +574,7 @@ describe('Incoming Payment Resolver', (): void => {
           })
         )
       }
-      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
     })
 
     test('Internal server error', async (): Promise<void> => {
@@ -604,7 +620,7 @@ describe('Incoming Payment Resolver', (): void => {
           })
         )
       }
-      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
     })
   })
 })

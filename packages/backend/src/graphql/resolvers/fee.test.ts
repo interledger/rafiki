@@ -31,7 +31,7 @@ describe('Fee Resolvers', () => {
   })
 
   afterEach(async () => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async () => {

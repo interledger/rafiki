@@ -1,9 +1,13 @@
-import { json } from '@remix-run/node'
+import { json, LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData, useNavigate } from '@remix-run/react'
 import { PageHeader, Button, Table } from '../components'
 import { getAccountsWithBalance } from '../lib/balances.server'
+import { getTenantCredentials } from '~/lib/utils'
+import { messageStorage } from '~/lib/message.server'
 
-export const loader = async () => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const session = await messageStorage.getSession(request.headers.get('cookie'))
+  await getTenantCredentials(session)
   const accountsWithBalance = await getAccountsWithBalance()
 
   return json({ accountsWithBalance })

@@ -94,7 +94,7 @@ export const createAssetSchema = z
   .object({
     code: z
       .string()
-      .min(3, { message: 'Code should be atleast 3 characters long' })
+      .min(3, { message: 'Code should be at least 3 characters long' })
       .max(6, { message: 'Maximum length of Code is 6 characters' })
       .regex(/^[a-zA-Z]+$/, { message: 'Code should only contain letters.' })
       .transform((code) => code.toUpperCase()),
@@ -104,7 +104,8 @@ export const createAssetSchema = z
       })
       .int()
       .min(0, { message: 'Scale should be from 0 to 255' })
-      .max(255, { message: 'Scale should be from 0 to 255' })
+      .max(255, { message: 'Scale should be from 0 to 255' }),
+    tenantId: z.string().optional()
   })
   .merge(updateAssetSchema)
   .omit({ id: true })
@@ -118,7 +119,8 @@ export const amountSchema = z.coerce
 export const createWalletAddressSchema = z.object({
   name: z.string().min(1),
   publicName: z.string().optional(),
-  asset: z.string().uuid()
+  asset: z.string().uuid(),
+  tenantId: z.string().uuid().optional()
 })
 
 export const updateWalletAddressSchema = z
@@ -127,3 +129,33 @@ export const updateWalletAddressSchema = z
     status: z.enum([WalletAddressStatus.Active, WalletAddressStatus.Inactive])
   })
   .merge(uuidSchema)
+
+export const updateTenantGeneralSchema = z
+  .object({
+    publicName: z.string().optional(),
+    email: z.string().email().or(z.literal(''))
+  })
+  .merge(uuidSchema)
+
+export const updateTenantIdpSchema = z
+  .object({
+    idpSecret: z.string().optional(),
+    idpConsentUrl: z.string().optional()
+  })
+  .merge(uuidSchema)
+
+export const updateTenantSensitiveSchema = z
+  .object({
+    apiSecret: z
+      .string()
+      .min(10, { message: 'API Secret should be at least 10 characters long' })
+      .max(255, { message: 'Maximum length of API Secret is 255 characters' })
+  })
+  .merge(uuidSchema)
+
+export const createTenantSchema = z
+  .object({})
+  .merge(updateTenantGeneralSchema)
+  .merge(updateTenantIdpSchema)
+  .merge(updateTenantSensitiveSchema)
+  .omit({ id: true })

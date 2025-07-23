@@ -41,7 +41,7 @@ describe('SPSP Routes', (): void => {
   })
 
   afterAll(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
     await appContainer.shutdown()
   })
 

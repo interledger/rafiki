@@ -21,6 +21,8 @@ services:
       IDP_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
       DISPLAY_NAME: Happy Life Bank
       DISPLAY_ICON: bank-icon.svg
+      OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
+      FRONTEND_PORT: 4010
     volumes:
       - ../happy-life-bank/seed.yml:/workspace/seed.yml
       - ../happy-life-bank/private-key.pem:/workspace/private-key.pem
@@ -58,17 +60,21 @@ services:
       USE_TIGERBEETLE: false
       AUTH_SERVER_GRANT_URL: ${HAPPY_LIFE_BANK_AUTH_SERVER_DOMAIN:-http://happy-life-bank-auth:3006}
       AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-auth:3007
+      AUTH_ADMIN_API_URL: 'http://happy-life-bank-auth:4003/graphql'
+      AUTH_ADMIN_API_SECRET: 'rPoZpe9tVyBNCigm05QDco7WLcYa0xMao7lO5KG1XG4='
+      AUTH_SERVICE_API_URL: 'http://happy-life-bank-auth:4011'
       ILP_ADDRESS: test.happy-life-bank
       ILP_CONNECTOR_URL: http://happy-life-bank-backend:4002
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       WEBHOOK_URL: http://happy-life-bank/webhooks
-      OPEN_PAYMENTS_URL: ${HAPPY_LIFE_BANK_OPEN_PAYMENTS_URL:-http://happy-life-bank-backend}
       EXCHANGE_RATES_URL: http://happy-life-bank/rates
+      OPEN_PAYMENTS_URL: ${HAPPY_LIFE_BANK_OPEN_PAYMENTS_URL:-https://happy-life-bank-backend}
       REDIS_URL: redis://shared-redis:6379/2
       WALLET_ADDRESS_URL: ${HAPPY_LIFE_BANK_WALLET_ADDRESS_URL:-https://happy-life-bank-backend/.well-known/pay}
       ENABLE_TELEMETRY: true
       KEY_ID: 53f2d913-e98a-40b9-b270-372d0547f23d
+      OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
     depends_on:
       - cloud-nine-backend
     healthcheck:
@@ -95,6 +101,7 @@ services:
       - '4006:3006'
       - '9232:9229'
       - '4009:3009'
+      - '4011:4011'
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://happy_life_bank_auth:happy_life_bank_auth@shared-database/happy_life_bank_auth
@@ -104,6 +111,8 @@ services:
       IDENTITY_SERVER_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
       COOKIE_KEY: 42397d1f371dd4b8b7d0308a689a57c882effd4ea909d792302542af47e2cd37
       ADMIN_API_SECRET: rPoZpe9tVyBNCigm05QDco7WLcYa0xMao7lO5KG1XG4=
+      OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
+      SERVICE_API_PORT: 4011
     depends_on:
       - cloud-nine-auth
   happy-life-admin:
@@ -129,7 +138,6 @@ services:
       ENABLE_INSECURE_MESSAGE_COOKIE: true
       AUTH_ENABLED: false
       SIGNATURE_VERSION: 1
-      SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
     depends_on:
       - cloud-nine-admin
       - happy-life-backend
