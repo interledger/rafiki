@@ -9,7 +9,11 @@ import { truncateTables } from '../../tests/tableManager'
 import { Tenant } from '../model'
 import { TenantService } from '../service'
 import { faker } from '@faker-js/faker'
-import { exchangeRatesSetting, randomSetting } from '../../tests/tenantSettings'
+import {
+  exchangeRatesSetting,
+  randomSetting,
+  createTenantSettings
+} from '../../tests/tenantSettings'
 import { TenantSetting, TenantSettingKeys } from './model'
 import {
   CreateOptions,
@@ -290,7 +294,7 @@ describe('TenantSetting Service', (): void => {
     async function createTenantSetting(): Promise<TenantSetting[]> {
       const options: CreateOptions = {
         tenantId: tenant.id,
-        setting: [randomSetting()]
+        setting: [exchangeRatesSetting()]
       }
 
       const createdTenantSetting = await tenantSettingService.create(options)
@@ -321,7 +325,15 @@ describe('TenantSetting Service', (): void => {
     })
 
     test('should get all tenant settings', async () => {
-      const newTenantSetting = await createTenantSetting()
+      const newTenantSetting = await createTenantSettings(deps, {
+        tenantId: tenant.id,
+        setting: [
+          {
+            key: TenantSettingKeys.WEBHOOK_URL.name,
+            value: faker.internet.url()
+          }
+        ]
+      })
       const dbTenantSettings = await tenantSettingService.get({
         tenantId: tenant.id
       })

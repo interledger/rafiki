@@ -153,9 +153,19 @@ export const updateTenantSensitiveSchema = z
   })
   .merge(uuidSchema)
 
+export const tenantSettingsSchema = z.object({
+  exchangeRatesUrl: z.string().url().or(z.literal('')).optional(),
+  webhookUrl: z.string().url().or(z.literal('')).optional(),
+  webhookTimeout: z.coerce.number().or(z.literal('')).optional(),
+  webhookMaxRetry: z.coerce.number().or(z.literal('')).optional(),
+  walletAddressUrl: z.string().or(z.literal('')).optional(),
+  ilpAddress: z.string().optional()
+})
+
 export const createTenantSchema = z
   .object({})
   .merge(updateTenantGeneralSchema)
   .merge(updateTenantIdpSchema)
   .merge(updateTenantSensitiveSchema)
+  .merge(tenantSettingsSchema)
   .omit({ id: true })
