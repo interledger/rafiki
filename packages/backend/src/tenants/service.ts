@@ -141,8 +141,8 @@ async function createTenant(
     ) {
       createInitialTenantSettingsOptions.setting =
         createInitialTenantSettingsOptions.setting.concat(settings)
-    } else {
-      createInitialTenantSettingsOptions.setting = settings ?? []
+    } else if (settings) {
+      createInitialTenantSettingsOptions.setting = settings
     }
 
     deps.logger.info(
