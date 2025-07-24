@@ -26,11 +26,6 @@ import { SubjectService } from '../subject/service'
 import { errorToGNAPCode, errorToHTTPCode, isGrantError } from './errors'
 import { TenantService } from '../tenant/service'
 import { Tenant, isTenantWithIdp } from '../tenant/model'
-import {
-  errorToGNAPCode as accessErrorToGNAPCode,
-  errorToHTTPCode as accessErrorToHTTPCode,
-  isAccessError
-} from '../access/errors'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
@@ -173,13 +168,6 @@ async function createApprovedGrant(
         err.message || 'invalid request'
       )
     }
-    if (isAccessError(err)) {
-      throw new GNAPServerRouteError(
-        accessErrorToHTTPCode[err],
-        accessErrorToGNAPCode[err],
-        err
-      )
-    }
     throw new GNAPServerRouteError(
       500,
       GNAPErrorCode.RequestDenied,
@@ -267,13 +255,6 @@ async function createPendingGrant(
         errorToHTTPCode[err.code],
         errorToGNAPCode[err.code],
         err.message || 'invalid request'
-      )
-    }
-    if (isAccessError(err)) {
-      throw new GNAPServerRouteError(
-        accessErrorToHTTPCode[err],
-        accessErrorToGNAPCode[err],
-        err
       )
     }
     throw new GNAPServerRouteError(

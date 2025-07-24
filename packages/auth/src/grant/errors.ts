@@ -2,7 +2,8 @@ import { HttpStatusCode } from 'axios'
 import { GNAPErrorCode } from '../shared/gnapErrors'
 
 export enum GrantErrorCode {
-  InvalidRequest
+  InvalidRequest,
+  OnlyOneAccessAmountAllowed
 }
 
 export class GrantError extends Error {
@@ -21,17 +22,20 @@ export function isGrantError(error: unknown): error is GrantError {
 export const errorToHTTPCode: {
   [key in GrantErrorCode]: number
 } = {
-  [GrantErrorCode.InvalidRequest]: HttpStatusCode.BadRequest
+  [GrantErrorCode.InvalidRequest]: HttpStatusCode.BadRequest,
+  [GrantErrorCode.OnlyOneAccessAmountAllowed]: HttpStatusCode.BadRequest
 }
 
 export const errorToGNAPCode: {
   [key in GrantErrorCode]: GNAPErrorCode
 } = {
-  [GrantErrorCode.InvalidRequest]: GNAPErrorCode.InvalidRequest
+  [GrantErrorCode.InvalidRequest]: GNAPErrorCode.InvalidRequest,
+  [GrantErrorCode.OnlyOneAccessAmountAllowed]: GNAPErrorCode.InvalidRequest
 }
 
 export const errorToMessage: {
   [key in GrantErrorCode]: string
 } = {
-  [GrantErrorCode.InvalidRequest]: 'Invalid request'
+  [GrantErrorCode.InvalidRequest]: 'Invalid request',
+  [GrantErrorCode.OnlyOneAccessAmountAllowed]: 'only one access amount allowed'
 }

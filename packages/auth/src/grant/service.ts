@@ -21,6 +21,8 @@ import { canSkipInteraction } from './utils'
 import { IAppConfig } from '../config/app'
 import { SubjectRequest } from '../subject/types'
 import { SubjectService } from '../subject/service'
+import { accessErrorToGrantError, isAccessError } from '../access/errors'
+import { errorToMessage, GrantError } from './errors'
 
 interface GrantFilter {
   identifier?: FilterString
@@ -278,6 +280,10 @@ async function create(
   } catch (err) {
     if (!trx) {
       await grantTrx.rollback()
+    }
+    if (isAccessError(err)) {
+      const grantErr = accessErrorToGrantError[err]
+      throw new GrantError(grantErr, errorToMessage[grantErr])
     }
 
     throw err

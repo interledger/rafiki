@@ -1,6 +1,5 @@
 import { faker } from '@faker-js/faker'
 import nock from 'nock'
-import { Knex } from 'knex'
 import { v4 } from 'uuid'
 import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'

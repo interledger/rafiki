@@ -54,7 +54,6 @@ import { TelemetryService } from '../../../telemetry/service'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { ReceiverService } from '../../receiver/service'
-import { TransactionOrKnex } from 'objection'
 import { WalletAddressService } from '../../wallet_address/service'
 import { CreateOptions } from '../../../tenants/settings/service'
 import {
@@ -82,7 +81,6 @@ describe('OutgoingPaymentService', (): void => {
   let receiver: string
   let client: string
   let amtDelivered: bigint
-  let trx: TransactionOrKnex
   let config: IAppConfig
   let receiverService: ReceiverService
   let receiverGet: typeof receiverService.get
@@ -284,7 +282,6 @@ describe('OutgoingPaymentService', (): void => {
     config = await deps.use('config')
     knex = appContainer.knex
     receiverService = await deps.use('receiverService')
-    trx = appContainer.knex
   })
 
   beforeEach(async (): Promise<void> => {

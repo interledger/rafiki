@@ -218,7 +218,8 @@ export class OutgoingPayment
       receiver: this.receiver,
       failed: this.failed,
       metadata: this.metadata ?? undefined,
-      createdAt: this.createdAt.toISOString()
+      createdAt: this.createdAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString()
     }
   }
 

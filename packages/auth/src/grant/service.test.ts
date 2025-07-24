@@ -24,7 +24,6 @@ import { AccessToken } from '../accessToken/model'
 import { Interaction, InteractionState } from '../interaction/model'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { getPageTests } from '../shared/baseModel.test'
-import { TransactionOrKnex } from 'objection'
 import { Tenant } from '../tenant/model'
 import { generateTenant } from '../tests/tenant'
 
@@ -32,7 +31,6 @@ describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let grantService: GrantService
-  let trx: TransactionOrKnex
   let knex: Knex
   let tenant: Tenant
 
@@ -217,7 +215,7 @@ describe('Grant Service', (): void => {
           }
         }
 
-        const grant = await grantService.create(grantRequest)
+        const grant = await grantService.create(grantRequest, tenant.id)
 
         expect(grant).toMatchObject({
           state: GrantState.Pending,
