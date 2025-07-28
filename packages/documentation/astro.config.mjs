@@ -133,6 +133,20 @@ export default defineConfig({
           ]
         },
         {
+          label: 'Rafiki Guide',
+          collapsed: true,
+          items: [
+            {
+              label: 'Rafiki TestNet',
+              link: '/integration/deploy-to-prod/rafiki-deployment-testnet'
+            },
+            {
+              label: 'GCP prerequisites',
+              link: '/integration/deploy-to-prod/gcp-prerequisites-guide'
+            }
+          ]
+        },
+        {
           label: 'Integration',
           collapsed: true,
           items: [
