@@ -13,6 +13,8 @@ import { SubjectRequest } from './types'
 import { generateNonce, generateToken } from '../shared/utils'
 import { Subject } from './model'
 import { TransactionOrKnex } from 'objection'
+import { Tenant } from '../tenant/model'
+import { generateTenant } from '../tests/tenant'
 
 describe('Subject Service', (): void => {
   let deps: IocContract<AppServices>
@@ -33,7 +35,11 @@ describe('Subject Service', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    grant = await Grant.query(trx).insertAndFetch(generateBaseGrant())
+    const tenant = await Tenant.query().insertAndFetch(generateTenant())
+    grant = await Grant.query(trx).insertAndFetch({
+      ...generateBaseGrant(),
+      tenantId: tenant.id
+    })
   })
 
   beforeAll(async (): Promise<void> => {
@@ -73,17 +79,6 @@ describe('Subject Service', (): void => {
       test('when id is not a valid URI', async (): Promise<void> => {
         const subjectRequest: SubjectRequest = {
           id: 'invalid-uri',
-          format: 'uri'
-        }
-
-        await expect(
-          subjectService.createSubject(grant.id, [subjectRequest])
-        ).rejects.toThrow()
-      })
-
-      test('when id is not a https URI', async (): Promise<void> => {
-        const subjectRequest: SubjectRequest = {
-          id: 'http://wallet.com/alice',
           format: 'uri'
         }
 

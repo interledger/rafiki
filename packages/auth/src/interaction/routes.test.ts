@@ -835,7 +835,7 @@ describe('Interaction Routes', (): void => {
             }
           ],
           state: interaction.state,
-          subjects: []
+          subject: undefined
         })
       })
 
