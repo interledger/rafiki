@@ -182,9 +182,11 @@ export function toOpenPaymentsGrant(
   subjectItems: Subject[]
 ): OpenPaymentsGrant {
   return {
-    access_token: toOpenPaymentsAccessToken(accessToken, accessItems, {
-      authServerUrl: args.authServerUrl
-    }),
+    access_token: accessToken
+      ? toOpenPaymentsAccessToken(accessToken, accessItems, {
+          authServerUrl: args.authServerUrl
+        })
+      : undefined,
     continue: {
       access_token: {
         value: grant.continueToken
