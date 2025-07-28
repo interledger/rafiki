@@ -9,18 +9,33 @@ import {
 } from '../graphql/generated/graphql'
 import { FnWithDeps } from '../shared/types'
 import { v4 } from 'uuid'
+import { AxiosInstance, AxiosRequestConfig } from 'axios'
 
 type ServiceDependencies = {
   logger: Logger
   config: IAppConfig
   apolloClient: ApolloClient<NormalizedCacheObject>
+  axios: AxiosInstance
 }
 
-type PaymentService = {
+export type WalletAddress = {
+  id: string
+  publicName?: string
+  assetCode: string
+  assetScale: number
+  authServer: string
+  resourceServer: string
+  cardService: string
+} & {
+  [key: string]: unknown
+}
+
+export type PaymentService = {
   createIncomingPayment: (
     walletAddressId: string,
     incomingAmount: AmountInput
   ) => Promise<string>
+  getWalletAddress: (walletAddressUrl: string) => Promise<WalletAddress>
 }
 
 export function createPaymentService(
@@ -38,7 +53,9 @@ export function createPaymentService(
     createIncomingPayment: (
       walletAddressId: string,
       incomingAmount: AmountInput
-    ) => createIncomingPayment(deps, walletAddressId, incomingAmount)
+    ) => createIncomingPayment(deps, walletAddressId, incomingAmount),
+    getWalletAddress: (walletAddressUrl: string) =>
+      getWalletAddress(deps, walletAddressUrl)
   }
 }
 
@@ -71,4 +88,22 @@ const createIncomingPayment: FnWithDeps<
   }
 
   return incomingPaymentUrl
+}
+
+async function getWalletAddress(
+  deps: ServiceDependencies,
+  walletAddressUrl: string
+): Promise<WalletAddress> {
+  const config: AxiosRequestConfig = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }
+  const { data: walletAddress } = await deps.axios.get<
+    WalletAddress | undefined
+  >(walletAddressUrl, config)
+  if (!walletAddress) {
+    throw new Error('No wallet address was found')
+  }
+  return walletAddress
 }
