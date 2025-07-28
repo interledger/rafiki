@@ -171,7 +171,11 @@ async function getGrantDetails(
   ctx.body = {
     grantId: interaction.grant.id,
     access: access.map(toOpenPaymentsAccess),
-    subjects: subjects.map(toOpenPaymentsSubject),
+    subject: subjects.length
+      ? {
+          sub_ids: subjects.map(toOpenPaymentsSubject)
+        }
+      : undefined,
     state: interaction.state
   }
 }

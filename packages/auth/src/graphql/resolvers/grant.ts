@@ -5,7 +5,7 @@ import {
   MutationResolvers,
   Grant as SchemaGrant,
   Access as SchemaAccess,
-  Subject as SchemaSubject,
+  SubjectItem as SchemaSubjectItem,
   QueryResolvers
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
@@ -45,7 +45,7 @@ export const getGrantById: QueryResolvers<ApolloContext>['grant'] = async (
   ctx
 ): Promise<ResolversTypes['Grant']> => {
   const grantService = await ctx.container.use('grantService')
-  const grant = await grantService.getByIdWithAccess(args.id)
+  const grant = await grantService.getByIdWithAccessAndSubject(args.id)
 
   if (!grant) {
     throw new GraphQLError('No grant', {
@@ -92,7 +92,11 @@ export const grantToGraphql = (grant: Grant): SchemaGrant => ({
   id: grant.id,
   client: grant.client,
   access: grant.access?.map((item) => accessToGraphql(item)) || [],
-  subject: grant.subjects?.map((item) => subjectToGraphql(item)) || [],
+  subject: grant.subjects
+    ? {
+        sub_ids: grant.subjects?.map((item) => subjectToGraphql(item)) || []
+      }
+    : undefined,
   state: grant.state,
   finalizationReason: grant.finalizationReason,
   createdAt: grant.createdAt.toISOString()
@@ -107,7 +111,7 @@ export const accessToGraphql = (access: Access): SchemaAccess => ({
   limits: access.limits
 })
 
-export const subjectToGraphql = (subject: Subject): SchemaSubject => ({
+export const subjectToGraphql = (subject: Subject): SchemaSubjectItem => ({
   id: subject.id,
   subId: subject.subId,
   subIdFormat: subject.subIdFormat,

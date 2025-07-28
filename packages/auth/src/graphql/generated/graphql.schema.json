@@ -278,15 +278,19 @@
             "description": "Details of the access provided by the grant.",
             "args": [],
             "type": {
-              "kind": "LIST",
+              "kind": "NON_NULL",
               "name": null,
               "ofType": {
-                "kind": "NON_NULL",
+                "kind": "LIST",
                 "name": null,
                 "ofType": {
-                  "kind": "OBJECT",
-                  "name": "Access",
-                  "ofType": null
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "Access",
+                    "ofType": null
+                  }
                 }
               }
             },
@@ -374,17 +378,9 @@
             "description": "Details of the subject provided by the grant.",
             "args": [],
             "type": {
-              "kind": "LIST",
-              "name": null,
-              "ofType": {
-                "kind": "NON_NULL",
-                "name": null,
-                "ofType": {
-                  "kind": "OBJECT",
-                  "name": "Subject",
-                  "ofType": null
-                }
-              }
+              "kind": "OBJECT",
+              "name": "Subject",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -748,7 +744,7 @@
           },
           {
             "kind": "OBJECT",
-            "name": "Subject",
+            "name": "SubjectItem",
             "ofType": null
           }
         ]
@@ -1154,6 +1150,42 @@
       {
         "kind": "OBJECT",
         "name": "Subject",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "sub_ids",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "SubjectItem",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "SubjectItem",
         "description": null,
         "isOneOf": null,
         "fields": [

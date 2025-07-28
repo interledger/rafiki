@@ -65,7 +65,6 @@ async function getByGrant(
 
 function validateSubjectRequest(subject: SubjectRequest): void {
   try {
-    if (!subject.id.startsWith('https://')) throw 1
     new URL(subject.id)
   } catch {
     throw new GrantError(
@@ -73,7 +72,7 @@ function validateSubjectRequest(subject: SubjectRequest): void {
       'subject id must be a valid https url'
     )
   }
-  if (subject.format != 'uri') {
+  if (subject.format !== 'uri') {
     throw new GrantError(
       GrantErrorCode.InvalidRequest,
       'subject format is invalid'

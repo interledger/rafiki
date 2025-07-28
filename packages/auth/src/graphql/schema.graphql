@@ -95,9 +95,9 @@ type Grant implements Model {
   "Wallet address of the grantee's account."
   client: String!
   "Details of the access provided by the grant."
-  access: [Access!]
+  access: [Access!]!
   "Details of the subject provided by the grant."
-  subject: [Subject!]
+  subject: Subject
   "Current state of the grant."
   state: GrantState!
   "Specific outcome of a finalized grant, indicating whether the grant was issued, revoked, or rejected."
@@ -121,7 +121,11 @@ type Access implements Model {
   createdAt: String!
 }
 
-type Subject implements Model {
+type Subject {
+  sub_ids: [SubjectItem!]!
+}
+
+type SubjectItem implements Model {
   "Unique identifier of the subject object."
   id: ID!
   "Wallet address of the subject's account."

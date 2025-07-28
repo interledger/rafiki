@@ -39,7 +39,6 @@ describe('Grant Service', (): void => {
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
     grantService = await deps.use('grantService')
-    trx = appContainer.knex
   })
 
   beforeEach(async (): Promise<void> => {
@@ -335,11 +334,28 @@ describe('Grant Service', (): void => {
       })
     })
 
-    describe('getByIdWithAccess', (): void => {
+    describe('getByIdWithAccessAndSubject', (): void => {
       test('Can fetch a grant by id with access', async () => {
-        const fetchedGrant = await grantService.getByIdWithAccess(grant.id)
+        const grantRequest: GrantRequest = {
+          ...BASE_GRANT_REQUEST,
+          subject: {
+            sub_ids: [
+              {
+                id: faker.internet.url(),
+                format: 'uri'
+              }
+            ]
+          }
+        }
+
+        const grant = await grantService.create(grantRequest, tenant.id)
+        expect(grant?.id).toBeDefined()
+
+        const fetchedGrant = await grantService.getByIdWithAccessAndSubject(
+          grant.id
+        )
         expect(fetchedGrant?.id).toEqual(grant.id)
-        expect(fetchedGrant?.access?.length).toBeGreaterThan(0)
+        expect(fetchedGrant?.subjects?.length).toBeGreaterThan(0)
       })
     })
 

@@ -29,7 +29,7 @@ interface GrantFilter {
 }
 
 export interface GrantService {
-  getByIdWithAccess(grantId: string): Promise<Grant | undefined>
+  getByIdWithAccessAndSubject(grantId: string): Promise<Grant | undefined>
   create(
     grantRequest: GrantRequest,
     tenantId: string,
@@ -130,7 +130,8 @@ export async function createGrantService({
     knex
   }
   return {
-    getByIdWithAccess: (grantId: string) => getByIdWithAccess(grantId),
+    getByIdWithAccessAndSubject: (grantId: string) =>
+      getByIdWithAccessAndSubject(grantId),
     create: (grantRequest: GrantRequest, tenantId: string, trx?: Transaction) =>
       create(deps, grantRequest, tenantId, trx),
     markPending: (grantId: string, trx?: Transaction) =>
@@ -152,8 +153,13 @@ export async function createGrantService({
   }
 }
 
-async function getByIdWithAccess(grantId: string): Promise<Grant | undefined> {
-  return Grant.query().findById(grantId).withGraphJoined('access')
+async function getByIdWithAccessAndSubject(
+  grantId: string
+): Promise<Grant | undefined> {
+  return Grant.query()
+    .findById(grantId)
+    .withGraphJoined('access')
+    .withGraphJoined('subjects')
 }
 
 async function approve(grantId: string): Promise<Grant> {
