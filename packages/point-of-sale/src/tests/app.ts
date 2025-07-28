@@ -18,6 +18,12 @@ export const createTestApp = async (
   const config = await container.use('config')
   config.port = 0
 
+  const testConfig = {
+    ...config,
+    port: 0 // dynamic port assignment
+  }
+  container.singleton('config', async () => testConfig)
+
   const app = new App(container)
   await start(container, app)
 

@@ -1,34 +1,47 @@
-export enum PosDeviceError {
+export enum DeviceError {
   UnknownMerchant = 'UnknownMerchant',
-  UnknownPosDevice = 'UnknownPosDevice'
+  UnknownDevice = 'UnknownDevice',
+  DeviceNotFound = 'DeviceNotFound'
 }
 
-export const errorToHTTPCode: {
-  [key in PosDeviceError]: number
-} = {
-  [PosDeviceError.UnknownMerchant]: 400,
-  [PosDeviceError.UnknownPosDevice]: 404
+export const deviceErrorStatusMap: Record<DeviceError, number> = {
+  [DeviceError.UnknownMerchant]: 404,
+  [DeviceError.UnknownDevice]: 404,
+  [DeviceError.DeviceNotFound]: 404
 }
 
-export const errorToMessage: {
-  [key in PosDeviceError]: string
-} = {
-  [PosDeviceError.UnknownMerchant]: 'unknown merchant',
-  [PosDeviceError.UnknownPosDevice]: 'unknown POS device'
+export const deviceErrorMessageMap: Record<DeviceError, string> = {
+  [DeviceError.UnknownMerchant]: 'Unknown merchant',
+  [DeviceError.UnknownDevice]: 'Unknown POS device',
+  [DeviceError.DeviceNotFound]: 'Device not found'
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-export const isPosDeviceError = (o: any): o is PosDeviceError =>
-  Object.values(PosDeviceError).includes(o)
+export class DeviceServiceError extends Error {
+  constructor(public readonly code: DeviceError) {
+    super(deviceErrorMessageMap[code])
+    this.name = 'DeviceServiceError'
+  }
+}
 
-export class PosDeviceRouteError extends Error {
+//Router Specific Error
+export class POSDeviceError extends Error {
   public status: number
   public details?: Record<string, unknown>
 
-  constructor(error: PosDeviceError, details?: Record<string, unknown>) {
-    super(errorToMessage[error])
-    this.status = errorToHTTPCode[error]
-    this.name = 'PosDeviceRouteError'
-    this.details = details
+  constructor(
+    serviceErrorOrStatus: DeviceServiceError | number,
+    message?: string,
+    details?: Record<string, unknown>
+  ) {
+    if (serviceErrorOrStatus instanceof DeviceServiceError) {
+      super(serviceErrorOrStatus.message)
+      this.status = deviceErrorStatusMap[serviceErrorOrStatus.code]
+      this.details = details
+    } else {
+      super(message || 'Device error')
+      this.status = serviceErrorOrStatus
+      this.details = details
+    }
+    this.name = 'POSDeviceError'
   }
 }
