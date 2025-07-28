@@ -231,8 +231,7 @@ export class IncomingPayment
       completed: this.completed,
       metadata: this.metadata ?? undefined,
       createdAt: this.createdAt.toISOString(),
-      expiresAt: this.expiresAt.toISOString(),
-      updatedAt: this.updatedAt.toISOString()
+      expiresAt: this.expiresAt.toISOString()
     }
   }
 
