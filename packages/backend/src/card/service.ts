@@ -15,7 +15,7 @@ export interface CardService {
 
 interface ServiceDependencies {
   axios: AxiosInstance
-  cardServiceHost: string
+  cardServiceUrl: string
   logger: Logger
 }
 
@@ -41,7 +41,7 @@ async function sendPaymentEvent(
   eventDetails: EventDetails
 ) {
   const { status } = await deps.axios.post(
-    `${deps.cardServiceHost}${PAYMENT_FOUNDED_PATH}`,
+    `${deps.cardServiceUrl}${PAYMENT_FOUNDED_PATH}`,
     eventDetails
   )
 

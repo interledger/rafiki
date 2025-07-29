@@ -8,11 +8,26 @@ import Router from '@koa/router'
 import bodyParser from 'koa-bodyparser'
 import cors from '@koa/cors'
 import { CardServiceClient } from './card-service-client/client'
+import {
+  CreateMerchantContext,
+  DeleteMerchantContext,
+  MerchantRoutes
+} from './merchant/routes'
+import {
+  PosDeviceRoutes,
+  RegisterDeviceContext
+} from './merchant/devices/routes'
+import { PosDeviceService } from './merchant/devices/service'
+import { MerchantService } from './merchant/service'
 
 export interface AppServices {
   logger: Promise<Logger>
   knex: Promise<Knex>
   config: Promise<IAppConfig>
+  merchantRoutes: Promise<MerchantRoutes>
+  posDeviceRoutes: Promise<PosDeviceRoutes>
+  posDeviceService: Promise<PosDeviceService>
+  merchantService: Promise<MerchantService>
   cardServiceClient: Promise<CardServiceClient>
 }
 
@@ -26,6 +41,13 @@ export interface AppContextData {
 }
 
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
+
+export type AppRequest<ParamsT extends string = string> = Omit<
+  AppContext['request'],
+  'params'
+> & {
+  params: Record<ParamsT, string>
+}
 
 export class App {
   private posServer!: Server
@@ -48,6 +70,30 @@ export class App {
     router.get('/healthz', (ctx: AppContext): void => {
       ctx.status = 200
     })
+
+    const merchantRoutes = await this.container.use('merchantRoutes')
+    const posDeviceRoutes = await this.container.use('posDeviceRoutes')
+
+    // POST /merchants
+    // Create merchant
+    router.post<DefaultState, CreateMerchantContext>(
+      '/merchants',
+      merchantRoutes.create
+    )
+
+    // DELETE /merchants/:merchantId
+    // Delete merchant
+    router.delete<DefaultState, DeleteMerchantContext>(
+      '/merchants/:merchantId',
+      merchantRoutes.delete
+    )
+
+    // POST /merchant/:merchantId/devices
+    // Register a device
+    router.post<DefaultState, RegisterDeviceContext>(
+      '/merchants/:merchantId/devices',
+      posDeviceRoutes.register
+    )
 
     koa.use(cors())
     koa.use(router.routes())
@@ -89,7 +135,7 @@ export class App {
     })
 
     koa.context.container = this.container
-    koa.context.logger = await this.container.use('logger')
+    koa.context.logger = this.logger
 
     koa.use(
       async (

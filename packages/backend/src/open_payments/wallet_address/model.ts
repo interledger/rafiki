@@ -118,10 +118,12 @@ export class WalletAddress
 
   public toOpenPaymentsType({
     authServer,
-    resourceServer
+    resourceServer,
+    cardService
   }: {
     authServer: string
     resourceServer: string
+    cardService: string
   }): OpenPaymentsWalletAddress {
     const returnVal: OpenPaymentsWalletAddress = {
       id: this.address,
@@ -129,7 +131,8 @@ export class WalletAddress
       assetCode: this.asset.code,
       assetScale: this.asset.scale,
       authServer,
-      resourceServer
+      resourceServer,
+      cardService
     }
     if (this.additionalProperties && this.additionalProperties.length) {
       returnVal.additionalProperties = this.additionalProperties

@@ -1,4 +1,4 @@
-import Axios, {
+import {
   AxiosError,
   AxiosInstance,
   AxiosRequestConfig,
@@ -6,14 +6,14 @@ import Axios, {
 } from 'axios'
 import { CardServiceClientError } from './errors'
 import { v4 as uuid } from 'uuid'
+import { BaseService } from '../shared/baseService'
 
-// TODO: Remove after Card model is defined and used below
 interface Card {
-  // ...
-  walletAddress: {
-    // ...
-    cardService: string
-  }
+  trasactionCounter: number
+  expiry: Date
+  // TODO: replace with WalletAddress from payment service
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  walletAddress: any
 }
 
 export interface PaymentOptions {
@@ -21,10 +21,16 @@ export interface PaymentOptions {
   incomingPaymentUrl: string
   date: Date
   signature: string
-  // TODO: Replace with Card model that has a WalletAddress
   card: Card
 }
 
+export interface CardServiceClient {
+  sendPayment(options: PaymentOptions): Promise<Result>
+}
+
+interface ServiceDependencies extends BaseService {
+  axios: AxiosInstance
+}
 interface PaymentOptionsWithReqId extends PaymentOptions {
   requestId: string
 }
@@ -47,57 +53,68 @@ const isResult = (x: any): x is Result => Object.values(Result).includes(x)
 const isPaymentResponse = (x: any): x is PaymentResponse =>
   typeof x.requestId === 'string' && isResult(x.result)
 
-export class CardServiceClient {
-  private axios: AxiosInstance
-
-  constructor() {
-    this.axios = Axios.create({ timeout: 30_000 })
+export async function createCardServiceClient({
+  logger,
+  axios
+}: ServiceDependencies): Promise<CardServiceClient> {
+  const log = logger.child({
+    service: 'PosDeviceService'
+  })
+  const deps: ServiceDependencies = {
+    logger: log,
+    axios
   }
+  return {
+    sendPayment: (options) => sendPayment(deps, options)
+  }
+}
 
-  public async sendPayment(options: PaymentOptions): Promise<Result> {
-    try {
-      const config: AxiosRequestConfig = {
-        headers: {
-          'Content-Type': 'application/json'
-        }
+async function sendPayment(
+  deps: ServiceDependencies,
+  options: PaymentOptions
+): Promise<Result> {
+  try {
+    const config: AxiosRequestConfig = {
+      headers: {
+        'Content-Type': 'application/json'
       }
-      const requestBody: PaymentOptionsWithReqId = {
-        ...options,
-        requestId: uuid()
-      }
-      const cardServiceUrl = options.card.walletAddress.cardService
-      const response = await this.axios.post<PaymentResponse>(
-        `${cardServiceUrl}/payment`,
-        requestBody,
-        config
-      )
-      const payment = response.data
-      if (!payment) {
-        throw new CardServiceClientError(
-          'No payment information was received',
-          HttpStatusCode.NotFound
-        )
-      }
-      return payment.result
-    } catch (error) {
-      if (error instanceof CardServiceClientError) throw error
-
-      if (error instanceof AxiosError) {
-        if (isPaymentResponse(error.response?.data)) {
-          return error.response.data.result
-        }
-        throw new CardServiceClientError(
-          error.response?.data ?? 'Unknown Axios error',
-          error.response?.status ?? HttpStatusCode.ServiceUnavailable
-        )
-      }
-
+    }
+    const requestBody: PaymentOptionsWithReqId = {
+      ...options,
+      requestId: uuid()
+    }
+    const cardServiceUrl = options.card.walletAddress.cardService
+    const response = await deps.axios.post<PaymentResponse>(
+      `${cardServiceUrl}/payment`,
+      requestBody,
+      config
+    )
+    const payment = response.data
+    if (!payment) {
       throw new CardServiceClientError(
-        typeof error === 'string'
-          ? error
-          : 'Something went wrong when calling the card service',
-        HttpStatusCode.ServiceUnavailable
+        'No payment information was received',
+        HttpStatusCode.NotFound
       )
     }
+    return payment.result
+  } catch (error) {
+    if (error instanceof CardServiceClientError) throw error
+
+    if (error instanceof AxiosError) {
+      if (isPaymentResponse(error.response?.data)) {
+        return error.response.data.result
+      }
+      throw new CardServiceClientError(
+        error.response?.data ?? 'Unknown Axios error',
+        error.response?.status ?? HttpStatusCode.ServiceUnavailable
+      )
+    }
+
+    throw new CardServiceClientError(
+      typeof error === 'string'
+        ? error
+        : 'Something went wrong when calling the card service',
+      HttpStatusCode.ServiceUnavailable
+    )
   }
 }

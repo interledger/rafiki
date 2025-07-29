@@ -2,17 +2,24 @@ import {
   CardServiceClient,
   PaymentOptions,
   PaymentResponse,
-  Result
+  Result,
+  createCardServiceClient
 } from './client'
 import nock from 'nock'
 import { HttpStatusCode } from 'axios'
+import { initIocContainer } from '..'
+import { Config } from '../config/app'
 
 describe('CardServiceClient', () => {
   const CARD_SERVICE_URL = 'http://card-service.com'
   let client: CardServiceClient
 
-  beforeEach(() => {
-    client = new CardServiceClient()
+  beforeEach(async () => {
+    const deps = initIocContainer(Config)
+    client = await createCardServiceClient({
+      logger: await deps.use('logger'),
+      axios: await deps.use('axios')
+    })
     nock.cleanAll()
   })
 
@@ -21,7 +28,7 @@ describe('CardServiceClient', () => {
   })
 
   const createPaymentResponse = (result?: Result): PaymentResponse => ({
-    requestId: '',
+    requestId: 'requestId',
     result: result ?? Result.APPROVED
   })
 
@@ -33,7 +40,9 @@ describe('CardServiceClient', () => {
     card: {
       walletAddress: {
         cardService: CARD_SERVICE_URL
-      }
+      },
+      trasactionCounter: 1,
+      expiry: new Date(new Date().getDate() + 1)
     }
   }
 
