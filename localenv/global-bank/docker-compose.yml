@@ -29,12 +29,8 @@ services:
     depends_on:
       global-bank-backend:
         condition: service_healthy
-      intergalactic-bank-mock-ase:
-        condition: service_started
-      cloud-nine-mock-ase:
-        condition: service_started
-      cloud-ten-mock-ase:
-        condition: service_started
+      shared-database:
+        condition: service_healthy
   global-bank-backend:
     hostname: global-bank-backend
     image: rafiki-backend
@@ -81,7 +77,8 @@ services:
       KEY_ID: 53f2d913-e98a-40b9-b270-372d0547f23e
       OPERATOR_TENANT_ID: 53f2d913-e98a-40b9-b270-372d0547f23e
     depends_on:
-      - intergalactic-bank-backend
+      shared-database:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--spider", "http://localhost:3001/healthz"]
       start_period: 60s

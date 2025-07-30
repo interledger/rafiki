@@ -1,7 +1,7 @@
 import { Errors } from 'ilp-packet'
 import { AccountAlreadyExistsError } from '../../../../../accounting/errors'
 import { LiquidityAccountType } from '../../../../../accounting/service'
-import { IncomingPaymentState } from '../../../../../open_payments/payment/incoming/model'
+import { IncomingPayment, IncomingPaymentState } from '../../../../../open_payments/payment/incoming/model'
 import {
   ILPContext,
   ILPMiddleware,
@@ -10,10 +10,30 @@ import {
 } from '../rafiki'
 import { AuthState } from './auth'
 import { StreamState } from './stream-address'
+import { OutgoingPayment } from '../../../../../open_payments/payment/outgoing/model'
+import { Peer } from '../../../peer/model'
+
+function determineOperation(
+  incoming: IncomingAccount,
+  outgoing: OutgoingAccount
+): string {
+  if (incoming instanceof OutgoingPayment && outgoing instanceof Peer) {
+    return 'outgoing_payment'
+  }
+
+  if (incoming instanceof Peer && outgoing instanceof IncomingPayment) {
+    return 'incoming_payment'
+  }
+
+  if (incoming instanceof Peer && outgoing instanceof Peer) {
+    return 'routing'
+  }
+  return 'unknown'
+}
 
 export function createAccountMiddleware(): ILPMiddleware {
   return async function account(
-    ctx: ILPContext<AuthState & StreamState>,
+    ctx: ILPContext<AuthState & StreamState & { unfulfillable: boolean, operation: string }>,
     next: () => Promise<void>
   ): Promise<void> {
     const createLiquidityAccount = async (
@@ -105,7 +125,8 @@ export function createAccountMiddleware(): ILPMiddleware {
       const address = ctx.request.prepare.destination
       const peer = await peers.getByDestinationAddress(
         address,
-        incomingAccount.tenantId
+        incomingAccount.tenantId,
+        incomingAccount.id
       )
       if (peer) {
         return peer
@@ -134,6 +155,15 @@ export function createAccountMiddleware(): ILPMiddleware {
         return outgoingAccount!
       }
     }
+
+    const operation = determineOperation(incomingAccount, outgoingAccount)
+    // if (operation === 'outgoing_payment' || operation === 'incoming_payment') {
+    //   ctx.state.unfulfillable = false
+    // } else {
+    //   ctx.state.unfulfillable = true
+    // }
+    ctx.state.operation = operation
+
     await next()
   }
 }

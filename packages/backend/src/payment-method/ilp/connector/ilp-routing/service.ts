@@ -23,6 +23,7 @@ export interface RouterService extends BaseService {
   getNextHop(
     destination: string,
     tenantId: string,
+    incomingPeerId?: string,
     assetId?: string
   ): Promise<string | undefined>
   getOwnAddress(): string
@@ -103,6 +104,7 @@ export async function createRouterService({
     deps: RouterServiceDependencies,
     destination: string,
     tenantId: string,
+    incomingPeerId?: string,
     assetId?: string
   ): Promise<string | undefined> {
     const segments = destination.split('.')
@@ -113,7 +115,7 @@ export async function createRouterService({
 
       if (routes && routes.length > 0) {
         const filteredRoutes = assetId
-          ? routes.filter((route) => route.assetId === assetId)
+          ? routes.filter((route) => route.assetId === assetId && route.peerId !== incomingPeerId)
           : routes
 
         if (filteredRoutes.length > 0) {

@@ -67,6 +67,7 @@ export interface PeerService {
   getByDestinationAddress(
     address: string,
     tenantId: string,
+    incomingPeerId?: string,
     assetId?: string
   ): Promise<Peer | undefined>
   getByIncomingToken(token: string): Promise<Peer | undefined>
@@ -112,8 +113,8 @@ export async function createPeerService({
     get: (id, tenantId) => getPeer(deps, id, tenantId),
     create: (options) => createPeer(deps, options),
     update: (options) => updatePeer(deps, options),
-    getByDestinationAddress: (destinationAddress, tenantId, assetId) =>
-      getPeerByDestinationAddress(deps, destinationAddress, tenantId, assetId),
+    getByDestinationAddress: (destinationAddress, tenantId, incomingPeerId, assetId) =>
+      getPeerByDestinationAddress(deps, destinationAddress, tenantId, incomingPeerId, assetId),
     getByIncomingToken: (token) => getPeerByIncomingToken(deps, token),
     getPage: (pagination?, sortOrder?, tenantId?) =>
       getPeersPage(deps, pagination, sortOrder, tenantId),
@@ -364,11 +365,13 @@ async function getPeerByDestinationAddress(
   deps: ServiceDependencies,
   destinationAddress: string,
   tenantId: string,
+  incomingPeerId?: string,
   assetId?: string
 ): Promise<Peer | undefined> {
   const nextHop = await deps.routerService.getNextHop(
     destinationAddress,
     tenantId,
+    incomingPeerId,
     assetId
   )
   if (nextHop) {

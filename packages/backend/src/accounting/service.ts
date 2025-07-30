@@ -155,6 +155,76 @@ interface CreateAccountToAccountTransferArgs {
   ): Promise<string[] | TransferError>
 }
 
+// Helper function to identify if an account is a peer account
+function isPeerAccount(account: LiquidityAccount): boolean {
+  return (
+    account.onDebit !== undefined && 
+    account.id !== account.asset.id &&
+    // Check for peer-specific properties
+    (account as any).staticIlpAddress !== undefined
+  )
+}
+
+// Helper function to log peer liquidity before and after transfers
+async function logPeerLiquidity(
+  deps: BaseAccountingServiceDependencies,
+  accounts: LiquidityAccount[],
+  getAccountBalance: (accountRef: string) => Promise<bigint | undefined>,
+  stage: 'before' | 'after',
+  transferInfo?: { sourceAmount: bigint; destinationAmount?: bigint }
+): Promise<void> {
+  const peerAccounts = accounts.filter(isPeerAccount)
+  
+  if (peerAccounts.length === 0) {
+    return
+  }
+
+  const peerBalances = await Promise.all(
+    peerAccounts.map(async (account) => {
+      const balance = await getAccountBalance(account.id)
+      const peer = account as any
+      return {
+        peerId: account.id,
+        staticIlpAddress: peer.staticIlpAddress || 'Unknown',
+        balance: balance || 0n,
+        balanceFormatted: formatBalance(balance || 0n, account.asset.scale || 0),
+        assetCode: account.asset.code || 'Unknown',
+        assetScale: account.asset.scale || 0,
+        liquidityThreshold: peer.liquidityThreshold || null
+      }
+    })
+  )
+
+  const logData = {
+    stage,
+    peerBalances,
+    transferInfo: transferInfo ? {
+      sourceAmount: transferInfo.sourceAmount.toString(),
+      sourceAmountFormatted: formatBalance(transferInfo.sourceAmount, accounts[0]?.asset.scale || 0),
+      destinationAmount: transferInfo.destinationAmount?.toString(),
+      destinationAmountFormatted: transferInfo.destinationAmount ? 
+        formatBalance(transferInfo.destinationAmount, accounts[1]?.asset.scale || 0) : undefined
+    } : undefined
+  }
+
+  deps.logger.info(logData, `Peer liquidity ${stage} payment transfer`)
+}
+
+function formatBalance(balance: bigint, scale: number): string {
+  const balanceStr = balance.toString()
+  if (scale === 0) {
+    return balanceStr
+  }
+  
+  if (balanceStr.length <= scale) {
+    return `0.${balanceStr.padStart(scale, '0')}`
+  }
+  
+  const integerPart = balanceStr.slice(0, -scale)
+  const decimalPart = balanceStr.slice(-scale)
+  return `${integerPart}.${decimalPart}`
+}
+
 export async function createAccountToAccountTransfer(
   deps: BaseAccountingServiceDependencies,
   args: CreateAccountToAccountTransferArgs
@@ -184,6 +254,14 @@ export async function createAccountToAccountTransfer(
   if (destinationAmount !== undefined && destinationAmount <= 0n) {
     return TransferError.InvalidDestinationAmount
   }
+
+  await logPeerLiquidity(
+    deps,
+    [sourceAccount, destinationAccount],
+    getAccountBalance,
+    'before',
+    { sourceAmount, destinationAmount }
+  )
 
   const transfersToCreateOrError =
     sourceAccount.asset.ledger === destinationAccount.asset.ledger
@@ -241,6 +319,14 @@ export async function createAccountToAccountTransfer(
           withdrawalThrottleDelay
         })
       }
+
+      await logPeerLiquidity(
+        deps,
+        [sourceAccount, destinationAccount],
+        getAccountBalance,
+        'after',
+        { sourceAmount, destinationAmount }
+      )
     },
 
     void: async (): Promise<void | TransferError> => {

@@ -66,7 +66,17 @@ export function createBalanceMiddleware(): ILPMiddleware {
 
     request.prepare.amount = destinationAmount.toString()
 
+    
     if (state.unfulfillable) {
+      logger.info(
+        {
+          amount,
+          destinationAmountOrError,
+          sourceAsset: accounts.incoming.asset,
+          destinationAsset: accounts.outgoing.asset,
+        },
+        'Unfulfillable -> this only should appear during quoting'
+      )
       await next()
       stopTimer()
       return
@@ -86,6 +96,15 @@ export function createBalanceMiddleware(): ILPMiddleware {
       }
       const trxOrError =
         await services.accounting.createTransfer(transferOptions)
+
+      logger.info(
+        {
+          trxOrError,
+          transferOptions,
+          state
+        },
+        'Created transfer'
+      )
       if (isTransferError(trxOrError)) {
         logger.error(
           { transferOptions, transferError: trxOrError },
@@ -122,6 +141,13 @@ export function createBalanceMiddleware(): ILPMiddleware {
       if (trx) {
         if (response.fulfill) {
           await trx.post()
+          logger.info(
+            {
+              trx,
+              response
+            },
+            'Posted transfer'
+          )
         } else {
           await trx.void()
         }
