@@ -22,7 +22,7 @@ function getEnvs(opUrl, authUrl, connectorUrl) {
     NODE_ENV: 'autopeer',
     TRUST_PROXY: true,
     TESTNET_AUTOPEER_URL:
-      process.env.TESTNET_AUTOPEER_URL ?? 'https://autopeer.rafiki.money',
+      process.env.TESTNET_AUTOPEER_URL ?? 'https://autopeer.interledger-test.dev',
     ILP_ADDRESS: process.env.ILP_ADDRESS || `test.local-playground-${v4()}`,
     CLOUD_NINE_PUBLIC_HOST: opUrl,
     CLOUD_NINE_OPEN_PAYMENTS_URL: opUrl,
