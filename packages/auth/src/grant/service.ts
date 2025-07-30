@@ -21,8 +21,8 @@ import { canSkipInteraction } from './utils'
 import { IAppConfig } from '../config/app'
 import { SubjectRequest } from '../subject/types'
 import { SubjectService } from '../subject/service'
-import { accessErrorToGrantError, isAccessError } from '../access/errors'
-import { errorToMessage, GrantError } from './errors'
+import { isAccessError } from '../access/errors'
+import { errorToMessage, GrantError, accessErrorToGrantError } from './errors'
 
 interface GrantFilter {
   identifier?: FilterString

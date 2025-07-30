@@ -1,5 +1,6 @@
 import { HttpStatusCode } from 'axios'
 import { GNAPErrorCode } from '../shared/gnapErrors'
+import { AccessError } from '../access/errors'
 
 export enum GrantErrorCode {
   InvalidRequest,
@@ -38,4 +39,11 @@ export const errorToMessage: {
 } = {
   [GrantErrorCode.InvalidRequest]: 'Invalid request',
   [GrantErrorCode.OnlyOneAccessAmountAllowed]: 'only one access amount allowed'
+}
+
+export const accessErrorToGrantError: {
+  [key in AccessError]: GrantErrorCode
+} = {
+  [AccessError.OnlyOneAccessAmountAllowed]:
+    GrantErrorCode.OnlyOneAccessAmountAllowed
 }
