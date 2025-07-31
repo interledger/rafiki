@@ -111,11 +111,13 @@ export async function createRouterService({
     for (let i = segments.length; i > 0; i--) {
       const prefix = segments.slice(0, i).join('.')
       const key = `${tenantId}:${prefix}`
-      const routes = await deps.staticRoutes.get(key)
+      const routes = (await deps.staticRoutes.get(key))?.filter(
+        (route) => route.peerId !== incomingPeerId
+      )
 
       if (routes && routes.length > 0) {
         const filteredRoutes = assetId
-          ? routes.filter((route) => route.assetId === assetId && route.peerId !== incomingPeerId)
+          ? routes.filter((route) => route.assetId === assetId)
           : routes
 
         if (filteredRoutes.length > 0) {

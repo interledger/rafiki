@@ -158,10 +158,11 @@ interface CreateAccountToAccountTransferArgs {
 // Helper function to identify if an account is a peer account
 function isPeerAccount(account: LiquidityAccount): boolean {
   return (
-    account.onDebit !== undefined && 
+    account.onDebit !== undefined &&
     account.id !== account.asset.id &&
     // Check for peer-specific properties
-    (account as any).staticIlpAddress !== undefined
+    (account as unknown as { staticIlpAddress?: string }).staticIlpAddress !==
+      undefined
   )
 }
 
@@ -174,7 +175,7 @@ async function logPeerLiquidity(
   transferInfo?: { sourceAmount: bigint; destinationAmount?: bigint }
 ): Promise<void> {
   const peerAccounts = accounts.filter(isPeerAccount)
-  
+
   if (peerAccounts.length === 0) {
     return
   }
@@ -182,15 +183,21 @@ async function logPeerLiquidity(
   const peerBalances = await Promise.all(
     peerAccounts.map(async (account) => {
       const balance = await getAccountBalance(account.id)
-      const peer = account as any
+      const peerAccount = account as unknown as {
+        staticIlpAddress?: string
+        liquidityThreshold?: bigint | null
+      }
       return {
         peerId: account.id,
-        staticIlpAddress: peer.staticIlpAddress || 'Unknown',
+        staticIlpAddress: peerAccount.staticIlpAddress || 'Unknown',
         balance: balance || 0n,
-        balanceFormatted: formatBalance(balance || 0n, account.asset.scale || 0),
+        balanceFormatted: formatBalance(
+          balance || 0n,
+          account.asset.scale || 0
+        ),
         assetCode: account.asset.code || 'Unknown',
         assetScale: account.asset.scale || 0,
-        liquidityThreshold: peer.liquidityThreshold || null
+        liquidityThreshold: peerAccount.liquidityThreshold || null
       }
     })
   )
@@ -198,13 +205,22 @@ async function logPeerLiquidity(
   const logData = {
     stage,
     peerBalances,
-    transferInfo: transferInfo ? {
-      sourceAmount: transferInfo.sourceAmount.toString(),
-      sourceAmountFormatted: formatBalance(transferInfo.sourceAmount, accounts[0]?.asset.scale || 0),
-      destinationAmount: transferInfo.destinationAmount?.toString(),
-      destinationAmountFormatted: transferInfo.destinationAmount ? 
-        formatBalance(transferInfo.destinationAmount, accounts[1]?.asset.scale || 0) : undefined
-    } : undefined
+    transferInfo: transferInfo
+      ? {
+          sourceAmount: transferInfo.sourceAmount.toString(),
+          sourceAmountFormatted: formatBalance(
+            transferInfo.sourceAmount,
+            accounts[0]?.asset.scale || 0
+          ),
+          destinationAmount: transferInfo.destinationAmount?.toString(),
+          destinationAmountFormatted: transferInfo.destinationAmount
+            ? formatBalance(
+                transferInfo.destinationAmount,
+                accounts[1]?.asset.scale || 0
+              )
+            : undefined
+        }
+      : undefined
   }
 
   deps.logger.info(logData, `Peer liquidity ${stage} payment transfer`)
@@ -215,11 +231,11 @@ function formatBalance(balance: bigint, scale: number): string {
   if (scale === 0) {
     return balanceStr
   }
-  
+
   if (balanceStr.length <= scale) {
     return `0.${balanceStr.padStart(scale, '0')}`
   }
-  
+
   const integerPart = balanceStr.slice(0, -scale)
   const decimalPart = balanceStr.slice(-scale)
   return `${integerPart}.${decimalPart}`

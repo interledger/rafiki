@@ -113,8 +113,19 @@ export async function createPeerService({
     get: (id, tenantId) => getPeer(deps, id, tenantId),
     create: (options) => createPeer(deps, options),
     update: (options) => updatePeer(deps, options),
-    getByDestinationAddress: (destinationAddress, tenantId, incomingPeerId, assetId) =>
-      getPeerByDestinationAddress(deps, destinationAddress, tenantId, incomingPeerId, assetId),
+    getByDestinationAddress: (
+      destinationAddress,
+      tenantId,
+      incomingPeerId,
+      assetId
+    ) =>
+      getPeerByDestinationAddress(
+        deps,
+        destinationAddress,
+        tenantId,
+        incomingPeerId,
+        assetId
+      ),
     getByIncomingToken: (token) => getPeerByIncomingToken(deps, token),
     getPage: (pagination?, sortOrder?, tenantId?) =>
       getPeersPage(deps, pagination, sortOrder, tenantId),

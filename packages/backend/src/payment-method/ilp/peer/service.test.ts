@@ -672,6 +672,7 @@ describe('Peer Service', (): void => {
         peerService.getByDestinationAddress(
           'test.rafiki',
           tenantId,
+          undefined,
           secondAsset.id
         )
       ).resolves.toEqual(peerWithSecondAsset)

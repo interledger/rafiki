@@ -1,7 +1,30 @@
+import { IncomingPayment } from '../../../../../open_payments/payment/incoming/model'
+import { OutgoingPayment } from '../../../../../open_payments/payment/outgoing/model'
+import { Peer } from '../../../peer/model'
 import {
   ILPContext,
-  ILPMiddleware
+  ILPMiddleware,
+  IncomingAccount,
+  OutgoingAccount
 } from '../rafiki'
+
+function determineOperation(
+  incoming: IncomingAccount,
+  outgoing: OutgoingAccount
+): string {
+  if (incoming instanceof OutgoingPayment && outgoing instanceof Peer) {
+    return 'outgoing_payment'
+  }
+
+  if (incoming instanceof Peer && outgoing instanceof IncomingPayment) {
+    return 'incoming_payment'
+  }
+
+  if (incoming instanceof Peer && outgoing instanceof Peer) {
+    return 'routing'
+  }
+  return 'unknown'
+}
 
 export function createIlpTimingMiddleware(): ILPMiddleware {
   return async function ilpTiming(
@@ -22,8 +45,14 @@ export function createIlpTimingMiddleware(): ILPMiddleware {
     try {
       await next()
     } finally {
+      if (ctx.accounts?.incoming && ctx.accounts?.outgoing) {
+        operation = determineOperation(
+          ctx.accounts.incoming,
+          ctx.accounts.outgoing
+        )
+      }
       stopTimer({
-        operation: ctx.state.operation
+        operation
       })
     }
   }
