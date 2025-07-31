@@ -345,6 +345,14 @@ describe('Grant Service', (): void => {
                 format: 'uri'
               }
             ]
+          },
+          access_token: {
+            access: [
+              {
+                ...BASE_GRANT_ACCESS,
+                type: AccessType.IncomingPayment
+              }
+            ]
           }
         }
 
@@ -356,6 +364,7 @@ describe('Grant Service', (): void => {
         )
         expect(fetchedGrant?.id).toEqual(grant.id)
         expect(fetchedGrant?.subjects?.length).toBeGreaterThan(0)
+        expect(fetchedGrant?.access?.length).toBeGreaterThan(0)
       })
     })
 
