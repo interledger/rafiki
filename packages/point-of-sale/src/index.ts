@@ -20,7 +20,6 @@ import { createPosDeviceService } from './merchant/devices/service'
 import { createMerchantRoutes } from './merchant/routes'
 import { createPaymentService } from './payments/service'
 import { createPosDeviceRoutes } from './merchant/devices/routes'
-import { createCardServiceClient } from './card-service-client/client'
 import axios from 'axios'
 
 export function initIocContainer(
