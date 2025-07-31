@@ -197,12 +197,6 @@ export function initIocContainer(
     })
   )
 
-  container.singleton('cardServiceClient', async (deps) => {
-    return createCardServiceClient({
-      logger: await deps.use('logger'),
-      axios: await deps.use('axios')
-    })
-  })
   return container
 }
 

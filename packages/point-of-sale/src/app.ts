@@ -7,7 +7,6 @@ import Koa, { DefaultState } from 'koa'
 import Router from '@koa/router'
 import bodyParser from 'koa-bodyparser'
 import cors from '@koa/cors'
-import { CardServiceClient } from './card-service-client/client'
 import {
   CreateMerchantContext,
   DeleteMerchantContext,
@@ -28,7 +27,6 @@ export interface AppServices {
   posDeviceRoutes: Promise<PosDeviceRoutes>
   posDeviceService: Promise<PosDeviceService>
   merchantService: Promise<MerchantService>
-  cardServiceClient: Promise<CardServiceClient>
 }
 
 export type AppContainer = IocContract<AppServices>
