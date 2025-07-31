@@ -111,14 +111,18 @@ export async function createRouterService({
     for (let i = segments.length; i > 0; i--) {
       const prefix = segments.slice(0, i).join('.')
       const key = `${tenantId}:${prefix}`
-      const routes = (await deps.staticRoutes.get(key))?.filter(
-        (route) => route.peerId !== incomingPeerId
-      )
+      const routes = await deps.staticRoutes.get(key)
 
       if (routes && routes.length > 0) {
-        const filteredRoutes = assetId
-          ? routes.filter((route) => route.assetId === assetId)
-          : routes
+        const filteredRoutes = routes.filter((route) => {
+          if (incomingPeerId && route.peerId === incomingPeerId) {
+            return false
+          }
+          if (assetId && route.assetId !== assetId) {
+            return false
+          }
+          return true
+        })
 
         if (filteredRoutes.length > 0) {
           // If multiple routes are found, select one randomly
@@ -160,8 +164,8 @@ export async function createRouterService({
       addStaticRoute(deps, destination, peerId, tenantId, assetId),
     removeStaticRoute: (destination, peerId, tenantId, assetId) =>
       removeStaticRoute(deps, destination, peerId, tenantId, assetId),
-    getNextHop: (destination, tenantId, assetId) =>
-      getNextHop(deps, destination, tenantId, assetId),
+    getNextHop: (destination, tenantId, incomingPeerId, assetId) =>
+      getNextHop(deps, destination, tenantId, incomingPeerId, assetId),
     getOwnAddress: () => getOwnAddress(deps)
   }
 }

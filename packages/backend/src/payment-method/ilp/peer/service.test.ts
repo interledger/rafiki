@@ -109,6 +109,7 @@ describe('Peer Service', (): void => {
         const nextHop = await routerService.getNextHop(
           options.staticIlpAddress,
           peer.tenantId,
+          undefined,
           peer.assetId
         )
         expect(nextHop).toBe(peer.id)
@@ -135,6 +136,7 @@ describe('Peer Service', (): void => {
       const nextHop = await routerService.getNextHop(
         options.staticIlpAddress,
         peer.tenantId,
+        undefined,
         peer.assetId
       )
       expect(nextHop).toBe(peer.id)
@@ -269,16 +271,19 @@ describe('Peer Service', (): void => {
       const nextHop1 = await routerService.getNextHop(
         staticIlpAddress,
         peer.tenantId,
+        undefined,
         peer.assetId
       )
       const nextHop2 = await routerService.getNextHop(
         'g.custom1',
         peer.tenantId,
+        undefined,
         peer.assetId
       )
       const nextHop3 = await routerService.getNextHop(
         'g.custom2',
         peer.tenantId,
+        undefined,
         peer.assetId
       )
 
@@ -316,11 +321,13 @@ describe('Peer Service', (): void => {
       const nextHop1 = await routerService.getNextHop(
         staticIlpAddress,
         tenant1.id,
+        undefined,
         peer1.assetId
       )
       const nextHop2 = await routerService.getNextHop(
         staticIlpAddress,
         tenant2.id,
+        undefined,
         peer2.assetId
       )
 
@@ -371,6 +378,7 @@ describe('Peer Service', (): void => {
         const nextHop = await routerService.getNextHop(
           staticIlpAddress,
           peer.tenantId,
+          undefined,
           peer.assetId
         )
         expect(nextHop).toBe(peer.id)
@@ -491,11 +499,13 @@ describe('Peer Service', (): void => {
       const nextHop1 = await routerService.getNextHop(
         'g.new1',
         peer.tenantId,
+        undefined,
         peer.assetId
       )
       const nextHop2 = await routerService.getNextHop(
         'g.new2',
         peer.tenantId,
+        undefined,
         peer.assetId
       )
 
@@ -521,16 +531,19 @@ describe('Peer Service', (): void => {
       const nextHop1 = await routerService.getNextHop(
         newStaticIlpAddress,
         peer.tenantId,
+        undefined,
         peer.assetId
       )
       const nextHop2 = await routerService.getNextHop(
         'g.new1',
         peer.tenantId,
+        undefined,
         peer.assetId
       )
       const nextHop3 = await routerService.getNextHop(
         'g.new2',
         peer.tenantId,
+        undefined,
         peer.assetId
       )
 
@@ -556,16 +569,19 @@ describe('Peer Service', (): void => {
       const nextHop1 = await routerService.getNextHop(
         peer.staticIlpAddress,
         peer.tenantId,
+        undefined,
         peer.assetId
       )
       const nextHop2 = await routerService.getNextHop(
         'g.custom1',
         peer.tenantId,
+        undefined,
         peer.assetId
       )
       const nextHop3 = await routerService.getNextHop(
         'g.custom2',
         peer.tenantId,
+        undefined,
         peer.assetId
       )
 
@@ -598,11 +614,13 @@ describe('Peer Service', (): void => {
       const nextHop1 = await routerService.getNextHop(
         'g.tenant1only',
         tenant1.id,
+        undefined,
         peer1.assetId
       )
       const nextHop2 = await routerService.getNextHop(
         'g.tenant1only',
         tenant2.id,
+        undefined,
         peer2.assetId
       )
 
@@ -770,16 +788,19 @@ describe('Peer Service', (): void => {
       const nextHop1 = await routerService.getNextHop(
         peer.staticIlpAddress,
         peer.tenantId,
+        undefined,
         peer.assetId
       )
       const nextHop2 = await routerService.getNextHop(
         'g.custom1',
         peer.tenantId,
+        undefined,
         peer.assetId
       )
       const nextHop3 = await routerService.getNextHop(
         'g.custom2',
         peer.tenantId,
+        undefined,
         peer.assetId
       )
 
@@ -806,11 +827,13 @@ describe('Peer Service', (): void => {
       const nextHop1 = await routerService.getNextHop(
         'test.shared',
         tenant1.id,
+        undefined,
         peer1.assetId
       )
       const nextHop2 = await routerService.getNextHop(
         'test.shared',
         tenant2.id,
+        undefined,
         peer2.assetId
       )
 
