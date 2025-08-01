@@ -24,8 +24,10 @@ export class IlpQuoteDetails extends BaseModel {
 
   public get minExchangeRate(): Pay.Ratio {
     return Pay.Ratio.of(
-      Pay.Int.from(this.minExchangeRateNumerator) as Pay.PositiveInt,
-      Pay.Int.from(this.minExchangeRateDenominator) as Pay.PositiveInt
+      Pay.Int.from(this.minExchangeRateNumerator) as unknown as Pay.Int,
+      Pay.Int.from(
+        this.minExchangeRateDenominator
+      ) as unknown as Pay.PositiveInt
     )
   }
 
@@ -36,8 +38,12 @@ export class IlpQuoteDetails extends BaseModel {
 
   public get lowEstimatedExchangeRate(): Pay.Ratio {
     return Pay.Ratio.of(
-      Pay.Int.from(this.lowEstimatedExchangeRateNumerator) as Pay.PositiveInt,
-      Pay.Int.from(this.lowEstimatedExchangeRateDenominator) as Pay.PositiveInt
+      Pay.Int.from(
+        this.lowEstimatedExchangeRateNumerator
+      ) as unknown as Pay.Int,
+      Pay.Int.from(
+        this.lowEstimatedExchangeRateDenominator
+      ) as unknown as Pay.PositiveInt
     )
   }
 
@@ -49,8 +55,12 @@ export class IlpQuoteDetails extends BaseModel {
   // Note that the upper exchange rate bound is *exclusive*.
   public get highEstimatedExchangeRate(): Pay.PositiveRatio {
     const highEstimatedExchangeRate = Pay.Ratio.of(
-      Pay.Int.from(this.highEstimatedExchangeRateNumerator) as Pay.PositiveInt,
-      Pay.Int.from(this.highEstimatedExchangeRateDenominator) as Pay.PositiveInt
+      Pay.Int.from(
+        this.highEstimatedExchangeRateNumerator
+      ) as unknown as Pay.PositiveInt,
+      Pay.Int.from(
+        this.highEstimatedExchangeRateDenominator
+      ) as unknown as Pay.PositiveInt
     )
     if (!highEstimatedExchangeRate.isPositive()) {
       throw new Error('high estimated exchange rate is not positive')
