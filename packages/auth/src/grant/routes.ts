@@ -135,7 +135,9 @@ async function createGrant(
     throw new GNAPServerRouteError(
       400,
       GNAPErrorCode.InvalidRequest,
-      err instanceof Error ? err.message : 'access identifier required'
+      err instanceof Error
+        ? err.message
+        : 'unknown error while checking interaction requirement'
     )
   }
   if (noInteractionRequired) {
