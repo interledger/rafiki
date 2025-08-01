@@ -1,0 +1,208 @@
+---
+title: Overview
+---
+
+import {
+  MermaidWrapper,
+  Mermaid,
+  LinkOut,
+  Tooltip
+} from '@interledger/docs-design-system'
+
+This guide provides an approach for you to deploy and integrate Rafiki on Google Cloud Platform using Terraform, Kubernetes, Helm charts, and Argo CD. The reference architecture used in this guide is the <LinkOut href='https://github.com/interledger/testnet'>Interledger Test Network</LinkOut>. For this example we'll assume you are a digital wallet provider that wants to deploy your wallet application and Rafiki in your Kubernetes cluster.
+
+:::caution
+As the Interledger Test Network is used to showcase Rafiki's functionalities and to serve as a sandbox environment, this example is intended for informational purposes only and should not be used for a production deployment.
+:::
+
+## Prerequisites
+
+Before beginning the integration, ensure you have the following:
+
+- A <LinkOut href='https://cloud.google.com'>Google Cloud Platform</LinkOut> account with billing enabled
+- The <LinkOut href='https://cloud.google.com/sdk'>gcloud CLI</LinkOut> installed and
+  authenticated
+- Hashicorp <LinkOut href='https://developer.hashicorp.com/terraform/install'>Terraform</LinkOut> installed
+- A <LinkOut href='https://cloud.google.com/kubernetes-engine'>Kubernetes</LinkOut> cluster deployed via GKE
+- <LinkOut href='https://helm.sh/docs/intro/install/'>Helm</LinkOut> installed
+- <LinkOut href='https://kubernetes.io/docs/tasks/tools/'>kubectl</LinkOut> installed
+  and configured
+- The <LinkOut href='https://argo-cd.readthedocs.io/en/stable/cli_installation/'>argocd CLI</LinkOut> (optional)
+- Domain name for your wallet (required for SSL/TLS certificates)
+
+## Architecture overview
+
+The deployment follows the Interledger Test Network reference architecture, which includes:
+
+- **GKE Cluster**: Managed Kubernetes cluster on GCP
+- **Rafiki Services**: Core Interledger functionality (Admin API, Auth Service, Backend)
+- **PostgreSQL**: Database for Rafiki and wallet data
+- **Redis**: Caching and session management
+- **NGINX Ingress**: Load balancing and SSL termination
+- **Argo CD**: GitOps continuous deployment
+- **Digital Wallet**: Your wallet application integrated with Rafiki
+
+## Reference architecture
+
+The following diagram illustrates the complete architecture based on the Interledger Test Network reference implementation:
+
+<MermaidWrapper diagramName="rafiki-architecture">
+
+<Mermaid
+  graph={`graph TB
+    %% External entities
+    User[👤 Wallet User]
+    External[🌐 Interledger network]
+    Internet[🌍 Internet]
+    
+    %% DNS and Load Balancer Layer
+    subgraph "DNS & Load Balancing"
+        DNS[Cloud DNS<br/>your-wallet.com]
+        LB[Google Cloud<br/>Load Balancer]
+    end
+    
+    %% GKE Cluster
+    subgraph "GKE Cluster"
+        %% Ingress Layer
+        subgraph "Ingress Layer"
+            Ingress[NGINX Ingress<br/>Controller]
+            CertManager[cert-manager<br/>Let's Encrypt]
+        end
+        
+        %% Application Layer
+        subgraph "Digital Wallet Namespace"
+            WalletUI[Digital Wallet UI<br/>wallet.your-wallet.com]
+            WalletAPI[Wallet Backend API<br/>api.your-wallet.com]
+            WalletDB[(Wallet Database<br/>PostgreSQL)]
+        end
+        
+        %% Rafiki Services
+        subgraph "Rafiki Namespace"
+            RafikiAuth[Rafiki Auth Server<br/>auth.your-wallet.com]
+            RafikiBackend[Rafiki Backend<br/>backend.your-wallet.com]
+            RafikiAdmin[Rafiki Admin API<br/>admin.your-wallet.com]
+            RafikiDB[(Rafiki Database<br/>PostgreSQL)]
+            Redis[(Redis Cache)]
+        end
+        
+        %% GitOps and Monitoring
+        subgraph "Platform Services"
+            ArgoCD[Argo CD<br/>argocd.your-wallet.com]
+            Monitoring[Prometheus<br/>& Grafana]
+        end
+        
+        %% Persistent Storage
+        subgraph "Storage"
+            PVC1[Wallet DB PVC]
+            PVC2[Rafiki DB PVC]
+            PVC3[Redis PVC]
+        end
+    end
+    
+    %% External Git Repository
+    GitRepo[📁 Git Repository<br/>Helm Charts & Config]
+    
+    %% Connections - External
+    User --> Internet
+    Internet --> DNS
+    DNS --> LB
+    LB --> Ingress
+    
+    %% Connections - Internal Services
+    Ingress --> WalletUI
+    Ingress --> WalletAPI
+    Ingress --> RafikiAuth
+    Ingress --> RafikiBackend
+    Ingress --> RafikiAdmin
+    Ingress --> ArgoCD
+    
+    %% Wallet Internal Connections
+    WalletUI --> WalletAPI
+    WalletAPI --> WalletDB
+    WalletAPI --> RafikiAdmin
+    WalletAPI --> RafikiBackend
+    
+    %% Rafiki Internal Connections
+    RafikiAuth --> RafikiDB
+    RafikiAuth --> Redis
+    RafikiBackend --> RafikiDB
+    RafikiBackend --> Redis
+    RafikiAdmin --> RafikiDB
+    
+    %% Interledger Protocol Connections
+    RafikiBackend --> External
+    External --> RafikiBackend
+    
+    %% Storage Connections
+    WalletDB --> PVC1
+    RafikiDB --> PVC2
+    Redis --> PVC3
+    
+    %% GitOps
+    GitRepo --> ArgoCD
+    ArgoCD --> WalletAPI
+    ArgoCD --> RafikiAuth
+    ArgoCD --> RafikiBackend
+    ArgoCD --> RafikiAdmin
+    
+    %% Certificate Management
+    CertManager --> Ingress
+    
+    %% Styling
+    classDef userFacing fill:#f0f0f0,stroke:#333,color:#000
+    classDef rafiki fill:#d9d9d9,stroke:#333,color:#000
+    classDef wallet fill:#e6e6e6,stroke:#333,color:#000
+    classDef platform fill:#cccccc,stroke:#333,color:#000
+    classDef storage fill:#b3b3b3,stroke:#333,color:#000
+    classDef external fill:#ffffff,stroke:#333,color:#000
+    
+    class User,WalletUI userFacing
+    class RafikiAuth,RafikiBackend,RafikiAdmin,RafikiDB,Redis rafiki
+    class WalletAPI,WalletDB wallet
+    class ArgoCD,Monitoring,Ingress,CertManager platform
+    class PVC1,PVC2,PVC3 storage
+    class External,Internet,DNS,LB,GitRepo external`}
+/>
+
+</MermaidWrapper>
+
+## Component details
+
+### External layer
+
+- **Users**: Access wallet through web/mobile interfaces
+- **DNS & Load Balancing**: Google Cloud DNS and Load Balancer for traffic routing
+
+### Ingress layer
+
+- **NGINX Ingress**: Routes traffic to appropriate services based on hostname
+- **cert-manager**: Automatically provisions and manages TLS certificates
+
+### Digital wallet layer
+
+- **Wallet UI** (`wallet.your-wallet.com`): User-facing web application
+- **Wallet API** (`api.your-wallet.com`): Backend services for wallet functionality
+- **Wallet Database**: User accounts, balances, transaction history
+
+### Rafiki layer
+
+Core Interledger services providing the following functionality:
+
+- **Auth server** (`auth.your-wallet.com`): Handles <LinkOut href='openpayments.dev'>Open Payments</LinkOut> authentication and authorization
+- **Backend** (`backend.your-wallet.com`): Core Interledger protocol implementation
+- **Admin API** (`admin.your-wallet.com`): Administrative functions and account management via GraphQL API
+- **Database**: Stores Interledger accounts, payment pointers, and transaction data
+- **Redis**: Caching and session management
+
+### Platform Services
+
+- **Argo CD**: GitOps continuous deployment from Git repositories
+- **Monitoring**: Prometheus metrics collection and Grafana dashboards
+
+## Next steps
+
+1. **[Configuration variables](/integration/deploy-to-prod/02-configuration-variables)**: Review all variables that need customization for your environment
+2. **[Secrets management](/integration/deploy-to-prod/03-secrets-management)**: Set up secure secret generation, storage, and rotation strategies
+3. **[Infrastructure setup](/integration/deploy-to-prod/04-infrastructure-setup)**: Deploy GCP infrastructure using Terraform
+4. **[Rafiki services deployment](/integration/deploy-to-prod/05-services-deployment)**: Install and configure all services using Helm and Argo CD
+5. **[Troubleshooting](/integration/deploy-to-prod/06-troubleshooting)**: Verify end-to-end payment flows and resolve common issues

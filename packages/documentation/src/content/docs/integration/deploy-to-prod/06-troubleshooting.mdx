@@ -1,0 +1,139 @@
+---
+title: Troubleshooting
+---
+
+This guide helps diagnose and resolve common issues when deploying and integrating Rafiki with your digital wallet.
+
+## Pre-deployment checklist
+
+Before troubleshooting issues, ensure you've completed all required customizations:
+
+### Required customizations
+
+<div class="overflow-table">
+
+| File/Location                 | Variables to Update                   |
+| ----------------------------- | ------------------------------------- |
+| `terraform.tfvars`            | `project_id`, `domain_name`, `region` |
+| `cluster-issuer.yaml`         | `email` field                         |
+| `argocd/ingress.yaml`         | `host` fields                         |
+| `ingress-nginx/values.yaml`   | `loadBalancerIP`                      |
+| `rafiki/values.yaml`          | All `YOUR_DOMAIN.com` references      |
+| `wallet/values.yaml`          | `YOUR_DOMAIN.com`, `YOUR_REGISTRY`    |
+| `monitoring/values.yaml`      | Domain references, passwords, SMTP    |
+| `backup/postgres-backup.yaml` | GCS bucket, project ID                |
+| Environment secrets           | Database passwords, API tokens        |
+| DNS records                   | Point domains to static IP            |
+
+</div>
+
+### Security checklist
+
+<div class="overflow-table">
+
+| Security Item      | Description                                              |
+| ------------------ | -------------------------------------------------------- |
+| TLS Certificates   | Let's Encrypt configured for all domains                 |
+| Database Passwords | Strong, randomly generated passwords                     |
+| API Secrets        | 32-byte secrets for auth and webhooks                    |
+| Network Policies   | Enabled to restrict pod-to-pod communication             |
+| RBAC               | Proper service accounts and permissions                  |
+| Image Security     | Using official images with known vulnerabilities patched |
+| Backup Encryption  | KMS encryption for backup data                           |
+
+</div>
+
+## Common issues and solutions
+
+### Infrastructure issues
+
+#### Issue: Error creating cluster
+
+**Solutions:**
+
+1. **Check GCP permissions:**
+
+   ```bash
+   # Verify current user has required permissions
+   gcloud auth list
+   gcloud projects get-iam-policy PROJECT_ID
+
+   # Add required roles
+   gcloud projects add-iam-policy-binding PROJECT_ID \
+     --member="user:your-email@domain.com" \
+     --role="roles/container.admin"
+   ```
+
+2. **Enable required APIs:**
+
+   ```bash
+   gcloud services enable container.googleapis.com
+   gcloud services enable compute.googleapis.com
+   gcloud services enable dns.googleapis.com
+   ```
+
+3. **Check quota limits:**
+   ```bash
+   gcloud compute project-info describe --project=PROJECT_ID
+   ```
+
+#### Issue: GKE Cluster Creation Hangs
+
+**Symptoms:**
+
+- Terraform hangs on cluster creation
+- Cluster shows "PROVISIONING" status for extended time
+
+**Solutions:**
+
+1. **Check region availability:**
+
+   ```bash
+   # List available zones in region
+   gcloud compute zones list --filter="region:us-central1"
+
+   # Try different region
+   terraform apply -var="region=us-east1"
+   ```
+
+2. **Reduce initial node count:**
+
+   ```bash
+   terraform apply -var="min_node_count=1"
+   ```
+
+3. **Check for resource conflicts:**
+
+   ```bash
+   # List existing clusters
+   gcloud container clusters list
+
+   # Clean up if needed
+   gcloud container clusters delete OLD_CLUSTER_NAME --region=REGION
+   ```
+
+### DNS and Certificate Issues
+
+#### Issue: Certificate Not Issued
+
+**Symptoms:**
+
+```bash
+kubectl get certificates -A
+NAME               READY   SECRET           AGE
+rafiki-auth-tls    False   rafiki-auth-tls  10m
+```
+
+**Debugging:**
+
+```bash
+# Check certificate status
+kubectl describe certificate rafiki-auth-tls -n rafiki
+
+# Check certificate request
+kubectl get certificaterequests -A
+kubectl describe certificaterequest <name> -n rafiki
+
+# Check cert-manager logs
+kubectl logs -n cert-manager deployment/
+```

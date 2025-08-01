@@ -1,0 +1,270 @@
+---
+title: Infrastructure setup
+---
+
+This guide covers the infrastructure setup phase, including Terraform configuration, Google Kubernetes Engine (GKE) cluster deployment, and core Kubernetes components.
+
+:::caution
+Before starting infrastructure deployment, ensure you have completed [configuration variables](/integration/deploy-to-prod/02-configuration-variables) review and [secrets management](/integration/deploy-to-prod/03-secrets-management) setup. You'll need generated secrets ready for the deployment process.
+:::
+
+## Project structure
+
+Create the following directory structure for your infrastructure:
+
+```
+rafiki-wallet-infrastructure/
+├── terraform/
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   ├── gke.tf
+│   ├── networking.tf
+│   └── dns.tf
+├── k8s-manifests/
+│   ├── argocd/
+│   ├── ingress-nginx/
+│   └── cert-manager/
+└── helm-values/
+    ├── rafiki/
+    └── wallet/
+```
+
+## Terraform configuration
+
+### Main configuration
+
+Configure the Terraform providers and backend:
+
+```hcl
+# terraform/main.tf
+terraform {
+  required_version = ">= 1.0"
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 4.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.0"
+    }
+  }
+}
+
+provider "google" {
+  project = var.project_id
+  region  = var.region
+}
+
+data "google_client_config" "default" {}
+
+provider "kubernetes" {
+  host                   = "https://${google_container_cluster.primary.endpoint}"
+  token                  = data.google_client_config.default.access_token
+  cluster_ca_certificate = base64decode(google_container_cluster.primary.master_auth.0.cluster_ca_certificate)
+}
+```
+
+### Variables definition
+
+Define all the variables needed for your deployment:
+
+```hcl
+# terraform/variables.tf
+variable "project_id" {
+  description = "GCP Project ID"
+  type        = string
+}
+
+variable "region" {
+  description = "GCP Region"
+  type        = string
+  default     = "us-central1"
+}
+
+variable "cluster_name" {
+  description = "GKE Cluster name"
+  type        = string
+  default     = "rafiki-wallet-cluster"
+}
+
+variable "domain_name" {
+  description = "Domain name for the wallet"
+  type        = string
+}
+
+variable "node_pool_machine_type" {
+  description = "Machine type for GKE nodes"
+  type        = string
+  default     = "e2-standard-4"
+}
+
+variable "min_node_count" {
+  description = "Minimum number of nodes in the cluster"
+  type        = number
+  default     = 1
+}
+
+variable "max_node_count" {
+  description = "Maximum number of nodes for autoscaling"
+  type        = number
+  default     = 10
+}
+
+variable "disk_size_gb" {
+  description = "Boot disk size for each node in GB"
+  type        = number
+  default     = 100
+}
+
+variable "enable_network_policy" {
+  description = "Enable Kubernetes network policies"
+  type        = bool
+  default     = true
+}
+```
+
+### GKE cluster configuration
+
+Create a GKE cluster with security and scalability features:
+
+```hcl
+# terraform/gke.tf
+resource "google_container_cluster" "primary" {
+  name     = var.cluster_name
+  location = var.region
+
+  # We can't create a cluster with no node pool defined, but we want to only use
+  # separately managed node pools. So we create the smallest possible default
+  # node pool and immediately delete it.
+  remove_default_node_pool = true
+  initial_node_count       = 1
+
+  network    = google_compute_network.vpc.name
+  subnetwork = google_compute_subnetwork.subnet.name
+
+  workload_identity_config {
+    workload_pool = "${var.project_id}.svc.id.goog"
+  }
+
+  addons_config {
+    http_load_balancing {
+      disabled = false
+    }
+    horizontal_pod_autoscaling {
+      disabled = false
+    }
+  }
+
+  network_policy {
+    enabled = var.enable_network_policy
+  }
+
+  # Enable network policy addon if network policy is enabled
+  dynamic "addons_config" {
+    for_each = var.enable_network_policy ? [1] : []
+    content {
+      network_policy_config {
+        disabled = false
+      }
+    }
+  }
+}
+
+resource "google_container_node_pool" "primary_nodes" {
+  name       = "${var.cluster_name}-node-pool"
+  location   = var.region
+  cluster    = google_container_cluster.primary.name
+  node_count = var.min_node_count
+
+  node_config {
+    preemptible  = false
+    machine_type = var.node_pool_machine_type
+    disk_size_gb = var.disk_size_gb
+
+    service_account = google_service_account.kubernetes.email
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/cloud-platform"
+    ]
+
+    workload_metadata_config {
+      mode = "GKE_METADATA"
+    }
+
+    # Security settings
+    shielded_instance_config {
+      enable_secure_boot          = true
+      enable_integrity_monitoring = true
+    }
+  }
+
+  autoscaling {
+    min_node_count = var.min_node_count
+    max_node_count = var.max_node_count
+  }
+
+  management {
+    auto_repair  = true
+    auto_upgrade = true
+  }
+}
+
+resource "google_service_account" "kubernetes" {
+  account_id   = "${var.cluster_name}-sa"
+  display_name = "GKE Service Account for ${var.cluster_name}"
+}
+
+# IAM binding for the service account
+resource "google_project_iam_member" "kubernetes" {
+  project = var.project_id
+  role    = "roles/container.nodeServiceAccount"
+  member  = "serviceAccount:${google_service_account.kubernetes.email}"
+}
+```
+
+### Networking configuration
+
+Set up virtual private cloud (VPC) networking with proper IP ranges and firewall rules:
+
+```hcl
+# terraform/networking.tf
+resource "google_compute_network" "vpc" {
+  name                    = "${var.cluster_name}-vpc"
+  auto_create_subnetworks = "false"
+}
+
+resource "google_compute_subnetwork" "subnet" {
+  name          = "${var.cluster_name}-subnet"
+  region        = var.region
+  network       = google_compute_network.vpc.name
+  ip_cidr_range = "10.10.0.0/24"
+
+  secondary_ip_range {
+    range_name    = "services-range"
+    ip_cidr_range = "192.168.1.0/24"
+  }
+
+  secondary_ip_range {
+    range_name    = "pod-ranges"
+    ip_cidr_range = "192.168.64.0/22"
+  }
+}
+
+resource "google_compute_global_address" "ingress_ip" {
+  name = "${var.cluster_name}-ingress-ip"
+}
+
+resource "google_compute_firewall" "allow_ingress" {
+  name    = "${var.cluster_name}-allow-ingress"
+  network = google_compute_network.vpc.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["80", "443"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["gke-node"]
+}
+```
