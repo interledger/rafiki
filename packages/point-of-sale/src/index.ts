@@ -20,6 +20,7 @@ import { createPosDeviceService } from './merchant/devices/service'
 import { createMerchantRoutes } from './merchant/routes'
 import { createPaymentService } from './payments/service'
 import { createPosDeviceRoutes } from './merchant/devices/routes'
+import axios from 'axios'
 
 export function initIocContainer(
   config: typeof Config
@@ -27,6 +28,7 @@ export function initIocContainer(
   const container: IocContract<AppServices> = new Ioc()
 
   container.singleton('config', async () => config)
+  container.singleton('axios', async () => axios.create())
 
   container.singleton('logger', async (deps: IocContract<AppServices>) => {
     const config = await deps.use('config')

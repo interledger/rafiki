@@ -805,6 +805,9 @@ importers:
       '@koa/router':
         specifier: ^12.0.2
         version: 12.0.2
+      axios:
+        specifier: 1.8.2
+        version: 1.8.2(debug@4.3.2)
       dotenv:
         specifier: ^16.4.7
         version: 16.4.7
