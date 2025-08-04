@@ -43,8 +43,8 @@ script:post-response {
   }
   
   const resourceUrl = url.parse(body?.resourceServer)
-  if (resourceUrl.hostname.includes('cloud-nine-wallet') || resourceUrl.hostname.includes('happy-life-bank')) {
-    const port = resourceUrl.hostname.includes('cloud-nine-wallet') ? bru.getEnvVar('senderOpenPaymentsPort') : bru.getEnvVar('receiverOpenPaymentsPort')
+  if (resourceUrl.hostname.includes(bru.getEnvVar('senderHost')) || resourceUrl.hostname.includes('receiverHost')) {
+    const port = resourceUrl.hostname.includes(bru.getEnvVar('senderHost')) ? bru.getEnvVar('senderOpenPaymentsPort') : bru.getEnvVar('receiverOpenPaymentsPort')
       bru.setEnvVar("senderTenantOpenPaymentsHost", 'http://localhost:' + port + resourceUrl.path);
   } else {
       bru.setEnvVar("senderTenantOpenPaymentsHost", body?.resourceServer);
