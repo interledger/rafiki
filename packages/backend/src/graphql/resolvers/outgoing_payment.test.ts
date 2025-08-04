@@ -894,6 +894,102 @@ describe('OutgoingPayment Resolvers', (): void => {
       }
       expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
     })
+    test('fails because of card expiry', async (): Promise<void> => {
+      const createSpy = jest
+        .spyOn(outgoingPaymentService, 'create')
+        .mockResolvedValueOnce(OutgoingPaymentError.InvalidCardExpiry)
+
+      const input = {
+        walletAddressId: uuid(),
+        quoteId: uuid(),
+        cardDetails: {
+          signature: 'test-signature',
+          expiry: 'NOT-A-VALID-EXPIRY'
+        }
+      }
+
+      expect.assertions(3)
+      try {
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation CreateOutgoingPayment(
+                $input: CreateOutgoingPaymentInput!
+              ) {
+                createOutgoingPayment(input: $input) {
+                  payment {
+                    id
+                    state
+                  }
+                }
+              }
+            `,
+            variables: { input }
+          })
+          .then(
+            (query): OutgoingPaymentResponse =>
+              query.data?.createOutgoingPayment
+          )
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[OutgoingPaymentError.InvalidCardExpiry],
+            extensions: expect.objectContaining({
+              code: errorToCode[OutgoingPaymentError.InvalidCardExpiry]
+            })
+          })
+        )
+      }
+      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
+    })
+    test('works with card details', async (): Promise<void> => {
+      const { id: walletAddressId } = await createWalletAddress(deps, {
+        tenantId,
+        assetId: asset.id
+      })
+      const payment = await createPayment({
+        tenantId,
+        walletAddressId
+      })
+
+      const createSpy = jest
+        .spyOn(outgoingPaymentService, 'create')
+        .mockResolvedValueOnce(payment)
+
+      const input = {
+        walletAddressId: payment.walletAddressId,
+        quoteId: payment.quote.id,
+        cardDetails: {
+          signature: 'test-signature',
+          expiry: '12/24'
+        }
+      }
+
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            mutation CreateOutgoingPayment(
+              $input: CreateOutgoingPaymentInput!
+            ) {
+              createOutgoingPayment(input: $input) {
+                payment {
+                  id
+                  state
+                }
+              }
+            }
+          `,
+          variables: { input }
+        })
+        .then(
+          (query): OutgoingPaymentResponse => query.data?.createOutgoingPayment
+        )
+
+      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
+      expect(query.payment?.id).toBe(payment.id)
+      expect(query.payment?.state).toBe(SchemaPaymentState.Funding)
+    })
   })
 
   describe('Mutation.createOutgoingPaymentFromIncomingPayment', (): void => {
