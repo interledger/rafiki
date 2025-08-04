@@ -46,6 +46,7 @@ import { IAppConfig } from '../../../config/app'
 import { AssetService } from '../../../asset/service'
 import { Span, trace } from '@opentelemetry/api'
 import { FeeService } from '../../../fee/service'
+import { OutgoingPaymentCardDetails } from './card/model'
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
@@ -201,6 +202,13 @@ export interface CreateFromIncomingPayment extends BaseOptions {
   debitAmount: Amount
 }
 
+export interface CreateFromCardPayment extends CreateFromIncomingPayment {
+  cardDetails: {
+    expiry: string
+    signature: string
+  }
+}
+
 export type CancelOutgoingPaymentOptions = {
   id: string
   tenantId: string
@@ -210,6 +218,17 @@ export type CancelOutgoingPaymentOptions = {
 export type CreateOutgoingPaymentOptions =
   | CreateFromQuote
   | CreateFromIncomingPayment
+  | CreateFromCardPayment
+
+export function isCreateFromCardPayment(
+  options: CreateOutgoingPaymentOptions
+): options is CreateFromCardPayment {
+  return (
+    'cardDetails' in options &&
+    'expiry' in options.cardDetails &&
+    'signature' in options.cardDetails
+  )
+}
 
 export function isCreateFromIncomingPayment(
   options: CreateOutgoingPaymentOptions
@@ -398,6 +417,22 @@ async function createOutgoingPayment(
             state: OutgoingPaymentState.Funding,
             grantId
           })
+
+          if (isCreateFromCardPayment(options)) {
+            const { expiry, signature } = options.cardDetails
+
+            if (!isExpiryFormat(expiry))
+              throw OutgoingPaymentError.InvalidCardExpiry
+
+            payment.cardDetails = await OutgoingPaymentCardDetails.query(
+              trx
+            ).insertAndFetch({
+              outgoingPaymentId: payment.id,
+              expiry,
+              signature
+            })
+          }
+
           payment.walletAddress = walletAddress
           payment.quote = quote
           if (asset) payment.quote.asset = asset
@@ -817,4 +852,8 @@ function validateSentAmount(
     errorMessage
   )
   throw new Error(errorMessage)
+}
+
+function isExpiryFormat(expiry: string): boolean {
+  return !!expiry.match(/^(0[1-9]|1[0-2])\/(\d{2})$/)
 }
