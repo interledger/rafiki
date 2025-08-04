@@ -56,9 +56,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   } else {
     const tenant = await getTenantInfo(request, { id })
     const waPrefixSetting = findWASetting(tenant.settings)
-    if (!waPrefixSetting)
-      throw new Error('Wallet Address Prefix not configured!')
-    tenantWAPrefix = waPrefixSetting
+    tenantWAPrefix = waPrefixSetting ?? getOpenPaymentsUrl()
   }
   return json({ assets, tenants, tenantWAPrefix })
 }
