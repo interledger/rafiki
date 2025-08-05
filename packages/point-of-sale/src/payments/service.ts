@@ -18,16 +18,19 @@ type ServiceDependencies = {
   axios: AxiosInstance
 }
 
-export type WalletAddress = {
+type OpenPaymentsWalletAddress = {
   id: string
   publicName?: string
   assetCode: string
   assetScale: number
   authServer: string
   resourceServer: string
-  cardService: string
 } & {
   [key: string]: unknown
+}
+
+export type WalletAddress = OpenPaymentsWalletAddress & {
+  cardService: string
 }
 
 export type PaymentService = {
@@ -100,10 +103,16 @@ async function getWalletAddress(
     }
   }
   const { data: walletAddress } = await deps.axios.get<
-    WalletAddress | undefined
+    OpenPaymentsWalletAddress | undefined
   >(walletAddressUrl, config)
   if (!walletAddress) {
     throw new Error('No wallet address was found')
   }
-  return walletAddress
+  if (
+    !('cardService' in walletAddress) ||
+    typeof walletAddress.cardService !== 'string'
+  ) {
+    throw new Error('Missing card service URL')
+  }
+  return walletAddress as WalletAddress
 }

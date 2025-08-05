@@ -119,4 +119,22 @@ describe('getWalletAddress', () => {
       'No wallet address was found'
     )
   })
+
+  test("should throw when the wallet address doesn't have cardServiceUrl", async () => {
+    ;(mockAxios.get as jest.Mock).mockResolvedValueOnce({
+      data: {
+        id: uuid(),
+        publicName: 'wallet-address-name',
+        assetCode: 'USD',
+        assetScale: 1,
+        authServer: 'auth-server',
+        resourceServer: 'resource-server',
+        cardService: undefined
+      }
+    })
+
+    await expect(service.getWalletAddress(WALLET_ADDRESS_URL)).rejects.toThrow(
+      'Missing card service URL'
+    )
+  })
 })
