@@ -39,7 +39,8 @@ export enum AmountType {
 export function loader() {
   return json({
     defaultIdpSecret: CONFIG.idpSecret,
-    isTenant: process.env.IS_TENANT === 'true'
+    authIdpServiceDomain: CONFIG.authIdpServiceDomain,
+    interactionReturnUrl: CONFIG.interactionReturnUrl
   })
 }
 
@@ -225,14 +226,15 @@ type ConsentScreenProps = {
 
 // In production, ensure that secrets are handled securely and are not exposed to the client-side code.
 export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
-  const { defaultIdpSecret, isTenant } = useLoaderData<typeof loader>()
+  const { defaultIdpSecret, interactionReturnUrl, authIdpServiceDomain } =
+    useLoaderData<typeof loader>()
   const [ctx, setCtx] = useState({
     ready: false,
     thirdPartyName: '',
     thirdPartyUri: '',
     interactId: 'demo-interact-id',
     nonce: 'demo-interact-nonce',
-    returnUrl: `http://localhost:${isTenant ? 5030 : 3030}/mock-idp/consent?`,
+    returnUrl: `${interactionReturnUrl}/mock-idp/consent?`,
     //TODO returnUrl: 'http://localhost:3030/mock-idp/consent?interactid=demo-interact-id&nonce=demo-interact-nonce',
     accesses: null,
     outgoingPaymentAccess: null,
@@ -281,6 +283,7 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
           interactId,
           nonce
         },
+        authIdpServiceDomain,
         idpSecret
       )
         .then((response) => {
