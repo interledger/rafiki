@@ -173,7 +173,8 @@ export function initIocContainer(
     return createPaymentService({
       apolloClient: await deps.use('apolloClient'),
       logger: await deps.use('logger'),
-      config: await deps.use('config')
+      config: await deps.use('config'),
+      axios: await deps.use('axios')
     })
   })
 
