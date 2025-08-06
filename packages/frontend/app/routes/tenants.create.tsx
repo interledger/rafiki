@@ -92,6 +92,26 @@ export default function CreateTenantPage() {
     }
   ]
 
+  let tenantSettingErrors: string[] = []
+
+  if (response) {
+    const errorEntries = Object.entries(response.errors.fieldErrors)
+    errorEntries.map(([key, value]) => {
+      if (tenantSettings.find((setting) => key === setting.name)) {
+        tenantSettingErrors = tenantSettingErrors.concat(value)
+      }
+    })
+  }
+
+  const getTenantSettingError = (settingName: string) => {
+    const foundError =
+      response &&
+      Object.entries(response.errors.fieldErrors).find(
+        ([key, _]) => key === settingName
+      )
+    return foundError && foundError[1]
+  }
+
   return (
     <div className='pt-4 flex flex-col space-y-4'>
       <div className='flex flex-col rounded-md bg-offwhite px-6'>
@@ -182,14 +202,23 @@ export default function CreateTenantPage() {
               <div className='md:col-span-2 bg-white rounded-md shadow-md'>
                 <div className='w-full p-4 space-y-3'>
                   {tenantSettings.map((setting) => (
-                    <Input
-                      key={setting.name}
-                      name={setting.name}
-                      label={setting.label}
-                      placeholder={setting.placeholder}
-                    />
+                    <div key={`div-${setting.name}`}>
+                      <Input
+                        key={setting.name}
+                        name={setting.name}
+                        label={setting.label}
+                        placeholder={setting.placeholder}
+                      />
+                      <p
+                        id={`${setting.name}-error`}
+                        className='text-red-500 text-sa'
+                      >
+                        {getTenantSettingError(setting.name)}
+                      </p>
+                    </div>
                   ))}
                 </div>
+                <ErrorPanel errors={tenantSettingErrors} />
               </div>
             </div>
             {/* Tenant Settings - END */}
@@ -256,8 +285,6 @@ export async function action({ request }: ActionFunctionArgs) {
         value: String(value)
       })
   }
-
-  console.log('tenantSettings=', tenantSettings)
 
   const response = await createTenant(request, {
     ...restOfData,
