@@ -1518,7 +1518,7 @@ export type TenantSetting = {
 
 export type TenantSettingInput = {
   /** Key for this setting. */
-  key: Scalars['String']['input'];
+  key: TenantSettingKey;
   /** Value of a setting for this key. */
   value: Scalars['String']['input'];
 };
