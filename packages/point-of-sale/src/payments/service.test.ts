@@ -1,8 +1,10 @@
-import { createPaymentService } from './service'
+import { PaymentService, createPaymentService } from './service'
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 import { Logger } from 'pino'
 import { AmountInput } from '../graphql/generated/graphql'
 import { IAppConfig } from '../config/app'
+import { v4 as uuid } from 'uuid'
+import { AxiosInstance } from 'axios'
 
 const mockLogger = {
   child: jest.fn().mockReturnThis(),
@@ -15,10 +17,15 @@ const mockApolloClient = {
   mutate: jest.fn()
 } as unknown as ApolloClient<NormalizedCacheObject>
 
+const mockAxios: Partial<AxiosInstance> = {
+  get: jest.fn()
+}
+
 const deps = {
   logger: mockLogger,
   config: mockConfig as IAppConfig,
-  apolloClient: mockApolloClient
+  apolloClient: mockApolloClient,
+  axios: mockAxios as AxiosInstance
 }
 
 describe('createPaymentService', () => {
@@ -67,6 +74,67 @@ describe('createPaymentService', () => {
     expect(mockLogger.error).toHaveBeenCalledWith(
       { walletAddressId },
       'Failed to create incoming payment for given walletAddressId'
+    )
+  })
+})
+
+describe('getWalletAddress', () => {
+  let service: PaymentService
+  const WALLET_ADDRESS_URL = 'https://api.example.com/wallet-address'
+
+  beforeAll(() => {
+    service = createPaymentService(deps)
+  })
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  test('should obtain wallet address successfully', async () => {
+    ;(mockAxios.get as jest.Mock).mockResolvedValueOnce({
+      data: {
+        id: uuid(),
+        publicName: 'wallet-address-name',
+        assetCode: 'USD',
+        assetScale: 1,
+        authServer: 'auth-server',
+        resourceServer: 'resource-server',
+        cardService: 'card-service-url'
+      }
+    })
+    const walletAddress = await service.getWalletAddress(WALLET_ADDRESS_URL)
+    expect(walletAddress).toMatchObject({
+      publicName: 'wallet-address-name',
+      assetCode: 'USD',
+      assetScale: 1,
+      authServer: 'auth-server',
+      resourceServer: 'resource-server',
+      cardService: 'card-service-url'
+    })
+  })
+
+  test('should throw when no wallet address was found', async () => {
+    ;(mockAxios.get as jest.Mock).mockResolvedValueOnce({ data: undefined })
+    await expect(service.getWalletAddress(WALLET_ADDRESS_URL)).rejects.toThrow(
+      'No wallet address was found'
+    )
+  })
+
+  test("should throw when the wallet address doesn't have cardServiceUrl", async () => {
+    ;(mockAxios.get as jest.Mock).mockResolvedValueOnce({
+      data: {
+        id: uuid(),
+        publicName: 'wallet-address-name',
+        assetCode: 'USD',
+        assetScale: 1,
+        authServer: 'auth-server',
+        resourceServer: 'resource-server',
+        cardService: undefined
+      }
+    })
+
+    await expect(service.getWalletAddress(WALLET_ADDRESS_URL)).rejects.toThrow(
+      'Missing card service URL'
     )
   })
 })
