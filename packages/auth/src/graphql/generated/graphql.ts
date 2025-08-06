@@ -69,6 +69,8 @@ export type Grant = Model & {
   id: Scalars['ID']['output'];
   /** Current state of the grant. */
   state: GrantState;
+  /** Details of the subject provided by the grant. */
+  subject?: Maybe<Subject>;
 };
 
 export type GrantEdge = {
@@ -209,6 +211,23 @@ export enum SortOrder {
   Desc = 'DESC'
 }
 
+export type Subject = {
+  __typename?: 'Subject';
+  sub_ids: Array<SubjectItem>;
+};
+
+export type SubjectItem = Model & {
+  __typename?: 'SubjectItem';
+  /** The date and time when the subject was created. */
+  createdAt: Scalars['String']['output'];
+  /** Unique identifier of the subject object. */
+  id: Scalars['ID']['output'];
+  /** Wallet address of the subject's account. */
+  subId: Scalars['String']['output'];
+  /** Format of the subject identifier */
+  subIdFormat: Scalars['String']['output'];
+};
+
 
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -279,7 +298,7 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 
 /** Mapping of interface types */
 export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> = {
-  Model: ( Partial<Access> ) | ( Partial<Grant> );
+  Model: ( Partial<Access> ) | ( Partial<Grant> ) | ( Partial<SubjectItem> );
 };
 
 /** Mapping between all available schema types and the resolvers types */
@@ -307,6 +326,8 @@ export type ResolversTypes = {
   RevokeGrantMutationResponse: ResolverTypeWrapper<Partial<RevokeGrantMutationResponse>>;
   SortOrder: ResolverTypeWrapper<Partial<SortOrder>>;
   String: ResolverTypeWrapper<Partial<Scalars['String']['output']>>;
+  Subject: ResolverTypeWrapper<Partial<Subject>>;
+  SubjectItem: ResolverTypeWrapper<Partial<SubjectItem>>;
   UInt8: ResolverTypeWrapper<Partial<Scalars['UInt8']['output']>>;
   UInt64: ResolverTypeWrapper<Partial<Scalars['UInt64']['output']>>;
 };
@@ -333,6 +354,8 @@ export type ResolversParentTypes = {
   RevokeGrantInput: Partial<RevokeGrantInput>;
   RevokeGrantMutationResponse: Partial<RevokeGrantMutationResponse>;
   String: Partial<Scalars['String']['output']>;
+  Subject: Partial<Subject>;
+  SubjectItem: Partial<SubjectItem>;
   UInt8: Partial<Scalars['UInt8']['output']>;
   UInt64: Partial<Scalars['UInt64']['output']>;
 };
@@ -354,6 +377,7 @@ export type GrantResolvers<ContextType = any, ParentType extends ResolversParent
   finalizationReason?: Resolver<Maybe<ResolversTypes['GrantFinalization']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['GrantState'], ParentType, ContextType>;
+  subject?: Resolver<Maybe<ResolversTypes['Subject']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -378,7 +402,7 @@ export type LimitDataResolvers<ContextType = any, ParentType extends ResolversPa
 };
 
 export type ModelResolvers<ContextType = any, ParentType extends ResolversParentTypes['Model'] = ResolversParentTypes['Model']> = {
-  __resolveType: TypeResolveFn<'Access' | 'Grant', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'Access' | 'Grant' | 'SubjectItem', ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
 };
@@ -412,6 +436,19 @@ export type RevokeGrantMutationResponseResolvers<ContextType = any, ParentType e
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type SubjectResolvers<ContextType = any, ParentType extends ResolversParentTypes['Subject'] = ResolversParentTypes['Subject']> = {
+  sub_ids?: Resolver<Array<ResolversTypes['SubjectItem']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type SubjectItemResolvers<ContextType = any, ParentType extends ResolversParentTypes['SubjectItem'] = ResolversParentTypes['SubjectItem']> = {
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  subId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  subIdFormat?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export interface UInt8ScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['UInt8'], any> {
   name: 'UInt8';
 }
@@ -432,6 +469,8 @@ export type Resolvers<ContextType = any> = {
   PaymentAmount?: PaymentAmountResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   RevokeGrantMutationResponse?: RevokeGrantMutationResponseResolvers<ContextType>;
+  Subject?: SubjectResolvers<ContextType>;
+  SubjectItem?: SubjectItemResolvers<ContextType>;
   UInt8?: GraphQLScalarType;
   UInt64?: GraphQLScalarType;
 };

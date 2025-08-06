@@ -405,6 +405,7 @@ describe('Grant Routes', (): void => {
           message: 'internal server error'
         })
       })
+
       test('Fails to initiate a grant w/o interact field', async (): Promise<void> => {
         const ctx = createContext<CreateContext>(
           {
