@@ -78,7 +78,7 @@ describe('Incoming Payment Service', (): void => {
       return {
         pollIncomingPaymentCreatedWebhook: true,
         incomingPaymentCreatedPollFrequency: 1,
-        incomingPaymentCreatedPollTimeout: 300
+        incomingPaymentCreatedPollTimeout: 100
       }
     }
     async function patchIncomingPaymentHelper(options: {
