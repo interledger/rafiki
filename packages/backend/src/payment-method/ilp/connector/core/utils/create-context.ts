@@ -20,7 +20,9 @@ export function createContext<StateT = unknown, CustomT = unknown>(
   options: Options<StateT, CustomT> = {}
 ): Koa.ParameterizedContext<StateT, CustomT> {
   const app = options.app || new Koa<StateT, CustomT>()
-  const req = new MockIncomingMessage(options.req || {})
+  const req = new MockIncomingMessage(
+    options.req || {}
+  ) as unknown as IncomingMessage
   const res = new MockServerResponse(
     req,
     options.res

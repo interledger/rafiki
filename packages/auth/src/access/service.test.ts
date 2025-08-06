@@ -1,5 +1,4 @@
 import nock from 'nock'
-import { Knex } from 'knex'
 import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
 import { Config } from '../config/app'
@@ -20,12 +19,11 @@ describe('Access Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let accessService: AccessService
-  let trx: Knex.Transaction
   let grant: Grant
 
   beforeEach(async (): Promise<void> => {
-    const tenant = await Tenant.query(trx).insertAndFetch(generateTenant())
-    grant = await Grant.query(trx).insertAndFetch(
+    const tenant = await Tenant.query().insertAndFetch(generateTenant())
+    grant = await Grant.query().insertAndFetch(
       generateBaseGrant({ tenantId: tenant.id })
     )
   })
@@ -128,7 +126,7 @@ describe('Access Service', (): void => {
         actions: [AccessAction.Create, AccessAction.Read, AccessAction.List]
       }
 
-      const access = await Access.query(trx).insert([
+      const access = await Access.query().insert([
         {
           grantId: grant.id,
           type: incomingPaymentAccess.type,

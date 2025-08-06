@@ -37,6 +37,7 @@
     "@jest/types": "^29.6.3",
     "@swc/jest": "^0.2.37",
     "@types/jest": "^29.5.14",
+    "@types/node": "^20.19.9",
     "@typescript-eslint/eslint-plugin": "^7.3.1",
     "@typescript-eslint/parser": "^7.3.1",
     "dotenv": "^16.4.7",
@@ -46,7 +47,7 @@
     "localtunnel": "^2.0.2",
     "npm-run-all2": "^6.2.6",
     "prettier": "^3.2.5",
-    "typescript": "^5.4.3",
+    "typescript": "^5.9.2",
     "uuid": "^9.0.1"
   },
   "dependenciesMeta": {
