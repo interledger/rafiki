@@ -3,6 +3,10 @@ assets:
     scale: 2
     liquidity: 1000000000000
     liquidityThreshold: 10000000
+  - code: EUR
+    scale: 2
+    liquidity: 1000000000000
+    liquidityThreshold: 10000000
 peeringAsset: 'USD'
 peers:
   - initialLiquidity: '1000000000000'
