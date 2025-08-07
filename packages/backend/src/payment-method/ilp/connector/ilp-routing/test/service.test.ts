@@ -372,6 +372,21 @@ describe('RouterService', (): void => {
       // there is a possibility that a sender gets it's packets routed to itself
       // Therefore, we should filter out the incoming peer route
       await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId1)
+
+      const nextHop1 = await routerService.getNextHop(
+        prefix,
+        tenantId1,
+        peerId1
+      )
+
+      expect(nextHop1).toBeUndefined()
+    })
+
+    test('filters out incoming peer route with asset id', async (): Promise<void> => {
+      // In case destinations are general, such as `test`,
+      // there is a possibility that a sender gets it's packets routed to itself
+      // Therefore, we should filter out the incoming peer route
+      await routerService.addStaticRoute(prefix, peerId1, tenantId1, assetId1)
       await routerService.addStaticRoute(prefix, peerId2, tenantId1, assetId1)
       await routerService.addStaticRoute(prefix, peerId2, tenantId1, assetId2)
 
