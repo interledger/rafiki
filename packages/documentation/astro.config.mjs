@@ -172,6 +172,36 @@ export default defineConfig({
           ]
         },
         {
+          label: 'Deployment example',
+          collapsed: true,
+          items: [
+            {
+              label: 'Overview',
+              link: '/integration/deploy-to-prod/01-architecture-overview'
+            },
+            {
+              label: 'Configuration variables',
+              link: '/integration/deploy-to-prod/02-configuration-variables'
+            },
+            {
+              label: 'Secrets management',
+              link: '/integration/deploy-to-prod/03-secrets-management'
+            },
+            {
+              label: 'Infrastructure setup',
+              link: '/integration/deploy-to-prod/04-infrastructure-setup'
+            },
+            {
+              label: 'Services deployment',
+              link: '/integration/deploy-to-prod/05-services-deployment'
+            },
+            {
+              label: 'Troubleshooting',
+              link: '/integration/deploy-to-prod/06-troubleshooting'
+            }
+          ]
+        },
+        {
           label: 'Integration',
           collapsed: true,
           items: [

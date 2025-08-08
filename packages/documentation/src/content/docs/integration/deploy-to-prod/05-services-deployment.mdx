@@ -1,0 +1,964 @@
+---
+title: Services deployment
+---
+
+This guide covers deploying Rafiki services and your digital wallet application using Helm charts and Argo CD.
+
+## Rafiki deployment
+
+Set up the Rafiki namespace and required secrets:
+
+:::note
+If you followed the recommended sequence, you should have already generated your secrets using the [secrets management guide](/integration/deploy-to-prod/03-secrets-management). The commands below assume you have the secrets ready to deploy.
+:::
+
+```bash
+# Create Rafiki namespace
+kubectl create namespace rafiki
+
+# Create database credentials
+kubectl create secret generic rafiki-db-secret \
+  --from-literal=username=rafiki \
+  --from-literal=password=$(openssl rand -base64 32) \
+  --from-literal=postgres-password=$(openssl rand -base64 32) \
+  --namespace rafiki
+
+# Create application secrets
+kubectl create secret generic rafiki-secrets \
+  --from-literal=auth-server-secret=$(openssl rand -base64 32) \
+  --from-literal=cookie-key=$(openssl rand -base64 32) \
+  --from-literal=webhook-secret=$(openssl rand -base64 32) \
+  --namespace rafiki
+
+# Verify secrets
+kubectl get secrets -n rafiki
+```
+
+### Rafiki Helm configuration
+
+Configure the Rafiki services with the following settings:
+
+```yaml
+# helm-values/rafiki/values.yaml - CUSTOMIZE all YOUR_DOMAIN references
+global:
+  image:
+    registry: ghcr.io
+    tag: 'latest'
+
+postgresql:
+  enabled: true
+  primary:
+    persistence:
+      size: 20Gi
+      storageClass: 'ssd' # Use SSD for better performance
+  auth:
+    existingSecret: rafiki-db-secret
+    secretKeys:
+      adminPasswordKey: postgres-password
+      userPasswordKey: password
+  metrics:
+    enabled: true # Enable PostgreSQL metrics
+
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: false
+  master:
+    persistence:
+      size: 5Gi
+  metrics:
+    enabled: true # Enable Redis metrics
+
+rafiki-auth:
+  enabled: true
+  image:
+    repository: interledger/rafiki-auth
+  replicaCount: 2 # High availability
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      nginx.ingress.kubernetes.io/rate-limit: '100' # Rate limiting
+    hosts:
+      - host: auth.YOUR_DOMAIN.com # Replace with your domain
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: rafiki-auth-tls
+        hosts:
+          - auth.YOUR_DOMAIN.com # Replace with your domain
+  env:
+    AUTH_DATABASE_URL: 'postgresql://rafiki:$(POSTGRES_PASSWORD)@rafiki-postgresql:5432/rafiki'
+    REDIS_URL: 'redis://rafiki-redis-master:6379'
+    COOKIE_KEY:
+      valueFrom:
+        secretKeyRef:
+          name: rafiki-secrets
+          key: cookie-key
+    TRUST_PROXY: 'true' # Enable proxy trust for GCP Load Balancer
+    NODE_ENVIRONMENT: 'production' # Set environment mode
+    LOG_LEVEL: 'info' # Set logging level
+
+rafiki-backend:
+  enabled: true
+  image:
+    repository: interledger/rafiki-backend
+  replicaCount: 3 # Scale for payment processing
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      nginx.ingress.kubernetes.io/rate-limit: '1000' # Higher rate limit for payments
+    hosts:
+      - host: backend.YOUR_DOMAIN.com # Replace with your domain
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: rafiki-backend-tls
+        hosts:
+          - backend.YOUR_DOMAIN.com # Replace with your domain
+  env:
+    DATABASE_URL: 'postgresql://rafiki:$(POSTGRES_PASSWORD)@rafiki-postgresql:5432/rafiki'
+    REDIS_URL: 'redis://rafiki-redis-master:6379'
+    WEBHOOK_URL: 'https://api.YOUR_DOMAIN.com/webhooks/rafiki' # Replace with your domain
+    OPEN_PAYMENTS_URL: 'https://backend.YOUR_DOMAIN.com' # Replace with your domain
+    ILP_ADDRESS: 'test.YOUR_DOMAIN' # Replace with your ILP address
+    ILP_CONNECTOR_URL: 'https://ilp.YOUR_DOMAIN.com' # Replace with your domain
+    EXCHANGE_RATES_URL: 'https://api.YOUR_DOMAIN.com/rates' # Replace with your domain
+    TRUST_PROXY: 'true'
+    NODE_ENVIRONMENT: 'production'
+    LOG_LEVEL: 'info'
+    # Worker configuration
+    OUTGOING_PAYMENT_WORKERS: '1'
+    INCOMING_PAYMENT_WORKERS: '1'
+    WALLET_ADDRESS_WORKERS: '1'
+    WEBHOOK_WORKERS: '1'
+    # Worker idle times (milliseconds)
+    OUTGOING_PAYMENT_WORKER_IDLE: '200'
+    INCOMING_PAYMENT_WORKER_IDLE: '200'
+    WALLET_ADDRESS_WORKER_IDLE: '1000'
+    WEBHOOK_WORKER_IDLE: '200'
+    # TigerBeetle configuration
+    USE_TIGERBEETLE: 'true'
+    TIGERBEETLE_CLUSTER_ID: '0'
+    TIGERBEETLE_REPLICA_ADDRESSES: '10.5.0.50:4342'
+    # Private key configuration
+    # PRIVATE_KEY_FILE: "/path/to/private.key"  # Uncomment and configure as needed
+  # Volume mounts for private key file (if needed)
+  # volumes:
+  #   - name: private-key
+  #     secret:
+  #       secretName: rafiki-private-key
+  # volumeMounts:
+  #   - name: private-key
+  #     mountPath: /path/to/private.key
+  #     subPath: private.key
+  #     readOnly: true
+
+rafiki-admin:
+  enabled: true
+  image:
+    repository: interledger/rafiki-admin
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      nginx.ingress.kubernetes.io/rate-limit: '50' # Lower rate limit for admin
+    hosts:
+      - host: admin.YOUR_DOMAIN.com # Replace with your domain
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: rafiki-admin-tls
+        hosts:
+          - admin.YOUR_DOMAIN.com # Replace with your domain
+  env:
+    DATABASE_URL: 'postgresql://rafiki:$(POSTGRES_PASSWORD)@rafiki-postgresql:5432/rafiki'
+    TRUST_PROXY: 'true'
+
+# Monitoring and observability
+serviceMonitor:
+  enabled: true # Enable Prometheus monitoring
+
+# Network policies for security
+networkPolicy:
+  enabled: true
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+```
+
+### Deploy Rafiki with Argo CD
+
+Create an Argo CD application for Rafiki deployment:
+
+```yaml
+# k8s-manifests/argocd/rafiki-application.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: rafiki
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://interledger.github.io/charts/interledger
+    chart: rafiki
+    targetRevision: '*'
+    helm:
+      valueFiles:
+        - values.yaml
+      values: |
+        # Include your customized values here or reference from Git repo
+        global:
+          image:
+            registry: ghcr.io
+            tag: "latest"
+        # Add other values from helm-values/rafiki/values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: rafiki
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+```
+
+Deploy Rafiki using Argo CD:
+
+```bash
+# Deploy Rafiki using Argo CD
+kubectl apply -f k8s-manifests/argocd/rafiki-application.yaml
+
+# Monitor deployment
+kubectl get applications -n argocd
+argocd app sync rafiki
+argocd app wait rafiki --health
+```
+
+## Digital wallet deployment
+
+Set up the wallet namespace and required secrets:
+
+```bash
+# Create wallet namespace
+kubectl create namespace wallet
+
+# Create wallet database secret
+kubectl create secret generic wallet-db-secret \
+  --from-literal=username=wallet \
+  --from-literal=password=$(openssl rand -base64 32) \
+  --from-literal=postgres-password=$(openssl rand -base64 32) \
+  --from-literal=database-url="postgresql://wallet:$(openssl rand -base64 32)@wallet-postgresql:5432/wallet" \
+  --namespace wallet
+
+# Create wallet application secrets
+kubectl create secret generic wallet-secrets \
+  --from-literal=jwt-secret=$(openssl rand -base64 32) \
+  --from-literal=webhook-secret=$(openssl rand -base64 32) \
+  --from-literal=session-secret=$(openssl rand -base64 32) \
+  --namespace wallet
+
+# Create Redis secret
+kubectl create secret generic wallet-redis-secret \
+  --from-literal=password=$(openssl rand -base64 32) \
+  --namespace wallet
+
+# If using private container registry, create image pull secret
+kubectl create secret docker-registry gcr-json-key \
+  --docker-server=gcr.io \
+  --docker-username=_json_key \
+  --docker-password="$(cat path/to/service-account-key.json)" \
+  --docker-email=YOUR_EMAIL@YOUR_DOMAIN.com \
+  --namespace wallet
+```
+
+### Wallet Helm configuration
+
+Configure your digital wallet application:
+
+```yaml
+# helm-values/wallet/values.yaml - CUSTOMIZE all YOUR_DOMAIN and YOUR_REGISTRY references
+replicaCount: 3 # High availability
+
+image:
+  repository: YOUR_REGISTRY/digital-wallet # Replace with your container registry
+  tag: 'v1.0.0' # Replace with your wallet version
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: gcr-json-key # If using private registry
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rate-limit: '1000'
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+  hosts:
+    - host: wallet.YOUR_DOMAIN.com # Replace with your domain
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: wallet-tls
+      hosts:
+        - wallet.YOUR_DOMAIN.com # Replace with your domain
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+config:
+  rafiki:
+    authServerUrl: 'https://auth.YOUR_DOMAIN.com' # Replace with your domain
+    backendUrl: 'https://backend.YOUR_DOMAIN.com' # Replace with your domain
+    adminUrl: 'https://admin.YOUR_DOMAIN.com' # Replace with your domain
+  database:
+    url: 'postgresql://wallet:$(POSTGRES_PASSWORD)@wallet-postgresql:5432/wallet'
+  redis:
+    url: 'redis://wallet-redis-master:6379'
+
+# Separate PostgreSQL for wallet data
+postgresql:
+  enabled: true
+  nameOverride: 'wallet-postgresql'
+  primary:
+    persistence:
+      size: 50Gi
+      storageClass: 'ssd'
+  auth:
+    database: 'wallet'
+    username: 'wallet'
+    existingSecret: wallet-db-secret
+    secretKeys:
+      adminPasswordKey: postgres-password
+      userPasswordKey: password
+
+# Separate Redis for wallet sessions
+redis:
+  enabled: true
+  nameOverride: 'wallet-redis'
+  architecture: standalone
+  auth:
+    enabled: true
+    existingSecret: wallet-redis-secret
+    existingSecretPasswordKey: password
+
+# Environment variables for wallet application
+env:
+  - name: RAFIKI_AUTH_SERVER_URL
+    value: 'https://auth.YOUR_DOMAIN.com' # Replace with your domain
+  - name: RAFIKI_BACKEND_URL
+    value: 'https://backend.YOUR_DOMAIN.com' # Replace with your domain
+  - name: RAFIKI_ADMIN_URL
+    value: 'https://admin.YOUR_DOMAIN.com' # Replace with your domain
+  - name: DATABASE_URL
+    valueFrom:
+      secretKeyRef:
+        name: wallet-db-secret
+        key: database-url
+  - name: REDIS_URL
+    value: 'redis://wallet-redis-master:6379'
+  - name: JWT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: wallet-secrets
+        key: jwt-secret
+  - name: WEBHOOK_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: wallet-secrets
+        key: webhook-secret
+  - name: NODE_ENV
+    value: 'production'
+  - name: LOG_LEVEL
+    value: 'info'
+```
+
+### Create wallet API ingress
+
+Set up additional ingress for wallet API:
+
+```yaml
+# k8s-manifests/wallet/api-ingress.yaml - CUSTOMIZE host field
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wallet-api-ingress
+  namespace: wallet
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+    nginx.ingress.kubernetes.io/rate-limit: '500'
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - api.YOUR_DOMAIN.com # Replace with your domain
+      secretName: wallet-api-tls
+  rules:
+    - host: api.YOUR_DOMAIN.com # Replace with your domain
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: wallet-api
+                port:
+                  number: 80
+```
+
+### Deploy wallet with Argo CD
+
+Create an Argo CD application for wallet deployment:
+
+```yaml
+# k8s-manifests/argocd/wallet-application.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: digital-wallet
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/YOUR_ORG/wallet-helm-charts # Replace with your repo
+    path: charts/digital-wallet
+    targetRevision: HEAD
+    helm:
+      valueFiles:
+        - values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: wallet
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+```
+
+Deploy the wallet application:
+
+```bash
+# Apply wallet API ingress
+kubectl apply -f k8s-manifests/wallet/api-ingress.yaml
+
+# Deploy wallet using Argo CD
+kubectl apply -f k8s-manifests/argocd/wallet-application.yaml
+
+# Monitor deployment
+kubectl get applications -n argocd
+argocd app sync digital-wallet
+argocd app wait digital-wallet --health
+```
+
+## Service verification
+
+### Health checks
+
+Verify all services are running correctly:
+
+```bash
+# Check Rafiki service health endpoints
+curl -k https://auth.YOUR_DOMAIN.com/health
+curl -k https://backend.YOUR_DOMAIN.com/health
+curl -k https://admin.YOUR_DOMAIN.com/health
+
+# Check wallet application
+curl -k https://wallet.YOUR_DOMAIN.com/health
+curl -k https://api.YOUR_DOMAIN.com/health
+
+# Verify payment pointer resolution
+curl -k https://backend.YOUR_DOMAIN.com/.well-known/pay
+```
+
+### Database Initialization
+
+Initialize databases with required schemas:
+
+```bash
+# Connect to Rafiki database and run migrations (if needed)
+kubectl exec -it -n rafiki deployment/rafiki-admin -- npm run migrate
+
+# Verify database tables
+kubectl exec -it -n rafiki rafiki-postgresql-0 -- psql -U rafiki -d rafiki -c "\dt"
+
+# Connect to wallet database and run migrations
+kubectl exec -it -n wallet deployment/wallet-api -- npm run migrate
+
+# Verify wallet database
+kubectl exec -it -n wallet wallet-postgresql-0 -- psql -U wallet -d wallet -c "\dt"
+```
+
+## Monitoring setup
+
+### Install monitoring stack
+
+Configure monitoring with Prometheus and Grafana:
+
+```yaml
+# k8s-manifests/monitoring/values.yaml - CUSTOMIZE domain references
+prometheus:
+  prometheusSpec:
+    retention: 15d
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: ssd
+          accessModes: ['ReadWriteOnce']
+          resources:
+            requests:
+              storage: 30Gi
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    hosts:
+      - prometheus.YOUR_DOMAIN.com # Replace with your domain
+    tls:
+      - secretName: prometheus-tls
+        hosts:
+          - prometheus.YOUR_DOMAIN.com # Replace with your domain
+
+grafana:
+  adminPassword: 'CHANGE_THIS_PASSWORD' # Replace with secure password
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    hosts:
+      - grafana.YOUR_DOMAIN.com # Replace with your domain
+    tls:
+      - secretName: grafana-tls
+        hosts:
+          - grafana.YOUR_DOMAIN.com # Replace with your domain
+
+  # SMTP configuration for alerts
+  smtp:
+    enabled: true
+    host: 'smtp.gmail.com:587' # Replace with your SMTP server
+    user: 'notifications@YOUR_DOMAIN.com' # Replace with your email
+    password: 'YOUR_SMTP_PASSWORD' # Replace with your SMTP password
+    from_address: 'notifications@YOUR_DOMAIN.com' # Replace with your email
+
+alertmanager:
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: ssd
+          accessModes: ['ReadWriteOnce']
+          resources:
+            requests:
+              storage: 5Gi
+  config:
+    global:
+      smtp_smarthost: 'smtp.gmail.com:587' # Replace with your SMTP server
+      smtp_from: 'alerts@YOUR_DOMAIN.com' # Replace with your email
+    route:
+      group_by: ['alertname']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 1h
+      receiver: 'web.hook'
+    receivers:
+      - name: 'web.hook'
+        slack_configs:
+          - api_url: 'YOUR_SLACK_WEBHOOK_URL' # Replace with your Slack webhook
+            channel: '#alerts'
+            title: 'Rafiki Wallet Alert'
+```
+
+Install the monitoring stack:
+
+```bash
+# Add Prometheus community repo
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+
+# Install kube-prometheus-stack with custom values
+helm install monitoring prometheus-community/kube-prometheus-stack \
+  --namespace monitoring \
+  --create-namespace \
+  -f k8s-manifests/monitoring/values.yaml
+
+# Verify monitoring installation
+kubectl get pods -n monitoring
+kubectl get svc -n monitoring
+kubectl get ingress -n monitoring
+```
+
+## Post-deployment configuration
+
+### Initialize Rafiki assets
+
+Create initial assets and configuration for Rafiki:
+
+```bash
+# Create a script to initialize Rafiki with basic assets
+cat > initialize-rafiki.sh << 'EOF'
+#!/bin/bash
+
+# Get admin API endpoint
+ADMIN_URL="https://admin.YOUR_DOMAIN.com"
+
+# Create USD asset
+curl -X POST $ADMIN_URL/graphql \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -d '{
+    "query": "mutation CreateAsset($input: CreateAssetInput!) { createAsset(input: $input) { asset { id code scale } } }",
+    "variables": {
+      "input": {
+        "code": "USD",
+        "scale": 2
+      }
+    }
+  }'
+
+# Create EUR asset
+curl -X POST $ADMIN_URL/graphql \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -d '{
+    "query": "mutation CreateAsset($input: CreateAssetInput!) { createAsset(input: $input) { asset { id code scale } } }",
+    "variables": {
+      "input": {
+        "code": "EUR",
+        "scale": 2
+      }
+    }
+  }'
+
+echo "Assets created successfully"
+EOF
+
+chmod +x initialize-rafiki.sh
+```
+
+### Set up backup jobs
+
+Configure automated database backups:
+
+```yaml
+# k8s-manifests/backup/postgres-backup.yaml - CUSTOMIZE GCS bucket and project ID
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  namespace: rafiki
+spec:
+  schedule: '0 2 * * *' # Daily at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: backup-sa
+          containers:
+            - name: postgres-backup
+              image: google/cloud-sdk:alpine
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  BACKUP_DATE=$(date +%Y%m%d-%H%M%S)
+
+                  # Backup Rafiki database
+                  pg_dump $RAFIKI_DATABASE_URL | gzip > /tmp/rafiki-backup-${BACKUP_DATE}.sql.gz
+                  gsutil cp /tmp/rafiki-backup-${BACKUP_DATE}.sql.gz gs://YOUR_PROJECT-backups/rafiki/
+
+                  # Backup Wallet database  
+                  pg_dump $WALLET_DATABASE_URL | gzip > /tmp/wallet-backup-${BACKUP_DATE}.sql.gz
+                  gsutil cp /tmp/wallet-backup-${BACKUP_DATE}.sql.gz gs://YOUR_PROJECT-backups/wallet/
+
+                  # Cleanup old backups (keep last 30 days)
+                  gsutil -m rm gs://YOUR_PROJECT-backups/rafiki/rafiki-backup-$(date -d '30 days ago' +%Y%m%d)*.sql.gz || true
+                  gsutil -m rm gs://YOUR_PROJECT-backups/wallet/wallet-backup-$(date -d '30 days ago' +%Y%m%d)*.sql.gz || true
+              env:
+                - name: RAFIKI_DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: rafiki-db-secret
+                      key: database-url
+                - name: WALLET_DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: wallet-db-secret
+                      key: database-url
+          restartPolicy: OnFailure
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backup-sa
+  namespace: rafiki
+  annotations:
+    iam.gke.io/gcp-service-account: backup-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com # Replace with your project ID
+```
+
+Create the backup infrastructure:
+
+```bash
+# Create GCS bucket for backups
+gsutil mb gs://YOUR_PROJECT-backups
+
+# Apply backup job
+kubectl apply -f k8s-manifests/backup/postgres-backup.yaml
+
+# Test backup job manually
+kubectl create job --from=cronjob/postgres-backup manual-backup -n rafiki
+```
+
+## Security hardening
+
+### Network policies
+
+Implement network policies for enhanced security:
+
+```yaml
+# k8s-manifests/security/network-policies.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rafiki-network-policy
+  namespace: rafiki
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: wallet
+      ports:
+        - protocol: TCP
+          port: 80
+  egress:
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 53
+        - protocol: UDP
+          port: 53
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: wallet
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: wallet-network-policy
+  namespace: wallet
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: rafiki
+  egress:
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 53
+        - protocol: UDP
+          port: 53
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: rafiki
+```
+
+Apply network policies:
+
+```bash
+# Label namespaces for network policies
+kubectl label namespace ingress-nginx name=ingress-nginx
+kubectl label namespace rafiki name=rafiki
+kubectl label namespace wallet name=wallet
+
+# Apply network policies
+kubectl apply -f k8s-manifests/security/network-policies.yaml
+```
+
+## Deployment verification
+
+### Service status verification
+
+Check all services are running correctly:
+
+```bash
+# Verify all pods are running
+kubectl get pods -n rafiki
+kubectl get pods -n wallet
+kubectl get pods -n monitoring
+
+# Check services
+kubectl get svc -n rafiki
+kubectl get svc -n wallet
+
+# Check ingress
+kubectl get ingress -A
+
+# Check certificates
+kubectl get certificates -A
+```
+
+## Service URLs summary
+
+Your deployed services are available at these URLs:
+
+| Service            | URL                                | Purpose                        |
+| ------------------ | ---------------------------------- | ------------------------------ |
+| **Wallet UI**      | https://wallet.YOUR_DOMAIN.com     | User-facing wallet application |
+| **Wallet API**     | https://api.YOUR_DOMAIN.com        | Wallet backend API             |
+| **Rafiki Auth**    | https://auth.YOUR_DOMAIN.com       | Authentication server          |
+| **Rafiki Backend** | https://backend.YOUR_DOMAIN.com    | Payment processing             |
+| **Rafiki Admin**   | https://admin.YOUR_DOMAIN.com      | Administrative API             |
+| **Argo CD**        | https://argocd.YOUR_DOMAIN.com     | GitOps management              |
+| **Grafana**        | https://grafana.YOUR_DOMAIN.com    | Monitoring dashboards          |
+| **Prometheus**     | https://prometheus.YOUR_DOMAIN.com | Metrics collection             |
+
+## Performance optimization
+
+### Database performance tuning
+
+Optimize PostgreSQL settings:
+
+```sql
+-- Connect to PostgreSQL and optimize settings
+-- For Rafiki database
+ALTER SYSTEM SET shared_buffers = '256MB';
+ALTER SYSTEM SET effective_cache_size = '1GB';
+ALTER SYSTEM SET maintenance_work_mem = '64MB';
+ALTER SYSTEM SET checkpoint_completion_target = 0.9;
+ALTER SYSTEM SET wal_buffers = '16MB';
+ALTER SYSTEM SET default_statistics_target = 100;
+
+-- Reload configuration
+SELECT pg_reload_conf();
+
+-- Create indexes for better performance
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_payments_wallet_address_id ON payments(wallet_address_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_payments_created_at ON payments(created_at);
+```
+
+### Resource scaling
+
+Monitor and adjust resource allocations based on actual usage:
+
+```bash
+# Check resource usage
+kubectl top nodes
+kubectl top pods -n rafiki
+kubectl top pods -n wallet
+
+# Scale deployments based on load
+kubectl scale deployment rafiki-backend --replicas=5 -n rafiki
+kubectl scale deployment wallet-api --replicas=5 -n wallet
+
+# Enable horizontal pod autoscaling if not already enabled
+kubectl autoscale deployment rafiki-backend --cpu-percent=70 --min=3 --max=10 -n rafiki
+kubectl autoscale deployment wallet-api --cpu-percent=70 --min=3 --max=10 -n wallet
+```
+
+## Next steps
+
+With your services deployed, you can now:
+
+1. **Configure monitoring alerts**: Set up alerting rules for monitoring
+2. **Implement backup verification**: Test backup and restore procedures
+3. **Test performance**: Conduct load testing to validate scaling configuration
+4. **Review security**: Perform security audit and penetration testing
+5. **[Troubleshoot issues](/integration/deploy-to-prod/06-troubleshooting)**: Address any deployment issues
+
+Your Rafiki infrastructure is now fully deployed and ready for integration with your digital wallet application!
