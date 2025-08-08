@@ -7,7 +7,8 @@ import { truncateTables } from '../../tests/tableManager'
 import { createTenant } from '../../tests/tenant'
 import {
   CreateTenantSettingsInput,
-  CreateTenantSettingsMutationResponse
+  CreateTenantSettingsMutationResponse,
+  TenantSettingKey as SchemaTenantSettingKey
 } from '../generated/graphql'
 import {
   ApolloClient,
@@ -101,7 +102,7 @@ describe('Tenant Settings Resolvers', (): void => {
       const input: CreateTenantSettingsInput = {
         settings: [
           {
-            key: TenantSettingKeys.EXCHANGE_RATES_URL.name,
+            key: SchemaTenantSettingKey.ExchangeRatesUrl,
             value: faker.internet.url()
           }
         ]
@@ -137,7 +138,7 @@ describe('Tenant Settings Resolvers', (): void => {
       const input: CreateTenantSettingsInput = {
         settings: [
           {
-            key: TenantSettingKeys.WEBHOOK_MAX_RETRY.name,
+            key: SchemaTenantSettingKey.WebhookMaxRetry,
             value: '-1'
           }
         ]

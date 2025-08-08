@@ -59,6 +59,10 @@ export const listTenants = async (request: Request, args: QueryTenantsArgs) => {
               publicName
               createdAt
               deletedAt
+              settings {
+                key
+                value
+              }
             }
           }
           pageInfo {
@@ -178,6 +182,10 @@ export const getTenantInfo = async (
           publicName
           createdAt
           deletedAt
+          settings {
+            key
+            value
+          }
         }
       }
     `,

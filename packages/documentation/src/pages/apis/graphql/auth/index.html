@@ -1,0 +1,2716 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/favicon.svg" sizes="32x32" />
+    <title>Auth Admin API</title>
+    <style>
+      #spectaql {
+        padding: 0;
+        margin: 0;
+      }
+      #spectaql pre {
+        overflow: auto;
+        margin-top: 0;
+        margin-bottom: 20px;
+      }
+      #spectaql pre code {
+        display: block;
+        background: #ccc;
+      }
+      #spectaql table {
+        width: 100%;
+        table-layout: fixed;
+        text-align: left;
+        border-collapse: collapse;
+      }
+      #spectaql table td,
+      #spectaql table th {
+        margin: 0;
+        padding: 0;
+      }
+      #spectaql #introduction .example-section > *,
+      #spectaql .definition-heading,
+      #spectaql .doc-heading,
+      #spectaql .introduction-item-title,
+      #spectaql .operation-heading {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #spectaql #page {
+        display: flex;
+      }
+      #spectaql #page * {
+        box-sizing: border-box;
+      }
+      #spectaql #page.drawer-open #sidebar {
+        z-index: 1000;
+        transform: translateX(0);
+      }
+      #spectaql #page.drawer-open .drawer-overlay {
+        display: block;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 10;
+      }
+      #spectaql #sidebar {
+        position: fixed;
+        min-width: 250px;
+        max-width: 250px;
+        flex-shrink: 0;
+        transition: transform 0.2s ease-out;
+        transform: translateX(-100%);
+        z-index: 10;
+        padding-top: 20px;
+        background: #fff;
+      }
+      @media (min-width: 48em) {
+        #spectaql #sidebar {
+          position: relative;
+          transform: none;
+        }
+      }
+      @media (min-width: 64em) {
+        #spectaql #sidebar {
+          min-width: 300px;
+          max-width: 300px;
+        }
+      }
+      #spectaql .sidebar-top-container {
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+      }
+      #spectaql #mobile-navbar {
+        display: flex;
+        align-items: center;
+        position: sticky;
+        top: 0;
+      }
+      @media (min-width: 48em) {
+        #spectaql #mobile-navbar {
+          display: none;
+        }
+      }
+      #spectaql .sidebar-open-button {
+        display: flex;
+        align-items: flex-start;
+        margin: 0;
+        padding: 0;
+        border: none;
+        background: 0 0;
+      }
+      #spectaql .sidebar-open-button .hamburger {
+        width: 16px;
+        height: 14px;
+        cursor: pointer;
+      }
+      #spectaql .sidebar-open-button .hamburger::after {
+        display: block;
+        content: '';
+        height: 2px;
+        background: #222;
+        box-shadow:
+          0 5px 0 #222,
+          0 10px 0 #222;
+      }
+      #spectaql .sidebar-open-button .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      #spectaql .close-button {
+        display: block;
+      }
+      #spectaql .close-button .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      @media (min-width: 48em) {
+        #spectaql .close-button {
+          display: none;
+        }
+      }
+      #spectaql .drawer-overlay {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0);
+      }
+      @media (min-width: 48em) {
+        #spectaql .drawer-overlay {
+          display: none !important;
+        }
+      }
+      #spectaql #nav {
+        display: flex;
+        flex-direction: column;
+        max-height: calc(100vh - 0px);
+        padding: 0 20px;
+        padding-bottom: 20px;
+        position: sticky;
+        top: 0;
+        overflow: auto;
+      }
+      #spectaql #logo {
+        margin-right: auto;
+      }
+      #spectaql #logo img {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+      }
+      #spectaql .nav-group-items,
+      #spectaql .nav-group-section-items {
+        padding: 0;
+        margin: 0;
+      }
+      #spectaql .nav-group-items > li,
+      #spectaql .nav-group-section-items > li {
+        list-style: none;
+      }
+      #spectaql .nav-group-items .nav-group-section-title,
+      #spectaql .nav-group-items > li,
+      #spectaql .nav-group-section-items .nav-group-section-title,
+      #spectaql .nav-group-section-items > li {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #spectaql .nav-group-section-items {
+        display: none;
+      }
+      #spectaql .nav-scroll-expand .nav-group-section-items {
+        display: block;
+      }
+      #spectaql #docs {
+        position: relative;
+        margin: 0 auto;
+        min-width: 100px;
+        max-width: 88em;
+        flex-grow: 1;
+        flex-shrink: 1;
+        padding: 20px;
+      }
+      @media (min-width: 48em) {
+        #spectaql .doc-row {
+          display: flex;
+          flex-wrap: wrap;
+        }
+      }
+      #spectaql .doc-row .doc-copy,
+      #spectaql .doc-row .doc-examples {
+        width: 100%;
+      }
+      @media (min-width: 48em) {
+        #spectaql .doc-row .doc-copy,
+        #spectaql .doc-row .doc-examples {
+          width: 50%;
+        }
+      }
+      @media (min-width: 48em) {
+        #spectaql .doc-row .doc-copy {
+          padding-right: 20px;
+        }
+      }
+      @media (min-width: 48em) {
+        #spectaql .doc-row .doc-examples {
+          padding-left: 20px;
+        }
+      }
+      .hljs {
+        display: block;
+        overflow-x: auto;
+        padding: 0.5em;
+        background: #23241f;
+      }
+      .hljs,
+      .hljs-subst,
+      .hljs-tag {
+        color: #f8f8f2;
+      }
+      .hljs-emphasis,
+      .hljs-strong {
+        color: #a8a8a2;
+      }
+      .hljs-bullet,
+      .hljs-link,
+      .hljs-literal,
+      .hljs-number,
+      .hljs-quote,
+      .hljs-regexp {
+        color: #ae81ff;
+      }
+      .hljs-code,
+      .hljs-section,
+      .hljs-selector-class,
+      .hljs-title {
+        color: #a6e22e;
+      }
+      .hljs-strong {
+        font-weight: 700;
+      }
+      .hljs-emphasis {
+        font-style: italic;
+      }
+      .hljs-attr,
+      .hljs-keyword,
+      .hljs-name,
+      .hljs-selector-tag {
+        color: #f92672;
+      }
+      .hljs-attribute,
+      .hljs-symbol {
+        color: #66d9ef;
+      }
+      .hljs-class .hljs-title,
+      .hljs-params {
+        color: #f8f8f2;
+      }
+      .hljs-addition,
+      .hljs-built_in,
+      .hljs-builtin-name,
+      .hljs-selector-attr,
+      .hljs-selector-id,
+      .hljs-selector-pseudo,
+      .hljs-string,
+      .hljs-template-variable,
+      .hljs-type,
+      .hljs-variable {
+        color: #e6db74;
+      }
+      .hljs-comment,
+      .hljs-deletion,
+      .hljs-meta {
+        color: #75715e;
+      }
+      #spectaql {
+        font-family: -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI',
+          Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji',
+          'Segoe UI Emoji', 'Segoe UI Symbol';
+        font-size: 14px;
+        line-height: 1.6;
+        background: #fff;
+        color: #222;
+      }
+      @media (min-width: 32em) {
+        #spectaql {
+          font-size: 16px;
+        }
+      }
+      #spectaql a {
+        color: #0298bf;
+        text-decoration: none;
+      }
+      #spectaql a:hover {
+        color: #0182a2;
+      }
+      #spectaql a:active,
+      #spectaql a:focus {
+        color: #0298bf;
+      }
+      #spectaql code {
+        font-size: 0.875em;
+        font-family:
+          Consolas,
+          Monaco,
+          Andale Mono,
+          Ubuntu Mono,
+          monospace;
+      }
+      #spectaql pre {
+        color: #fff;
+      }
+      #spectaql pre code {
+        background: #222;
+      }
+      #spectaql pre code,
+      #spectaql pre code.hljs {
+        font-size: 0.82em;
+        line-height: 1.4;
+        padding: 15px 20px;
+      }
+      #spectaql .doc-heading {
+        line-height: 1.2;
+        font-size: 2.25em;
+        margin-top: 10px;
+      }
+      @media (min-width: 48em) {
+        #spectaql .doc-heading {
+          margin-top: -10px;
+        }
+      }
+      #spectaql .close-button {
+        background: 0 0;
+        border: none;
+        padding: 5px;
+        font-size: 16px;
+        font-weight: 700;
+        color: #222;
+      }
+      #spectaql #introduction {
+        margin-bottom: 60px;
+      }
+      #spectaql #introduction .example-section:not(.example-section-is-code) {
+        margin-bottom: 20px;
+      }
+      #spectaql #introduction .example-section:not(.example-section-is-code) h5,
+      #spectaql #introduction .example-section:not(.example-section-is-code) p {
+        margin: 0;
+        font-size: 1em;
+      }
+      #spectaql #docs,
+      #spectaql #mobile-navbar,
+      #spectaql #sidebar {
+        padding-top: 20px;
+        padding-bottom: 20px;
+      }
+      @media (min-width: 32em) {
+        #spectaql #docs,
+        #spectaql #mobile-navbar,
+        #spectaql #sidebar {
+          padding-top: 30px;
+          padding-bottom: 30px;
+        }
+      }
+      @media (min-width: 48em) {
+        #spectaql #docs,
+        #spectaql #mobile-navbar,
+        #spectaql #sidebar {
+          padding-top: 40px;
+          padding-bottom: 40px;
+        }
+      }
+      #spectaql #docs,
+      #spectaql #mobile-navbar,
+      #spectaql #nav,
+      #spectaql .sidebar-top-container {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+      @media (min-width: 32em) {
+        #spectaql #docs,
+        #spectaql #mobile-navbar,
+        #spectaql #nav,
+        #spectaql .sidebar-top-container {
+          padding-left: 30px;
+          padding-right: 30px;
+        }
+      }
+      @media (min-width: 48em) {
+        #spectaql #docs,
+        #spectaql #mobile-navbar,
+        #spectaql #nav,
+        #spectaql .sidebar-top-container {
+          padding-left: 50px;
+          padding-right: 50px;
+        }
+      }
+      #spectaql #sidebar {
+        padding-bottom: 0;
+        background: #fff;
+      }
+      #spectaql #sidebar a {
+        color: #222;
+      }
+      #spectaql #sidebar a.nav-scroll-active,
+      #spectaql #sidebar a:hover {
+        font-weight: 700;
+      }
+      #spectaql #sidebar a.nav-scroll-active {
+        color: #222;
+      }
+      #spectaql #sidebar a:hover {
+        color: #0182a2;
+      }
+      @media (min-width: 48em) {
+        #spectaql #sidebar {
+          border-right: 2px solid #d8d8d8;
+        }
+      }
+      #spectaql #mobile-navbar {
+        background: #fff;
+        margin-top: -20px;
+        margin-left: -20px;
+        margin-right: -20px;
+      }
+      @media (min-width: 32em) {
+        #spectaql #mobile-navbar {
+          margin-top: -30px;
+          margin-left: -30px;
+          margin-right: -30px;
+        }
+      }
+      #spectaql #mobile-navbar .sidebar-open-button::after {
+        display: block;
+        content: 'All Topics';
+        margin-left: 10px;
+        color: #222;
+      }
+      #spectaql #nav .nav-group {
+        margin-top: 20px;
+      }
+      #spectaql #nav .nav-group li {
+        margin-bottom: 5px;
+      }
+      #spectaql #nav .nav-group-title {
+        font-size: 0.875em;
+        font-weight: 400;
+        margin: 0 0 6px 0;
+        color: #999;
+      }
+      #spectaql #nav .nav-group-section-title {
+        font-size: inherit;
+        margin: 0;
+        margin-bottom: 5px;
+        font-weight: 400;
+      }
+      #spectaql #nav .nav-group-section-items {
+        margin-left: 0.75em;
+      }
+      #spectaql .definition,
+      #spectaql .operation {
+        margin-bottom: 60px;
+      }
+      #spectaql .definition .definition-heading,
+      #spectaql .definition .operation-heading,
+      #spectaql .operation .definition-heading,
+      #spectaql .operation .operation-heading {
+        font-size: 1.72em;
+      }
+      #spectaql .definition .definition-heading code,
+      #spectaql .definition .operation-heading code,
+      #spectaql .operation .definition-heading code,
+      #spectaql .operation .operation-heading code {
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+      }
+      @media (min-width: 32em) {
+        #spectaql .definition .definition-heading,
+        #spectaql .definition .operation-heading,
+        #spectaql .operation .definition-heading,
+        #spectaql .operation .operation-heading {
+          font-size: 2.25em;
+        }
+      }
+      #spectaql .definition-group-name,
+      #spectaql .group-heading,
+      #spectaql .operation-group-name {
+        border-top: 2px solid #d8d8d8;
+        padding-top: 3px;
+        color: #999;
+        font-size: inherit;
+        font-weight: inherit;
+      }
+      #spectaql .definition-group-name a,
+      #spectaql .group-heading a,
+      #spectaql .operation-group-name a {
+        color: #999;
+      }
+      #spectaql .definition-group-name a:hover,
+      #spectaql .group-heading a:hover,
+      #spectaql .operation-group-name a:hover {
+        font-weight: 700;
+      }
+      #spectaql .doc-examples {
+        margin-top: 20px;
+      }
+      #spectaql .doc-examples .example-heading {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      #spectaql .doc-examples .example-section-is-code h5 {
+        color: #999;
+        text-transform: uppercase;
+        background: #000;
+        font-size: 0.75em;
+        font-weight: 700;
+        padding: 0.6em 0 0.6em 20px;
+        margin: 0;
+        opacity: 1;
+      }
+      @media (min-width: 48em) {
+        #spectaql .doc-examples {
+          margin-top: 0;
+        }
+      }
+      #spectaql .doc-copy p {
+        margin: 0 0 20px 0;
+      }
+      #spectaql .doc-copy p:last-child {
+        margin-bottom: 0;
+      }
+      #spectaql .doc-copy table tr th {
+        font-weight: 400;
+        border-bottom: 2px solid #d8d8d8;
+      }
+      #spectaql .doc-copy table tr td {
+        border-bottom: 1px solid #e0e0e0;
+      }
+      #spectaql .doc-copy table tr.row-has-field-arguments td,
+      #spectaql .doc-copy table tr:last-child td {
+        border-bottom: none;
+      }
+      #spectaql .doc-copy table tr td,
+      #spectaql .doc-copy table tr th {
+        padding: 5px;
+      }
+      #spectaql .doc-copy table tr td:first-child,
+      #spectaql .doc-copy table tr th:first-child {
+        padding-left: 0;
+      }
+      #spectaql .doc-copy table tr td:last-child,
+      #spectaql .doc-copy table tr th:last-child {
+        padding-right: 0;
+      }
+      #spectaql .doc-copy .doc-copy-section {
+        margin-bottom: 30px;
+      }
+      #spectaql .doc-copy .doc-copy-section > h5 {
+        margin: 0 0 5px 0;
+        font-size: inherit;
+        font-weight: inherit;
+        color: #999;
+      }
+      #spectaql .doc-copy .definition-description > h5,
+      #spectaql .doc-copy .definition-properties > h5,
+      #spectaql .doc-copy .operation-description > h5 {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      #spectaql .field-arguments {
+        font-size: 0.875em;
+        background-color: #fafbfc;
+        border: 1px solid #e0e0e0;
+        padding: 10px;
+        margin-bottom: 5px;
+      }
+      #spectaql .field-arguments p {
+        margin: 10px 0 0 0;
+      }
+      #spectaql .field-arguments h5.field-arguments-heading {
+        margin: 0;
+        padding: 0 0 10px 0;
+        font-weight: inherit;
+        color: #999;
+      }
+      #spectaql .field-arguments .field-argument {
+        border-top: 1px #e0e0e0 solid;
+        padding: 10px 0;
+      }
+      #spectaql .field-arguments .field-argument:last-child {
+        padding-bottom: 0;
+      }
+      #spectaql .field-arguments .field-argument-name {
+        margin: 0;
+        font-size: inherit;
+        font-weight: inherit;
+      }
+      #spectaql .deprecation-reason {
+        word-break: break-word;
+      }
+      #spectaql .deprecation-reason::before {
+        display: inline;
+        content: 'Deprecated';
+        padding: 2px 5px;
+        margin-right: 5px;
+        background: #fed7d8;
+        color: #c60609;
+        font-weight: 700;
+        font-size: 0.875em;
+      }
+    </style>
+    <script>
+      function scrollSpy() {
+        var l = 5,
+          e = document.querySelector('html'),
+          c =
+            (e &&
+              (e = window.getComputedStyle(e).scrollPaddingTop) &&
+              'string' == typeof e &&
+              'auto' !== e &&
+              e.endsWith('px') &&
+              (l += parseInt(e.split('px')[0])),
+            'nav-scroll-active'),
+          i = null,
+          d = []
+        function t() {
+          i = null
+          var e = document.querySelectorAll('[data-traverse-target]')
+          Array.prototype.forEach.call(e, function (e) {
+            d.push({ id: e.id, top: e.offsetTop })
+          })
+        }
+        var n = debounce(function () {
+            t(), o()
+          }, 500),
+          o = debounce(function () {
+            var e,
+              t,
+              n,
+              o,
+              r = ((e) => {
+                for (var t = e + l, n = 0; n < d.length; n++) {
+                  var o = d[n + 1]
+                  if (t >= d[n].top && (!o || t < o.top)) return n
+                }
+                return -1
+              })(document.documentElement.scrollTop || document.body.scrollTop)
+            r !== i &&
+              ((r = d[(i = r)]),
+              (e = document.querySelector('.' + c)),
+              (t = s(
+                (r = r
+                  ? document.querySelector('#nav a[href="#' + r.id + '"]')
+                  : null)
+              )),
+              (n = (o = s(e)) !== t),
+              o && n && u(o, !1),
+              t && n && u(t, !0),
+              r &&
+                (r.classList.add(c),
+                r.scrollIntoViewIfNeeded
+                  ? r.scrollIntoViewIfNeeded()
+                  : !r.scrollIntoView ||
+                    (0 <= (o = (o = r).getBoundingClientRect()).top &&
+                      0 <= o.left &&
+                      o.bottom <=
+                        (window.innerHeight ||
+                          document.documentElement.clientHeight) &&
+                      o.right <=
+                        (window.innerWidth ||
+                          document.documentElement.clientWidth)) ||
+                    r.scrollIntoView({ block: 'center', inline: 'start' })),
+              e) &&
+              e.classList.remove(c)
+          }, 100)
+        function u(e, t) {
+          for (var n = t ? 'add' : 'remove'; e; )
+            e.classList[n]('nav-scroll-expand'), (e = s(e.parentNode))
+        }
+        function s(e) {
+          return e && e.closest ? e.closest('.nav-group-section') : null
+        }
+        setTimeout(function () {
+          t(),
+            o(),
+            window.addEventListener('scroll', o),
+            window.addEventListener('resize', n)
+        }, 300)
+      }
+      function toggleMenu() {
+        var t = 'drawer-open',
+          e = document.querySelector('#spectaql .sidebar-open-button'),
+          n = document.querySelector('#spectaql #sidebar .close-button'),
+          o = document.querySelector('#spectaql .drawer-overlay')
+        function r() {
+          var e = document.querySelector('#spectaql #page')
+          e.classList.contains(t) ? e.classList.remove(t) : e.classList.add(t)
+        }
+        e.addEventListener('click', r),
+          n.addEventListener('click', r),
+          o.addEventListener('click', r)
+      }
+      function debounce(e, t) {
+        var n = null
+        return function () {
+          clearTimeout(n),
+            (n = setTimeout(function () {
+              e.apply(null)
+            }, t))
+        }
+      }
+      window.addEventListener('DOMContentLoaded', (e) => {
+        toggleMenu(), scrollSpy()
+      })
+    </script>
+  </head>
+  <body id="spectaql">
+    <div id="page" class="drawer-layout">
+      <div id="sidebar">
+        <div class="sidebar-top-container">
+          <div id="logo">
+            <img
+              src="data:image/png;base64,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&#x3D;&#x3D;"
+              title="Auth Admin API"
+            />
+          </div>
+          <button class="close-button" type="button">
+            <span aria-hidden="true">×</span>
+            <span class="sr-only">Close menu</span>
+          </button>
+        </div>
+        <nav id="nav" role="navigation">
+          <div class="nav-group">
+            <h4 class="nav-group-title">Introduction</h4>
+            <ul class="nav-group-items">
+              <li><a href="#introduction">Welcome</a></li>
+              <li>
+                <a data-traverse-ignore="" href="/overview/overview"
+                  >Back to documentation</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div class="nav-group">
+            <h4 class="nav-group-title">Operations</h4>
+            <ul class="nav-group-items">
+              <li class="nav-group-section">
+                <h5 class="nav-group-section-title">
+                  <a href="#group-Operations-Queries">Queries</a>
+                </h5>
+                <ul class="nav-group-section-items">
+                  <li><a href="#query-grant">grant</a></li>
+                  <li><a href="#query-grants">grants</a></li>
+                </ul>
+              </li>
+              <li class="nav-group-section">
+                <h5 class="nav-group-section-title">
+                  <a href="#group-Operations-Mutations">Mutations</a>
+                </h5>
+                <ul class="nav-group-section-items">
+                  <li><a href="#mutation-revokeGrant">revokeGrant</a></li>
+                </ul>
+              </li>
+              <li><a href="#"></a></li>
+            </ul>
+          </div>
+          <div class="nav-group">
+            <h4 class="nav-group-title">Types</h4>
+            <ul class="nav-group-items">
+              <li><a href="#definition-Access">Access</a></li>
+              <li><a href="#definition-Boolean">Boolean</a></li>
+              <li>
+                <a href="#definition-FilterFinalizationReason"
+                  >FilterFinalizationReason</a
+                >
+              </li>
+              <li>
+                <a href="#definition-FilterGrantState">FilterGrantState</a>
+              </li>
+              <li><a href="#definition-FilterString">FilterString</a></li>
+              <li><a href="#definition-Grant">Grant</a></li>
+              <li><a href="#definition-GrantEdge">GrantEdge</a></li>
+              <li><a href="#definition-GrantFilter">GrantFilter</a></li>
+              <li>
+                <a href="#definition-GrantFinalization">GrantFinalization</a>
+              </li>
+              <li><a href="#definition-GrantState">GrantState</a></li>
+              <li>
+                <a href="#definition-GrantsConnection">GrantsConnection</a>
+              </li>
+              <li><a href="#definition-ID">ID</a></li>
+              <li><a href="#definition-Int">Int</a></li>
+              <li><a href="#definition-LimitData">LimitData</a></li>
+              <li><a href="#definition-Model">Model</a></li>
+              <li><a href="#definition-PageInfo">PageInfo</a></li>
+              <li><a href="#definition-PaymentAmount">PaymentAmount</a></li>
+              <li>
+                <a href="#definition-RevokeGrantInput">RevokeGrantInput</a>
+              </li>
+              <li>
+                <a href="#definition-RevokeGrantMutationResponse"
+                  >RevokeGrantMutationResponse</a
+                >
+              </li>
+              <li><a href="#definition-SortOrder">SortOrder</a></li>
+              <li><a href="#definition-String">String</a></li>
+              <li><a href="#definition-UInt64">UInt64</a></li>
+              <li><a href="#definition-UInt8">UInt8</a></li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+      <div id="docs" data-pagefind-body>
+        <div id="mobile-navbar">
+          <button class="sidebar-open-button" type="button">
+            <span class="hamburger"></span>
+            <span class="sr-only">All topics</span>
+          </button>
+        </div>
+        <article id="content">
+          <h1 class="doc-heading">Auth Admin API</h1>
+          <div id="introduction" data-traverse-target="introduction">
+            <div id="welcome" class="doc-row">
+              <div class="doc-copy">
+                <p>
+                  The Auth Admin API allows you to get information about a
+                  grant, such as its status, state, related payment details, and
+                  the wallet address of the grantee’s account. The API also
+                  allows you to revoke grants.
+                </p>
+              </div>
+              <div class="doc-examples">
+                <div
+                  class="example-section welcome-api-endpoints-section example-section-is-code"
+                >
+                  <h5>API Endpoints</h5>
+                  <pre><code># Staging:
+https://staging.example.com/graphql
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+          <h1
+            id="group-Operations-Queries"
+            class="group-heading"
+            data-traverse-target="group-Operations-Queries"
+          >
+            Queries
+          </h1>
+          <section
+            id="query-grant"
+            class="operation operation-query"
+            data-traverse-target="query-grant"
+          >
+            <h2 class="operation-heading">
+              <code>grant</code>
+            </h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="operation-description doc-copy-section">
+                  <h5>Description</h5>
+                  <p>Fetch a specific grant by its ID.</p>
+                </div>
+              </div>
+            </div>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="operation-response doc-copy-section">
+                  <h5>Response</h5>
+                  <p>
+                    Returns a
+                    <a href="#definition-Grant"><code>Grant!</code></a>
+                  </p>
+                </div>
+                <div class="operation-arguments doc-copy-section">
+                  <h5>Arguments</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <span class="property-name"><code>id</code></span> -
+                          <span class="property-type"
+                            ><a href="#definition-ID"><code>ID!</code></a></span
+                          >
+                        </td>
+                        <td>Unique identifier of the grant.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <h4 class="example-heading">Example</h4>
+                <div
+                  class="example-section example-section-is-code operation-query-example"
+                >
+                  <h5>Query</h5>
+                  <pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">query</span> Grant<span class="hljs-tag">(<span class="hljs-code">$id</span>: ID!)</span> <span class="hljs-tag">{
+  <span class="hljs-symbol">grant<span class="hljs-tag">(id: <span class="hljs-code">$id</span>)</span> <span class="hljs-tag">{
+    <span class="hljs-symbol">id</span>
+    <span class="hljs-symbol">client</span>
+    <span class="hljs-symbol">access <span class="hljs-tag">{
+      <span class="hljs-symbol">id</span>
+      <span class="hljs-symbol">identifier</span>
+      <span class="hljs-symbol">type</span>
+      <span class="hljs-symbol">actions</span>
+      <span class="hljs-symbol">limits <span class="hljs-tag">{
+        <span class="hljs-type">...LimitDataFragment</span>
+      }</span></span>
+      <span class="hljs-symbol">createdAt</span>
+    }</span></span>
+    <span class="hljs-symbol">state</span>
+    <span class="hljs-symbol">finalizationReason</span>
+    <span class="hljs-symbol">createdAt</span>
+  }</span></span>
+}</span></span>
+</code></pre>
+                </div>
+                <div
+                  class="example-section example-section-is-code operation-variables-example"
+                >
+                  <h5>Variables</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">4</span><span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+                <div
+                  class="example-section example-section-is-code operation-response-example"
+                >
+                  <h5>Response</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">"grant"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">4</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"client"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"access"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">Access</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"state"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"PROCESSING"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"finalizationReason"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"ISSUED"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
+    <span class="hljs-punctuation">}</span>
+  <span class="hljs-punctuation">}</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="query-grants"
+            class="operation operation-query"
+            data-traverse-target="query-grants"
+          >
+            <div class="operation-group-name">
+              <a href="#group-Operations-Queries">Queries</a>
+            </div>
+            <h2 class="operation-heading">
+              <code>grants</code>
+            </h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="operation-description doc-copy-section">
+                  <h5>Description</h5>
+                  <p>Fetch a paginated list of grants.</p>
+                </div>
+              </div>
+            </div>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="operation-response doc-copy-section">
+                  <h5>Response</h5>
+                  <p>
+                    Returns a
+                    <a href="#definition-GrantsConnection"
+                      ><code>GrantsConnection!</code></a
+                    >
+                  </p>
+                </div>
+                <div class="operation-arguments doc-copy-section">
+                  <h5>Arguments</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <span class="property-name"><code>after</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>
+                          Forward pagination: Cursor (grant ID) to start
+                          retrieving grants after this point.
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <span class="property-name"><code>before</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>
+                          Backward pagination: Cursor (grant ID) to start
+                          retrieving grants before this point.
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <span class="property-name"><code>first</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-Int"
+                              ><code>Int</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>
+                          Forward pagination: Limit the result to the first
+                          <strong>n</strong> grants after the
+                          <code>after</code> cursor.
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <span class="property-name"><code>last</code></span> -
+                          <span class="property-type"
+                            ><a href="#definition-Int"
+                              ><code>Int</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>
+                          Backward pagination: Limit the result to the last
+                          <strong>n</strong> grants before the
+                          <code>before</code> cursor.
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <span class="property-name"><code>filter</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-GrantFilter"
+                              ><code>GrantFilter</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>
+                          Filter grants based on specified criteria such as ID,
+                          state, or finalization reason.
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <span class="property-name"
+                            ><code>sortOrder</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-SortOrder"
+                              ><code>SortOrder</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>
+                          Specify the sort order of grants based on their
+                          creation date, either ascending or descending.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <h4 class="example-heading">Example</h4>
+                <div
+                  class="example-section example-section-is-code operation-query-example"
+                >
+                  <h5>Query</h5>
+                  <pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">query</span> Grants<span class="hljs-tag">(
+  <span class="hljs-code">$after</span>:<span class="hljs-type"> String,</span>
+  <span class="hljs-code">$before</span>:<span class="hljs-type"> String,</span>
+  <span class="hljs-code">$first</span>:<span class="hljs-type"> Int,</span>
+  <span class="hljs-code">$last</span>:<span class="hljs-type"> Int,</span>
+  <span class="hljs-code">$filter</span>:<span class="hljs-type"> GrantFilter,</span>
+  <span class="hljs-code">$sortOrder</span>:<span class="hljs-type"> SortOrder
+</span>)</span> <span class="hljs-tag">{
+  <span class="hljs-symbol">grants<span class="hljs-tag">(
+    after: <span class="hljs-code">$after</span>,
+    before: <span class="hljs-code">$before</span>,
+    first: <span class="hljs-code">$first</span>,
+    last: <span class="hljs-code">$last</span>,
+    filter: <span class="hljs-code">$filter</span>,
+    sortOrder: <span class="hljs-code">$sortOrder</span>
+  )</span> <span class="hljs-tag">{
+    <span class="hljs-symbol">pageInfo <span class="hljs-tag">{
+      <span class="hljs-symbol">endCursor</span>
+      <span class="hljs-symbol">hasNextPage</span>
+      <span class="hljs-symbol">hasPreviousPage</span>
+      <span class="hljs-symbol">startCursor</span>
+    }</span></span>
+    <span class="hljs-symbol">edges <span class="hljs-tag">{
+      <span class="hljs-symbol">node <span class="hljs-tag">{
+        <span class="hljs-type">...GrantFragment</span>
+      }</span></span>
+      <span class="hljs-symbol">cursor</span>
+    }</span></span>
+  }</span></span>
+}</span></span>
+</code></pre>
+                </div>
+                <div
+                  class="example-section example-section-is-code operation-variables-example"
+                >
+                  <h5>Variables</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"after"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"before"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"first"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"last"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"filter"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">GrantFilter</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"sortOrder"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"ASC"</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+                <div
+                  class="example-section example-section-is-code operation-response-example"
+                >
+                  <h5>Response</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">"grants"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">"pageInfo"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">PageInfo</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"edges"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">GrantEdge</span><span class="hljs-punctuation">]</span>
+    <span class="hljs-punctuation">}</span>
+  <span class="hljs-punctuation">}</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <h1
+            id="group-Operations-Mutations"
+            class="group-heading"
+            data-traverse-target="group-Operations-Mutations"
+          >
+            Mutations
+          </h1>
+          <section
+            id="mutation-revokeGrant"
+            class="operation operation-mutation"
+            data-traverse-target="mutation-revokeGrant"
+          >
+            <h2 class="operation-heading">
+              <code>revokeGrant</code>
+            </h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="operation-description doc-copy-section">
+                  <h5>Description</h5>
+                  <p>Revoke an existing grant.</p>
+                </div>
+              </div>
+            </div>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="operation-response doc-copy-section">
+                  <h5>Response</h5>
+                  <p>
+                    Returns a
+                    <a href="#definition-RevokeGrantMutationResponse"
+                      ><code>RevokeGrantMutationResponse!</code></a
+                    >
+                  </p>
+                </div>
+                <div class="operation-arguments doc-copy-section">
+                  <h5>Arguments</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <span class="property-name"><code>input</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-RevokeGrantInput"
+                              ><code>RevokeGrantInput!</code></a
+                            ></span
+                          >
+                        </td>
+                        <td></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <h4 class="example-heading">Example</h4>
+                <div
+                  class="example-section example-section-is-code operation-query-example"
+                >
+                  <h5>Query</h5>
+                  <pre><code class="hljs language-gql"><span class="hljs-symbol"><span class="hljs-keyword">mutation</span> RevokeGrant<span class="hljs-tag">(<span class="hljs-code">$input</span>:<span class="hljs-type"> RevokeGrantInput!</span>)</span> <span class="hljs-tag">{
+  <span class="hljs-symbol">revokeGrant<span class="hljs-tag">(input: <span class="hljs-code">$input</span>)</span> <span class="hljs-tag">{
+    <span class="hljs-symbol">id</span>
+  }</span></span>
+}</span></span>
+</code></pre>
+                </div>
+                <div
+                  class="example-section example-section-is-code operation-variables-example"
+                >
+                  <h5>Variables</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"input"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">RevokeGrantInput</span><span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+                <div
+                  class="example-section example-section-is-code operation-response-example"
+                >
+                  <h5>Response</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"revokeGrant"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"4"</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <h1
+            id="group-Types"
+            class="group-heading"
+            data-traverse-target="group-Types"
+          >
+            Types
+          </h1>
+          <section
+            id="definition-Access"
+            class="definition definition-object"
+            data-traverse-target="definition-Access"
+          >
+            <h2 class="definition-heading">Access</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-properties doc-copy-section">
+                  <h5>Fields</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Field Name</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"><code>id</code></span> -
+                          <span class="property-type"
+                            ><a href="#definition-ID"><code>ID!</code></a></span
+                          >
+                        </td>
+                        <td>Unique identifier of the access object.</td>
+                      </tr>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>identifier</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>
+                          Wallet address of the sub-resource (incoming payment,
+                          outgoing payment, or quote).
+                        </td>
+                      </tr>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"><code>type</code></span> -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String!</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>
+                          Type of access (incoming payment, outgoing payment, or
+                          quote).
+                        </td>
+                      </tr>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>actions</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>[String]!</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>Actions allowed with this access.</td>
+                      </tr>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"><code>limits</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-LimitData"
+                              ><code>LimitData</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>
+                          Limits for an outgoing payment associated with this
+                          access.
+                        </td>
+                      </tr>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>createdAt</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String!</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>The date and time when the access was created.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">4</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"identifier"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"actions"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"limits"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">LimitData</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="definition-Boolean"
+            class="definition definition-scalar"
+            data-traverse-target="definition-Boolean"
+          >
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">Boolean</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-description doc-copy-section">
+                  <h5>Description</h5>
+                  <p>
+                    The <code>Boolean</code> scalar type represents
+                    <code>true</code> or <code>false</code>.
+                  </p>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-literal"><span class="hljs-keyword">true</span></span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="definition-FilterFinalizationReason"
+            class="definition definition-input-object"
+            data-traverse-target="definition-FilterFinalizationReason"
+          >
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">FilterFinalizationReason</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-properties doc-copy-section">
+                  <h5>Fields</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Input Field</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <span class="property-name"><code>in</code></span> -
+                          <span class="property-type"
+                            ><a href="#definition-GrantFinalization"
+                              ><code>[GrantFinalization!]</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>
+                          List of finalization reasons to include in the filter.
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <span class="property-name"><code>notIn</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-GrantFinalization"
+                              ><code>[GrantFinalization!]</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>
+                          List of finalization reasons to exclude in the filter.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"in"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">"ISSUED"</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"notIn"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">"ISSUED"</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="definition-FilterGrantState"
+            class="definition definition-input-object"
+            data-traverse-target="definition-FilterGrantState"
+          >
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">FilterGrantState</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-properties doc-copy-section">
+                  <h5>Fields</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Input Field</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <span class="property-name"><code>in</code></span> -
+                          <span class="property-type"
+                            ><a href="#definition-GrantState"
+                              ><code>[GrantState!]</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>List of states to include in the filter.</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <span class="property-name"><code>notIn</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-GrantState"
+                              ><code>[GrantState!]</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>List of states to exclude in the filter.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"in"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">"PROCESSING"</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"notIn"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">"PROCESSING"</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="definition-FilterString"
+            class="definition definition-input-object"
+            data-traverse-target="definition-FilterString"
+          >
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">FilterString</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-properties doc-copy-section">
+                  <h5>Fields</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Input Field</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <span class="property-name"><code>in</code></span> -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>[String!]</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>Array of strings to filter by.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"in"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">"abc123"</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="definition-Grant"
+            class="definition definition-object"
+            data-traverse-target="definition-Grant"
+          >
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">Grant</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-properties doc-copy-section">
+                  <h5>Fields</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Field Name</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"><code>id</code></span> -
+                          <span class="property-type"
+                            ><a href="#definition-ID"><code>ID!</code></a></span
+                          >
+                        </td>
+                        <td>Unique identifier of the grant.</td>
+                      </tr>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"><code>client</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String!</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>Wallet address of the grantee's account.</td>
+                      </tr>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"><code>access</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-Access"
+                              ><code>[Access!]!</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>Details of the access provided by the grant.</td>
+                      </tr>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"><code>state</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-GrantState"
+                              ><code>GrantState!</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>Current state of the grant.</td>
+                      </tr>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>finalizationReason</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-GrantFinalization"
+                              ><code>GrantFinalization</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>
+                          Specific outcome of a finalized grant, indicating
+                          whether the grant was issued, revoked, or rejected.
+                        </td>
+                      </tr>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>createdAt</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String!</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>The date and time when the grant was created.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">4</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"client"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"access"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">Access</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"state"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"PROCESSING"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"finalizationReason"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"ISSUED"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="definition-GrantEdge"
+            class="definition definition-object"
+            data-traverse-target="definition-GrantEdge"
+          >
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">GrantEdge</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-properties doc-copy-section">
+                  <h5>Fields</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Field Name</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"><code>node</code></span> -
+                          <span class="property-type"
+                            ><a href="#definition-Grant"
+                              ><code>Grant!</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>A grant node in the list.</td>
+                      </tr>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"><code>cursor</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String!</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>A cursor for paginating through the grants.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"node"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Grant</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"cursor"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="definition-GrantFilter"
+            class="definition definition-input-object"
+            data-traverse-target="definition-GrantFilter"
+          >
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">GrantFilter</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-properties doc-copy-section">
+                  <h5>Fields</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Input Field</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <span class="property-name"
+                            ><code>identifier</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-FilterString"
+                              ><code>FilterString</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>Filter grants by their unique identifier.</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <span class="property-name"><code>state</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-FilterGrantState"
+                              ><code>FilterGrantState</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>Filter grants by their state.</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <span class="property-name"
+                            ><code>finalizationReason</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-FilterFinalizationReason"
+                              ><code>FilterFinalizationReason</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>Filter grants by their finalization reason.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"identifier"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">FilterString</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"state"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">FilterGrantState</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"finalizationReason"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">FilterFinalizationReason</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="definition-GrantFinalization"
+            class="definition definition-enum"
+            data-traverse-target="definition-GrantFinalization"
+          >
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">GrantFinalization</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-properties doc-copy-section">
+                  <h5>Values</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Enum Value</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <p><code>ISSUED</code></p>
+                        </td>
+                        <td>The grant was issued successfully.</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <p><code>REVOKED</code></p>
+                        </td>
+                        <td>The grant was revoked.</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <p><code>REJECTED</code></p>
+                        </td>
+                        <td>The grant request was rejected.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-gql"><span class="hljs-symbol">"ISSUED"</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="definition-GrantState"
+            class="definition definition-enum"
+            data-traverse-target="definition-GrantState"
+          >
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">GrantState</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-properties doc-copy-section">
+                  <h5>Values</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Enum Value</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <p><code>PROCESSING</code></p>
+                        </td>
+                        <td>The grant request is processing.</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <p><code>PENDING</code></p>
+                        </td>
+                        <td>The grant request is awaiting interaction.</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <p><code>APPROVED</code></p>
+                        </td>
+                        <td>The grant request has been approved.</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <p><code>FINALIZED</code></p>
+                        </td>
+                        <td>
+                          The grant request has been finalized, and no more
+                          access tokens or interactions can be made.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-gql"><span class="hljs-symbol">"PROCESSING"</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="definition-GrantsConnection"
+            class="definition definition-object"
+            data-traverse-target="definition-GrantsConnection"
+          >
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">GrantsConnection</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-properties doc-copy-section">
+                  <h5>Fields</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Field Name</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>pageInfo</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-PageInfo"
+                              ><code>PageInfo!</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>Information to aid in pagination.</td>
+                      </tr>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"><code>edges</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-GrantEdge"
+                              ><code>[GrantEdge!]!</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>
+                          A list of edges representing grants and cursors for
+                          pagination.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"pageInfo"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">PageInfo</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"edges"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">GrantEdge</span><span class="hljs-punctuation">]</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="definition-ID"
+            class="definition definition-scalar"
+            data-traverse-target="definition-ID"
+          >
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">ID</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-description doc-copy-section">
+                  <h5>Description</h5>
+                  <p>
+                    The <code>ID</code> scalar type represents a unique
+                    identifier, often used to refetch an object or as key for a
+                    cache. The ID type appears in a JSON response as a String;
+                    however, it is not intended to be human-readable. When
+                    expected as an input type, any string (such as
+                    <code>&quot;4&quot;</code>) or integer (such as
+                    <code>4</code>) input value will be accepted as an ID.
+                  </p>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-gql"><span class="hljs-symbol">"4"</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="definition-Int"
+            class="definition definition-scalar"
+            data-traverse-target="definition-Int"
+          >
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">Int</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-description doc-copy-section">
+                  <h5>Description</h5>
+                  <p>
+                    The <code>Int</code> scalar type represents non-fractional
+                    signed whole numeric values. Int can represent values
+                    between -(2^31) and 2^31 - 1.
+                  </p>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-number">123</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="definition-LimitData"
+            class="definition definition-object"
+            data-traverse-target="definition-LimitData"
+          >
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">LimitData</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-properties doc-copy-section">
+                  <h5>Fields</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Field Name</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>receiver</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>Wallet address URL of the receiver.</td>
+                      </tr>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>debitAmount</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-PaymentAmount"
+                              ><code>PaymentAmount</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>Amount to debit.</td>
+                      </tr>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>receiveAmount</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-PaymentAmount"
+                              ><code>PaymentAmount</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>Amount to receive.</td>
+                      </tr>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>interval</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>Interval between payments.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"receiver"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"debitAmount"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">PaymentAmount</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"receiveAmount"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">PaymentAmount</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"interval"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="definition-Model"
+            class="definition definition-interface"
+            data-traverse-target="definition-Model"
+          >
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">Model</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div
+                  class="definition-properties definition-fields doc-copy-section"
+                >
+                  <h5>Fields</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Field Name</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"><code>id</code></span> -
+                          <span class="property-type"
+                            ><a href="#definition-ID"><code>ID!</code></a></span
+                          >
+                        </td>
+                        <td>Unique identifier for the model.</td>
+                      </tr>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>createdAt</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String!</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>The date and time when the model was created.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div
+                  class="definition-properties definition-possible-types doc-copy-section"
+                >
+                  <h5>Possible Types</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Model Types</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <p>
+                            <a href="#definition-Grant"><code>Grant</code></a>
+                          </p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <p>
+                            <a href="#definition-Access"><code>Access</code></a>
+                          </p>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"4"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="definition-PageInfo"
+            class="definition definition-object"
+            data-traverse-target="definition-PageInfo"
+          >
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">PageInfo</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-properties doc-copy-section">
+                  <h5>Fields</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Field Name</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>endCursor</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>
+                          The cursor used to fetch the next page when paginating
+                          forward.
+                        </td>
+                      </tr>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>hasNextPage</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-Boolean"
+                              ><code>Boolean!</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>
+                          Indicates if there are more pages when paginating
+                          forward.
+                        </td>
+                      </tr>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>hasPreviousPage</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-Boolean"
+                              ><code>Boolean!</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>
+                          Indicates if there are more pages when paginating
+                          backward.
+                        </td>
+                      </tr>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>startCursor</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>
+                          The cursor used to fetch the next page when paginating
+                          backward.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"endCursor"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"hasNextPage"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"hasPreviousPage"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"startCursor"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="definition-PaymentAmount"
+            class="definition definition-object"
+            data-traverse-target="definition-PaymentAmount"
+          >
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">PaymentAmount</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-properties doc-copy-section">
+                  <h5>Fields</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Field Name</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"><code>value</code></span>
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-UInt64"
+                              ><code>UInt64!</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>The value of the payment amount.</td>
+                      </tr>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>assetCode</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String!</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>
+                          Should be an ISO 4217 currency code whenever possible,
+                          e.g. <code>USD</code>. For more information, refer to
+                          <a
+                            href="https://rafiki.dev/overview/concepts/accounting/#assets"
+                            >assets</a
+                          >.
+                        </td>
+                      </tr>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>assetScale</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-UInt8"
+                              ><code>UInt8!</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>
+                          Difference in orders of magnitude between the standard
+                          unit of an asset and a corresponding fractional unit.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">UInt64</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"assetCode"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"assetScale"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">UInt8</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="definition-RevokeGrantInput"
+            class="definition definition-input-object"
+            data-traverse-target="definition-RevokeGrantInput"
+          >
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">RevokeGrantInput</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-properties doc-copy-section">
+                  <h5>Fields</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Input Field</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <span class="property-name"
+                            ><code>grantId</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-String"
+                              ><code>String!</code></a
+                            ></span
+                          >
+                        </td>
+                        <td>Unique identifier of the grant to revoke.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"grantId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="definition-RevokeGrantMutationResponse"
+            class="definition definition-object"
+            data-traverse-target="definition-RevokeGrantMutationResponse"
+          >
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">RevokeGrantMutationResponse</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-properties doc-copy-section">
+                  <h5>Fields</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Field Name</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"><code>id</code></span> -
+                          <span class="property-type"
+                            ><a href="#definition-ID"><code>ID!</code></a></span
+                          >
+                        </td>
+                        <td>Unique identifier of the revoked grant.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"4"</span><span class="hljs-punctuation">}</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="definition-SortOrder"
+            class="definition definition-enum"
+            data-traverse-target="definition-SortOrder"
+          >
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">SortOrder</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-properties doc-copy-section">
+                  <h5>Values</h5>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Enum Value</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <p><code>ASC</code></p>
+                        </td>
+                        <td>Sort the results in ascending order.</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <p><code>DESC</code></p>
+                        </td>
+                        <td>Sort the results in descending order.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-gql"><span class="hljs-symbol">"ASC"</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="definition-String"
+            class="definition definition-scalar"
+            data-traverse-target="definition-String"
+          >
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">String</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-description doc-copy-section">
+                  <h5>Description</h5>
+                  <p>
+                    The <code>String</code> scalar type represents textual data,
+                    represented as UTF-8 character sequences. The String type is
+                    most often used by GraphQL to represent free-form
+                    human-readable text.
+                  </p>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-gql"><span class="hljs-symbol">"abc123"</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="definition-UInt64"
+            class="definition definition-scalar"
+            data-traverse-target="definition-UInt64"
+          >
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">UInt64</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-description doc-copy-section">
+                  <h5>Description</h5>
+                  <p>
+                    The <code>UInt64</code> scalar type represents unsigned
+                    64-bit whole numeric values. It is capable of handling
+                    values that are larger than the JavaScript
+                    <code>Number</code> type limit (greater than 2^53).
+                  </p>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-gql"><span class="hljs-symbol">UInt64</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            id="definition-UInt8"
+            class="definition definition-scalar"
+            data-traverse-target="definition-UInt8"
+          >
+            <div class="definition-group-name">
+              <a href="#group-Types">Types</a>
+            </div>
+            <h2 class="definition-heading">UInt8</h2>
+            <div class="doc-row">
+              <div class="doc-copy">
+                <div class="definition-description doc-copy-section">
+                  <h5>Description</h5>
+                  <p>
+                    The <code>UInt8</code> scalar type represents unsigned 8-bit
+                    whole numeric values, ranging from 0 to 255.
+                  </p>
+                </div>
+              </div>
+              <div class="doc-examples">
+                <div class="example-section example-section-is-code">
+                  <h5>Example</h5>
+                  <pre><code class="hljs language-gql"><span class="hljs-symbol">UInt8</span>
+</code></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+        </article>
+        <div class="drawer-overlay"></div>
+      </div>
+    </div>
+  </body>
+</html>
