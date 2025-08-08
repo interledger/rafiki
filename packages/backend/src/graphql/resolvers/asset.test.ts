@@ -1,4 +1,9 @@
-import { ApolloError, gql } from '@apollo/client'
+import {
+  ApolloClient,
+  ApolloError,
+  gql,
+  NormalizedCacheObject
+} from '@apollo/client'
 import assert from 'assert'
 import { v4 as uuid } from 'uuid'
 
@@ -659,6 +664,163 @@ describe('Asset Resolvers', (): void => {
             fixed: fee.fixedFee.toString()
           })
         })
+      })
+    })
+
+    describe('tenant boundaries', (): void => {
+      let operatorAsset: AssetModel
+      let tenantAsset: AssetModel
+      let secondTenantAsset: AssetModel
+      let tenantedApolloClient: ApolloClient<NormalizedCacheObject>
+
+      const pageQuery = gql`
+        query Assets($tenantId: String) {
+          assets(tenantId: $tenantId) {
+            edges {
+              node {
+                id
+              }
+            }
+          }
+        }
+      `
+      beforeEach(async (): Promise<void> => {
+        operatorAsset = await createAsset(deps)
+
+        const tenant = await createTenant(deps)
+        tenantedApolloClient = await createApolloClient(
+          appContainer.container,
+          appContainer.app,
+          tenant.id
+        )
+        tenantAsset = await createAsset(deps, { tenantId: tenant.id })
+        secondTenantAsset = await createAsset(deps, { tenantId: tenant.id })
+      })
+      test('operator can get assets across all tenants', async (): Promise<void> => {
+        const query = await appContainer.apolloClient
+          .query({
+            query: pageQuery
+          })
+          .then((query): AssetsConnection => {
+            if (query.data) {
+              return query.data.assets
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+        expect(query.edges).toHaveLength(3)
+        expect(query.edges).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: operatorAsset.id
+              })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: tenantAsset.id
+              })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: secondTenantAsset.id
+              })
+            })
+          ])
+        )
+      })
+
+      test('tenant cannot get assets across all tenants', async (): Promise<void> => {
+        const query = await tenantedApolloClient
+          .query({
+            query: pageQuery
+          })
+          .then((query): AssetsConnection => {
+            if (query.data) {
+              return query.data.assets
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+        expect(query.edges).toHaveLength(2)
+        expect(query.edges).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: tenantAsset.id
+              })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: secondTenantAsset.id
+              })
+            })
+          ])
+        )
+      })
+
+      test('operator can specify filter assets across all tenants', async (): Promise<void> => {
+        const query = await appContainer.apolloClient
+          .query({
+            query: pageQuery,
+            variables: {
+              tenantId: tenantAsset.tenantId
+            }
+          })
+          .then((query): AssetsConnection => {
+            if (query.data) {
+              return query.data.assets
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+        expect(query.edges).toHaveLength(2)
+        expect(query.edges).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: tenantAsset.id
+              })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: secondTenantAsset.id
+              })
+            })
+          ])
+        )
+      })
+
+      test('tenant cannot filter assets across all tenants', async (): Promise<void> => {
+        const query = await tenantedApolloClient
+          .query({
+            query: pageQuery,
+            variables: {
+              tenantId: Config.operatorTenantId
+            }
+          })
+          .then((query): AssetsConnection => {
+            if (query.data) {
+              return query.data.assets
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+        expect(query.edges).toHaveLength(2)
+        expect(query.edges).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: tenantAsset.id
+              })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: secondTenantAsset.id
+              })
+            })
+          ])
+        )
       })
     })
   })
