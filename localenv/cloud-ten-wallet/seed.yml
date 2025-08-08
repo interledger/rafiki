@@ -18,15 +18,15 @@ assets:
 peeringAsset: 'USD'
 peers:
   - initialLiquidity: '10000000'
-    peerUrl: http://intergalactic-bank-backend:3002
-    peerIlpAddress: test.intergalactic-bank
+    peerUrl: http://global-bank-backend:3002
+    peerIlpAddress: test.global-bank
     liquidityThreshold: 1000000
     tokens:
       incoming: 
-        - intergalactic-to-cloud-ten
-      outgoing: cloud-ten-to-intergalactic
+        - global-to-cloud-ten
+      outgoing: cloud-ten-to-global
     routes:
-      - "test.intergalactic-bank"
+      - "test.global-bank"
       - "test.happy-life-bank"
 accounts:
   - name: 'Frace Granklin'

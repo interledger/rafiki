@@ -133,16 +133,6 @@ export async function createRouterService({
                   Math.floor(Math.random() * filteredRoutes.length)
                 ]
 
-          deps.logger.debug(
-            {
-              destination,
-              prefix,
-              tenantId,
-              assetId,
-              selectedPeer: selectedRoute.peerId
-            },
-            'found next hop'
-          )
           return selectedRoute.peerId
         }
       }

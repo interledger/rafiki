@@ -68,7 +68,7 @@ services:
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       WEBHOOK_URL: http://global-bank/webhooks
-      OPEN_PAYMENTS_URL: ${GLOBAL_BANK_OPEN_PAYMENTS_URL:-http://global-bank-backend}
+      OPEN_PAYMENTS_URL: ${GLOBAL_BANK_OPEN_PAYMENTS_URL:-https://global-bank-backend}
       EXCHANGE_RATES_URL: http://global-bank/rates
       REDIS_URL: redis://shared-redis:6379/4
       WALLET_ADDRESS_URL: ${GLOBAL_BANK_WALLET_ADDRESS_URL:-https://global-bank-backend/.well-known/pay}
