@@ -3026,7 +3026,7 @@ export type ListTenantsQueryVariables = Exact<{
 }>;
 
 
-export type ListTenantsQuery = { __typename?: 'Query', tenants: { __typename?: 'TenantsConnection', edges: Array<{ __typename?: 'TenantEdge', node: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null, createdAt: string, deletedAt?: string | null } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
+export type ListTenantsQuery = { __typename?: 'Query', tenants: { __typename?: 'TenantsConnection', edges: Array<{ __typename?: 'TenantEdge', node: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null, createdAt: string, deletedAt?: string | null, settings: Array<{ __typename?: 'TenantSetting', key: string, value: string }> } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
 
 export type CreateTenantMutationVariables = Exact<{
   input: CreateTenantInput;
@@ -3054,7 +3054,7 @@ export type GetTenantQueryVariables = Exact<{
 }>;
 
 
-export type GetTenantQuery = { __typename?: 'Query', tenant: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null, createdAt: string, deletedAt?: string | null } };
+export type GetTenantQuery = { __typename?: 'Query', tenant: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null, createdAt: string, deletedAt?: string | null, settings: Array<{ __typename?: 'TenantSetting', key: string, value: string }> } };
 
 export type GetWalletAddressQueryVariables = Exact<{
   id: Scalars['String']['input'];

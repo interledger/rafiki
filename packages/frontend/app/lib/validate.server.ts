@@ -120,7 +120,8 @@ export const createWalletAddressSchema = z.object({
   name: z.string().min(1),
   publicName: z.string().optional(),
   asset: z.string().uuid(),
-  tenantId: z.string().uuid().optional()
+  tenantId: z.string().uuid().optional(),
+  waPrefix: z.string().url()
 })
 
 export const updateWalletAddressSchema = z
