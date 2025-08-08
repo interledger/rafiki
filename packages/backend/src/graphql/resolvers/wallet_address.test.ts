@@ -909,6 +909,9 @@ describe('Wallet Address Resolvers', (): void => {
                     value
                     visibleInOpenPayments
                   }
+                  tenant {
+                    id
+                  }
                 }
               }
             `,
@@ -932,6 +935,10 @@ describe('Wallet Address Resolvers', (): void => {
             __typename: 'Asset',
             code: walletAddress.asset.code,
             scale: walletAddress.asset.scale
+          },
+          tenant: {
+            __typename: 'Tenant',
+            id: walletAddress.tenantId
           },
           address: walletAddress.address,
           publicName: publicName ?? null,

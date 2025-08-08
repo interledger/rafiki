@@ -94,6 +94,9 @@ describe('Payment', (): void => {
                   state
                   metadata
                   createdAt
+                  tenant {
+                    id
+                  }
                 }
                 cursor
               }
@@ -129,7 +132,10 @@ describe('Payment', (): void => {
       client: combinedOutgoingPayment.client,
       state: combinedOutgoingPayment.state,
       createdAt: combinedOutgoingPayment.createdAt.toISOString(),
-      liquidity: '0'
+      liquidity: '0',
+      tenant: {
+        id: combinedOutgoingPayment.tenantId
+      }
     })
 
     const combinedIncomingPayment = toCombinedPayment(
@@ -144,7 +150,10 @@ describe('Payment', (): void => {
       client: combinedIncomingPayment.client,
       state: combinedIncomingPayment.state,
       createdAt: combinedIncomingPayment.createdAt.toISOString(),
-      liquidity: '0'
+      liquidity: '0',
+      tenant: {
+        id: combinedIncomingPayment.tenantId
+      }
     })
   })
 
