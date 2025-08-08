@@ -94,6 +94,8 @@ describe('Auto Peering Resolvers', (): void => {
 
   afterEach(async (): Promise<void> => {
     await truncateTables(deps)
+    const staticRoutesStore = await deps.use('staticRoutesStore')
+    await staticRoutesStore.deleteAll()
   })
 
   afterAll(async (): Promise<void> => {

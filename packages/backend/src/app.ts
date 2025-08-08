@@ -113,6 +113,7 @@ import { TenantSettingService } from './tenants/settings/service'
 import { StreamCredentialsService } from './payment-method/ilp/stream-credentials/service'
 import { PaymentMethodProviderService } from './payment-method/provider/service'
 
+import { RouterService } from './payment-method/ilp/connector/ilp-routing/service'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -246,6 +247,7 @@ export interface AppServices {
   assetService: Promise<AssetService>
   accountingService: Promise<AccountingService>
   peerService: Promise<PeerService>
+  routerService: Promise<RouterService>
   walletAddressService: Promise<WalletAddressService>
   spspRoutes: Promise<SPSPRoutes>
   incomingPaymentRoutes: Promise<IncomingPaymentRoutes>
