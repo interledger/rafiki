@@ -203,7 +203,16 @@ export const Config = {
     'SEND_TENANT_WEBHOOKS_TO_OPERATOR',
     false
   ),
-  cardServiceUrl: process.env.CARD_SERVICE_URL
+  cardServiceUrl: optional(envString, 'CARD_SERVICE_URL'),
+  posServiceUrl: optional(envString, 'POS_SERVICE_URL')
+}
+
+function optional(envGetter: (envVar: string) => unknown, envVar: string) {
+  try {
+    return envGetter(envVar)
+  } catch (err) {
+    return undefined
+  }
 }
 
 function parseRedisTlsConfig(

@@ -686,5 +686,34 @@ describe('Webhook Service', (): void => {
         { recipientTenantId: tenantId3 }
       ])
     })
+
+    test(
+      'adds webhooks for POS service if event was for a card payment',
+      withConfigOverride(
+        () => config,
+        { posServiceUrl: faker.internet.url() },
+        async (): Promise<void> => {
+          const tenantId = crypto.randomUUID()
+          expect(
+            finalizeWebhookRecipients([tenantId], config, {
+              isCardPayment: true
+            })
+          ).toStrictEqual([
+            { recipientTenantId: tenantId },
+            {
+              recipientTenantId: config.operatorTenantId,
+              metadata: { sendToPosService: true }
+            }
+          ])
+        }
+      )
+    )
+
+    test("doesn't add a webhook for POS service if not configured", async (): Promise<void> => {
+      const tenantId = crypto.randomUUID()
+      expect(
+        finalizeWebhookRecipients([tenantId], config, { isCardPayment: true })
+      ).toStrictEqual([{ recipientTenantId: tenantId }])
+    })
   })
 })

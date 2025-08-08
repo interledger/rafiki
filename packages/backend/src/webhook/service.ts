@@ -164,12 +164,18 @@ async function processNextWebhook(
         })
       }
 
-      const settings = await deps_.tenantSettingService.get({
-        tenantId: webhook.recipientTenantId
-      })
-      const formattedSettings = formatSettings(settings)
+      if (webhook.metadata?.sendToPosService) {
+        await sendWebhook(deps, webhook, {
+          webhookUrl: `${deps.config.posServiceUrl}/webhook`
+        })
+      } else {
+        const settings = await deps_.tenantSettingService.get({
+          tenantId: webhook.recipientTenantId
+        })
+        const formattedSettings = formatSettings(settings)
 
-      await sendWebhook(deps, webhook, formattedSettings)
+        await sendWebhook(deps, webhook, formattedSettings)
+      }
 
       span.end()
       return webhook.id
@@ -287,8 +293,9 @@ async function getWebhookEventsPage(
 
 export function finalizeWebhookRecipients(
   tenantIds: string[],
-  config: IAppConfig
-): Pick<Webhook, 'recipientTenantId'>[] {
+  config: IAppConfig,
+  metadata?: Record<string, unknown>
+): Pick<Webhook, 'recipientTenantId' | 'metadata'>[] {
   const tenantIdSet = new Set(tenantIds)
 
   if (
@@ -298,7 +305,22 @@ export function finalizeWebhookRecipients(
     tenantIdSet.add(config.operatorTenantId)
   }
 
-  return [...tenantIdSet.values()].map((tenantId) => ({
+  let recipients: Pick<Webhook, 'recipientTenantId' | 'metadata'>[] = [
+    ...tenantIdSet.values()
+  ].map((tenantId) => ({
     recipientTenantId: tenantId
   }))
+
+  if (metadata?.isCardPayment && config.posServiceUrl) {
+    recipients = recipients.concat([
+      {
+        recipientTenantId: config.operatorTenantId,
+        metadata: {
+          sendToPosService: true
+        }
+      }
+    ])
+  }
+
+  return recipients
 }

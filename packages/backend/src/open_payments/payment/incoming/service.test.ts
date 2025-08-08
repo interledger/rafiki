@@ -873,6 +873,72 @@ describe('Incoming Payment Service', (): void => {
             client
           })
         })
+
+        test(
+          'Creates webhook event for POS service if card payment',
+          withConfigOverride(
+            () => config,
+            { posServiceUrl: faker.internet.url() },
+            async (): Promise<void> => {
+              await expect(
+                IncomingPaymentEvent.query(knex).where({
+                  type: eventType
+                })
+              ).resolves.toHaveLength(0)
+              await IncomingPayment.query(knex)
+                .patch({
+                  metadata: {
+                    isCardPayment: true
+                  }
+                })
+                .where('id', incomingPayment.id)
+              assert.ok(incomingPayment.processAt)
+              jest.useFakeTimers()
+              jest.setSystemTime(incomingPayment.processAt)
+              await expect(incomingPaymentService.processNext()).resolves.toBe(
+                incomingPayment.id
+              )
+              const events = await IncomingPaymentEvent.query(knex)
+                .where({
+                  incomingPaymentId: incomingPayment.id,
+                  type: eventType,
+                  withdrawalAccountId: incomingPayment.id,
+                  withdrawalAmount: amountReceived
+                })
+                .withGraphFetched('webhooks')
+              expect(events).toHaveLength(1)
+              assert.ok(events[0].webhooks)
+              expect(events[0].webhooks).toHaveLength(2)
+              expect(events[0].webhooks).toEqual(
+                expect.arrayContaining([
+                  expect.objectContaining({
+                    eventId: events[0].id,
+                    recipientTenantId: events[0].tenantId,
+                    attempts: 0,
+                    processAt: expect.any(Date)
+                  }),
+                  expect.objectContaining({
+                    eventId: events[0].id,
+                    recipientTenantId: Config.operatorTenantId,
+                    attempts: 0,
+                    processAt: expect.any(Date),
+                    metadata: {
+                      sendToPosService: true
+                    }
+                  })
+                ])
+              )
+              await expect(
+                incomingPaymentService.get({
+                  id: incomingPayment.id
+                })
+              ).resolves.toMatchObject({
+                processAt: null,
+                client
+              })
+            }
+          )
+        )
       }
     )
   })
