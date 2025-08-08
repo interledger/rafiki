@@ -615,24 +615,29 @@ export const createIncomingPaymentWithdrawal: MutationResolvers<TenantedApolloCo
     const incomingPaymentService = await ctx.container.use(
       'incomingPaymentService'
     )
-    const incomingPayment = await incomingPaymentService.get({
-      id: incomingPaymentId,
-      tenantId: ctx.isOperator ? undefined : ctx.tenant.id
-    })
     const webhookService = await ctx.container.use('webhookService')
-    const event = await webhookService.getLatestByResourceId({
-      incomingPaymentId,
-      types: [
-        IncomingPaymentEventType.IncomingPaymentCompleted,
-        IncomingPaymentEventType.IncomingPaymentExpired
-      ]
-    })
-    if (!incomingPayment || !incomingPayment.receivedAmount || !event?.id) {
-      throw new GraphQLError(errorToMessage[LiquidityError.InvalidId], {
-        extensions: {
-          code: errorToCode[LiquidityError.InvalidId]
-        }
+    const [incomingPayment, event] = await Promise.all([
+      incomingPaymentService.get({
+        id: incomingPaymentId,
+        tenantId: ctx.isOperator ? undefined : ctx.tenant.id
+      }),
+      webhookService.getLatestByResourceId({
+        incomingPaymentId,
+        types: [
+          IncomingPaymentEventType.IncomingPaymentCompleted,
+          IncomingPaymentEventType.IncomingPaymentExpired
+        ]
       })
+    ])
+    if (!incomingPayment || !incomingPayment.receivedAmount || !event?.id) {
+      throw new GraphQLError(
+        errorToMessage[LiquidityError.UnknownIncomingPayment],
+        {
+          extensions: {
+            code: errorToCode[LiquidityError.UnknownIncomingPayment]
+          }
+        }
+      )
     }
 
     const accountingService = await ctx.container.use('accountingService')
@@ -668,24 +673,29 @@ export const createOutgoingPaymentWithdrawal: MutationResolvers<TenantedApolloCo
     const outgoingPaymentService = await ctx.container.use(
       'outgoingPaymentService'
     )
-    const outgoingPayment = await outgoingPaymentService.get({
-      id: outgoingPaymentId,
-      tenantId: ctx.isOperator ? undefined : ctx.tenant.id
-    })
     const webhookService = await ctx.container.use('webhookService')
-    const event = await webhookService.getLatestByResourceId({
-      outgoingPaymentId,
-      types: [
-        OutgoingPaymentEventType.PaymentCompleted,
-        OutgoingPaymentEventType.PaymentFailed
-      ]
-    })
-    if (!outgoingPayment || !event?.id) {
-      throw new GraphQLError(errorToMessage[LiquidityError.InvalidId], {
-        extensions: {
-          code: errorToCode[LiquidityError.InvalidId]
-        }
+    const [outgoingPayment, event] = await Promise.all([
+      outgoingPaymentService.get({
+        id: outgoingPaymentId,
+        tenantId: ctx.isOperator ? undefined : ctx.tenant.id
+      }),
+      webhookService.getLatestByResourceId({
+        outgoingPaymentId,
+        types: [
+          OutgoingPaymentEventType.PaymentCompleted,
+          OutgoingPaymentEventType.PaymentFailed
+        ]
       })
+    ])
+    if (!outgoingPayment || !event?.id) {
+      throw new GraphQLError(
+        errorToMessage[LiquidityError.UnknownOutgoingPayment],
+        {
+          extensions: {
+            code: errorToCode[LiquidityError.UnknownOutgoingPayment]
+          }
+        }
+      )
     }
 
     const accountingService = await ctx.container.use('accountingService')

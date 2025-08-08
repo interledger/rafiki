@@ -36,6 +36,7 @@ import { createOutgoingPayment } from '../tests/outgoingPayment'
 import { TenantSetting, TenantSettingKeys } from '../tenants/settings/model'
 import { faker } from '@faker-js/faker'
 import { withConfigOverride } from '../tests/helpers'
+import { createTenant } from '../tests/tenant'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -114,6 +115,27 @@ describe('Webhook Service', (): void => {
 
     test('Cannot fetch a bogus webhook event', async (): Promise<void> => {
       await expect(webhookService.getEvent(uuid())).resolves.toBeUndefined()
+    })
+
+    test('Can filter a webhook event by tenant id', async (): Promise<void> => {
+      const tenant = await createTenant(deps)
+      const tenantWebhookEvent = await WebhookEvent.query(knex).insertAndFetch({
+        id: uuid(),
+        type: WalletAddressEventType.WalletAddressNotFound,
+        data: {
+          account: {
+            id: uuid()
+          }
+        },
+        tenantId: tenant.id
+      })
+
+      await expect(
+        webhookService.getEvent(tenantWebhookEvent.id, tenant.id)
+      ).resolves.toEqual(tenantWebhookEvent)
+      await expect(
+        webhookService.getEvent(event.id, tenant.id)
+      ).resolves.toBeUndefined()
     })
   })
 

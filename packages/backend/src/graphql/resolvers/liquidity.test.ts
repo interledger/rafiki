@@ -3121,9 +3121,9 @@ describe('Liquidity Resolvers', (): void => {
           expect(error).toBeInstanceOf(ApolloError)
           expect((error as ApolloError).graphQLErrors).toContainEqual(
             expect.objectContaining({
-              message: 'Invalid transfer id',
+              message: 'Unknown incoming payment',
               extensions: expect.objectContaining({
-                code: GraphQLErrorCode.BadUserInput
+                code: GraphQLErrorCode.NotFound
               })
             })
           )
@@ -3164,9 +3164,9 @@ describe('Liquidity Resolvers', (): void => {
           expect(error).toBeInstanceOf(ApolloError)
           expect((error as ApolloError).graphQLErrors).toContainEqual(
             expect.objectContaining({
-              message: 'Invalid transfer id',
+              message: 'Unknown incoming payment',
               extensions: expect.objectContaining({
-                code: GraphQLErrorCode.BadUserInput
+                code: GraphQLErrorCode.NotFound
               })
             })
           )
@@ -3345,9 +3345,9 @@ describe('Liquidity Resolvers', (): void => {
           expect(error).toBeInstanceOf(ApolloError)
           expect((error as ApolloError).graphQLErrors).toContainEqual(
             expect.objectContaining({
-              message: 'Invalid transfer id',
+              message: 'Unknown outgoing payment',
               extensions: expect.objectContaining({
-                code: GraphQLErrorCode.BadUserInput
+                code: GraphQLErrorCode.NotFound
               })
             })
           )
@@ -3395,9 +3395,9 @@ describe('Liquidity Resolvers', (): void => {
           expect(error).toBeInstanceOf(ApolloError)
           expect((error as ApolloError).graphQLErrors).toContainEqual(
             expect.objectContaining({
-              message: 'Invalid transfer id',
+              message: 'Unknown outgoing payment',
               extensions: expect.objectContaining({
-                code: GraphQLErrorCode.BadUserInput
+                code: GraphQLErrorCode.NotFound
               })
             })
           )
