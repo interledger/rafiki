@@ -684,7 +684,12 @@ describe('Peer Service', (): void => {
       })
 
       await expect(
-        peerService.getByDestinationAddress('test.rafiki', tenantId, asset.id)
+        peerService.getByDestinationAddress(
+          'test.rafiki',
+          tenantId,
+          undefined,
+          asset.id
+        )
       ).resolves.toEqual(peer)
       await expect(
         peerService.getByDestinationAddress(
