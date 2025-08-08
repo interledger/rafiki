@@ -4191,6 +4191,12 @@
             "deprecationReason": null
           },
           {
+            "name": "UnknownOutgoingPayment",
+            "description": "The specified outgoing payment could not be found.",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "UnknownPayment",
             "description": "The specified payment could not be found.",
             "isDeprecated": false,

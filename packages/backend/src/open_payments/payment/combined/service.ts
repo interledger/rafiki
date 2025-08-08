@@ -10,6 +10,12 @@ interface CombinedPaymentFilter {
   walletAddressId?: FilterString
   type?: FilterString
 }
+
+interface GetOptions {
+  id: string
+  tenantId?: string
+}
+
 interface GetPageOptions {
   pagination?: Pagination
   filter?: CombinedPaymentFilter
@@ -18,6 +24,7 @@ interface GetPageOptions {
 }
 
 export interface CombinedPaymentService {
+  get(options: GetOptions): Promise<CombinedPayment | undefined>
   getPage(options?: GetPageOptions): Promise<CombinedPayment[]>
 }
 
@@ -35,9 +42,25 @@ export async function createCombinedPaymentService(
     logger: deps_.logger.child({ service: 'OutgoingPaymentService' })
   }
   return {
+    get: (options: GetOptions) => getCombinedPayment(deps, options),
     getPage: (options?: GetPageOptions) =>
       getCombinedPaymentsPage(deps, options)
   }
+}
+
+async function getCombinedPayment(
+  deps: ServiceDependencies,
+  options: GetOptions
+): Promise<CombinedPayment | undefined> {
+  const { id, tenantId } = options
+
+  const query = CombinedPayment.query(deps.knex)
+
+  if (tenantId) {
+    query.where('tenantId', tenantId)
+  }
+
+  return await query.findById(id)
 }
 
 async function getCombinedPaymentsPage(

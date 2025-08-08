@@ -33,7 +33,7 @@ interface GetPageOptions {
 }
 
 export interface WebhookService {
-  getEvent(id: string): Promise<WebhookEvent | undefined>
+  getEvent(id: string, tenantId?: string): Promise<WebhookEvent | undefined>
   getLatestByResourceId(
     options: WebhookByResourceIdOptions
   ): Promise<WebhookEvent | undefined>
@@ -54,7 +54,7 @@ export async function createWebhookService(
   })
   const deps = { ...deps_, logger }
   return {
-    getEvent: (id) => getWebhookEvent(deps, id),
+    getEvent: (id, tenantId) => getWebhookEvent(deps, id, tenantId),
     getLatestByResourceId: (options) =>
       getLatestWebhookEventByResourceId(deps, options),
     processNext: () => processNextWebhook(deps),
@@ -64,9 +64,12 @@ export async function createWebhookService(
 
 async function getWebhookEvent(
   deps: ServiceDependencies,
-  id: string
+  id: string,
+  tenantId?: string
 ): Promise<WebhookEvent | undefined> {
-  return WebhookEvent.query(deps.knex).findById(id)
+  const query = WebhookEvent.query(deps.knex)
+  if (tenantId) query.where('tenantId', tenantId)
+  return query.findById(id)
 }
 
 interface WebhookEventOptions {
