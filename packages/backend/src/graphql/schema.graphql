@@ -657,7 +657,7 @@ input CreateTenantSettingsInput {
 
 input TenantSettingInput {
   "Key for this setting."
-  key: String!
+  key: TenantSettingKey!
   "Value of a setting for this key."
   value: String!
 }
@@ -1617,9 +1617,18 @@ type TenantEdge {
   cursor: String!
 }
 
+enum TenantSettingKey {
+  EXCHANGE_RATES_URL
+  WEBHOOK_URL
+  WEBHOOK_TIMEOUT
+  WEBHOOK_MAX_RETRY
+  WALLET_ADDRESS_URL
+  ILP_ADDRESS
+}
+
 type TenantSetting {
   "Key for this setting."
-  key: String!
+  key: TenantSettingKey!
   "Value of a setting for this key."
   value: String!
 }

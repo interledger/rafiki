@@ -1515,17 +1515,26 @@ export type TenantMutationResponse = {
 export type TenantSetting = {
   __typename?: 'TenantSetting';
   /** Key for this setting. */
-  key: Scalars['String']['output'];
+  key: TenantSettingKey;
   /** Value of a setting for this key. */
   value: Scalars['String']['output'];
 };
 
 export type TenantSettingInput = {
   /** Key for this setting. */
-  key: Scalars['String']['input'];
+  key: TenantSettingKey;
   /** Value of a setting for this key. */
   value: Scalars['String']['input'];
 };
+
+export enum TenantSettingKey {
+  ExchangeRatesUrl = 'EXCHANGE_RATES_URL',
+  IlpAddress = 'ILP_ADDRESS',
+  WalletAddressUrl = 'WALLET_ADDRESS_URL',
+  WebhookMaxRetry = 'WEBHOOK_MAX_RETRY',
+  WebhookTimeout = 'WEBHOOK_TIMEOUT',
+  WebhookUrl = 'WEBHOOK_URL'
+}
 
 export type TenantsConnection = {
   __typename?: 'TenantsConnection';
@@ -2020,6 +2029,7 @@ export type ResolversTypes = {
   TenantMutationResponse: ResolverTypeWrapper<Partial<TenantMutationResponse>>;
   TenantSetting: ResolverTypeWrapper<Partial<TenantSetting>>;
   TenantSettingInput: ResolverTypeWrapper<Partial<TenantSettingInput>>;
+  TenantSettingKey: ResolverTypeWrapper<Partial<TenantSettingKey>>;
   TenantsConnection: ResolverTypeWrapper<Partial<TenantsConnection>>;
   TransferState: ResolverTypeWrapper<Partial<TransferState>>;
   TransferType: ResolverTypeWrapper<Partial<TransferType>>;
@@ -2640,7 +2650,7 @@ export type TenantMutationResponseResolvers<ContextType = any, ParentType extend
 };
 
 export type TenantSettingResolvers<ContextType = any, ParentType extends ResolversParentTypes['TenantSetting'] = ResolversParentTypes['TenantSetting']> = {
-  key?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  key?: Resolver<ResolversTypes['TenantSettingKey'], ParentType, ContextType>;
   value?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
