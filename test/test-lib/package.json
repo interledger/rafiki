@@ -21,7 +21,7 @@
     "@types/koa-bodyparser": "^4.3.12",
     "@types/node": "^20.14.15",
     "graphql": "^16.11.0",
-    "json-canonicalize": "^1.0.6",
+    "json-canonicalize": "^1.2.0",
     "koa": "^2.15.3",
     "mock-account-service-lib": "workspace:*",
     "yaml": "^2.7.0"
