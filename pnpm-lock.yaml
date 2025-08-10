@@ -787,8 +787,8 @@ importers:
         specifier: ^7.26.9
         version: 7.26.9(@babel/core@7.26.9)
       '@types/k6':
-        specifier: ^0.54.2
-        version: 0.54.2
+        specifier: ^0.57.1
+        version: 0.57.1
       babel-loader:
         specifier: ^9.2.1
         version: 9.2.1(@babel/core@7.26.9)(webpack@5.97.1)
@@ -7988,8 +7988,8 @@ packages:
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
     dev: true
 
-  /@types/k6@0.54.2:
-    resolution: {integrity: sha512-B5LPxeQm97JnUTpoKNE1UX9jFp+JiJCAXgZOa2P7aChxVoPQXKfWMzK+739xHq3lPkKj1aV+HeOxkP56g/oWBg==}
+  /@types/k6@0.57.1:
+    resolution: {integrity: sha512-S/p2RQAYUBXyYROkR2fgeON/LaxJ0YR+KIlnPQW/TOeLBXD7tX4RfDSWaIecuDTWKblmc6UwANyP0e5QDZPhMw==}
     dev: true
 
   /@types/katex@0.16.2:
