@@ -134,7 +134,7 @@ describe('Webhook Service', (): void => {
         webhookService.getEvent(tenantWebhookEvent.id, tenant.id)
       ).resolves.toEqual(tenantWebhookEvent)
       await expect(
-        webhookService.getEvent(event.id, tenant.id)
+        webhookService.getEvent(tenantWebhookEvent.id, uuid())
       ).resolves.toBeUndefined()
     })
   })
