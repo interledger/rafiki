@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - uses: ./.github/workflows/rafiki/env-setup
     - run: pnpm checks
 
@@ -26,7 +26,7 @@ jobs:
     needs: prerequisite
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter backend build:deps
       - run: NODE_OPTIONS="--max-old-space-size=4096" pnpm --filter backend test:ci
@@ -42,7 +42,7 @@ jobs:
     needs: prerequisite
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter frontend typecheck
       - run: pnpm --filter frontend build
@@ -52,7 +52,7 @@ jobs:
     needs: prerequisite
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter auth build:deps
       - run: pnpm --filter auth test
@@ -68,7 +68,7 @@ jobs:
     needs: prerequisite
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter token-introspection test
       - name: AsyncAPI extension
@@ -83,7 +83,7 @@ jobs:
     needs: prerequisite
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter mock-account-servicing-entity build
       - run: pnpm --filter mock-account-servicing-entity typecheck
@@ -95,7 +95,7 @@ jobs:
       matrix:
         package: [auth, backend]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ./.github/workflows/rafiki/env-setup
       - name: generate ${{ matrix.package }} graphql
         run: pnpm --filter ${{ matrix.package }} generate
@@ -126,7 +126,7 @@ jobs:
           - './.github/codeql/source.yml'
           - './.github/codeql/tests.yml'
     steps:
-     - uses: actions/checkout@v4
+     - uses: actions/checkout@v5
      - uses: ./.github/workflows/rafiki/env-setup
      - name: Initialize CodeQL
        uses: github/codeql-action/init@v3
@@ -142,7 +142,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup environment
         uses: ./.github/workflows/rafiki/env-setup
@@ -165,7 +165,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup environment
         uses: ./.github/workflows/rafiki/env-setup
@@ -302,7 +302,7 @@ jobs:
     timeout-minutes: 5
     needs: [auth, backend, frontend, token-introspection, mock-account-servicing-entity, graphql, codeql-analyze, integration-test]
     steps: 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm build
 
@@ -314,7 +314,7 @@ jobs:
       dockerPush: ${{ steps.version-generator.outputs.PUSH_DOCKER_IMAGE }}
       generateRelease: ${{ steps.version-generator.outputs.GENERATE_RELEASE }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           fetch-tags: true
@@ -429,7 +429,7 @@ jobs:
           - backend
           - frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Fetch docker image from cache
         uses: actions/cache/restore@v4
         with:
@@ -465,7 +465,7 @@ jobs:
           - backend
           - frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Fetch docker image from cache
         uses: actions/cache/restore@v4
         with:
@@ -497,7 +497,7 @@ jobs:
           - backend
           - frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/image-push
         with:
           app_name: rafiki
@@ -518,7 +518,7 @@ jobs:
           - backend
           - frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Push manifest list
         uses: ./.github/actions/manifest-push
         with:
@@ -533,7 +533,7 @@ jobs:
     if: needs.version-generator.outputs.generateRelease == 'true'
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Generate CHANGELOG data
         id: changelog
         uses: requarks/changelog-action@v1
