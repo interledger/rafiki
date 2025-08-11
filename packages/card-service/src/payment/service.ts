@@ -25,11 +25,11 @@ export async function createPaymentService({
     config
   }
   return {
-    create: (payment: PaymentBody) => handlePayment(deps, payment)
+    create: (payment: PaymentBody) => handleCreatePayment(deps, payment)
   }
 }
 
-async function handlePayment(
+async function handleCreatePayment(
   deps: ServiceDependencies,
   payment: PaymentBody
 ): Promise<PaymentEventBody> {
@@ -64,7 +64,7 @@ async function waitForPaymentEvent(
     new Promise<void>((_, reject) =>
       setTimeout(
         () => reject(new PaymentTimeoutError()),
-        config.cardPaymentTimeout
+        config.cardPaymentTimeoutMS
       )
     )
   ])

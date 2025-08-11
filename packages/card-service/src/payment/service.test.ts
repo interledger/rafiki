@@ -1,4 +1,4 @@
-import { createPaymentService, PaymentTimeoutError } from './service'
+import { createPaymentService } from './service'
 import { paymentWaitMap } from './wait-map'
 import { PaymentEventResultEnum, PaymentBody } from './types'
 import { initIocContainer } from '../index'
@@ -6,6 +6,7 @@ import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
 import { AppServices } from '../app'
 import { IocContract } from '@adonisjs/fold'
+import { PaymentTimeoutError } from './errors'
 
 const uuid = '123e4567-e89b-12d3-a456-426614174000'
 const uri = 'https://example.com/wallet/123'
@@ -27,7 +28,6 @@ describe('PaymentService', () => {
     incomingPaymentUrl: uri,
     date: dateTime,
     signature: 'sig',
-    terminalCert: 'cert',
     terminalId: uuid
   }
 
