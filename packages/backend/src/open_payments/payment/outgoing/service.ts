@@ -732,7 +732,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
         intervalSent: {
           assetCode: startingSpendAmounts.debitAmountCode,
           assetScale: startingSpendAmounts.debitAmountScale,
-          value: intervalStatus === 'previous' ? 0n : intervalDebitValue
+          value: intervalStatus === IntervalStatus.Previous ? 0n : intervalDebitValue
         },
         intervalReceived: {
           assetCode: startingSpendAmounts.receiveAmountCode,

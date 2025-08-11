@@ -2373,7 +2373,7 @@ describe('OutgoingPaymentService', (): void => {
         expected: IntervalStatus.Next
       },
       {
-        description: 'returns next when payment is before interval start',
+        description: 'returns previous when payment is before interval start',
         interval: '2022-07-01T13:00:00Z/P1M',
         payment: { createdAt: new Date('2022-06-30T12:59:59Z') },
         expected: IntervalStatus.Previous
