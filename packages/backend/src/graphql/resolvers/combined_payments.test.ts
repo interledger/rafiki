@@ -1,7 +1,11 @@
 import { IocContract } from '@adonisjs/fold'
-import { gql } from '@apollo/client'
+import { ApolloClient, gql, NormalizedCacheObject } from '@apollo/client'
 import { AppServices } from '../../app'
-import { createTestApp, TestContainer } from '../../tests/app'
+import {
+  createApolloClient,
+  createTestApp,
+  TestContainer
+} from '../../tests/app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
@@ -16,8 +20,12 @@ import {
   createCombinedPayment,
   toCombinedPayment
 } from '../../tests/combinedPayment'
-import { PaymentType } from '../../open_payments/payment/combined/model'
+import {
+  CombinedPayment,
+  PaymentType
+} from '../../open_payments/payment/combined/model'
 import { getPageTests } from './page.test'
+import { createTenant } from '../../tests/tenant'
 
 describe('Payment', (): void => {
   let deps: IocContract<AppServices>
@@ -238,6 +246,146 @@ describe('Payment', (): void => {
       client: combinedOutgoingPayment.client,
       state: combinedOutgoingPayment.state,
       createdAt: combinedOutgoingPayment.createdAt.toISOString()
+    })
+  })
+
+  describe('tenant boundaries', (): void => {
+    let operatorPayment: CombinedPayment
+    let tenantPayment: CombinedPayment
+    let secondTenantPayment: CombinedPayment
+    let tenenatedApolloClient: ApolloClient<NormalizedCacheObject>
+
+    const pageQuery = gql`
+      query Payments($tenantId: String) {
+        payments(tenantId: $tenantId) {
+          edges {
+            node {
+              id
+            }
+          }
+        }
+      }
+    `
+
+    beforeEach(async (): Promise<void> => {
+      operatorPayment = await createCombinedPayment(deps)
+      const tenant = await createTenant(deps)
+      tenenatedApolloClient = await createApolloClient(
+        appContainer.container,
+        appContainer.app,
+        tenant.id
+      )
+      tenantPayment = await createCombinedPayment(deps, { tenantId: tenant.id })
+      secondTenantPayment = await createCombinedPayment(deps, {
+        tenantId: tenant.id
+      })
+    })
+
+    test('operator can get payments across all tenants', async (): Promise<void> => {
+      const query = await appContainer.apolloClient
+        .query({
+          query: pageQuery
+        })
+        .then((query): PaymentConnection => {
+          if (query.data) {
+            return query.data.payments
+          } else {
+            throw new Error('data was empty')
+          }
+        })
+      expect(query.edges).toHaveLength(3)
+      expect(query.edges).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            node: expect.objectContaining({ id: operatorPayment.id })
+          }),
+          expect.objectContaining({
+            node: expect.objectContaining({ id: tenantPayment.id })
+          }),
+          expect.objectContaining({
+            node: expect.objectContaining({ id: secondTenantPayment.id })
+          })
+        ])
+      )
+    })
+
+    test('tenant cannot get payments across all tenants', async (): Promise<void> => {
+      const query = await tenenatedApolloClient
+        .query({
+          query: pageQuery
+        })
+        .then((query): PaymentConnection => {
+          if (query.data) {
+            return query.data.payments
+          } else {
+            throw new Error('data was empty')
+          }
+        })
+      expect(query.edges).toHaveLength(2)
+      expect(query.edges).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            node: expect.objectContaining({ id: tenantPayment.id })
+          }),
+          expect.objectContaining({
+            node: expect.objectContaining({ id: secondTenantPayment.id })
+          })
+        ])
+      )
+    })
+
+    test('operator can filter payments across all tenants', async (): Promise<void> => {
+      const query = await appContainer.apolloClient
+        .query({
+          query: pageQuery,
+          variables: { tenantId: tenantPayment.tenantId }
+        })
+        .then((query): PaymentConnection => {
+          if (query.data) {
+            return query.data.payments
+          } else {
+            throw new Error('data was empty')
+          }
+        })
+      expect(query.edges).toHaveLength(2)
+      expect(query.edges).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            node: expect.objectContaining({ id: tenantPayment.id })
+          }),
+          expect.objectContaining({
+            node: expect.objectContaining({ id: secondTenantPayment.id })
+          })
+        ])
+      )
+    })
+
+    test('tenant cannot filter payments across all tenants', async (): Promise<void> => {
+      const query = await tenenatedApolloClient
+        .query({
+          query: pageQuery,
+          variables: {
+            tenantId: operatorPayment.tenantId
+          }
+        })
+        .then((query): PaymentConnection => {
+          if (query.data) {
+            return query.data.payments
+          } else {
+            throw new Error('data was empty')
+          }
+        })
+      expect(query.edges).toHaveLength(2)
+      expect(query.edges).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            node: expect.objectContaining({ id: tenantPayment.id })
+          }),
+          expect.objectContaining({
+            node: expect.objectContaining({ id: secondTenantPayment.id })
+          })
+        ])
+      )
     })
   })
 })
