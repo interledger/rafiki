@@ -1,7 +1,8 @@
 import { LinkOut } from '@interledger/docs-design-system'
 
 <div class="overflow-table">
-#### Required Values
+
+### Required values
 
 | Helm value name                          | Default     | Description                                  |
 | ---------------------------------------- | ----------- | -------------------------------------------- |
@@ -9,9 +10,9 @@ import { LinkOut } from '@interledger/docs-design-system'
 | `frontend.serviceUrls.OPEN_PAYMENTS_URL` | _undefined_ | Your Open Payments API endpoint              |
 | `frontend.port`                          | _undefined_ | Port from which to host the Rafiki Remix app |
 
-#### Conditionally required values
+### Conditionally required values
 
-The following values are required only when `frontend.authEnabled` is set to `true`.
+The following values are required only when `frontend.kratos.enabled` is set to `true`.
 
 | Helm value name                      | Default     | Description                                                                                                                                                                                                          |
 | ------------------------------------ | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -19,15 +20,35 @@ The following values are required only when `frontend.authEnabled` is set to `tr
 | `frontend.kratos.containerPublicUrl` | _undefined_ | The URL for you to access the Kratos Docker container from within the Docker network. This is used for backend calls to Kratos.                                                                                      |
 | `frontend.kratos.browserPublicUrl`   | _undefined_ | The URL for you to access the Kratos Docker container from a browser outside of the Docker network. This is used for calls from a browser (what you see in the Rafiki Admin UI) to the Kratos server on the backend. |
 
-#### Optional values
+### Optional values
 
-| Helm value name                        | Default      | Description                                                                                                                                                            |
-| -------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `frontend.authEnabled`                 | `true`       | When `true`, only authenticated users can be granted access to Rafiki Admin by an administrator                                                                        |
-| `frontend.quoteSignatureSecret`        | _undefined_  | The signature secret used to authenticate requests to the Backend Admin API.                                                                                           |
-| `frontend.signatureVersion`            | `1`          | The signature version number used to authenticate requests to the Backend Admin API.                                                                                   |
-| `frontend.enableInsecureMessageCookie` | `true`       | When set to `true`, `t`, or `1`, cookie will be transmitted over insecure HTTP connection. Insecure message cookies are required for flash messages to work over HTTP. |
-| `frontend.nodeEnv`                     | `production` | The type of node environment: `development`, `test`, or `production`.                                                                                                  |
-| `frontend.logLevel`                    | `info`       | Pino log level                                                                                                                                                         |
+| Helm value name                                 | Default             | Description                                                                                      |
+| ----------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------ |
+| `frontend.nodeEnv`                              | `production`        | The type of node environment: `development`, `test`, or `production`.                            |
+| `frontend.logLevel`                             | `debug`             | Pino log level                                                                                   |
+| `frontend.replicaCount`                         | `1`                 | The number of pods to run across the cluster.                                                    |
+| `frontend.nodeSelector`                         | `{}`                | NodeSelector can be used to specify the nodes on which the pods should run on your cluster.      |
+| `frontend.serviceAccount.create`                | `false`             | If true, a ServiceAccount will be created with the specified name and annotations.               |
+| `frontend.serviceAccount.annotations`           | `{}`                | Annotations to add to the ServiceAccount.                                                        |
+| `frontend.serviceAccount.name`                  | `""`                | The name of the ServiceAccount to use.                                                           |
+| `frontend.service.name`                         | `service`           | The name of the service.                                                                         |
+| `frontend.service.type`                         | `ClusterIP`         | The type of Kubernetes service.                                                                  |
+| `frontend.service.ports.port`                   | `3010`              | The port exposed by the service.                                                                 |
+| `frontend.service.ports.targetPort`             | `3010`              | The port on the container that the service should forward traffic to.                            |
+| `frontend.service.ports.protocol`               | `TCP`               | The protocol used by the port.                                                                   |
+| `frontend.service.ports.name`                   | `http`              | The name of the port.                                                                            |
+| `frontend.configmap`                            | `files/config.yaml` | Defines the location of the template that will be used to generate the ConfigMap.                |
+| `frontend.containers.name`                      | `server`            | The name of the main container.                                                                  |
+| `frontend.containers.envFrom`                   | ConfigMap reference | Environment variables sourced from the ConfigMap with the release name.                          |
+| `frontend.containers.resources.requests.memory` | `128Mi`             | The minimum amount of memory required by the container.                                          |
+| `frontend.containers.resources.requests.cpu`    | `100m`              | The minimum amount of CPU required by the container.                                             |
+| `frontend.containers.resources.limits.memory`   | `512Mi`             | The maximum amount of memory the container can use.                                              |
+| `frontend.containers.resources.limits.cpu`      | `1`                 | The maximum amount of CPU the container can use.                                                 |
+| `frontend.containers.ports.name`                | `http`              | The name of the container port.                                                                  |
+| `frontend.containers.ports.containerPort`       | `3010`              | The port number on the container.                                                                |
+| `frontend.containers.ports.protocol`            | `TCP`               | The protocol used by the container port.                                                         |
+| `frontend.rollingUpdate.maxSurge`               | `100%`              | The maximum number of pods that can be created above the desired number during a rolling update. |
+| `frontend.rollingUpdate.maxUnavailable`         | `50%`               | The maximum number of pods that can be unavailable during a rolling update.                      |
+| `frontend.kratos.enabled`                       | `false`             | When `true`, Kratos authentication is enabled for the frontend.                                  |
 
 </div>
