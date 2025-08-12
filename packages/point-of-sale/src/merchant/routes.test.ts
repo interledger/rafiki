@@ -6,6 +6,7 @@ import { Config } from '../config/app'
 import { createTestApp, TestContainer } from '../tests/app'
 import { createContext } from '../tests/context'
 import { truncateTables } from '../tests/tableManager'
+import { PosDeviceService } from './devices/service'
 import {
   CreateMerchantContext,
   createMerchantRoutes,
@@ -19,15 +20,20 @@ describe('Merchant Routes', (): void => {
   let appContainer: TestContainer
   let merchantRoutes: MerchantRoutes
   let merchantService: MerchantService
+  let posDeviceService: PosDeviceService
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     merchantService = await deps.use('merchantService')
+    posDeviceService = await deps.use('posDeviceService')
     const logger = await deps.use('logger')
+    const knex = await deps.use('knex')
 
     merchantRoutes = createMerchantRoutes({
       merchantService,
+      posDeviceService,
+      knex,
       logger
     })
   })

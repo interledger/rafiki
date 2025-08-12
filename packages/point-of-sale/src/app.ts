@@ -18,7 +18,7 @@ import {
 } from './merchant/devices/routes'
 import { PosDeviceService } from './merchant/devices/service'
 import { MerchantService } from './merchant/service'
-import { PaymentContext, PaymentRoutes } from './payment/routes'
+import { PaymentContext, PaymentRoutes } from './payments/routes'
 
 export interface AppServices {
   logger: Promise<Logger>

@@ -4,23 +4,41 @@ import { Model } from 'objection'
 import { Config } from './config/app'
 import { App, AppServices } from './app'
 import createLogger from 'pino'
+import {
+  ApolloClient,
+  ApolloLink,
+  createHttpLink,
+  InMemoryCache
+} from '@apollo/client'
+import { onError } from '@apollo/client/link/error'
+import { setContext } from '@apollo/client/link/context'
+import { print } from 'graphql'
+import { canonicalize } from 'json-canonicalize'
+import { createHmac } from 'crypto'
 import { createMerchantService } from './merchant/service'
 import { createPosDeviceService } from './merchant/devices/service'
 import { createMerchantRoutes } from './merchant/routes'
+import { createPaymentService } from './payments/service'
 import { createPosDeviceRoutes } from './merchant/devices/routes'
-import { createPaymentRoutes } from './payment/routes'
+import { createPaymentRoutes } from './payments/routes'
+import axios from 'axios'
+import { createCardServiceClient } from './card-service-client/client'
 
 export function initIocContainer(
   config: typeof Config
 ): IocContract<AppServices> {
   const container: IocContract<AppServices> = new Ioc()
+
   container.singleton('config', async () => config)
+  container.singleton('axios', async () => axios.create())
+
   container.singleton('logger', async (deps: IocContract<AppServices>) => {
     const config = await deps.use('config')
     const logger = createLogger()
     logger.level = config.logLevel
     return logger
   })
+
   container.singleton('knex', async (deps: IocContract<AppServices>) => {
     const logger = await deps.use('logger')
     const config = await deps.use('config')
@@ -73,7 +91,92 @@ export function initIocContainer(
   container.singleton('merchantRoutes', async (deps) => {
     return createMerchantRoutes({
       logger: await deps.use('logger'),
-      merchantService: await deps.use('merchantService')
+      merchantService: await deps.use('merchantService'),
+      posDeviceService: await deps.use('posDeviceService')
+    })
+  })
+
+  container.singleton('apolloClient', async (deps) => {
+    const [logger, config] = await Promise.all([
+      deps.use('logger'),
+      deps.use('config')
+    ])
+
+    const httpLink = createHttpLink({
+      uri: config.graphqlUrl
+    })
+
+    const errorLink = onError(({ graphQLErrors }) => {
+      if (graphQLErrors) {
+        logger.error(graphQLErrors)
+        graphQLErrors.map(({ extensions }) => {
+          if (extensions && extensions.code === 'UNAUTHENTICATED') {
+            logger.error('UNAUTHENTICATED')
+          }
+
+          if (extensions && extensions.code === 'FORBIDDEN') {
+            logger.error('FORBIDDEN')
+          }
+        })
+      }
+    })
+
+    const authLink = setContext((request, { headers }) => {
+      if (!config.tenantSecret || !config.tenantSignatureVersion)
+        return { headers }
+      const timestamp = Date.now()
+      const version = config.tenantSignatureVersion
+
+      const { query, variables, operationName } = request
+      const formattedRequest = {
+        variables,
+        operationName,
+        query: print(query)
+      }
+
+      const payload = `${timestamp}.${canonicalize(formattedRequest)}`
+      const hmac = createHmac('sha256', config.tenantSecret)
+      hmac.update(payload)
+      const digest = hmac.digest('hex')
+
+      const link = {
+        headers: {
+          ...headers,
+          'tenant-id': `${config.tenantId}`,
+          signature: `t=${timestamp}, v${version}=${digest}`
+        }
+      }
+
+      return link
+    })
+
+    const link = ApolloLink.from([errorLink, authLink, httpLink])
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache({}),
+      link: link,
+      defaultOptions: {
+        query: {
+          fetchPolicy: 'no-cache'
+        },
+        mutate: {
+          fetchPolicy: 'no-cache'
+        },
+        watchQuery: {
+          fetchPolicy: 'no-cache'
+        }
+      }
+    })
+
+    return client
+  })
+
+  container.singleton('paymentClient', async (deps) => {
+    return createPaymentService({
+      apolloClient: await deps.use('apolloClient'),
+      logger: await deps.use('logger'),
+      config: await deps.use('config'),
+      axios: await deps.use('axios')
     })
   })
 
@@ -86,6 +189,13 @@ export function initIocContainer(
     }
   )
 
+  container.singleton('cardServiceClient', async (deps) => {
+    return createCardServiceClient({
+      logger: await deps.use('logger'),
+      axios: await deps.use('axios')
+    })
+  })
+
   container.singleton('posDeviceRoutes', async (deps) =>
     createPosDeviceRoutes({
       logger: await deps.use('logger'),
@@ -95,10 +205,12 @@ export function initIocContainer(
 
   container.singleton('paymentRoutes', async (deps) => {
     return createPaymentRoutes({
-      logger: await deps.use('logger')
-      // TODO: Add paymentService
+      logger: await deps.use('logger'),
+      paymentService: await deps.use('paymentClient'),
+      cardServiceClient: await deps.use('cardServiceClient')
     })
   })
+
   return container
 }
 

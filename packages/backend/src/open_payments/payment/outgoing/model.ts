@@ -16,6 +16,10 @@ import {
   OutgoingPaymentWithSpentAmounts
 } from '@interledger/open-payments'
 import { Tenant } from '../../../tenants/model'
+import {
+  OutgoingPaymentCardDetails,
+  outgoingPaymentCardDetailsRelation
+} from './card/model'
 
 export class OutgoingPaymentGrant extends DbErrors(Model) {
   public static get modelPaths(): string[] {
@@ -101,6 +105,8 @@ export class OutgoingPayment
 
   public metadata?: Record<string, unknown>
 
+  public cardDetails?: OutgoingPaymentCardDetails
+
   public quote!: Quote
 
   public get assetId(): string {
@@ -145,6 +151,14 @@ export class OutgoingPayment
         join: {
           from: 'outgoingPayments.tenantId',
           to: 'tenants.id'
+        }
+      },
+      cardDetails: {
+        relation: Model.HasOneRelation,
+        modelClass: OutgoingPaymentCardDetails,
+        join: {
+          from: 'outgoingPayments.id',
+          to: outgoingPaymentCardDetailsRelation
         }
       }
     }
