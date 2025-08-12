@@ -20,6 +20,7 @@ import {
   createCombinedPayment,
   toCombinedPayment
 } from '../../../tests/combinedPayment'
+import { createTenant } from '../../../tests/tenant'
 
 describe('Combined Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -90,71 +91,117 @@ describe('Combined Payment Service', (): void => {
   }
 
   describe('CombinedPayment Service', (): void => {
-    getPageTests({
-      createModel: () => createCombinedPayment(deps),
-      getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
-        combinedPaymentService.getPage({ pagination, sortOrder })
-    })
-
-    test('should return empty array if no payments', async (): Promise<void> => {
-      const payments = await combinedPaymentService.getPage()
-      expect(payments).toEqual([])
-    })
-
-    test('can get all', async (): Promise<void> => {
-      const { incomingPayment, outgoingPayment } = await setupPayments(deps)
-      const payments = await combinedPaymentService.getPage()
-      expect(payments.length).toEqual(2)
-      expect(
-        payments.find((p) => p.type === PaymentType.Outgoing)
-      ).toMatchObject(toCombinedPayment(PaymentType.Outgoing, outgoingPayment))
-      expect(
-        payments.find((p) => p.type === PaymentType.Incoming)
-      ).toMatchObject(toCombinedPayment(PaymentType.Incoming, incomingPayment))
-    })
-
-    test('can filter by walletAddressId', async (): Promise<void> => {
-      const { incomingPayment } = await setupPayments(deps)
-      const payments = await combinedPaymentService.getPage({
-        filter: {
-          walletAddressId: {
-            in: [incomingPayment.walletAddressId]
-          }
-        }
+    describe('Page tests', (): void => {
+      getPageTests({
+        createModel: () => createCombinedPayment(deps),
+        getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
+          combinedPaymentService.getPage({ pagination, sortOrder })
       })
-      expect(payments.length).toEqual(1)
-      expect(payments[0]).toMatchObject(
-        toCombinedPayment(PaymentType.Incoming, incomingPayment)
-      )
-    })
 
-    test('can filter by type', async (): Promise<void> => {
-      const { outgoingPayment } = await setupPayments(deps)
-      const payments = await combinedPaymentService.getPage({
-        filter: {
-          type: {
-            in: [PaymentType.Outgoing]
-          }
-        }
+      test('should return empty array if no payments', async (): Promise<void> => {
+        const payments = await combinedPaymentService.getPage()
+        expect(payments).toEqual([])
       })
-      expect(payments.length).toEqual(1)
-      expect(payments[0]).toMatchObject(
-        toCombinedPayment(PaymentType.Outgoing, outgoingPayment)
-      )
+
+      test('can get all', async (): Promise<void> => {
+        const { incomingPayment, outgoingPayment } = await setupPayments(deps)
+        const payments = await combinedPaymentService.getPage()
+        expect(payments.length).toEqual(2)
+        expect(
+          payments.find((p) => p.type === PaymentType.Outgoing)
+        ).toMatchObject(
+          toCombinedPayment(PaymentType.Outgoing, outgoingPayment)
+        )
+        expect(
+          payments.find((p) => p.type === PaymentType.Incoming)
+        ).toMatchObject(
+          toCombinedPayment(PaymentType.Incoming, incomingPayment)
+        )
+      })
+
+      test('can filter by walletAddressId', async (): Promise<void> => {
+        const { incomingPayment } = await setupPayments(deps)
+        const payments = await combinedPaymentService.getPage({
+          filter: {
+            walletAddressId: {
+              in: [incomingPayment.walletAddressId]
+            }
+          }
+        })
+        expect(payments.length).toEqual(1)
+        expect(payments[0]).toMatchObject(
+          toCombinedPayment(PaymentType.Incoming, incomingPayment)
+        )
+      })
+
+      test('can filter by type', async (): Promise<void> => {
+        const { outgoingPayment } = await setupPayments(deps)
+        const payments = await combinedPaymentService.getPage({
+          filter: {
+            type: {
+              in: [PaymentType.Outgoing]
+            }
+          }
+        })
+        expect(payments.length).toEqual(1)
+        expect(payments[0]).toMatchObject(
+          toCombinedPayment(PaymentType.Outgoing, outgoingPayment)
+        )
+      })
+
+      test('can filter by tenantId', async (): Promise<void> => {
+        await setupPayments(deps)
+        await expect(
+          combinedPaymentService.getPage({
+            tenantId: crypto.randomUUID()
+          })
+        ).resolves.toHaveLength(0)
+        await expect(
+          combinedPaymentService.getPage({
+            tenantId: Config.operatorTenantId
+          })
+        ).resolves.toHaveLength(2)
+      })
     })
 
-    test('can filter by tenantId', async (): Promise<void> => {
-      await setupPayments(deps)
-      await expect(
-        combinedPaymentService.getPage({
-          tenantId: crypto.randomUUID()
+    describe('Get combined payment', (): void => {
+      test('Can get combined payment', async (): Promise<void> => {
+        const { incomingPayment } = await setupPayments(deps)
+
+        const payment = await combinedPaymentService.get({
+          id: incomingPayment.id
         })
-      ).resolves.toHaveLength(0)
-      await expect(
-        combinedPaymentService.getPage({
-          tenantId: Config.operatorTenantId
+        expect(payment).toMatchObject(
+          toCombinedPayment(PaymentType.Incoming, incomingPayment)
+        )
+      })
+
+      test('Can filter get combined payment by tenant id', async (): Promise<void> => {
+        const { incomingPayment } = await setupPayments(deps)
+        const tenant = await createTenant(deps)
+        const tenantWalletAddress = await createWalletAddress(deps, {
+          tenantId: tenant.id
         })
-      ).resolves.toHaveLength(2)
+        const tenantIncomingPayment = await createIncomingPayment(deps, {
+          walletAddressId: tenantWalletAddress.id,
+          tenantId: tenant.id
+        })
+
+        await expect(
+          combinedPaymentService.get({
+            id: tenantIncomingPayment.id,
+            tenantId: tenant.id
+          })
+        ).resolves.toMatchObject(
+          toCombinedPayment(PaymentType.Incoming, tenantIncomingPayment)
+        )
+        await expect(
+          combinedPaymentService.get({
+            id: incomingPayment.id,
+            tenantId: tenant.id
+          })
+        ).resolves.toBeUndefined()
+      })
     })
   })
 })

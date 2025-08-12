@@ -724,6 +724,8 @@ enum LiquidityError {
   UnknownAsset
   "The specified incoming payment could not be found."
   UnknownIncomingPayment
+  "The specified outgoing payment could not be found."
+  UnknownOutgoingPayment
   "The specified payment could not be found."
   UnknownPayment
   "The specified wallet address could not be found."
