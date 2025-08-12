@@ -52,12 +52,10 @@ async function payment(
   ctx: PaymentContext
 ): Promise<void> {
   const body = ctx.request.body
-  // 1. Get the walletAddress by walletAddressUrl
   try {
     const walletAddress = await deps.paymentService.getWalletAddress(
       body.card.walletAddress
     )
-    // 2. Call Rafiki BE to create an incoming payment
     const incomingAmount: AmountInput = {
       assetCode: walletAddress.assetCode,
       assetScale: walletAddress.assetScale,
@@ -67,8 +65,6 @@ async function payment(
       walletAddress.id,
       incomingAmount
     )
-
-    // 3. Call card service client
     const result = await deps.cardServiceClient.sendPayment({
       merchantWalletAddress: body.merchantWalletAddress,
       incomingPaymentUrl,
