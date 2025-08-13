@@ -2,7 +2,6 @@ import crypto from 'crypto'
 import nock from 'nock'
 import { faker } from '@faker-js/faker'
 import { v4 } from 'uuid'
-import { Knex } from 'knex'
 import {
   JWK,
   generateTestKeys,
@@ -62,7 +61,6 @@ describe('Signature Service', (): void => {
     let grant: Grant
     let interaction: Interaction
     let token: AccessToken
-    let trx: Knex.Transaction
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let next: () => Promise<any>
     let managementId: string
@@ -115,18 +113,18 @@ describe('Signature Service', (): void => {
     })
 
     beforeEach(async (): Promise<void> => {
-      tenant = await Tenant.query(trx).insertAndFetch(generateTenant())
-      grant = await Grant.query(trx).insertAndFetch(
+      tenant = await Tenant.query().insertAndFetch(generateTenant())
+      grant = await Grant.query().insertAndFetch(
         generateBaseGrant({ tenantId: tenant.id })
       )
-      await Access.query(trx).insertAndFetch({
+      await Access.query().insertAndFetch({
         grantId: grant.id,
         ...BASE_ACCESS
       })
-      interaction = await Interaction.query(trx).insertAndFetch(
+      interaction = await Interaction.query().insertAndFetch(
         generateBaseInteraction(grant)
       )
-      token = await AccessToken.query(trx).insertAndFetch({
+      token = await AccessToken.query().insertAndFetch({
         grantId: grant.id,
         ...BASE_TOKEN
       })
