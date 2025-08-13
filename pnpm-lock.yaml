@@ -576,8 +576,8 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0
       spectaql:
-        specifier: ^3.0.4
-        version: 3.0.4
+        specifier: ^3.0.5
+        version: 3.0.5
       starlight-fullview-mode:
         specifier: ^0.2.3
         version: 0.2.3(@astrojs/starlight@0.34.4)
@@ -9504,6 +9504,7 @@ packages:
 
   /async@3.2.4:
     resolution: {integrity: sha512-iAB+JbDEGXhyIUavoDl9WP/Jj106Kz9DEn1DPgYw5ruDn0e3Wgi3sKFm55sASdGBNOQB8F59d9qQ7deqrHA8wQ==}
+    dev: true
 
   /async@3.2.6:
     resolution: {integrity: sha512-htCUDlxyyCLMgaM3xXg0C0LW2xqfuQ6p05pCEIsXuyQ+a1koYKTuBMzRNwmybfLgvJDMd0r1LTn4+E0Ti6C2AA==}
@@ -13559,7 +13560,7 @@ packages:
     peerDependencies:
       grunt: '>=0.4.5'
     dependencies:
-      async: 3.2.4
+      async: 3.2.6
       grunt: 1.5.3
       rimraf: 2.7.1
     dev: false
@@ -13658,7 +13659,7 @@ packages:
     resolution: {integrity: sha512-2bQiD4fzXqX8rhNdXkAywCadeqiPiay0oQny77wA2F3WF4grPJXCvAcyoWUJV+po/b15glGkxuSiQCK299UC2w==}
     engines: {node: '>=10'}
     dependencies:
-      async: 3.2.4
+      async: 3.2.6
       exit: 0.1.2
       getobject: 1.0.2
       hooker: 0.2.3
@@ -20508,8 +20509,8 @@ packages:
     resolution: {integrity: sha512-eWN+LnM3GR6gPu35WxNgbGl8rmY1AEmoMDvL/QD6zYmPWgywxWqJWNdLGT+ke8dKNWrcYgYjPpG5gbTfghP8rw==}
     dev: true
 
-  /spectaql@3.0.4:
-    resolution: {integrity: sha512-I/afdQ3gMRd7Z+R/Au1D6jU/+Nh0pD3NraLBh5QpaLno4Vy/VIwhDZAkLBMrnleuQhhiPiO/GTIZy7TngCZRWQ==}
+  /spectaql@3.0.5:
+    resolution: {integrity: sha512-AD4MZn1dy8JmLTix8mN5Qo9jSBsx67UhOB/lewyDHUfj/cY/FsqH/1MSrCVvxFEIeU3dJqfLmCuvTW4EQz2Ssg==}
     engines: {node: '>=16', npm: '>=7'}
     hasBin: true
     dependencies:
@@ -20547,7 +20548,7 @@ packages:
       postcss: 8.5.3
       sass: 1.89.2
       sync-request: 6.1.0
-      tmp: 0.2.1
+      tmp: 0.2.4
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -21346,17 +21347,15 @@ packages:
       os-tmpdir: 1.0.2
     dev: true
 
-  /tmp@0.2.1:
-    resolution: {integrity: sha512-76SUhtfqR2Ijn+xllcI5P1oyannHNHByD80W1q447gU3mp9G9PSpGdWmjUOHRDPiHYacIk66W7ubDTuPF3BEtQ==}
-    engines: {node: '>=8.17.0'}
-    dependencies:
-      rimraf: 3.0.2
-    dev: false
-
   /tmp@0.2.3:
     resolution: {integrity: sha512-nZD7m9iCPC5g0pYmcaxogYKggSfLsdxl8of3Q/oIbqCqLLIO9IAF0GWjX1z9NZRHPiXv8Wex4yDCaZsgEw0Y8w==}
     engines: {node: '>=14.14'}
     dev: true
+
+  /tmp@0.2.4:
+    resolution: {integrity: sha512-UdiSoX6ypifLmrfQ/XfiawN6hkjSBpCjhKxxZcWlUUmoXLaCKQU0bx4HF/tdDK2uzRuchf1txGvrWBzYREssoQ==}
+    engines: {node: '>=14.14'}
+    dev: false
 
   /tmpl@1.0.5:
     resolution: {integrity: sha512-3f0uOEAQwIqGuWW2MVzYg8fV/QNnc/IpuJNG837rLuczAaLVHslWHZQj4IGiEl5Hs3kkbhwL9Ab7Hrsmuj+Smw==}
