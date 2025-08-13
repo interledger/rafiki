@@ -83,6 +83,16 @@ describe('Payment Routes', () => {
       expect(ctx.status).toBe(400)
     })
 
+    test('returns 500 when an unknown error is thrown', async () => {
+      const ctx = createPaymentContext()
+      jest
+        .spyOn(paymentService, 'getWalletAddress')
+        .mockRejectedValueOnce('Unknown error')
+      await paymentRoutes.payment(ctx)
+      expect(ctx.response.body).toBe('Unknown error')
+      expect(ctx.status).toBe(500)
+    })
+
     function mockPaymentService() {
       jest.spyOn(paymentService, 'getWalletAddress').mockResolvedValueOnce({
         id: 'id',
