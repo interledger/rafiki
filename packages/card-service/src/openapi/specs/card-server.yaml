@@ -1,0 +1,120 @@
+openapi: 3.0.3
+info:
+  title: Card Service API
+  version: 1.0.0
+paths:
+  /payment:
+    post:
+      summary: Accept a payment request from POS
+      operationId: createPayment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - requestId
+                - card
+                - merchantWalletAddress
+                - incomingPaymentUrl
+                - date
+                - signature
+                #                - terminalCert
+                - terminalId
+              properties:
+                requestId:
+                  type: string
+                  format: uuid
+                card:
+                  type: object
+                  required:
+                    - walletAddress
+                    - transactionCounter
+                    - expiry
+                  properties:
+                    walletAddress:
+                      type: string
+                      format: uri
+                    transactionCounter:
+                      type: integer
+                    expiry:
+                      type: string
+                      pattern: '^(0[1-9]|1[0-2])\/\d{2,4}$'
+                      example: '12/25'
+                      description: 'Card expiry in MM/YY or MM/YYYY format'
+                merchantWalletAddress:
+                  type: string
+                  format: uri
+                incomingPaymentUrl:
+                  type: string
+                  format: uri
+                date:
+                  type: string
+                  format: date-time
+                signature:
+                  type: string
+                #                terminalCert:
+                #                  type: string
+                terminalId:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: Payment request accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  requestId:
+                    type: string
+                  result:
+                    type: string
+                    enum:
+                      - approved
+        '400':
+          description: Invalid request
+        '401':
+          description: Card expired or invalid signature
+        '500':
+          description: Internal server error
+  /payment-event:
+    post:
+      summary: Handle payment event result from backend
+      operationId: handlePaymentEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - requestId
+                - outgoingPaymentId
+                - result
+              properties:
+                requestId:
+                  type: string
+                  format: uuid
+                outgoingPaymentId:
+                  type: string
+                  format: uuid
+                result:
+                  type: object
+                  required:
+                    - code
+                  properties:
+                    code:
+                      type: string
+                      enum:
+                        - completed
+                        - card_expired
+                        - invalid_signature
+      responses:
+        '202':
+          description: Payment event accepted and forwarded
+        '400':
+          description: Malformed request body
+        '404':
+          description: Request not found
