@@ -27,7 +27,7 @@ Additionally, this package also includes a reference implementation of a [GNAP](
 Never heard of Interledger before? Or would you like to learn more? Here are some excellent places to start:
 
 - [Interledger Website](https://interledger.org/)
-- [Interledger Specs](https://interledger.org/rfcs/0027-interledger-protocol-4/)
+- [Interledger Specs](https://interledger.org/developers/get-started/)
 - [Interledger Explainer Video](https://twitter.com/Interledger/status/1567916000074678272)
 - [Open Payments](https://openpayments.dev/)
 - [Web Monetization](https://webmonetization.org/)
