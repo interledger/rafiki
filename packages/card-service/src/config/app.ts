@@ -32,6 +32,7 @@ export const Config = {
   env: envString('NODE_ENV', 'development'),
   cardServicePort: envInt('CARD_SERVICE_PORT', 3007),
   cardServiceUrl: envString('CARD_SERVICE_URL', 'http://localhost:3007'),
+  cardPaymentTimeoutMS: envInt('CARD_PAYMENT_TIMEOUT_MS', 30000),
   redisUrl: envString('REDIS_URL', 'redis://127.0.0.1:6379'),
   redisTls: parseRedisTlsConfig(
     process.env.REDIS_TLS_CA_FILE_PATH,

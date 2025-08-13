@@ -554,6 +554,9 @@ importers:
       '@adonisjs/fold':
         specifier: ^8.2.0
         version: 8.2.0
+      '@interledger/openapi':
+        specifier: 2.0.2
+        version: 2.0.2
       '@koa/cors':
         specifier: ^5.0.0
         version: 5.0.0
@@ -609,6 +612,9 @@ importers:
       nock:
         specifier: 14.0.0-beta.19
         version: 14.0.0-beta.19
+      node-mocks-http:
+        specifier: ^1.16.2
+        version: 1.16.2(@types/node@20.14.15)
       testcontainers:
         specifier: ^10.16.0
         version: 10.16.0
@@ -8736,7 +8742,7 @@ packages:
       eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
     dependencies:
       '@eslint-community/eslint-utils': 4.4.0(eslint@8.57.1)
-      '@types/json-schema': 7.0.12
+      '@types/json-schema': 7.0.15
       '@types/semver': 7.5.0
       '@typescript-eslint/scope-manager': 5.62.0
       '@typescript-eslint/types': 5.62.0
