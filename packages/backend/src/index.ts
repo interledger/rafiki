@@ -672,13 +672,16 @@ export function initIocContainer(
     })
   })
 
-  container.singleton('cardService', async (deps) => {
-    return createCardService({
-      axios: await deps.use('axios'),
-      logger: await deps.use('logger'),
-      cardServiceUrl: config.cardServiceUrl
+  if (config.cardServiceUrl) {
+    const cardServiceUrl = config.cardServiceUrl
+    container.singleton('cardService', async (deps) => {
+      return createCardService({
+        axios: await deps.use('axios'),
+        logger: await deps.use('logger'),
+        cardServiceUrl
+      })
     })
-  })
+  }
 
   return container
 }
