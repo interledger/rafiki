@@ -36,6 +36,14 @@ export async function createCardService(
   }
 }
 
+export async function createNoopCardService(): Promise<CardService> {
+  return {
+    async sendPaymentEvent(_eventDetails) {
+      // do nothing
+    }
+  }
+}
+
 async function sendPaymentEvent(
   deps: ServiceDependencies,
   eventDetails: EventDetails
