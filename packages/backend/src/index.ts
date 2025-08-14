@@ -679,7 +679,7 @@ export function initIocContainer(
           logger: await deps.use('logger'),
           cardServiceUrl: config.cardServiceUrl
         })
-      : createNoopCardService()
+      : createNoopCardService(await deps.use('logger'))
   })
 
   return container
