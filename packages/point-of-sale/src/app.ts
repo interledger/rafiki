@@ -18,6 +18,7 @@ import {
 } from './merchant/devices/routes'
 import { PosDeviceService } from './merchant/devices/service'
 import { MerchantService } from './merchant/service'
+import { PaymentContext, PaymentRoutes } from './payments/routes'
 
 export interface AppServices {
   logger: Promise<Logger>
@@ -27,6 +28,7 @@ export interface AppServices {
   posDeviceRoutes: Promise<PosDeviceRoutes>
   posDeviceService: Promise<PosDeviceService>
   merchantService: Promise<MerchantService>
+  paymentRoutes: Promise<PaymentRoutes>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -71,6 +73,7 @@ export class App {
 
     const merchantRoutes = await this.container.use('merchantRoutes')
     const posDeviceRoutes = await this.container.use('posDeviceRoutes')
+    const paymentRoutes = await this.container.use('paymentRoutes')
 
     // POST /merchants
     // Create merchant
@@ -92,6 +95,10 @@ export class App {
       '/merchants/:merchantId/devices',
       posDeviceRoutes.register
     )
+
+    // POST /payment
+    // Initiate a payment
+    router.post<DefaultState, PaymentContext>('/payment', paymentRoutes.payment)
 
     koa.use(cors())
     koa.use(router.routes())
