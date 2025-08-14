@@ -32,9 +32,9 @@ Configure your infrastructure deployment with these variables:
 | Variable                 | Default Value           | Required | Description                                           |
 | ------------------------ | ----------------------- | -------- | ----------------------------------------------------- |
 | `project_id`             | -                       | Yes      | GCP Project ID where resources will be created        |
+| `domain_name`            | -                       | Yes      | Primary domain for your wallet (e.g., `mywallet.com`) |
 | `region`                 | `us-central1`           | No       | Primary GCP region for cluster and resources          |
 | `cluster_name`           | `rafiki-wallet-cluster` | No       | Name of the GKE cluster                               |
-| `domain_name`            | -                       | Yes      | Primary domain for your wallet (e.g., `mywallet.com`) |
 | `node_pool_machine_type` | `e2-standard-4`         | No       | GCE machine type for Kubernetes nodes                 |
 | `min_node_count`         | `1`                     | No       | Minimum number of nodes in the cluster                |
 | `max_node_count`         | `10`                    | No       | Maximum number of nodes for autoscaling               |
@@ -337,17 +337,16 @@ _Found in: `k8s-manifests/backup/postgres-backup.yaml`_
 Configure these DNS A records pointing to your static IP:
 
 <div class="overflow-table">
-
-| Record Type | Name                         | Value            | TTL |
-| ----------- | ---------------------------- | ---------------- | --- |
-| A           | `wallet.YOUR_DOMAIN.com`     | `YOUR_STATIC_IP` | 300 |
-| A           | `api.YOUR_DOMAIN.com`        | `YOUR_STATIC_IP` | 300 |
-| A           | `auth.YOUR_DOMAIN.com`       | `YOUR_STATIC_IP` | 300 |
-| A           | `backend.YOUR_DOMAIN.com`    | `YOUR_STATIC_IP` | 300 |
-| A           | `admin.YOUR_DOMAIN.com`      | `YOUR_STATIC_IP` | 300 |
-| A           | `argocd.YOUR_DOMAIN.com`     | `YOUR_STATIC_IP` | 300 |
-| A           | `grafana.YOUR_DOMAIN.com`    | `YOUR_STATIC_IP` | 300 |
-| A           | `prometheus.YOUR_DOMAIN.com` | `YOUR_STATIC_IP` | 300 |
+ | Name                         | Value            | TTL |
+ | ---------------------------- | ---------------- | --- |
+ | `wallet.YOUR_DOMAIN.com`     | `YOUR_STATIC_IP` | 300 |
+ | `api.YOUR_DOMAIN.com`        | `YOUR_STATIC_IP` | 300 |
+ | `auth.YOUR_DOMAIN.com`       | `YOUR_STATIC_IP` | 300 |
+ | `backend.YOUR_DOMAIN.com`    | `YOUR_STATIC_IP` | 300 |
+ | `admin.YOUR_DOMAIN.com`      | `YOUR_STATIC_IP` | 300 |
+ | `argocd.YOUR_DOMAIN.com`     | `YOUR_STATIC_IP` | 300 |
+ | `grafana.YOUR_DOMAIN.com`    | `YOUR_STATIC_IP` | 300 |
+ | `prometheus.YOUR_DOMAIN.com` | `YOUR_STATIC_IP` | 300 |
 
 </div>
 
@@ -359,7 +358,7 @@ All configuration files use these placeholder patterns that you must replace:
 - `YOUR_PROJECT_ID` - Replace with your GCP project ID
 - `YOUR_REGISTRY` - Replace with your container registry
 - `YOUR_EMAIL` - Replace with your administrative email
-- `<generated-secret>` - Generate using `openssl rand -base64 32` (see Secrets Management guide)
+- `<generated-secret>` - Generate using `openssl rand -base64 32` (refer to the [Secrets Management](/integration/deploy-to-prod/03-secrets-management) guide)
 - `<secure-password>` - Generate strong passwords for admin accounts
 
 Ensure you systematically replace all placeholder values before deployment to avoid configuration errors.

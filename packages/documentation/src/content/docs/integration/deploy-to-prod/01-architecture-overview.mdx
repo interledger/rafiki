@@ -9,7 +9,7 @@ import {
   Tooltip
 } from '@interledger/docs-design-system'
 
-This guide provides an approach for you to deploy and integrate Rafiki on Google Cloud Platform using Terraform, Kubernetes, Helm charts, and Argo CD. The reference architecture used in this guide is the <LinkOut href='https://github.com/interledger/testnet'>Interledger Test Network</LinkOut>. For this example we'll assume you are a digital wallet provider that wants to deploy your wallet application and Rafiki in your Kubernetes cluster.
+This guide provides an approach for you to deploy and integrate Rafiki on Google Cloud Platform (GCP) using Terraform, Kubernetes, Helm charts, and Argo CD. The reference architecture used in this guide is the <LinkOut href='https://github.com/interledger/testnet'>Interledger Test Network</LinkOut>. For this example we'll assume you are a digital wallet provider that wants to deploy your wallet application and Rafiki in your Kubernetes cluster.
 
 :::caution
 As the Interledger Test Network is used to showcase Rafiki's functionalities and to serve as a sandbox environment, this example is intended for informational purposes only and should not be used for a production deployment.
@@ -19,7 +19,7 @@ As the Interledger Test Network is used to showcase Rafiki's functionalities and
 
 Before beginning the integration, ensure you have the following:
 
-- A <LinkOut href='https://cloud.google.com'>Google Cloud Platform</LinkOut> account with billing enabled
+- A <LinkOut href='https://cloud.google.com'>GCP</LinkOut> account with billing enabled
 - The <LinkOut href='https://cloud.google.com/sdk'>gcloud CLI</LinkOut> installed and
   authenticated
 - Hashicorp <LinkOut href='https://developer.hashicorp.com/terraform/install'>Terraform</LinkOut> installed
@@ -41,163 +41,146 @@ The deployment follows the Interledger Test Network reference architecture, whic
 - **NGINX Ingress**: Load balancing and SSL termination
 - **Argo CD**: GitOps continuous deployment
 - **Digital Wallet**: Your wallet application integrated with Rafiki
+- **GateHub Integration**: Payment backend and ledger services
 
 ## Reference architecture
 
-The following diagram illustrates the complete architecture based on the Interledger Test Network reference implementation:
+The following diagram illustrates the architecture based on the Interledger Test Network wallet application with GateHub integration:
 
 <MermaidWrapper diagramName="rafiki-architecture">
 
 <Mermaid
-  graph={`graph TB
-    %% External entities
-    User[👤 Wallet User]
-    External[🌐 Interledger network]
-    Internet[🌍 Internet]
+  graph={`graph TD
+    %% External Services
+    Redis[Redis]
+    PostgreSQL1[PostgreSQL]
+    FreecurrencyAPI[FreecurrencyAPI]
+    GateHub[GateHub]
+    OpenPayments[Open Payments]
     
-    %% DNS and Load Balancer Layer
-    subgraph "DNS & Load Balancing"
-        DNS[Cloud DNS<br/>your-wallet.com]
-        LB[Google Cloud<br/>Load Balancer]
+    %% Core Rafiki System
+    Rafiki[Rafiki]
+    AdminAPI[Admin API]
+    AuthAPI[Auth API]
+    
+    %% Wallet Backend Components
+    subgraph WalletBackend[Wallet Backend]
+        RatesService[Rates Service]
+        WebhookService[Webhook Service]
+        RafikiIntegration[Rafiki Integration]
+        GateHubService[GateHub Service]
+        InternalLedger[Internal Ledger System]
+        IDPLedgering[IDP & Ledgering]
+        NodeJS[Node.js]
+        ExpressJS[Express.js]
     end
     
-    %% GKE Cluster
-    subgraph "GKE Cluster"
-        %% Ingress Layer
-        subgraph "Ingress Layer"
-            Ingress[NGINX Ingress<br/>Controller]
-            CertManager[cert-manager<br/>Let's Encrypt]
-        end
-        
-        %% Application Layer
-        subgraph "Digital Wallet Namespace"
-            WalletUI[Digital Wallet UI<br/>wallet.your-wallet.com]
-            WalletAPI[Wallet Backend API<br/>api.your-wallet.com]
-            WalletDB[(Wallet Database<br/>PostgreSQL)]
-        end
-        
-        %% Rafiki Services
-        subgraph "Rafiki Namespace"
-            RafikiAuth[Rafiki Auth Server<br/>auth.your-wallet.com]
-            RafikiBackend[Rafiki Backend<br/>backend.your-wallet.com]
-            RafikiAdmin[Rafiki Admin API<br/>admin.your-wallet.com]
-            RafikiDB[(Rafiki Database<br/>PostgreSQL)]
-            Redis[(Redis Cache)]
-        end
-        
-        %% GitOps and Monitoring
-        subgraph "Platform Services"
-            ArgoCD[Argo CD<br/>argocd.your-wallet.com]
-            Monitoring[Prometheus<br/>& Grafana]
-        end
-        
-        %% Persistent Storage
-        subgraph "Storage"
-            PVC1[Wallet DB PVC]
-            PVC2[Rafiki DB PVC]
-            PVC3[Redis PVC]
-        end
+    %% Frontend
+    subgraph WalletFrontend[Wallet Frontend]
+        NextJS[Next.js]
+        React[React]
     end
     
-    %% External Git Repository
-    GitRepo[📁 Git Repository<br/>Helm Charts & Config]
+    %% Client
+    subgraph ClientDevices[Client]
+        Desktop[Desktop]
+        Mobile[Mobile]
+    end
     
-    %% Connections - External
-    User --> Internet
-    Internet --> DNS
-    DNS --> LB
-    LB --> Ingress
+    %% Database for Open Payments
+    PostgreSQL2[PostgreSQL]
     
-    %% Connections - Internal Services
-    Ingress --> WalletUI
-    Ingress --> WalletAPI
-    Ingress --> RafikiAuth
-    Ingress --> RafikiBackend
-    Ingress --> RafikiAdmin
-    Ingress --> ArgoCD
+    %% Connections
+    Redis --> Rafiki
+    PostgreSQL1 --> Rafiki
     
-    %% Wallet Internal Connections
-    WalletUI --> WalletAPI
-    WalletAPI --> WalletDB
-    WalletAPI --> RafikiAdmin
-    WalletAPI --> RafikiBackend
+    Rafiki --> AdminAPI
+    Rafiki --> AuthAPI
     
-    %% Rafiki Internal Connections
-    RafikiAuth --> RafikiDB
-    RafikiAuth --> Redis
-    RafikiBackend --> RafikiDB
-    RafikiBackend --> Redis
-    RafikiAdmin --> RafikiDB
+    AdminAPI --> WalletBackend
+    AuthAPI --> WalletBackend
     
-    %% Interledger Protocol Connections
-    RafikiBackend --> External
-    External --> RafikiBackend
+    FreecurrencyAPI --> WalletBackend
+    GateHub --> WalletBackend
     
-    %% Storage Connections
-    WalletDB --> PVC1
-    RafikiDB --> PVC2
-    Redis --> PVC3
+    WalletBackend --> PostgreSQL2
+    WalletBackend --> WalletFrontend
     
-    %% GitOps
-    GitRepo --> ArgoCD
-    ArgoCD --> WalletAPI
-    ArgoCD --> RafikiAuth
-    ArgoCD --> RafikiBackend
-    ArgoCD --> RafikiAdmin
+    OpenPayments --> PostgreSQL2
+    OpenPayments --> WalletBackend
     
-    %% Certificate Management
-    CertManager --> Ingress
+    WalletFrontend --> ClientDevices
     
     %% Styling
-    classDef userFacing fill:#f0f0f0,stroke:#333,color:#000
-    classDef rafiki fill:#d9d9d9,stroke:#333,color:#000
-    classDef wallet fill:#e6e6e6,stroke:#333,color:#000
-    classDef platform fill:#cccccc,stroke:#333,color:#000
-    classDef storage fill:#b3b3b3,stroke:#333,color:#000
-    classDef external fill:#ffffff,stroke:#333,color:#000
+    classDef redisStyle fill:#DC382D,stroke:#333,stroke-width:2px,color:#fff
+    classDef postgresStyle fill:#336791,stroke:#333,stroke-width:2px,color:#fff
+    classDef rafikiStyle fill:#4ECDC4,stroke:#333,stroke-width:2px,color:#fff
+    classDef openPaymentsStyle fill:#00A86B,stroke:#333,stroke-width:2px,color:#fff
+    classDef apiStyle fill:#FF69B4,stroke:#333,stroke-width:2px,color:#fff
+    classDef walletBackendStyle fill:#E6F3FF,stroke:#333,stroke-width:2px
+    classDef frontendStyle fill:#E8F5E8,stroke:#333,stroke-width:2px
+    classDef clientStyle fill:#E6E6FA,stroke:#333,stroke-width:2px
+    classDef nodeStyle fill:#68A063,stroke:#333,stroke-width:2px,color:#fff
+    classDef gatehubStyle fill:#1E3A8A,stroke:#333,stroke-width:2px,color:#fff
     
-    class User,WalletUI userFacing
-    class RafikiAuth,RafikiBackend,RafikiAdmin,RafikiDB,Redis rafiki
-    class WalletAPI,WalletDB wallet
-    class ArgoCD,Monitoring,Ingress,CertManager platform
-    class PVC1,PVC2,PVC3 storage
-    class External,Internet,DNS,LB,GitRepo external`}
+    class Redis redisStyle
+    class PostgreSQL1,PostgreSQL2 postgresStyle
+    class Rafiki rafikiStyle
+    class OpenPayments openPaymentsStyle
+    class AdminAPI,AuthAPI apiStyle
+    class WalletBackend walletBackendStyle
+    class WalletFrontend frontendStyle
+    class ClientDevices clientStyle
+    class NodeJS nodeStyle
+    class GateHub,GateHubService gatehubStyle`}
 />
 
 </MermaidWrapper>
 
 ## Component details
 
-### External layer
+### External services
 
-- **Users**: Access wallet through web/mobile interfaces
-- **DNS & Load Balancing**: Google Cloud DNS and Load Balancer for traffic routing
+- **Redis**: Provides caching and session management for the Rafiki system
+- **FreecurrencyAPI**: External service providing real-time currency exchange rates
+- **GateHub**: Payment backend service providing ledger and payment processing capabilities
 
-### Ingress layer
+### Database layer
 
-- **NGINX Ingress**: Routes traffic to appropriate services based on hostname
-- **cert-manager**: Automatically provisions and manages TLS certificates
+- **PostgreSQL (Rafiki)**: Primary database storing Interledger accounts, wallet addresses, and core transaction data
+- **PostgreSQL (Open Payments)**: Dedicated database for Open Payments protocol data and wallet-specific information
 
-### Digital wallet layer
+### Rafiki core services
 
-- **Wallet UI** (`wallet.your-wallet.com`): User-facing web application
-- **Wallet API** (`api.your-wallet.com`): Backend services for wallet functionality
-- **Wallet Database**: User accounts, balances, transaction history
+- **Rafiki**: Core Interledger payment engine handling protocol implementation and payment processing
+- **Admin API**: GraphQL interface for administrative functions and account management
+- **Auth API**: Authentication and authorization service implementing Open Payments standards
 
-### Rafiki layer
+### GKE cluster - wallet services
 
-Core Interledger services providing the following functionality:
+#### Wallet backend namespace
 
-- **Auth server** (`auth.your-wallet.com`): Handles <LinkOut href='openpayments.dev'>Open Payments</LinkOut> authentication and authorization
-- **Backend** (`backend.your-wallet.com`): Core Interledger protocol implementation
-- **Admin API** (`admin.your-wallet.com`): Administrative functions and account management via GraphQL API
-- **Database**: Stores Interledger accounts, payment pointers, and transaction data
-- **Redis**: Caching and session management
+- **Wallet Backend**: Main Node.js/Express application orchestrating wallet functionality
+- **Rates Service**: Handles currency exchange rate management and calculations
+- **Webhook Service**: Manages incoming webhook notifications from external services
+- **Rafiki Integration**: Interface layer for communication with Rafiki services
+- **GateHub Service**: Integration component for GateHub payment backend
+- **Internal Ledger System**: Manages internal transaction ledgering and accounting
+- **IDP & Ledgering**: Identity provider integration and additional ledger management
 
-### Platform Services
+#### Wallet frontend namespace
 
-- **Argo CD**: GitOps continuous deployment from Git repositories
-- **Monitoring**: Prometheus metrics collection and Grafana dashboards
+- **Wallet Frontend**: Next.js/React application providing the user interface
+
+#### Ingress layer
+
+- **NGINX Ingress**: Routes external traffic to appropriate services based on hostname and path
+- **cert-manager**: Automatically provisions and manages SSL/TLS certificates
+
+#### Platform services
+
+- **Argo CD**: GitOps continuous deployment system managing application deployments
+- **Monitoring**: Prometheus metrics collection and Grafana dashboards for system observability
 
 ## Next steps
 

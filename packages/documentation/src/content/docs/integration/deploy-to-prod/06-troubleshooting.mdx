@@ -77,7 +77,7 @@ Before troubleshooting issues, ensure you've completed all required customizatio
    gcloud compute project-info describe --project=PROJECT_ID
    ```
 
-#### Issue: GKE Cluster Creation Hangs
+#### Issue: GKE cluster creation hangs
 
 **Symptoms:**
 
@@ -112,16 +112,53 @@ Before troubleshooting issues, ensure you've completed all required customizatio
    gcloud container clusters delete OLD_CLUSTER_NAME --region=REGION
    ```
 
-### DNS and Certificate Issues
+### DNS and certificate issues
 
-#### Issue: Certificate Not Issued
+#### Issue: certificate not issued
 
 **Symptoms:**
+
+- Certificate shows `READY: False` status
+- TLS certificate secret not created
+- HTTPS connections fail with certificate errors
+- Let's Encrypt certificate challenges failing
 
 ```bash
 kubectl get certificates -A
 NAME               READY   SECRET           AGE
 rafiki-auth-tls    False   rafiki-auth-tls  10m
+```
+
+**Solutions:**
+
+1. **Verify DNS records are correctly configured:**
+
+   ```bash
+   # Check if domain resolves to your cluster IP
+   nslookup auth.YOUR_DOMAIN.com
+   dig auth.YOUR_DOMAIN.com
+
+   # Verify static IP is assigned
+   kubectl get ingress -A
+   ```
+
+2. **Check cert-manager is running properly:**
+
+   ```bash
+   # Verify cert-manager pods are healthy
+   kubectl get pods -n cert-manager
+
+   # Check cluster-issuer status
+   kubectl get clusterissuer
+   kubectl describe clusterissuer letsencrypt-prod
+   ```
+
+3 . **Check firewall rules allow HTTP/HTTPS traffic:**
+
+```bash
+# Ensure HTTP challenge can reach your domain
+gcloud compute firewall-rules list
+curl -I http://auth.YOUR_DOMAIN.com/.well-known/acme-challenge/test
 ```
 
 **Debugging:**
@@ -135,5 +172,10 @@ kubectl get certificaterequests -A
 kubectl describe certificaterequest <name> -n rafiki
 
 # Check cert-manager logs
-kubectl logs -n cert-manager deployment/
+kubectl logs -n cert-manager deployment/cert-manager
+kubectl logs -n cert-manager deployment/cert-manager-webhook
+kubectl logs -n cert-manager deployment/cert-manager-cainjector
+
+# Check ingress-nginx logs for HTTP challenges
+kubectl logs -n ingress-nginx deployment/ingress-nginx-controller
 ```
