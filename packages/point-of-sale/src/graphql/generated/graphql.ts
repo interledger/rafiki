@@ -191,6 +191,13 @@ export type CancelOutgoingPaymentInput = {
   reason?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type CardDetailsInput = {
+  /** Expire date */
+  expiry: Scalars['String']['input'];
+  /** Signature */
+  signature: Scalars['String']['input'];
+};
+
 export type CreateAssetInput = {
   /** Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets). */
   code: Scalars['String']['input'];
@@ -278,6 +285,8 @@ export type CreateOutgoingPaymentFromIncomingPaymentInput = {
 };
 
 export type CreateOutgoingPaymentInput = {
+  /** Used for the card service to provide the card expiry and signature */
+  cardDetails?: InputMaybe<CardDetailsInput>;
   /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Additional metadata associated with the outgoing payment. */
@@ -1006,6 +1015,8 @@ export type MutationWithdrawEventLiquidityArgs = {
 
 export type OutgoingPayment = BasePayment & Model & {
   __typename?: 'OutgoingPayment';
+  /** Used for the card service to provide the card expiry and signature */
+  cardDetails?: Maybe<OutgoingPaymentCardDetails>;
   /** Information about the wallet address of the Open Payments client that created the outgoing payment. */
   client?: Maybe<Scalars['String']['output']>;
   /** The date and time that the outgoing payment was created. */
@@ -1038,6 +1049,16 @@ export type OutgoingPayment = BasePayment & Model & {
   tenantId?: Maybe<Scalars['String']['output']>;
   /** Unique identifier of the wallet address under which the outgoing payment was created. */
   walletAddressId: Scalars['ID']['output'];
+};
+
+export type OutgoingPaymentCardDetails = Model & {
+  __typename?: 'OutgoingPaymentCardDetails';
+  createdAt: Scalars['String']['output'];
+  expiry: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  outgoingPaymentId: Scalars['ID']['output'];
+  signature: Scalars['String']['output'];
+  updatedAt: Scalars['String']['output'];
 };
 
 export type OutgoingPaymentConnection = {
@@ -1511,17 +1532,26 @@ export type TenantMutationResponse = {
 export type TenantSetting = {
   __typename?: 'TenantSetting';
   /** Key for this setting. */
-  key: Scalars['String']['output'];
+  key: TenantSettingKey;
   /** Value of a setting for this key. */
   value: Scalars['String']['output'];
 };
 
 export type TenantSettingInput = {
   /** Key for this setting. */
-  key: Scalars['String']['input'];
+  key: TenantSettingKey;
   /** Value of a setting for this key. */
   value: Scalars['String']['input'];
 };
+
+export enum TenantSettingKey {
+  ExchangeRatesUrl = 'EXCHANGE_RATES_URL',
+  IlpAddress = 'ILP_ADDRESS',
+  WalletAddressUrl = 'WALLET_ADDRESS_URL',
+  WebhookMaxRetry = 'WEBHOOK_MAX_RETRY',
+  WebhookTimeout = 'WEBHOOK_TIMEOUT',
+  WebhookUrl = 'WEBHOOK_URL'
+}
 
 export type TenantsConnection = {
   __typename?: 'TenantsConnection';
@@ -1898,7 +1928,7 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping of interface types */
 export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> = {
   BasePayment: ( Partial<IncomingPayment> ) | ( Partial<OutgoingPayment> ) | ( Partial<Payment> );
-  Model: ( Partial<AccountingTransfer> ) | ( Partial<Asset> ) | ( Partial<Fee> ) | ( Partial<IncomingPayment> ) | ( Partial<OutgoingPayment> ) | ( Partial<Payment> ) | ( Partial<Peer> ) | ( Partial<Tenant> ) | ( Partial<WalletAddress> ) | ( Partial<WalletAddressKey> ) | ( Partial<WebhookEvent> );
+  Model: ( Partial<AccountingTransfer> ) | ( Partial<Asset> ) | ( Partial<Fee> ) | ( Partial<IncomingPayment> ) | ( Partial<OutgoingPayment> ) | ( Partial<OutgoingPaymentCardDetails> ) | ( Partial<Payment> ) | ( Partial<Peer> ) | ( Partial<Tenant> ) | ( Partial<WalletAddress> ) | ( Partial<WalletAddressKey> ) | ( Partial<WebhookEvent> );
 };
 
 /** Mapping between all available schema types and the resolvers types */
@@ -1921,6 +1951,7 @@ export type ResolversTypes = {
   CancelIncomingPaymentInput: ResolverTypeWrapper<Partial<CancelIncomingPaymentInput>>;
   CancelIncomingPaymentResponse: ResolverTypeWrapper<Partial<CancelIncomingPaymentResponse>>;
   CancelOutgoingPaymentInput: ResolverTypeWrapper<Partial<CancelOutgoingPaymentInput>>;
+  CardDetailsInput: ResolverTypeWrapper<Partial<CardDetailsInput>>;
   CreateAssetInput: ResolverTypeWrapper<Partial<CreateAssetInput>>;
   CreateAssetLiquidityWithdrawalInput: ResolverTypeWrapper<Partial<CreateAssetLiquidityWithdrawalInput>>;
   CreateIncomingPaymentInput: ResolverTypeWrapper<Partial<CreateIncomingPaymentInput>>;
@@ -1982,6 +2013,7 @@ export type ResolversTypes = {
   Model: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Model']>;
   Mutation: ResolverTypeWrapper<{}>;
   OutgoingPayment: ResolverTypeWrapper<Partial<OutgoingPayment>>;
+  OutgoingPaymentCardDetails: ResolverTypeWrapper<Partial<OutgoingPaymentCardDetails>>;
   OutgoingPaymentConnection: ResolverTypeWrapper<Partial<OutgoingPaymentConnection>>;
   OutgoingPaymentEdge: ResolverTypeWrapper<Partial<OutgoingPaymentEdge>>;
   OutgoingPaymentFilter: ResolverTypeWrapper<Partial<OutgoingPaymentFilter>>;
@@ -2014,6 +2046,7 @@ export type ResolversTypes = {
   TenantMutationResponse: ResolverTypeWrapper<Partial<TenantMutationResponse>>;
   TenantSetting: ResolverTypeWrapper<Partial<TenantSetting>>;
   TenantSettingInput: ResolverTypeWrapper<Partial<TenantSettingInput>>;
+  TenantSettingKey: ResolverTypeWrapper<Partial<TenantSettingKey>>;
   TenantsConnection: ResolverTypeWrapper<Partial<TenantsConnection>>;
   TransferState: ResolverTypeWrapper<Partial<TransferState>>;
   TransferType: ResolverTypeWrapper<Partial<TransferType>>;
@@ -2065,6 +2098,7 @@ export type ResolversParentTypes = {
   CancelIncomingPaymentInput: Partial<CancelIncomingPaymentInput>;
   CancelIncomingPaymentResponse: Partial<CancelIncomingPaymentResponse>;
   CancelOutgoingPaymentInput: Partial<CancelOutgoingPaymentInput>;
+  CardDetailsInput: Partial<CardDetailsInput>;
   CreateAssetInput: Partial<CreateAssetInput>;
   CreateAssetLiquidityWithdrawalInput: Partial<CreateAssetLiquidityWithdrawalInput>;
   CreateIncomingPaymentInput: Partial<CreateIncomingPaymentInput>;
@@ -2121,6 +2155,7 @@ export type ResolversParentTypes = {
   Model: ResolversInterfaceTypes<ResolversParentTypes>['Model'];
   Mutation: {};
   OutgoingPayment: Partial<OutgoingPayment>;
+  OutgoingPaymentCardDetails: Partial<OutgoingPaymentCardDetails>;
   OutgoingPaymentConnection: Partial<OutgoingPaymentConnection>;
   OutgoingPaymentEdge: Partial<OutgoingPaymentEdge>;
   OutgoingPaymentFilter: Partial<OutgoingPaymentFilter>;
@@ -2392,7 +2427,7 @@ export type LiquidityMutationResponseResolvers<ContextType = any, ParentType ext
 };
 
 export type ModelResolvers<ContextType = any, ParentType extends ResolversParentTypes['Model'] = ResolversParentTypes['Model']> = {
-  __resolveType: TypeResolveFn<'AccountingTransfer' | 'Asset' | 'Fee' | 'IncomingPayment' | 'OutgoingPayment' | 'Payment' | 'Peer' | 'Tenant' | 'WalletAddress' | 'WalletAddressKey' | 'WebhookEvent', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'AccountingTransfer' | 'Asset' | 'Fee' | 'IncomingPayment' | 'OutgoingPayment' | 'OutgoingPaymentCardDetails' | 'Payment' | 'Peer' | 'Tenant' | 'WalletAddress' | 'WalletAddressKey' | 'WebhookEvent', ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
 };
@@ -2439,6 +2474,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
 };
 
 export type OutgoingPaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['OutgoingPayment'] = ResolversParentTypes['OutgoingPayment']> = {
+  cardDetails?: Resolver<Maybe<ResolversTypes['OutgoingPaymentCardDetails']>, ParentType, ContextType>;
   client?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   debitAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
@@ -2455,6 +2491,16 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   stateAttempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   tenantId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   walletAddressId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type OutgoingPaymentCardDetailsResolvers<ContextType = any, ParentType extends ResolversParentTypes['OutgoingPaymentCardDetails'] = ResolversParentTypes['OutgoingPaymentCardDetails']> = {
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  expiry?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  outgoingPaymentId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  signature?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -2633,7 +2679,7 @@ export type TenantMutationResponseResolvers<ContextType = any, ParentType extend
 };
 
 export type TenantSettingResolvers<ContextType = any, ParentType extends ResolversParentTypes['TenantSetting'] = ResolversParentTypes['TenantSetting']> = {
-  key?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  key?: Resolver<ResolversTypes['TenantSettingKey'], ParentType, ContextType>;
   value?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -2792,6 +2838,7 @@ export type Resolvers<ContextType = any> = {
   Model?: ModelResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   OutgoingPayment?: OutgoingPaymentResolvers<ContextType>;
+  OutgoingPaymentCardDetails?: OutgoingPaymentCardDetailsResolvers<ContextType>;
   OutgoingPaymentConnection?: OutgoingPaymentConnectionResolvers<ContextType>;
   OutgoingPaymentEdge?: OutgoingPaymentEdgeResolvers<ContextType>;
   OutgoingPaymentResponse?: OutgoingPaymentResponseResolvers<ContextType>;
@@ -3016,7 +3063,7 @@ export type ListTenantsQueryVariables = Exact<{
 }>;
 
 
-export type ListTenantsQuery = { __typename?: 'Query', tenants: { __typename?: 'TenantsConnection', edges: Array<{ __typename?: 'TenantEdge', node: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null, createdAt: string, deletedAt?: string | null } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
+export type ListTenantsQuery = { __typename?: 'Query', tenants: { __typename?: 'TenantsConnection', edges: Array<{ __typename?: 'TenantEdge', node: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null, createdAt: string, deletedAt?: string | null, settings: Array<{ __typename?: 'TenantSetting', key: TenantSettingKey, value: string }> } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
 
 export type CreateTenantMutationVariables = Exact<{
   input: CreateTenantInput;
@@ -3044,7 +3091,7 @@ export type GetTenantQueryVariables = Exact<{
 }>;
 
 
-export type GetTenantQuery = { __typename?: 'Query', tenant: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null, createdAt: string, deletedAt?: string | null } };
+export type GetTenantQuery = { __typename?: 'Query', tenant: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null, createdAt: string, deletedAt?: string | null, settings: Array<{ __typename?: 'TenantSetting', key: TenantSettingKey, value: string }> } };
 
 export type GetWalletAddressQueryVariables = Exact<{
   id: Scalars['String']['input'];

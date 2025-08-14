@@ -123,7 +123,7 @@ export class WalletAddress
   }: {
     authServer: string
     resourceServer: string
-    cardService: string
+    cardService?: string
   }): OpenPaymentsWalletAddress {
     const returnVal: OpenPaymentsWalletAddress = {
       id: this.address,
@@ -132,7 +132,7 @@ export class WalletAddress
       assetScale: this.asset.scale,
       authServer,
       resourceServer,
-      cardService
+      ...(cardService && { cardService })
     }
     if (this.additionalProperties && this.additionalProperties.length) {
       returnVal.additionalProperties = this.additionalProperties
