@@ -36,6 +36,19 @@ export async function createCardService(
   }
 }
 
+export async function createNoopCardService(
+  logger: Logger
+): Promise<CardService> {
+  return {
+    async sendPaymentEvent(_eventDetails) {
+      // do nothing
+      logger.warn(
+        'CARD_SERVICE_URL env variable not set, falling back to NoopCardService'
+      )
+    }
+  }
+}
+
 async function sendPaymentEvent(
   deps: ServiceDependencies,
   eventDetails: EventDetails
