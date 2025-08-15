@@ -637,9 +637,7 @@ describe('Webhook Service', (): void => {
         { sendTenantWebhooksToOperator: true },
         async (): Promise<void> => {
           const tenantId = crypto.randomUUID()
-          expect(
-            finalizeWebhookRecipients([tenantId], Config, logger)
-          ).toStrictEqual([
+          expect(finalizeWebhookRecipients([tenantId], Config)).toStrictEqual([
             { recipientTenantId: tenantId },
             { recipientTenantId: Config.operatorTenantId }
           ])
@@ -654,9 +652,9 @@ describe('Webhook Service', (): void => {
         { sendTenantWebhooksToOperator: false },
         async (): Promise<void> => {
           const tenantId = crypto.randomUUID()
-          expect(
-            finalizeWebhookRecipients([tenantId], Config, logger)
-          ).toStrictEqual([{ recipientTenantId: tenantId }])
+          expect(finalizeWebhookRecipients([tenantId], Config)).toStrictEqual([
+            { recipientTenantId: tenantId }
+          ])
         }
       )
     )
@@ -668,8 +666,7 @@ describe('Webhook Service', (): void => {
       expect(
         finalizeWebhookRecipients(
           [tenantId1, tenantId1, tenantId2, tenantId2, tenantId3],
-          Config,
-          logger
+          Config
         )
       ).toStrictEqual([
         { recipientTenantId: tenantId1 },
@@ -686,7 +683,7 @@ describe('Webhook Service', (): void => {
         async (): Promise<void> => {
           const tenantId = crypto.randomUUID()
           expect(
-            finalizeWebhookRecipients([tenantId], config, logger, {
+            finalizeWebhookRecipients([tenantId], config, {
               isCardPayment: true
             })
           ).toStrictEqual([
@@ -706,9 +703,14 @@ describe('Webhook Service', (): void => {
       console.log('config.posServiceUrl=', typeof config.posServiceUrl)
 
       expect(
-        finalizeWebhookRecipients([tenantId], config, logger, {
-          isCardPayment: true
-        })
+        finalizeWebhookRecipients(
+          [tenantId],
+          config,
+          {
+            isCardPayment: true
+          },
+          logger
+        )
       ).toStrictEqual([{ recipientTenantId: tenantId }])
       expect(loggerWarnSpy).toHaveBeenCalled()
     })

@@ -292,8 +292,8 @@ async function getWebhookEventsPage(
 export function finalizeWebhookRecipients(
   tenantIds: string[],
   config: IAppConfig,
-  logger: Logger,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
+  logger?: Logger
 ): Pick<Webhook, 'recipientTenantId' | 'metadata'>[] {
   const tenantIdSet = new Set(tenantIds)
 
@@ -320,7 +320,7 @@ export function finalizeWebhookRecipients(
       }
     ])
   } else if (metadata?.isCardPayment && !config.posServiceUrl) {
-    logger.warn('Could not create webhook recipient for point of sale service')
+    logger?.warn('Could not create webhook recipient for point of sale service')
   }
 
   return recipients
