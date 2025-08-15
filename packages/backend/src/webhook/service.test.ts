@@ -24,7 +24,7 @@ import { AppServices } from '../app'
 import { getPageTests } from '../shared/baseModel.test'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { createWebhookEvent, webhookEventTypes } from '../tests/webhook'
-import { IncomingPaymentEventType } from '../open_payments/payment/incoming/model'
+import { IncomingPaymentEventType, IncomingPaymentInitiationReason } from '../open_payments/payment/incoming/model'
 import { OutgoingPaymentEventType } from '../open_payments/payment/outgoing/model'
 import { createIncomingPayment } from '../tests/incomingPayment'
 import { createWalletAddress } from '../tests/walletAddress'
@@ -159,13 +159,15 @@ describe('Webhook Service', (): void => {
         (
           await createIncomingPayment(deps, {
             walletAddressId: walletAddressIn.id,
-            tenantId: Config.operatorTenantId
+            tenantId: Config.operatorTenantId,
+            initiationReason: IncomingPaymentInitiationReason.OpenPayments
           })
         ).id,
         (
           await createIncomingPayment(deps, {
             walletAddressId: walletAddressIn.id,
-            tenantId: Config.operatorTenantId
+            tenantId: Config.operatorTenantId,
+            initiationReason: IncomingPaymentInitiationReason.OpenPayments
           })
         ).id
       ]
