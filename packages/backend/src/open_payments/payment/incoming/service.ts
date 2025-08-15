@@ -34,7 +34,7 @@ export interface CreateIncomingPaymentOptions {
   incomingAmount?: Amount
   metadata?: Record<string, unknown>
   tenantId: string
-  initiationReason: IncomingPaymentInitiationReason
+  initiationReason?: IncomingPaymentInitiationReason
 }
 
 export interface UpdateOptions {
