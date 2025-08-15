@@ -77,6 +77,7 @@ import { createTenantService } from './tenants/service'
 import { AuthServiceClient } from './auth-service-client/client'
 import { createTenantSettingService } from './tenants/settings/service'
 import { createPaymentMethodProviderService } from './payment-method/provider/service'
+import { createRouterService } from './payment-method/ilp/connector/ilp-routing/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -397,7 +398,8 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       accountingService: await deps.use('accountingService'),
       assetService: await deps.use('assetService'),
-      httpTokenService: await deps.use('httpTokenService')
+      httpTokenService: await deps.use('httpTokenService'),
+      routerService: await deps.use('routerService')
     })
   })
   container.singleton('authServerService', async (deps) => {
@@ -516,6 +518,19 @@ export function initIocContainer(
     return createWalletAddressKeyService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex')
+    })
+  })
+  container.singleton('staticRoutesStore', async () => {
+    return createInMemoryDataStore(Number.MAX_SAFE_INTEGER)
+  })
+
+  container.singleton('routerService', async (deps) => {
+    const config = await deps.use('config')
+    return await createRouterService({
+      logger: await deps.use('logger'),
+      staticIlpAddress: config.ilpAddress,
+      staticRoutes: await deps.use('staticRoutesStore'),
+      config
     })
   })
 
@@ -728,6 +743,33 @@ export const gracefulShutdown = async (
   telemetry.shutdown()
 }
 
+const loadRoutesFromDatabase = async (
+  container: IocContract<AppServices>
+): Promise<void> => {
+  const peerService = await container.use('peerService')
+  const routerService = await container.use('routerService')
+  const logger = await container.use('logger')
+
+  const peers = await peerService.getPage()
+  logger.info(
+    { peerCount: peers.length },
+    'loading static routes from database'
+  )
+
+  for (const peer of peers) {
+    // If no routes are set, we use the static address of our peers as the only routes
+    const routes = peer.routes || [peer.staticIlpAddress]
+    for (const route of routes) {
+      await routerService.addStaticRoute(
+        route,
+        peer.id,
+        peer.tenantId,
+        peer.assetId
+      )
+    }
+  }
+}
+
 export const start = async (
   container: IocContract<AppServices>,
   app: App
@@ -819,6 +861,8 @@ export const start = async (
       `Auto-peering server listening on ${config.autoPeeringServerPort}`
     )
   }
+
+  await loadRoutesFromDatabase(container)
 }
 
 // If this script is run directly, start the server
