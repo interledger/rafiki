@@ -18,6 +18,7 @@ import { listSubresource } from '../../wallet_address/routes'
 import { AccessAction } from '@interledger/open-payments'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
 import { PaymentMethodProviderService } from '../../../payment-method/provider/service'
+import { IncomingPaymentInitiationReason } from './model'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -144,7 +145,8 @@ async function createIncomingPayment(
     metadata: body.metadata,
     expiresAt,
     incomingAmount: body.incomingAmount && parseAmount(body.incomingAmount),
-    tenantId: ctx.params.tenantId
+    tenantId: ctx.params.tenantId,
+    initiationReason: IncomingPaymentInitiationReason.OpenPayments
   })
 
   if (isIncomingPaymentError(incomingPaymentOrError)) {
