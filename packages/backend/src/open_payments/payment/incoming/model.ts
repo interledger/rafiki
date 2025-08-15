@@ -34,6 +34,15 @@ export enum IncomingPaymentState {
   Expired = 'EXPIRED'
 }
 
+export enum IncomingPaymentInitiationReason {
+  // The incoming payment was initiated by a card payment.
+  Card = 'CARD',
+  // The incoming payemnt was initiated through Open Payments.
+  OpenPayments = 'OPEN_PAYMENTS',
+  // The incoming payment was initiated by the Admin API.
+  Admin = 'ADMIN'
+}
+
 export interface IncomingPaymentResponse {
   id: string
   walletAddressId: string
@@ -102,6 +111,7 @@ export class IncomingPayment
   public processAt!: Date | null
   public approvedAt?: Date | null
   public cancelledAt?: Date | null
+  public initiatedBy!: IncomingPaymentInitiationReason
 
   public readonly assetId!: string
   public asset!: Asset

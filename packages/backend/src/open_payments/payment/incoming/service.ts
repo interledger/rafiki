@@ -2,6 +2,7 @@ import {
   IncomingPayment,
   IncomingPaymentEvent,
   IncomingPaymentEventType,
+  IncomingPaymentInitiationReason,
   IncomingPaymentState
 } from './model'
 import { AccountingService } from '../../../accounting/service'
@@ -33,6 +34,7 @@ export interface CreateIncomingPaymentOptions {
   incomingAmount?: Amount
   metadata?: Record<string, unknown>
   tenantId: string
+  initiationReason: IncomingPaymentInitiationReason
 }
 
 export interface UpdateOptions {
@@ -143,7 +145,8 @@ async function createIncomingPayment(
     expiresAt,
     incomingAmount,
     metadata,
-    tenantId
+    tenantId,
+    initiationReason
   }: CreateIncomingPaymentOptions,
   trx?: Knex.Transaction
 ): Promise<IncomingPayment | IncomingPaymentError> {
@@ -188,7 +191,9 @@ async function createIncomingPayment(
     metadata,
     state: IncomingPaymentState.Pending,
     processAt: expiresAt,
-    tenantId
+    tenantId,
+    initiatedBy:
+      initiationReason ?? IncomingPaymentInitiationReason.OpenPayments
   })
 
   const asset = await deps.assetService.get(incomingPayment.assetId)
