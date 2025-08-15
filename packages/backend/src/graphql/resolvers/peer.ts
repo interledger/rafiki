@@ -1,9 +1,11 @@
 import { assetToGraphql } from './asset'
+import { tenantToGraphQl } from './tenant'
 import {
   QueryResolvers,
   ResolversTypes,
   Peer as SchemaPeer,
-  MutationResolvers
+  MutationResolvers,
+  PeerResolvers
 } from '../generated/graphql'
 import { Peer } from '../../payment-method/ilp/peer/model'
 import {
@@ -142,6 +144,25 @@ export const deletePeer: MutationResolvers<TenantedApolloContext>['deletePeer'] 
     }
   }
 
+export const getPeerTenant: PeerResolvers<TenantedApolloContext>['tenant'] =
+  async (parent, args, ctx): Promise<ResolversTypes['Tenant'] | null> => {
+    if (!parent.id)
+      throw new Error('"id" is required in request to resolve "tenant".')
+
+    const peerService = await ctx.container.use('peerService')
+    const peer = await peerService.get(parent.id)
+    if (!peer)
+      throw new GraphQLError(errorToMessage[PeerError.UnknownPeer], {
+        extensions: {
+          code: errorToCode[PeerError.UnknownPeer]
+        }
+      })
+    const tenantService = await ctx.container.use('tenantService')
+    const tenant = await tenantService.get(peer.tenantId)
+    if (!tenant) return null
+    return tenantToGraphQl(tenant)
+  }
+
 export const peerToGraphql = (peer: Peer): SchemaPeer => ({
   id: peer.id,
   maxPacketAmount: peer.maxPacketAmount,
@@ -150,6 +171,5 @@ export const peerToGraphql = (peer: Peer): SchemaPeer => ({
   staticIlpAddress: peer.staticIlpAddress,
   name: peer.name,
   liquidityThreshold: peer.liquidityThreshold,
-  createdAt: new Date(+peer.createdAt).toISOString(),
-  tenantId: peer.tenantId
+  createdAt: new Date(+peer.createdAt).toISOString()
 })
