@@ -203,11 +203,11 @@ export const Config = {
     'SEND_TENANT_WEBHOOKS_TO_OPERATOR',
     false
   ),
-  cardServiceUrl: optional(envString, 'CARD_SERVICE_URL'),
-  posServiceUrl: optional(envString, 'POS_SERVICE_URL')
+  cardServiceUrl: optionalString(envString, 'CARD_SERVICE_URL'),
+  posServiceUrl: optionalString(envString, 'POS_SERVICE_URL')
 }
 
-function optional(envGetter: (envVar: string) => unknown, envVar: string) {
+function optionalString(envGetter: (envVar: string) => string, envVar: string) {
   try {
     return envGetter(envVar)
   } catch (err) {
