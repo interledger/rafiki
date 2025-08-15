@@ -36,5 +36,5 @@ export const CONFIG: Config = {
   authIdpServiceDomain:
     process.env.AUTH_IDP_SERVICE_DOMAIN || 'http://localhost:3009',
   interactionReturnUrl:
-    process.env.INTERACTION_RETURN_URL || 'http://loclahost:3030'
+    process.env.INTERACTION_RETURN_URL || 'http://localhost:3030'
 }
