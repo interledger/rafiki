@@ -9,13 +9,7 @@ import {
   OutgoingPaymentError,
   isOutgoingPaymentError
 } from './errors'
-import {
-  CreateOutgoingPaymentOptions,
-  getPaymentIntervalStatus,
-  IntervalStatus,
-  OutgoingPaymentService,
-  PaymentLimits
-} from './service'
+import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config, IAppConfig } from '../../../config/app'
 import { Grant } from '../../auth/middleware'
