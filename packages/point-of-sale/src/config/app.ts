@@ -1,4 +1,6 @@
 import dotenv from 'dotenv'
+import * as fs from 'fs'
+import { ConnectionOptions } from 'tls'
 
 function envString(name: string, defaultValue?: string): string {
   const envValue = process.env[name]
@@ -41,6 +43,33 @@ export const Config = {
   dbSchema: undefined as string | undefined,
   tenantId: envString('TENANT_ID'),
   tenantSecret: envString('TENANT_SECRET'),
-  tenantSignatureVersion: envString('TENANT_SIGNATURE_VERSION'),
-  graphqlUrl: envString('GRAPHQL_URL')
+  tenantSignatureVersion: envInt('TENANT_SIGNATURE_VERSION', 1),
+  graphqlUrl: envString('GRAPHQL_URL'),
+  webhookSignatureVersion: envInt('WEBHOOK_SIGNATURE_VERSION', 1),
+  webhookSignatureSecret: envString('WEBHOOK_SIGNATURE_SECRET'),
+  webhookTimeoutMs: envInt('WEBHOOK_TIMEOUNT_MS', 30000)
+}
+
+function parseRedisTlsConfig(
+  caFile?: string,
+  keyFile?: string,
+  certFile?: string
+): ConnectionOptions | undefined {
+  const options: ConnectionOptions = {}
+
+  // self-signed certs.
+  if (caFile) {
+    options.ca = fs.readFileSync(caFile)
+    options.rejectUnauthorized = false
+  }
+
+  if (certFile) {
+    options.cert = fs.readFileSync(certFile)
+  }
+
+  if (keyFile) {
+    options.key = fs.readFileSync(keyFile)
+  }
+
+  return Object.keys(options).length > 0 ? options : undefined
 }
