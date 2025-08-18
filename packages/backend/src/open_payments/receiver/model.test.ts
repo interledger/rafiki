@@ -7,7 +7,10 @@ import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
 import { Receiver } from './model'
-import { IncomingPaymentState } from '../payment/incoming/model'
+import {
+  IncomingPaymentInitiationReason,
+  IncomingPaymentState
+} from '../payment/incoming/model'
 
 describe('Receiver Model', (): void => {
   let deps: IocContract<AppServices>
@@ -36,7 +39,8 @@ describe('Receiver Model', (): void => {
       })
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
-        tenantId: Config.operatorTenantId
+        tenantId: Config.operatorTenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
       })
       const isLocal = true
 
@@ -72,7 +76,8 @@ describe('Receiver Model', (): void => {
       })
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
-        tenantId: Config.operatorTenantId
+        tenantId: Config.operatorTenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
       })
 
       incomingPayment.state = IncomingPaymentState.Completed
@@ -95,7 +100,8 @@ describe('Receiver Model', (): void => {
       })
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
-        tenantId: Config.operatorTenantId
+        tenantId: Config.operatorTenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
       })
 
       incomingPayment.expiresAt = new Date(Date.now() - 1)
@@ -118,7 +124,8 @@ describe('Receiver Model', (): void => {
       const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
-        tenantId: walletAddress.tenantId
+        tenantId: walletAddress.tenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
       })
 
       incomingPayment.state = IncomingPaymentState.Completed
@@ -139,7 +146,8 @@ describe('Receiver Model', (): void => {
       const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
-        tenantId: walletAddress.tenantId
+        tenantId: walletAddress.tenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
       })
 
       incomingPayment.expiresAt = new Date(Date.now() - 1)

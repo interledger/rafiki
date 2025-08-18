@@ -100,6 +100,13 @@ export const createIncomingPayment: MutationResolvers<ForTenantIdContext>['creat
       throw new Error('Missing tenant id to create incoming payment')
     }
 
+    if (!ctx.isOperator && args.input.isCardPayment) {
+      ctx.logger.warn(
+        { input: args.input, tenant: ctx.tenant },
+        'non-operator cannot create card payment'
+      )
+    }
+
     const incomingPaymentOrError = await incomingPaymentService.create({
       walletAddressId: args.input.walletAddressId,
       expiresAt: !args.input.expiresAt

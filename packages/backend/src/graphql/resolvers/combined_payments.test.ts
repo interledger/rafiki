@@ -26,6 +26,7 @@ import {
 } from '../../open_payments/payment/combined/model'
 import { getPageTests } from './page.test'
 import { createTenant } from '../../tests/tenant'
+import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/model'
 
 describe('Payment', (): void => {
   let deps: IocContract<AppServices>
@@ -84,7 +85,8 @@ describe('Payment', (): void => {
     const incomingPayment = await createIncomingPayment(deps, {
       walletAddressId: inWalletAddressId,
       client: client,
-      tenantId: Config.operatorTenantId
+      tenantId: Config.operatorTenantId,
+      initiationReason: IncomingPaymentInitiationReason.OpenPayments
     })
 
     const query = await appContainer.apolloClient

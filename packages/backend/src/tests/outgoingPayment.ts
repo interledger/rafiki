@@ -10,7 +10,10 @@ import { CreateOutgoingPaymentOptions } from '../open_payments/payment/outgoing/
 import { LiquidityAccountType } from '../accounting/service'
 import { WalletAddress } from '../open_payments/wallet_address/model'
 import { CreateIncomingPaymentOptions } from '../open_payments/payment/incoming/service'
-import { IncomingPayment } from '../open_payments/payment/incoming/model'
+import {
+  IncomingPayment,
+  IncomingPaymentInitiationReason
+} from '../open_payments/payment/incoming/model'
 import { createIncomingPayment } from './incomingPayment'
 import assert from 'assert'
 import { Config } from '../config/app'
@@ -52,7 +55,8 @@ export async function createOutgoingPayment(
 
     const incomingPayment = await createIncomingPayment(deps, {
       walletAddressId: options.walletAddressId,
-      tenantId: walletAddress.tenantId
+      tenantId: walletAddress.tenantId,
+      initiationReason: IncomingPaymentInitiationReason.Admin
     })
     await incomingPayment.$query().delete()
 
@@ -127,7 +131,10 @@ export async function createOutgoingPaymentWithReceiver(
   const incomingPayment = await createIncomingPayment(deps, {
     ...args.incomingPaymentOptions,
     walletAddressId: args.receivingWalletAddress.id,
-    tenantId: Config.operatorTenantId
+    tenantId: Config.operatorTenantId,
+    initiationReason: args.incomingPaymentOptions?.client
+      ? IncomingPaymentInitiationReason.OpenPayments
+      : IncomingPaymentInitiationReason.Admin
   })
 
   const config = await deps.use('config')

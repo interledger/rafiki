@@ -21,6 +21,7 @@ import {
   toCombinedPayment
 } from '../../../tests/combinedPayment'
 import { createTenant } from '../../../tests/tenant'
+import { IncomingPaymentInitiationReason } from '../incoming/model'
 
 describe('Combined Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -67,7 +68,8 @@ describe('Combined Payment Service', (): void => {
   async function setupPayments(deps: IocContract<AppServices>) {
     const incomingPayment = await createIncomingPayment(deps, {
       walletAddressId: receiveWalletAddress.id,
-      tenantId: Config.operatorTenantId
+      tenantId: Config.operatorTenantId,
+      initiationReason: IncomingPaymentInitiationReason.Admin
     })
     const receiverUrl = incomingPayment.getUrl(config.openPaymentsUrl)
 

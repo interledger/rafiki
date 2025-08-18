@@ -6,6 +6,7 @@ import { WalletAddress } from '../open_payments/wallet_address/model'
 import { Receiver } from '../open_payments/receiver/model'
 import { createIncomingPayment } from './incomingPayment'
 import { OpenPaymentsPaymentMethod } from '../payment-method/provider/service'
+import { IncomingPaymentInitiationReason } from '../open_payments/payment/incoming/model'
 
 type CreateReceiverOptions = Omit<
   CreateIncomingPaymentOptions,
@@ -27,7 +28,10 @@ export async function createReceiver(
   const incomingPayment = await createIncomingPayment(deps, {
     ...options,
     walletAddressId: walletAddress.id,
-    tenantId: options?.tenantId ?? config.operatorTenantId
+    tenantId: options?.tenantId ?? config.operatorTenantId,
+    initiationReason: options?.client
+      ? IncomingPaymentInitiationReason.OpenPayments
+      : IncomingPaymentInitiationReason.Admin
   })
 
   return new Receiver(

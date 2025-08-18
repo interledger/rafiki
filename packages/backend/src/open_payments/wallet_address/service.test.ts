@@ -29,6 +29,7 @@ import { WalletAddressAdditionalProperty } from './additional_property/model'
 import { CacheDataStore } from '../../middleware/cache/data-stores'
 import { createTenantSettings } from '../../tests/tenantSettings'
 import { TenantSettingKeys } from '../../tenants/settings/model'
+import { IncomingPaymentInitiationReason } from '../payment/incoming/model'
 
 describe('Open Payments Wallet Address Service', (): void => {
   let deps: IocContract<AppServices>
@@ -342,7 +343,8 @@ describe('Open Payments Wallet Address Service', (): void => {
                 description: 'Test incoming payment',
                 externalRef: '#123'
               },
-              tenantId: Config.operatorTenantId
+              tenantId: Config.operatorTenantId,
+              initiationReason: IncomingPaymentInitiationReason.Admin
             })
 
             await walletAddressService.update({
@@ -387,7 +389,8 @@ describe('Open Payments Wallet Address Service', (): void => {
                 description: 'Test incoming payment',
                 externalRef: '#123'
               },
-              tenantId: Config.operatorTenantId
+              tenantId: Config.operatorTenantId,
+              initiationReason: IncomingPaymentInitiationReason.Admin
             })
 
             await walletAddressService.update({

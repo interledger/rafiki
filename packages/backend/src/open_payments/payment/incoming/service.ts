@@ -34,7 +34,7 @@ export interface CreateIncomingPaymentOptions {
   incomingAmount?: Amount
   metadata?: Record<string, unknown>
   tenantId: string
-  initiationReason?: IncomingPaymentInitiationReason
+  initiationReason: IncomingPaymentInitiationReason
 }
 
 export interface UpdateOptions {
@@ -192,8 +192,7 @@ async function createIncomingPayment(
     state: IncomingPaymentState.Pending,
     processAt: expiresAt,
     tenantId,
-    initiatedBy:
-      initiationReason ?? IncomingPaymentInitiationReason.OpenPayments
+    initiatedBy: initiationReason
   })
 
   const asset = await deps.assetService.get(incomingPayment.assetId)

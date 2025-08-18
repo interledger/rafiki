@@ -203,11 +203,15 @@ export const Config = {
     'SEND_TENANT_WEBHOOKS_TO_OPERATOR',
     false
   ),
-  cardServiceUrl: optionalString(envString, 'CARD_SERVICE_URL'),
-  posServiceUrl: optionalString(envString, 'POS_SERVICE_URL')
+  cardServiceUrl: optional(envString, 'CARD_SERVICE_URL'),
+  posServiceUrl: optional(envString, 'POS_SERVICE_URL')
 }
 
-function optionalString(envGetter: (envVar: string) => string, envVar: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function optional<T extends (...args: any[]) => ReturnType<T>>(
+  envGetter: T,
+  envVar: string
+): ReturnType<T> | undefined {
   try {
     return envGetter(envVar)
   } catch (err) {

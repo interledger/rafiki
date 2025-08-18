@@ -13,7 +13,8 @@ import {
   IncomingPaymentEvent,
   IncomingPaymentEventType,
   IncomingPaymentState,
-  IncomingPaymentEventError
+  IncomingPaymentEventError,
+  IncomingPaymentInitiationReason
 } from './model'
 import { WalletAddress } from '../../wallet_address/model'
 import { OpenPaymentsPaymentMethod } from '../../../payment-method/provider/service'
@@ -51,7 +52,8 @@ describe('Models', (): void => {
       incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
         metadata: { description: 'my payment' },
-        tenantId: walletAddress.tenantId
+        tenantId: walletAddress.tenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
       })
     })
 
