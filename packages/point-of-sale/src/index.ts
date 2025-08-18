@@ -20,7 +20,9 @@ import { createPosDeviceService } from './merchant/devices/service'
 import { createMerchantRoutes } from './merchant/routes'
 import { createPaymentService } from './payments/service'
 import { createPosDeviceRoutes } from './merchant/devices/routes'
+import { createPaymentRoutes } from './payments/routes'
 import axios from 'axios'
+import { createCardServiceClient } from './card-service-client/client'
 
 export function initIocContainer(
   config: typeof Config
@@ -183,12 +185,16 @@ export function initIocContainer(
     async (deps: IocContract<AppServices>) => {
       const logger = await deps.use('logger')
       const knex = await deps.use('knex')
-      return await createPosDeviceService({
-        logger,
-        knex
-      })
+      return await createPosDeviceService({ logger, knex })
     }
   )
+
+  container.singleton('cardServiceClient', async (deps) => {
+    return createCardServiceClient({
+      logger: await deps.use('logger'),
+      axios: await deps.use('axios')
+    })
+  })
 
   container.singleton('posDeviceRoutes', async (deps) =>
     createPosDeviceRoutes({
@@ -196,6 +202,14 @@ export function initIocContainer(
       posDeviceService: await deps.use('posDeviceService')
     })
   )
+
+  container.singleton('paymentRoutes', async (deps) => {
+    return createPaymentRoutes({
+      logger: await deps.use('logger'),
+      paymentService: await deps.use('paymentClient'),
+      cardServiceClient: await deps.use('cardServiceClient')
+    })
+  })
 
   return container
 }
