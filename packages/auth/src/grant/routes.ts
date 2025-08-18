@@ -23,7 +23,12 @@ import { canSkipInteraction } from './utils'
 import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
 import { generateRouteLogs } from '../shared/utils'
 import { SubjectService } from '../subject/service'
-import { errorToGNAPCode, errorToHTTPCode, isGrantError } from './errors'
+import {
+  errorToGNAPCode,
+  errorToHTTPCode,
+  GrantError,
+  isGrantError
+} from './errors'
 import { TenantService } from '../tenant/service'
 import { Tenant, isTenantWithIdp } from '../tenant/model'
 
@@ -131,14 +136,15 @@ async function createGrant(
   let noInteractionRequired: boolean
   try {
     noInteractionRequired = canSkipInteraction(deps.config, ctx.request.body)
-  } catch (err) {
-    throw new GNAPServerRouteError(
-      400,
-      GNAPErrorCode.InvalidRequest,
-      err instanceof Error
-        ? err.message
-        : 'unknown error while checking interaction requirement'
-    )
+  } catch (e) {
+    if (isGrantError(e)) {
+      throw new GNAPServerRouteError(
+        400,
+        GNAPErrorCode.InvalidRequest,
+        e.message
+      )
+    }
+    throw e
   }
   if (noInteractionRequired) {
     await createApprovedGrant(deps, tenantId, ctx)
@@ -167,7 +173,7 @@ async function createApprovedGrant(
       throw new GNAPServerRouteError(
         errorToHTTPCode[err.code],
         errorToGNAPCode[err.code],
-        err.message || 'invalid request'
+        err.message
       )
     }
     throw new GNAPServerRouteError(
@@ -177,7 +183,6 @@ async function createApprovedGrant(
     )
   }
   const access = await deps.accessService.getByGrant(grant.id)
-  const subjects = await deps.subjectService.getByGrant(grant.id)
   ctx.status = 200
 
   logger.debug(
@@ -192,8 +197,7 @@ async function createApprovedGrant(
     grant,
     { authServerUrl: config.authServerUrl },
     accessToken,
-    access,
-    subjects
+    access
   )
 }
 

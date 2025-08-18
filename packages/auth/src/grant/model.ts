@@ -179,7 +179,7 @@ export function toOpenPaymentsGrant(
   args: ToOpenPaymentsGrantArgs,
   accessToken: AccessToken,
   accessItems: Access[],
-  subjectItems: Subject[]
+  subjectItems?: Subject[]
 ): OpenPaymentsGrant {
   return {
     access_token: accessToken

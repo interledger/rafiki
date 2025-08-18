@@ -9,8 +9,8 @@ export enum GrantErrorCode {
 
 export class GrantError extends Error {
   code: GrantErrorCode
-  constructor(code: GrantErrorCode, description?: string) {
-    super(description || errorToMessage[code])
+  constructor(code: GrantErrorCode, message: string) {
+    super(message)
     this.name = 'GrantError'
     this.code = code
   }
