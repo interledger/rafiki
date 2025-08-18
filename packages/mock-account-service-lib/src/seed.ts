@@ -107,7 +107,7 @@ export async function setupFromSeed(
       assets[peeringAsset].id
     )
 
-    if (existingPeer) {
+    if (existingPeer && existingPeer.staticIlpAddress === peer.peerIlpAddress) {
       continue
     }
 

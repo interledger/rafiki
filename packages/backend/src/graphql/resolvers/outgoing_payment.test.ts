@@ -1,10 +1,19 @@
-import { ApolloError, gql } from '@apollo/client'
+import {
+  ApolloClient,
+  ApolloError,
+  gql,
+  NormalizedCacheObject
+} from '@apollo/client'
 import { PaymentError } from '@interledger/pay'
 import { v4 as uuid } from 'uuid'
 import * as Pay from '@interledger/pay'
 
 import { getPageTests } from './page.test'
-import { createTestApp, TestContainer } from '../../tests/app'
+import {
+  createApolloClient,
+  createTestApp,
+  TestContainer
+} from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
@@ -37,6 +46,7 @@ import {
 } from '../generated/graphql'
 import { faker } from '@faker-js/faker'
 import { GraphQLErrorCode } from '../errors'
+import { createTenant } from '../../tests/tenant'
 
 describe('OutgoingPayment Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -126,8 +136,11 @@ describe('OutgoingPayment Resolvers', (): void => {
       let secondOutgoingPayment: OutgoingPaymentModel
 
       const pageQuery = gql`
-        query OutgoingPayments($filter: OutgoingPaymentFilter) {
-          outgoingPayments(filter: $filter) {
+        query OutgoingPayments(
+          $filter: OutgoingPaymentFilter
+          $tenantId: String
+        ) {
+          outgoingPayments(filter: $filter, tenantId: $tenantId) {
             edges {
               node {
                 id
@@ -334,6 +347,174 @@ describe('OutgoingPayment Resolvers', (): void => {
             id: secondOutgoingPayment.id
           })
         )
+      })
+
+      describe('tenant boundaries', (): void => {
+        let tenantPayment: OutgoingPaymentModel
+        let secondTenantPayment: OutgoingPaymentModel
+        let tenantedApolloClient: ApolloClient<NormalizedCacheObject>
+
+        beforeEach(async (): Promise<void> => {
+          const tenant = await createTenant(deps)
+          tenantedApolloClient = await createApolloClient(
+            appContainer.container,
+            appContainer.app,
+            tenant.id
+          )
+          const tenantWalletAddress = await createWalletAddress(deps, {
+            tenantId: tenant.id
+          })
+
+          tenantPayment = await createOutgoingPayment(deps, {
+            walletAddressId: tenantWalletAddress.id,
+            tenantId: tenant.id,
+            method: 'ilp',
+            receiver,
+            validDestination: false
+          })
+
+          secondTenantPayment = await createOutgoingPayment(deps, {
+            walletAddressId: tenantWalletAddress.id,
+            tenantId: tenant.id,
+            method: 'ilp',
+            receiver,
+            validDestination: false
+          })
+        })
+
+        test('operator can get outgoing payments across all tenants', async (): Promise<void> => {
+          const query = await appContainer.apolloClient
+            .query({
+              query: pageQuery
+            })
+            .then((query): OutgoingPaymentConnection => {
+              if (query.data) {
+                return query.data.outgoingPayments
+              } else {
+                throw new Error()
+              }
+            })
+
+          expect(query.edges).toHaveLength(4)
+          expect(query.edges).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                node: expect.objectContaining({
+                  id: firstOutgoingPayment.id
+                })
+              }),
+              expect.objectContaining({
+                node: expect.objectContaining({
+                  id: secondOutgoingPayment.id
+                })
+              }),
+              expect.objectContaining({
+                node: expect.objectContaining({
+                  id: tenantPayment.id
+                })
+              }),
+              expect.objectContaining({
+                node: expect.objectContaining({
+                  id: secondTenantPayment.id
+                })
+              })
+            ])
+          )
+        })
+
+        test('tenant canot get outgoing payments across all tenants', async (): Promise<void> => {
+          const query = await tenantedApolloClient
+            .query({
+              query: pageQuery
+            })
+            .then((query): OutgoingPaymentConnection => {
+              if (query.data) {
+                return query.data.outgoingPayments
+              } else {
+                throw new Error()
+              }
+            })
+
+          expect(query.edges).toHaveLength(2)
+          expect(query.edges).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                node: expect.objectContaining({
+                  id: tenantPayment.id
+                })
+              }),
+              expect.objectContaining({
+                node: expect.objectContaining({
+                  id: secondTenantPayment.id
+                })
+              })
+            ])
+          )
+        })
+
+        test('operator can filter outgoing payments across all tenants', async (): Promise<void> => {
+          const query = await appContainer.apolloClient
+            .query({
+              query: pageQuery,
+              variables: {
+                tenantId: tenantPayment.tenantId
+              }
+            })
+            .then((query): OutgoingPaymentConnection => {
+              if (query.data) {
+                return query.data.outgoingPayments
+              } else {
+                throw new Error()
+              }
+            })
+
+          expect(query.edges).toHaveLength(2)
+          expect(query.edges).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                node: expect.objectContaining({
+                  id: tenantPayment.id
+                })
+              }),
+              expect.objectContaining({
+                node: expect.objectContaining({
+                  id: secondTenantPayment.id
+                })
+              })
+            ])
+          )
+        })
+
+        test('tenant cannot filter outgoing payments across all tenants', async (): Promise<void> => {
+          const query = await tenantedApolloClient
+            .query({
+              query: pageQuery,
+              variables: { tenantId: firstOutgoingPayment.tenantId }
+            })
+            .then((query): OutgoingPaymentConnection => {
+              if (query.data) {
+                return query.data.outgoingPayments
+              } else {
+                throw new Error()
+              }
+            })
+
+          expect(query.edges).toHaveLength(2)
+          expect(query.edges).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                node: expect.objectContaining({
+                  id: tenantPayment.id
+                })
+              }),
+              expect.objectContaining({
+                node: expect.objectContaining({
+                  id: secondTenantPayment.id
+                })
+              })
+            ])
+          )
+        })
       })
     })
 

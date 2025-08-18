@@ -708,6 +708,8 @@ export enum LiquidityError {
   UnknownAsset = 'UnknownAsset',
   /** The specified incoming payment could not be found. */
   UnknownIncomingPayment = 'UnknownIncomingPayment',
+  /** The specified outgoing payment could not be found. */
+  UnknownOutgoingPayment = 'UnknownOutgoingPayment',
   /** The specified payment could not be found. */
   UnknownPayment = 'UnknownPayment',
   /** The specified peer could not be found. */

@@ -587,6 +587,7 @@ async function getPeerByAddressAndAsset(
       ) {
         id
         name
+        staticIlpAddress
         asset {
           id
           scale
