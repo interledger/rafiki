@@ -32,7 +32,7 @@ import {
 } from '../../wallet_address/service'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
-import { Interval } from 'luxon'
+import { DateTime, Interval } from 'luxon'
 import { knex } from 'knex'
 import { AccountAlreadyExistsError } from '../../../accounting/errors'
 import { PaymentMethodHandlerService } from '../../../payment-method/handler/service'
@@ -510,32 +510,6 @@ export enum IntervalStatus {
   Next = 'next'
 }
 
-export function getPaymentIntervalStatus({
-  limits,
-  payment
-}: {
-  limits: PaymentLimits
-  payment: OutgoingPayment
-}): IntervalStatus | null {
-  const interval = limits.paymentInterval
-
-  if (!interval) {
-    return null
-  }
-
-  const createdTime = payment.createdAt.getTime()
-  const start = interval.start?.toMillis() ?? -Infinity
-  const end = interval.end?.toMillis() ?? Infinity
-
-  if (createdTime < start) {
-    return IntervalStatus.Previous
-  } else if (createdTime >= end) {
-    return IntervalStatus.Next
-  } else {
-    return IntervalStatus.Current
-  }
-}
-
 function validateAmountAssets(
   payment: OutgoingPayment,
   limits: Limits
@@ -650,10 +624,11 @@ async function validateGrantAndAddSpentAmountsToPayment(
       const asset = await deps.assetService.get(grantPayment.quote.assetId)
       if (asset) grantPayment.quote.asset = asset
 
-      const intervalStatus = getPaymentIntervalStatus({
-        limits: paymentLimits,
-        payment: grantPayment
-      })
+      const addToInterval =
+        paymentLimits.paymentInterval &&
+        paymentLimits.paymentInterval.contains(
+          DateTime.fromJSDate(grantPayment.createdAt)
+        )
 
       if (grantPayment.failed) {
         const totalSent = validateSentAmount(
@@ -674,7 +649,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
           grantPayment.debitAmount.value
         newSpentAmounts.received.value += estimatedReceived
 
-        if (intervalStatus === IntervalStatus.Current) {
+        if (addToInterval) {
           updateIntervalAmounts(newSpentAmounts, totalSent, estimatedReceived)
         }
       } else {
@@ -682,7 +657,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
         newSpentAmounts.sent.value += grantPayment.debitAmount.value
         newSpentAmounts.received.value += grantPayment.receiveAmount.value
 
-        if (intervalStatus === 'current') {
+        if (addToInterval) {
           updateIntervalAmounts(
             newSpentAmounts,
             grantPayment.debitAmount.value,
@@ -692,10 +667,13 @@ async function validateGrantAndAddSpentAmountsToPayment(
       }
     }
   } else {
-    const intervalStatus = getPaymentIntervalStatus({
-      limits: paymentLimits,
-      payment
-    })
+    const isInIntervalAndFirstPayment = hasInterval
+      ? !latestSpentAmounts ||
+        (latestSpentAmounts.intervalEnd &&
+          paymentLimits.paymentInterval?.start &&
+          latestSpentAmounts.intervalEnd <
+            paymentLimits.paymentInterval.start.toJSDate())
+      : false
 
     const startingSpendAmounts = latestSpentAmounts ?? {
       debitAmountCode: payment.asset.code,
@@ -722,22 +700,21 @@ async function validateGrantAndAddSpentAmountsToPayment(
     }
 
     if (hasInterval) {
-      const intervalDebitValue =
-        startingSpendAmounts.intervalDebitAmountValue ?? 0n
-      const intervalReceiveValue =
-        startingSpendAmounts.intervalReceiveAmountValue ?? 0n
-
       newSpentAmounts = {
         ...baseSpentAmounts,
         intervalSent: {
           assetCode: startingSpendAmounts.debitAmountCode,
           assetScale: startingSpendAmounts.debitAmountScale,
-          value: intervalStatus === IntervalStatus.Previous ? 0n : intervalDebitValue
+          value: isInIntervalAndFirstPayment
+            ? 0n
+            : startingSpendAmounts.intervalDebitAmountValue ?? 0n
         },
         intervalReceived: {
           assetCode: startingSpendAmounts.receiveAmountCode,
           assetScale: startingSpendAmounts.receiveAmountScale,
-          value: intervalStatus === 'previous' ? 0n : intervalReceiveValue
+          value: isInIntervalAndFirstPayment
+            ? 0n
+            : startingSpendAmounts.intervalReceiveAmountValue ?? 0n
         }
       } as SpentAmountsWithInterval
     } else {
