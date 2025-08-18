@@ -89,6 +89,10 @@ export class App {
       webhookHandlerRoutes.handleWebhook
     )
 
+    // POST /payment
+    // Initiate a payment
+    router.post<DefaultState, PaymentContext>('/payment', paymentRoutes.payment)
+
     koa.use(cors())
     koa.use(router.routes())
 
