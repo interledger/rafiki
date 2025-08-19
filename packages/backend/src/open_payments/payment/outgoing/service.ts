@@ -688,7 +688,6 @@ async function validateGrantAndAddSpentAmountsToPayment(
           continue
         }
 
-        // Sum grant totals
         outgoingPaymentGrantSpentAmounts.grantTotalDebitAmountValue += totalSent
         // Estimate delivered amount of failed payment
         const estimatedReceived =
@@ -706,7 +705,6 @@ async function validateGrantAndAddSpentAmountsToPayment(
               0n) + estimatedReceived
         }
       } else {
-        // Sum grant totals for successful payments
         outgoingPaymentGrantSpentAmounts.grantTotalDebitAmountValue +=
           grantPayment.debitAmount.value
         outgoingPaymentGrantSpentAmounts.grantTotalReceiveAmountValue +=
