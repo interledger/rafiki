@@ -14,7 +14,10 @@ import { IlpAddress } from 'ilp-packet'
 import base64url from 'base64url'
 import { TenantSettingService } from '../../tenants/settings/service'
 import { TenantSetting, TenantSettingKeys } from '../../tenants/settings/model'
-import { IncomingPayment } from '../../open_payments/payment/incoming/model'
+import {
+  IncomingPayment,
+  IncomingPaymentInitiationReason
+} from '../../open_payments/payment/incoming/model'
 
 describe('PaymentMethodProviderService', (): void => {
   let deps: IocContract<AppServices>
@@ -55,7 +58,8 @@ describe('PaymentMethodProviderService', (): void => {
       })
       incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
-        tenantId: Config.operatorTenantId
+        tenantId: Config.operatorTenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
       })
     })
     test('returns payment methods with ILP payment method for operator tenant', async (): Promise<void> => {

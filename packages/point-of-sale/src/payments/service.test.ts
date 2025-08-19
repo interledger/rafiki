@@ -54,7 +54,16 @@ describe('createPaymentService', () => {
       incomingAmount
     )
     expect(result).toBe(expectedUrl)
-    expect(mockApolloClient.mutate).toHaveBeenCalled()
+    expect(mockApolloClient.mutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        variables: {
+          walletAddressId,
+          incomingAmount,
+          idempotencyKey: expect.any(String),
+          isCardPayment: true
+        }
+      })
+    )
   })
 
   it('should throw and log error if payment creation fails (no id)', async () => {

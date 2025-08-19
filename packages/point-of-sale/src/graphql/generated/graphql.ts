@@ -233,6 +233,8 @@ export type CreateIncomingPaymentInput = {
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Maximum amount to be received for this incoming payment. */
   incomingAmount?: InputMaybe<AmountInput>;
+  /** Whether or not the incoming payment is being created for a card payment. */
+  isCardPayment?: InputMaybe<Scalars['Boolean']['input']>;
   /** Additional metadata associated with the incoming payment. */
   metadata?: InputMaybe<Scalars['JSONObject']['input']>;
   /** Unique identifier of the wallet address under which the incoming payment will be created. */
@@ -715,6 +717,8 @@ export enum LiquidityError {
   UnknownAsset = 'UnknownAsset',
   /** The specified incoming payment could not be found. */
   UnknownIncomingPayment = 'UnknownIncomingPayment',
+  /** The specified outgoing payment could not be found. */
+  UnknownOutgoingPayment = 'UnknownOutgoingPayment',
   /** The specified payment could not be found. */
   UnknownPayment = 'UnknownPayment',
   /** The specified peer could not be found. */

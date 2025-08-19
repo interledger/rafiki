@@ -75,7 +75,8 @@ const createIncomingPayment: FnWithDeps<
     variables: {
       walletAddressId,
       incomingAmount,
-      idempotencyKey: v4()
+      idempotencyKey: v4(),
+      isCardPayment: true
     }
   })
 

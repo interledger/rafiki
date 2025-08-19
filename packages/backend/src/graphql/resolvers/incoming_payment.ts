@@ -5,7 +5,10 @@ import {
   IncomingPayment as SchemaIncomingPayment,
   QueryResolvers
 } from '../generated/graphql'
-import { IncomingPayment } from '../../open_payments/payment/incoming/model'
+import {
+  IncomingPayment,
+  IncomingPaymentInitiationReason
+} from '../../open_payments/payment/incoming/model'
 import {
   isIncomingPaymentError,
   errorToCode,
@@ -97,6 +100,13 @@ export const createIncomingPayment: MutationResolvers<ForTenantIdContext>['creat
       throw new Error('Missing tenant id to create incoming payment')
     }
 
+    if (!ctx.isOperator && args.input.isCardPayment) {
+      ctx.logger.warn(
+        { input: args.input, tenant: ctx.tenant },
+        'non-operator cannot create card payment'
+      )
+    }
+
     const incomingPaymentOrError = await incomingPaymentService.create({
       walletAddressId: args.input.walletAddressId,
       expiresAt: !args.input.expiresAt
@@ -104,7 +114,11 @@ export const createIncomingPayment: MutationResolvers<ForTenantIdContext>['creat
         : new Date(args.input.expiresAt),
       incomingAmount: args.input.incomingAmount,
       metadata: args.input.metadata,
-      tenantId
+      tenantId,
+      initiationReason:
+        ctx.isOperator && args.input.isCardPayment
+          ? IncomingPaymentInitiationReason.Card
+          : IncomingPaymentInitiationReason.Admin
     })
     if (isIncomingPaymentError(incomingPaymentOrError)) {
       throw new GraphQLError(errorToMessage[incomingPaymentOrError], {
