@@ -388,7 +388,8 @@ describe('Receiver Service', (): void => {
             incomingAmount,
             expiresAt,
             metadata,
-            tenantId: Config.operatorTenantId
+            tenantId: Config.operatorTenantId,
+            initiationReason: IncomingPaymentInitiationReason.Admin
           })
           expect(remoteIncomingPaymentCreateSpy).not.toHaveBeenCalled()
         }

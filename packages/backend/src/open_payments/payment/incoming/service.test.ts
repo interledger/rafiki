@@ -347,7 +347,8 @@ describe('Incoming Payment Service', (): void => {
             ).id,
         ...options,
         incomingAmount: options.incomingAmount ? amount : undefined,
-        tenantId
+        tenantId,
+        initiationReason: IncomingPaymentInitiationReason.OpenPayments
       })
       assert.ok(!isIncomingPaymentError(incomingPayment))
       expect(incomingPayment).toMatchObject({
