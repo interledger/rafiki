@@ -186,7 +186,8 @@ describe('Combined Payment Service', (): void => {
         })
         const tenantIncomingPayment = await createIncomingPayment(deps, {
           walletAddressId: tenantWalletAddress.id,
-          tenantId: tenant.id
+          tenantId: tenant.id,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
 
         await expect(

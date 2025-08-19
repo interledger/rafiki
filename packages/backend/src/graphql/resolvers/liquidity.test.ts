@@ -2502,7 +2502,8 @@ describe('Liquidity Resolvers', (): void => {
                   assetScale: tenantWalletAddress.asset.scale
                 },
                 expiresAt: new Date(Date.now() + 60 * 1000),
-                tenantId: tenant.id
+                tenantId: tenant.id,
+                initiationReason: IncomingPaymentInitiationReason.Admin
               })
               const tenantOutgoingPayment = await createOutgoingPayment(deps, {
                 tenantId: tenant.id,
@@ -2854,7 +2855,8 @@ describe('Liquidity Resolvers', (): void => {
                   assetScale: tenantWalletAddress.asset.scale
                 },
                 expiresAt: new Date(Date.now() + 60 * 1000),
-                tenantId: tenant.id
+                tenantId: tenant.id,
+                initiationReason: IncomingPaymentInitiationReason.Admin
               })
               const tenantOutgoingPayment = await createOutgoingPayment(deps, {
                 tenantId: tenant.id,
