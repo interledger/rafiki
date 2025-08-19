@@ -591,37 +591,34 @@ async function validateGrantAndAddSpentAmountsToPayment(
 
   // TODO: error if paymentInterval exists but doesnt have both start and end
 
-  const outgoingPaymentGrantSpentAmountsInsert: PartialModelObject<OutgoingPaymentGrantSpentAmounts> & {
-    intervalDebitAmountValue: null | bigint
-    intervalReceiveAmountValue: null | bigint
-  } = {
-    id: uuid(),
-    grantId: grant.id,
-    outgoingPaymentId: payment.id,
-    receiveAmountScale: payment.receiveAmount.assetScale,
-    receiveAmountCode: payment.receiveAmount.assetCode,
-    paymentReceiveAmountValue: payment.receiveAmount.value,
-    intervalReceiveAmountValue: null,
-    grantTotalReceiveAmountValue: 0n,
-    debitAmountScale: payment.debitAmount.assetScale,
-    debitAmountCode: payment.debitAmount.assetCode,
-    paymentDebitAmountValue: payment.debitAmount.value,
-    intervalDebitAmountValue: null,
-    grantTotalDebitAmountValue: 0n,
-    paymentState: payment.state,
-    intervalStart: paymentLimits.paymentInterval?.start?.toJSDate() || null,
-    intervalEnd: paymentLimits.paymentInterval?.end?.toJSDate() || null
-  }
+  const outgoingPaymentGrantSpentAmounts =
+    OutgoingPaymentGrantSpentAmounts.create({
+      id: uuid(),
+      grantId: grant.id,
+      outgoingPaymentId: payment.id,
+      receiveAmountScale: payment.receiveAmount.assetScale,
+      receiveAmountCode: payment.receiveAmount.assetCode,
+      paymentReceiveAmountValue: payment.receiveAmount.value,
+      intervalReceiveAmountValue: null,
+      grantTotalReceiveAmountValue: 0n,
+      debitAmountScale: payment.debitAmount.assetScale,
+      debitAmountCode: payment.debitAmount.assetCode,
+      paymentDebitAmountValue: payment.debitAmount.value,
+      intervalDebitAmountValue: null,
+      grantTotalDebitAmountValue: 0n,
+      paymentState: payment.state,
+      intervalStart: paymentLimits.paymentInterval?.start?.toJSDate() || null,
+      intervalEnd: paymentLimits.paymentInterval?.end?.toJSDate() || null,
+      createdAt: new Date()
+    })
 
   const hasInterval = !!paymentLimits.paymentInterval
 
   if (isExistingGrant && !latestSpentAmounts) {
     // Legacy path: calculate spent amounts from historical payments
-    outgoingPaymentGrantSpentAmountsInsert.grantTotalDebitAmountValue = 0n
-    outgoingPaymentGrantSpentAmountsInsert.grantTotalReceiveAmountValue = 0n
     if (hasInterval) {
-      outgoingPaymentGrantSpentAmountsInsert.intervalDebitAmountValue = 0n
-      outgoingPaymentGrantSpentAmountsInsert.intervalReceiveAmountValue = 0n
+      outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue = 0n
+      outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue = 0n
     }
 
     const grantPayments = await OutgoingPayment.query(trx)
@@ -655,37 +652,36 @@ async function validateGrantAndAddSpentAmountsToPayment(
         }
 
         // Sum grant totals
-        outgoingPaymentGrantSpentAmountsInsert.grantTotalDebitAmountValue +=
-          totalSent
+        outgoingPaymentGrantSpentAmounts.grantTotalDebitAmountValue += totalSent
         // Estimate delivered amount of failed payment
         const estimatedReceived =
           (grantPayment.receiveAmount.value * totalSent) /
           grantPayment.debitAmount.value
-        outgoingPaymentGrantSpentAmountsInsert.grantTotalReceiveAmountValue +=
+        outgoingPaymentGrantSpentAmounts.grantTotalReceiveAmountValue +=
           estimatedReceived
 
         if (addToInterval) {
-          // TODO: handle these non-null assertion better? should never be null if
-          // addToInterval is true. Could ?? 0n instead but kinda skirts the issue.
-          outgoingPaymentGrantSpentAmountsInsert.intervalDebitAmountValue! +=
+          outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue =
+            (outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue ?? 0n) +
             totalSent
-          outgoingPaymentGrantSpentAmountsInsert.intervalReceiveAmountValue! +=
-            estimatedReceived
+          outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue =
+            (outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue ??
+              0n) + estimatedReceived
         }
       } else {
         // Sum grant totals for successful payments
-        outgoingPaymentGrantSpentAmountsInsert.grantTotalDebitAmountValue +=
+        outgoingPaymentGrantSpentAmounts.grantTotalDebitAmountValue +=
           grantPayment.debitAmount.value
-        outgoingPaymentGrantSpentAmountsInsert.grantTotalReceiveAmountValue +=
+        outgoingPaymentGrantSpentAmounts.grantTotalReceiveAmountValue +=
           grantPayment.receiveAmount.value
 
         if (addToInterval) {
-          // TODO: handle these non-null assertion better? should never be null if
-          // addToInterval is true. Could ?? 0n instead but kinda skirts the issue.
-          outgoingPaymentGrantSpentAmountsInsert.intervalDebitAmountValue! +=
+          outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue =
+            (outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue ?? 0n) +
             grantPayment.debitAmount.value
-          outgoingPaymentGrantSpentAmountsInsert.intervalReceiveAmountValue! +=
-            grantPayment.receiveAmount.value
+          outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue =
+            (outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue ??
+              0n) + grantPayment.receiveAmount.value
         }
       }
     }
@@ -699,17 +695,17 @@ async function validateGrantAndAddSpentAmountsToPayment(
             paymentLimits.paymentInterval.start.toJSDate())
       : false
 
-    outgoingPaymentGrantSpentAmountsInsert.grantTotalDebitAmountValue =
+    outgoingPaymentGrantSpentAmounts.grantTotalDebitAmountValue =
       latestSpentAmounts?.grantTotalDebitAmountValue ?? 0n
-    outgoingPaymentGrantSpentAmountsInsert.grantTotalReceiveAmountValue =
+    outgoingPaymentGrantSpentAmounts.grantTotalReceiveAmountValue =
       latestSpentAmounts?.grantTotalReceiveAmountValue ?? 0n
 
     if (hasInterval) {
-      outgoingPaymentGrantSpentAmountsInsert.intervalDebitAmountValue =
+      outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue =
         isInIntervalAndFirstPayment
           ? 0n
           : latestSpentAmounts?.intervalDebitAmountValue ?? 0n
-      outgoingPaymentGrantSpentAmountsInsert.intervalReceiveAmountValue =
+      outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue =
         isInIntervalAndFirstPayment
           ? 0n
           : latestSpentAmounts?.intervalReceiveAmountValue ?? 0n
@@ -717,10 +713,8 @@ async function validateGrantAndAddSpentAmountsToPayment(
   }
 
   if (hasInterval) {
-    const debit =
-      outgoingPaymentGrantSpentAmountsInsert.intervalDebitAmountValue
-    const receive =
-      outgoingPaymentGrantSpentAmountsInsert.intervalReceiveAmountValue
+    const debit = outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue
+    const receive = outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue
 
     // TODO: better error
     if (debit === null || receive === null) {
@@ -734,15 +728,14 @@ async function validateGrantAndAddSpentAmountsToPayment(
     }
 
     // add current payment to interval
-    outgoingPaymentGrantSpentAmountsInsert.intervalDebitAmountValue =
+    outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue =
       debit + payment.debitAmount.value
-    outgoingPaymentGrantSpentAmountsInsert.intervalReceiveAmountValue =
+    outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue =
       receive + payment.receiveAmount.value
   } else {
-    const debit =
-      outgoingPaymentGrantSpentAmountsInsert.grantTotalDebitAmountValue
+    const debit = outgoingPaymentGrantSpentAmounts.grantTotalDebitAmountValue
     const receive =
-      outgoingPaymentGrantSpentAmountsInsert.grantTotalReceiveAmountValue
+      outgoingPaymentGrantSpentAmounts.grantTotalReceiveAmountValue
 
     setGrantSpentAmounts(payment, debit, receive)
 
@@ -752,14 +745,12 @@ async function validateGrantAndAddSpentAmountsToPayment(
   }
 
   // update totals
-  outgoingPaymentGrantSpentAmountsInsert.grantTotalDebitAmountValue +=
+  outgoingPaymentGrantSpentAmounts.grantTotalDebitAmountValue +=
     payment.debitAmount.value
-  outgoingPaymentGrantSpentAmountsInsert.grantTotalReceiveAmountValue +=
+  outgoingPaymentGrantSpentAmounts.grantTotalReceiveAmountValue +=
     payment.receiveAmount.value
 
-  await OutgoingPaymentGrantSpentAmounts.query(trx).insert(
-    outgoingPaymentGrantSpentAmountsInsert
-  )
+  await outgoingPaymentGrantSpentAmounts.$query().insert()
 
   return true
 }
