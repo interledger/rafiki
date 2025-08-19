@@ -17,7 +17,7 @@
     "rehype-autolink-headings": "^7.1.0",
     "rehype-mathjax": "^7.1.0",
     "remark-math": "^6.0.0",
-    "spectaql": "^3.0.4",
+    "spectaql": "^3.0.5",
     "starlight-fullview-mode": "^0.2.3",
     "starlight-links-validator": "^0.17.0"
   }
