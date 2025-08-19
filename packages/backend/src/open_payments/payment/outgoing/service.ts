@@ -1,6 +1,5 @@
 import {
   ForeignKeyViolationError,
-  PartialModelObject,
   TransactionOrKnex,
   UniqueViolationError
 } from 'objection'
