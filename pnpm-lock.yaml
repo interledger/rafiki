@@ -582,8 +582,8 @@ importers:
         specifier: ^0.2.3
         version: 0.2.3(@astrojs/starlight@0.34.4)
       starlight-links-validator:
-        specifier: ^0.17.0
-        version: 0.17.0(@astrojs/starlight@0.34.4)
+        specifier: ^0.17.1
+        version: 0.17.1(@astrojs/starlight@0.34.4)
 
   packages/frontend:
     dependencies:
@@ -20634,8 +20634,8 @@ packages:
       '@iconify-json/mdi': 1.2.3
     dev: false
 
-  /starlight-links-validator@0.17.0(@astrojs/starlight@0.34.4):
-    resolution: {integrity: sha512-D+j0W7Z6CVSxPlt8jskBcApqaAU16JmuxE4c483Xj2sWJteiz0wW2xvk0cG3o/cW1q9x44Ezc668OnUi3a5LAA==}
+  /starlight-links-validator@0.17.1(@astrojs/starlight@0.34.4):
+    resolution: {integrity: sha512-d2QoBO3mQPWYq/TO4I0kT/3Z9hFulnMzMPaG2dW0H14hPq4N7ZwiBl2FMrLK8I4UE34sztcBatvWCZc62S0BMQ==}
     engines: {node: '>=18.17.1'}
     peerDependencies:
       '@astrojs/starlight': '>=0.32.0'
