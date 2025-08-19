@@ -750,7 +750,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
   outgoingPaymentGrantSpentAmounts.grantTotalReceiveAmountValue +=
     payment.receiveAmount.value
 
-  await outgoingPaymentGrantSpentAmounts.$query().insert()
+  await outgoingPaymentGrantSpentAmounts.$query(trx).insert()
 
   return true
 }
