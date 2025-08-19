@@ -116,7 +116,10 @@ services:
       OPERATOR_TENANT_ID: 53f2d913-e98a-40b9-b270-372d0547f23e
       SERVICE_API_PORT: 5011
     depends_on:
-      - happy-life-auth
+      shared-database:
+        condition: service_healthy
+      happy-life-auth:
+        condition: service_started
   global-bank-admin:
     hostname: global-bank-admin
     image: rafiki-frontend

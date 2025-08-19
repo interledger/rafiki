@@ -1,15 +1,15 @@
 assets:
   - code: USD
     scale: 2
-    liquidity: 1000000000000
+    liquidity: 10000000
     liquidityThreshold: 10000000
   - code: EUR
     scale: 2
-    liquidity: 1000000000000
+    liquidity: 10000000
     liquidityThreshold: 10000000
 peeringAsset: 'USD'
 peers:
-  - initialLiquidity: '1000000000000'
+  - initialLiquidity: '10000000'
     peerUrl: http://global-bank-backend:3002
     peerIlpAddress: test.global-bank
     liquidityThreshold: 1000000
