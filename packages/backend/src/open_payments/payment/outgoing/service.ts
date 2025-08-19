@@ -589,7 +589,44 @@ async function validateGrantAndAddSpentAmountsToPayment(
     .limit(1)
     .first()
 
-  // TODO: error if paymentInterval exists but doesnt have both start and end
+  if (
+    paymentLimits.paymentInterval &&
+    (!paymentLimits.paymentInterval.start || !paymentLimits.paymentInterval.end)
+  ) {
+    deps.logger.error(
+      {
+        grantId: grant.id,
+        paymentId: payment.id,
+        intervalStart: paymentLimits.paymentInterval.start?.toJSDate(),
+        intervalEnd: paymentLimits.paymentInterval.end?.toJSDate()
+      },
+      'Payment interval missing start or end'
+    )
+    throw OutgoingPaymentError.InvalidInterval
+  }
+
+  // check if payment interval is before latest spent amounts interval
+  if (
+    paymentLimits.paymentInterval &&
+    latestSpentAmounts?.intervalStart &&
+    latestSpentAmounts?.intervalEnd &&
+    paymentLimits.paymentInterval.end &&
+    paymentLimits.paymentInterval.end.toJSDate() <=
+      latestSpentAmounts.intervalStart
+  ) {
+    deps.logger.error(
+      {
+        grantId: grant.id,
+        paymentId: payment.id,
+        paymentIntervalStart: paymentLimits.paymentInterval.start?.toJSDate(),
+        paymentIntervalEnd: paymentLimits.paymentInterval.end.toJSDate(),
+        latestIntervalStart: latestSpentAmounts.intervalStart,
+        latestIntervalEnd: latestSpentAmounts.intervalEnd
+      },
+      'Payment interval is before latest spent amounts interval'
+    )
+    throw OutgoingPaymentError.InvalidInterval
+  }
 
   const outgoingPaymentGrantSpentAmounts =
     OutgoingPaymentGrantSpentAmounts.create({
@@ -716,9 +753,8 @@ async function validateGrantAndAddSpentAmountsToPayment(
     const debit = outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue
     const receive = outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue
 
-    // TODO: better error
     if (debit === null || receive === null) {
-      throw new Error('Invalid interval')
+      throw OutgoingPaymentError.InvalidInterval
     }
 
     setGrantSpentAmounts(payment, debit, receive)
