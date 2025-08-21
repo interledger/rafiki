@@ -69,7 +69,7 @@ describe('createPaymentService', () => {
   it('should throw and log error if payment creation fails (no id)', async () => {
     mockApolloClient.mutate = jest
       .fn()
-      .mockResolvedValue({ data: { payment: { id: undefined } } })
+      .mockResolvedValue({ data: { payment: undefined } })
     const service = createPaymentService(deps)
     const walletAddressId = 'wallet-123'
     const incomingAmount: AmountInput = {

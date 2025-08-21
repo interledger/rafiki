@@ -23,6 +23,7 @@ import { createPosDeviceRoutes } from './merchant/devices/routes'
 import { createPaymentRoutes } from './payments/routes'
 import axios from 'axios'
 import { createCardServiceClient } from './card-service-client/client'
+import { createWebhookHandlerRoutes } from './webhook-handlers/routes'
 
 export function initIocContainer(
   config: typeof Config
@@ -205,8 +206,15 @@ export function initIocContainer(
   container.singleton('paymentRoutes', async (deps) => {
     return createPaymentRoutes({
       logger: await deps.use('logger'),
+      config: await deps.use('config'),
       paymentService: await deps.use('paymentClient'),
       cardServiceClient: await deps.use('cardServiceClient')
+    })
+  })
+
+  container.singleton('webhookHandlerRoutes', async (deps) => {
+    return createWebhookHandlerRoutes({
+      logger: await deps.use('logger')
     })
   })
 

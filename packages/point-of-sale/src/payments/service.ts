@@ -5,6 +5,7 @@ import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 import {
   AmountInput,
   CreateIncomingPaymentInput,
+  IncomingPayment,
   type Mutation
 } from '../graphql/generated/graphql'
 import { FnWithDeps } from '../shared/types'
@@ -37,7 +38,7 @@ export type PaymentService = {
   createIncomingPayment: (
     walletAddressId: string,
     incomingAmount: AmountInput
-  ) => Promise<string>
+  ) => Promise<IncomingPayment>
   getWalletAddress: (walletAddressUrl: string) => Promise<WalletAddress>
 }
 
@@ -80,8 +81,8 @@ const createIncomingPayment: FnWithDeps<
     }
   })
 
-  const incomingPaymentUrl = data?.payment?.id
-  if (!incomingPaymentUrl) {
+  const incomingPayment = data?.payment
+  if (!incomingPayment) {
     deps.logger.error(
       { walletAddressId },
       'Failed to create incoming payment for given walletAddressId'
@@ -91,7 +92,7 @@ const createIncomingPayment: FnWithDeps<
     )
   }
 
-  return incomingPaymentUrl
+  return incomingPayment
 }
 
 async function getWalletAddress(
