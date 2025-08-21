@@ -4,7 +4,7 @@ import Pagination from '@astrojs/starlight/components/Pagination.astro';
 
 <footer class="footer sl-flex">
 	<Pagination />
-  <div class="ilf-footer">
+  <div class="footer-legal">
     <p>
       Rafiki is stewarded by the <a href="https://interledger.org" rel="noopener noreferrer" target="_blank" data-umami-event="Rafiki docs footer - Interledger foundation">Interledger Foundation</a> and Rafiki contributors.
     </p>
@@ -22,19 +22,15 @@ import Pagination from '@astrojs/starlight/components/Pagination.astro';
     margin-top: 6rem;
   }
 
-  .ilf-footer {
+  .footer-legal {
     margin-top: auto;
     padding: 1rem;
     color: #676767;
     text-align: center;
-    font-size: 0.75rem;
+    font-size: var(--sl-text-sm);
   }
 
-  .ilf-footer a {
-    text-decoration: none;
-  }
-
-  .ilf-footer a:hover {
+  .footer-legal a:hover {
     color: var(--sl-color-white);
   }
 </style>
