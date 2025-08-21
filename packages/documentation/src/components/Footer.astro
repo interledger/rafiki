@@ -1,0 +1,40 @@
+---
+import Pagination from '@astrojs/starlight/components/Pagination.astro';
+---
+
+<footer class="footer sl-flex">
+	<Pagination />
+  <div class="ilf-footer">
+    <p>
+      Rafiki is stewarded by the <a href="https://interledger.org">Interledger Foundation</a> and Rafiki contributors.
+    </p>
+    <p>
+      Rafiki is made available by the Interledger Foundation under the <a href="https://github.com/interledger/rafiki/blob/main/LICENSE">Apache License, Version 2.0.</a>
+    </p>
+  </div>  
+</footer>
+
+<style>
+  .footer {
+    flex-grow: 1;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 6rem;
+  }
+
+  .ilf-footer {
+    margin-top: auto;
+    padding: 1rem;
+    color: #676767;
+    text-align: center;
+    font-size: 0.75rem;
+  }
+
+  .ilf-footer a {
+    text-decoration: none;
+  }
+
+  .ilf-footer a:hover {
+    color: var(--sl-color-white);
+  }
+</style>
