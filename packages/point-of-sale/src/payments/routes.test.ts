@@ -1,4 +1,5 @@
 import { IocContract } from '@adonisjs/fold'
+import { v4 } from 'uuid'
 import { initIocContainer } from '..'
 import { AppServices } from '../app'
 import { Config } from '../config/app'
@@ -9,6 +10,8 @@ import { PaymentService } from './service'
 import { CardServiceClient, Result } from '../card-service-client/client'
 import { createContext } from '../tests/context'
 import { CardServiceClientError } from '../card-service-client/errors'
+import { IncomingPaymentState } from '../graphql/generated/graphql'
+import { webhookWaitMap } from '../webhook-handlers/request-map'
 
 describe('Payment Routes', () => {
   let deps: IocContract<AppServices>
@@ -45,9 +48,22 @@ describe('Payment Routes', () => {
         .spyOn(cardServiceClient, 'sendPayment')
         .mockResolvedValueOnce(Result.APPROVED)
 
+      jest
+        .spyOn(webhookWaitMap, 'setWithExpiry')
+        .mockImplementation((key, deferred) => {
+          deferred.resolve({
+            id: v4(),
+            type: 'incoming_payment.completed',
+            data: { id: key, completed: true }
+          })
+          return webhookWaitMap
+        })
+
       await paymentRoutes.payment(ctx)
       expect(ctx.response.body).toBe(Result.APPROVED)
       expect(ctx.status).toBe(200)
+
+      expect(webhookWaitMap.get('incoming-payment-url')).toBeUndefined()
     })
 
     test('returns 401 with result card_expired or invalid_signature', async () => {
@@ -104,7 +120,18 @@ describe('Payment Routes', () => {
       })
       jest
         .spyOn(paymentService, 'createIncomingPayment')
-        .mockResolvedValueOnce('incoming-payment-url')
+        .mockResolvedValueOnce({
+          id: 'incoming-payment-url',
+          createdAt: new Date().toString(),
+          walletAddressId: v4(),
+          expiresAt: new Date(Date.now() + 30000).toString(),
+          receivedAmount: {
+            assetCode: 'USD',
+            assetScale: 2,
+            value: BigInt(0)
+          },
+          state: IncomingPaymentState.Pending
+        })
     }
   })
 })

@@ -37,8 +37,6 @@ async function handleCreatePayment(
   try {
     const deferred = new Deferred<PaymentEventBody>()
     paymentWaitMap.set(requestId, deferred)
-    // TODO: Initiate outgoing payment here
-
     const result = await waitForPaymentEvent(deps.config, deferred)
     paymentWaitMap.delete(requestId)
     if (!result) {
