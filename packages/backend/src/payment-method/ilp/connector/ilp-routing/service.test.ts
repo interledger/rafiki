@@ -1,10 +1,10 @@
-import { RouterService } from '../service'
-import { Config } from '../../../../../config/app'
-import { createTestApp, TestContainer } from '../../../../../tests/app'
+import { RouterService } from './service'
+import { Config } from '../../../../config/app'
+import { createTestApp, TestContainer } from '../../../../tests/app'
 import { IocContract } from '@adonisjs/fold'
-import { initIocContainer } from '../../../../..'
-import { AppServices } from '../../../../../app'
-import { truncateTables } from '../../../../../tests/tableManager'
+import { initIocContainer } from '../../../..'
+import { AppServices } from '../../../../app'
+import { truncateTables } from '../../../../tests/tableManager'
 
 describe('RouterService', (): void => {
   const tenantId1 = 'tenant-1'
