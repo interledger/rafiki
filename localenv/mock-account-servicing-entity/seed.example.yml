@@ -13,6 +13,7 @@ peers:
     peerUrl: http://peer-backend:3002
     peerIlpAddress: test.peer
     liquidityThreshold: 10000
+    maxPacketAmount: 10000
 accounts:
   - name: 'Grace Franklin'
     path: accounts/gfranklin

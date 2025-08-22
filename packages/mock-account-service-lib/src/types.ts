@@ -15,6 +15,7 @@ export interface Peering {
   peerIlpAddress: string
   routes: string[]
   initialLiquidity: string
+  maxPacketAmount: number
   name: string
   tokens: {
     incoming: string[]

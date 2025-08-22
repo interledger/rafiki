@@ -37,6 +37,7 @@ export function createRequesters(
     name: string,
     routes: string[],
     liquidityThreshold: number,
+    maxPacketAmount: number,
     incomingTokens: string[],
     outgoingToken: string
   ) => Promise<CreatePeerMutationResponse>
@@ -89,6 +90,7 @@ export function createRequesters(
       name,
       routes,
       liquidityThreshold,
+      maxPacketAmount,
       incomingToken,
       outgoingToken
     ) =>
@@ -101,6 +103,7 @@ export function createRequesters(
         name,
         routes,
         liquidityThreshold,
+        maxPacketAmount,
         incomingToken,
         outgoingToken
       ),
@@ -228,6 +231,7 @@ export async function createPeer(
   name: string,
   routes: string[],
   liquidityThreshold: number,
+  maxPacketAmount: number,
   incomingTokens: string[],
   outgoingToken: string
 ): Promise<CreatePeerMutationResponse> {
@@ -253,6 +257,7 @@ export async function createPeer(
       assetId,
       name,
       liquidityThreshold,
+      maxPacketAmount,
       routes
     }
   }
