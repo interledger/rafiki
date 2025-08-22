@@ -35,6 +35,13 @@ export async function createPeer(
   if (options.liquidityThreshold) {
     peerOptions.liquidityThreshold = options.liquidityThreshold
   }
+  if (options.tenantId) {
+    peerOptions.tenantId = options.tenantId
+  }
+  peerOptions.routes = [
+    ...(options.routes || []),
+    peerOptions.staticIlpAddress
+  ].filter((route, index, arr) => arr.indexOf(route) === index)
   const peerService = await deps.use('peerService')
   const peer = await peerService.create(peerOptions)
   if (isPeerError(peer)) {

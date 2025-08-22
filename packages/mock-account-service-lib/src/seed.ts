@@ -116,9 +116,11 @@ export async function setupFromSeed(
       peer.peerUrl,
       assets[peeringAsset].id,
       peer.name,
+      peer.routes || [],
       peer.liquidityThreshold,
       peer.tokens.incoming,
-      peer.tokens.outgoing
+      peer.tokens.outgoing,
+      peer.maxPacketAmount
     ).then((response) => response.peer || null)
 
     if (!newPeer) {

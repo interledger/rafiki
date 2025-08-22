@@ -35,9 +35,11 @@ export function createRequesters(
     outgoingEndpoint: string,
     assetId: string,
     name: string,
+    routes: string[],
     liquidityThreshold: number,
     incomingTokens: string[],
-    outgoingToken: string
+    outgoingToken: string,
+    maxPacketAmount?: number
   ) => Promise<CreatePeerMutationResponse>
   createAutoPeer: (
     peerUrl: string,
@@ -86,9 +88,11 @@ export function createRequesters(
       outgoingEndpoint,
       assetId,
       name,
+      routes,
       liquidityThreshold,
       incomingToken,
-      outgoingToken
+      outgoingToken,
+      maxPacketAmount
     ) =>
       createPeer(
         apolloClient,
@@ -97,9 +101,11 @@ export function createRequesters(
         outgoingEndpoint,
         assetId,
         name,
+        routes,
         liquidityThreshold,
         incomingToken,
-        outgoingToken
+        outgoingToken,
+        maxPacketAmount
       ),
     createAutoPeer: (peerUrl, assetId) =>
       createAutoPeer(apolloClient, logger, peerUrl, assetId),
@@ -223,9 +229,11 @@ export async function createPeer(
   outgoingEndpoint: string,
   assetId: string,
   name: string,
+  routes: string[],
   liquidityThreshold: number,
   incomingTokens: string[],
-  outgoingToken: string
+  outgoingToken: string,
+  maxPacketAmount?: number
 ): Promise<CreatePeerMutationResponse> {
   const createPeerMutation = gql`
     mutation CreatePeer($input: CreatePeerInput!) {
@@ -248,9 +256,16 @@ export async function createPeer(
       },
       assetId,
       name,
-      liquidityThreshold
+      liquidityThreshold,
+      maxPacketAmount,
+      routes
     }
   }
+
+  if (maxPacketAmount) {
+    createPeerInput.input.maxPacketAmount = maxPacketAmount
+  }
+
   return apolloClient
     .mutate({
       mutation: createPeerMutation,
