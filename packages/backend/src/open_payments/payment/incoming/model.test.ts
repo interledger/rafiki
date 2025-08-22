@@ -63,7 +63,7 @@ describe('Models', (): void => {
             walletAddress
           )
         ).toEqual({
-          id: `${baseUrl}/${incomingPayment.tenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+          id: `${baseUrl}/${Config.operatorTenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
           walletAddress: walletAddress.address,
           completed: incomingPayment.completed,
           receivedAmount: serializeAmount(incomingPayment.receivedAmount),
@@ -94,7 +94,7 @@ describe('Models', (): void => {
             paymentMethods
           )
         ).toEqual({
-          id: `${baseUrl}/${incomingPayment.tenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+          id: `${baseUrl}/${Config.operatorTenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
           walletAddress: walletAddress.address,
           completed: incomingPayment.completed,
           receivedAmount: serializeAmount(incomingPayment.receivedAmount),
