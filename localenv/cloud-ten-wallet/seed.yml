@@ -21,7 +21,6 @@ peers:
     peerUrl: http://global-bank-backend:3002
     peerIlpAddress: test.global-bank
     liquidityThreshold: 1000000
-    maxPacketAmount: 10000
     tokens:
       incoming: 
         - global-to-cloud-ten
