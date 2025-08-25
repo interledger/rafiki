@@ -23,7 +23,7 @@ CREATE DATABASE cloud_nine_wallet_point_of_sale;
 ALTER DATABASE cloud_nine_wallet_point_of_sale OWNER TO cloud_nine_wallet_point_of_sale;
 
 CREATE USER happy_life_bank_point_of_sale WITH PASSWORD 'happy_life_bank_point_of_sale';
-CREATE DATABASE happy_life_bank_point_ofW_sale;
+CREATE DATABASE happy_life_bank_point_of_sale;
 ALTER DATABASE happy_life_bank_point_of_sale OWNER TO happy_life_bank_point_of_sale;
 
 CREATE USER happy_life_bank_card_service WITH PASSWORD 'happy_life_bank_card_service';

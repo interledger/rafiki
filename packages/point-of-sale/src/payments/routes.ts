@@ -83,7 +83,7 @@ async function payment(
     )
     const result = await deps.cardServiceClient.sendPayment({
       merchantWalletAddress: body.merchantWalletAddress,
-      incomingPaymentUrl: incomingPayment.id,
+      incomingPaymentUrl: incomingPayment.url,
       date: new Date(),
       signature: body.signature,
       card: body.card

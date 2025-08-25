@@ -613,6 +613,7 @@ describe('Incoming Payment Resolver', (): void => {
           .spyOn(incomingPaymentService, 'update')
           .mockResolvedValueOnce({
             ...payment,
+            getUrl: payment.getUrl,
             metadata: input.metadata
           } as IncomingPaymentModel)
 

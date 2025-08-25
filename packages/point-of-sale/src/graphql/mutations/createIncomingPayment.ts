@@ -5,6 +5,7 @@ export const CREATE_INCOMING_PAYMENT = gql`
     createIncomingPayment(input: $input) {
       payment {
         id
+        url
       }
     }
   }

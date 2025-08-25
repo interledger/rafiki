@@ -937,6 +937,8 @@ interface BasePayment {
 type IncomingPayment implements BasePayment & Model {
   "Unique identifier of the incoming payment."
   id: ID!
+  "The URL of the incoming payment."
+  url: String!
   "Unique identifier of the wallet address under which the incoming payment was created."
   walletAddressId: ID!
   "Information about the wallet address of the Open Payments client that created the incoming payment."

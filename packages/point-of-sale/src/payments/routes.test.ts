@@ -12,6 +12,7 @@ import { createContext } from '../tests/context'
 import { CardServiceClientError } from '../card-service-client/errors'
 import { IncomingPaymentState } from '../graphql/generated/graphql'
 import { webhookWaitMap } from '../webhook-handlers/request-map'
+import { faker } from '@faker-js/faker'
 
 describe('Payment Routes', () => {
   let deps: IocContract<AppServices>
@@ -122,6 +123,7 @@ describe('Payment Routes', () => {
         .spyOn(paymentService, 'createIncomingPayment')
         .mockResolvedValueOnce({
           id: 'incoming-payment-url',
+          url: faker.internet.url(),
           createdAt: new Date().toString(),
           walletAddressId: v4(),
           expiresAt: new Date(Date.now() + 30000).toString(),
