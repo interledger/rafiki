@@ -16,6 +16,7 @@ import {
 } from '../tenants/settings/model'
 import { TenantSettingService } from '../tenants/settings/service'
 import { Logger } from 'pino'
+import { IncomingPaymentInitiationReason } from '../open_payments/payment/incoming/model'
 
 // First retry waits 10 seconds
 // Second retry waits 20 (more) seconds
@@ -295,7 +296,7 @@ async function getWebhookEventsPage(
 export function finalizeWebhookRecipients(
   tenantIds: string[],
   config: IAppConfig,
-  metadata?: Record<string, unknown>,
+  initiationReason?: IncomingPaymentInitiationReason,
   logger?: Logger
 ): Pick<Webhook, 'recipientTenantId' | 'metadata'>[] {
   const tenantIdSet = new Set(tenantIds)
@@ -313,7 +314,10 @@ export function finalizeWebhookRecipients(
     recipientTenantId: tenantId
   }))
 
-  if (metadata?.isCardPayment && config.posServiceUrl) {
+  if (
+    initiationReason === IncomingPaymentInitiationReason.Card &&
+    config.posServiceUrl
+  ) {
     recipients = recipients.concat([
       {
         recipientTenantId: config.operatorTenantId,
@@ -322,7 +326,10 @@ export function finalizeWebhookRecipients(
         }
       }
     ])
-  } else if (metadata?.isCardPayment && !config.posServiceUrl) {
+  } else if (
+    initiationReason === IncomingPaymentInitiationReason.Card &&
+    !config.posServiceUrl
+  ) {
     logger?.warn('Could not create webhook recipient for point of sale service')
   }
 

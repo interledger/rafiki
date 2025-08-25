@@ -377,7 +377,7 @@ async function handleDeactivated(
       webhooks: finalizeWebhookRecipients(
         [incomingPayment.tenantId],
         deps.config,
-        incomingPayment.metadata,
+        incomingPayment.initiatedBy,
         deps.logger
       )
     })

@@ -311,16 +311,7 @@ describe('Incoming Payment Resolver', (): void => {
 
     describe('tenant boundaries', (): void => {
       test('operator can label incoming payment as card payment', async (): Promise<void> => {
-        const payment = await createIncomingPayment(deps, {
-          walletAddressId,
-          client,
-          tenantId,
-          initiationReason: IncomingPaymentInitiationReason.Admin
-        })
-
-        const createSpy = jest
-          .spyOn(incomingPaymentService, 'create')
-          .mockResolvedValueOnce(payment)
+        const createSpy = jest.spyOn(incomingPaymentService, 'create')
 
         const input = {
           walletAddressId,
@@ -357,7 +348,7 @@ describe('Incoming Payment Resolver', (): void => {
           __typename: 'IncomingPaymentResponse',
           payment: {
             __typename: 'IncomingPayment',
-            id: payment.id,
+            id: expect.any(String),
             walletAddressId
           }
         })
@@ -368,19 +359,10 @@ describe('Incoming Payment Resolver', (): void => {
         const tenantWalletAddress = await createWalletAddress(deps, {
           tenantId: tenant.id
         })
-        const payment = await createIncomingPayment(deps, {
-          walletAddressId: tenantWalletAddress.id,
-          client,
-          tenantId: tenant.id,
-          initiationReason: IncomingPaymentInitiationReason.Admin
-        })
-
-        const createSpy = jest
-          .spyOn(incomingPaymentService, 'create')
-          .mockResolvedValueOnce(payment)
+        const createSpy = jest.spyOn(incomingPaymentService, 'create')
 
         const input = {
-          walletAddressId,
+          walletAddressId: tenantWalletAddress.id,
           isCardPayment: true
         }
 
@@ -419,7 +401,7 @@ describe('Incoming Payment Resolver', (): void => {
           __typename: 'IncomingPaymentResponse',
           payment: {
             __typename: 'IncomingPayment',
-            id: payment.id,
+            id: expect.any(String),
             walletAddressId: tenantWalletAddress.id
           }
         })
