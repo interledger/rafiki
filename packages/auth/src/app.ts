@@ -397,18 +397,10 @@ export class App {
     })
 
     const accessTokenRoutes = await this.container.use('accessTokenRoutes')
-    const openApi = await this.container.use('openApi')
 
     // Token Introspection
     router.post<DefaultState, IntrospectContext>(
       '/',
-      createValidatorMiddleware<IntrospectContext>(
-        openApi.tokenIntrospectionSpec,
-        {
-          path: '/',
-          method: HttpMethod.POST
-        }
-      ),
       accessTokenRoutes.introspect
     )
 

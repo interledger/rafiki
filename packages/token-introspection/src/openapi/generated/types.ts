@@ -275,9 +275,15 @@ export type external = {
         /**
          * Receiver
          * Format: uri
-         * @description The URL of the incoming payment or ILP STREAM connection that is being paid.
+         * @description The URL of the incoming payment that is being paid.
          */
         receiver: string;
+        /**
+         * Wallet Address
+         * Format: uri
+         * @description URL of a wallet address hosted by a Rafiki instance.
+         */
+        walletAddress: string;
       };
       responses: never;
       parameters: never;
@@ -381,7 +387,7 @@ export type operations = {
            * @description The interaction reference generated for this
            * interaction by the AS.
            */
-          interact_ref: string;
+          interact_ref?: string;
         };
       };
     };

@@ -19,7 +19,6 @@ import {
   getAuthServerOpenAPI
 } from '@interledger/open-payments'
 import { createInteractionService } from './interaction/service'
-import { getTokenIntrospectionOpenAPI } from 'token-introspection'
 import { Redis } from 'ioredis'
 import { createTenantService } from './tenant/service'
 import { createTenantRoutes } from './tenant/routes'
@@ -191,12 +190,10 @@ export function initIocContainer(
     const idpSpec = await createOpenAPI(
       path.resolve(__dirname, './openapi/specs/id-provider.yaml')
     )
-    const tokenIntrospectionSpec = await getTokenIntrospectionOpenAPI()
 
     return {
       authServerSpec,
-      idpSpec,
-      tokenIntrospectionSpec
+      idpSpec
     }
   })
 
