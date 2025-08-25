@@ -26,7 +26,7 @@ import { SubjectService } from '../subject/service'
 import {
   errorToGNAPCode,
   errorToHTTPCode,
-  GrantError,
+  
   isGrantError
 } from './errors'
 import { TenantService } from '../tenant/service'
