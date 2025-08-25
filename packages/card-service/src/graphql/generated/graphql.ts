@@ -2886,6 +2886,20 @@ export type Resolvers<ContextType = any> = {
 };
 
 
+export type CreateOutgoingPaymentFromIncomingVariables = Exact<{
+  input: CreateOutgoingPaymentFromIncomingPaymentInput;
+}>;
+
+
+export type CreateOutgoingPaymentFromIncoming = { __typename?: 'Mutation', createOutgoingPaymentFromIncomingPayment: { __typename?: 'OutgoingPaymentResponse', payment?: { __typename?: 'OutgoingPayment', id: string } | null } };
+
+export type GetWalletAddressByUrlVariables = Exact<{
+  url: Scalars['String']['input'];
+}>;
+
+
+export type GetWalletAddressByUrl = { __typename?: 'Query', walletAddressByUrl?: { __typename?: 'WalletAddress', id: string, asset: { __typename?: 'Asset', code: string, scale: number } } | null };
+
 export type GetAssetQueryVariables = Exact<{
   id: Scalars['String']['input'];
 }>;

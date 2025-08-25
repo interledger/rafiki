@@ -14,6 +14,11 @@ export interface PaymentBody {
   signature: string
   //  terminalCert: string
   terminalId: string
+  incomingAmount: {
+    assetCode: string
+    assetScale: number
+    value: string
+  }
 }
 
 export type PaymentContext = Omit<AppContext, 'request'> & {

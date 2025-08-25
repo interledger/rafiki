@@ -272,6 +272,8 @@ export type CreateOrUpdatePeerByUrlMutationResponse = {
 };
 
 export type CreateOutgoingPaymentFromIncomingPaymentInput = {
+  /** Used for the card service to provide the card expiry and signature */
+  cardDetails?: InputMaybe<CardDetailsInput>;
   /** Amount to send (fixed send). */
   debitAmount: AmountInput;
   /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
@@ -715,6 +717,8 @@ export enum LiquidityError {
   UnknownAsset = 'UnknownAsset',
   /** The specified incoming payment could not be found. */
   UnknownIncomingPayment = 'UnknownIncomingPayment',
+  /** The specified outgoing payment could not be found. */
+  UnknownOutgoingPayment = 'UnknownOutgoingPayment',
   /** The specified payment could not be found. */
   UnknownPayment = 'UnknownPayment',
   /** The specified peer could not be found. */
