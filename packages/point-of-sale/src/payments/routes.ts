@@ -70,7 +70,11 @@ async function payment(
       incomingPaymentUrl,
       date: new Date(),
       signature: body.signature,
-      card: body.card
+      card: body.card,
+      incomingAmount: {
+        ...incomingAmount,
+        value: incomingAmount.value.toString()
+      }
     })
 
     ctx.body = result

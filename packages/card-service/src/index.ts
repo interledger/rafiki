@@ -1,3 +1,4 @@
+import { createHmac } from 'crypto'
 import { App, AppServices } from './app'
 import { Config } from './config/app'
 import { Ioc, IocContract } from '@adonisjs/fold'
@@ -10,6 +11,16 @@ import { createPaymentService } from './payment/service'
 import { createPaymentRoutes } from './payment/routes'
 import { createOpenAPI } from '@interledger/openapi'
 import path from 'path'
+import {
+  createHttpLink,
+  ApolloClient,
+  ApolloLink,
+  InMemoryCache
+} from '@apollo/client'
+import { onError } from '@apollo/client/link/error'
+import { setContext } from '@apollo/client/link/context'
+import { print } from 'graphql'
+import { canonicalize } from 'json-canonicalize'
 
 export function initIocContainer(
   config: typeof Config
@@ -74,6 +85,81 @@ export function initIocContainer(
     })
   })
 
+  container.singleton('apolloClient', async (deps) => {
+    const [logger, config] = await Promise.all([
+      deps.use('logger'),
+      deps.use('config')
+    ])
+
+    const httpLink = createHttpLink({
+      uri: config.graphqlUrl
+    })
+
+    const errorLink = onError(({ graphQLErrors }) => {
+      if (graphQLErrors) {
+        logger.error(graphQLErrors)
+        graphQLErrors.map(({ extensions }) => {
+          if (extensions && extensions.code === 'UNAUTHENTICATED') {
+            logger.error('UNAUTHENTICATED')
+          }
+
+          if (extensions && extensions.code === 'FORBIDDEN') {
+            logger.error('FORBIDDEN')
+          }
+        })
+      }
+    })
+
+    const authLink = setContext((request, { headers }) => {
+      if (!config.tenantSecret || !config.tenantSignatureVersion)
+        return { headers }
+      const timestamp = Date.now()
+      const version = config.tenantSignatureVersion
+
+      const { query, variables, operationName } = request
+      const formattedRequest = {
+        variables,
+        operationName,
+        query: print(query)
+      }
+
+      const payload = `${timestamp}.${canonicalize(formattedRequest)}`
+      const hmac = createHmac('sha256', config.tenantSecret)
+      hmac.update(payload)
+      const digest = hmac.digest('hex')
+
+      const link = {
+        headers: {
+          ...headers,
+          'tenant-id': `${config.tenantId}`,
+          signature: `t=${timestamp}, v${version}=${digest}`
+        }
+      }
+
+      return link
+    })
+
+    const link = ApolloLink.from([errorLink, authLink, httpLink])
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache({}),
+      link: link,
+      defaultOptions: {
+        query: {
+          fetchPolicy: 'no-cache'
+        },
+        mutate: {
+          fetchPolicy: 'no-cache'
+        },
+        watchQuery: {
+          fetchPolicy: 'no-cache'
+        }
+      }
+    })
+
+    return client
+  })
+
   container.singleton('pos-store', async (deps): Promise<PosStoreService> => {
     const redis = await deps.use('redis')
     const logger = await deps.use('logger')
@@ -95,7 +181,8 @@ export function initIocContainer(
     async (deps: IocContract<AppServices>) => {
       return createPaymentService({
         logger: await deps.use('logger'),
-        config: await deps.use('config')
+        config: await deps.use('config'),
+        apolloClient: await deps.use('apolloClient')
       })
     }
   )
