@@ -18,10 +18,10 @@ import { v4 as uuid } from 'uuid'
 import { IncomingPaymentService } from '../../open_payments/payment/incoming/service'
 import { AccountingService } from '../../accounting/service'
 import {
-  IncomingPaymentInitiationReason,
   IncomingPayment as IncomingPaymentModel,
   IncomingPaymentState
 } from '../../open_payments/payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/types'
 import {
   IncomingPayment,
   IncomingPaymentResponse,

@@ -40,11 +40,8 @@ import {
   OutgoingPaymentEventType
 } from './model'
 import { RETRY_BACKOFF_SECONDS } from './worker'
-import {
-  IncomingPayment,
-  IncomingPaymentInitiationReason,
-  IncomingPaymentState
-} from '../incoming/model'
+import { IncomingPayment, IncomingPaymentState } from '../incoming/model'
+import { IncomingPaymentInitiationReason } from '../incoming/types'
 import { isTransferError } from '../../../accounting/errors'
 import { AccountingService } from '../../../accounting/service'
 import { AssetOptions } from '../../../asset/service'

@@ -14,10 +14,8 @@ import { IlpAddress } from 'ilp-packet'
 import base64url from 'base64url'
 import { TenantSettingService } from '../../tenants/settings/service'
 import { TenantSetting, TenantSettingKeys } from '../../tenants/settings/model'
-import {
-  IncomingPayment,
-  IncomingPaymentInitiationReason
-} from '../../open_payments/payment/incoming/model'
+import { IncomingPayment } from '../../open_payments/payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/types'
 
 describe('PaymentMethodProviderService', (): void => {
   let deps: IocContract<AppServices>

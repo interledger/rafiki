@@ -24,10 +24,8 @@ import { AppServices } from '../app'
 import { getPageTests } from '../shared/baseModel.test'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { createWebhookEvent, webhookEventTypes } from '../tests/webhook'
-import {
-  IncomingPaymentEventType,
-  IncomingPaymentInitiationReason
-} from '../open_payments/payment/incoming/model'
+import { IncomingPaymentEventType } from '../open_payments/payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../open_payments/payment/incoming/types'
 import { OutgoingPaymentEventType } from '../open_payments/payment/outgoing/model'
 import { createIncomingPayment } from '../tests/incomingPayment'
 import { createWalletAddress } from '../tests/walletAddress'
@@ -724,7 +722,6 @@ describe('Webhook Service', (): void => {
     test("doesn't add a webhook for POS service if not configured", async (): Promise<void> => {
       const tenantId = crypto.randomUUID()
       const loggerWarnSpy = jest.spyOn(logger, 'warn')
-      console.log('config.posServiceUrl=', typeof config.posServiceUrl)
 
       expect(
         finalizeWebhookRecipients(

@@ -5,10 +5,8 @@ import {
   IncomingPayment as SchemaIncomingPayment,
   QueryResolvers
 } from '../generated/graphql'
-import {
-  IncomingPayment,
-  IncomingPaymentInitiationReason
-} from '../../open_payments/payment/incoming/model'
+import { IncomingPayment } from '../../open_payments/payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/types'
 import {
   isIncomingPaymentError,
   errorToCode,

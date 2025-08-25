@@ -16,7 +16,7 @@ import {
 } from '../tenants/settings/model'
 import { TenantSettingService } from '../tenants/settings/service'
 import { Logger } from 'pino'
-import { IncomingPaymentInitiationReason } from '../open_payments/payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../open_payments/payment/incoming/types'
 
 // First retry waits 10 seconds
 // Second retry waits 20 (more) seconds

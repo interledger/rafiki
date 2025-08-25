@@ -10,9 +10,9 @@ import {
   IncomingPayment,
   IncomingPaymentEvent,
   IncomingPaymentEventType,
-  IncomingPaymentInitiationReason,
   IncomingPaymentState
 } from './model'
+import { IncomingPaymentInitiationReason } from './types'
 import { Config, IAppConfig } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
@@ -905,9 +905,7 @@ describe('Incoming Payment Service', (): void => {
               ).resolves.toHaveLength(0)
               await IncomingPayment.query(knex)
                 .patch({
-                  metadata: {
-                    isCardPayment: true
-                  }
+                  initiatedBy: IncomingPaymentInitiationReason.Card
                 })
                 .where('id', incomingPayment.id)
               assert.ok(incomingPayment.processAt)

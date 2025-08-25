@@ -14,6 +14,7 @@ import {
   IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethod
 } from '@interledger/open-payments'
 import { OpenPaymentsPaymentMethod } from '../../../payment-method/provider/service'
+import { IncomingPaymentInitiationReason } from './types'
 
 export enum IncomingPaymentEventType {
   IncomingPaymentCreated = 'incoming_payment.created',
@@ -32,15 +33,6 @@ export enum IncomingPaymentState {
   // If the payment expires before it is completed then the state will move to `EXPIRED`
   // and no further payments will be accepted.
   Expired = 'EXPIRED'
-}
-
-export enum IncomingPaymentInitiationReason {
-  // The incoming payment was initiated by a card payment.
-  Card = 'CARD',
-  // The incoming payemnt was initiated through Open Payments.
-  OpenPayments = 'OPEN_PAYMENTS',
-  // The incoming payment was initiated by the Admin API.
-  Admin = 'ADMIN'
 }
 
 export interface IncomingPaymentResponse {

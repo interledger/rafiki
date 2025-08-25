@@ -18,7 +18,7 @@ import { getPageInfo, parsePaginationQueryParameters } from './pagination'
 import { AssetService } from '../asset/service'
 import { PeerService } from '../payment-method/ilp/peer/service'
 import { createPeer } from '../tests/peer'
-import { IncomingPaymentInitiationReason } from '../open_payments/payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../open_payments/payment/incoming/types'
 
 describe('Pagination', (): void => {
   let deps: IocContract<AppServices>

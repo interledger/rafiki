@@ -26,9 +26,9 @@ import {
 } from '../../open_payments/wallet_address/model'
 import {
   IncomingPayment,
-  IncomingPaymentEventType,
-  IncomingPaymentInitiationReason
+  IncomingPaymentEventType
 } from '../../open_payments/payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/types'
 import {
   OutgoingPayment,
   OutgoingPaymentEvent,

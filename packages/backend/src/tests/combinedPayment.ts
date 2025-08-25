@@ -4,10 +4,8 @@ import {
   CombinedPayment,
   PaymentType
 } from '../open_payments/payment/combined/model'
-import {
-  IncomingPayment,
-  IncomingPaymentInitiationReason
-} from '../open_payments/payment/incoming/model'
+import { IncomingPayment } from '../open_payments/payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../open_payments/payment/incoming/types'
 import { OutgoingPayment } from '../open_payments/payment/outgoing/model'
 import { createIncomingPayment } from './incomingPayment'
 import { createOutgoingPayment } from './outgoingPayment'
