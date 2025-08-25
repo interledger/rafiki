@@ -3154,4 +3154,4 @@ export type CreateIncomingPaymentVariables = Exact<{
 }>;
 
 
-export type CreateIncomingPayment = { __typename?: 'Mutation', createIncomingPayment: { __typename?: 'IncomingPaymentResponse', payment?: { __typename?: 'IncomingPayment', id: string } | null } };
+export type CreateIncomingPayment = { __typename?: 'Mutation', createIncomingPayment: { __typename?: 'IncomingPaymentResponse', payment?: { __typename?: 'IncomingPayment', id: string, url: string } | null } };
