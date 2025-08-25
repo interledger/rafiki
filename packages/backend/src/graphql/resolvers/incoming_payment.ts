@@ -129,7 +129,7 @@ export const createIncomingPayment: MutationResolvers<ForTenantIdContext>['creat
         }
       })
     } else
-    return {
+      return {
         payment: paymentToGraphql(incomingPaymentOrError, config)
       }
   }

@@ -45,5 +45,5 @@ export const Config = {
   graphqlUrl: envString('GRAPHQL_URL'),
   webhookSignatureVersion: envInt('WEBHOOK_SIGNATURE_VERSION', 1),
   webhookSignatureSecret: envString('WEBHOOK_SIGNATURE_SECRET'),
-  webhookTimeoutMs: envInt('WEBHOOK_TIMEOUNT_MS', 30000)
+  webhookTimeoutMs: envInt('WEBHOOK_TIMEOUT_MS', 30000)
 }
