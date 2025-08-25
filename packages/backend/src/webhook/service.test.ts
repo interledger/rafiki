@@ -705,9 +705,11 @@ describe('Webhook Service', (): void => {
         async (): Promise<void> => {
           const tenantId = crypto.randomUUID()
           expect(
-            finalizeWebhookRecipients([tenantId], config, {
-              isCardPayment: true
-            })
+            finalizeWebhookRecipients(
+              [tenantId],
+              config,
+              IncomingPaymentInitiationReason.Card
+            )
           ).toStrictEqual([
             { recipientTenantId: tenantId },
             {
@@ -728,9 +730,7 @@ describe('Webhook Service', (): void => {
         finalizeWebhookRecipients(
           [tenantId],
           config,
-          {
-            isCardPayment: true
-          },
+          IncomingPaymentInitiationReason.Card,
           logger
         )
       ).toStrictEqual([{ recipientTenantId: tenantId }])
