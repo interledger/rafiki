@@ -16,6 +16,7 @@ import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { GraphQLError } from 'graphql'
 import { GraphQLErrorCode } from '../errors'
+import { IAppConfig } from '../../config/app'
 
 export const getIncomingPayment: QueryResolvers<TenantedApolloContext>['incomingPayment'] =
   async (parent, args, ctx): Promise<ResolversTypes['IncomingPayment']> => {
@@ -33,7 +34,8 @@ export const getIncomingPayment: QueryResolvers<TenantedApolloContext>['incoming
         }
       })
     }
-    return paymentToGraphql(payment)
+    const config = await ctx.container.use('config')
+    return paymentToGraphql(payment, config)
   }
 
 export const getWalletAddressIncomingPayments: WalletAddressResolvers<TenantedApolloContext>['incomingPayments'] =
@@ -72,12 +74,13 @@ export const getWalletAddressIncomingPayments: WalletAddressResolvers<TenantedAp
       sortOrder: order
     })
 
+    const config = await ctx.container.use('config')
     return {
       pageInfo,
       edges: incomingPayments.map((incomingPayment: IncomingPayment) => {
         return {
           cursor: incomingPayment.id,
-          node: paymentToGraphql(incomingPayment)
+          node: paymentToGraphql(incomingPayment, config)
         }
       })
     }
@@ -106,6 +109,7 @@ export const createIncomingPayment: MutationResolvers<ForTenantIdContext>['creat
       metadata: args.input.metadata,
       tenantId
     })
+    const config = await ctx.container.use('config')
     if (isIncomingPaymentError(incomingPaymentOrError)) {
       throw new GraphQLError(errorToMessage[incomingPaymentOrError], {
         extensions: {
@@ -113,8 +117,8 @@ export const createIncomingPayment: MutationResolvers<ForTenantIdContext>['creat
         }
       })
     } else
-      return {
-        payment: paymentToGraphql(incomingPaymentOrError)
+    return {
+        payment: paymentToGraphql(incomingPaymentOrError, config)
       }
   }
 
@@ -131,6 +135,7 @@ export const updateIncomingPayment: MutationResolvers<TenantedApolloContext>['up
       ...args.input,
       tenantId: ctx.tenant.id
     })
+    const config = await ctx.container.use('config')
     if (isIncomingPaymentError(incomingPaymentOrError)) {
       throw new GraphQLError(errorToMessage[incomingPaymentOrError], {
         extensions: {
@@ -139,7 +144,7 @@ export const updateIncomingPayment: MutationResolvers<TenantedApolloContext>['up
       })
     } else
       return {
-        payment: paymentToGraphql(incomingPaymentOrError)
+        payment: paymentToGraphql(incomingPaymentOrError, config)
       }
   }
 
@@ -166,8 +171,9 @@ export const approveIncomingPayment: MutationResolvers<TenantedApolloContext>['a
       })
     }
 
+    const config = await ctx.container.use('config')
     return {
-      payment: paymentToGraphql(incomingPaymentOrError)
+      payment: paymentToGraphql(incomingPaymentOrError, config)
     }
   }
 
@@ -194,16 +200,19 @@ export const cancelIncomingPayment: MutationResolvers<TenantedApolloContext>['ca
       })
     }
 
+    const config = await ctx.container.use('config')
     return {
-      payment: paymentToGraphql(incomingPaymentOrError)
+      payment: paymentToGraphql(incomingPaymentOrError, config)
     }
   }
 
 export function paymentToGraphql(
-  payment: IncomingPayment
+  payment: IncomingPayment,
+  config: IAppConfig
 ): SchemaIncomingPayment {
   return {
     id: payment.id,
+    url: payment.getUrl(config.openPaymentsUrl),
     walletAddressId: payment.walletAddressId,
     client: payment.client,
     state: payment.state,

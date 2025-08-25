@@ -23,7 +23,7 @@ export class DeviceServiceError extends Error {
   }
 }
 
-//Router Specific Error
+// Router Specific Error
 export class POSDeviceError extends Error {
   public status: number
   public details?: Record<string, unknown>
