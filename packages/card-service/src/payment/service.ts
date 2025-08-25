@@ -3,10 +3,25 @@ import { IAppConfig } from '../config/app'
 import { Deferred } from '../utils/deferred'
 import { paymentWaitMap } from './wait-map'
 import { BaseService } from '../shared/baseService'
-import { PaymentTimeoutError } from './errors'
+import {
+  PaymentCreationFailedError,
+  PaymentRouteError,
+  PaymentTimeoutError,
+  UnknownWalletAddressError
+} from './errors'
+import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
+import {
+  CreateOutgoingPaymentFromIncomingPaymentInput,
+  Mutation,
+  Query,
+  QueryWalletAddressByUrlArgs
+} from '../graphql/generated/graphql'
+import { CREATE_OUTGOING_PAYMENT_FROM_INCOMING } from '../graphql/mutations/createOutgoingPayment'
+import { GET_WALLET_ADDRESS_BY_URL } from '../graphql/mutations/getWalletAddress'
 
 interface ServiceDependencies extends BaseService {
   config: IAppConfig
+  apolloClient: ApolloClient<NormalizedCacheObject>
 }
 
 export interface PaymentService {
@@ -15,14 +30,16 @@ export interface PaymentService {
 
 export async function createPaymentService({
   logger,
-  config
+  config,
+  apolloClient
 }: ServiceDependencies): Promise<PaymentService> {
   const log = logger.child({
     service: 'PaymentService'
   })
   const deps: ServiceDependencies = {
     logger: log,
-    config
+    config,
+    apolloClient
   }
   return {
     create: (payment: PaymentBody) => handleCreatePayment(deps, payment)
@@ -37,6 +54,43 @@ async function handleCreatePayment(
   try {
     const deferred = new Deferred<PaymentEventBody>()
     paymentWaitMap.set(requestId, deferred)
+    const walletAddressByUrl = await deps.apolloClient.query<
+      Query['walletAddressByUrl'],
+      QueryWalletAddressByUrlArgs
+    >({
+      query: GET_WALLET_ADDRESS_BY_URL,
+      variables: {
+        url: payment.card.walletAddress
+      }
+    })
+
+    if (!walletAddressByUrl?.data) {
+      throw new UnknownWalletAddressError()
+    }
+    const walletAddressId = walletAddressByUrl.data.id
+
+    const outgoingPaymentFromIncomingPayment = await deps.apolloClient.mutate<
+      Mutation['createOutgoingPaymentFromIncomingPayment'],
+      CreateOutgoingPaymentFromIncomingPaymentInput
+    >({
+      mutation: CREATE_OUTGOING_PAYMENT_FROM_INCOMING,
+      variables: {
+        walletAddressId,
+        incomingPayment: payment.incomingPaymentUrl,
+        debitAmount: {
+          ...payment.incomingAmount,
+          value: BigInt(payment.incomingAmount.value)
+        },
+        cardDetails: {
+          signature: payment.signature,
+          expiry: payment.card.expiry
+        }
+      }
+    })
+
+    if (!outgoingPaymentFromIncomingPayment?.data)
+      throw new PaymentCreationFailedError()
+
     const result = await waitForPaymentEvent(deps.config, deferred)
     paymentWaitMap.delete(requestId)
     if (!result) {
@@ -46,7 +100,7 @@ async function handleCreatePayment(
     return result
   } catch (err) {
     paymentWaitMap.delete(requestId)
-    if (err instanceof PaymentTimeoutError) throw err
+    if (err instanceof PaymentRouteError) throw err
     throw new Error(
       err instanceof Error ? err.message : 'Internal server error'
     )

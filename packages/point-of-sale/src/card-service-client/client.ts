@@ -22,6 +22,11 @@ export interface PaymentOptions {
   date: Date
   signature: string
   card: Card
+  incomingAmount: {
+    assetCode: string
+    assetScale: number
+    value: string
+  }
 }
 
 export interface CardServiceClient {

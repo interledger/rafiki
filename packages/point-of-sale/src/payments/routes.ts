@@ -86,7 +86,11 @@ async function payment(
       incomingPaymentUrl: incomingPayment.url,
       date: new Date(),
       signature: body.signature,
-      card: body.card
+      card: body.card,
+      incomingAmount: {
+        ...incomingAmount,
+        value: incomingAmount.value.toString()
+      }
     })
 
     if (result !== Result.APPROVED) throw new InvalidCardPaymentError(result)

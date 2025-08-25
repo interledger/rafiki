@@ -6,7 +6,14 @@ import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
 import { AppServices } from '../app'
 import { IocContract } from '@adonisjs/fold'
-import { PaymentTimeoutError } from './errors'
+import {
+  PaymentCreationFailedError,
+  PaymentTimeoutError,
+  UnknownWalletAddressError
+} from './errors'
+import { v4 } from 'uuid'
+import { GET_WALLET_ADDRESS_BY_URL } from '../graphql/mutations/getWalletAddress'
+import { CREATE_OUTGOING_PAYMENT_FROM_INCOMING } from '../graphql/mutations/createOutgoingPayment'
 
 const uuid = '123e4567-e89b-12d3-a456-426614174000'
 const uri = 'https://example.com/wallet/123'
@@ -16,6 +23,8 @@ describe('PaymentService', () => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let service: Awaited<ReturnType<typeof createPaymentService>>
+  let querySpy: jest.SpyInstance
+  let mutationSpy: jest.SpyInstance
 
   const paymentFixture: PaymentBody = {
     requestId: uuid,
@@ -28,7 +37,12 @@ describe('PaymentService', () => {
     incomingPaymentUrl: uri,
     date: dateTime,
     signature: 'sig',
-    terminalId: uuid
+    terminalId: uuid,
+    incomingAmount: {
+      assetCode: 'USD',
+      assetScale: 2,
+      value: '100'
+    }
   }
 
   beforeAll(async () => {
@@ -37,8 +51,34 @@ describe('PaymentService', () => {
     service = await deps.use('paymentService')
   })
 
+  beforeEach(async (): Promise<void> => {
+    const apolloClient = await deps.use('apolloClient')
+    querySpy = jest.spyOn(apolloClient, 'query')
+    querySpy.mockResolvedValue({
+      data: {
+        id: v4(),
+        asset: {
+          code: 'USD',
+          scale: 2
+        }
+      }
+    })
+
+    mutationSpy = jest.spyOn(apolloClient, 'mutate')
+    mutationSpy.mockResolvedValue({
+      data: {
+        createOutgoingPaymentFromIncomingPayment: {
+          payment: {
+            id: v4()
+          }
+        }
+      }
+    })
+  })
+
   afterEach(() => {
     paymentWaitMap.clear()
+    jest.clearAllMocks()
   })
 
   afterAll(async () => {
@@ -62,6 +102,42 @@ describe('PaymentService', () => {
         outgoingPaymentId: uuid,
         result: { code: PaymentEventResultEnum.Completed }
       })
+
+      expect(querySpy).toHaveBeenCalledWith({
+        query: GET_WALLET_ADDRESS_BY_URL,
+        variables: { url: paymentFixture.card.walletAddress }
+      })
+      expect(mutationSpy).toHaveBeenCalledWith({
+        mutation: CREATE_OUTGOING_PAYMENT_FROM_INCOMING,
+        variables: {
+          walletAddressId: expect.any(String),
+          incomingPayment: paymentFixture.incomingPaymentUrl,
+          debitAmount: {
+            ...paymentFixture.incomingAmount,
+            value: BigInt(paymentFixture.incomingAmount.value)
+          },
+          cardDetails: {
+            signature: paymentFixture.signature,
+            expiry: paymentFixture.card.expiry
+          }
+        }
+      })
+    })
+
+    test('throws if wallet address is invalid', async (): Promise<void> => {
+      querySpy.mockClear()
+      querySpy.mockResolvedValue(undefined)
+      await expect(service.create(paymentFixture)).rejects.toThrow(
+        UnknownWalletAddressError
+      )
+    })
+
+    test('throws if payment creation failed', async (): Promise<void> => {
+      mutationSpy.mockClear()
+      mutationSpy.mockResolvedValue(undefined)
+      await expect(service.create(paymentFixture)).rejects.toThrow(
+        PaymentCreationFailedError
+      )
     })
 
     test('throws PaymentTimeoutError on timeout', async () => {

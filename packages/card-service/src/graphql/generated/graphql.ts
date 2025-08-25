@@ -233,8 +233,6 @@ export type CreateIncomingPaymentInput = {
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Maximum amount to be received for this incoming payment. */
   incomingAmount?: InputMaybe<AmountInput>;
-  /** Whether or not the incoming payment is being created for a card payment. */
-  isCardPayment?: InputMaybe<Scalars['Boolean']['input']>;
   /** Additional metadata associated with the incoming payment. */
   metadata?: InputMaybe<Scalars['JSONObject']['input']>;
   /** Unique identifier of the wallet address under which the incoming payment will be created. */
@@ -633,8 +631,6 @@ export type IncomingPayment = BasePayment & Model & {
   state: IncomingPaymentState;
   /** The tenant UUID associated with the incoming payment. If not provided, it will be obtained from the signature. */
   tenantId?: Maybe<Scalars['String']['output']>;
-  /** The URL of the incoming payment. */
-  url: Scalars['String']['output'];
   /** Unique identifier of the wallet address under which the incoming payment was created. */
   walletAddressId: Scalars['ID']['output'];
 };
@@ -2395,7 +2391,6 @@ export type IncomingPaymentResolvers<ContextType = any, ParentType extends Resol
   receivedAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['IncomingPaymentState'], ParentType, ContextType>;
   tenantId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  url?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   walletAddressId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -2891,6 +2886,20 @@ export type Resolvers<ContextType = any> = {
 };
 
 
+export type CreateOutgoingPaymentFromIncomingVariables = Exact<{
+  input: CreateOutgoingPaymentFromIncomingPaymentInput;
+}>;
+
+
+export type CreateOutgoingPaymentFromIncoming = { __typename?: 'Mutation', createOutgoingPaymentFromIncomingPayment: { __typename?: 'OutgoingPaymentResponse', payment?: { __typename?: 'OutgoingPayment', id: string } | null } };
+
+export type GetWalletAddressByUrlVariables = Exact<{
+  url: Scalars['String']['input'];
+}>;
+
+
+export type GetWalletAddressByUrl = { __typename?: 'Query', walletAddressByUrl?: { __typename?: 'WalletAddress', id: string } | null };
+
 export type GetAssetQueryVariables = Exact<{
   id: Scalars['String']['input'];
 }>;
@@ -3150,10 +3159,3 @@ export type ListWebhookEventsVariables = Exact<{
 
 
 export type ListWebhookEvents = { __typename?: 'Query', webhookEvents: { __typename?: 'WebhookEventsConnection', edges: Array<{ __typename?: 'WebhookEventsEdge', cursor: string, node: { __typename?: 'WebhookEvent', id: string, tenantId: string, data: any, type: string, createdAt: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
-
-export type CreateIncomingPaymentVariables = Exact<{
-  input: CreateIncomingPaymentInput;
-}>;
-
-
-export type CreateIncomingPayment = { __typename?: 'Mutation', createIncomingPayment: { __typename?: 'IncomingPaymentResponse', payment?: { __typename?: 'IncomingPayment', id: string, url: string } | null } };

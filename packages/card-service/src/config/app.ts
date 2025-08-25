@@ -38,7 +38,11 @@ export const Config = {
     process.env.REDIS_TLS_CA_FILE_PATH,
     process.env.REDIS_TLS_KEY_FILE_PATH,
     process.env.REDIS_TLS_CERT_FILE_PATH
-  )
+  ),
+  graphqlUrl: envString('GRAPHQL_URL'),
+  tenantId: envString('TENANT_ID'),
+  tenantSecret: envString('TENANT_SECRET'),
+  tenantSignatureVersion: envString('TENANT_SIGNATURE_VERSION')
 }
 
 function parseRedisTlsConfig(

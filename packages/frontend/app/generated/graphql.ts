@@ -274,6 +274,8 @@ export type CreateOrUpdatePeerByUrlMutationResponse = {
 };
 
 export type CreateOutgoingPaymentFromIncomingPaymentInput = {
+  /** Used for the card service to provide the card expiry and signature */
+  cardDetails?: InputMaybe<CardDetailsInput>;
   /** Amount to send (fixed send). */
   debitAmount: AmountInput;
   /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
