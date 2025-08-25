@@ -1,6 +1,5 @@
 import { v4 } from 'uuid'
 import { IocContract } from '@adonisjs/fold'
-import { Knex } from 'knex'
 import { faker } from '@faker-js/faker'
 import {
   AccessItem,
@@ -23,7 +22,6 @@ import { generateTenant } from '../tests/tenant'
 describe('Access utilities', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let trx: Knex.Transaction
   let identifier: string
   let grant: Grant
   let grantAccessItem: Access
@@ -39,8 +37,8 @@ describe('Access utilities', (): void => {
 
   beforeEach(async (): Promise<void> => {
     identifier = `https://example.com/${v4()}`
-    tenant = await Tenant.query(trx).insertAndFetch(generateTenant())
-    grant = await Grant.query(trx).insertAndFetch({
+    tenant = await Tenant.query().insertAndFetch(generateTenant())
+    grant = await Grant.query().insertAndFetch({
       state: GrantState.Processing,
       startMethod: [StartMethod.Redirect],
       continueToken: generateToken(),
@@ -52,7 +50,7 @@ describe('Access utilities', (): void => {
       tenantId: tenant.id
     })
 
-    grantAccessItem = await Access.query(trx).insertAndFetch({
+    grantAccessItem = await Access.query().insertAndFetch({
       grantId: grant.id,
       type: AccessType.OutgoingPayment,
       actions: [AccessAction.Read, AccessAction.Create, AccessAction.List],
@@ -123,7 +121,7 @@ describe('Access utilities', (): void => {
   })
 
   test('Can compare an access item on a grant and an access item from a request with a subaction of the grant', async (): Promise<void> => {
-    const grantAccessItemSuperAction = await Access.query(trx).insertAndFetch({
+    const grantAccessItemSuperAction = await Access.query().insertAndFetch({
       grantId: grant.id,
       type: AccessType.OutgoingPayment,
       actions: [AccessAction.ReadAll],
@@ -161,7 +159,7 @@ describe('Access utilities', (): void => {
   })
 
   test('Can compare an access item on a grant and an access item from a request with different action ordering', async (): Promise<void> => {
-    const grantAccessItemSuperAction = await Access.query(trx).insertAndFetch({
+    const grantAccessItemSuperAction = await Access.query().insertAndFetch({
       grantId: grant.id,
       type: AccessType.OutgoingPayment,
       actions: [AccessAction.Create, AccessAction.ReadAll, AccessAction.List],
@@ -199,7 +197,7 @@ describe('Access utilities', (): void => {
   })
 
   test('Can compare an access item on a grant without an identifier with a request with an identifier', async (): Promise<void> => {
-    const grantAccessItemSuperAction = await Access.query(trx).insertAndFetch({
+    const grantAccessItemSuperAction = await Access.query().insertAndFetch({
       grantId: grant.id,
       type: AccessType.IncomingPayment,
       actions: [AccessAction.ReadAll],
@@ -238,7 +236,7 @@ describe('Access utilities', (): void => {
       }
     }
 
-    const grant = await Grant.query(trx).insertAndFetch({
+    const grant = await Grant.query().insertAndFetch({
       state: GrantState.Processing,
       startMethod: [StartMethod.Redirect],
       continueToken: generateToken(),
@@ -250,7 +248,7 @@ describe('Access utilities', (): void => {
       tenantId: tenant.id
     })
 
-    const grantAccessItem = await Access.query(trx).insertAndFetch({
+    const grantAccessItem = await Access.query().insertAndFetch({
       grantId: grant.id,
       type: AccessType.OutgoingPayment,
       actions: [AccessAction.Read, AccessAction.Create],
@@ -274,7 +272,7 @@ describe('Access utilities', (): void => {
   })
 
   test('access comparison fails if identifier mismatch', async (): Promise<void> => {
-    const grantAccessItemSuperAction = await Access.query(trx).insertAndFetch({
+    const grantAccessItemSuperAction = await Access.query().insertAndFetch({
       grantId: grant.id,
       type: AccessType.IncomingPayment,
       actions: [AccessAction.ReadAll],
@@ -296,7 +294,7 @@ describe('Access utilities', (): void => {
   })
 
   test('access comparison fails if type mismatch', async (): Promise<void> => {
-    const grantAccessItemSuperAction = await Access.query(trx).insertAndFetch({
+    const grantAccessItemSuperAction = await Access.query().insertAndFetch({
       grantId: grant.id,
       type: AccessType.Quote,
       actions: [AccessAction.Read]

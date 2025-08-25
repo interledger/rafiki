@@ -1,6 +1,5 @@
 import { faker } from '@faker-js/faker'
 import nock from 'nock'
-import { Knex } from 'knex'
 import { v4 } from 'uuid'
 import jestOpenAPI from 'jest-openapi'
 
@@ -30,7 +29,6 @@ import { Tenant } from '../tenant/model'
 describe('Access Token Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let trx: Knex.Transaction
   let accessTokenRoutes: AccessTokenRoutes
   let accessTokenService: AccessTokenService
   let grantService: GrantService
@@ -99,15 +97,15 @@ describe('Access Token Routes', (): void => {
 
     beforeEach(async (): Promise<void> => {
       const tenant = await Tenant.query().insertAndFetch(generateTenant())
-      grant = await Grant.query(trx).insertAndFetch({
+      grant = await Grant.query().insertAndFetch({
         ...BASE_GRANT,
         tenantId: tenant.id
       })
-      access = await Access.query(trx).insertAndFetch({
+      access = await Access.query().insertAndFetch({
         grantId: grant.id,
         ...BASE_ACCESS
       })
-      token = await AccessToken.query(trx).insertAndFetch({
+      token = await AccessToken.query().insertAndFetch({
         grantId: grant.id,
         ...BASE_TOKEN
       })
@@ -291,7 +289,7 @@ describe('Access Token Routes', (): void => {
         type: 'quote',
         actions: ['create', 'read']
       }
-      await Access.query(trx).insertAndFetch({
+      await Access.query().insertAndFetch({
         grantId: grant.id,
         ...secondAccess
       })
@@ -377,11 +375,11 @@ describe('Access Token Routes', (): void => {
 
     beforeEach(async (): Promise<void> => {
       const tenant = await Tenant.query().insertAndFetch(generateTenant())
-      grant = await Grant.query(trx).insertAndFetch({
+      grant = await Grant.query().insertAndFetch({
         ...BASE_GRANT,
         tenantId: tenant.id
       })
-      token = await AccessToken.query(trx).insertAndFetch({
+      token = await AccessToken.query().insertAndFetch({
         grantId: grant.id,
         ...BASE_TOKEN
       })
@@ -390,7 +388,7 @@ describe('Access Token Routes', (): void => {
     test('Returns status 204 even if token does not exist', async (): Promise<void> => {
       const ctx = createTokenHttpSigContext(token, grant)
 
-      await token.$query(trx).delete()
+      await token.$query().delete()
 
       await accessTokenRoutes.revoke(ctx)
       expect(ctx.response.status).toBe(204)
@@ -399,7 +397,7 @@ describe('Access Token Routes', (): void => {
     test('Returns status 204 if token has not expired', async (): Promise<void> => {
       const ctx = createTokenHttpSigContext(token, grant)
 
-      await token.$query(trx).patch({ expiresIn: 10000 })
+      await token.$query().patch({ expiresIn: 10000 })
       await accessTokenRoutes.revoke(ctx)
       expect(ctx.response.status).toBe(204)
     })
@@ -407,7 +405,7 @@ describe('Access Token Routes', (): void => {
     test('Returns status 204 if token has expired', async (): Promise<void> => {
       const ctx = createTokenHttpSigContext(token, grant)
 
-      await token.$query(trx).patch({ expiresIn: -1 })
+      await token.$query().patch({ expiresIn: -1 })
       await accessTokenRoutes.revoke(ctx)
       expect(ctx.response.status).toBe(204)
     })
@@ -419,16 +417,16 @@ describe('Access Token Routes', (): void => {
     let token: AccessToken
 
     beforeEach(async (): Promise<void> => {
-      const tenant = await Tenant.query(trx).insertAndFetch(generateTenant())
-      grant = await Grant.query(trx).insertAndFetch({
+      const tenant = await Tenant.query().insertAndFetch(generateTenant())
+      grant = await Grant.query().insertAndFetch({
         ...BASE_GRANT,
         tenantId: tenant.id
       })
-      access = await Access.query(trx).insertAndFetch({
+      access = await Access.query().insertAndFetch({
         grantId: grant.id,
         ...BASE_ACCESS
       })
-      token = await AccessToken.query(trx).insertAndFetch({
+      token = await AccessToken.query().insertAndFetch({
         grantId: grant.id,
         ...BASE_TOKEN
       })
@@ -464,7 +462,7 @@ describe('Access Token Routes', (): void => {
     test('Can rotate an expired token', async (): Promise<void> => {
       const ctx = createTokenHttpSigContext(token, grant)
 
-      await token.$query(trx).patch({ expiresIn: -1 })
+      await token.$query().patch({ expiresIn: -1 })
       await accessTokenRoutes.rotate(ctx)
       expect(ctx.response.status).toBe(200)
       expect(ctx.response.get('Content-Type')).toBe(
