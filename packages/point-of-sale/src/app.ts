@@ -93,6 +93,15 @@ export class App {
     // Initiate a payment
     router.post<DefaultState, PaymentContext>('/payment', paymentRoutes.payment)
 
+    // POST /webhook-events
+    // Handle webhook
+    // Currently only handles incoming_payment.completed webhooks
+    router.post<DefaultState, HandleWebhookContext>(
+      '/webhook',
+      webhookHttpSigMiddleware,
+      webhookHandlerRoutes.handleWebhook
+    )
+
     koa.use(cors())
     koa.use(router.routes())
 
