@@ -9,9 +9,7 @@ import net from 'net'
 import dns from 'dns'
 import { createHmac } from 'crypto'
 
-import {
-  createAuthenticatedClient as createOpenPaymentsClient
-} from '@interledger/open-payments'
+import { createAuthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
 import { createOpenAPI } from '@interledger/openapi'
 import path from 'path'
 import { StreamServer } from '@interledger/stream-receiver'

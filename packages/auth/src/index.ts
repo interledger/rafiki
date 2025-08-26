@@ -14,9 +14,7 @@ import { createAccessTokenRoutes } from './accessToken/routes'
 import { createGrantRoutes } from './grant/routes'
 import { createInteractionRoutes } from './interaction/routes'
 import { createOpenAPI } from '@interledger/openapi'
-import {
-  createUnauthenticatedClient as createOpenPaymentsClient
-} from '@interledger/open-payments'
+import { createUnauthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
 import { createInteractionService } from './interaction/service'
 import { getTokenIntrospectionOpenAPI } from 'token-introspection'
 import { Redis } from 'ioredis'
