@@ -25,6 +25,7 @@ import { getPageTests } from '../shared/baseModel.test'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { createWebhookEvent, webhookEventTypes } from '../tests/webhook'
 import { IncomingPaymentEventType } from '../open_payments/payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../open_payments/payment/incoming/types'
 import { OutgoingPaymentEventType } from '../open_payments/payment/outgoing/model'
 import { createIncomingPayment } from '../tests/incomingPayment'
 import { createWalletAddress } from '../tests/walletAddress'
@@ -37,6 +38,7 @@ import { TenantSetting, TenantSettingKeys } from '../tenants/settings/model'
 import { faker } from '@faker-js/faker'
 import { withConfigOverride } from '../tests/helpers'
 import { createTenant } from '../tests/tenant'
+import { Logger } from 'pino'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -159,13 +161,15 @@ describe('Webhook Service', (): void => {
         (
           await createIncomingPayment(deps, {
             walletAddressId: walletAddressIn.id,
-            tenantId: Config.operatorTenantId
+            tenantId: Config.operatorTenantId,
+            initiationReason: IncomingPaymentInitiationReason.OpenPayments
           })
         ).id,
         (
           await createIncomingPayment(deps, {
             walletAddressId: walletAddressIn.id,
-            tenantId: Config.operatorTenantId
+            tenantId: Config.operatorTenantId,
+            initiationReason: IncomingPaymentInitiationReason.OpenPayments
           })
         ).id
       ]
@@ -642,6 +646,10 @@ describe('Webhook Service', (): void => {
   })
 
   describe('finalizeWebhookRecipients', (): void => {
+    let logger: Logger
+    beforeEach(async (): Promise<void> => {
+      logger = await deps.use('logger')
+    })
     test(
       'adds operatorTenant as recipient if sendAllWebhooksToOperator is enabled',
       withConfigOverride(
@@ -685,6 +693,45 @@ describe('Webhook Service', (): void => {
         { recipientTenantId: tenantId2 },
         { recipientTenantId: tenantId3 }
       ])
+    })
+
+    test(
+      'adds webhooks for POS service if event was for a card payment',
+      withConfigOverride(
+        () => config,
+        { posServiceUrl: faker.internet.url() },
+        async (): Promise<void> => {
+          const tenantId = crypto.randomUUID()
+          expect(
+            finalizeWebhookRecipients(
+              [tenantId],
+              config,
+              IncomingPaymentInitiationReason.Card
+            )
+          ).toStrictEqual([
+            { recipientTenantId: tenantId },
+            {
+              recipientTenantId: config.operatorTenantId,
+              metadata: { sendToPosService: true }
+            }
+          ])
+        }
+      )
+    )
+
+    test("doesn't add a webhook for POS service if not configured", async (): Promise<void> => {
+      const tenantId = crypto.randomUUID()
+      const loggerWarnSpy = jest.spyOn(logger, 'warn')
+
+      expect(
+        finalizeWebhookRecipients(
+          [tenantId],
+          config,
+          IncomingPaymentInitiationReason.Card,
+          logger
+        )
+      ).toStrictEqual([{ recipientTenantId: tenantId }])
+      expect(loggerWarnSpy).toHaveBeenCalled()
     })
   })
 })

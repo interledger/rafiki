@@ -47,6 +47,7 @@ import {
 import { faker } from '@faker-js/faker'
 import { GraphQLErrorCode } from '../errors'
 import { createTenant } from '../../tests/tenant'
+import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/types'
 
 describe('OutgoingPayment Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -180,7 +181,8 @@ describe('OutgoingPayment Resolvers', (): void => {
 
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId: firstReceiverWalletAddress.id,
-          tenantId: Config.operatorTenantId
+          tenantId: Config.operatorTenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
         receiver = incomingPayment.getUrl(config.openPaymentsUrl)
         firstOutgoingPayment = await createOutgoingPayment(deps, {
@@ -193,7 +195,8 @@ describe('OutgoingPayment Resolvers', (): void => {
 
         const secondIncomingPayment = await createIncomingPayment(deps, {
           walletAddressId: secondReceiverWalletAddress.id,
-          tenantId: Config.operatorTenantId
+          tenantId: Config.operatorTenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
         const secondReceiver = secondIncomingPayment.getUrl(
           config.openPaymentsUrl

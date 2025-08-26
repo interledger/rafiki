@@ -28,6 +28,7 @@ import {
   IncomingPayment,
   IncomingPaymentEventType
 } from '../../open_payments/payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/types'
 import {
   OutgoingPayment,
   OutgoingPaymentEvent,
@@ -2258,7 +2259,8 @@ describe('Liquidity Resolvers', (): void => {
           assetScale: walletAddress.asset.scale
         },
         expiresAt: new Date(Date.now() + 60 * 1000),
-        tenantId: Config.operatorTenantId
+        tenantId: Config.operatorTenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
       })
       payment = await createOutgoingPayment(deps, {
         tenantId,
@@ -2500,7 +2502,8 @@ describe('Liquidity Resolvers', (): void => {
                   assetScale: tenantWalletAddress.asset.scale
                 },
                 expiresAt: new Date(Date.now() + 60 * 1000),
-                tenantId: tenant.id
+                tenantId: tenant.id,
+                initiationReason: IncomingPaymentInitiationReason.Admin
               })
               const tenantOutgoingPayment = await createOutgoingPayment(deps, {
                 tenantId: tenant.id,
@@ -2852,7 +2855,8 @@ describe('Liquidity Resolvers', (): void => {
                   assetScale: tenantWalletAddress.asset.scale
                 },
                 expiresAt: new Date(Date.now() + 60 * 1000),
-                tenantId: tenant.id
+                tenantId: tenant.id,
+                initiationReason: IncomingPaymentInitiationReason.Admin
               })
               const tenantOutgoingPayment = await createOutgoingPayment(deps, {
                 tenantId: tenant.id,
@@ -2981,7 +2985,8 @@ describe('Liquidity Resolvers', (): void => {
           assetScale: walletAddress.asset.scale
         },
         expiresAt: new Date(Date.now() + 60 * 1000),
-        tenantId: Config.operatorTenantId
+        tenantId: Config.operatorTenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
       })
       outgoingPayment = await createOutgoingPayment(deps, {
         tenantId: Config.operatorTenantId,

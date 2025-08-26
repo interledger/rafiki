@@ -4,6 +4,7 @@ import {
   IncomingPaymentEventType,
   IncomingPaymentState
 } from './model'
+import { IncomingPaymentInitiationReason } from './types'
 import { AccountingService } from '../../../accounting/service'
 import { BaseService } from '../../../shared/baseService'
 import { Knex } from 'knex'
@@ -33,6 +34,7 @@ export interface CreateIncomingPaymentOptions {
   incomingAmount?: Amount
   metadata?: Record<string, unknown>
   tenantId: string
+  initiationReason: IncomingPaymentInitiationReason
 }
 
 export interface UpdateOptions {
@@ -143,7 +145,8 @@ async function createIncomingPayment(
     expiresAt,
     incomingAmount,
     metadata,
-    tenantId
+    tenantId,
+    initiationReason
   }: CreateIncomingPaymentOptions,
   trx?: Knex.Transaction
 ): Promise<IncomingPayment | IncomingPaymentError> {
@@ -188,7 +191,8 @@ async function createIncomingPayment(
     metadata,
     state: IncomingPaymentState.Pending,
     processAt: expiresAt,
-    tenantId
+    tenantId,
+    initiatedBy: initiationReason
   })
 
   const asset = await deps.assetService.get(incomingPayment.assetId)
@@ -372,7 +376,9 @@ async function handleDeactivated(
       tenantId: incomingPayment.tenantId,
       webhooks: finalizeWebhookRecipients(
         [incomingPayment.tenantId],
-        deps.config
+        deps.config,
+        incomingPayment.initiatedBy,
+        deps.logger
       )
     })
 

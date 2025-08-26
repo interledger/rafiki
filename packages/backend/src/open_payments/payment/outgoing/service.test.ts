@@ -41,6 +41,7 @@ import {
 } from './model'
 import { RETRY_BACKOFF_SECONDS } from './worker'
 import { IncomingPayment, IncomingPaymentState } from '../incoming/model'
+import { IncomingPaymentInitiationReason } from '../incoming/types'
 import { isTransferError } from '../../../accounting/errors'
 import { AccountingService } from '../../../accounting/service'
 import { AssetOptions } from '../../../asset/service'
@@ -326,7 +327,8 @@ describe('OutgoingPaymentService', (): void => {
 
     incomingPayment = await createIncomingPayment(deps, {
       walletAddressId: receiverWalletAddress.id,
-      tenantId: Config.operatorTenantId
+      tenantId: Config.operatorTenantId,
+      initiationReason: IncomingPaymentInitiationReason.Admin
     })
     receiver = incomingPayment.getUrl(config.openPaymentsUrl)
 
@@ -454,7 +456,8 @@ describe('OutgoingPaymentService', (): void => {
         })
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId: receiverWalletAddress.id,
-          tenantId: Config.operatorTenantId
+          tenantId: Config.operatorTenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
         otherReceiver = incomingPayment.getUrl(config.openPaymentsUrl)
 
@@ -1575,7 +1578,8 @@ describe('OutgoingPaymentService', (): void => {
           assetCode: receiverWalletAddress.asset.code,
           assetScale: receiverWalletAddress.asset.scale
         },
-        tenantId: Config.operatorTenantId
+        tenantId: Config.operatorTenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
       })
       assert.ok(incomingPayment.walletAddress)
 
@@ -1659,7 +1663,8 @@ describe('OutgoingPaymentService', (): void => {
           assetCode: receiverWalletAddress.asset.code,
           assetScale: receiverWalletAddress.asset.scale
         },
-        tenantId: Config.operatorTenantId
+        tenantId: Config.operatorTenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
       })
       assert.ok(incomingPayment.walletAddress)
 
@@ -1732,7 +1737,8 @@ describe('OutgoingPaymentService', (): void => {
           assetCode: receiverWalletAddress.asset.code,
           assetScale: receiverWalletAddress.asset.scale
         },
-        tenantId: Config.operatorTenantId
+        tenantId: Config.operatorTenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
       })
       assert.ok(incomingPayment.id)
       assert.ok(incomingPayment.createdAt)

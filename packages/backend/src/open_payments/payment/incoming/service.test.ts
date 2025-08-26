@@ -12,6 +12,7 @@ import {
   IncomingPaymentEventType,
   IncomingPaymentState
 } from './model'
+import { IncomingPaymentInitiationReason } from './types'
 import { Config, IAppConfig } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
@@ -119,7 +120,8 @@ describe('Incoming Payment Service', (): void => {
       return incomingPaymentService.create({
         walletAddressId,
         ...options,
-        incomingAmount: undefined
+        incomingAmount: undefined,
+        initiationReason: IncomingPaymentInitiationReason.OpenPayments
       })
     }
 
@@ -345,7 +347,8 @@ describe('Incoming Payment Service', (): void => {
             ).id,
         ...options,
         incomingAmount: options.incomingAmount ? amount : undefined,
-        tenantId
+        tenantId,
+        initiationReason: IncomingPaymentInitiationReason.OpenPayments
       })
       assert.ok(!isIncomingPaymentError(incomingPayment))
       expect(incomingPayment).toMatchObject({
@@ -389,7 +392,8 @@ describe('Incoming Payment Service', (): void => {
             description: 'Test incoming payment',
             externalRef: '#123'
           },
-          tenantId
+          tenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
       ).resolves.toBe(IncomingPaymentError.UnknownWalletAddress)
     })
@@ -412,7 +416,8 @@ describe('Incoming Payment Service', (): void => {
             description: 'Test incoming payment',
             externalRef: '#123'
           },
-          tenantId
+          tenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
       ).resolves.toBe(IncomingPaymentError.InvalidAmount)
       await expect(
@@ -428,7 +433,8 @@ describe('Incoming Payment Service', (): void => {
             description: 'Test incoming payment',
             externalRef: '#123'
           },
-          tenantId
+          tenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
       ).resolves.toBe(IncomingPaymentError.InvalidAmount)
     })
@@ -447,7 +453,8 @@ describe('Incoming Payment Service', (): void => {
             description: 'Test incoming payment',
             externalRef: '#123'
           },
-          tenantId
+          tenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
       ).resolves.toBe(IncomingPaymentError.InvalidAmount)
       await expect(
@@ -463,7 +470,8 @@ describe('Incoming Payment Service', (): void => {
             description: 'Test incoming payment',
             externalRef: '#123'
           },
-          tenantId
+          tenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
       ).resolves.toBe(IncomingPaymentError.InvalidAmount)
     })
@@ -482,7 +490,8 @@ describe('Incoming Payment Service', (): void => {
             description: 'Test incoming payment',
             externalRef: '#123'
           },
-          tenantId
+          tenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
       ).resolves.toBe(IncomingPaymentError.InvalidExpiry)
     })
@@ -506,7 +515,8 @@ describe('Incoming Payment Service', (): void => {
             description: 'Test incoming payment',
             externalRef: '#123'
           },
-          tenantId
+          tenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
       ).resolves.toBe(IncomingPaymentError.InactiveWalletAddress)
     })
@@ -527,7 +537,8 @@ describe('Incoming Payment Service', (): void => {
             description: 'Test incoming payment',
             externalRef: '#123'
           },
-          tenantId
+          tenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
       ).resolves.toBe(IncomingPaymentError.InvalidExpiry)
     })
@@ -545,7 +556,8 @@ describe('Incoming Payment Service', (): void => {
       payment = (await incomingPaymentService.create({
         walletAddressId,
         incomingAmount: amount,
-        tenantId
+        tenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
       })) as IncomingPayment
       assert.ok(!isIncomingPaymentError(payment))
     })
@@ -600,7 +612,8 @@ describe('Incoming Payment Service', (): void => {
             description: 'Test incoming payment',
             externalRef: '#123'
           },
-          tenantId
+          tenantId,
+          initiationReason: IncomingPaymentInitiationReason.OpenPayments
         }),
       get: (options) => incomingPaymentService.get(options),
       list: (options) => incomingPaymentService.getWalletAddressPage(options)
@@ -623,7 +636,8 @@ describe('Incoming Payment Service', (): void => {
           description: 'Test incoming payment',
           externalRef: '#123'
         },
-        tenantId
+        tenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
       })
       assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
       incomingPayment = incomingPaymentOrError
@@ -687,7 +701,8 @@ describe('Incoming Payment Service', (): void => {
           description: 'Test incoming payment',
           externalRef: '#123'
         },
-        tenantId
+        tenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
       })
       assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
       const incomingPaymentId = incomingPaymentOrError.id
@@ -717,7 +732,8 @@ describe('Incoming Payment Service', (): void => {
             description: 'Test incoming payment',
             externalRef: '#123'
           },
-          tenantId
+          tenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
         await expect(
           accountingService.createDeposit({
@@ -755,7 +771,8 @@ describe('Incoming Payment Service', (): void => {
             description: 'Test incoming payment',
             externalRef: '#123'
           },
-          tenantId
+          tenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
         jest.useFakeTimers()
         jest.setSystemTime(incomingPayment.expiresAt)
@@ -793,7 +810,8 @@ describe('Incoming Payment Service', (): void => {
               description: 'Test incoming payment',
               externalRef: '#123'
             },
-            tenantId
+            tenantId,
+            initiationReason: IncomingPaymentInitiationReason.OpenPayments
           })
           await expect(
             accountingService.createDeposit({
@@ -873,6 +891,70 @@ describe('Incoming Payment Service', (): void => {
             client
           })
         })
+
+        test(
+          'Creates webhook event for POS service if card payment',
+          withConfigOverride(
+            () => config,
+            { posServiceUrl: faker.internet.url() },
+            async (): Promise<void> => {
+              await expect(
+                IncomingPaymentEvent.query(knex).where({
+                  type: eventType
+                })
+              ).resolves.toHaveLength(0)
+              await IncomingPayment.query(knex)
+                .patch({
+                  initiatedBy: IncomingPaymentInitiationReason.Card
+                })
+                .where('id', incomingPayment.id)
+              assert.ok(incomingPayment.processAt)
+              jest.useFakeTimers()
+              jest.setSystemTime(incomingPayment.processAt)
+              await expect(incomingPaymentService.processNext()).resolves.toBe(
+                incomingPayment.id
+              )
+              const events = await IncomingPaymentEvent.query(knex)
+                .where({
+                  incomingPaymentId: incomingPayment.id,
+                  type: eventType,
+                  withdrawalAccountId: incomingPayment.id,
+                  withdrawalAmount: amountReceived
+                })
+                .withGraphFetched('webhooks')
+              expect(events).toHaveLength(1)
+              assert.ok(events[0].webhooks)
+              expect(events[0].webhooks).toHaveLength(2)
+              expect(events[0].webhooks).toEqual(
+                expect.arrayContaining([
+                  expect.objectContaining({
+                    eventId: events[0].id,
+                    recipientTenantId: events[0].tenantId,
+                    attempts: 0,
+                    processAt: expect.any(Date)
+                  }),
+                  expect.objectContaining({
+                    eventId: events[0].id,
+                    recipientTenantId: Config.operatorTenantId,
+                    attempts: 0,
+                    processAt: expect.any(Date),
+                    metadata: {
+                      sendToPosService: true
+                    }
+                  })
+                ])
+              )
+              await expect(
+                incomingPaymentService.get({
+                  id: incomingPayment.id
+                })
+              ).resolves.toMatchObject({
+                processAt: null,
+                client
+              })
+            }
+          )
+        )
       }
     )
   })
@@ -893,7 +975,8 @@ describe('Incoming Payment Service', (): void => {
           description: 'Test incoming payment',
           externalRef: '#123'
         },
-        tenantId
+        tenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
       })
     })
     test('updates state of pending incoming payment to complete', async (): Promise<void> => {

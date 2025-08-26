@@ -23,6 +23,7 @@ import {
   IncomingPayment,
   IncomingPaymentState
 } from '../payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../payment/incoming/types'
 import { getTests } from '../wallet_address/model.test'
 import { WalletAddress } from '../wallet_address/model'
 import { Fee, FeeType } from '../../fee/model'
@@ -190,7 +191,8 @@ describe('QuoteService', (): void => {
           incomingPayment = await createIncomingPayment(deps, {
             walletAddressId: receivingWalletAddress.id,
             incomingAmount,
-            tenantId: Config.operatorTenantId
+            tenantId: Config.operatorTenantId,
+            initiationReason: IncomingPaymentInitiationReason.Admin
           })
           options = {
             tenantId,
@@ -403,7 +405,8 @@ describe('QuoteService', (): void => {
           walletAddressId: receivingWalletAddress.id,
           incomingAmount,
           expiresAt: expiryDate,
-          tenantId: Config.operatorTenantId
+          tenantId: Config.operatorTenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
         const options: CreateQuoteOptions = {
           tenantId,
@@ -564,7 +567,8 @@ describe('QuoteService', (): void => {
       async ({ debitAmount, receiveAmount }): Promise<void> => {
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId: receivingWalletAddress.id,
-          tenantId: Config.operatorTenantId
+          tenantId: Config.operatorTenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
         const options: CreateQuoteOptions = {
           tenantId,
@@ -622,7 +626,8 @@ describe('QuoteService', (): void => {
               assetScale: asset.scale,
               value: incomingAmountValue
             },
-            tenantId: Config.operatorTenantId
+            tenantId: Config.operatorTenantId,
+            initiationReason: IncomingPaymentInitiationReason.Admin
           })
 
           await Fee.query().insertAndFetch({
@@ -666,7 +671,8 @@ describe('QuoteService', (): void => {
             assetScale: asset.scale,
             value: incomingAmountValue
           },
-          tenantId: Config.operatorTenantId
+          tenantId: Config.operatorTenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
 
         const mockedQuote = mockQuote({
@@ -896,7 +902,8 @@ describe('QuoteService', (): void => {
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId: receivingWalletAddress.id,
           incomingAmount,
-          tenantId: Config.operatorTenantId
+          tenantId: Config.operatorTenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
 
         const options: CreateQuoteOptions = {

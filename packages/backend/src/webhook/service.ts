@@ -15,6 +15,8 @@ import {
   TenantSettingKeys
 } from '../tenants/settings/model'
 import { TenantSettingService } from '../tenants/settings/service'
+import { Logger } from 'pino'
+import { IncomingPaymentInitiationReason } from '../open_payments/payment/incoming/types'
 
 // First retry waits 10 seconds
 // Second retry waits 20 (more) seconds
@@ -164,12 +166,18 @@ async function processNextWebhook(
         })
       }
 
-      const settings = await deps_.tenantSettingService.get({
-        tenantId: webhook.recipientTenantId
-      })
-      const formattedSettings = formatSettings(settings)
+      if (webhook.metadata?.sendToPosService) {
+        await sendWebhook(deps, webhook, {
+          webhookUrl: `${deps.config.posServiceUrl}/webhook`
+        })
+      } else {
+        const settings = await deps_.tenantSettingService.get({
+          tenantId: webhook.recipientTenantId
+        })
+        const formattedSettings = formatSettings(settings)
 
-      await sendWebhook(deps, webhook, formattedSettings)
+        await sendWebhook(deps, webhook, formattedSettings)
+      }
 
       span.end()
       return webhook.id
@@ -287,8 +295,10 @@ async function getWebhookEventsPage(
 
 export function finalizeWebhookRecipients(
   tenantIds: string[],
-  config: IAppConfig
-): Pick<Webhook, 'recipientTenantId'>[] {
+  config: IAppConfig,
+  initiationReason?: IncomingPaymentInitiationReason,
+  logger?: Logger
+): Pick<Webhook, 'recipientTenantId' | 'metadata'>[] {
   const tenantIdSet = new Set(tenantIds)
 
   if (
@@ -298,7 +308,30 @@ export function finalizeWebhookRecipients(
     tenantIdSet.add(config.operatorTenantId)
   }
 
-  return [...tenantIdSet.values()].map((tenantId) => ({
+  let recipients: Pick<Webhook, 'recipientTenantId' | 'metadata'>[] = [
+    ...tenantIdSet.values()
+  ].map((tenantId) => ({
     recipientTenantId: tenantId
   }))
+
+  if (
+    initiationReason === IncomingPaymentInitiationReason.Card &&
+    config.posServiceUrl
+  ) {
+    recipients = recipients.concat([
+      {
+        recipientTenantId: config.operatorTenantId,
+        metadata: {
+          sendToPosService: true
+        }
+      }
+    ])
+  } else if (
+    initiationReason === IncomingPaymentInitiationReason.Card &&
+    !config.posServiceUrl
+  ) {
+    logger?.warn('Could not create webhook recipient for point of sale service')
+  }
+
+  return recipients
 }
