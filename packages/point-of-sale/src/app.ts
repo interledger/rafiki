@@ -19,6 +19,11 @@ import {
 import { PosDeviceService } from './merchant/devices/service'
 import { MerchantService } from './merchant/service'
 import { PaymentContext, PaymentRoutes } from './payments/routes'
+import {
+  HandleWebhookContext,
+  WebhookHandlerRoutes
+} from './webhook-handlers/routes'
+import { webhookHttpSigMiddleware } from './webhook-handlers/middleware'
 
 export interface AppServices {
   logger: Promise<Logger>
@@ -29,6 +34,7 @@ export interface AppServices {
   posDeviceService: Promise<PosDeviceService>
   merchantService: Promise<MerchantService>
   paymentRoutes: Promise<PaymentRoutes>
+  webhookHandlerRoutes: Promise<WebhookHandlerRoutes>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -74,6 +80,9 @@ export class App {
     const merchantRoutes = await this.container.use('merchantRoutes')
     const posDeviceRoutes = await this.container.use('posDeviceRoutes')
     const paymentRoutes = await this.container.use('paymentRoutes')
+    const webhookHandlerRoutes = await this.container.use(
+      'webhookHandlerRoutes'
+    )
 
     // POST /merchants
     // Create merchant
@@ -99,6 +108,15 @@ export class App {
     // POST /payment
     // Initiate a payment
     router.post<DefaultState, PaymentContext>('/payment', paymentRoutes.payment)
+
+    // POST /webhook-events
+    // Handle webhook
+    // Currently only handles incoming_payment.completed webhooks
+    router.post<DefaultState, HandleWebhookContext>(
+      '/webhook',
+      webhookHttpSigMiddleware,
+      webhookHandlerRoutes.handleWebhook
+    )
 
     koa.use(cors())
     koa.use(router.routes())

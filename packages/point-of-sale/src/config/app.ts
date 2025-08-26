@@ -41,6 +41,9 @@ export const Config = {
   dbSchema: undefined as string | undefined,
   tenantId: envString('TENANT_ID'),
   tenantSecret: envString('TENANT_SECRET'),
-  tenantSignatureVersion: envString('TENANT_SIGNATURE_VERSION'),
-  graphqlUrl: envString('GRAPHQL_URL')
+  tenantSignatureVersion: envInt('TENANT_SIGNATURE_VERSION', 1),
+  graphqlUrl: envString('GRAPHQL_URL'),
+  webhookSignatureVersion: envInt('WEBHOOK_SIGNATURE_VERSION', 1),
+  webhookSignatureSecret: envString('WEBHOOK_SIGNATURE_SECRET'),
+  webhookTimeoutMs: envInt('WEBHOOK_TIMEOUT_MS', 30000)
 }

@@ -3789,6 +3789,22 @@
             "deprecationReason": null
           },
           {
+            "name": "url",
+            "description": "The URL of the incoming payment.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "walletAddressId",
             "description": "Unique identifier of the wallet address under which the incoming payment was created.",
             "args": [],

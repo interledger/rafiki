@@ -1,7 +1,8 @@
 import { IocContract } from '@adonisjs/fold'
+import { v4 } from 'uuid'
 import { initIocContainer } from '..'
 import { AppServices } from '../app'
-import { Config } from '../config/app'
+import { Config, IAppConfig } from '../config/app'
 import { TestContainer, createTestApp } from '../tests/app'
 import { PaymentContext, PaymentRoutes } from './routes'
 import { truncateTables } from '../tests/tableManager'
@@ -9,6 +10,10 @@ import { PaymentService } from './service'
 import { CardServiceClient, Result } from '../card-service-client/client'
 import { createContext } from '../tests/context'
 import { CardServiceClientError } from '../card-service-client/errors'
+import { IncomingPaymentState } from '../graphql/generated/graphql'
+import { webhookWaitMap } from '../webhook-handlers/request-map'
+import { faker } from '@faker-js/faker'
+import { withConfigOverride } from '../tests/helpers'
 
 describe('Payment Routes', () => {
   let deps: IocContract<AppServices>
@@ -16,6 +21,7 @@ describe('Payment Routes', () => {
   let paymentRoutes: PaymentRoutes
   let paymentService: PaymentService
   let cardServiceClient: CardServiceClient
+  let config: IAppConfig
 
   beforeAll(async () => {
     deps = initIocContainer(Config)
@@ -23,6 +29,7 @@ describe('Payment Routes', () => {
     paymentService = await deps.use('paymentClient')
     cardServiceClient = await deps.use('cardServiceClient')
     paymentRoutes = await deps.use('paymentRoutes')
+    config = await deps.use('config')
   })
 
   beforeEach(() => {
@@ -45,9 +52,22 @@ describe('Payment Routes', () => {
         .spyOn(cardServiceClient, 'sendPayment')
         .mockResolvedValueOnce(Result.APPROVED)
 
+      jest
+        .spyOn(webhookWaitMap, 'setWithExpiry')
+        .mockImplementationOnce((key, deferred) => {
+          deferred.resolve({
+            id: v4(),
+            type: 'incoming_payment.completed',
+            data: { id: key, completed: true }
+          })
+          return webhookWaitMap
+        })
+
       await paymentRoutes.payment(ctx)
       expect(ctx.response.body).toBe(Result.APPROVED)
       expect(ctx.status).toBe(200)
+
+      expect(webhookWaitMap.get('incoming-payment-url')).toBeUndefined()
     })
 
     test('returns 401 with result card_expired or invalid_signature', async () => {
@@ -93,6 +113,34 @@ describe('Payment Routes', () => {
       expect(ctx.status).toBe(500)
     })
 
+    test(
+      'returns 504 if incoming payment event times out',
+      withConfigOverride(
+        () => config,
+        { webhookTimeoutMs: 1 },
+        async (): Promise<void> => {
+          jest
+            .spyOn(webhookWaitMap, 'setWithExpiry')
+            .mockImplementationOnce(() => {
+              return webhookWaitMap
+            })
+          const deleteSpy = jest.spyOn(webhookWaitMap, 'delete')
+          const ctx = createPaymentContext()
+          mockPaymentService()
+          jest
+            .spyOn(cardServiceClient, 'sendPayment')
+            .mockResolvedValueOnce(Result.APPROVED)
+          await paymentRoutes.payment(ctx)
+          expect(ctx.response.body).toBe(
+            'Timed out waiting for incoming payment event'
+          )
+          expect(ctx.status).toBe(504)
+
+          expect(deleteSpy).toHaveBeenCalled()
+        }
+      )
+    )
+
     function mockPaymentService() {
       jest.spyOn(paymentService, 'getWalletAddress').mockResolvedValueOnce({
         id: 'id',
@@ -104,7 +152,19 @@ describe('Payment Routes', () => {
       })
       jest
         .spyOn(paymentService, 'createIncomingPayment')
-        .mockResolvedValueOnce('incoming-payment-url')
+        .mockResolvedValueOnce({
+          id: 'incoming-payment-url',
+          url: faker.internet.url(),
+          createdAt: new Date().toString(),
+          walletAddressId: v4(),
+          expiresAt: new Date(Date.now() + 30000).toString(),
+          receivedAmount: {
+            assetCode: 'USD',
+            assetScale: 2,
+            value: BigInt(0)
+          },
+          state: IncomingPaymentState.Pending
+        })
     }
   })
 })

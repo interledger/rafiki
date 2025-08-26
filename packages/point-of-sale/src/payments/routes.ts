@@ -4,8 +4,18 @@ import { AmountInput } from '../graphql/generated/graphql'
 import { BaseService } from '../shared/baseService'
 import { PaymentService } from './service'
 import { CardServiceClientError } from '../card-service-client/errors'
+import { Deferred } from '../utils/deferred'
+import { webhookWaitMap } from '../webhook-handlers/request-map'
+import { WebhookBody } from '../webhook-handlers/routes'
+import { IAppConfig } from '../config/app'
+import {
+  IncomingPaymentEventTimeoutError,
+  InvalidCardPaymentError,
+  PaymentRouteError
+} from './errors'
 
 interface ServiceDependencies extends BaseService {
+  config: IAppConfig
   paymentService: PaymentService
   cardServiceClient: CardServiceClient
 }
@@ -61,29 +71,57 @@ async function payment(
       assetScale: walletAddress.assetScale,
       value: body.value
     }
-    const incomingPaymentUrl = await deps.paymentService.createIncomingPayment(
+    const incomingPayment = await deps.paymentService.createIncomingPayment(
       walletAddress.id,
       incomingAmount
     )
+    const deferred = new Deferred<WebhookBody>()
+    webhookWaitMap.setWithExpiry(
+      incomingPayment.id,
+      deferred,
+      deps.config.webhookTimeoutMs
+    )
     const result = await deps.cardServiceClient.sendPayment({
       merchantWalletAddress: body.merchantWalletAddress,
-      incomingPaymentUrl,
+      incomingPaymentUrl: incomingPayment.url,
       date: new Date(),
       signature: body.signature,
       card: body.card
     })
 
+    if (result !== Result.APPROVED) throw new InvalidCardPaymentError(result)
+    const event = await waitForIncomingPaymentEvent(deps.config, deferred)
+    webhookWaitMap.delete(incomingPayment.id)
+    if (!event || !event.data.completed)
+      throw new IncomingPaymentEventTimeoutError(incomingPayment.id)
     ctx.body = result
-    ctx.status = result === Result.APPROVED ? 200 : 401
+    ctx.status = 200
   } catch (err) {
+    if (err instanceof IncomingPaymentEventTimeoutError)
+      webhookWaitMap.delete(err.incomingPaymentId)
     const { body, status } = handlePaymentError(err)
     ctx.body = body
     ctx.status = status
   }
 }
 
+async function waitForIncomingPaymentEvent(
+  config: IAppConfig,
+  deferred: Deferred<WebhookBody>
+): Promise<WebhookBody | void> {
+  return Promise.race([
+    deferred.promise,
+    new Promise<void>((resolve) =>
+      setTimeout(() => resolve(), config.webhookTimeoutMs)
+    )
+  ])
+}
+
 function handlePaymentError(err: unknown) {
   if (err instanceof CardServiceClientError) {
+    return { body: err.message, status: err.status }
+  }
+  if (err instanceof PaymentRouteError) {
     return { body: err.message, status: err.status }
   }
   if (err instanceof Error) {
