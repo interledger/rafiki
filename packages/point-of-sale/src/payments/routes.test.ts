@@ -2,7 +2,7 @@ import { IocContract } from '@adonisjs/fold'
 import { v4 } from 'uuid'
 import { initIocContainer } from '..'
 import { AppServices } from '../app'
-import { Config } from '../config/app'
+import { Config, IAppConfig } from '../config/app'
 import { TestContainer, createTestApp } from '../tests/app'
 import { PaymentContext, PaymentRoutes } from './routes'
 import { truncateTables } from '../tests/tableManager'
@@ -13,6 +13,7 @@ import { CardServiceClientError } from '../card-service-client/errors'
 import { IncomingPaymentState } from '../graphql/generated/graphql'
 import { webhookWaitMap } from '../webhook-handlers/request-map'
 import { faker } from '@faker-js/faker'
+import { withConfigOverride } from '../tests/helpers'
 
 describe('Payment Routes', () => {
   let deps: IocContract<AppServices>
@@ -20,6 +21,7 @@ describe('Payment Routes', () => {
   let paymentRoutes: PaymentRoutes
   let paymentService: PaymentService
   let cardServiceClient: CardServiceClient
+  let config: IAppConfig
 
   beforeAll(async () => {
     deps = initIocContainer(Config)
@@ -27,6 +29,7 @@ describe('Payment Routes', () => {
     paymentService = await deps.use('paymentClient')
     cardServiceClient = await deps.use('cardServiceClient')
     paymentRoutes = await deps.use('paymentRoutes')
+    config = await deps.use('config')
   })
 
   beforeEach(() => {
@@ -51,7 +54,7 @@ describe('Payment Routes', () => {
 
       jest
         .spyOn(webhookWaitMap, 'setWithExpiry')
-        .mockImplementation((key, deferred) => {
+        .mockImplementationOnce((key, deferred) => {
           deferred.resolve({
             id: v4(),
             type: 'incoming_payment.completed',
@@ -109,6 +112,34 @@ describe('Payment Routes', () => {
       expect(ctx.response.body).toBe('Unknown error')
       expect(ctx.status).toBe(500)
     })
+
+    test(
+      'returns 504 if incoming payment event times out',
+      withConfigOverride(
+        () => config,
+        { webhookTimeoutMs: 1 },
+        async (): Promise<void> => {
+          jest
+            .spyOn(webhookWaitMap, 'setWithExpiry')
+            .mockImplementationOnce(() => {
+              return webhookWaitMap
+            })
+          const deleteSpy = jest.spyOn(webhookWaitMap, 'delete')
+          const ctx = createPaymentContext()
+          mockPaymentService()
+          jest
+            .spyOn(cardServiceClient, 'sendPayment')
+            .mockResolvedValueOnce(Result.APPROVED)
+          await paymentRoutes.payment(ctx)
+          expect(ctx.response.body).toBe(
+            'Timed out waiting for incoming payment event'
+          )
+          expect(ctx.status).toBe(504)
+
+          expect(deleteSpy).toHaveBeenCalled()
+        }
+      )
+    )
 
     function mockPaymentService() {
       jest.spyOn(paymentService, 'getWalletAddress').mockResolvedValueOnce({

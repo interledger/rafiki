@@ -93,10 +93,12 @@ async function payment(
     const event = await waitForIncomingPaymentEvent(deps.config, deferred)
     webhookWaitMap.delete(incomingPayment.id)
     if (!event || !event.data.completed)
-      throw new IncomingPaymentEventTimeoutError()
+      throw new IncomingPaymentEventTimeoutError(incomingPayment.id)
     ctx.body = result
     ctx.status = 200
   } catch (err) {
+    if (err instanceof IncomingPaymentEventTimeoutError)
+      webhookWaitMap.delete(err.incomingPaymentId)
     const { body, status } = handlePaymentError(err)
     ctx.body = body
     ctx.status = status
@@ -109,8 +111,8 @@ async function waitForIncomingPaymentEvent(
 ): Promise<WebhookBody | void> {
   return Promise.race([
     deferred.promise,
-    new Promise<void>((_, reject) =>
-      setTimeout(() => reject(new Error()), config.webhookTimeoutMs)
+    new Promise<void>((resolve) =>
+      setTimeout(() => resolve(), config.webhookTimeoutMs)
     )
   ])
 }

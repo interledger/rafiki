@@ -21,7 +21,12 @@ export class InvalidCardPaymentError extends PaymentRouteError {
 }
 
 export class IncomingPaymentEventTimeoutError extends PaymentRouteError {
-  constructor(message = 'Timed out waiting for incoming payment event') {
+  incomingPaymentId: string
+  constructor(
+    incomingPaymentId: string,
+    message = 'Timed out waiting for incoming payment event'
+  ) {
     super(504, message)
+    this.incomingPaymentId = incomingPaymentId
   }
 }
