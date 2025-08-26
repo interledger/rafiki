@@ -3,7 +3,7 @@ import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 import { Logger } from 'pino'
 import { AmountInput } from '../graphql/generated/graphql'
 import { IAppConfig } from '../config/app'
-import { v4 as uuid } from 'uuid'
+import { v4 as uuid, v4 } from 'uuid'
 import { AxiosInstance } from 'axios'
 
 const mockLogger = {
@@ -34,11 +34,13 @@ describe('createPaymentService', () => {
   })
 
   it('should create an incoming payment and return the incoming payment url (id)', async () => {
+    const uuid = v4()
     const expectedUrl = 'https://api.example.com/incoming-payments/abc123'
     mockApolloClient.mutate = jest.fn().mockResolvedValue({
       data: {
         payment: {
-          id: expectedUrl
+          id: uuid,
+          url: expectedUrl
         }
       }
     })
@@ -53,7 +55,7 @@ describe('createPaymentService', () => {
       walletAddressId,
       incomingAmount
     )
-    expect(result).toBe(expectedUrl)
+    expect(result).toEqual({ id: uuid, url: expectedUrl })
     expect(mockApolloClient.mutate).toHaveBeenCalledWith(
       expect.objectContaining({
         variables: {
