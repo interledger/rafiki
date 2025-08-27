@@ -233,6 +233,8 @@ export type CreateIncomingPaymentInput = {
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Maximum amount to be received for this incoming payment. */
   incomingAmount?: InputMaybe<AmountInput>;
+  /** Whether or not the incoming payment is being created for a card payment. */
+  isCardPayment?: InputMaybe<Scalars['Boolean']['input']>;
   /** Additional metadata associated with the incoming payment. */
   metadata?: InputMaybe<Scalars['JSONObject']['input']>;
   /** Unique identifier of the wallet address under which the incoming payment will be created. */
@@ -631,6 +633,8 @@ export type IncomingPayment = BasePayment & Model & {
   state: IncomingPaymentState;
   /** The tenant UUID associated with the incoming payment. If not provided, it will be obtained from the signature. */
   tenantId?: Maybe<Scalars['String']['output']>;
+  /** The URL of the incoming payment. */
+  url: Scalars['String']['output'];
   /** Unique identifier of the wallet address under which the incoming payment was created. */
   walletAddressId: Scalars['ID']['output'];
 };
@@ -2391,6 +2395,7 @@ export type IncomingPaymentResolvers<ContextType = any, ParentType extends Resol
   receivedAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['IncomingPaymentState'], ParentType, ContextType>;
   tenantId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  url?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   walletAddressId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
