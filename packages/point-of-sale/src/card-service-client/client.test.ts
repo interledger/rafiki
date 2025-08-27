@@ -43,6 +43,11 @@ describe('CardServiceClient', () => {
       },
       trasactionCounter: 1,
       expiry: new Date(new Date().getDate() + 1)
+    },
+    incomingAmount: {
+      assetCode: 'USD',
+      assetScale: 2,
+      value: '100'
     }
   }
 

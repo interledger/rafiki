@@ -1604,6 +1604,18 @@
         "fields": null,
         "inputFields": [
           {
+            "name": "cardDetails",
+            "description": "Used for the card service to provide the card expiry and signature",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "CardDetailsInput",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "debitAmount",
             "description": "Amount to send (fixed send).",
             "type": {

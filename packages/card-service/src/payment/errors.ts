@@ -19,3 +19,15 @@ export class PaymentTimeoutError extends PaymentRouteError {
     super(504, message)
   }
 }
+
+export class UnknownWalletAddressError extends PaymentRouteError {
+  constructor(message = 'Unknown wallet address') {
+    super(404, message)
+  }
+}
+
+export class PaymentCreationFailedError extends PaymentRouteError {
+  constructor(message = 'Failed to create outgoing payment') {
+    super(500, message)
+  }
+}
