@@ -177,16 +177,17 @@ export function toOpenPaymentsGrantContinuation(
 export function toOpenPaymentsGrant(
   grant: Grant,
   args: ToOpenPaymentsGrantArgs,
-  accessToken: AccessToken,
-  accessItems: Access[],
+  accessToken?: AccessToken,
+  accessItems?: Access[],
   subjectItems?: Subject[]
 ): OpenPaymentsGrant {
   return {
-    access_token: accessToken
-      ? toOpenPaymentsAccessToken(accessToken, accessItems, {
-          authServerUrl: args.authServerUrl
-        })
-      : undefined,
+    access_token:
+      accessToken && accessItems
+        ? toOpenPaymentsAccessToken(accessToken, accessItems, {
+            authServerUrl: args.authServerUrl
+          })
+        : undefined,
     continue: {
       access_token: {
         value: grant.continueToken

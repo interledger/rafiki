@@ -23,12 +23,7 @@ import { canSkipInteraction } from './utils'
 import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
 import { generateRouteLogs } from '../shared/utils'
 import { SubjectService } from '../subject/service'
-import {
-  errorToGNAPCode,
-  errorToHTTPCode,
-  
-  isGrantError
-} from './errors'
+import { errorToGNAPCode, errorToHTTPCode, isGrantError } from './errors'
 import { TenantService } from '../tenant/service'
 import { Tenant, isTenantWithIdp } from '../tenant/model'
 
