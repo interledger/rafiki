@@ -44,6 +44,6 @@ export const Config = {
   tenantSignatureVersion: envInt('TENANT_SIGNATURE_VERSION', 1),
   graphqlUrl: envString('GRAPHQL_URL'),
   webhookSignatureVersion: envInt('WEBHOOK_SIGNATURE_VERSION', 1),
-  webhookSignatureSecret: envString('WEBHOOK_SIGNATURE_SECRET'),
+  webhookSignatureSecret: process.env.WEBHOOK_SIGNATURE_SECRET,
   webhookTimeoutMs: envInt('WEBHOOK_TIMEOUT_MS', 30000)
 }

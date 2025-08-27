@@ -3157,3 +3157,10 @@ export type CreateIncomingPaymentVariables = Exact<{
 
 
 export type CreateIncomingPayment = { __typename?: 'Mutation', createIncomingPayment: { __typename?: 'IncomingPaymentResponse', payment?: { __typename?: 'IncomingPayment', id: string, url: string } | null } };
+
+export type GetWalletAddressByUrlVariables = Exact<{
+  url: Scalars['String']['input'];
+}>;
+
+
+export type GetWalletAddressByUrl = { __typename?: 'Query', walletAddressByUrl?: { __typename?: 'WalletAddress', id: string, asset: { __typename?: 'Asset', code: string, scale: number } } | null };

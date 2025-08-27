@@ -20,8 +20,8 @@ paths:
                 - incomingPaymentUrl
                 - date
                 - signature
-                #                - terminalCert
-                - terminalId
+                # - terminalCert
+                # - terminalId
               properties:
                 requestId:
                   type: string

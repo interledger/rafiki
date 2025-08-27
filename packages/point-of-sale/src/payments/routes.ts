@@ -66,13 +66,16 @@ async function payment(
     const walletAddress = await deps.paymentService.getWalletAddress(
       body.card.walletAddress
     )
+    const merchantWalletAddressByUrl = await deps.paymentService.getLocalWalletAddress(
+      body.merchantWalletAddress
+    )
     const incomingAmount: AmountInput = {
-      assetCode: walletAddress.assetCode,
-      assetScale: walletAddress.assetScale,
+      assetCode: merchantWalletAddressByUrl.asset.code,
+      assetScale: merchantWalletAddressByUrl.asset.scale,
       value: body.value
     }
     const incomingPayment = await deps.paymentService.createIncomingPayment(
-      walletAddress.id,
+      merchantWalletAddressByUrl.id,
       incomingAmount
     )
     const deferred = new Deferred<WebhookBody>()
@@ -86,7 +89,10 @@ async function payment(
       incomingPaymentUrl: incomingPayment.url,
       date: new Date(),
       signature: body.signature,
-      card: body.card,
+      card: {
+        ...body.card,
+        walletAddress: { ...walletAddress, url: body.card.walletAddress }
+      },
       incomingAmount: {
         ...incomingAmount,
         value: incomingAmount.value.toString()

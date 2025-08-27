@@ -42,7 +42,7 @@ export const Config = {
   graphqlUrl: envString('GRAPHQL_URL'),
   tenantId: envString('TENANT_ID'),
   tenantSecret: envString('TENANT_SECRET'),
-  tenantSignatureVersion: envString('TENANT_SIGNATURE_VERSION')
+  tenantSignatureVersion: envInt('TENANT_SIGNATURE_VERSION', 1)
 }
 
 function parseRedisTlsConfig(

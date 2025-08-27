@@ -64,7 +64,7 @@ export async function getWalletAddress(
     authServer: `${ensureTrailingSlash(deps.config.authServerGrantUrl)}${walletAddress.tenantId}`,
     resourceServer: `${ensureTrailingSlash(deps.config.openPaymentsUrl)}${walletAddress.tenantId}`,
     ...(deps.config.cardServiceUrl && {
-      cardService: `${ensureTrailingSlash(deps.config.cardServiceUrl)}${walletAddress.tenantId}`
+      cardService: `${deps.config.cardServiceUrl}`
     })
   })
 }
