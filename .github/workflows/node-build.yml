@@ -18,6 +18,9 @@ jobs:
     timeout-minutes: 5
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
     - uses: ./.github/workflows/rafiki/env-setup
     - run: pnpm checks
 
@@ -27,6 +30,9 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter backend build:deps
       - run: NODE_OPTIONS="--max-old-space-size=4096" pnpm --filter backend test:ci
@@ -43,6 +49,9 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter frontend typecheck
       - run: pnpm --filter frontend build
@@ -53,6 +62,9 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter auth build:deps
       - run: pnpm --filter auth test
@@ -69,6 +81,9 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter token-introspection test
       - name: AsyncAPI extension
@@ -84,6 +99,9 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter mock-account-servicing-entity build
       - run: pnpm --filter mock-account-servicing-entity typecheck
@@ -96,6 +114,9 @@ jobs:
         package: [auth, backend]
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
       - uses: ./.github/workflows/rafiki/env-setup
       - name: generate ${{ matrix.package }} graphql
         run: pnpm --filter ${{ matrix.package }} generate
@@ -127,6 +148,9 @@ jobs:
           - './.github/codeql/tests.yml'
     steps:
      - uses: actions/checkout@v4
+       with:
+         submodules: recursive
+         fetch-depth: 0
      - uses: ./.github/workflows/rafiki/env-setup
      - name: Initialize CodeQL
        uses: github/codeql-action/init@v3
@@ -143,6 +167,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
 
       - name: Setup environment
         uses: ./.github/workflows/rafiki/env-setup
@@ -166,6 +193,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
 
       - name: Setup environment
         uses: ./.github/workflows/rafiki/env-setup
@@ -396,6 +426,11 @@ jobs:
           - backend
           - frontend
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Build
@@ -403,6 +438,7 @@ jobs:
         with:
           push: false
           platforms: ${{ matrix.platform.arch }}
+          context: .
           file: packages/${{ matrix.package }}/Dockerfile.prod
           tags: ghcr.io/${{ github.repository_owner }}/rafiki-${{ matrix.package }}-${{ matrix.platform.name }}:${{ needs.version-generator.outputs.version }}
           outputs: type=docker,dest=/tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
