@@ -524,6 +524,8 @@ describe('Peer Service', (): void => {
         routes: newRoutes,
         tenantId: peer.tenantId
       }
+      const removeSpy = jest.spyOn(routerService, 'removeStaticRoute')
+      const addSpy = jest.spyOn(routerService, 'addStaticRoute')
 
       const updatedPeer = await peerService.update(updateOptions)
       assert.ok(!isPeerError(updatedPeer))
@@ -550,6 +552,42 @@ describe('Peer Service', (): void => {
       expect(nextHop1).toBe(peer.id)
       expect(nextHop2).toBe(peer.id)
       expect(nextHop3).toBe(peer.id)
+
+      // Ensure previous routes were cleared before syncing new ones
+      expect(removeSpy).toHaveBeenCalledWith(
+        peer.staticIlpAddress,
+        peer.id,
+        peer.tenantId,
+        peer.assetId
+      )
+      expect(addSpy).toHaveBeenCalledWith(
+        newStaticIlpAddress,
+        peer.id,
+        peer.tenantId,
+        peer.assetId
+      )
+      expect(addSpy).toHaveBeenCalledWith(
+        'g.new1',
+        peer.id,
+        peer.tenantId,
+        peer.assetId
+      )
+      expect(addSpy).toHaveBeenCalledWith(
+        'g.new2',
+        peer.id,
+        peer.tenantId,
+        peer.assetId
+      )
+
+      const firstAddCallOrder = addSpy.mock.invocationCallOrder[0]
+      const lastRemoveCallOrder =
+        removeSpy.mock.invocationCallOrder[
+          removeSpy.mock.invocationCallOrder.length - 1
+        ]
+      expect(lastRemoveCallOrder).toBeLessThan(firstAddCallOrder)
+
+      removeSpy.mockRestore()
+      addSpy.mockRestore()
     })
 
     test('Clears routes when routes array is empty', async (): Promise<void> => {
