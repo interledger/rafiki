@@ -26,6 +26,26 @@ export class OutgoingPaymentGrant extends DbErrors(Model) {
   public interval?: string
 }
 
+export type OutgoingPaymentGrantSpentAmountsInput = {
+  id?: string
+  grantId: string
+  outgoingPaymentId: string
+  receiveAmountScale: number
+  receiveAmountCode: string
+  paymentReceiveAmountValue: number | string | bigint
+  intervalReceiveAmountValue?: number | string | bigint | null
+  grantTotalReceiveAmountValue: number | string | bigint
+  debitAmountScale: number
+  debitAmountCode: string
+  paymentDebitAmountValue: number | string | bigint
+  intervalDebitAmountValue?: number | string | bigint | null
+  grantTotalDebitAmountValue: number | string | bigint
+  paymentState: string
+  intervalStart?: Date | string | null
+  intervalEnd?: Date | string | null
+  createdAt?: Date | string
+}
+
 export class OutgoingPaymentGrantSpentAmounts extends BaseModel {
   public static get modelPaths(): string[] {
     return [__dirname]
@@ -49,6 +69,29 @@ export class OutgoingPaymentGrantSpentAmounts extends BaseModel {
   public intervalStart!: Date | null
   public intervalEnd!: Date | null
   public createdAt!: Date
+
+  public static create(
+    data: OutgoingPaymentGrantSpentAmountsInput
+  ): OutgoingPaymentGrantSpentAmounts {
+    return this.fromJson({
+      ...data,
+      paymentReceiveAmountValue: BigInt(data.paymentReceiveAmountValue),
+      intervalReceiveAmountValue:
+        data.intervalReceiveAmountValue != null
+          ? BigInt(data.intervalReceiveAmountValue)
+          : null,
+      grantTotalReceiveAmountValue: BigInt(data.grantTotalReceiveAmountValue),
+      paymentDebitAmountValue: BigInt(data.paymentDebitAmountValue),
+      intervalDebitAmountValue:
+        data.intervalDebitAmountValue != null
+          ? BigInt(data.intervalDebitAmountValue)
+          : null,
+      grantTotalDebitAmountValue: BigInt(data.grantTotalDebitAmountValue),
+      intervalStart: data.intervalStart ? new Date(data.intervalStart) : null,
+      intervalEnd: data.intervalEnd ? new Date(data.intervalEnd) : null,
+      createdAt: data.createdAt ? new Date(data.createdAt) : new Date()
+    })
+  }
 }
 
 export class OutgoingPayment

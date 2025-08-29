@@ -32,7 +32,7 @@ import {
 } from '../../wallet_address/service'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
-import { Interval } from 'luxon'
+import { DateTime, Interval } from 'luxon'
 import { knex } from 'knex'
 import { AccountAlreadyExistsError } from '../../../accounting/errors'
 import { PaymentMethodHandlerService } from '../../../payment-method/handler/service'
@@ -510,32 +510,6 @@ export enum IntervalStatus {
   Next = 'next'
 }
 
-export function getPaymentIntervalStatus({
-  limits,
-  payment
-}: {
-  limits: PaymentLimits
-  payment: OutgoingPayment
-}): IntervalStatus | null {
-  const interval = limits.paymentInterval
-
-  if (!interval) {
-    return null
-  }
-
-  const createdTime = payment.createdAt.getTime()
-  const start = interval.start?.toMillis() ?? -Infinity
-  const end = interval.end?.toMillis() ?? Infinity
-
-  if (createdTime < start) {
-    return IntervalStatus.Previous
-  } else if (createdTime >= end) {
-    return IntervalStatus.Next
-  } else {
-    return IntervalStatus.Current
-  }
-}
-
 function validateAmountAssets(
   payment: OutgoingPayment,
   limits: Limits
@@ -557,22 +531,6 @@ function validateAmountAssets(
 export interface PaymentLimits extends Limits {
   paymentInterval?: Interval
 }
-
-type SpentAmountsWithoutInterval = {
-  sent: Amount
-  received: Amount
-  intervalSent: null
-  intervalReceived: null
-}
-
-type SpentAmountsWithInterval = {
-  sent: Amount
-  received: Amount
-  intervalSent: Amount
-  intervalReceived: Amount
-}
-
-type SpentAmounts = SpentAmountsWithoutInterval | SpentAmountsWithInterval
 
 async function validateGrantAndAddSpentAmountsToPayment(
   deps: ServiceDependencies,
@@ -630,11 +588,75 @@ async function validateGrantAndAddSpentAmountsToPayment(
     .limit(1)
     .first()
 
+  if (
+    paymentLimits.paymentInterval &&
+    (!paymentLimits.paymentInterval.start || !paymentLimits.paymentInterval.end)
+  ) {
+    deps.logger.error(
+      {
+        grantId: grant.id,
+        paymentId: payment.id,
+        intervalStart: paymentLimits.paymentInterval.start?.toJSDate(),
+        intervalEnd: paymentLimits.paymentInterval.end?.toJSDate()
+      },
+      'Payment interval missing start or end'
+    )
+    throw OutgoingPaymentError.InvalidInterval
+  }
+
+  // check if payment interval is before latest spent amounts interval
+  if (
+    paymentLimits.paymentInterval &&
+    latestSpentAmounts?.intervalStart &&
+    latestSpentAmounts?.intervalEnd &&
+    paymentLimits.paymentInterval.end &&
+    paymentLimits.paymentInterval.end.toJSDate() <=
+      latestSpentAmounts.intervalStart
+  ) {
+    deps.logger.error(
+      {
+        grantId: grant.id,
+        paymentId: payment.id,
+        paymentIntervalStart: paymentLimits.paymentInterval.start?.toJSDate(),
+        paymentIntervalEnd: paymentLimits.paymentInterval.end.toJSDate(),
+        latestIntervalStart: latestSpentAmounts.intervalStart,
+        latestIntervalEnd: latestSpentAmounts.intervalEnd
+      },
+      'Payment interval is before latest spent amounts interval'
+    )
+    throw OutgoingPaymentError.InvalidInterval
+  }
+
+  const outgoingPaymentGrantSpentAmounts =
+    OutgoingPaymentGrantSpentAmounts.create({
+      id: uuid(),
+      grantId: grant.id,
+      outgoingPaymentId: payment.id,
+      receiveAmountScale: payment.receiveAmount.assetScale,
+      receiveAmountCode: payment.receiveAmount.assetCode,
+      paymentReceiveAmountValue: payment.receiveAmount.value,
+      intervalReceiveAmountValue: null,
+      grantTotalReceiveAmountValue: 0n,
+      debitAmountScale: payment.debitAmount.assetScale,
+      debitAmountCode: payment.debitAmount.assetCode,
+      paymentDebitAmountValue: payment.debitAmount.value,
+      intervalDebitAmountValue: null,
+      grantTotalDebitAmountValue: 0n,
+      paymentState: payment.state,
+      intervalStart: paymentLimits.paymentInterval?.start?.toJSDate() || null,
+      intervalEnd: paymentLimits.paymentInterval?.end?.toJSDate() || null,
+      createdAt: new Date()
+    })
+
   const hasInterval = !!paymentLimits.paymentInterval
-  let newSpentAmounts: SpentAmounts
 
   if (isExistingGrant && !latestSpentAmounts) {
     // Legacy path: calculate spent amounts from historical payments
+    if (hasInterval) {
+      outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue = 0n
+      outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue = 0n
+    }
+
     const grantPayments = await OutgoingPayment.query(trx)
       .where({
         grantId: grant.id
@@ -644,16 +666,15 @@ async function validateGrantAndAddSpentAmountsToPayment(
       })
       .withGraphFetched('quote')
 
-    newSpentAmounts = initSpentAmounts(payment, hasInterval)
-
     for (const grantPayment of grantPayments) {
       const asset = await deps.assetService.get(grantPayment.quote.assetId)
       if (asset) grantPayment.quote.asset = asset
 
-      const intervalStatus = getPaymentIntervalStatus({
-        limits: paymentLimits,
-        payment: grantPayment
-      })
+      const addToInterval =
+        paymentLimits.paymentInterval &&
+        paymentLimits.paymentInterval.contains(
+          DateTime.fromJSDate(grantPayment.createdAt)
+        )
 
       if (grantPayment.failed) {
         const totalSent = validateSentAmount(
@@ -666,205 +687,138 @@ async function validateGrantAndAddSpentAmountsToPayment(
           continue
         }
 
-        // Sum grant totals
-        newSpentAmounts.sent.value += totalSent
+        outgoingPaymentGrantSpentAmounts.grantTotalDebitAmountValue += totalSent
         // Estimate delivered amount of failed payment
         const estimatedReceived =
           (grantPayment.receiveAmount.value * totalSent) /
           grantPayment.debitAmount.value
-        newSpentAmounts.received.value += estimatedReceived
+        outgoingPaymentGrantSpentAmounts.grantTotalReceiveAmountValue +=
+          estimatedReceived
 
-        if (intervalStatus === IntervalStatus.Current) {
-          updateIntervalAmounts(newSpentAmounts, totalSent, estimatedReceived)
+        if (addToInterval) {
+          outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue =
+            (outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue ?? 0n) +
+            totalSent
+          outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue =
+            (outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue ??
+              0n) + estimatedReceived
         }
       } else {
-        // Sum grant totals for successful payments
-        newSpentAmounts.sent.value += grantPayment.debitAmount.value
-        newSpentAmounts.received.value += grantPayment.receiveAmount.value
+        outgoingPaymentGrantSpentAmounts.grantTotalDebitAmountValue +=
+          grantPayment.debitAmount.value
+        outgoingPaymentGrantSpentAmounts.grantTotalReceiveAmountValue +=
+          grantPayment.receiveAmount.value
 
-        if (intervalStatus === 'current') {
-          updateIntervalAmounts(
-            newSpentAmounts,
-            grantPayment.debitAmount.value,
-            grantPayment.receiveAmount.value
-          )
+        if (addToInterval) {
+          outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue =
+            (outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue ?? 0n) +
+            grantPayment.debitAmount.value
+          outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue =
+            (outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue ??
+              0n) + grantPayment.receiveAmount.value
         }
       }
     }
   } else {
-    const intervalStatus = getPaymentIntervalStatus({
-      limits: paymentLimits,
-      payment
-    })
+    // detect if we need to restart interval sum at 0 or continue from last
+    const isInIntervalAndFirstPayment = hasInterval
+      ? !latestSpentAmounts ||
+        (latestSpentAmounts.intervalEnd &&
+          paymentLimits.paymentInterval?.start &&
+          latestSpentAmounts.intervalEnd <
+            paymentLimits.paymentInterval.start.toJSDate())
+      : false
 
-    const startingSpendAmounts = latestSpentAmounts ?? {
-      debitAmountCode: payment.asset.code,
-      debitAmountScale: payment.asset.scale,
-      intervalDebitAmountValue: 0n,
-      receiveAmountCode: payment.receiveAmount.assetCode,
-      receiveAmountScale: payment.receiveAmount.assetScale,
-      intervalReceiveAmountValue: 0n,
-      grantTotalReceiveAmountValue: 0n,
-      grantTotalDebitAmountValue: 0n
-    }
-
-    const baseSpentAmounts = {
-      sent: {
-        assetCode: startingSpendAmounts.debitAmountCode,
-        assetScale: startingSpendAmounts.debitAmountScale,
-        value: startingSpendAmounts.grantTotalDebitAmountValue
-      },
-      received: {
-        assetCode: startingSpendAmounts.receiveAmountCode,
-        assetScale: startingSpendAmounts.receiveAmountScale,
-        value: startingSpendAmounts.grantTotalReceiveAmountValue
-      }
-    }
+    outgoingPaymentGrantSpentAmounts.grantTotalDebitAmountValue =
+      latestSpentAmounts?.grantTotalDebitAmountValue ?? 0n
+    outgoingPaymentGrantSpentAmounts.grantTotalReceiveAmountValue =
+      latestSpentAmounts?.grantTotalReceiveAmountValue ?? 0n
 
     if (hasInterval) {
-      const intervalDebitValue =
-        startingSpendAmounts.intervalDebitAmountValue ?? 0n
-      const intervalReceiveValue =
-        startingSpendAmounts.intervalReceiveAmountValue ?? 0n
-
-      newSpentAmounts = {
-        ...baseSpentAmounts,
-        intervalSent: {
-          assetCode: startingSpendAmounts.debitAmountCode,
-          assetScale: startingSpendAmounts.debitAmountScale,
-          value: intervalStatus === IntervalStatus.Previous ? 0n : intervalDebitValue
-        },
-        intervalReceived: {
-          assetCode: startingSpendAmounts.receiveAmountCode,
-          assetScale: startingSpendAmounts.receiveAmountScale,
-          value: intervalStatus === 'previous' ? 0n : intervalReceiveValue
-        }
-      } as SpentAmountsWithInterval
-    } else {
-      newSpentAmounts = {
-        ...baseSpentAmounts,
-        intervalSent: null,
-        intervalReceived: null
-      } as SpentAmountsWithoutInterval
-    }
-  }
-
-  // determine which spent amounts (total or interval) to use for checking if
-  // payment exceeds grant limits and for assigning to the payment's grant spent amounts
-  const activeSpent = getActiveSpentAmounts(newSpentAmounts)
-
-  // spent amounts exclude current payment - store the
-  // amounts BEFORE adding the current payment
-  payment.grantSpentDebitAmount = activeSpent.debit
-  payment.grantSpentReceiveAmount = activeSpent.receive
-
-  // fail if payment exceeds limits
-  if (
-    (paymentLimits.debitAmount &&
-      paymentLimits.debitAmount.value - activeSpent.debit.value <
-        payment.debitAmount.value) ||
-    (paymentLimits.receiveAmount &&
-      paymentLimits.receiveAmount.value - activeSpent.receive.value <
-        payment.receiveAmount.value)
-  ) {
-    return false
-  }
-
-  newSpentAmounts.sent.value += payment.debitAmount.value
-  newSpentAmounts.received.value += payment.receiveAmount.value
-
-  updateIntervalAmounts(
-    newSpentAmounts,
-    payment.debitAmount.value,
-    payment.receiveAmount.value
-  )
-
-  await OutgoingPaymentGrantSpentAmounts.query(trx).insert({
-    id: uuid(),
-    grantId: grant.id,
-    outgoingPaymentId: payment.id,
-    receiveAmountScale: payment.receiveAmount.assetScale,
-    receiveAmountCode: payment.receiveAmount.assetCode,
-    paymentReceiveAmountValue: payment.receiveAmount.value,
-    intervalReceiveAmountValue: newSpentAmounts.intervalReceived?.value ?? null,
-    grantTotalReceiveAmountValue: newSpentAmounts.received.value,
-    debitAmountScale: payment.debitAmount.assetScale,
-    debitAmountCode: payment.debitAmount.assetCode,
-    paymentDebitAmountValue: payment.debitAmount.value,
-    intervalDebitAmountValue: newSpentAmounts.intervalSent?.value ?? null,
-    grantTotalDebitAmountValue: newSpentAmounts.sent.value,
-    paymentState: payment.state,
-    intervalStart: paymentLimits.paymentInterval?.start?.toJSDate() || null,
-    intervalEnd: paymentLimits.paymentInterval?.end?.toJSDate() || null
-  })
-
-  return true
-}
-
-function getActiveSpentAmounts(
-  newSpent: SpentAmounts | SpentAmountsWithInterval
-) {
-  const useInterval =
-    newSpent.intervalSent !== null && newSpent.intervalReceived !== null
-  return {
-    debit: useInterval ? newSpent.intervalSent! : newSpent.sent,
-    receive: useInterval ? newSpent.intervalReceived! : newSpent.received
-  }
-}
-
-function initSpentAmounts(
-  payment: OutgoingPayment,
-  hasInterval: boolean
-): SpentAmounts {
-  const baseAmounts = {
-    sent: {
-      assetCode: payment.asset.code,
-      assetScale: payment.asset.scale,
-      value: BigInt(0)
-    },
-    received: {
-      assetCode: payment.receiveAmount.assetCode,
-      assetScale: payment.receiveAmount.assetScale,
-      value: BigInt(0)
+      outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue =
+        isInIntervalAndFirstPayment
+          ? 0n
+          : latestSpentAmounts?.intervalDebitAmountValue ?? 0n
+      outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue =
+        isInIntervalAndFirstPayment
+          ? 0n
+          : latestSpentAmounts?.intervalReceiveAmountValue ?? 0n
     }
   }
 
   if (hasInterval) {
-    return {
-      ...baseAmounts,
-      intervalSent: {
-        assetCode: payment.asset.code,
-        assetScale: payment.asset.scale,
-        value: 0n
-      },
-      intervalReceived: {
-        assetCode: payment.receiveAmount.assetCode,
-        assetScale: payment.receiveAmount.assetScale,
-        value: 0n
-      }
-    } as SpentAmountsWithInterval
+    const debit = outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue
+    const receive = outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue
+
+    if (debit === null || receive === null) {
+      throw OutgoingPaymentError.InvalidInterval
+    }
+
+    setGrantSpentAmounts(payment, debit, receive)
+
+    if (exceedsGrantLimits(payment, paymentLimits, debit, receive)) {
+      return false
+    }
+
+    // add current payment to interval
+    outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue =
+      debit + payment.debitAmount.value
+    outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue =
+      receive + payment.receiveAmount.value
   } else {
-    return {
-      ...baseAmounts,
-      intervalSent: null,
-      intervalReceived: null
-    } as SpentAmountsWithoutInterval
+    const debit = outgoingPaymentGrantSpentAmounts.grantTotalDebitAmountValue
+    const receive =
+      outgoingPaymentGrantSpentAmounts.grantTotalReceiveAmountValue
+
+    setGrantSpentAmounts(payment, debit, receive)
+
+    if (exceedsGrantLimits(payment, paymentLimits, debit, receive)) {
+      return false
+    }
+  }
+
+  // update totals
+  outgoingPaymentGrantSpentAmounts.grantTotalDebitAmountValue +=
+    payment.debitAmount.value
+  outgoingPaymentGrantSpentAmounts.grantTotalReceiveAmountValue +=
+    payment.receiveAmount.value
+
+  await outgoingPaymentGrantSpentAmounts.$query(trx).insert()
+
+  return true
+}
+
+function setGrantSpentAmounts(
+  payment: OutgoingPayment,
+  spentValue: bigint,
+  spentReceive: bigint
+): void {
+  payment.grantSpentDebitAmount = {
+    value: spentValue,
+    assetCode: payment.debitAmount.assetCode,
+    assetScale: payment.debitAmount.assetScale
+  }
+  payment.grantSpentReceiveAmount = {
+    value: spentReceive,
+    assetCode: payment.receiveAmount.assetCode,
+    assetScale: payment.receiveAmount.assetScale
   }
 }
 
-// no-op if there are no intervals
-function updateIntervalAmounts(
-  spentAmounts: SpentAmounts,
-  debitAmount: bigint,
-  receiveAmount: bigint
-): void {
-  if (
-    spentAmounts.intervalSent !== null &&
-    spentAmounts.intervalReceived !== null
-  ) {
-    spentAmounts.intervalSent.value += debitAmount
-    spentAmounts.intervalReceived.value += receiveAmount
-  }
+function exceedsGrantLimits(
+  payment: OutgoingPayment,
+  limits: PaymentLimits,
+  spentValue: bigint,
+  spentReceive: bigint
+): boolean {
+  return (
+    (limits.debitAmount &&
+      limits.debitAmount.value - spentValue < payment.debitAmount.value) ||
+    (limits.receiveAmount &&
+      limits.receiveAmount.value - spentReceive <
+        payment.receiveAmount.value) ||
+    false
+  )
 }
 
 export interface FundOutgoingPaymentOptions {
