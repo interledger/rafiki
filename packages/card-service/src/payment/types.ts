@@ -17,7 +17,7 @@ export interface PaymentBody {
   incomingAmount: {
     assetCode: string
     assetScale: number
-    value: string
+    value: bigint
   }
 }
 

@@ -171,6 +171,7 @@ async function getQuote(
     }
 
     if (ilpQuote.minDeliveryAmount <= BigInt(0)) {
+      deps.logger.error('non positive quote outside of catch')
       throw new PaymentMethodHandlerError('Received error during ILP quoting', {
         description: 'Minimum delivery amount of ILP quote is non-positive',
         retryable: false,
@@ -202,6 +203,7 @@ async function getQuote(
         },
         errorDescription
       )
+      deps.logger.error('non positive estimated amount')
       throw new PaymentMethodHandlerError('Received error during ILP quoting', {
         description: errorDescription,
         retryable: false,

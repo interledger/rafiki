@@ -10,7 +10,7 @@ import { BaseService } from '../shared/baseService'
 
 interface Card {
   trasactionCounter: number
-  expiry: Date
+  expiry: string
   walletAddress: {
     cardService: string
     url: string
@@ -38,7 +38,10 @@ interface ServiceDependencies extends BaseService {
   axios: AxiosInstance
 }
 interface PaymentBody extends Omit<PaymentOptions, 'card'> {
-  card: Omit<Card, 'walletAddress'> & { walletAddress: string }
+  card: Omit<Card, 'walletAddress' | 'expiry'> & {
+    walletAddress: string
+    expiry: string
+  }
   requestId: string
 }
 

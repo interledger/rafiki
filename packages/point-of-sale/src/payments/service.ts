@@ -12,7 +12,6 @@ import {
 import { FnWithDeps } from '../shared/types'
 import { v4 } from 'uuid'
 import { AxiosInstance, AxiosRequestConfig } from 'axios'
-import { WalletAddress as GqlWalletAddress } from '../graphql/generated/graphql'
 import { GET_WALLET_ADDRESS_BY_URL } from '../graphql/mutations/walletAddressByUrl'
 
 type ServiceDependencies = {
@@ -41,9 +40,18 @@ export type PaymentService = {
   createIncomingPayment: (
     walletAddressId: string,
     incomingAmount: AmountInput
-  ) => Promise<Exclude<CreateIncomingPayment['createIncomingPayment']['payment'], null | undefined>>
+  ) => Promise<
+    Exclude<
+      CreateIncomingPayment['createIncomingPayment']['payment'],
+      null | undefined
+    >
+  >
   getWalletAddress: (walletAddressUrl: string) => Promise<WalletAddress>
-  getLocalWalletAddress: (walletAddressUrl: string) => Promise<Exclude<GetWalletAddressByUrl['walletAddressByUrl'], null | undefined>>
+  getLocalWalletAddress: (
+    walletAddressUrl: string
+  ) => Promise<
+    Exclude<GetWalletAddressByUrl['walletAddressByUrl'], null | undefined>
+  >
 }
 
 export function createPaymentService(

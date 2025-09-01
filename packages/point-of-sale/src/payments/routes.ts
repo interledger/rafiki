@@ -24,7 +24,7 @@ export type PaymentBody = {
   card: {
     walletAddress: string
     trasactionCounter: number
-    expiry: Date
+    expiry: string
   }
   signature: string
   value: bigint
@@ -66,9 +66,10 @@ async function payment(
     const walletAddress = await deps.paymentService.getWalletAddress(
       body.card.walletAddress
     )
-    const merchantWalletAddressByUrl = await deps.paymentService.getLocalWalletAddress(
-      body.merchantWalletAddress
-    )
+    const merchantWalletAddressByUrl =
+      await deps.paymentService.getLocalWalletAddress(
+        body.merchantWalletAddress
+      )
     const incomingAmount: AmountInput = {
       assetCode: merchantWalletAddressByUrl.asset.code,
       assetScale: merchantWalletAddressByUrl.asset.scale,
@@ -84,6 +85,7 @@ async function payment(
       deferred,
       deps.config.webhookTimeoutMs
     )
+    deps.logger.info('calling card service from routes')
     const result = await deps.cardServiceClient.sendPayment({
       merchantWalletAddress: body.merchantWalletAddress,
       incomingPaymentUrl: incomingPayment.url,

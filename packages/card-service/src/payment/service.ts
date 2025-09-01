@@ -54,20 +54,21 @@ async function handleCreatePayment(
   try {
     const deferred = new Deferred<PaymentEventBody>()
     paymentWaitMap.set(requestId, deferred)
-    const walletAddressByUrl = await deps.apolloClient.query<
+    const waByUrlResult = await deps.apolloClient.query<
       Query['walletAddressByUrl'],
       QueryWalletAddressByUrlArgs
     >({
       query: GET_WALLET_ADDRESS_BY_URL,
       variables: {
-        url: payment.card.walletAddress
+        url: payment.card.walletAddress.replace('http:', 'https:')
       }
     })
 
-    if (!walletAddressByUrl?.data) {
+    if (!waByUrlResult?.data) {
       throw new UnknownWalletAddressError()
     }
-    const walletAddressId = walletAddressByUrl.data.id
+
+    const walletAddressId = waByUrlResult.data.walletAddressByUrl.id
 
     const outgoingPaymentFromIncomingPayment = await deps.apolloClient.mutate<
       Mutation['createOutgoingPaymentFromIncomingPayment'],
@@ -75,15 +76,14 @@ async function handleCreatePayment(
     >({
       mutation: CREATE_OUTGOING_PAYMENT_FROM_INCOMING,
       variables: {
-        walletAddressId,
-        incomingPayment: payment.incomingPaymentUrl,
-        debitAmount: {
-          ...payment.incomingAmount,
-          value: BigInt(payment.incomingAmount.value)
-        },
-        cardDetails: {
-          signature: payment.signature,
-          expiry: payment.card.expiry
+        input: {
+          walletAddressId,
+          incomingPayment: payment.incomingPaymentUrl,
+          debitAmount: payment.incomingAmount,
+          cardDetails: {
+            signature: payment.signature,
+            expiry: payment.card.expiry
+          }
         }
       }
     })
