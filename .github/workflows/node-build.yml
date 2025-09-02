@@ -76,7 +76,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter token-introspection test
+      - run: pnpm --filter token-introspection test -- --runInBand
       - name: AsyncAPI extension
         run: |
           echo "{\"extends\":[\"spectral:oas\",\"spectral:asyncapi\"]}" >> .spectral.json
