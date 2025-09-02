@@ -75,6 +75,9 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter token-introspection test -- --runInBand
       - name: AsyncAPI extension
