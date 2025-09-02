@@ -67,6 +67,7 @@ Clone the Rafiki repository
 ```sh
 git clone https://github.com/interledger/rafiki.git
 cd rafiki
+git submodule update --init --recursive
 ```
 
 Install Node.js
@@ -92,6 +93,22 @@ Install dependencies
 
 ```sh
 pnpm i
+```
+
+### Git submodules
+
+This repository uses a git submodule for Open Payments specifications located at `open-payments-specifications/`.
+
+- Initialize submodules after cloning:
+
+```sh
+git submodule update --init --recursive
+```
+
+- Alternatively, clone the repository with submodules in one step:
+
+```sh
+git clone --recurse-submodules https://github.com/interledger/rafiki.git
 ```
 
 ### Local Development
