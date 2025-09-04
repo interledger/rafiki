@@ -699,7 +699,7 @@ describe('Webhook Service', (): void => {
       'adds webhooks for POS service if event was for a card payment',
       withConfigOverride(
         () => config,
-        { posServiceUrl: faker.internet.url() },
+        { posWebhookServiceUrl: faker.internet.url() },
         async (): Promise<void> => {
           const tenantId = crypto.randomUUID()
           expect(

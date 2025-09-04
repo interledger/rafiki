@@ -896,7 +896,7 @@ describe('Incoming Payment Service', (): void => {
           'Creates webhook event for POS service if card payment',
           withConfigOverride(
             () => config,
-            { posServiceUrl: faker.internet.url() },
+            { posWebhookServiceUrl: faker.internet.url() },
             async (): Promise<void> => {
               await expect(
                 IncomingPaymentEvent.query(knex).where({
