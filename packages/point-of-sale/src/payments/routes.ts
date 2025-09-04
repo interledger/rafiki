@@ -101,6 +101,7 @@ async function payment(
     ctx.body = result
     ctx.status = 200
   } catch (err) {
+    deps.logger.debug(err)
     if (err instanceof IncomingPaymentEventTimeoutError)
       webhookWaitMap.delete(err.incomingPaymentId)
     const { body, status } = handlePaymentError(err)

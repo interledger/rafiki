@@ -101,7 +101,7 @@ async function getWalletAddress(
 ): Promise<WalletAddress> {
   const config: AxiosRequestConfig = {
     headers: {
-      'Content-Type': 'application/json'
+      Accept: 'application/json'
     }
   }
   const { data: walletAddress } = await deps.axios.get<

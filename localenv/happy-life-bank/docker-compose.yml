@@ -23,6 +23,7 @@ services:
       LOG_LEVEL: debug
       CARD_SERVICE_PORT: 4007
       DATABASE_URL: postgresql://happy_life_bank_card_service:happy_life_bank_card_service@shared-database/happy_life_bank_card_service
+      GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
     depends_on:
       - shared-database
       - cloud-nine-wallet-card-service
@@ -56,6 +57,10 @@ services:
       LOG_LEVEL: debug 
       PORT: 4008 
       DATABASE_URL: postgresql://happy_life_bank_point_of_sale:happy_life_bank_point_of_sale@shared-database/happy_life_bank_point_of_sale
+      TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
+      TENANT_SECRET: secret
+      GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
+      WEBHOOK_SIGNATURE_SECRET: webhook_secret
     depends_on: 
       - shared-database
       - cloud-nine-wallet-point-of-sale
