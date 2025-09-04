@@ -24,6 +24,9 @@ services:
       CARD_SERVICE_PORT: 3007
       DATABASE_URL: postgresql://cloud_nine_wallet_card_service:cloud_nine_wallet_card_service@shared-database/cloud_nine_wallet_card_service
       GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
+      TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
+      TENANT_SECRET: tenant_secret
+      TENANT_SIGNATURE_VERSION: tenant_signature_version
     depends_on:
       - shared-database
     healthcheck:

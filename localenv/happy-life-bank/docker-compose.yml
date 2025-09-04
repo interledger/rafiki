@@ -24,6 +24,9 @@ services:
       CARD_SERVICE_PORT: 4007
       DATABASE_URL: postgresql://happy_life_bank_card_service:happy_life_bank_card_service@shared-database/happy_life_bank_card_service
       GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
+      TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
+      TENANT_SECRET: tenant_secret
+      TENANT_SIGNATURE_VERSION: tenant_signature_version
     depends_on:
       - shared-database
       - cloud-nine-wallet-card-service
