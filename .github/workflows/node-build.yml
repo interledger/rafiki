@@ -27,6 +27,9 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter backend build:deps
       - run: NODE_OPTIONS="--max-old-space-size=4096" pnpm --filter backend test:ci
@@ -53,6 +56,9 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter auth build:deps
       - run: pnpm --filter auth test
@@ -143,6 +149,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
 
       - name: Setup environment
         uses: ./.github/workflows/rafiki/env-setup
@@ -166,6 +175,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
 
       - name: Setup environment
         uses: ./.github/workflows/rafiki/env-setup
@@ -396,6 +408,8 @@ jobs:
           - backend
           - frontend
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Build

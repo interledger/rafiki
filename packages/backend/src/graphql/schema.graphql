@@ -653,7 +653,7 @@ input CreateTenantSettingsInput {
 
 input TenantSettingInput {
   "Key for this setting."
-  key: String!
+  key: TenantSettingKey!
   "Value of a setting for this key."
   value: String!
 }
@@ -724,6 +724,8 @@ enum LiquidityError {
   UnknownAsset
   "The specified incoming payment could not be found."
   UnknownIncomingPayment
+  "The specified outgoing payment could not be found."
+  UnknownOutgoingPayment
   "The specified payment could not be found."
   UnknownPayment
   "The specified wallet address could not be found."
@@ -1611,9 +1613,18 @@ type TenantEdge {
   cursor: String!
 }
 
+enum TenantSettingKey {
+  EXCHANGE_RATES_URL
+  WEBHOOK_URL
+  WEBHOOK_TIMEOUT
+  WEBHOOK_MAX_RETRY
+  WALLET_ADDRESS_URL
+  ILP_ADDRESS
+}
+
 type TenantSetting {
   "Key for this setting."
-  key: String!
+  key: TenantSettingKey!
   "Value of a setting for this key."
   value: String!
 }

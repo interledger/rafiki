@@ -123,9 +123,6 @@ export class OutgoingPayment
     ].includes(this.state)
   }
 
-  // Outgoing peer
-  public peerId?: string
-
   public tenantId!: string
 
   static get relationMappings() {
@@ -193,9 +190,6 @@ export class OutgoingPayment
     }
     if (this.error) {
       data.error = this.error
-    }
-    if (this.peerId) {
-      data.peerId = this.peerId
     }
 
     if (this.grantId) {
@@ -287,7 +281,6 @@ export type PaymentData = Omit<OutgoingPaymentResponse, 'failed'> & {
   state: OutgoingPaymentState
   stateAttempts: number
   balance: string
-  peerId?: string
   grantId?: string
 }
 
