@@ -1551,13 +1551,9 @@
             "name": "debitAmount",
             "description": "Amount to send (fixed send).",
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "INPUT_OBJECT",
-                "name": "AmountInput",
-                "ofType": null
-              }
+              "kind": "INPUT_OBJECT",
+              "name": "AmountInput",
+              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": false,
