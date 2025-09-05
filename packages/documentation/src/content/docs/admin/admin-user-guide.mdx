@@ -91,6 +91,7 @@ After logging in, you’ll be greeted by the main landing page with a left-hand 
 
 Each of the following menu items leads to a different page of the Rafiki Admin application:
 
+- [Tenants](#tenants)
 - [Peers](#peers)
 - [Assets](#assets)
 - [Wallet addresses](#wallet-addresses)
@@ -98,11 +99,23 @@ Each of the following menu items leads to a different page of the Rafiki Admin a
 - [Payments](#payments)
 - [Account settings](#account-settings)
 
+## Tenants
+
+
+
+### Create tenant
+
+
+
 ## Peers
 
 The Peers page allows you to manage peering relationships in your Rafiki instance, including viewing, creating, editing, and deleting peers.
 
-On this page, all configured peers appear in a table where you can view the peer name, its ILP address, asset details including the asset type and scale, and the outgoing HTTP endpoint.
+On this page, all configured peers appear in a table where you can view the peer name, its ILP address, asset details including the asset type and scale, and the outgoing HTTP endpoint. The list of peers is scoped to the current tenant based on the user's API credentials.
+
+:::note
+Operators can create, edit, and delete peers for any tenant. Tenants can only view and manage their own peers.
+:::
 
 <LargeImg
   src='/img/admin-guide/peers.png'
@@ -129,6 +142,8 @@ Fill out the following fields to configure and create your peer:
 |                     | Outgoing Auth Token  | A single token used by your Rafiki instance for all outgoing requests to authenticate itself with the peer. |
 |                     | Outgoing Endpoint    | The URL of the peer’s server where your Rafiki instance sends outgoing requests.                            |
 | Asset Information   | Asset                | The asset used for transactions with this peer.                                                             |
+
+If you are an operator, you must select a tenant when creating a new peer. The asset selection dropdown is dynamically populated based on the selected tenant.
 
 After completing these fields, select **Create** to add the new peer.
 
@@ -170,7 +185,7 @@ Confirm the deletion by typing "delete peer" into the text field and selecting *
 
 The Assets page allows you to manage assets in your Rafiki instance, including viewing, editing, and creating assets.
 
-On this page, all configured assets appear in a table where you can view the asset ID, the asset code, the scale, and the withdrawal threshold.
+On this page, all configured assets appear in a table where you can view the asset ID, the asset code, the scale, and the withdrawal threshold. The list of assets is scoped to the current tenant based on the user's API credentials. 
 
 <LargeImg
   src='/img/admin-guide/assets.png'

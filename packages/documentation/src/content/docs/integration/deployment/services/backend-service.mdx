@@ -55,7 +55,11 @@ A packet can either continue on to your peer via HTTP or end at your Rafiki inst
 
 ## GraphQL Backend Admin API
 
-The `backend` service exposes a GraphQL [Backend Admin API](/apis/graphql/admin-api-overview#backend-admin-api) to manage assets, peers, wallet addresses, Open Payments resources, and several types of liquidity.
+The `backend` service exposes a GraphQL [Backend Admin API](/apis/graphql/admin-api-overview#backend-admin-api) to manage tenants, assets, peers, wallet addresses, Open Payments resources, and several types of liquidity. Requests to the Backend Admin API must include a `tenant-id` header and be authenticated using HTTP signature authentication. The Rafiki Admin application automatically handles the creation of the HTTP signature and includes the necessary headers in the request.
+
+## Tenant management
+
+In a multi-tenant environment, tenants are added to Rafiki through the Backend Admin API or the Rafiki Admin application. The `auth` service does not publicly extend the capability to create a tenant; tenant creation in the `auth` service is triggered by the `backend` service. The `OPERATOR_TENANT_ID` environment variable must be set to the UUID of the operator. The operator has elevated permissions and can manage resources for all other tenants. The operator can also choose to receive webhook events for all tenants by setting the `SEND_TENANT_WEBHOOKS_TO_OPERATOR` environment variable to `true`.
 
 ## Environment variables
 

@@ -5,7 +5,7 @@ title: Identity provider (IdP)
 import { Badge, Steps } from '@astrojs/starlight/components'
 import { LinkOut } from '@interledger/docs-design-system'
 
-An identity provider (IdP) is a system or service that stores and manages user identity information, authentication, and consent. Examples of IdPs include OpenID Connect and Okta.
+An identity provider (IdP) is a system or service that stores and manages user identity information, authentication, and consent. Examples of IdPs include OpenID Connect and Okta. 
 
 Open Payments requires any authorization server that issues interactive grants be integrated with an IdP. Interactive grants are used to gather consent. More information about interactive grants is available [below](#interactive-grants).
 
@@ -15,6 +15,8 @@ Responsibilities of your IdP include:
 - Sending the interaction choice (approve or deny) to the authorization server
 - Sending a request to the authorization server to finish the interaction
 - Redirecting the user after the interaction is complete
+
+In a multi-tenant environment, each tenant uses their own IdP.
 
 :::note
 We provide Ory Kratos, a cloud-based user management system, for the identity and user management of your Rafiki Admin users. Kratos is for internal use only and **cannot** be used as your IdP for Open Payments.
@@ -45,7 +47,7 @@ Rafiki's authorization server also extends an [API](#interaction-endpoints) that
 
 ### Environment variables
 
-The following variables must be configured for the `auth` service.
+The following variables must be configured for the `auth` service. In a multi-tenant environment, the `IDENTITY_SERVER_URL` and `IDENTITY_SERVER_SECRET` variables are configured on a per-tenant basis. These values are stored in the `auth` service's tenant table and are used to secure communications between the `auth` service and the tenant's IdP.
 
 <div class="overflow-table wide-column">
 
@@ -133,7 +135,7 @@ The `x-idp-secret` header is specific to Rafiki's authorization server and is us
 - `POST /grant/:id/:nonce/accept`
 - `POST /grant/:id/:nonce/reject`
 
-The header's purpose is to secure communications between the IdP and the authorization server. Its value should be a shared secret known to both entities. When the IdP server sends requests to the authorization server, the IdP must provide the secret via this header.
+The header's purpose is to secure communications between the IdP and the authorization server. Its value should be the `IDENTITY_SERVER_SECRET` configured for the specific tenant. When the IdP server sends requests to the authorization server, the IdP must provide the secret via this header.
 
 :::note
 If you're running your own authorization server rather than using the server provided by Rafiki, you can add security in any way you see fit. You aren't required to use the `x-idp-secret` header.

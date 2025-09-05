@@ -47,9 +47,11 @@ A valid response means the URL is a wallet address.
   "publicName": "Alice",
   "assetCode": "USD",
   "assetScale": 2,
-  "authServer": "https://auth.wallet.example.com",
-  "resourceServer": "https://wallet.example.com",
+  "authServer": "https://auth.wallet.example.com/some-tenant-id",
+  "resourceServer": "https://wallet.example.com/some-tenant-id",
 }
 ```
+
+In a multi-tenant environment, the `authServer` and `resourceServer` URLs include the `tenantId` to ensure that Open Payments requests are properly routed to the correct tenant.
 
 Rafiki assigns each of your customers' accounts with a wallet address. This wallet address is also a payment pointer because Rafiki supports Open Payments and Interledger. See the integration requirements for [wallet addresses](/integration/requirements/wallet-addresses) for more information.

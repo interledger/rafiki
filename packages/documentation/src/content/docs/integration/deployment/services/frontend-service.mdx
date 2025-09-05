@@ -6,7 +6,7 @@ import { LinkOut } from '@interledger/docs-design-system'
 import Frontend from '/src/partials/frontend-variables.mdx'
 import KratosWarn from '/src/partials/kratos-warning.mdx'
 
-Rafiki’s <LinkOut href="https://github.com/interledger/rafiki/tree/main/packages/frontend">`frontend`</LinkOut> service provides an optional internal admin interface, called the [Rafiki Admin application](/admin/admin-user-guide), for you to manage your Rafiki instance through a <LinkOut href="https://remix.run/">Remix</LinkOut> web app. This service communicates with the [Backend Admin API](/apis/graphql/admin-api-overview#backend-admin-api) to facilitate administrative tasks within Rafiki.
+Rafiki’s <LinkOut href="https://github.com/interledger/rafiki/tree/main/packages/frontend">`frontend`</LinkOut> service provides an optional internal admin interface, called the [Rafiki Admin application](/admin/admin-user-guide), for you to manage your Rafiki instance through a <LinkOut href="https://remix.run/">Remix</LinkOut> web app. In a multi-tenant environment, the Rafiki Admin application is the primary way for operators to manage tenants and their resources. This service communicates with the [Backend Admin API](/apis/graphql/admin-api-overview#backend-admin-api) to facilitate administrative tasks within Rafiki.
 
 ## Requirements
 
@@ -21,7 +21,7 @@ You must also set the environment variables for the `frontend` service.
 
 ## Rafiki Admin settings
 
-While the `frontend` service is not required to run a Rafiki instance, it's highly recommended. A number of administrative tasks could be performed programmatically via the Backend Admin API, but the `frontend` service makes these functions available through a user-friendly interface.
+While the `frontend` service is not required to run a Rafiki instance, it's highly recommended. A number of administrative tasks could be performed programmatically via the Backend Admin API, but the `frontend` service makes these functions available through a user-friendly interface. In a multi-tenant environment, the Rafiki Admin application allows operators to manage tenants and their resources, and to configure tenant-specific settings such as the wallet address prefix. The `frontend` service uses HTTP signature authentication to communicate with the Backend Admin API. The `tenantId` is used to identify the tenant that the request is being made on behalf of.
 
 ## Environment variables
 
