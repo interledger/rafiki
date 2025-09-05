@@ -32,14 +32,13 @@ describe('createPaymentService', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
-
   afterEach(() => {
-    jest.restoreAllMocks()
+    jest.useRealTimers()
   })
 
   it('should create an incoming payment and return the incoming payment url (id)', async () => {
-    const now = 0
-    jest.spyOn(Date, 'now').mockReturnValue(now)
+    const now = new Date().getTime()
+    jest.useFakeTimers({ now })
     const uuid = v4()
     const expectedUrl = 'https://api.example.com/incoming-payments/abc123'
     mockApolloClient.mutate = jest.fn().mockResolvedValue({
