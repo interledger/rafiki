@@ -35,6 +35,7 @@ FROM base AS builder
 COPY package.json pnpm-workspace.yaml .npmrc tsconfig.json tsconfig.build.json ./
 COPY packages/auth ./packages/auth
 COPY packages/token-introspection ./packages/token-introspection
+COPY open-payments-specifications/openapi ./open-payments-specifications/openapi
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install \
@@ -59,6 +60,7 @@ COPY --from=prod-deps /home/rafiki/packages/auth/knexfile.js ./packages/auth/kne
 COPY --from=builder /home/rafiki/packages/auth/migrations/ ./packages/auth/migrations
 COPY --from=builder /home/rafiki/packages/auth/dist ./packages/auth/dist
 COPY --from=builder /home/rafiki/packages/token-introspection/dist ./packages/token-introspection/dist
+COPY --from=builder /home/rafiki/open-payments-specifications/openapi ./open-payments-specifications/openapi
 
 USER root
 

@@ -9,11 +9,9 @@ import net from 'net'
 import dns from 'dns'
 import { createHmac } from 'crypto'
 
-import {
-  createAuthenticatedClient as createOpenPaymentsClient,
-  getResourceServerOpenAPI,
-  getWalletAddressServerOpenAPI
-} from '@interledger/open-payments'
+import { createAuthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
+import { createOpenAPI } from '@interledger/openapi'
+import path from 'path'
 import { StreamServer } from '@interledger/stream-receiver'
 import axios from 'axios'
 import {
@@ -301,8 +299,18 @@ export function initIocContainer(
   })
 
   container.singleton('openApi', async () => {
-    const resourceServerSpec = await getResourceServerOpenAPI()
-    const walletAddressServerSpec = await getWalletAddressServerOpenAPI()
+    const resourceServerSpec = await createOpenAPI(
+      path.resolve(
+        __dirname,
+        '../../../open-payments-specifications/openapi/resource-server.yaml'
+      )
+    )
+    const walletAddressServerSpec = await createOpenAPI(
+      path.resolve(
+        __dirname,
+        '../../../open-payments-specifications/openapi/wallet-address-server.yaml'
+      )
+    )
 
     return {
       resourceServerSpec,

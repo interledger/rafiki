@@ -724,9 +724,6 @@ importers:
 
   packages/token-introspection:
     dependencies:
-      '@interledger/open-payments':
-        specifier: 7.0.0
-        version: 7.0.0
       '@interledger/openapi':
         specifier: 2.0.2
         version: 2.0.2
