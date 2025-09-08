@@ -68,11 +68,13 @@ describe('createPaymentService', () => {
     expect(mockApolloClient.mutate).toHaveBeenCalledWith(
       expect.objectContaining({
         variables: expect.objectContaining({
-          walletAddressId,
-          incomingAmount,
-          idempotencyKey: expect.any(String),
-          isCardPayment: true,
-          expiresAt
+          input: expect.objectContaining({
+            expiresAt,
+            idempotencyKey: expect.any(String),
+            incomingAmount,
+            isCardPayment: true,
+            walletAddressId
+          })
         })
       })
     )
