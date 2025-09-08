@@ -23,7 +23,6 @@ import {
   AccountingService,
   LiquidityAccountType
 } from '../../../accounting/service'
-import { PeerService } from '../../../payment-method/ilp/peer/service'
 import { ReceiverService } from '../../receiver/service'
 import { GetOptions, ListOptions } from '../../wallet_address/model'
 import {
@@ -68,7 +67,6 @@ export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
   receiverService: ReceiverService
-  peerService: PeerService
   paymentMethodHandlerService: PaymentMethodHandlerService
   walletAddressService: WalletAddressService
   quoteService: QuoteService
@@ -199,7 +197,7 @@ export interface CreateFromQuote extends BaseOptions {
 }
 export interface CreateFromIncomingPayment extends BaseOptions {
   incomingPayment: string
-  debitAmount: Amount
+  debitAmount?: Amount
 }
 
 export interface CreateFromCardPayment extends CreateFromIncomingPayment {
@@ -233,7 +231,7 @@ export function isCreateFromCardPayment(
 export function isCreateFromIncomingPayment(
   options: CreateOutgoingPaymentOptions
 ): options is CreateFromIncomingPayment {
-  return 'incomingPayment' in options && 'debitAmount' in options
+  return 'incomingPayment' in options
 }
 
 async function cancelOutgoingPayment(
@@ -303,11 +301,10 @@ async function createOutgoingPayment(
             description: 'Time to create a quote in outgoing payment'
           }
         )
-        const { debitAmount, incomingPayment } = options
         const quoteOrError = await deps.quoteService.create({
           tenantId,
-          receiver: incomingPayment,
-          debitAmount,
+          receiver: options.incomingPayment,
+          debitAmount: options.debitAmount,
           method: 'ilp',
           walletAddressId
         })
@@ -365,23 +362,6 @@ async function createOutgoingPayment(
         if (!receiver || !receiver.isActive()) {
           throw OutgoingPaymentError.InvalidQuote
         }
-        const stopTimerPeer = deps.telemetry.startTimer(
-          'outgoing_payment_service_getpeer_time_ms',
-          {
-            callName: 'PeerService:getByDestinationAddress',
-            description: 'Time to retrieve peer in outgoing payment'
-          }
-        )
-        const ilpPaymentMethod = receiver.paymentMethods.find(
-          (method) => method.type === 'ilp'
-        )
-        const peer = ilpPaymentMethod
-          ? await deps.peerService.getByDestinationAddress(
-              ilpPaymentMethod.ilpAddress,
-              tenantId
-            )
-          : undefined
-        stopTimerPeer()
 
         const payment = await OutgoingPayment.transaction(async (trx) => {
           if (grantId) {
@@ -468,16 +448,6 @@ async function createOutgoingPayment(
               throw OutgoingPaymentError.InsufficientGrant
             }
           }
-
-          const stopTimerPeerUpdate = deps.telemetry.startTimer(
-            'outgoing_payment_service_patchpeer_time_ms',
-            {
-              callName: 'OutgoingPaymentModel:patch',
-              description: 'Time to patch peer in outgoing payment'
-            }
-          )
-          if (peer) await payment.$query(trx).patch({ peerId: peer.id })
-          stopTimerPeerUpdate()
 
           const stopTimerWebhook = deps.telemetry.startTimer(
             'outgoing_payment_service_webhook_event_time_ms',
