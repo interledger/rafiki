@@ -112,10 +112,6 @@ describe('PaymentService', () => {
         variables: {
           walletAddressId: expect.any(String),
           incomingPayment: paymentFixture.incomingPaymentUrl,
-          debitAmount: {
-            ...paymentFixture.incomingAmount,
-            value: BigInt(paymentFixture.incomingAmount.value)
-          },
           cardDetails: {
             signature: paymentFixture.signature,
             expiry: paymentFixture.card.expiry

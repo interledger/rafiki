@@ -77,10 +77,6 @@ async function handleCreatePayment(
       variables: {
         walletAddressId,
         incomingPayment: payment.incomingPaymentUrl,
-        debitAmount: {
-          ...payment.incomingAmount,
-          value: BigInt(payment.incomingAmount.value)
-        },
         cardDetails: {
           signature: payment.signature,
           expiry: payment.card.expiry
