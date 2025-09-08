@@ -111,8 +111,7 @@ async function getWalletAddress(
 ): Promise<WalletAddress> {
   const config: AxiosRequestConfig = {
     headers: {
-      Accept: 'application/json',
-      host: 'cloud-nine-wallet-backend'
+      Accept: 'application/json'
     }
   }
   const { data: walletAddress } = await deps.axios.get<
