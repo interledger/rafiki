@@ -4,8 +4,8 @@ import { IAppConfig } from '../config/app'
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 import {
   AmountInput,
-  CreateIncomingPaymentInput,
   IncomingPayment,
+  MutationCreateIncomingPaymentArgs,
   type Mutation
 } from '../graphql/generated/graphql'
 import { FnWithDeps } from '../shared/types'
@@ -37,7 +37,8 @@ export type WalletAddress = OpenPaymentsWalletAddress & {
 export type PaymentService = {
   createIncomingPayment: (
     walletAddressId: string,
-    incomingAmount: AmountInput
+    incomingAmount: AmountInput,
+    tenantId?: string
   ) => Promise<IncomingPayment>
   getWalletAddress: (walletAddressUrl: string) => Promise<WalletAddress>
 }
@@ -66,19 +67,28 @@ export function createPaymentService(
 const createIncomingPayment: FnWithDeps<
   ServiceDependencies,
   PaymentService['createIncomingPayment']
-> = async (deps, walletAddressId, incomingAmount) => {
+> = async (deps, walletAddressId, incomingAmount, tenantId) => {
   const client = deps.apolloClient
   const { data } = await client.mutate<
     Mutation['createIncomingPayment'],
-    CreateIncomingPaymentInput
+    MutationCreateIncomingPaymentArgs
   >({
     mutation: CREATE_INCOMING_PAYMENT,
     variables: {
-      walletAddressId,
-      incomingAmount,
-      idempotencyKey: v4(),
-      isCardPayment: true
-    }
+      input: {
+        walletAddressId,
+        incomingAmount,
+        idempotencyKey: v4(),
+        isCardPayment: true
+      }
+    },
+    ...(tenantId && {
+      context: {
+        headers: {
+          'tenant-id': tenantId
+        }
+      }
+    })
   })
 
   const incomingPayment = data?.payment
@@ -101,7 +111,8 @@ async function getWalletAddress(
 ): Promise<WalletAddress> {
   const config: AxiosRequestConfig = {
     headers: {
-      Accept: 'application/json'
+      Accept: 'application/json',
+      host: 'cloud-nine-wallet-backend'
     }
   }
   const { data: walletAddress } = await deps.axios.get<

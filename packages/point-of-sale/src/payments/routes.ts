@@ -62,6 +62,7 @@ async function payment(
   ctx: PaymentContext
 ): Promise<void> {
   const body = ctx.request.body
+  const tenantId = ctx.request.header['tenant-id'] as string | undefined
   try {
     const walletAddress = await deps.paymentService.getWalletAddress(
       body.card.walletAddress
@@ -73,7 +74,8 @@ async function payment(
     }
     const incomingPayment = await deps.paymentService.createIncomingPayment(
       walletAddress.id,
-      incomingAmount
+      incomingAmount,
+      tenantId
     )
     const deferred = new Deferred<WebhookBody>()
     webhookWaitMap.setWithExpiry(
