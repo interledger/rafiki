@@ -69,6 +69,9 @@ const createIncomingPayment: FnWithDeps<
   PaymentService['createIncomingPayment']
 > = async (deps, walletAddressId, incomingAmount, tenantId) => {
   const client = deps.apolloClient
+  const expiresAt = new Date(
+    Date.now() + deps.config.incomingPaymentExpiryMs
+  ).toISOString()
   const { data } = await client.mutate<
     Mutation['createIncomingPayment'],
     MutationCreateIncomingPaymentArgs
@@ -79,7 +82,8 @@ const createIncomingPayment: FnWithDeps<
         walletAddressId,
         incomingAmount,
         idempotencyKey: v4(),
-        isCardPayment: true
+        isCardPayment: true,
+        expiresAt
       }
     },
     ...(tenantId && {

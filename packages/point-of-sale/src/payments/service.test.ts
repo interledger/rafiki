@@ -11,7 +11,7 @@ const mockLogger = {
   error: jest.fn()
 } as unknown as Logger
 
-const mockConfig = {}
+const mockConfig = { incomingPaymentExpiryMs: 10000 }
 
 const mockApolloClient = {
   mutate: jest.fn()
@@ -32,8 +32,13 @@ describe('createPaymentService', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
+  afterEach(() => {
+    jest.useRealTimers()
+  })
 
   it('should create an incoming payment and return the incoming payment url (id)', async () => {
+    const now = new Date().getTime()
+    jest.useFakeTimers({ now })
     const uuid = v4()
     const expectedUrl = 'https://api.example.com/incoming-payments/abc123'
     mockApolloClient.mutate = jest.fn().mockResolvedValue({
@@ -51,6 +56,10 @@ describe('createPaymentService', () => {
       assetCode: 'USD',
       assetScale: 2
     }
+    const expiresAt = new Date(
+      now + mockConfig.incomingPaymentExpiryMs
+    ).toISOString()
+
     const result = await service.createIncomingPayment(
       walletAddressId,
       incomingAmount
@@ -58,12 +67,13 @@ describe('createPaymentService', () => {
     expect(result).toEqual({ id: uuid, url: expectedUrl })
     expect(mockApolloClient.mutate).toHaveBeenCalledWith(
       expect.objectContaining({
-        variables: {
+        variables: expect.objectContaining({
           walletAddressId,
           incomingAmount,
           idempotencyKey: expect.any(String),
-          isCardPayment: true
-        }
+          isCardPayment: true,
+          expiresAt
+        })
       })
     )
   })
