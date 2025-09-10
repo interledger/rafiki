@@ -168,11 +168,7 @@ async function processNextWebhook(
 
       if (webhook.metadata?.sendToPosService) {
         await sendWebhook(deps, webhook, {
-          webhookUrl:
-            deps.config.posWebhookServiceUrl ??
-            (deps.config.posServiceUrl
-              ? `${deps.config.posServiceUrl}/webhook`
-              : undefined)
+          webhookUrl: deps.config.posWebhookServiceUrl
         })
       } else {
         const settings = await deps_.tenantSettingService.get({
@@ -320,7 +316,7 @@ export function finalizeWebhookRecipients(
 
   if (
     initiationReason === IncomingPaymentInitiationReason.Card &&
-    (config.posWebhookServiceUrl || config.posServiceUrl)
+    config.posWebhookServiceUrl
   ) {
     recipients = recipients.concat([
       {
@@ -332,8 +328,7 @@ export function finalizeWebhookRecipients(
     ])
   } else if (
     initiationReason === IncomingPaymentInitiationReason.Card &&
-    !config.posWebhookServiceUrl &&
-    !config.posServiceUrl
+    !config.posWebhookServiceUrl
   ) {
     logger?.warn('Could not create webhook recipient for point of sale service')
   }
