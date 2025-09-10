@@ -43,9 +43,11 @@ describe('createPaymentService', () => {
     const expectedUrl = 'https://api.example.com/incoming-payments/abc123'
     mockApolloClient.mutate = jest.fn().mockResolvedValue({
       data: {
-        payment: {
-          id: uuid,
-          url: expectedUrl
+        createIncomingPayment: {
+          payment: {
+            id: uuid,
+            url: expectedUrl
+          }
         }
       }
     })
@@ -68,20 +70,22 @@ describe('createPaymentService', () => {
     expect(mockApolloClient.mutate).toHaveBeenCalledWith(
       expect.objectContaining({
         variables: expect.objectContaining({
-          walletAddressId,
-          incomingAmount,
-          idempotencyKey: expect.any(String),
-          isCardPayment: true,
-          expiresAt
+          input: expect.objectContaining({
+            expiresAt,
+            idempotencyKey: expect.any(String),
+            incomingAmount,
+            isCardPayment: true,
+            walletAddressId
+          })
         })
       })
     )
   })
 
   it('should throw and log error if payment creation fails (no id)', async () => {
-    mockApolloClient.mutate = jest
-      .fn()
-      .mockResolvedValue({ data: { payment: undefined } })
+    mockApolloClient.mutate = jest.fn().mockResolvedValue({
+      data: { createIncomingPayment: { payment: undefined } }
+    })
     const service = createPaymentService(deps)
     const walletAddressId = 'wallet-123'
     const incomingAmount: AmountInput = {
@@ -157,5 +161,37 @@ describe('getWalletAddress', () => {
     await expect(service.getWalletAddress(WALLET_ADDRESS_URL)).rejects.toThrow(
       'Missing card service URL'
     )
+  })
+})
+
+describe('getWalletAddressByUrl', () => {
+  let service: PaymentService
+  const WALLET_ADDRESS_URL = 'https://api.example.com/wallet-address'
+
+  beforeAll(() => {
+    service = createPaymentService(deps)
+  })
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  test('should obtain wallet address id successfully', async () => {
+    const id = uuid()
+    mockApolloClient.query = jest.fn().mockResolvedValue({
+      data: { walletAddressByUrl: { id } }
+    })
+    const walletAddressId =
+      await service.getWalletAddressIdByUrl(WALLET_ADDRESS_URL)
+    expect(walletAddressId).toBe(id)
+  })
+
+  test('should throw when no wallet address was found', async () => {
+    mockApolloClient.query = jest.fn().mockResolvedValue({
+      data: { walletAddressByUrl: undefined }
+    })
+    await expect(
+      service.getWalletAddressIdByUrl(WALLET_ADDRESS_URL)
+    ).rejects.toThrow('Wallet address not found')
   })
 })

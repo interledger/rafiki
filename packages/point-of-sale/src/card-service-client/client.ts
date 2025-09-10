@@ -11,9 +11,7 @@ import { BaseService } from '../shared/baseService'
 interface Card {
   trasactionCounter: number
   expiry: Date
-  // TODO: replace with WalletAddress from payment service
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  walletAddress: any
+  walletAddress: string
 }
 
 export interface PaymentOptions {
@@ -30,7 +28,7 @@ export interface PaymentOptions {
 }
 
 export interface CardServiceClient {
-  sendPayment(options: PaymentOptions): Promise<Result>
+  sendPayment(cardServiceUrl: string, options: PaymentOptions): Promise<Result>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -70,12 +68,14 @@ export async function createCardServiceClient({
     axios
   }
   return {
-    sendPayment: (options) => sendPayment(deps, options)
+    sendPayment: (cardServiceUrl, options) =>
+      sendPayment(deps, cardServiceUrl, options)
   }
 }
 
 async function sendPayment(
   deps: ServiceDependencies,
+  cardServiceUrl: string,
   options: PaymentOptions
 ): Promise<Result> {
   try {
@@ -88,9 +88,8 @@ async function sendPayment(
       ...options,
       requestId: uuid()
     }
-    const cardServiceUrl = options.card.walletAddress.cardService
     const response = await deps.axios.post<PaymentResponse>(
-      `${cardServiceUrl}/payment`,
+      `${cardServiceUrl + (cardServiceUrl.endsWith('/') ? 'payment' : '/payment')}`,
       requestBody,
       config
     )
@@ -103,6 +102,7 @@ async function sendPayment(
     }
     return payment.result
   } catch (error) {
+    deps.logger.debug(error)
     if (error instanceof CardServiceClientError) throw error
 
     if (error instanceof AxiosError) {

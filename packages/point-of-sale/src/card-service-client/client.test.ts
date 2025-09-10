@@ -9,6 +9,7 @@ import nock from 'nock'
 import { HttpStatusCode } from 'axios'
 import { initIocContainer } from '..'
 import { Config } from '../config/app'
+import { faker } from '@faker-js/faker'
 
 describe('CardServiceClient', () => {
   const CARD_SERVICE_URL = 'http://card-service.com'
@@ -38,9 +39,7 @@ describe('CardServiceClient', () => {
     date: new Date(),
     signature: '',
     card: {
-      walletAddress: {
-        cardService: CARD_SERVICE_URL
-      },
+      walletAddress: faker.internet.url(),
       trasactionCounter: 1,
       expiry: new Date(new Date().getDate() + 1)
     },
@@ -61,13 +60,17 @@ describe('CardServiceClient', () => {
       nock(CARD_SERVICE_URL)
         .post('/payment')
         .reply(response.code, createPaymentResponse(response.result))
-      expect(await client.sendPayment(options)).toBe(response.result)
+      expect(await client.sendPayment(CARD_SERVICE_URL, options)).toBe(
+        response.result
+      )
     })
   })
 
   test('throws when there is no payload data', async () => {
     nock(CARD_SERVICE_URL).post('/payment').reply(HttpStatusCode.Ok, undefined)
-    await expect(client.sendPayment(options)).rejects.toMatchObject({
+    await expect(
+      client.sendPayment(CARD_SERVICE_URL, options)
+    ).rejects.toMatchObject({
       status: HttpStatusCode.NotFound,
       message: 'No payment information was received'
     })
@@ -77,7 +80,9 @@ describe('CardServiceClient', () => {
     nock(CARD_SERVICE_URL)
       .post('/payment')
       .reply(HttpStatusCode.ServiceUnavailable, 'Something went wrong')
-    await expect(client.sendPayment(options)).rejects.toMatchObject({
+    await expect(
+      client.sendPayment(CARD_SERVICE_URL, options)
+    ).rejects.toMatchObject({
       status: HttpStatusCode.ServiceUnavailable,
       message: 'Something went wrong'
     })

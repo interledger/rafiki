@@ -71,8 +71,16 @@ async function payment(
       assetScale: walletAddress.assetScale,
       value: body.value
     }
+    // TODO: in the future we need to find a way to make it work in local playground
+    const walletAddressUrl = body.merchantWalletAddress.replace(
+      /^http:/,
+      'https:'
+    )
+    const walletAddressId =
+      await deps.paymentService.getWalletAddressIdByUrl(walletAddressUrl)
+
     const incomingPayment = await deps.paymentService.createIncomingPayment(
-      walletAddress.id,
+      walletAddressId,
       incomingAmount
     )
     const deferred = new Deferred<WebhookBody>()
@@ -81,17 +89,21 @@ async function payment(
       deferred,
       deps.config.webhookTimeoutMs
     )
-    const result = await deps.cardServiceClient.sendPayment({
-      merchantWalletAddress: body.merchantWalletAddress,
-      incomingPaymentUrl: incomingPayment.url,
-      date: new Date(),
-      signature: body.signature,
-      card: body.card,
-      incomingAmount: {
-        ...incomingAmount,
-        value: incomingAmount.value.toString()
+
+    const result = await deps.cardServiceClient.sendPayment(
+      walletAddress.cardService,
+      {
+        merchantWalletAddress: body.merchantWalletAddress,
+        incomingPaymentUrl: incomingPayment.url,
+        date: new Date(),
+        signature: body.signature,
+        card: body.card,
+        incomingAmount: {
+          ...incomingAmount,
+          value: incomingAmount.value.toString()
+        }
       }
-    })
+    )
 
     if (result !== Result.APPROVED) throw new InvalidCardPaymentError(result)
     const event = await waitForIncomingPaymentEvent(deps.config, deferred)
@@ -101,6 +113,7 @@ async function payment(
     ctx.body = result
     ctx.status = 200
   } catch (err) {
+    deps.logger.debug(err)
     if (err instanceof IncomingPaymentEventTimeoutError)
       webhookWaitMap.delete(err.incomingPaymentId)
     const { body, status } = handlePaymentError(err)
