@@ -11,6 +11,7 @@ services:
       - rafiki
     ports:
       - '3007:3007'
+      - '9234:9229'
     volumes:
       - type: bind
         source: ../../packages/card-service/src
@@ -26,7 +27,7 @@ services:
       GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
       TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
       TENANT_SECRET: tenant_secret
-      TENANT_SIGNATURE_VERSION: tenant_signature_version
+      TENANT_SIGNATURE_VERSION: 1
     depends_on:
       - shared-database
     healthcheck:

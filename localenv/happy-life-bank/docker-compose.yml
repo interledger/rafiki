@@ -26,7 +26,7 @@ services:
       GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
       TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
       TENANT_SECRET: tenant_secret
-      TENANT_SIGNATURE_VERSION: tenant_signature_version
+      TENANT_SIGNATURE_VERSION: 1
     depends_on:
       - shared-database
       - cloud-nine-wallet-card-service
@@ -48,6 +48,7 @@ services:
       - rafiki 
     ports: 
       - '4008:4008' 
+      - '9233:9229'
     volumes: 
       - type: bind 
         source: ../../packages/point-of-sale/src 

@@ -165,6 +165,9 @@ describe('Payment Routes', () => {
           },
           state: IncomingPaymentState.Pending
         })
+      jest
+        .spyOn(paymentService, 'getWalletAddressIdByUrl')
+        .mockResolvedValueOnce(faker.internet.url())
     }
   })
 })
