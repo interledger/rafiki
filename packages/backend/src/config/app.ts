@@ -204,7 +204,8 @@ export const Config = {
     false
   ),
   cardServiceUrl: optional(envString, 'CARD_SERVICE_URL'),
-  posServiceUrl: optional(envString, 'POS_SERVICE_URL')
+  posServiceUrl: optional(envString, 'POS_SERVICE_URL'),
+  posWebhookServiceUrl: optional(envString, 'POS_WEBHOOK_SERVICE_URL')
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
