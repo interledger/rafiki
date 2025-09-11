@@ -773,8 +773,7 @@ function translatePin(
   sourcePan: string,
   sourceFormat: 'ISO-0' | 'ISO-1',
   targetPan: string,
-  targetFormat: 'ISO-0' | 'ISO-1',
-  pinEncryptionKey: string
+  targetFormat: 'ISO-0' | 'ISO-1'
 ): string {
   // Parse the PIN block to get the clear PIN
   const pin = parsePinBlock(pinBlock, sourcePan, sourceFormat)
@@ -788,16 +787,121 @@ function translatePin(
   return newPinBlock
 }
 
+// Derive transaction key from IPEK and KSN
+function deriveTransactionKey(ipek: Buffer, ksn: Buffer): Buffer {
+  if (ipek.length !== 16) {
+    throw new Error('IPEK must be 16 bytes')
+  }
+  if (ksn.length !== 10) {
+    throw new Error('KSN must be 10 bytes')
+  }
+
+  // Extract the transaction counter from the KSN
+  const ksnCopy = Buffer.from(ksn)
+  // Clear the key set ID bits (21 rightmost bits)
+  ksnCopy[7] &= 0xe0
+  ksnCopy[8] = 0x00
+  ksnCopy[9] = 0x00
+
+  // Get the transaction counter
+  const counter = Buffer.from(ksn)
+  // Keep only the 21 rightmost bits
+  counter[7] &= 0x1f
+  counter[0] = 0
+  counter[1] = 0
+  counter[2] = 0
+  counter[3] = 0
+  counter[4] = 0
+  counter[5] = 0
+  counter[6] = 0
+
+  // Start with the IPEK
+  let key = Buffer.from(ipek)
+
+  // For each bit in the counter, derive the key
+  for (let i = 0; i < 21; i++) {
+    const bitPos = 1 << i % 8
+    const bytePos = 7 - Math.floor(i / 8)
+
+    if (counter[bytePos] & bitPos) {
+      // Set the bit in the KSN
+      ksnCopy[bytePos] |= bitPos
+
+      // Derive the key for this bit
+      key = deriveKeyForBit(key, ksnCopy)
+    }
+  }
+
+  return key
+}
+
+// Derive key for a specific bit position
+function deriveKeyForBit(key: Buffer, ksn: Buffer): Buffer {
+  // Create variants of the key
+  const variantMask = Buffer.from('C0C0C0C000000000C0C0C0C000000000', 'hex')
+  const keyVariant = xorBuffers(key, variantMask)
+
+  // Encrypt the KSN with both key variants
+  const cipher1 = createCipheriv(
+    'des-ede-cbc',
+    key.subarray(0, 16),
+    Buffer.alloc(8)
+  )
+  let left = cipher1.update(ksn.subarray(0, 8))
+  left = Buffer.concat([left, cipher1.final()])
+
+  const cipher2 = createCipheriv(
+    'des-ede-cbc',
+    keyVariant.subarray(0, 16),
+    Buffer.alloc(8)
+  )
+  let right = cipher2.update(ksn.subarray(0, 8))
+  right = Buffer.concat([right, cipher2.final()])
+
+  // Combine the results
+  return Buffer.concat([left, right])
+}
+
 // Verify PIN
 function verifyPin(
   pinBlock: string,
   pan: string,
   format: 'ISO-0' | 'ISO-1',
   expectedPin: string,
-  pinEncryptionKey: string
+  tr31IpekUnderLmk?: string,
+  ksnHex?: string,
+  lmkHex?: string
 ): boolean {
+  // If DUKPT parameters are provided, decrypt the PIN block first
+  let decryptedPinBlock = pinBlock
+
+  if (tr31IpekUnderLmk && ksnHex && lmkHex) {
+    // Extract the clear IPEK from the TR31 key block
+    const clearIpekKey = extractClearKeyFromTR31KeyBlock(
+      Tr31Intent.LMK,
+      lmkHex,
+      tr31IpekUnderLmk
+    )
+
+    const ipek = clearIpekKey.clearKey
+    const ksn = Buffer.from(ksnHex, 'hex')
+
+    // Derive the transaction key
+    const transactionKey = deriveTransactionKey(ipek, ksn)
+
+    // Decrypt the PIN block
+    const encryptedPinBlockBuffer = Buffer.from(pinBlock, 'hex')
+    const decryptedPinBlockBuffer = decryptWith3DES(
+      encryptedPinBlockBuffer,
+      transactionKey.toString('hex'),
+      Buffer.alloc(8) // Using zero IV
+    )
+
+    decryptedPinBlock = decryptedPinBlockBuffer.toString('hex').toUpperCase()
+  }
+
   // Parse the PIN block to get the clear PIN
-  const pin = parsePinBlock(pinBlock, pan, format)
+  const pin = parsePinBlock(decryptedPinBlock, pan, format)
 
   // Compare with the expected PIN
   return pin === expectedPin
@@ -819,6 +923,7 @@ export {
   parsePinBlock,
   translatePin,
   verifyPin,
+  deriveTransactionKey,
   AES_MERCHANT_ASE_LMK_HEX,
   AES_CUSTOMER_ASE_LMK_HEX,
   AES_KAI_LMK_HEX,
