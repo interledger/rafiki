@@ -1,0 +1,186 @@
+---
+title: Tenants
+tableOfContents:
+  maxHeadingLevel: 4
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components'
+import { LinkOut } from '@interledger/docs-design-system'
+
+In Rafiki, a tenant represents an isolated environment for an account servicing entity (ASE). Each tenant has its own set of resources, such as assets, peers, and wallet addresses, and its own configuration settings. This allows multiple ASEs to share a single Rafiki instance while maintaining data isolation and security. The purpose of this guide is to help you set up and manage tenants.
+
+While this guide focuses on operators managing tenants from the Backend Admin API, the Rafiki Admin application offers the same capabilities in a user-friendly interface.
+
+Refer to the [Rafiki Admin user guide](/admin/admin-user-guide/#tenants) for detailed instructions and examples of creating and managing tenants through the application.
+
+## Tenant properties
+
+Each tenant on a given Rafiki instance has the following properties:
+
+- `id`: The unique identifier for the tenant used to identify the tenant in API requests and webhook events.
+- `email`: The tenant's email address.
+- `apiSecret`: The API secret used to secure requests made for this tenant. This secret is used to generate HTTP signatures, which are used to authenticate requests to the Backend Admin API.
+- `idpConsentUrl`: The URL of the tenant's identity provider's (IdP) consent screen. This URL is used to redirect users to the IdP to grant consent for Open Payments requests.
+- `idpSecret`: The secret used to secure requests from the tenant's IdP. This secret is used to authenticate requests from the IdP to the Rafiki instance.
+- `publicName`: The public display name for the tenant. This name is displayed in the Rafiki Admin application and can be used to identify the tenant.
+- `settings`: A list of key-value pairs for any initial tenant settings, as explained in the next section.
+
+## Tenant settings
+
+Tenant settings allow operators to customize the behavior of a tenant. These settings are stored as key-value pairs in the database and can be managed through the Backend Admin API or Rafiki Admin application.
+
+The following tenant settings are available:
+
+- `EXCHANGE_RATES_URL`: The URL of the tenant's exchange rates service. This setting is used to configure the source of exchange rate data for the tenant.
+- `WEBHOOK_URL`: The URL of the tenant's webhook endpoint. This setting is used to configure the endpoint that will receive webhook events for the tenant.
+- `WEBHOOK_TIMEOUT`: The timeout for the tenant's webhook requests (in milliseconds). This setting is used to configure the maximum amount of time to wait for a response from the webhook endpoint.
+- `WEBHOOK_MAX_RETRY`: The maximum number of retries for the tenant's webhook event when a non-200 status is returned or if the request timed out.
+- `WALLET_ADDRESS_URL`: The URL of the tenant's wallet address service. This setting is used to configure the base URL for wallet addresses created for the tenant.
+- `ILP_ADDRESS`: The tenant's Interledger Protocol (ILP) address. This setting is used to configure the base ILP address for the tenant.
+
+:::note
+Only operators can create, edit, and delete tenants.
+:::
+
+## Create a tenant
+
+<Tabs>
+  <TabItem label="Operation">
+    ```graphql
+    mutation CreateTenant($input: CreateTenantInput!) {
+      createTenant(input: $input) {
+        tenant {
+          id
+          publicName
+          email
+          apiSecret
+          idpConsentUrl
+          idpSecret
+        }
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Variables">
+    ```json
+    {
+      "input": {
+        "publicName": "Tenant Name",
+        "email": "tenant@example.com",
+        "apiSecret": "your-secret-api-key",
+        "idpConsentUrl": "https://example.com/consent",
+        "idpSecret": "your-idp-secret"
+      }
+    }
+    ```
+
+    For more information about this mutation's input object, see [`CreateTenantInput`](/apis/graphql/backend/#definition-CreateTenantInput).
+
+  </TabItem>
+  <TabItem label="Response">
+    ```json
+    {
+      "data": {
+        "createTenant": {
+          "tenant": {
+            "id": "123e4567-e89b-12d3-a456-426614174000",
+            "publicName": "Tenant Name",
+            "email": "tenant@example.com",
+            "apiSecret": "your-secret-api-key",
+            "idpConsentUrl": "https://example.com/consent",
+            "idpSecret": "your-idp-secret"
+          }
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+## Update a tenant
+
+<Tabs>
+  <TabItem label="Operation">
+    ```graphql
+    mutation UpdateTenant($input: UpdateTenantInput!) {
+      updateTenant(input: $input) {
+        tenant {
+          id
+          email
+          apiSecret
+          idpConsentUrl
+          idpSecret
+          publicName
+        }
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Variables">
+    ```json
+    {
+      "input": {
+        "id": "123e4567-e89b-12d3-a456-426614174000",
+        "publicName": "New Tenant Name",
+        "email": "new-tenant@example.com",
+        "idpConsentUrl": "https://example.com/new-consent",
+        "idpSecret": "new-idp-secret"
+      }
+    }
+    ```
+
+    For more information about this mutation's input object, see [`UpdateTenantInput`](/apis/graphql/backend/#definition-UpdateTenantInput).
+
+  </TabItem>
+  <TabItem label="Response">
+    ```json
+    {
+      "data": {
+        "updateTenant": {
+          "tenant": {
+            "id": "123e4567-e89b-12d3-a456-426614174000",
+            "publicName": "New Tenant Name",
+            "email": "new-tenant@example.com",
+            "apiSecret": "your-secret-api-key",
+            "idpConsentUrl": "https://example.com/new-consent",
+            "idpSecret": "new-idp-secret"
+          }
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+## Delete a tenant
+
+<Tabs>
+  <TabItem label="Operation">
+    ```graphql
+    mutation DeleteTenant($id: String!) {
+      deleteTenant(id: $id) {
+        success
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Variables">
+    ```json
+    {
+      "id": "123e4567-e89b-12d3-a456-426614174000"
+    }
+    ```
+    
+  </TabItem>
+  <TabItem label="Response">
+    ```json
+    {
+      "data": {
+        "deleteTenant": {
+          "success": true
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
