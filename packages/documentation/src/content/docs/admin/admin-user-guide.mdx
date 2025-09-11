@@ -6,7 +6,7 @@ import { LinkOut } from '@interledger/docs-design-system'
 import { LargeImg } from '@interledger/docs-design-system'
 import KratosWarn from '/src/partials/kratos-warning.mdx'
 
-The Rafiki Admin application provides tools to manage peers, assets, wallet addresses, webhooks, payments, and account settings. It functions as an interface to the Rafiki [backend service](/integration/deployment/services/backend-service/) and all actions performed, such as fetching data or executing commands, are passed to the Rafiki `backend` service. The purpose of this document is to help you navigate and use the Rafiki Admin application effectively.
+The Rafiki Admin application provides tools to manage tenants, assets, peers wallet addresses, webhook events, payments, and account settings. It functions as an interface to the Rafiki [backend service](/integration/deployment/services/backend-service/) and all actions performed, such as fetching data or executing commands, are passed to the Rafiki `backend` service. The purpose of this document is to help you navigate and use the Rafiki Admin application effectively.
 
 ## Getting started
 
@@ -80,7 +80,29 @@ Ory Kratos provides frontend components (such as forms and buttons) for identity
 
 <KratosWarn />
 
+### API credential configuration
+
+To access your data and manage resources within your tenant, you must configure your API credentials. Enter your tenant ID and API secret and select **Save Credentials**
+
+<LargeImg
+  src='/img/admin-guide/home-pre.png'
+  alt='A screenshot of the Rafiki Admin application user interface displaying the API credentials screen before the credentials have been entered. It shows two text fields: one for tenant ID and one for API secret, and an empty navigation menu.'
+/>
+
+After successfully configuring your API credentials, a message will appear indicating that the credentials have been configured, and the left navigation menu will be populated with the available options.
+
+<LargeImg
+  src='/img/admin-guide/home-post.png'
+  alt='A screenshot of the Rafiki Admin application user interface displaying the API credentials screen after the credentials have been entered. It shows a success message, a "Clear Credentials" button, and the full navigation menu.'
+/>
+
+The **Clear Credentials** button allows you to clear your stored API credentials. You might want to clear your credentials in order to switch tenants or troubleshoot connection issues.
+
 ## Navigation
+
+:::note
+The screenshots in this guide may not perfectly reflect the appearance of the Rafiki Admin UI in all environments. Specifically, the left navigation menu may differ slightly depending on whether authentication is enabled.
+:::
 
 After logging in, you’ll be greeted by the main landing page with a left-hand navigation menu. This menu provides access to the main functionality needed to manage your Rafiki instance.
 
@@ -92,8 +114,8 @@ After logging in, you’ll be greeted by the main landing page with a left-hand 
 Each of the following menu items leads to a different page of the Rafiki Admin application:
 
 - [Tenants](#tenants)
-- [Peers](#peers)
 - [Assets](#assets)
+- [Peers](#peers)
 - [Wallet addresses](#wallet-addresses)
 - [Webhooks](#webhooks)
 - [Payments](#payments)
@@ -101,17 +123,152 @@ Each of the following menu items leads to a different page of the Rafiki Admin a
 
 ## Tenants
 
+The Tenants page allows you to manage tenants in your Rafiki instance, including viewing, creating, editing, and deleting tenants.
 
+:::note
+Only users with operator privileges can create, edit, and delete tenants. An operator cannot delete themselves.
+:::
+
+On this page, all configured tenants appear in a table where you can view the tenant's public name, email, and status. Operators are designated by a yellow "Operator" tag.
+
+<LargeImg
+  src='/img/admin-guide/tenants.png'
+  alt='A screenshot of the Rafiki Admin application user interface displaying the "Tenants" section. It shows a table containing tenants with details including Public name, Email, and Status. An "Add tenant" button is in the top right.'
+/>
 
 ### Create tenant
 
+To create a new tenant, select **Add tenant** from the main Tenants page.
 
+<LargeImg
+  src='/img/admin-guide/create-tenant.png'
+  alt='A screenshot of the Rafiki Admin application user interface displaying the "Create Tenant" section. It shows several text fields to configure in order to create a new tenant. A "Create" button is in the lower right.'
+/>
+
+Fill out the following fields to configure and create your new tenant:
+
+| Section                       | Field                | Description                                                                       |
+| ----------------------------- | -------------------- | --------------------------------------------------------------------------------- |
+| General Information           | Public Name          | A public name for the tenant.                                                     |
+|                               | Email                | The tenant's email address.                                                       |
+| Sensitive Information         | API Secret           | The API secret for the tenant. Treat as sensitive information.                    |
+| Identity Provider Information | Consent URL          | The URL for the tenant's identity provider consent endpoint.                      |
+|                               | Secret               | The secret for the tenant's identity provider.                                    |
+| Tenant Settings               | Exchange Rates Url   | The URL for the tenant's exchange rates service.                                  |
+|                               | Webhook Url          | The URL for the tenant's webhook endpoint.                                        |
+|                               | Webhook Timeout      | The timeout for the tenant's webhook requests.                                    |
+|                               | Webhook Max Retry    | The maximum number of retries for the tenant's webhook requests.                  |
+|                               | Wallet Address Url   | The URL for the tenant's wallet address service.                                  |
+|                               | ILP Address          | The tenant's Interledger Protocol (ILP) address.                                  |
+
+After completing these fields, select **Create** to add the new tenant.
+
+### Edit tenant
+
+To edit an existing tenant, select any tenant entry from the table on the main Tenants page. This opens the Edit Tenant page where you can view and change tenant settings.
+
+<LargeImg
+  src='/img/admin-guide/edit-tenant.png'
+  alt='A screenshot of the Rafiki Admin application user interface displaying the "Edit Tenant" section. It shows several text fields configured for an existing tenant. This page is used to view and edit tenant details.'
+/>
+
+The Edit Tenant page includes the following sections:
+
+| Section                       | Field                | Description                                                                                 |
+| ----------------------------- | -------------------- | ------------------------------------------------------------------------------------------- |
+| General Information           | Tenant ID            | A unique identifier assigned by Rafiki when the tenant was created. This cannot be changed. |
+|                               | Public Name          | A public name for the tenant.                                                               |
+|                               | Email                | The tenant's email address.                                                                 |
+| Identity Provider Information | Consent URL          | The URL for the tenant's identity provider consent endpoint.                                |
+|                               | Secret               | The secret for the tenant's identity provider.                                              |
+| Sensitive Information         | API Secret           | A unique identifier assigned by Rafiki when the tenant was created. This cannot be changed. |
+
+You can modify the public name, email, consent URL, and secret for a tenant. The tenant ID and API secret are read-only.
+
+After editing any of the preceding fields, select **Save** to commit those changes.
+
+#### Delete tenant
+
+As an operator, you may need to delete tenants from your Rafiki instance. The option to delete a tenant is only visible when viewing a non-operator tenant. An operator cannot delete themselves.
+
+To perform this irreversible action, select **Delete tenant**. Confirm the deletion by typing "delete tenant" into the text field and selecting **Delete this tenant**.
+
+## Assets
+
+The Assets page allows you to manage assets in your Rafiki instance, including viewing, editing, and creating assets.
+
+On this page, all configured assets appear in a table where you can view the asset ID, the asset code, the scale, and the withdrawal threshold. The list of assets shows only those for the current tenant, as determined by your API credentials.
+
+:::note
+Operators can create, edit, and delete assets for any tenant. Tenants can only view and manage their own assets.
+:::
+
+<LargeImg
+  src='/img/admin-guide/assets.png'
+  alt='A screenshot of the Rafiki Admin application user interface displaying the "Assets" section. It shows a table containing four assets with details including ID, asset code, asset scale, and withdrawal threshold. An "Add asset" button is in the top right.'
+/>
+
+### Create asset
+
+To create a new asset, select **Add Asset** from the main Assets page.
+
+<LargeImg
+  src='/img/admin-guide/create-asset.png'
+  alt='A screenshot of the Rafiki Admin application user interface displaying the "Create Asset" section. It shows several text fields to configure in order to create a new asset. A "Create" button is in the lower right.'
+/>
+
+Fill out the following fields to create your new asset:
+
+| Section             | Field                | Description                                                                       |
+| ------------------- | -------------------- | --------------------------------------------------------------------------------- |
+| General Information | Code                 | The asset code, generally an ISO 4217 currency code where available.              |
+|                     | Scale                | Difference in order of magnitude between the standard unit and a fractional unit. |
+|                     | Withdrawal Threshold | The minimum amount of liquidity that can be withdrawn from the asset.             |
+|                     | Tenant Id            | Select a tenant to associate with this asset.                                     |
+
+After completing these fields, select **Create** to add the new asset.
+
+### Edit asset
+
+To edit an existing asset, select any asset entry from the table on the main Assets page. This opens the Edit Asset page where you can view and change asset settings.
+
+<LargeImg
+  src='/img/admin-guide/edit-asset.png'
+  alt='A screenshot of the Rafiki Admin application user interface displaying the "Edit Asset" section. It shows several text fields configured for an existing asset. This page is used to view and edit asset details.'
+/>
+
+While the Edit Asset page shares fields with the Create Asset page, it also includes fields and actions specific to managing an existing asset:
+
+| Section               | Field/Action       | Description                                                                                                                                                             |
+| --------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| General Information   | Asset ID           | A unique identifier assigned by Rafiki when the asset was created. This cannot be changed.                                                                              |
+| Liquidity Information | Amount             | Current amount of asset liquidity available.                                                                                                                            |
+|                       | Deposit Liquidity  | To increase the amount of liquidity available, select **Deposit liquidity**.                                                                                            |
+|                       | Withdraw Liquidity | To reduce the amount of liquidity available, select **Withdraw liquidity**.                                                                                             |
+| Sending Fee           | Fixed Fee          | Flat fee per asset, specified in the smallest unit as defined by the asset scale. In our screenshot above, a fixed fee value of 100 with a scale of 2 represents 1 USD. |
+|                       | Basis Points       | A variable fee per asset. One basis point fee is equal to 0.01% of the total amount, 100 basis points = 1%, 10000 basis points = 100%                                   |
+|                       | Fee history        | To view a list of asset fees over time, select **Fee history**.                                                                                                         |
+
+After editing any of the preceding fields in the General Information or Sending Fee sections, select **Save** to commit those changes.
+
+#### Delete asset
+
+The final section of the Edit Asset page is the irreversible action of deleting an asset. Select **Delete asset** to make this change.
+
+<img
+  src='/img/admin-guide/delete-asset.png'
+  alt='A screenshot of the Rafiki Admin application user interface displaying the "Delete Asset" modal window.'
+  class='img-outline'
+  style='max-width:400px'
+/>
+
+Confirm the deletion by typing "delete asset" into the text field and selecting **Delete this asset**.
 
 ## Peers
 
 The Peers page allows you to manage peering relationships in your Rafiki instance, including viewing, creating, editing, and deleting peers.
 
-On this page, all configured peers appear in a table where you can view the peer name, its ILP address, asset details including the asset type and scale, and the outgoing HTTP endpoint. The list of peers is scoped to the current tenant based on the user's API credentials.
+On this page, all configured peers appear in a table where you can view the peer name, its ILP address, asset details including the asset type and scale, and the outgoing HTTP endpoint. The list of peers shows only those for the current tenant, as determined by your API credentials. 
 
 :::note
 Operators can create, edit, and delete peers for any tenant. Tenants can only view and manage their own peers.
@@ -141,9 +298,9 @@ Fill out the following fields to configure and create your peer:
 | HTTP Information    | Incoming Auth Tokens | A comma-separated list of tokens accepted by your Rafiki instance from a peer for incoming requests.        |
 |                     | Outgoing Auth Token  | A single token used by your Rafiki instance for all outgoing requests to authenticate itself with the peer. |
 |                     | Outgoing Endpoint    | The URL of the peer’s server where your Rafiki instance sends outgoing requests.                            |
-| Asset Information   | Asset                | The asset used for transactions with this peer.                                                             |
+| Asset Information   | Tenant               | The tenant whose asset will be used for transactions with this peer.                                        |
 
-If you are an operator, you must select a tenant when creating a new peer. The asset selection dropdown is dynamically populated based on the selected tenant.
+If you are an operator, you must select a tenant when creating a new peer. The asset selection dropdown is dynamically populated based on the selected tenant. If you don't have any tenants, the tenant ID will default to your own.
 
 After completing these fields, select **Create** to add the new peer.
 
@@ -170,7 +327,7 @@ After editing any of the preceding fields in the General Information or HTTP Inf
 
 #### Delete peer
 
-The final section of the Peers page is the irreversible action of deleting a peer. Select **Delete peer** to make this change.
+The final section of the Edit Peer page is the irreversible action of deleting a peer. Select **Delete peer** to make this change.
 
 <img
   src='/img/admin-guide/delete-peer.png'
@@ -181,64 +338,15 @@ The final section of the Peers page is the irreversible action of deleting a pee
 
 Confirm the deletion by typing "delete peer" into the text field and selecting **Delete this peer**.
 
-## Assets
-
-The Assets page allows you to manage assets in your Rafiki instance, including viewing, editing, and creating assets.
-
-On this page, all configured assets appear in a table where you can view the asset ID, the asset code, the scale, and the withdrawal threshold. The list of assets is scoped to the current tenant based on the user's API credentials. 
-
-<LargeImg
-  src='/img/admin-guide/assets.png'
-  alt='A screenshot of the Rafiki Admin application user interface displaying the "Assets" section. It shows a table containing four assets with details including ID, asset code, asset scale, and withdrawal threshold. An "Add asset" button is in the top right.'
-/>
-
-### Create asset
-
-To create a new asset, select **Add Asset** from the main Assets page.
-
-<LargeImg
-  src='/img/admin-guide/create-asset.png'
-  alt='A screenshot of the Rafiki Admin application user interface displaying the "Create Asset" section. It shows several text fields to configure in order to create a new asset. A "Create" button is in the lower right.'
-/>
-
-Fill out the following fields to create your new asset:
-
-| Section             | Field                | Description                                                                       |
-| ------------------- | -------------------- | --------------------------------------------------------------------------------- |
-| General Information | Code                 | The asset code, generally an ISO 4217 currency code where available.              |
-|                     | Scale                | Difference in order of magnitude between the standard unit and a fractional unit. |
-|                     | Withdrawal Threshold | The minimum amount of liquidity that can be withdrawn from the asset.             |
-
-After completing these fields, select **Create** to add the new asset.
-
-### Edit asset
-
-To edit an existing asset, select any asset entry from the table on the main Assets page. This opens the Edit Asset page where you can view and change asset settings.
-
-<LargeImg
-  src='/img/admin-guide/edit-asset.png'
-  alt='A screenshot of the Rafiki Admin application user interface displaying the "Edit Asset" section. It shows several text fields configured for an existing asset. This page is used to view and edit asset details.'
-/>
-
-While the Edit Asset page shares fields with the Create Asset page, it also includes fields and actions specific to managing an existing asset:
-
-| Section               | Field/Action       | Description                                                                                                                                                             |
-| --------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| General Information   | Asset ID           | A unique identifier assigned by Rafiki when the asset was created. This cannot be changed.                                                                              |
-| Liquidity Information | Amount             | Current amount of asset liquidity available.                                                                                                                            |
-|                       | Deposit Liquidity  | To increase the amount of liquidity available, select **Deposit liquidity**.                                                                                            |
-|                       | Withdraw Liquidity | To reduce the amount of liquidity available, select **Withdraw liquidity**.                                                                                             |
-| Sending Fee           | Fixed Fee          | Flat fee per asset, specified in the smallest unit as defined by the asset scale. In our screenshot above, a fixed fee value of 100 with a scale of 2 represents 1 USD. |
-|                       | Basis Points       | A variable fee per asset. One basis point fee is equal to 0.01% of the total amount, 100 basis points = 1%, 10000 basis points = 100%                                   |
-|                       | Fee history        | To view a list of asset fees over time, select **Fee history**.                                                                                                         |
-
-After editing any of the preceding fields in the General Information or Sending Fee sections, select **Save** to commit those changes.
-
 ## Wallet addresses
 
 The Wallet Addresses page allows you to manage the wallet addresses associated with your Rafiki instance, including viewing, editing, and creating wallet addresses.
 
-On this page, all configured wallet addresses appear in the table where you can view the address URL, the public name, and the wallet status.
+On this page, all configured wallet addresses appear in the table where you can view the address URL, the public name, and the wallet status. The list of wallet addresses shows only those for the current tenant, as determined by your API credentials.
+
+:::note
+Operators can create wallet addresses for any tenant. Tenants can only create their own wallet address.
+:::
 
 <LargeImg
   src='/img/admin-guide/wallet-addresses.png'
@@ -260,7 +368,7 @@ Fill out the following fields to create a new wallet address:
 | ------------------- | ------------------- | --------------------------------------------------------------------------- |
 | General Information | Wallet address name | The case-insensitive URL of the wallet. Once set, it cannot be changed.     |
 |                     | Public name         | The name associated with the wallet that is visible to anyone with the URL. |
-|                     | Asset               | Select an asset to associate with this wallet.                              |
+|                     | Tenant              | Select a tenant to associate with this wallet.                              |
 
 :::note[Wallet address requirements]
 
@@ -292,6 +400,7 @@ While the Edit Wallet Address page shares fields with the Create Wallet Address 
 |                       | View asset           | For more information about an asset, select **View asset**.                                 |
 | Liquidity Information | Amount               | Current amount of liquidity available for this wallet.                                      |
 |                       | Withdraw             | To withdraw funds from this wallet, select **Withdraw**.                                    |
+| Payments              | Go to payments page  | Navigates to the Payments page but with the wallet address ID filter auto-populated.        |
 
 After editing any of the preceding fields in the General Information section, select **Save** to commit those changes.
 
@@ -311,7 +420,7 @@ Wallet addresses cannot be deleted from the system. This restriction exists to e
 In both cases, the recommended approach is to create a new wallet address and deactivate the old one. To deactivate a wallet address, change the wallet status to Inactive.
 :::
 
-## Webhooks
+## Webhook events
 
 The Webhook Events page allows you to monitor and manage webhook events within your Rafiki instance. Webhook events in Rafiki are the main communication channel between you and your Rafiki instance. See Webhook events for more information about webhook events.
 
@@ -328,7 +437,7 @@ To view the webhook event as a JSON representation, select **View data**.
 
 The Payments page allows you to view all incoming and outgoing payments in your Rafiki instance. This allows you to monitor payment activity as well as track the status of payments.
 
-All payments appear in the table. For each payment, you can view the unique payment ID, type of payment, state of the payment, and the date and time the payment was created. A field at the top of the page allows you to filter the table by payment type, making it easier to drill down into specific transactions.
+All payments appear in the table. For each payment, you can view the unique payment ID, type of payment, state of the payment, and the date and time the payment was created. Fields at the top of the page allow you to filter the table by payment type and wallet address ID, making it easier to drill down into specific transactions.
 
 <LargeImg
   src='/img/admin-guide/payments.png'

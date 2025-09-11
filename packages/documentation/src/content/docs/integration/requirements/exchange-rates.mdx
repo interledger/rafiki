@@ -5,7 +5,7 @@ title: Exchange rates
 import { Badge } from '@astrojs/starlight/components'
 import { LinkOut } from '@interledger/docs-design-system'
 
-If you plan to support cross-currency transactions, you must specify from where your Rafiki instance will fetch current exchange rates. In a multi-tenant environment, tenants are responsible for setting their own rates and hosting them at their own endpoints.
+If you plan to support cross-currency transactions, you must specify from where your Rafiki instance will fetch current exchange rates. Tenants are responsible for setting their own rates and hosting them at their own endpoints.
 
 A rate probe precedes every Interledger payment. The probe provides a quote that estimates the full cost of transferring value over the network. For a rate probe involving a cross-currency transaction to be successful, Rafiki needs to know the exchange rates for each currency that makes up the transaction.
 

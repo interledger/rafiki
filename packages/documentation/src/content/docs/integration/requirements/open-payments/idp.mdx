@@ -16,7 +16,7 @@ Responsibilities of your IdP include:
 - Sending a request to the authorization server to finish the interaction
 - Redirecting the user after the interaction is complete
 
-In a multi-tenant environment, each tenant uses their own IdP.
+Each tenant must use their own IdP.
 
 :::note
 We provide Ory Kratos, a cloud-based user management system, for the identity and user management of your Rafiki Admin users. Kratos is for internal use only and **cannot** be used as your IdP for Open Payments.
@@ -47,7 +47,7 @@ Rafiki's authorization server also extends an [API](#interaction-endpoints) that
 
 ### Environment variables
 
-The following variables must be configured for the `auth` service. In a multi-tenant environment, the `IDENTITY_SERVER_URL` and `IDENTITY_SERVER_SECRET` variables are configured on a per-tenant basis. These values are stored in the `auth` service's tenant table and are used to secure communications between the `auth` service and the tenant's IdP.
+The following variables must be configured for the `auth` service. Operators configure the `IDENTITY_SERVER_URL` and `IDENTITY_SERVER_SECRET` variables on a per-tenant basis. These values are stored in the `auth` service's tenant table and are used to secure communications between the `auth` service and the tenant's IdP.
 
 <div class="overflow-table wide-column">
 

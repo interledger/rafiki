@@ -6,20 +6,34 @@ Multi-tenancy is an architectural approach that enables a single Rafiki instance
 
 In a multi-tenant environment, the entity responsible for managing a Rafiki instance that serves multiple ASEs is called an **operator**. Each ASE that uses the shared Rafiki instance is called a **tenant**.
 
-## Operator
+## Operator and tenant roles and responsibilities
+
+Both operators and tenants have distinct roles and responsibilities.
+
+### Operator
 
 An operator oversees operational and administrative tasks associated with managing a shared Rafiki instance, including:
 
+- Creating, updating, and deleting tenants
+- Managing assets, liquidity, peering relationships, rate information, and other details, including the ability to manage these on behalf of other tenants
 - Onboarding new tenants
 - Holding Open Payments resources
 - Owning the wallet root domain
-- Managing assets, liquidity, peering relationships, rate information, and other details for each tenant
+- Configuring global settings for the Rafiki instance
+- Monitoring the health and performance of the Rafiki instance
+- Managing the underlying infrastructure of the Rafiki instance
+- The operator also has the same capabilities as a tenant, in addition to their operator-specific privileges
 
-## Tenant
+### Tenant
 
-A tenant is an ASE that connects to a shared Rafiki instance rather than running its own environment. To connect the shared environment, each tenant must install and run their own integration service.
+A tenant is an ASE that connects to a shared Rafiki instance rather than running its own environment. To connect the shared environment, each tenant must install and run their own integration service. Tenants are responsible for the following:
 
-Tenants are added through the Backend Admin API or the Rafiki Admin application. Only operators can create new tenants in a Rafiki instance. When adding new tenants, operators should communicate credentials out-of-band with the tenant.
+- Creating and managing wallet addresses for their users
+- Sending and receiving payments
+- Configuring tenant-specific settings, such as the webhook URL and exchange rates URL
+- Managing their own assets and liquidity
+
+Tenants are added through the Backend Admin API or the [Rafiki Admin application](/admin/admin-user-guide/#tenants). Only operators can create new tenants in a Rafiki instance. When adding new tenants, operators should communicate credentials out-of-band with the tenant.
 
 ## What multi-tenancy enables
 

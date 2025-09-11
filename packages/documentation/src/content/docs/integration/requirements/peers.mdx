@@ -18,6 +18,15 @@ Refer to the [Rafiki Admin user guide](/admin/admin-user-guide#peers) for detail
 Whether you are using the Backend Admin API or the Rafiki Admin application, the underlying configurations and requirements remain the same. Choose the interface that best suits your individual workflow.
 :::
 
+**Permissions**
+
+- Operators can create peers for any tenant
+- Operators can view any peer
+- Operators can edit and delete peers that belong to any tenant
+- Tenants can only view their own peers
+- Tenants can only edit and delete their own peers
+- Tenants cannot create peers
+
 ## Perform prerequisites
 
 :::note
@@ -110,7 +119,7 @@ As mentioned in the prerequisites, you must add an asset to your Rafiki instance
     For more information about this mutation's input object, see [`CreatePeerInput`](/apis/graphql/backend/#definition-CreatePeerInput).
 
   :::note[Tenant ID and HTTP signatures]
-    In a multi-tenant environment, the `tenantId` is determined from the HTTP signature. All requests to create a peer must be signed using the HTTP signature method. The `tenantId` from the signature is used to verify the identity of the requester. The request must include a `tenantId` header, and the `Signature-Input` header must include the `tenantId` header in its list of signed components.
+    The `tenantId` is determined from the HTTP signature. All requests to create a peer must be signed using the HTTP signature method. The `tenantId` from the signature is used to verify the identity of the requester. The request must include a `tenantId` header, and the `Signature-Input` header must include the `tenantId` header in its list of signed components.
   :::
 
   </TabItem>
@@ -138,7 +147,7 @@ As mentioned in the prerequisites, you must add an asset to your Rafiki instance
     ```
 
   :::note[Tenant ID in the peer response]
-    In a multi-tenant environment, the `peer` object in the response will include the `tenantId` of the tenant to which the peer belongs. This `tenantId` is used to identify the tenant when processing requests related to the peer.
+    The `peer` object in the response will include the `tenantId` of the tenant to which the peer belongs. This `tenantId` is used to identify the tenant when processing requests related to the peer.
   :::
 
   </TabItem>
@@ -190,7 +199,7 @@ In this example we will update the peer we just created. Rather than change any 
     For more information about this mutation's input object, see [`UpdatePeerInput`](/apis/graphql/backend/#definition-UpdatePeerInput).
 
   :::note[Tenant ID and HTTP signatures]
-    In a multi-tenant environment, the `tenantId` is determined from the HTTP signature. All requests to update a peer must be signed using the HTTP signature method. The `tenantId` from the signature is used to verify the identity of the requester. The request must include a `tenantId` header, and the `Signature-Input` header must include the `tenantId` header in its list of signed components.
+    The `tenantId` is determined from the HTTP signature. All requests to update a peer must be signed using the HTTP signature method. The `tenantId` from the signature is used to verify the identity of the requester. The request must include a `tenantId` header, and the `Signature-Input` header must include the `tenantId` header in its list of signed components.
   :::
 
   </TabItem>
@@ -221,7 +230,7 @@ In this example we will update the peer we just created. Rather than change any 
     ```
 
   :::note[Tenant ID in the peer response]
-    In a multi-tenant environment, the `peer` object in the response will include the `tenantId` of the tenant to which the peer belongs. This `tenantId` is used to identify the tenant when processing requests related to the peer.
+    The `peer` object in the response will include the `tenantId` of the tenant to which the peer belongs. This `tenantId` is used to identify the tenant when processing requests related to the peer.
   :::
 
   </TabItem>

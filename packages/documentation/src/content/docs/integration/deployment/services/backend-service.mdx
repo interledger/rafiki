@@ -55,11 +55,15 @@ A packet can either continue on to your peer via HTTP or end at your Rafiki inst
 
 ## GraphQL Backend Admin API
 
-The `backend` service exposes a GraphQL [Backend Admin API](/apis/graphql/admin-api-overview#backend-admin-api) to manage tenants, assets, peers, wallet addresses, Open Payments resources, and several types of liquidity. Requests to the Backend Admin API must include a `tenant-id` header and be authenticated using HTTP signature authentication. The Rafiki Admin application automatically handles the creation of the HTTP signature and includes the necessary headers in the request.
+The `backend` service exposes a GraphQL [Backend Admin API](/apis/graphql/admin-api-overview#backend-admin-api) to manage tenants, assets, peers, wallet addresses, Open Payments resources, and several types of liquidity, all within a specific tenant's context. 
+
+### Authentication and authorization
+
+To ensure the security and integrity of your Rafiki instance, all requests to the Backend Admin API must include a `tenant-id` header and be authenticated using HTTP signatures. This verifies that the request is from an authorized client. You are responsible for generating the HTTP signature and including the `tenant-Id` header in all requests. Rafiki then verifies the singature and enforces tenant-based access control. The [Rafiki Admin application](/admin/admin-user-guide/) automatically handles the creation of the HTTP signature and includes the necessary headers in the request.
 
 ## Tenant management
 
-In a multi-tenant environment, tenants are added to Rafiki through the Backend Admin API or the Rafiki Admin application. The `auth` service does not publicly extend the capability to create a tenant; tenant creation in the `auth` service is triggered by the `backend` service. The `OPERATOR_TENANT_ID` environment variable must be set to the UUID of the operator. The operator has elevated permissions and can manage resources for all other tenants. The operator can also choose to receive webhook events for all tenants by setting the `SEND_TENANT_WEBHOOKS_TO_OPERATOR` environment variable to `true`.
+Tenants are added to Rafiki through the Backend Admin API or the Rafiki Admin application. The `auth` service does not publicly extend the capability to create a tenant; tenant creation in the `auth` service is triggered by the `backend` service. The `OPERATOR_TENANT_ID` environment variable must be set to the UUID of the operator. The operator has elevated permissions and can manage resources for all other tenants. The operator can also choose to receive webhook events for all tenants by setting the `SEND_TENANT_WEBHOOKS_TO_OPERATOR` environment variable to `true`.
 
 ## Environment variables
 
