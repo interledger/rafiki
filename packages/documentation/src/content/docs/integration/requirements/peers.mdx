@@ -118,9 +118,9 @@ As mentioned in the prerequisites, you must add an asset to your Rafiki instance
     ```
     For more information about this mutation's input object, see [`CreatePeerInput`](/apis/graphql/backend/#definition-CreatePeerInput).
 
-  :::note[Tenant ID and HTTP signatures]
-    The `tenantId` is determined from the HTTP signature. All requests to create a peer must be signed using the HTTP signature method. The `tenantId` from the signature is used to verify the identity of the requester. The request must include a `tenantId` header, and the `Signature-Input` header must include the `tenantId` header in its list of signed components.
-  :::
+:::note[Tenant ID and HTTP signatures]
+The `tenantId` is determined from the HTTP signature. All requests to create a peer must be signed using the HTTP signature method. The `tenantId` from the signature is used to verify the identity of the requester. The request must include a `tenantId` header, and the `Signature-Input` header must include the `tenantId` header in its list of signed components.
+:::
 
   </TabItem>
   <TabItem label="Response">
@@ -146,9 +146,9 @@ As mentioned in the prerequisites, you must add an asset to your Rafiki instance
     }
     ```
 
-  :::note[Tenant ID in the peer response]
-    The `peer` object in the response will include the `tenantId` of the tenant to which the peer belongs. This `tenantId` is used to identify the tenant when processing requests related to the peer.
-  :::
+:::note[Tenant ID in the peer response]
+The `peer` object in the response will include the `tenantId` of the tenant to which the peer belongs. This `tenantId` is used to identify the tenant when processing requests related to the peer.
+:::
 
   </TabItem>
 </Tabs>
@@ -198,9 +198,9 @@ In this example we will update the peer we just created. Rather than change any 
     ```
     For more information about this mutation's input object, see [`UpdatePeerInput`](/apis/graphql/backend/#definition-UpdatePeerInput).
 
-  :::note[Tenant ID and HTTP signatures]
-    The `tenantId` is determined from the HTTP signature. All requests to update a peer must be signed using the HTTP signature method. The `tenantId` from the signature is used to verify the identity of the requester. The request must include a `tenantId` header, and the `Signature-Input` header must include the `tenantId` header in its list of signed components.
-  :::
+:::note[Tenant ID and HTTP signatures]
+The `tenantId` is determined from the HTTP signature. All requests to update a peer must be signed using the HTTP signature method. The `tenantId` from the signature is used to verify the identity of the requester. The request must include a `tenantId` header, and the `Signature-Input` header must include the `tenantId` header in its list of signed components.
+:::
 
   </TabItem>
   <TabItem label="Response">
@@ -229,9 +229,9 @@ In this example we will update the peer we just created. Rather than change any 
     }
     ```
 
-  :::note[Tenant ID in the peer response]
-    The `peer` object in the response will include the `tenantId` of the tenant to which the peer belongs. This `tenantId` is used to identify the tenant when processing requests related to the peer.
-  :::
+:::note[Tenant ID in the peer response]
+The `peer` object in the response will include the `tenantId` of the tenant to which the peer belongs. This `tenantId` is used to identify the tenant when processing requests related to the peer.
+:::
 
   </TabItem>
 </Tabs>

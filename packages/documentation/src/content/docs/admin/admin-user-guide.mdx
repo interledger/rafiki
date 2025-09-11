@@ -147,19 +147,19 @@ To create a new tenant, select **Add tenant** from the main Tenants page.
 
 Fill out the following fields to configure and create your new tenant:
 
-| Section                       | Field                | Description                                                                       |
-| ----------------------------- | -------------------- | --------------------------------------------------------------------------------- |
-| General Information           | Public Name          | A public name for the tenant.                                                     |
-|                               | Email                | The tenant's email address.                                                       |
-| Sensitive Information         | API Secret           | The API secret for the tenant. Treat as sensitive information.                    |
-| Identity Provider Information | Consent URL          | The URL for the tenant's identity provider consent endpoint.                      |
-|                               | Secret               | The secret for the tenant's identity provider.                                    |
-| Tenant Settings               | Exchange Rates Url   | The URL for the tenant's exchange rates service.                                  |
-|                               | Webhook Url          | The URL for the tenant's webhook endpoint.                                        |
-|                               | Webhook Timeout      | The timeout for the tenant's webhook requests.                                    |
-|                               | Webhook Max Retry    | The maximum number of retries for the tenant's webhook requests.                  |
-|                               | Wallet Address Url   | The URL for the tenant's wallet address service.                                  |
-|                               | ILP Address          | The tenant's Interledger Protocol (ILP) address.                                  |
+| Section                       | Field              | Description                                                      |
+| ----------------------------- | ------------------ | ---------------------------------------------------------------- |
+| General Information           | Public Name        | A public name for the tenant.                                    |
+|                               | Email              | The tenant's email address.                                      |
+| Sensitive Information         | API Secret         | The API secret for the tenant. Treat as sensitive information.   |
+| Identity Provider Information | Consent URL        | The URL for the tenant's identity provider consent endpoint.     |
+|                               | Secret             | The secret for the tenant's identity provider.                   |
+| Tenant Settings               | Exchange Rates Url | The URL for the tenant's exchange rates service.                 |
+|                               | Webhook Url        | The URL for the tenant's webhook endpoint.                       |
+|                               | Webhook Timeout    | The timeout for the tenant's webhook requests.                   |
+|                               | Webhook Max Retry  | The maximum number of retries for the tenant's webhook requests. |
+|                               | Wallet Address Url | The URL for the tenant's wallet address service.                 |
+|                               | ILP Address        | The tenant's Interledger Protocol (ILP) address.                 |
 
 After completing these fields, select **Create** to add the new tenant.
 
@@ -174,14 +174,14 @@ To edit an existing tenant, select any tenant entry from the table on the main T
 
 The Edit Tenant page includes the following sections:
 
-| Section                       | Field                | Description                                                                                 |
-| ----------------------------- | -------------------- | ------------------------------------------------------------------------------------------- |
-| General Information           | Tenant ID            | A unique identifier assigned by Rafiki when the tenant was created. This cannot be changed. |
-|                               | Public Name          | A public name for the tenant.                                                               |
-|                               | Email                | The tenant's email address.                                                                 |
-| Identity Provider Information | Consent URL          | The URL for the tenant's identity provider consent endpoint.                                |
-|                               | Secret               | The secret for the tenant's identity provider.                                              |
-| Sensitive Information         | API Secret           | A unique identifier assigned by Rafiki when the tenant was created. This cannot be changed. |
+| Section                       | Field       | Description                                                                                 |
+| ----------------------------- | ----------- | ------------------------------------------------------------------------------------------- |
+| General Information           | Tenant ID   | A unique identifier assigned by Rafiki when the tenant was created. This cannot be changed. |
+|                               | Public Name | A public name for the tenant.                                                               |
+|                               | Email       | The tenant's email address.                                                                 |
+| Identity Provider Information | Consent URL | The URL for the tenant's identity provider consent endpoint.                                |
+|                               | Secret      | The secret for the tenant's identity provider.                                              |
+| Sensitive Information         | API Secret  | A unique identifier assigned by Rafiki when the tenant was created. This cannot be changed. |
 
 You can modify the public name, email, consent URL, and secret for a tenant. The tenant ID and API secret are read-only.
 
@@ -268,7 +268,7 @@ Confirm the deletion by typing "delete asset" into the text field and selecting 
 
 The Peers page allows you to manage peering relationships in your Rafiki instance, including viewing, creating, editing, and deleting peers.
 
-On this page, all configured peers appear in a table where you can view the peer name, its ILP address, asset details including the asset type and scale, and the outgoing HTTP endpoint. The list of peers shows only those for the current tenant, as determined by your API credentials. 
+On this page, all configured peers appear in a table where you can view the peer name, its ILP address, asset details including the asset type and scale, and the outgoing HTTP endpoint. The list of peers shows only those for the current tenant, as determined by your API credentials.
 
 :::note
 Operators can create, edit, and delete peers for any tenant. Tenants can only view and manage their own peers.

@@ -50,9 +50,9 @@ An asset represents an item of value that can be transferred via the Interledger
     ```
     For more information about this mutation's input object, see [`CreateAssetInput`](/apis/graphql/backend/#definition-CreateAssetInput).
 
-  :::note[Tenant ID and HTTP signatures]
-    The `tenantId` is determined from the HTTP signature. All requests to create an asset must be signed using the HTTP signature method. The request must include a `tenantId` header, and the `Signature-Input` header must include the `tenantId` header in its list of signed components.
-  :::
+:::note[Tenant ID and HTTP signatures]
+The `tenantId` is determined from the HTTP signature. All requests to create an asset must be signed using the HTTP signature method. The request must include a `tenantId` header, and the `Signature-Input` header must include the `tenantId` header in its list of signed components.
+:::
 
   </TabItem>
   <TabItem label="Response">
@@ -74,9 +74,9 @@ An asset represents an item of value that can be transferred via the Interledger
     }
     ```
 
-  :::note[Tenant ID in the asset response]
-    The `asset` object in the response will include the `tenantId` of the tenant to which the asset belongs. This `tenantId` is used to identify the tenant when processing requests related to the asset.
-  :::  
+:::note[Tenant ID in the asset response]
+The `asset` object in the response will include the `tenantId` of the tenant to which the asset belongs. This `tenantId` is used to identify the tenant when processing requests related to the asset.
+:::
 
   </TabItem>
 </Tabs>
