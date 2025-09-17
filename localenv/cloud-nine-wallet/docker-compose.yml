@@ -26,7 +26,7 @@ services:
       DATABASE_URL: postgresql://cloud_nine_wallet_card_service:cloud_nine_wallet_card_service@shared-database/cloud_nine_wallet_card_service
       GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
       TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
-      TENANT_SECRET: tenant_secret
+      TENANT_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       TENANT_SIGNATURE_VERSION: 1
     depends_on:
       - shared-database
@@ -61,7 +61,7 @@ services:
       PORT: 3008
       DATABASE_URL: postgresql://cloud_nine_wallet_point_of_sale:cloud_nine_wallet_point_of_sale@shared-database/cloud_nine_wallet_point_of_sale 
       TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
-      TENANT_SECRET: secret
+      TENANT_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
       WEBHOOK_SIGNATURE_SECRET: webhook_secret
     depends_on: 

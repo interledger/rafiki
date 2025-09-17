@@ -4,11 +4,10 @@ import { IAppConfig } from '../config/app'
 import { ApolloClient, NormalizedCacheObject, gql } from '@apollo/client'
 import {
   AmountInput,
-  IncomingPayment,
+  CreateIncomingPayment,
   MutationCreateIncomingPaymentArgs,
   Query,
-  QueryWalletAddressByUrlArgs,
-  type Mutation
+  QueryWalletAddressByUrlArgs
 } from '../graphql/generated/graphql'
 import { FnWithDeps } from '../shared/types'
 import { v4 } from 'uuid'
@@ -36,11 +35,16 @@ export type WalletAddress = OpenPaymentsWalletAddress & {
   cardService: string
 }
 
+export type CreatedIncomingPayment = {
+  id: string
+  url: string
+}
+
 export type PaymentService = {
   createIncomingPayment: (
     walletAddressId: string,
     incomingAmount: AmountInput
-  ) => Promise<IncomingPayment>
+  ) => Promise<CreatedIncomingPayment>
   getWalletAddress: (walletAddressUrl: string) => Promise<WalletAddress>
   getWalletAddressIdByUrl: (walletAddressUrl: string) => Promise<string>
 }
@@ -77,7 +81,7 @@ const createIncomingPayment: FnWithDeps<
     Date.now() + deps.config.incomingPaymentExpiryMs
   ).toISOString()
   const { data } = await client.mutate<
-    Mutation,
+    CreateIncomingPayment,
     MutationCreateIncomingPaymentArgs
   >({
     mutation: CREATE_INCOMING_PAYMENT,
@@ -92,7 +96,7 @@ const createIncomingPayment: FnWithDeps<
     }
   })
 
-  const incomingPayment = data?.createIncomingPayment?.payment
+  const incomingPayment = data?.createIncomingPayment.payment
   if (!incomingPayment) {
     deps.logger.error(
       { walletAddressId },
