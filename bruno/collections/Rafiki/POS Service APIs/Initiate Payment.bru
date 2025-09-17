@@ -1,0 +1,24 @@
+meta {
+  name: Initiate Payment
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:4008/payment
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "card": {
+      "walletAddress": "http://cloud-nine-wallet-backend/accounts/gfranklin",
+      "trasactionCounter": 1,
+      "expiry": "2025-09-13T13:00:00Z"
+    },
+    "signature": "signature",
+    "value": 1,
+    "merchantWalletAddress": "http://happy-life-bank-backend/accounts/pfry"
+  }
+}
