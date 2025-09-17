@@ -11,9 +11,6 @@ import {
 } from './errors'
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 import {
-  CreateOutgoingPaymentFromIncoming,
-  CreateOutgoingPaymentFromIncomingPaymentInput,
-  GetWalletAddressByUrl,
   Mutation,
   MutationCreateOutgoingPaymentFromIncomingPaymentArgs,
   Query,
