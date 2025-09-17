@@ -289,6 +289,9 @@ async function getWebhookEventsPage(
   if (filter?.type?.in && filter.type.in.length > 0) {
     query.whereIn('type', filter.type.in)
   }
+  if (filter?.type?.notIn && filter.type.notIn.length > 0) {
+    query.whereNotIn('type', filter.type.notIn)
+  }
 
   return await query.getPage(pagination, sortOrder)
 }
@@ -297,7 +300,8 @@ export function finalizeWebhookRecipients(
   tenantIds: string[],
   config: IAppConfig,
   initiationReason?: IncomingPaymentInitiationReason,
-  logger?: Logger
+  logger?: Logger,
+  onlyPos?: boolean
 ): Pick<Webhook, 'recipientTenantId' | 'metadata'>[] {
   const tenantIdSet = new Set(tenantIds)
 
@@ -308,29 +312,36 @@ export function finalizeWebhookRecipients(
     tenantIdSet.add(config.operatorTenantId)
   }
 
+  const buildPosRecipient = (): Pick<
+    Webhook,
+    'recipientTenantId' | 'metadata'
+  >[] => {
+    if (!config.posWebhookServiceUrl) {
+      logger?.warn(
+        'Could not create webhook recipient for point of sale service'
+      )
+      return []
+    }
+    return [
+      {
+        recipientTenantId: config.operatorTenantId,
+        metadata: { sendToPosService: true }
+      }
+    ]
+  }
+
+  if (onlyPos) {
+    return buildPosRecipient()
+  }
+
   let recipients: Pick<Webhook, 'recipientTenantId' | 'metadata'>[] = [
     ...tenantIdSet.values()
   ].map((tenantId) => ({
     recipientTenantId: tenantId
   }))
 
-  if (
-    initiationReason === IncomingPaymentInitiationReason.Card &&
-    config.posWebhookServiceUrl
-  ) {
-    recipients = recipients.concat([
-      {
-        recipientTenantId: config.operatorTenantId,
-        metadata: {
-          sendToPosService: true
-        }
-      }
-    ])
-  } else if (
-    initiationReason === IncomingPaymentInitiationReason.Card &&
-    !config.posWebhookServiceUrl
-  ) {
-    logger?.warn('Could not create webhook recipient for point of sale service')
+  if (initiationReason === IncomingPaymentInitiationReason.Card) {
+    recipients = recipients.concat(buildPosRecipient())
   }
 
   return recipients
