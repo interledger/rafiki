@@ -37,11 +37,9 @@ describe('CardServiceClient', () => {
     incomingPaymentUrl: 'incomingPaymentUrl',
     merchantWalletAddress: '',
     date: new Date(),
-    signature: '',
     card: {
       walletAddress: faker.internet.url(),
-      trasactionCounter: 1,
-      expiry: new Date(new Date().getDate() + 1)
+      signature: ''
     },
     incomingAmount: {
       assetCode: 'USD',

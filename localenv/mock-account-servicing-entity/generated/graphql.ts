@@ -192,8 +192,6 @@ export type CancelOutgoingPaymentInput = {
 };
 
 export type CardDetailsInput = {
-  /** Expire date */
-  expiry: Scalars['String']['input'];
   /** Signature */
   signature: Scalars['String']['input'];
 };
@@ -289,7 +287,7 @@ export type CreateOutgoingPaymentFromIncomingPaymentInput = {
 };
 
 export type CreateOutgoingPaymentInput = {
-  /** Used for the card service to provide the card expiry and signature */
+  /** Used for the card service to provide the card signature */
   cardDetails?: InputMaybe<CardDetailsInput>;
   /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
@@ -1062,7 +1060,6 @@ export type OutgoingPayment = BasePayment & Model & {
 export type OutgoingPaymentCardDetails = Model & {
   __typename?: 'OutgoingPaymentCardDetails';
   createdAt: Scalars['String']['output'];
-  expiry: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   outgoingPaymentId: Scalars['ID']['output'];
   signature: Scalars['String']['output'];
@@ -2505,7 +2502,6 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
 
 export type OutgoingPaymentCardDetailsResolvers<ContextType = any, ParentType extends ResolversParentTypes['OutgoingPaymentCardDetails'] = ResolversParentTypes['OutgoingPaymentCardDetails']> = {
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  expiry?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   outgoingPaymentId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   signature?: Resolver<ResolversTypes['String'], ParentType, ContextType>;

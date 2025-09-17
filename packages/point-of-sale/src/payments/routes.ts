@@ -1,5 +1,5 @@
 import { AppContext } from '../app'
-import { CardServiceClient, Result } from '../card-service-client/client'
+import { Card, CardServiceClient, Result } from '../card-service-client/client'
 import { AmountInput } from '../graphql/generated/graphql'
 import { BaseService } from '../shared/baseService'
 import { PaymentService } from './service'
@@ -21,12 +21,7 @@ interface ServiceDependencies extends BaseService {
 }
 
 export type PaymentBody = {
-  card: {
-    walletAddress: string
-    trasactionCounter: number
-    expiry: Date
-  }
-  signature: string
+  card: Card
   value: bigint
   merchantWalletAddress: string
 }
@@ -63,21 +58,20 @@ async function payment(
 ): Promise<void> {
   const body = ctx.request.body
   try {
-    const walletAddress = await deps.paymentService.getWalletAddress(
-      body.card.walletAddress
+    const cardWalletAddress = body.card.walletAddress.replace(
+      /^https:/,
+      'http:'
     )
+    const walletAddress =
+      await deps.paymentService.getWalletAddress(cardWalletAddress)
     const incomingAmount: AmountInput = {
       assetCode: walletAddress.assetCode,
       assetScale: walletAddress.assetScale,
       value: body.value
     }
-    // TODO: in the future we need to find a way to make it work in local playground
-    const walletAddressUrl = body.merchantWalletAddress.replace(
-      /^http:/,
-      'https:'
+    const walletAddressId = await deps.paymentService.getWalletAddressIdByUrl(
+      body.merchantWalletAddress
     )
-    const walletAddressId =
-      await deps.paymentService.getWalletAddressIdByUrl(walletAddressUrl)
 
     const incomingPayment = await deps.paymentService.createIncomingPayment(
       walletAddressId,
@@ -89,14 +83,12 @@ async function payment(
       deferred,
       deps.config.webhookTimeoutMs
     )
-
     const result = await deps.cardServiceClient.sendPayment(
       walletAddress.cardService,
       {
         merchantWalletAddress: body.merchantWalletAddress,
         incomingPaymentUrl: incomingPayment.url,
-        date: new Date(),
-        signature: body.signature,
+        date: new Date().toISOString(),
         card: body.card,
         incomingAmount: {
           ...incomingAmount,

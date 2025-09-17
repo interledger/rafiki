@@ -19,9 +19,7 @@ paths:
                 - merchantWalletAddress
                 - incomingPaymentUrl
                 - date
-                - signature
                 #                - terminalCert
-                - terminalId
               properties:
                 requestId:
                   type: string
@@ -30,19 +28,14 @@ paths:
                   type: object
                   required:
                     - walletAddress
-                    - transactionCounter
-                    - expiry
+                    - signature
                   properties:
                     walletAddress:
                       type: string
                       format: uri
-                    transactionCounter:
-                      type: integer
-                    expiry:
+                    signature:
                       type: string
-                      pattern: '^(0[1-9]|1[0-2])\/\d{2,4}$'
-                      example: '12/25'
-                      description: 'Card expiry in MM/YY or MM/YYYY format'
+
                 merchantWalletAddress:
                   type: string
                   format: uri
@@ -52,13 +45,11 @@ paths:
                 date:
                   type: string
                   format: date-time
-                signature:
-                  type: string
                 #                terminalCert:
                 #                  type: string
-                terminalId:
-                  type: string
-                  format: uuid
+                # terminalId:
+                #   type: string
+                #   format: uuid
       responses:
         '201':
           description: Payment request accepted
