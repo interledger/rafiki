@@ -213,15 +213,16 @@ export async function sendWebhookEvent(
     callName: 'OutgoingPaymentLifecycle:sendWebhookEvent'
   })
   // TigerBeetle accounts are only created as the OutgoingPayment is funded.
-  // So default the amountSent and balance to 0 for outgoing payments still in the funding state
-  const amountSent =
-    payment.state === OutgoingPaymentState.Funding
-      ? BigInt(0)
-      : await deps.accountingService.getTotalSent(payment.id)
-  const balance =
-    payment.state === OutgoingPaymentState.Funding
-      ? BigInt(0)
-      : await deps.accountingService.getBalance(payment.id)
+  // So default the amountSent and balance to 0 for outgoing payments still in the funding or cancelled states
+  const isZeroAmountSent =
+    payment.state === OutgoingPaymentState.Funding ||
+    type === OutgoingPaymentEventType.PaymentCancelled
+  const amountSent = isZeroAmountSent
+    ? BigInt(0)
+    : await deps.accountingService.getTotalSent(payment.id)
+  const balance = isZeroAmountSent
+    ? BigInt(0)
+    : await deps.accountingService.getBalance(payment.id)
 
   if (amountSent === undefined || balance === undefined) {
     stopTimer()
@@ -242,7 +243,17 @@ export async function sendWebhookEvent(
     data: payment.toData({ amountSent, balance }),
     withdrawal,
     tenantId: payment.tenantId,
-    webhooks: finalizeWebhookRecipients([payment.tenantId], deps.config)
+    webhooks:
+      type === OutgoingPaymentEventType.PaymentFunded ||
+      type === OutgoingPaymentEventType.PaymentCancelled
+        ? finalizeWebhookRecipients(
+            [payment.tenantId],
+            deps.config,
+            undefined,
+            deps.logger,
+            true
+          )
+        : finalizeWebhookRecipients([payment.tenantId], deps.config)
   })
   stopTimer()
 }

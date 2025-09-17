@@ -185,6 +185,8 @@ export type CancelIncomingPaymentResponse = {
 };
 
 export type CancelOutgoingPaymentInput = {
+  /** If card flow, optional machine-readable failure reason */
+  cardPaymentFailureReason?: InputMaybe<CardPaymentFailureReason>;
   /** Unique identifier of the outgoing payment to cancel. */
   id: Scalars['ID']['input'];
   /** Reason why this outgoing payment has been canceled. This value will be publicly visible in the metadata field if this outgoing payment is requested through Open Payments. */
@@ -194,9 +196,15 @@ export type CancelOutgoingPaymentInput = {
 export type CardDetailsInput = {
   /** Expire date */
   expiry: Scalars['String']['input'];
+  /** Unique card request identifier from POS/Card Service */
+  requestId?: InputMaybe<Scalars['String']['input']>;
   /** Signature */
   signature: Scalars['String']['input'];
 };
+
+export enum CardPaymentFailureReason {
+  InvalidSignature = 'invalid_signature'
+}
 
 export type CreateAssetInput = {
   /** Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets). */
@@ -574,8 +582,10 @@ export type FeesConnection = {
 };
 
 export type FilterString = {
-  /** Array of strings to filter by. */
-  in: Array<Scalars['String']['input']>;
+  /** Array of strings to include. */
+  in?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Array of strings to exclude. */
+  notIn?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type Http = {
@@ -1065,6 +1075,7 @@ export type OutgoingPaymentCardDetails = Model & {
   expiry: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   outgoingPaymentId: Scalars['ID']['output'];
+  requestId?: Maybe<Scalars['String']['output']>;
   signature: Scalars['String']['output'];
   updatedAt: Scalars['String']['output'];
 };
@@ -1960,6 +1971,7 @@ export type ResolversTypes = {
   CancelIncomingPaymentResponse: ResolverTypeWrapper<Partial<CancelIncomingPaymentResponse>>;
   CancelOutgoingPaymentInput: ResolverTypeWrapper<Partial<CancelOutgoingPaymentInput>>;
   CardDetailsInput: ResolverTypeWrapper<Partial<CardDetailsInput>>;
+  CardPaymentFailureReason: ResolverTypeWrapper<Partial<CardPaymentFailureReason>>;
   CreateAssetInput: ResolverTypeWrapper<Partial<CreateAssetInput>>;
   CreateAssetLiquidityWithdrawalInput: ResolverTypeWrapper<Partial<CreateAssetLiquidityWithdrawalInput>>;
   CreateIncomingPaymentInput: ResolverTypeWrapper<Partial<CreateIncomingPaymentInput>>;
@@ -2508,6 +2520,7 @@ export type OutgoingPaymentCardDetailsResolvers<ContextType = any, ParentType ex
   expiry?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   outgoingPaymentId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  requestId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   signature?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;

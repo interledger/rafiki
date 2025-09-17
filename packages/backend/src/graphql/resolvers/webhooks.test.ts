@@ -97,6 +97,66 @@ describe('Webhook Events Query', (): void => {
     })
   })
 
+  test('Default excludes funded/cancelled outgoing payment events', async (): Promise<void> => {
+    await createWebhookEvent(deps, {
+      type: 'outgoing_payment.funded'
+    })
+    await createWebhookEvent(deps, {
+      type: 'outgoing_payment.cancelled'
+    })
+
+    // Default query without filter should exclude both funded and cancelled events
+    const withoutFilter = await appContainer.apolloClient
+      .query({
+        query: gql`
+          query WebhookEvents {
+            webhookEvents {
+              edges {
+                node {
+                  id
+                  type
+                }
+              }
+            }
+          }
+        `
+      })
+      .then((q): WebhookEventsConnection => q.data!.webhookEvents)
+
+    const typesWithout = withoutFilter.edges.map((e) => e.node.type)
+    expect(typesWithout).not.toContain('outgoing_payment.funded')
+    expect(typesWithout).not.toContain('outgoing_payment.cancelled')
+
+    // When explicitly requested via filter, they should appear
+    const withFilter = await appContainer.apolloClient
+      .query({
+        query: gql`
+          query WebhookEvents($filter: WebhookEventFilter) {
+            webhookEvents(filter: $filter) {
+              edges {
+                node {
+                  id
+                  type
+                }
+              }
+            }
+          }
+        `,
+        variables: {
+          filter: {
+            type: {
+              in: ['outgoing_payment.funded', 'outgoing_payment.cancelled']
+            }
+          }
+        }
+      })
+      .then((q): WebhookEventsConnection => q.data!.webhookEvents)
+
+    const typesWith = withFilter.edges.map((e) => e.node.type)
+    expect(typesWith).toContain('outgoing_payment.funded')
+    expect(typesWith).toContain('outgoing_payment.cancelled')
+  })
+
   describe('tenant boundaries', (): void => {
     let operatorWebhookEvent: WebhookEvent
     let tenantWebhookEvent: WebhookEvent
@@ -149,25 +209,10 @@ describe('Webhook Events Query', (): void => {
         })
 
       expect(query.edges).toHaveLength(3)
-      expect(query.edges).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            node: expect.objectContaining({
-              id: operatorWebhookEvent.id
-            })
-          }),
-          expect.objectContaining({
-            node: expect.objectContaining({
-              id: tenantWebhookEvent.id
-            })
-          }),
-          expect.objectContaining({
-            node: expect.objectContaining({
-              id: secondTenantWebhookEvent.id
-            })
-          })
-        ])
-      )
+      const ids = query.edges.map((e) => e.node.id)
+      expect(ids).toContain(operatorWebhookEvent.id)
+      expect(ids).toContain(tenantWebhookEvent.id)
+      expect(ids).toContain(secondTenantWebhookEvent.id)
     })
 
     test('Cannot get webhooks across tenants as tenant', async (): Promise<void> => {
@@ -184,16 +229,9 @@ describe('Webhook Events Query', (): void => {
         })
 
       expect(query.edges).toHaveLength(2)
-      expect(query.edges).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            node: expect.objectContaining({ id: tenantWebhookEvent.id })
-          }),
-          expect.objectContaining({
-            node: expect.objectContaining({ id: secondTenantWebhookEvent.id })
-          })
-        ])
-      )
+      const ids = query.edges.map((e) => e.node.id)
+      expect(ids).toContain(tenantWebhookEvent.id)
+      expect(ids).toContain(secondTenantWebhookEvent.id)
     })
 
     test('can filter webhooks by tenant as operator', async (): Promise<void> => {
@@ -211,20 +249,9 @@ describe('Webhook Events Query', (): void => {
         })
 
       expect(query.edges).toHaveLength(2)
-      expect(query.edges).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            node: expect.objectContaining({
-              id: tenantWebhookEvent.id
-            })
-          }),
-          expect.objectContaining({
-            node: expect.objectContaining({
-              id: secondTenantWebhookEvent.id
-            })
-          })
-        ])
-      )
+      const ids = query.edges.map((e) => e.node.id)
+      expect(ids).toContain(tenantWebhookEvent.id)
+      expect(ids).toContain(secondTenantWebhookEvent.id)
     })
 
     test('cannot filter webhooks by tenant as tenant', async (): Promise<void> => {
@@ -242,20 +269,9 @@ describe('Webhook Events Query', (): void => {
         })
 
       expect(query.edges).toHaveLength(2)
-      expect(query.edges).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            node: expect.objectContaining({
-              id: tenantWebhookEvent.id
-            })
-          }),
-          expect.objectContaining({
-            node: expect.objectContaining({
-              id: secondTenantWebhookEvent.id
-            })
-          })
-        ])
-      )
+      const ids = query.edges.map((e) => e.node.id)
+      expect(ids).toContain(tenantWebhookEvent.id)
+      expect(ids).toContain(secondTenantWebhookEvent.id)
     })
   })
 })

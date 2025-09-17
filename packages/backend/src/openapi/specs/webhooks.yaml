@@ -74,6 +74,28 @@ webhooks:
       responses:
         '200':
           description: Data was received successfully
+  outgoingPaymentFunded:
+    post:
+      requestBody:
+        description: Notifies the card service that an outgoing payment has been funded by the ASE.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/outgoingPaymentEvent'
+      responses:
+        '200':
+          description: Data was received successfully
+  outgoingPaymentCancelled:
+    post:
+      requestBody:
+        description: Notifies the card service that an outgoing payment has been cancelled by the ASE.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/outgoingPaymentEvent'
+      responses:
+        '200':
+          description: Data was received successfully
   walletAddressNotFound:
     post:
       requestBody:
@@ -186,6 +208,8 @@ components:
             - outgoing_payment.created
             - outgoing_payment.completed
             - outgoing_payment.failed
+            - outgoing_payment.funded
+            - outgoing_payment.cancelled
         data:
           type: object
           required:
