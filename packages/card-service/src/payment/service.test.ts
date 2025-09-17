@@ -109,10 +109,12 @@ describe('PaymentService', () => {
       expect(mutationSpy).toHaveBeenCalledWith({
         mutation: CREATE_OUTGOING_PAYMENT_FROM_INCOMING,
         variables: {
-          walletAddressId: expect.any(String),
-          incomingPayment: paymentFixture.incomingPaymentUrl,
-          cardDetails: {
-            signature: paymentFixture.card.signature
+          input: {
+            walletAddressId: expect.any(String),
+            incomingPayment: paymentFixture.incomingPaymentUrl,
+            cardDetails: {
+              signature: paymentFixture.card.signature
+            }
           }
         }
       })
