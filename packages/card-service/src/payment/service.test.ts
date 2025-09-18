@@ -15,9 +15,7 @@ import { v4 } from 'uuid'
 import { GET_WALLET_ADDRESS_BY_URL } from '../graphql/mutations/getWalletAddress'
 import { CREATE_OUTGOING_PAYMENT_FROM_INCOMING } from '../graphql/mutations/createOutgoingPayment'
 
-const uuid = '123e4567-e89b-12d3-a456-426614174000'
-const uri = 'https://example.com/wallet/123'
-const dateTime = '2024-01-01T00:00:00Z'
+const requestId = '123e4567-e89b-12d3-a456-426614174000'
 
 describe('PaymentService', () => {
   let deps: IocContract<AppServices>
@@ -27,15 +25,13 @@ describe('PaymentService', () => {
   let mutationSpy: jest.SpyInstance
 
   const paymentFixture: PaymentBody = {
-    requestId: uuid,
-    card: {
-      walletAddress: uri,
-      signature: 'sig'
-    },
-    merchantWalletAddress: uri,
-    incomingPaymentUrl: uri,
-    date: dateTime,
-    incomingAmount: {
+    requestId,
+    signature: 'sig',
+    payload: 'payload',
+    senderWalletAddress: 'https://example.com/wallet/123',
+    incomingPaymentUrl: 'https://example.com/incoming-payment/123',
+    timestamp: new Date().getTime(),
+    amount: {
       assetCode: 'USD',
       assetScale: 2,
       value: '100'
@@ -87,24 +83,24 @@ describe('PaymentService', () => {
   describe('create', () => {
     test('resolves when paymentEvent is received', async () => {
       setTimeout(() => {
-        const d = paymentWaitMap.get(uuid)
+        const d = paymentWaitMap.get(requestId)
         d?.resolve({
-          requestId: uuid,
-          outgoingPaymentId: uuid,
+          requestId: requestId,
+          outgoingPaymentId: requestId,
           result: { code: PaymentEventResultEnum.Completed }
         })
       }, 10)
 
       const result = await service.create(paymentFixture)
       expect(result).toEqual({
-        requestId: uuid,
-        outgoingPaymentId: uuid,
+        requestId: requestId,
+        outgoingPaymentId: requestId,
         result: { code: PaymentEventResultEnum.Completed }
       })
 
       expect(querySpy).toHaveBeenCalledWith({
         query: GET_WALLET_ADDRESS_BY_URL,
-        variables: { url: paymentFixture.card.walletAddress }
+        variables: { url: paymentFixture.senderWalletAddress }
       })
       expect(mutationSpy).toHaveBeenCalledWith({
         mutation: CREATE_OUTGOING_PAYMENT_FROM_INCOMING,
@@ -113,7 +109,7 @@ describe('PaymentService', () => {
             walletAddressId: expect.any(String),
             incomingPayment: paymentFixture.incomingPaymentUrl,
             cardDetails: {
-              signature: paymentFixture.card.signature
+              signature: paymentFixture.signature
             }
           }
         }

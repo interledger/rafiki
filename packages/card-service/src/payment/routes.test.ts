@@ -24,20 +24,16 @@ describe('PaymentRoutes', () => {
   let appContainer: TestContainer
   let routes: PaymentRoutes
 
-  const uuid = '123e4567-e89b-12d3-a456-426614174000'
-  const uri = 'https://example.com/wallet/123'
-  const dateTime = '2024-01-01T00:00:00Z'
+  const requestId = '123e4567-e89b-12d3-a456-426614174000'
 
   const paymentFixture: PaymentBody = {
-    requestId: uuid,
-    card: {
-      walletAddress: uri,
-      signature: 'sig'
-    },
-    merchantWalletAddress: uri,
-    incomingPaymentUrl: uri,
-    date: dateTime,
-    incomingAmount: {
+    requestId,
+    senderWalletAddress: 'https://example.com/wallet/123',
+    signature: 'sig',
+    payload: 'payload',
+    incomingPaymentUrl: 'https://example.com/incoming-payment/123',
+    timestamp: new Date().getTime(),
+    amount: {
       assetCode: 'USD',
       assetScale: 0,
       value: '100'
@@ -45,8 +41,8 @@ describe('PaymentRoutes', () => {
   }
 
   const paymentEventFixture: PaymentEventBody = {
-    requestId: uuid,
-    outgoingPaymentId: uuid,
+    requestId,
+    outgoingPaymentId: crypto.randomUUID(),
     result: { code: PaymentEventResultEnum.Completed }
   }
 
@@ -170,7 +166,7 @@ describe('PaymentRoutes', () => {
 
       const deferred = new Deferred<PaymentEventBody>()
       const resolveSpy = jest.spyOn(deferred, 'resolve')
-      paymentWaitMap.set(uuid, deferred)
+      paymentWaitMap.set(requestId, deferred)
       await expect(routes.handlePaymentEvent(ctx)).resolves.toBeUndefined()
       expect(resolveSpy).toHaveBeenCalledWith(ctx.request.body)
       expect(ctx.status).toBe(202)

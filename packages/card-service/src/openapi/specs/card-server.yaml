@@ -15,41 +15,39 @@ paths:
               type: object
               required:
                 - requestId
-                - card
-                - merchantWalletAddress
+                - signature
+                - payload
+                - amount
+                - timestamp
                 - incomingPaymentUrl
-                - date
-                #                - terminalCert
+                - senderWalletAddress
               properties:
                 requestId:
                   type: string
                   format: uuid
-                card:
+                signature:
+                  type: string
+                payload:
+                  type: string
+                amount:
                   type: object
-                  required:
-                    - walletAddress
-                    - signature
                   properties:
-                    walletAddress:
+                    value: 
                       type: string
-                      format: uri
-                    signature:
+                    assetCode:
                       type: string
-
-                merchantWalletAddress:
+                    assetScale:
+                      type: number
+                senderWalletAddress:
                   type: string
                   format: uri
                 incomingPaymentUrl:
                   type: string
                   format: uri
-                date:
-                  type: string
-                  format: date-time
-                #                terminalCert:
-                #                  type: string
-                # terminalId:
-                #   type: string
-                #   format: uuid
+                timestamp:
+                  type: number
+
+
       responses:
         '201':
           description: Payment request accepted
