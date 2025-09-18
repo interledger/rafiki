@@ -168,14 +168,12 @@ function createPaymentContext() {
     method: 'POST',
     url: `/payment`,
     body: {
-      card: {
-        walletAddress: 'wallet-address',
-        trasactionCounter: 0,
-        expiry: new Date(new Date().getDate() + 1)
-      },
       signature: 'signature',
-      value: 100,
-      merchantWalletAddress: 'merchant-wallet-address'
+      payload: 'payload',
+      receiverWalletAddress: faker.internet.url(),
+      senderWalletAddress: faker.internet.url(),
+      timestamp: new Date().getTime(),
+      amount: { assetScale: 2, assetCode: 'USD', value: '100' }
     }
   })
 }
