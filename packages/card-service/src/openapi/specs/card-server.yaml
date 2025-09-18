@@ -32,7 +32,7 @@ paths:
                 amount:
                   type: object
                   properties:
-                    value: 
+                    value:
                       type: string
                     assetCode:
                       type: string
@@ -46,7 +46,6 @@ paths:
                   format: uri
                 timestamp:
                   type: number
-
 
       responses:
         '201':
