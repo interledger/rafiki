@@ -11,9 +11,9 @@ import {
 } from './errors'
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 import {
-  Mutation,
+  CreateOutgoingPaymentFromIncoming,
+  GetWalletAddressByUrl,
   MutationCreateOutgoingPaymentFromIncomingPaymentArgs,
-  Query,
   QueryWalletAddressByUrlArgs
 } from '../graphql/generated/graphql'
 import { CREATE_OUTGOING_PAYMENT_FROM_INCOMING } from '../graphql/mutations/createOutgoingPayment'
@@ -55,7 +55,7 @@ async function handleCreatePayment(
     const deferred = new Deferred<PaymentEventBody>()
     paymentWaitMap.set(requestId, deferred)
     const { data } = await deps.apolloClient.query<
-      Query,
+      GetWalletAddressByUrl,
       QueryWalletAddressByUrlArgs
     >({
       query: GET_WALLET_ADDRESS_BY_URL,
@@ -70,7 +70,7 @@ async function handleCreatePayment(
     const walletAddressId = data.walletAddressByUrl.id
 
     const outgoingPaymentFromIncomingPayment = await deps.apolloClient.mutate<
-      Mutation,
+      CreateOutgoingPaymentFromIncoming,
       MutationCreateOutgoingPaymentFromIncomingPaymentArgs
     >({
       mutation: CREATE_OUTGOING_PAYMENT_FROM_INCOMING,
