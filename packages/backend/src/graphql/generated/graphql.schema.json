@@ -1128,22 +1128,6 @@
             "deprecationReason": null
           },
           {
-            "name": "expiry",
-            "description": "Expire date",
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "initiatedAt",
             "description": null,
             "type": {
@@ -1793,7 +1777,7 @@
         "inputFields": [
           {
             "name": "cardDetails",
-            "description": "Used for the card service to provide the card expiry and signature",
+            "description": "Used for the card service to provide the card signature",
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "CardDetailsInput",
@@ -6073,22 +6057,6 @@
         "fields": [
           {
             "name": "createdAt",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "expiry",
             "description": null,
             "args": [],
             "type": {
