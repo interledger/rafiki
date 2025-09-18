@@ -32,14 +32,16 @@ describe('PaymentRoutes', () => {
     requestId: uuid,
     card: {
       walletAddress: uri,
-      transactionCounter: 1,
-      expiry: '12/25'
+      signature: 'sig'
     },
     merchantWalletAddress: uri,
     incomingPaymentUrl: uri,
     date: dateTime,
-    signature: 'sig',
-    terminalId: uuid
+    incomingAmount: {
+      assetCode: 'USD',
+      assetScale: 0,
+      value: '100'
+    }
   }
 
   const paymentEventFixture: PaymentEventBody = {

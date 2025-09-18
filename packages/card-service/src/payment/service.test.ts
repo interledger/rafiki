@@ -30,14 +30,11 @@ describe('PaymentService', () => {
     requestId: uuid,
     card: {
       walletAddress: uri,
-      transactionCounter: 1,
-      expiry: '12/25'
+      signature: 'sig'
     },
     merchantWalletAddress: uri,
     incomingPaymentUrl: uri,
     date: dateTime,
-    signature: 'sig',
-    terminalId: uuid,
     incomingAmount: {
       assetCode: 'USD',
       assetScale: 2,
@@ -56,10 +53,12 @@ describe('PaymentService', () => {
     querySpy = jest.spyOn(apolloClient, 'query')
     querySpy.mockResolvedValue({
       data: {
-        id: v4(),
-        asset: {
-          code: 'USD',
-          scale: 2
+        walletAddressByUrl: {
+          id: v4(),
+          asset: {
+            code: 'USD',
+            scale: 2
+          }
         }
       }
     })
@@ -110,11 +109,12 @@ describe('PaymentService', () => {
       expect(mutationSpy).toHaveBeenCalledWith({
         mutation: CREATE_OUTGOING_PAYMENT_FROM_INCOMING,
         variables: {
-          walletAddressId: expect.any(String),
-          incomingPayment: paymentFixture.incomingPaymentUrl,
-          cardDetails: {
-            signature: paymentFixture.signature,
-            expiry: paymentFixture.card.expiry
+          input: {
+            walletAddressId: expect.any(String),
+            incomingPayment: paymentFixture.incomingPaymentUrl,
+            cardDetails: {
+              signature: paymentFixture.card.signature
+            }
           }
         }
       })
@@ -122,7 +122,7 @@ describe('PaymentService', () => {
 
     test('throws if wallet address is invalid', async (): Promise<void> => {
       querySpy.mockClear()
-      querySpy.mockResolvedValue(undefined)
+      querySpy.mockResolvedValue({ data: { walletAddressByUrl: undefined } })
       await expect(service.create(paymentFixture)).rejects.toThrow(
         UnknownWalletAddressError
       )

@@ -8,17 +8,15 @@ import { CardServiceClientError } from './errors'
 import { v4 as uuid } from 'uuid'
 import { BaseService } from '../shared/baseService'
 
-interface Card {
-  trasactionCounter: number
-  expiry: Date
+export interface Card {
+  signature: string
   walletAddress: string
 }
 
 export interface PaymentOptions {
   merchantWalletAddress: string
   incomingPaymentUrl: string
-  date: Date
-  signature: string
+  date: string
   card: Card
   incomingAmount: {
     assetCode: string

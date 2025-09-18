@@ -1,8 +1,7 @@
 import { AppContext } from '../app'
 export interface CardDetails {
   walletAddress: string
-  transactionCounter: number
-  expiry: string
+  signature: string
 }
 
 export interface PaymentBody {
@@ -11,9 +10,7 @@ export interface PaymentBody {
   merchantWalletAddress: string
   incomingPaymentUrl: string
   date: string
-  signature: string
   //  terminalCert: string
-  terminalId: string
   incomingAmount: {
     assetCode: string
     assetScale: number
