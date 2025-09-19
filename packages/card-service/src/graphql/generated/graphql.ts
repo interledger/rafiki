@@ -192,8 +192,9 @@ export type CancelOutgoingPaymentInput = {
 };
 
 export type CardDetailsInput = {
-  /** Signature */
-  signature: Scalars['String']['input'];
+  data: Scalars['JSONObject']['input'];
+  initiatedAt: Scalars['String']['input'];
+  requestId: Scalars['String']['input'];
 };
 
 export type CreateAssetInput = {

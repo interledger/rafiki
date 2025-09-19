@@ -1248,8 +1248,9 @@ input CreateOutgoingPaymentInput {
 }
 
 input CardDetailsInput {
-  "Signature"
-  signature: String!
+  data: JSONObject!
+  requestId: String!
+  initiatedAt: String!
 }
 
 input CancelOutgoingPaymentInput {
