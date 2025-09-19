@@ -818,7 +818,3 @@ function validateSentAmount(
   )
   throw new Error(errorMessage)
 }
-
-function isExpiryFormat(expiry: string): boolean {
-  return !!expiry.match(/^(0[1-9]|1[0-2])\/(\d{2})$/)
-}
