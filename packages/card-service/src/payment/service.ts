@@ -60,7 +60,7 @@ async function handleCreatePayment(
     >({
       query: GET_WALLET_ADDRESS_BY_URL,
       variables: {
-        url: payment.card.walletAddress
+        url: payment.senderWalletAddress
       }
     })
 
@@ -79,7 +79,7 @@ async function handleCreatePayment(
           walletAddressId,
           incomingPayment: payment.incomingPaymentUrl,
           cardDetails: {
-            signature: payment.card.signature
+            signature: payment.signature
           }
         }
       }

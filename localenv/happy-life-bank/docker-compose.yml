@@ -64,7 +64,8 @@ services:
       TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
       TENANT_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
-      WEBHOOK_SIGNATURE_SECRET: webhook_secret
+      WEBHOOK_SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      WEBHOOK_SIGNATURE_VERSION: 1
     depends_on: 
       - shared-database
       - cloud-nine-wallet-point-of-sale
@@ -144,6 +145,8 @@ services:
       ILP_ADDRESS: test.happy-life-bank
       ILP_CONNECTOR_URL: http://happy-life-bank-backend:4002
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
+      SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964= # webhook signature
+      SIGNATURE_VERSION: 1
       API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       WEBHOOK_URL: http://happy-life-bank/webhooks
       EXCHANGE_RATES_URL: http://happy-life-bank/rates
@@ -154,6 +157,7 @@ services:
       KEY_ID: 53f2d913-e98a-40b9-b270-372d0547f23d
       OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
       CARD_SERVICE_URL: 'http://happy-life-bank-card-service:4007'
+      POS_WEBHOOK_SERVICE_URL: 'http://happy-life-bank-point-of-sale:4008/webhook'
     depends_on:
       - cloud-nine-backend
     healthcheck:

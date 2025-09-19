@@ -25,6 +25,19 @@ import axios from 'axios'
 import { createCardServiceClient } from './card-service-client/client'
 import { createWebhookHandlerRoutes } from './webhook-handlers/routes'
 
+/* eslint-disable no-var */
+declare global {
+  interface BigInt {
+    toJSON(): string
+  }
+}
+/* eslint-enable no-var */
+
+// eslint-disable-next-line no-extend-native
+BigInt.prototype.toJSON = function (this: bigint) {
+  return this.toString()
+}
+
 export function initIocContainer(
   config: typeof Config
 ): IocContract<AppServices> {

@@ -12,11 +12,15 @@ post {
 
 body:json {
   {
-    "card": {
-      "walletAddress": "https://cloud-nine-wallet-backend/accounts/gfranklin",
-       "signature": "signature"
+    "signature": "signature",
+    "payload": "payload",
+    "amount": {
+      "value": "1000",
+      "assetScale": 2,
+      "assetCode": "USD"
     },
-    "value": 1,
-    "merchantWalletAddress": "https://happy-life-bank-backend/accounts/pfry"
+    "senderWalletAddress": "https://cloud-nine-wallet-backend/accounts/gfranklin",
+    "receiverWalletAddress": "https://happy-life-bank-backend/accounts/pfry",
+    "timestamp": 1758105181325
   }
 }
