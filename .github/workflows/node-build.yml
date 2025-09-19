@@ -92,6 +92,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter card-service test:ci
+      - run: pnpm --filter card-service build:deps
+      - name: Validate Open API specs
+        run: |
+          npx @stoplight/spectral-cli lint ./packages/card-service/src/openapi/specs/*.yaml
 
   point-of-sale:
     runs-on: ubuntu-latest
@@ -426,6 +430,8 @@ jobs:
           - auth
           - backend
           - frontend
+          - card-service
+          - point-of-sale
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -461,6 +467,8 @@ jobs:
           - auth
           - backend
           - frontend
+          - card-service
+          - point-of-sale
     steps:
       - uses: actions/checkout@v4
       - name: Fetch docker image from cache
@@ -497,6 +505,8 @@ jobs:
           - auth
           - backend
           - frontend
+          - card-service
+          - point-of-sale
     steps:
       - uses: actions/checkout@v4
       - name: Fetch docker image from cache
@@ -529,6 +539,8 @@ jobs:
           - auth
           - backend
           - frontend
+          - card-service
+          - point-of-sale
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/image-push
@@ -550,6 +562,8 @@ jobs:
           - auth
           - backend
           - frontend
+          - card-service
+          - point-of-sale
     steps:
       - uses: actions/checkout@v4
       - name: Push manifest list
