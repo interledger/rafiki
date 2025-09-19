@@ -1,4 +1,4 @@
-import { PaymentBody, PaymentEventBody } from './types'
+import { PaymentBody, PaymentEventBody, PaymentEventResultEnum } from './types'
 import { IAppConfig } from '../config/app'
 import { Deferred } from '../utils/deferred'
 import { paymentWaitMap } from './wait-map'
@@ -85,36 +85,48 @@ async function handleCreatePayment(
       }
     })
 
-    if (!outgoingPaymentFromIncomingPayment?.data)
+    if (
+      !outgoingPaymentFromIncomingPayment?.data
+        ?.createOutgoingPaymentFromIncomingPayment.payment
+    )
       throw new PaymentCreationFailedError()
 
-    const result = await waitForPaymentEvent(deps.config, deferred)
-    paymentWaitMap.delete(requestId)
-    if (!result) {
-      deps.logger.debug('Unexpected missing result from timeout')
-      throw new PaymentTimeoutError()
+    // const result = await waitForPaymentEvent(deps.config, deferred)
+    // if (!result) {
+    //   deps.logger.debug('Unexpected missing result from timeout')
+    //   throw new PaymentTimeoutError()
+    // }
+
+    return {
+      requestId,
+      outgoingPaymentId:
+        outgoingPaymentFromIncomingPayment.data
+          .createOutgoingPaymentFromIncomingPayment.payment.id,
+      result: {
+        code: PaymentEventResultEnum.Completed
+      }
     }
-    return result
   } catch (err) {
-    paymentWaitMap.delete(requestId)
     if (err instanceof PaymentRouteError) throw err
     throw new Error(
       err instanceof Error ? err.message : 'Internal server error'
     )
+  } finally {
+    paymentWaitMap.delete(requestId)
   }
 }
 
-async function waitForPaymentEvent(
-  config: IAppConfig,
-  deferred: Deferred<PaymentEventBody>
-): Promise<PaymentEventBody | void> {
-  return Promise.race([
-    deferred.promise,
-    new Promise<void>((_, reject) =>
-      setTimeout(
-        () => reject(new PaymentTimeoutError()),
-        config.cardPaymentTimeoutMS
-      )
-    )
-  ])
-}
+// async function waitForPaymentEvent(
+//   config: IAppConfig,
+//   deferred: Deferred<PaymentEventBody>
+// ): Promise<PaymentEventBody | void> {
+//   return Promise.race([
+//     deferred.promise,
+//     new Promise<void>((_, reject) =>
+//       setTimeout(
+//         () => reject(new PaymentTimeoutError()),
+//         config.cardPaymentTimeoutMS
+//       )
+//     )
+//   ])
+// }
