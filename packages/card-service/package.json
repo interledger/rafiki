@@ -6,7 +6,8 @@
     "dist/**/*"
   ],
   "scripts": {
-    "build": "pnpm clean && tsc --build tsconfig.json",
+    "build": "pnpm build:deps && pnpm clean && tsc --build tsconfig.json",
+    "build:deps": "pnpm --filter token-introspection build",
     "clean": "rm -fr dist/",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests --maxWorkers=50%",
     "test:ci": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests --maxWorkers=2",

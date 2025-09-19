@@ -19,6 +19,7 @@ FROM base AS prod-deps
 COPY package.json pnpm-workspace.yaml .npmrc ./
 COPY packages/card-service/knexfile.js ./packages/card-service/knexfile.js
 COPY packages/card-service/package.json ./packages/card-service/package.json
+COPY packages/token-introspection/package.json ./packages/token-introspection/package.json
 
 RUN pnpm clean
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
@@ -33,6 +34,7 @@ FROM base AS builder
 
 COPY package.json pnpm-workspace.yaml .npmrc tsconfig.json tsconfig.build.json ./
 COPY packages/card-service ./packages/card-service
+COPY packages/token-introspection ./packages/token-introspection
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install \
@@ -50,10 +52,13 @@ WORKDIR /home/rafiki
 COPY --from=prod-deps /home/rafiki/node_modules ./node_modules
 COPY --from=prod-deps /home/rafiki/packages/card-service/node_modules ./packages/card-service/node_modules
 COPY --from=prod-deps /home/rafiki/packages/card-service/package.json ./packages/card-service/package.json
+COPY --from=prod-deps /home/rafiki/packages/token-introspection/node_modules ./packages/token-introspection/node_modules
+COPY --from=prod-deps /home/rafiki/packages/token-introspection/package.json ./packages/token-introspection/package.json
 COPY --from=prod-deps /home/rafiki/packages/card-service/knexfile.js ./packages/card-service/knexfile.js
 
 COPY --from=builder /home/rafiki/packages/card-service/migrations/ ./packages/card-service/migrations
 COPY --from=builder /home/rafiki/packages/card-service/dist ./packages/card-service/dist
+COPY --from=builder /home/rafiki/packages/token-introspection/dist ./packages/token-introspection/dist
 COPY --from=builder /home/rafiki/packages/card-service/knexfile.js ./packages/card-service/knexfile.js
 
 USER root
