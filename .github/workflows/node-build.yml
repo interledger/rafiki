@@ -92,7 +92,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter card-service test:ci
-      - run: pnpm --filter card-service build:deps
+      - run: pnpm --filter card-service build
       - name: AsyncAPI extension
         run: |
           echo "{\"extends\":[\"spectral:oas\",\"spectral:asyncapi\"]}" >> .spectral.json
@@ -107,7 +107,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter point-of-sale build:deps
+      - run: pnpm --filter point-of-sale build
       - run: pnpm --filter point-of-sale test:ci
 
   mock-account-servicing-entity:
