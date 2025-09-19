@@ -242,6 +242,16 @@ components:
             grantId:
               type: string
               format: uuid
+            cardDetails:
+              type: object
+              properties:
+                data:
+                  type: object
+                requestId:
+                  type: string
+                initiatedAt:
+                  type: string
+                  format: date-time
       additionalProperties: false
     walletAddressNotFound:
       required:

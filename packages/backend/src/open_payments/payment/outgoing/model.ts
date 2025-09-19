@@ -209,6 +209,13 @@ export class OutgoingPayment
     if (this.grantId) {
       data.grantId = this.grantId
     }
+    if (this.cardDetails) {
+      data.cardDetails = {
+        requestId: this.cardDetails.requestId,
+        data: this.cardDetails.data,
+        initiatedAt: this.cardDetails.initiatedAt
+      }
+    }
     return data
   }
 
@@ -296,6 +303,10 @@ export type PaymentData = Omit<OutgoingPaymentResponse, 'failed'> & {
   stateAttempts: number
   balance: string
   grantId?: string
+  cardDetails?: Pick<
+    OutgoingPaymentCardDetails,
+    'requestId' | 'data' | 'initiatedAt'
+  >
 }
 
 export const isOutgoingPaymentEventType = (
