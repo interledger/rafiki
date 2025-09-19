@@ -202,8 +202,9 @@ export interface CreateFromIncomingPayment extends BaseOptions {
 
 export interface CreateFromCardPayment extends CreateFromIncomingPayment {
   cardDetails: {
-    expiry: string
-    signature: string
+    requestId: string
+    data: Record<string, unknown>
+    initiatedAt: Date
   }
 }
 
@@ -221,11 +222,7 @@ export type CreateOutgoingPaymentOptions =
 export function isCreateFromCardPayment(
   options: CreateOutgoingPaymentOptions
 ): options is CreateFromCardPayment {
-  return (
-    'cardDetails' in options &&
-    'expiry' in options.cardDetails &&
-    'signature' in options.cardDetails
-  )
+  return 'cardDetails' in options && 'requestId' in options.cardDetails
 }
 
 export function isCreateFromIncomingPayment(
@@ -399,17 +396,15 @@ async function createOutgoingPayment(
           })
 
           if (isCreateFromCardPayment(options)) {
-            const { expiry, signature } = options.cardDetails
-
-            if (!isExpiryFormat(expiry))
-              throw OutgoingPaymentError.InvalidCardExpiry
+            const { data, requestId, initiatedAt } = options.cardDetails
 
             payment.cardDetails = await OutgoingPaymentCardDetails.query(
               trx
             ).insertAndFetch({
               outgoingPaymentId: payment.id,
-              expiry,
-              signature
+              requestId,
+              data,
+              initiatedAt
             })
           }
 

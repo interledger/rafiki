@@ -67,6 +67,7 @@ import {
 } from '../../../tests/tenantSettings'
 import { OpenPaymentsPaymentMethod } from '../../../payment-method/provider/service'
 import { IlpAddress } from 'ilp-packet'
+import { OutgoingPaymentCardDetails } from './card/model'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -1493,7 +1494,8 @@ describe('OutgoingPaymentService', (): void => {
         }
       )
     })
-    test('failed to create when expiry is not valid', async () => {
+
+    test('stores card details when card payment', async () => {
       const paymentMethods: OpenPaymentsPaymentMethod[] = [
         {
           type: 'ilp',
@@ -1512,19 +1514,28 @@ describe('OutgoingPaymentService', (): void => {
         incomingPayment: incomingPayment.toOpenPaymentsTypeWithMethods(
           config.openPaymentsUrl,
           receiverWalletAddress,
-
           paymentMethods
         ).id,
         tenantId,
         cardDetails: {
-          expiry: 'invalid',
-          signature: 'test'
+          requestId: crypto.randomUUID(),
+          initiatedAt: new Date(),
+          data: {
+            signature: 'signature',
+            payload: 'payload'
+          }
         }
       }
 
-      const payment = await outgoingPaymentService.create(options)
-      expect(isOutgoingPaymentError(payment)).toBeTruthy()
-      expect(payment).toBe(OutgoingPaymentError.InvalidCardExpiry)
+      const outgoingPayment = await outgoingPaymentService.create(options)
+
+      assert(outgoingPayment instanceof OutgoingPayment)
+
+      const cardDetails = await OutgoingPaymentCardDetails.query(knex).where({
+        outgoingPaymentId: outgoingPayment.id
+      })
+
+      expect(cardDetails).toHaveLength(1)
     })
   })
 
