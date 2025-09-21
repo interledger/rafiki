@@ -18,7 +18,17 @@ peers:
         - global-to-cloud-nine
       outgoing: cloud-nine-to-global
     routes: 
-      - "test.global-bank"
+    # This route MUST remain unchanged when NOT in multihop mode so that happy-life packets aren't routed through global-bank
+      - "test" 
+  - initialLiquidity: '10000000'
+    peerUrl: http://happy-life-bank-backend:3002
+    peerIlpAddress: test.happy-life-bank
+    liquidityThreshold: 1000000
+    tokens:
+      incoming:
+        - happy-to-cloud-nine
+      outgoing: cloud-nine-to-happy
+    routes: 
       - "test.happy-life-bank"
 accounts:
   - name: 'Grace Franklin'

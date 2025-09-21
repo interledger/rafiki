@@ -18,15 +18,14 @@ assets:
 peeringAsset: 'USD'
 peers:
   - initialLiquidity: '10000000'
-    peerUrl: http://global-bank-backend:3002
-    peerIlpAddress: test.global-bank
+    peerUrl: http://happy-life-bank-backend:3002
+    peerIlpAddress: test.happy-life-bank
     liquidityThreshold: 1000000
     tokens:
-      incoming: 
-        - global-to-cloud-ten
-      outgoing: cloud-ten-to-global
-    routes:
-      - "test.global-bank"
+      incoming:
+        - happy-to-cloud-ten
+      outgoing: cloud-ten-to-happy
+    routes: 
       - "test.happy-life-bank"
 accounts:
   - name: 'Frace Granklin'
