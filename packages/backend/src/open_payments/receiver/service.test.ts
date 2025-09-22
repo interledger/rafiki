@@ -31,8 +31,10 @@ import { ReceiverError } from './errors'
 import { RemoteIncomingPaymentError } from '../payment/incoming_remote/errors'
 import assert from 'assert'
 import { Receiver } from './model'
-import { IncomingPayment } from '../payment/incoming/model'
-import { IncomingPaymentInitiationReason } from '../payment/incoming/types'
+import {
+  IncomingPayment,
+  IncomingPaymentInitiationReason
+} from '../payment/incoming/model'
 import { PaymentMethodProviderService } from '../../payment-method/provider/service'
 
 describe('Receiver Service', (): void => {

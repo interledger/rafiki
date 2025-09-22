@@ -18,7 +18,7 @@ import { listSubresource } from '../../wallet_address/routes'
 import { AccessAction } from '@interledger/open-payments'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
 import { PaymentMethodProviderService } from '../../../payment-method/provider/service'
-import { IncomingPaymentInitiationReason } from './types'
+import { IncomingPaymentInitiationReason } from './model'
 
 interface ServiceDependencies {
   config: IAppConfig

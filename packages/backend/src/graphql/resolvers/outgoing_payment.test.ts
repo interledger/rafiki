@@ -47,7 +47,7 @@ import {
 import { faker } from '@faker-js/faker'
 import { GraphQLErrorCode } from '../errors'
 import { createTenant } from '../../tests/tenant'
-import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/types'
+import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/model'
 
 describe('OutgoingPayment Resolvers', (): void => {
   let deps: IocContract<AppServices>

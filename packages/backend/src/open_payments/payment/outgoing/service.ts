@@ -18,7 +18,7 @@ import {
   OutgoingPaymentState,
   OutgoingPaymentEventType
 } from './model'
-import { OutgoingPaymentInitiationReason } from './types'
+import { OutgoingPaymentInitiationReason } from './model'
 import { Grant } from '../../auth/middleware'
 import {
   AccountingService,
@@ -205,7 +205,7 @@ export interface CreateFromCardPayment extends CreateFromIncomingPayment {
   cardDetails: {
     expiry: string
     signature: string
-    requestId?: string
+    requestId: string
   }
 }
 

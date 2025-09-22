@@ -4,7 +4,6 @@ import { DbErrors } from 'objection-db-errors'
 import { LiquidityAccount } from '../../../accounting/service'
 import { Asset } from '../../../asset/model'
 import { ConnectorAccount } from '../../../payment-method/ilp/connector/core/rafiki'
-import { OutgoingPaymentInitiationReason } from './types'
 import {
   WalletAddressSubresource,
   WalletAddress
@@ -275,6 +274,15 @@ export enum OutgoingPaymentWithdrawType {
   PaymentFailed = 'outgoing_payment.failed',
   PaymentCompleted = 'outgoing_payment.completed',
   PaymentCancelled = 'outgoing_payment.cancelled'
+}
+
+export const enum OutgoingPaymentInitiationReason {
+  // The outgoing payment was initiated by a card payment.
+  Card = 'CARD',
+  // The outgoing payment was initiated through Open Payments.
+  OpenPayments = 'OPEN_PAYMENTS',
+  // The outgoing payment was initiated by the Admin API.
+  Admin = 'ADMIN'
 }
 
 export const OutgoingPaymentEventType = {

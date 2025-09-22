@@ -216,7 +216,7 @@ export async function sendWebhookEvent(
   // So default the amountSent and balance to 0 for outgoing payments still in the funding or cancelled states
   const isZeroAmountSent =
     payment.state === OutgoingPaymentState.Funding ||
-    type === OutgoingPaymentEventType.PaymentCancelled
+    payment.state === OutgoingPaymentState.Cancelled
   const amountSent = isZeroAmountSent
     ? BigInt(0)
     : await deps.accountingService.getTotalSent(payment.id)
@@ -247,13 +247,14 @@ export async function sendWebhookEvent(
       type === OutgoingPaymentEventType.PaymentFunded ||
       type === OutgoingPaymentEventType.PaymentCancelled
         ? finalizeWebhookRecipients(
-            [payment.tenantId],
+            { tenantIds: [payment.tenantId], onlyCard: true },
             deps.config,
-            undefined,
-            deps.logger,
-            true
+            deps.logger
           )
-        : finalizeWebhookRecipients([payment.tenantId], deps.config)
+        : finalizeWebhookRecipients(
+            { tenantIds: [payment.tenantId] },
+            deps.config
+          )
   })
   stopTimer()
 }

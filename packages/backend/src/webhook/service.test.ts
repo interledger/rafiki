@@ -25,7 +25,7 @@ import { getPageTests } from '../shared/baseModel.test'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { createWebhookEvent, webhookEventTypes } from '../tests/webhook'
 import { IncomingPaymentEventType } from '../open_payments/payment/incoming/model'
-import { IncomingPaymentInitiationReason } from '../open_payments/payment/incoming/types'
+import { IncomingPaymentInitiationReason } from '../open_payments/payment/incoming/model'
 import { OutgoingPaymentEventType } from '../open_payments/payment/outgoing/model'
 import { createIncomingPayment } from '../tests/incomingPayment'
 import { createWalletAddress } from '../tests/walletAddress'
@@ -657,7 +657,9 @@ describe('Webhook Service', (): void => {
         { sendTenantWebhooksToOperator: true },
         async (): Promise<void> => {
           const tenantId = crypto.randomUUID()
-          expect(finalizeWebhookRecipients([tenantId], Config)).toStrictEqual([
+          expect(
+            finalizeWebhookRecipients({ tenantIds: [tenantId] }, Config)
+          ).toStrictEqual([
             { recipientTenantId: tenantId },
             { recipientTenantId: Config.operatorTenantId }
           ])
@@ -672,9 +674,9 @@ describe('Webhook Service', (): void => {
         { sendTenantWebhooksToOperator: false },
         async (): Promise<void> => {
           const tenantId = crypto.randomUUID()
-          expect(finalizeWebhookRecipients([tenantId], Config)).toStrictEqual([
-            { recipientTenantId: tenantId }
-          ])
+          expect(
+            finalizeWebhookRecipients({ tenantIds: [tenantId] }, Config)
+          ).toStrictEqual([{ recipientTenantId: tenantId }])
         }
       )
     )
@@ -685,7 +687,9 @@ describe('Webhook Service', (): void => {
       const tenantId3 = crypto.randomUUID()
       expect(
         finalizeWebhookRecipients(
-          [tenantId1, tenantId1, tenantId2, tenantId2, tenantId3],
+          {
+            tenantIds: [tenantId1, tenantId1, tenantId2, tenantId2, tenantId3]
+          },
           Config
         )
       ).toStrictEqual([
@@ -704,9 +708,11 @@ describe('Webhook Service', (): void => {
           const tenantId = crypto.randomUUID()
           expect(
             finalizeWebhookRecipients(
-              [tenantId],
-              config,
-              IncomingPaymentInitiationReason.Card
+              {
+                tenantIds: [tenantId],
+                initiationReason: IncomingPaymentInitiationReason.Card
+              },
+              config
             )
           ).toStrictEqual([
             { recipientTenantId: tenantId },
@@ -725,45 +731,43 @@ describe('Webhook Service', (): void => {
 
       expect(
         finalizeWebhookRecipients(
-          [tenantId],
+          {
+            tenantIds: [tenantId],
+            initiationReason: IncomingPaymentInitiationReason.Card
+          },
           config,
-          IncomingPaymentInitiationReason.Card,
           logger
         )
       ).toStrictEqual([{ recipientTenantId: tenantId }])
       expect(loggerWarnSpy).toHaveBeenCalled()
     })
 
-    test('returns empty recepients when onlyPos is true and pos url is not configured', async (): Promise<void> => {
+    test('returns empty recipients when onlyCard is true and card url is not configured', async (): Promise<void> => {
       const recipients = finalizeWebhookRecipients(
-        [crypto.randomUUID()],
+        { tenantIds: [crypto.randomUUID()], onlyCard: true },
         config,
-        undefined,
-        logger,
-        true
+        logger
       )
 
       expect(recipients).toStrictEqual([])
     })
 
     test(
-      'returns only POS recipient when onlyPos is true and pos url configured',
+      'returns only card recipient when onlyCard is true and card url configured',
       withConfigOverride(
         () => config,
-        { posWebhookServiceUrl: faker.internet.url() },
+        { cardWebhookUrl: faker.internet.url() },
         async (): Promise<void> => {
           const tenantId = crypto.randomUUID()
           const recipients = finalizeWebhookRecipients(
-            [tenantId],
+            { tenantIds: [tenantId], onlyCard: true },
             config,
-            undefined,
-            logger,
-            true
+            logger
           )
           expect(recipients).toStrictEqual([
             {
               recipientTenantId: config.operatorTenantId,
-              metadata: { sendToPosService: true }
+              metadata: { sendToCardService: true }
             }
           ])
         }
@@ -778,11 +782,12 @@ describe('Webhook Service', (): void => {
         async (): Promise<void> => {
           const tenantId = crypto.randomUUID()
           const recipients = finalizeWebhookRecipients(
-            [tenantId],
+            {
+              tenantIds: [tenantId],
+              initiationReason: IncomingPaymentInitiationReason.Card
+            },
             config,
-            IncomingPaymentInitiationReason.Card,
-            logger,
-            false
+            logger
           )
           expect(recipients).toEqual(
             expect.arrayContaining([

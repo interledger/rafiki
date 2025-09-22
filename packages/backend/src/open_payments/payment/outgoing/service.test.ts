@@ -41,7 +41,7 @@ import {
 } from './model'
 import { RETRY_BACKOFF_SECONDS } from './worker'
 import { IncomingPayment, IncomingPaymentState } from '../incoming/model'
-import { IncomingPaymentInitiationReason } from '../incoming/types'
+import { IncomingPaymentInitiationReason } from '../incoming/model'
 import { isTransferError } from '../../../accounting/errors'
 import { AccountingService } from '../../../accounting/service'
 import { AssetOptions } from '../../../asset/service'
@@ -1518,7 +1518,8 @@ describe('OutgoingPaymentService', (): void => {
         tenantId,
         cardDetails: {
           expiry: 'invalid',
-          signature: 'test'
+          signature: 'test',
+          requestId: 'req-invalid'
         }
       }
 

@@ -14,12 +14,20 @@ import {
   IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethod
 } from '@interledger/open-payments'
 import { OpenPaymentsPaymentMethod } from '../../../payment-method/provider/service'
-import { IncomingPaymentInitiationReason } from './types'
 
 export enum IncomingPaymentEventType {
   IncomingPaymentCreated = 'incoming_payment.created',
   IncomingPaymentExpired = 'incoming_payment.expired',
   IncomingPaymentCompleted = 'incoming_payment.completed'
+}
+
+export const enum IncomingPaymentInitiationReason {
+  // The incoming payment was initiated by a card payment.
+  Card = 'CARD',
+  // The incoming payemnt was initiated through Open Payments.
+  OpenPayments = 'OPEN_PAYMENTS',
+  // The incoming payment was initiated by the Admin API.
+  Admin = 'ADMIN'
 }
 
 export enum IncomingPaymentState {

@@ -16,7 +16,7 @@ import {
 } from '../tenants/settings/model'
 import { TenantSettingService } from '../tenants/settings/service'
 import { Logger } from 'pino'
-import { IncomingPaymentInitiationReason } from '../open_payments/payment/incoming/types'
+import { IncomingPaymentInitiationReason } from '../open_payments/payment/incoming/model'
 
 // First retry waits 10 seconds
 // Second retry waits 20 (more) seconds
@@ -166,7 +166,11 @@ async function processNextWebhook(
         })
       }
 
-      if (webhook.metadata?.sendToPosService) {
+      if (webhook.metadata?.sendToCardService) {
+        await sendWebhook(deps, webhook, {
+          webhookUrl: deps.config.cardWebhookUrl
+        })
+      } else if (webhook.metadata?.sendToPosService) {
         await sendWebhook(deps, webhook, {
           webhookUrl: deps.config.posWebhookServiceUrl
         })
@@ -296,14 +300,18 @@ async function getWebhookEventsPage(
   return await query.getPage(pagination, sortOrder)
 }
 
+type FinalizeRecipientsOptions = {
+  tenantIds: string[]
+  initiationReason?: IncomingPaymentInitiationReason
+  onlyCard?: boolean
+}
+
 export function finalizeWebhookRecipients(
-  tenantIds: string[],
+  options: FinalizeRecipientsOptions,
   config: IAppConfig,
-  initiationReason?: IncomingPaymentInitiationReason,
-  logger?: Logger,
-  onlyPos?: boolean
+  logger?: Logger
 ): Pick<Webhook, 'recipientTenantId' | 'metadata'>[] {
-  const tenantIdSet = new Set(tenantIds)
+  const tenantIdSet = new Set(options.tenantIds)
 
   if (
     !tenantIdSet.has(config.operatorTenantId) &&
@@ -330,8 +338,24 @@ export function finalizeWebhookRecipients(
     ]
   }
 
-  if (onlyPos) {
-    return buildPosRecipient()
+  const buildCardRecipient = (): Pick<
+    Webhook,
+    'recipientTenantId' | 'metadata'
+  >[] => {
+    if (!config.cardWebhookUrl) {
+      logger?.warn('Could not create webhook recipient for card service')
+      return []
+    }
+    return [
+      {
+        recipientTenantId: config.operatorTenantId,
+        metadata: { sendToCardService: true }
+      }
+    ]
+  }
+
+  if (options.onlyCard) {
+    return buildCardRecipient()
   }
 
   let recipients: Pick<Webhook, 'recipientTenantId' | 'metadata'>[] = [
@@ -340,7 +364,7 @@ export function finalizeWebhookRecipients(
     recipientTenantId: tenantId
   }))
 
-  if (initiationReason === IncomingPaymentInitiationReason.Card) {
+  if (options.initiationReason === IncomingPaymentInitiationReason.Card) {
     recipients = recipients.concat(buildPosRecipient())
   }
 

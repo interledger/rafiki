@@ -11,7 +11,7 @@ exports.up = async function (knex) {
     await knex.schema.alterTable(
       'outgoingPaymentCardDetails',
       function (table) {
-        table.string('requestId').nullable()
+        table.string('requestId').notNullable()
       }
     )
   }

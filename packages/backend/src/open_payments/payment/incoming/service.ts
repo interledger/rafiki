@@ -2,9 +2,9 @@ import {
   IncomingPayment,
   IncomingPaymentEvent,
   IncomingPaymentEventType,
-  IncomingPaymentState
+  IncomingPaymentState,
+  IncomingPaymentInitiationReason
 } from './model'
-import { IncomingPaymentInitiationReason } from './types'
 import { AccountingService } from '../../../accounting/service'
 import { BaseService } from '../../../shared/baseService'
 import { Knex } from 'knex'
@@ -207,7 +207,10 @@ async function createIncomingPayment(
     type: IncomingPaymentEventType.IncomingPaymentCreated,
     data: incomingPayment.toData(0n),
     tenantId: incomingPayment.tenantId,
-    webhooks: finalizeWebhookRecipients([incomingPayment.tenantId], deps.config)
+    webhooks: finalizeWebhookRecipients(
+      { tenantIds: [incomingPayment.tenantId] },
+      deps.config
+    )
   })
 
   incomingPayment = await addReceivedAmount(deps, incomingPayment, BigInt(0))
@@ -375,9 +378,11 @@ async function handleDeactivated(
       },
       tenantId: incomingPayment.tenantId,
       webhooks: finalizeWebhookRecipients(
-        [incomingPayment.tenantId],
+        {
+          tenantIds: [incomingPayment.tenantId],
+          initiationReason: incomingPayment.initiatedBy
+        },
         deps.config,
-        incomingPayment.initiatedBy,
         deps.logger
       )
     })

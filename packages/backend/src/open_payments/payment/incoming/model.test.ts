@@ -13,9 +13,9 @@ import {
   IncomingPaymentEvent,
   IncomingPaymentEventType,
   IncomingPaymentState,
+  IncomingPaymentInitiationReason,
   IncomingPaymentEventError
 } from './model'
-import { IncomingPaymentInitiationReason } from './types'
 import { WalletAddress } from '../../wallet_address/model'
 import { OpenPaymentsPaymentMethod } from '../../../payment-method/provider/service'
 
