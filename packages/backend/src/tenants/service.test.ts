@@ -15,10 +15,11 @@ import { createTenant } from '../tests/tenant'
 import { CacheDataStore } from '../middleware/cache/data-stores'
 import { AuthServiceClient } from '../auth-service-client/client'
 import { withConfigOverride } from '../tests/helpers'
-import { TenantSetting, TenantSettingKeys } from './settings/model'
+import { TenantSetting } from './settings/model'
 import { TenantSettingService } from './settings/service'
 import { isTenantError, TenantError } from './errors'
 import { v4 } from 'uuid'
+import { TenantSettingKey as SchemaTenantSettingKey } from '../graphql/generated/graphql'
 
 describe('Tenant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -157,7 +158,7 @@ describe('Tenant Service', (): void => {
         idpSecret: 'test-idp-secret',
         settings: [
           {
-            key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+            key: SchemaTenantSettingKey.WalletAddressUrl,
             value: walletAddressUrl
           }
         ]
@@ -171,7 +172,7 @@ describe('Tenant Service', (): void => {
       assert(!isTenantError(tenant))
       const tenantSetting = await TenantSetting.query()
         .where('tenantId', tenant.id)
-        .andWhere('key', TenantSettingKeys.WALLET_ADDRESS_URL.name)
+        .andWhere('key', SchemaTenantSettingKey.WalletAddressUrl)
 
       expect(tenantSetting.length).toBe(1)
       expect(tenantSetting[0].value).toEqual(walletAddressUrl)

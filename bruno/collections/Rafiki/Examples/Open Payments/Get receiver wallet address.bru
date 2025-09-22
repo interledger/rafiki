@@ -47,7 +47,7 @@ script:post-response {
       resourceUrl.hostname.includes('cloud-nine-wallet') || 
       resourceUrl.hostname.includes('happy-life-bank')
   ){
-      const port = resourceUrl.hostname.includes('cloud-nine-wallet') ? 3000 : 4000
+      const port = resourceUrl.hostname.includes('cloud-nine-wallet') ? bru.getEnvVar('cloudNineOpenPaymentsPort') : bru.getEnvVar('happyLifeOpenPaymentsPort')
       bru.setEnvVar("receiverOpenPaymentsHost",  'http://localhost:' + port + resourceUrl.path);
   } else {
       bru.setEnvVar("receiverOpenPaymentsHost", body?.resourceServer);

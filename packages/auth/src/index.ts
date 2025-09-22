@@ -14,10 +14,7 @@ import { createAccessTokenRoutes } from './accessToken/routes'
 import { createGrantRoutes } from './grant/routes'
 import { createInteractionRoutes } from './interaction/routes'
 import { createOpenAPI } from '@interledger/openapi'
-import {
-  createUnauthenticatedClient as createOpenPaymentsClient,
-  getAuthServerOpenAPI
-} from '@interledger/open-payments'
+import { createUnauthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
 import { createInteractionService } from './interaction/service'
 import { getTokenIntrospectionOpenAPI } from 'token-introspection'
 import { Redis } from 'ioredis'
@@ -187,7 +184,12 @@ export function initIocContainer(
   )
 
   container.singleton('openApi', async () => {
-    const authServerSpec = await getAuthServerOpenAPI()
+    const authServerSpec = await createOpenAPI(
+      path.resolve(
+        __dirname,
+        '../../../open-payments-specifications/openapi/auth-server.yaml'
+      )
+    )
     const idpSpec = await createOpenAPI(
       path.resolve(__dirname, './openapi/specs/id-provider.yaml')
     )

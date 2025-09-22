@@ -205,7 +205,7 @@ describe('QuoteService', (): void => {
         if (!debitAmount && !receiveAmount && !incomingAmount) {
           test('fails without receiver.incomingAmount', async (): Promise<void> => {
             await expect(quoteService.create(options)).resolves.toMatchObject({
-              type: QuoteErrorCode.InvalidReceiver
+              type: QuoteErrorCode.InvalidAmount
             })
           })
         } else {
@@ -552,6 +552,7 @@ describe('QuoteService', (): void => {
 
     test.each`
       debitAmount                              | receiveAmount                              | description
+      ${undefined}                             | ${undefined}                               | ${'with undefined debitAmount and receiveAmount'}
       ${{ ...debitAmount, value: BigInt(0) }}  | ${undefined}                               | ${'with debitAmount of zero'}
       ${{ ...debitAmount, value: BigInt(-1) }} | ${undefined}                               | ${'with negative debitAmount'}
       ${{ ...debitAmount, assetScale: 3 }}     | ${undefined}                               | ${'with wrong debitAmount asset'}

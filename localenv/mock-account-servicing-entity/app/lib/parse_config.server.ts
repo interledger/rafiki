@@ -32,5 +32,9 @@ export const CONFIG: Config = {
   graphqlUrl: process.env.GRAPHQL_URL,
   idpSecret: process.env.IDP_SECRET,
   operatorTenantId: process.env.OPERATOR_TENANT_ID,
-  isTenant: process.env.IS_TENANT === 'true'
+  isTenant: process.env.IS_TENANT === 'true',
+  authIdpServiceDomain:
+    process.env.AUTH_IDP_SERVICE_DOMAIN || 'http://localhost:3009',
+  interactionReturnUrl:
+    process.env.INTERACTION_RETURN_URL || 'http://localhost:3030'
 }
