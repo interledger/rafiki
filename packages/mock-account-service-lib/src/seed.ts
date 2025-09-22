@@ -144,9 +144,7 @@ export async function setupFromSeed(
       p.peerIlpAddress.startsWith('test.global-bank')
     )
     if (globalPeerSeed) {
-      const adminHealthUrl = getBackendHealthUrl(
-        globalPeerSeed.peerUrl
-      )
+      const adminHealthUrl = getBackendHealthUrl(globalPeerSeed.peerUrl)
       if (await isBackendReachable(adminHealthUrl)) {
         logger.debug('global-bank backend is reachable, enforcing multihop')
         const peersToBeDeleted: string[] = config.seed.peers
