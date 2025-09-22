@@ -63,7 +63,6 @@ export async function setupFromSeed(
     setFee,
     createPeer,
     updatePeer,
-    deletePeer,
     depositPeerLiquidity,
     createAutoPeer,
     createWalletAddress,
@@ -104,14 +103,30 @@ export async function setupFromSeed(
     : config.publicHost
 
   for (const peer of config.seed.peers) {
+    let peerStaticIlpAddress
+    // If peer needs to be unreachable, we need to use the staticIlpAddress without the `unreachable` segment in order to get the correct existing peer if any
+    const isUnreachablePeer = peer.peerIlpAddress.includes('unreachable.')
+    if (isUnreachablePeer) {
+      peerStaticIlpAddress = peer.peerIlpAddress.replace('unreachable.', '')
+    } else {
+      peerStaticIlpAddress = peer.peerIlpAddress
+    }
+
     const existingPeer = await getPeerByAddressAndAsset(
-      peer.peerIlpAddress,
+      peerStaticIlpAddress,
       assets[peeringAsset].id
     )
 
-    if (existingPeer && existingPeer.staticIlpAddress === peer.peerIlpAddress) {
-      // Needed for refreshing routes if changed in seed (when going back and forth from multihop mode)
-      await updatePeer({ id: existingPeer.id, routes: peer.routes || [] })
+    if (
+      existingPeer &&
+      existingPeer.staticIlpAddress === peerStaticIlpAddress
+    ) {
+      // Needed for refreshing routes and staticIlpAddress when changed in seed (when going back and forth from multihop mode)
+      await updatePeer({
+        id: existingPeer.id,
+        staticIlpAddress: peer.peerIlpAddress,
+        routes: peer.routes || []
+      })
       continue
     }
 
@@ -136,36 +151,6 @@ export async function setupFromSeed(
   }
 
   logger.debug('Finished seeding peers')
-
-  // Enforce multihop automatically: if the global-bank backend is reachable,
-  // remove direct peers between cloud-nine/cloud-ten and happy-life so routing goes through global-bank.
-  try {
-    const globalPeerSeed = config.seed.peers.find((p) =>
-      p.peerIlpAddress.startsWith('test.global-bank')
-    )
-    if (globalPeerSeed) {
-      const adminHealthUrl = getBackendHealthUrl(globalPeerSeed.peerUrl)
-      if (await isBackendReachable(adminHealthUrl)) {
-        logger.debug('global-bank backend is reachable, enforcing multihop')
-        const peersToBeDeleted: string[] = config.seed.peers
-          .filter((p) => !p.peerIlpAddress.startsWith('test.global-bank'))
-          .map((p) => p.peerIlpAddress)
-
-        for (const p of peersToBeDeleted) {
-          const peer = await getPeerByAddressAndAsset(
-            p,
-            assets[peeringAsset].id
-          )
-          if (peer) {
-            await deletePeer(peer.id)
-          }
-        }
-        logger.debug('Multihop enforced: removed direct peers where present')
-      }
-    }
-  } catch (e) {
-    logger.debug('Multihop enforcement skipped', e)
-  }
 
   if (config.testnetAutoPeerUrl) {
     logger.debug('autopeering url: ', config.testnetAutoPeerUrl)
@@ -248,29 +233,4 @@ export async function setupFromSeed(
   return createdTenant
     ? { tenantId: createdTenant.id, apiSecret: createdTenant.apiSecret }
     : undefined
-}
-
-function getBackendHealthUrl(connectorUrl: string): string {
-  try {
-    const url = new URL(connectorUrl)
-    const port = url.port === '3002' ? '3001' : url.port
-    url.port = port
-    url.pathname = '/healthz'
-    return url.toString()
-  } catch {
-    return connectorUrl
-  }
-}
-
-async function isBackendReachable(url: string): Promise<boolean> {
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 5000)
-  try {
-    const res = await fetch(url, { method: 'GET', signal: controller.signal })
-    return res.ok
-  } catch {
-    return false
-  } finally {
-    clearTimeout(timeout)
-  }
 }

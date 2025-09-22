@@ -19,8 +19,7 @@ import {
   type CreateTenantInput,
   TenantSettingKey,
   type UpdatePeerMutationResponse,
-  type UpdatePeerInput,
-  type DeletePeerMutationResponse
+  type UpdatePeerInput
 } from './generated/graphql'
 import { v4 as uuid } from 'uuid'
 
@@ -83,7 +82,6 @@ export function createRequesters(
     assetId: string
   ) => Promise<Peer | null>
   updatePeer: (input: UpdatePeerInput) => Promise<UpdatePeerMutationResponse>
-  deletePeer: (peerId: string) => Promise<DeletePeerMutationResponse>
 } {
   return {
     createAsset: (code, scale, liquidityThreshold) =>
@@ -136,8 +134,7 @@ export function createRequesters(
     getPeerByAddressAndAsset: (staticIlpAddress, assetId) =>
       getPeerByAddressAndAsset(apolloClient, staticIlpAddress, assetId),
     updatePeer: (input: UpdatePeerInput) =>
-      updatePeer(apolloClient, logger, input),
-    deletePeer: (peerId: string) => deletePeer(apolloClient, logger, peerId)
+      updatePeer(apolloClient, logger, input)
   }
 }
 
@@ -314,33 +311,6 @@ export async function updatePeer(
         throw new Error('Data was empty')
       }
       return data.updatePeer
-    })
-}
-
-export async function deletePeer(
-  apolloClient: ApolloClient<NormalizedCacheObject>,
-  logger: Logger,
-  peerId: string
-): Promise<DeletePeerMutationResponse> {
-  const mutation = gql`
-    mutation DeletePeer($input: DeletePeerInput!) {
-      deletePeer(input: $input) {
-        success
-      }
-    }
-  `
-
-  return apolloClient
-    .mutate({
-      mutation,
-      variables: { input: { id: peerId } }
-    })
-    .then(({ data }): DeletePeerMutationResponse => {
-      logger.debug(data)
-      if (!data?.deletePeer) {
-        throw new Error('Data was empty')
-      }
-      return data.deletePeer
     })
 }
 
