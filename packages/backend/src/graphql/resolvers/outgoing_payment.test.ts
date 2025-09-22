@@ -916,7 +916,12 @@ describe('OutgoingPayment Resolvers', (): void => {
         walletAddressId: payment.walletAddressId,
         quoteId: payment.quote.id,
         cardDetails: {
-          signature: 'test-signature'
+          data: {
+            signature: 'test-signature',
+            payload: 'payload'
+          },
+          requestId: crypto.randomUUID(),
+          initiatedAt: new Date().toISOString()
         }
       }
 
