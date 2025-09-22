@@ -266,13 +266,17 @@ export enum OutgoingPaymentState {
 }
 
 export enum OutgoingPaymentDepositType {
-  PaymentCreated = 'outgoing_payment.created',
-  PaymentFunded = 'outgoing_payment.funded'
+  PaymentCreated = 'outgoing_payment.created'
 }
 
 export enum OutgoingPaymentWithdrawType {
   PaymentFailed = 'outgoing_payment.failed',
-  PaymentCompleted = 'outgoing_payment.completed',
+  PaymentCompleted = 'outgoing_payment.completed'
+}
+
+// Events that reflect status changes but do not directly drive deposit/withdraw flows
+export enum OutgoingPaymentStatusType {
+  PaymentFunded = 'outgoing_payment.funded',
   PaymentCancelled = 'outgoing_payment.cancelled'
 }
 
@@ -287,11 +291,13 @@ export const enum OutgoingPaymentInitiationReason {
 
 export const OutgoingPaymentEventType = {
   ...OutgoingPaymentDepositType,
-  ...OutgoingPaymentWithdrawType
+  ...OutgoingPaymentWithdrawType,
+  ...OutgoingPaymentStatusType
 }
 export type OutgoingPaymentEventType =
   | OutgoingPaymentDepositType
   | OutgoingPaymentWithdrawType
+  | OutgoingPaymentStatusType
 
 export interface OutgoingPaymentResponse {
   id: string
