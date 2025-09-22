@@ -11,9 +11,9 @@ import {
 } from './errors'
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 import {
-  CreateOutgoingPaymentFromIncomingPaymentInput,
-  Mutation,
-  Query,
+  CreateOutgoingPaymentFromIncoming,
+  GetWalletAddressByUrl,
+  MutationCreateOutgoingPaymentFromIncomingPaymentArgs,
   QueryWalletAddressByUrlArgs
 } from '../graphql/generated/graphql'
 import { CREATE_OUTGOING_PAYMENT_FROM_INCOMING } from '../graphql/mutations/createOutgoingPayment'
@@ -54,32 +54,33 @@ async function handleCreatePayment(
   try {
     const deferred = new Deferred<PaymentEventBody>()
     paymentWaitMap.set(requestId, deferred)
-    const walletAddressByUrl = await deps.apolloClient.query<
-      Query['walletAddressByUrl'],
+    const { data } = await deps.apolloClient.query<
+      GetWalletAddressByUrl,
       QueryWalletAddressByUrlArgs
     >({
       query: GET_WALLET_ADDRESS_BY_URL,
       variables: {
-        url: payment.card.walletAddress
+        url: payment.senderWalletAddress
       }
     })
 
-    if (!walletAddressByUrl?.data) {
+    if (!data?.walletAddressByUrl) {
       throw new UnknownWalletAddressError()
     }
-    const walletAddressId = walletAddressByUrl.data.id
+    const walletAddressId = data.walletAddressByUrl.id
 
     const outgoingPaymentFromIncomingPayment = await deps.apolloClient.mutate<
-      Mutation['createOutgoingPaymentFromIncomingPayment'],
-      CreateOutgoingPaymentFromIncomingPaymentInput
+      CreateOutgoingPaymentFromIncoming,
+      MutationCreateOutgoingPaymentFromIncomingPaymentArgs
     >({
       mutation: CREATE_OUTGOING_PAYMENT_FROM_INCOMING,
       variables: {
-        walletAddressId,
-        incomingPayment: payment.incomingPaymentUrl,
-        cardDetails: {
-          signature: payment.signature,
-          expiry: payment.card.expiry
+        input: {
+          walletAddressId,
+          incomingPayment: payment.incomingPaymentUrl,
+          cardDetails: {
+            signature: payment.signature
+          }
         }
       }
     })

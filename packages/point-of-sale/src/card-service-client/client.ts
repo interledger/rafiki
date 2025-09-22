@@ -8,36 +8,31 @@ import { CardServiceClientError } from './errors'
 import { v4 as uuid } from 'uuid'
 import { BaseService } from '../shared/baseService'
 
-interface Card {
-  trasactionCounter: number
-  expiry: Date
-  // TODO: replace with WalletAddress from payment service
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  walletAddress: any
+interface Amount {
+  value: string
+  assetScale: number
+  assetCode: string
 }
 
-export interface PaymentOptions {
-  merchantWalletAddress: string
-  incomingPaymentUrl: string
-  date: Date
+export interface SendPaymentArgs {
   signature: string
-  card: Card
-  incomingAmount: {
-    assetCode: string
-    assetScale: number
-    value: string
-  }
+  payload: string
+  amount: Amount
+  incomingPaymentUrl: string
+  senderWalletAddress: string
+  timestamp: number
+}
+
+interface CardServicePaymentRequest extends SendPaymentArgs {
+  requestId: string
 }
 
 export interface CardServiceClient {
-  sendPayment(options: PaymentOptions): Promise<Result>
+  sendPayment(cardServiceUrl: string, options: SendPaymentArgs): Promise<Result>
 }
 
 interface ServiceDependencies extends BaseService {
   axios: AxiosInstance
-}
-interface PaymentOptionsWithReqId extends PaymentOptions {
-  requestId: string
 }
 
 export enum Result {
@@ -70,13 +65,15 @@ export async function createCardServiceClient({
     axios
   }
   return {
-    sendPayment: (options) => sendPayment(deps, options)
+    sendPayment: (cardServiceUrl, options) =>
+      sendPayment(deps, cardServiceUrl, options)
   }
 }
 
 async function sendPayment(
   deps: ServiceDependencies,
-  options: PaymentOptions
+  cardServiceUrl: string,
+  args: SendPaymentArgs
 ): Promise<Result> {
   try {
     const config: AxiosRequestConfig = {
@@ -84,13 +81,12 @@ async function sendPayment(
         'Content-Type': 'application/json'
       }
     }
-    const requestBody: PaymentOptionsWithReqId = {
-      ...options,
+    const requestBody: CardServicePaymentRequest = {
+      ...args,
       requestId: uuid()
     }
-    const cardServiceUrl = options.card.walletAddress.cardService
     const response = await deps.axios.post<PaymentResponse>(
-      `${cardServiceUrl}/payment`,
+      `${cardServiceUrl + (cardServiceUrl.endsWith('/') ? 'payment' : '/payment')}`,
       requestBody,
       config
     )
@@ -103,6 +99,7 @@ async function sendPayment(
     }
     return payment.result
   } catch (error) {
+    deps.logger.debug(error)
     if (error instanceof CardServiceClientError) throw error
 
     if (error instanceof AxiosError) {

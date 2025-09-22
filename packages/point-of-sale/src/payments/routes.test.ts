@@ -10,7 +10,6 @@ import { PaymentService } from './service'
 import { CardServiceClient, Result } from '../card-service-client/client'
 import { createContext } from '../tests/context'
 import { CardServiceClientError } from '../card-service-client/errors'
-import { IncomingPaymentState } from '../graphql/generated/graphql'
 import { webhookWaitMap } from '../webhook-handlers/request-map'
 import { faker } from '@faker-js/faker'
 import { withConfigOverride } from '../tests/helpers'
@@ -154,17 +153,11 @@ describe('Payment Routes', () => {
         .spyOn(paymentService, 'createIncomingPayment')
         .mockResolvedValueOnce({
           id: 'incoming-payment-url',
-          url: faker.internet.url(),
-          createdAt: new Date().toString(),
-          walletAddressId: v4(),
-          expiresAt: new Date(Date.now() + 30000).toString(),
-          receivedAmount: {
-            assetCode: 'USD',
-            assetScale: 2,
-            value: BigInt(0)
-          },
-          state: IncomingPaymentState.Pending
+          url: faker.internet.url()
         })
+      jest
+        .spyOn(paymentService, 'getWalletAddressIdByUrl')
+        .mockResolvedValueOnce(faker.internet.url())
     }
   })
 })
@@ -175,14 +168,12 @@ function createPaymentContext() {
     method: 'POST',
     url: `/payment`,
     body: {
-      card: {
-        walletAddress: 'wallet-address',
-        trasactionCounter: 0,
-        expiry: new Date(new Date().getDate() + 1)
-      },
       signature: 'signature',
-      value: 100,
-      merchantWalletAddress: 'merchant-wallet-address'
+      payload: 'payload',
+      receiverWalletAddress: faker.internet.url(),
+      senderWalletAddress: faker.internet.url(),
+      timestamp: new Date().getTime(),
+      amount: { assetScale: 2, assetCode: 'USD', value: '100' }
     }
   })
 }

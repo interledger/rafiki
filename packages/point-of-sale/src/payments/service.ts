@@ -1,12 +1,13 @@
 import { Logger } from 'pino'
 import { CREATE_INCOMING_PAYMENT } from '../graphql/mutations/createIncomingPayment'
 import { IAppConfig } from '../config/app'
-import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
+import { ApolloClient, NormalizedCacheObject, gql } from '@apollo/client'
 import {
   AmountInput,
-  CreateIncomingPaymentInput,
-  IncomingPayment,
-  type Mutation
+  CreateIncomingPayment,
+  MutationCreateIncomingPaymentArgs,
+  Query,
+  QueryWalletAddressByUrlArgs
 } from '../graphql/generated/graphql'
 import { FnWithDeps } from '../shared/types'
 import { v4 } from 'uuid'
@@ -34,12 +35,18 @@ export type WalletAddress = OpenPaymentsWalletAddress & {
   cardService: string
 }
 
+export type CreatedIncomingPayment = {
+  id: string
+  url: string
+}
+
 export type PaymentService = {
   createIncomingPayment: (
     walletAddressId: string,
     incomingAmount: AmountInput
-  ) => Promise<IncomingPayment>
+  ) => Promise<CreatedIncomingPayment>
   getWalletAddress: (walletAddressUrl: string) => Promise<WalletAddress>
+  getWalletAddressIdByUrl: (walletAddressUrl: string) => Promise<string>
 }
 
 export function createPaymentService(
@@ -59,7 +66,9 @@ export function createPaymentService(
       incomingAmount: AmountInput
     ) => createIncomingPayment(deps, walletAddressId, incomingAmount),
     getWalletAddress: (walletAddressUrl: string) =>
-      getWalletAddress(deps, walletAddressUrl)
+      getWalletAddress(deps, walletAddressUrl),
+    getWalletAddressIdByUrl: (walletAddressUrl: string) =>
+      getWalletAddressIdByUrl(deps, walletAddressUrl)
   }
 }
 
@@ -72,20 +81,22 @@ const createIncomingPayment: FnWithDeps<
     Date.now() + deps.config.incomingPaymentExpiryMs
   ).toISOString()
   const { data } = await client.mutate<
-    Mutation['createIncomingPayment'],
-    CreateIncomingPaymentInput
+    CreateIncomingPayment,
+    MutationCreateIncomingPaymentArgs
   >({
     mutation: CREATE_INCOMING_PAYMENT,
     variables: {
-      walletAddressId,
-      incomingAmount,
-      idempotencyKey: v4(),
-      isCardPayment: true,
-      expiresAt
+      input: {
+        walletAddressId,
+        incomingAmount,
+        idempotencyKey: v4(),
+        isCardPayment: true,
+        expiresAt
+      }
     }
   })
 
-  const incomingPayment = data?.payment
+  const incomingPayment = data?.createIncomingPayment.payment
   if (!incomingPayment) {
     deps.logger.error(
       { walletAddressId },
@@ -105,7 +116,7 @@ async function getWalletAddress(
 ): Promise<WalletAddress> {
   const config: AxiosRequestConfig = {
     headers: {
-      'Content-Type': 'application/json'
+      Accept: 'application/json'
     }
   }
   const { data: walletAddress } = await deps.axios.get<
@@ -121,4 +132,27 @@ async function getWalletAddress(
     throw new Error('Missing card service URL')
   }
   return walletAddress as WalletAddress
+}
+
+async function getWalletAddressIdByUrl(
+  deps: ServiceDependencies,
+  walletAddressUrl: string
+): Promise<string> {
+  const client = deps.apolloClient
+  const { data } = await client.query<Query, QueryWalletAddressByUrlArgs>({
+    variables: {
+      url: walletAddressUrl
+    },
+    query: gql`
+      query getWalletAddressByUrl($url: String!) {
+        walletAddressByUrl(url: $url) {
+          id
+        }
+      }
+    `
+  })
+  if (!data?.walletAddressByUrl) {
+    throw new Error('Wallet address not found')
+  }
+  return data.walletAddressByUrl.id
 }

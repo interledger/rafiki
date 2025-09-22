@@ -15,50 +15,38 @@ paths:
               type: object
               required:
                 - requestId
-                - card
-                - merchantWalletAddress
-                - incomingPaymentUrl
-                - date
                 - signature
-                #                - terminalCert
-                - terminalId
+                - payload
+                - amount
+                - timestamp
+                - incomingPaymentUrl
+                - senderWalletAddress
               properties:
                 requestId:
                   type: string
                   format: uuid
-                card:
+                signature:
+                  type: string
+                payload:
+                  type: string
+                amount:
                   type: object
-                  required:
-                    - walletAddress
-                    - transactionCounter
-                    - expiry
                   properties:
-                    walletAddress:
+                    value:
                       type: string
-                      format: uri
-                    transactionCounter:
-                      type: integer
-                    expiry:
+                    assetCode:
                       type: string
-                      pattern: '^(0[1-9]|1[0-2])\/\d{2,4}$'
-                      example: '12/25'
-                      description: 'Card expiry in MM/YY or MM/YYYY format'
-                merchantWalletAddress:
+                    assetScale:
+                      type: number
+                senderWalletAddress:
                   type: string
                   format: uri
                 incomingPaymentUrl:
                   type: string
                   format: uri
-                date:
-                  type: string
-                  format: date-time
-                signature:
-                  type: string
-                #                terminalCert:
-                #                  type: string
-                terminalId:
-                  type: string
-                  format: uuid
+                timestamp:
+                  type: number
+
       responses:
         '201':
           description: Payment request accepted

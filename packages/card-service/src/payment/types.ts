@@ -1,24 +1,23 @@
 import { AppContext } from '../app'
 export interface CardDetails {
   walletAddress: string
-  transactionCounter: number
-  expiry: string
+  signature: string
+}
+
+interface Amount {
+  value: string
+  assetScale: number
+  assetCode: string
 }
 
 export interface PaymentBody {
   requestId: string
-  card: CardDetails
-  merchantWalletAddress: string
-  incomingPaymentUrl: string
-  date: string
   signature: string
-  //  terminalCert: string
-  terminalId: string
-  incomingAmount: {
-    assetCode: string
-    assetScale: number
-    value: string
-  }
+  payload: string
+  amount: Amount
+  senderWalletAddress: string
+  incomingPaymentUrl: string
+  timestamp: number
 }
 
 export type PaymentContext = Omit<AppContext, 'request'> & {
