@@ -2086,8 +2086,16 @@ describe('OutgoingPaymentService', (): void => {
         debitAmount,
         incomingPayment: cardIncomingPayment.getUrl(config.openPaymentsUrl),
         tenantId,
-        cardDetails: { expiry: '12/30', signature: 'sig', requestId: 'req-1' }
+        cardDetails: {
+          requestId: crypto.randomUUID(),
+          data: {
+            signature: 'sig',
+            payload: 'payload'
+          },
+          initiatedAt: new Date()
+        }
       }
+
       const cardOutgoingPayment =
         await outgoingPaymentService.create(cardOptions)
       assert.ok(!isOutgoingPaymentError(cardOutgoingPayment))
@@ -2140,7 +2148,14 @@ describe('OutgoingPaymentService', (): void => {
         debitAmount,
         incomingPayment: cardIncomingPayment.getUrl(config.openPaymentsUrl),
         tenantId,
-        cardDetails: { expiry: '12/30', signature: 'sig', requestId: 'req-2' }
+        cardDetails: {
+          requestId: crypto.randomUUID(),
+          data: {
+            signature: 'sig',
+            payload: 'payload'
+          },
+          initiatedAt: new Date()
+        }
       }
       const cardOutgoingPayment =
         await outgoingPaymentService.create(cardOptions)
