@@ -5,6 +5,9 @@ info:
   description: Card Service API specs
   contact:
     email: tech@interledger.org
+tags:
+  - name: payment
+    description: Operations related to payments
 paths:
   /payment:
     post:
