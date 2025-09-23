@@ -3,7 +3,7 @@ info:
   title: Card Service API
   version: 1.0.0
   description: Card Service API specs
-  contact: 
+  contact:
     email: tech@interledger.org
 paths:
   /payment:
@@ -117,4 +117,4 @@ paths:
           description: Request not found
       description: 'Rafiki backend calls this endpoint to send the payment result.'
       tags:
-        - payment    
+        - payment
