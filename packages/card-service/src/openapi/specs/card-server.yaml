@@ -73,7 +73,7 @@ paths:
           description: Card expired or invalid signature
         '500':
           description: Internal server error
-      description: 'POS service calls this endpoint to accept a payment request.'
+      description: 'POS service calls this endpoint to initiate a payment request.'
       tags:
         - payment
   /payment-event:
