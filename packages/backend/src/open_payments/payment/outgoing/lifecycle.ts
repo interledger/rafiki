@@ -243,18 +243,20 @@ export async function sendWebhookEvent(
     data: payment.toData({ amountSent, balance }),
     withdrawal,
     tenantId: payment.tenantId,
-    webhooks:
-      type === OutgoingPaymentEventType.PaymentFunded ||
-      type === OutgoingPaymentEventType.PaymentCancelled
-        ? finalizeWebhookRecipients(
-            { tenantIds: [payment.tenantId], onlyCard: true },
-            deps.config,
-            deps.logger
-          )
-        : finalizeWebhookRecipients(
-            { tenantIds: [payment.tenantId] },
-            deps.config
-          )
+    webhooks: finalizeWebhookRecipients(
+      (() => {
+        const notifyCardOnly =
+          type === OutgoingPaymentEventType.PaymentFunded ||
+          type === OutgoingPaymentEventType.PaymentCancelled
+        return {
+          tenantIds: [payment.tenantId],
+          sendToCardService: notifyCardOnly,
+          omitTenantRecipients: notifyCardOnly
+        }
+      })(),
+      deps.config,
+      deps.logger
+    )
   })
   stopTimer()
 }

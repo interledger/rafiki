@@ -380,7 +380,8 @@ async function handleDeactivated(
       webhooks: finalizeWebhookRecipients(
         {
           tenantIds: [incomingPayment.tenantId],
-          initiationReason: incomingPayment.initiatedBy
+          sendToPosService:
+            incomingPayment.initiatedBy === IncomingPaymentInitiationReason.Card
         },
         deps.config,
         deps.logger

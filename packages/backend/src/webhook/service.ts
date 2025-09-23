@@ -16,7 +16,6 @@ import {
 } from '../tenants/settings/model'
 import { TenantSettingService } from '../tenants/settings/service'
 import { Logger } from 'pino'
-import { IncomingPaymentInitiationReason } from '../open_payments/payment/incoming/types'
 
 // First retry waits 10 seconds
 // Second retry waits 20 (more) seconds
@@ -302,8 +301,9 @@ async function getWebhookEventsPage(
 
 type FinalizeRecipientsOptions = {
   tenantIds: string[]
-  initiationReason?: IncomingPaymentInitiationReason
-  onlyCard?: boolean
+  sendToPosService?: boolean
+  sendToCardService?: boolean
+  omitTenantRecipients?: boolean
 }
 
 export function finalizeWebhookRecipients(
@@ -354,18 +354,18 @@ export function finalizeWebhookRecipients(
     ]
   }
 
-  if (options.onlyCard) {
-    return buildCardRecipient()
+  let recipients: Pick<Webhook, 'recipientTenantId' | 'metadata'>[] = []
+  if (!options.omitTenantRecipients) {
+    recipients = [...tenantIdSet.values()].map((tenantId) => ({
+      recipientTenantId: tenantId
+    }))
   }
 
-  let recipients: Pick<Webhook, 'recipientTenantId' | 'metadata'>[] = [
-    ...tenantIdSet.values()
-  ].map((tenantId) => ({
-    recipientTenantId: tenantId
-  }))
-
-  if (options.initiationReason === IncomingPaymentInitiationReason.Card) {
+  if (options.sendToPosService) {
     recipients = recipients.concat(buildPosRecipient())
+  }
+  if (options.sendToCardService) {
+    recipients = recipients.concat(buildCardRecipient())
   }
 
   return recipients
