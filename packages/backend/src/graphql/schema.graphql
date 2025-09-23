@@ -1064,6 +1064,7 @@ type OutgoingPaymentCardDetails implements Model {
   id: ID!
   outgoingPaymentId: ID!
   signature: String!
+  requestId: String
   createdAt: String!
   updatedAt: String!
 }
@@ -1250,6 +1251,8 @@ input CreateOutgoingPaymentInput {
 input CardDetailsInput {
   "Signature"
   signature: String!
+  "Unique card request identifier from POS/Card Service"
+  requestId: String
 }
 
 input CancelOutgoingPaymentInput {
@@ -1257,6 +1260,12 @@ input CancelOutgoingPaymentInput {
   id: ID!
   "Reason why this outgoing payment has been canceled. This value will be publicly visible in the metadata field if this outgoing payment is requested through Open Payments."
   reason: String
+  "If card flow, optional machine-readable failure reason"
+  cardPaymentFailureReason: CardPaymentFailureReason
+}
+
+enum CardPaymentFailureReason {
+  invalid_signature
 }
 
 input CreateOutgoingPaymentFromIncomingPaymentInput {
@@ -1505,8 +1514,10 @@ input WebhookEventFilter {
 }
 
 input FilterString {
-  "Array of strings to filter by."
-  in: [String!]!
+  "Array of strings to include."
+  in: [String!]
+  "Array of strings to exclude."
+  notIn: [String!]
 }
 
 interface Model {
