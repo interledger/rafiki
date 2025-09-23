@@ -7,7 +7,6 @@ exports.up = function (knex) {
     table.dropColumn('expiry')
     table.dropColumn('signature')
 
-    table.uuid('requestId').notNullable()
     table.jsonb('data').notNullable()
     table.timestamp('initiatedAt').notNullable()
   })
@@ -19,7 +18,6 @@ exports.up = function (knex) {
  */
 exports.down = function (knex) {
   return knex.schema.alterTable('outgoingPaymentCardDetails', function (table) {
-    table.dropColumn('requestId')
     table.dropColumn('data')
     table.dropColumn('initiatedAt')
 
