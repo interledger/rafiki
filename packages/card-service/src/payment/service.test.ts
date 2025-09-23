@@ -109,7 +109,12 @@ describe('PaymentService', () => {
             walletAddressId: expect.any(String),
             incomingPayment: paymentFixture.incomingPaymentUrl,
             cardDetails: {
-              signature: paymentFixture.signature
+              requestId: paymentFixture.requestId,
+              initiatedAt: new Date(paymentFixture.timestamp).toISOString(),
+              data: {
+                signature: paymentFixture.signature,
+                payload: paymentFixture.payload
+              }
             }
           }
         }

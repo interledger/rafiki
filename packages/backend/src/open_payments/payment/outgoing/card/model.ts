@@ -8,9 +8,9 @@ export const outgoingPaymentCardDetailsRelation: OutgoingPaymentIdRelation =
   'outgoingPaymentCardDetails.outgoingPaymentId'
 
 type OutgoingPaymentCardDetailsType = {
-  expiry: string
-  signature: string
   requestId: string
+  data: Record<string, unknown>
+  initiatedAt: Date
 } & {
   [key in OutgoingPaymentIdColumnName]: string
 }
@@ -23,8 +23,8 @@ export class OutgoingPaymentCardDetails
     return 'outgoingPaymentCardDetails'
   }
 
-  public expiry!: string
   public readonly outgoingPaymentId!: string
-  public signature!: string
   public requestId!: string
+  public data!: Record<string, unknown>
+  public initiatedAt!: Date
 }

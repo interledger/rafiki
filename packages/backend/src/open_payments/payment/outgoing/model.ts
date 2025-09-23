@@ -201,9 +201,6 @@ export class OutgoingPayment
       createdAt: new Date(+this.createdAt).toISOString(),
       balance: balance.toString()
     }
-    if (this.cardDetails?.requestId) {
-      data.cardDetails = { requestId: this.cardDetails.requestId }
-    }
     if (this.metadata) {
       data.metadata = this.metadata
     }
@@ -213,6 +210,13 @@ export class OutgoingPayment
 
     if (this.grantId) {
       data.grantId = this.grantId
+    }
+    if (this.cardDetails) {
+      data.cardDetails = {
+        requestId: this.cardDetails.requestId,
+        data: this.cardDetails.data,
+        initiatedAt: this.cardDetails.initiatedAt
+      }
     }
     return data
   }
@@ -318,9 +322,10 @@ export type PaymentData = Omit<OutgoingPaymentResponse, 'failed'> & {
   stateAttempts: number
   balance: string
   grantId?: string
-  cardDetails?: {
-    requestId?: string
-  }
+  cardDetails?: Pick<
+    OutgoingPaymentCardDetails,
+    'requestId' | 'data' | 'initiatedAt'
+  >
 }
 
 export const isOutgoingPaymentEventType = (
