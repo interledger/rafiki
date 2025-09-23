@@ -18,6 +18,7 @@ import {
   OutgoingPaymentState,
   OutgoingPaymentEventType
 } from './model'
+import { OutgoingPaymentInitiationReason } from './model'
 import { Grant } from '../../auth/middleware'
 import {
   AccountingService,
@@ -212,6 +213,7 @@ export type CancelOutgoingPaymentOptions = {
   id: string
   tenantId: string
   reason?: string
+  cardPaymentFailureReason?: 'invalid_signature'
 }
 
 export type CreateOutgoingPaymentOptions =
@@ -256,7 +258,10 @@ async function cancelOutgoingPayment(
         state: OutgoingPaymentState.Cancelled,
         metadata: {
           ...payment.metadata,
-          ...(options.reason ? { cancellationReason: options.reason } : {})
+          ...(options.reason ? { cancellationReason: options.reason } : {}),
+          ...(options.cardPaymentFailureReason
+            ? { cardPaymentFailureReason: options.cardPaymentFailureReason }
+            : {})
         }
       })
       .withGraphFetched('quote')
@@ -266,6 +271,15 @@ async function cancelOutgoingPayment(
     payment.walletAddress = await deps.walletAddressService.get(
       payment.walletAddressId
     )
+
+    if (payment.initiatedBy === OutgoingPaymentInitiationReason.Card) {
+      await sendWebhookEvent(
+        deps,
+        payment,
+        OutgoingPaymentEventType.PaymentCancelled,
+        trx
+      )
+    }
 
     return addSentAmount(deps, payment)
   })
@@ -385,6 +399,15 @@ async function createOutgoingPayment(
             }
           )
 
+          let initiatedBy: OutgoingPaymentInitiationReason
+          if (isCreateFromCardPayment(options)) {
+            initiatedBy = OutgoingPaymentInitiationReason.Card
+          } else if (options.grant) {
+            initiatedBy = OutgoingPaymentInitiationReason.OpenPayments
+          } else {
+            initiatedBy = OutgoingPaymentInitiationReason.Admin
+          }
+
           const payment = await OutgoingPayment.query(trx).insertAndFetch({
             id: quoteId,
             tenantId,
@@ -392,7 +415,8 @@ async function createOutgoingPayment(
             client: options.client,
             metadata: options.metadata,
             state: OutgoingPaymentState.Funding,
-            grantId
+            grantId,
+            initiatedBy
           })
 
           if (isCreateFromCardPayment(options)) {
@@ -733,6 +757,15 @@ async function fundPayment(
       return error
     }
     await payment.$query(trx).patch({ state: OutgoingPaymentState.Sending })
+
+    if (payment.initiatedBy === OutgoingPaymentInitiationReason.Card) {
+      await sendWebhookEvent(
+        deps,
+        payment,
+        OutgoingPaymentEventType.PaymentFunded,
+        trx
+      )
+    }
     return await addSentAmount(deps, payment)
   })
 }

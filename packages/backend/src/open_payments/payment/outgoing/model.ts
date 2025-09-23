@@ -107,6 +107,8 @@ export class OutgoingPayment
 
   public cardDetails?: OutgoingPaymentCardDetails
 
+  public initiatedBy!: OutgoingPaymentInitiationReason
+
   public quote!: Quote
 
   public get assetId(): string {
@@ -276,13 +278,30 @@ export enum OutgoingPaymentWithdrawType {
   PaymentCompleted = 'outgoing_payment.completed'
 }
 
+// Events that reflect status changes but do not directly drive deposit/withdraw flows
+export enum OutgoingPaymentStatusType {
+  PaymentFunded = 'outgoing_payment.funded',
+  PaymentCancelled = 'outgoing_payment.cancelled'
+}
+
+export const enum OutgoingPaymentInitiationReason {
+  // The outgoing payment was initiated by a card payment.
+  Card = 'CARD',
+  // The outgoing payment was initiated through Open Payments.
+  OpenPayments = 'OPEN_PAYMENTS',
+  // The outgoing payment was initiated by the Admin API.
+  Admin = 'ADMIN'
+}
+
 export const OutgoingPaymentEventType = {
   ...OutgoingPaymentDepositType,
-  ...OutgoingPaymentWithdrawType
+  ...OutgoingPaymentWithdrawType,
+  ...OutgoingPaymentStatusType
 }
 export type OutgoingPaymentEventType =
   | OutgoingPaymentDepositType
   | OutgoingPaymentWithdrawType
+  | OutgoingPaymentStatusType
 
 export interface OutgoingPaymentResponse {
   id: string

@@ -113,10 +113,10 @@ describe('OutgoingPaymentService', (): void => {
     [key in OutgoingPaymentState]: OutgoingPaymentEventType | undefined
   } = {
     [OutgoingPaymentState.Funding]: OutgoingPaymentEventType.PaymentCreated,
-    [OutgoingPaymentState.Sending]: undefined,
+    [OutgoingPaymentState.Sending]: OutgoingPaymentEventType.PaymentFunded,
     [OutgoingPaymentState.Failed]: OutgoingPaymentEventType.PaymentFailed,
     [OutgoingPaymentState.Completed]: OutgoingPaymentEventType.PaymentCompleted,
-    [OutgoingPaymentState.Cancelled]: undefined
+    [OutgoingPaymentState.Cancelled]: OutgoingPaymentEventType.PaymentCancelled
   }
 
   async function processNext(
@@ -132,7 +132,7 @@ describe('OutgoingPaymentService', (): void => {
     if (expectState) expect(payment.state).toBe(expectState)
     expect(payment.error).toEqual(expectedError || null)
     const type = webhookTypes[payment.state]
-    if (type) {
+    if (type && type !== OutgoingPaymentEventType.PaymentFunded) {
       await expect(
         OutgoingPaymentEvent.query(knex).where({
           type
@@ -1537,6 +1537,44 @@ describe('OutgoingPaymentService', (): void => {
 
       expect(cardDetails).toHaveLength(1)
     })
+
+    test('persists requestId in cardDetails and includes in webhook data', async () => {
+      const paymentMethods: OpenPaymentsPaymentMethod[] = [
+        {
+          type: 'ilp',
+          ilpAddress: 'test.ilp' as IlpAddress,
+          sharedSecret: ''
+        }
+      ]
+      const debitAmount = {
+        value: BigInt(123),
+        assetCode: receiverWalletAddress.asset.code,
+        assetScale: receiverWalletAddress.asset.scale
+      }
+      const requestId = 'req-123'
+      const options: CreateFromCardPayment = {
+        walletAddressId: receiverWalletAddress.id,
+        debitAmount,
+        incomingPayment: incomingPayment.toOpenPaymentsTypeWithMethods(
+          config.openPaymentsUrl,
+          receiverWalletAddress,
+          paymentMethods
+        ).id,
+        tenantId,
+        cardDetails: {
+          expiry: '12/30',
+          signature: 'sig',
+          requestId
+        }
+      }
+      const created = await outgoingPaymentService.create(options)
+      assert.ok(!isOutgoingPaymentError(created))
+      const fetched = await OutgoingPayment.query(knex)
+        .findById(created.id)
+        .withGraphFetched('cardDetails')
+      assert.ok(fetched?.cardDetails)
+      expect(fetched.cardDetails.requestId).toBe(requestId)
+    })
   })
 
   describe('processNext', (): void => {
@@ -2069,6 +2107,110 @@ describe('OutgoingPaymentService', (): void => {
         OutgoingPaymentState.Failed,
         LifecycleError.QuoteExpired
       )
+    })
+  })
+
+  describe('webhook events for funded/cancelled (card vs non-card)', (): void => {
+    test('emits funded only for card flows', async (): Promise<void> => {
+      // Create card flow outgoing payment
+      const cardIncomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: receiverWalletAddress.id,
+        tenantId: Config.operatorTenantId,
+        initiationReason: IncomingPaymentInitiationReason.Card
+      })
+      const cardOptions: CreateFromCardPayment = {
+        walletAddressId,
+        debitAmount,
+        incomingPayment: cardIncomingPayment.getUrl(config.openPaymentsUrl),
+        tenantId,
+        cardDetails: { expiry: '12/30', signature: 'sig', requestId: 'req-1' }
+      }
+      const cardOutgoingPayment =
+        await outgoingPaymentService.create(cardOptions)
+      assert.ok(!isOutgoingPaymentError(cardOutgoingPayment))
+      await outgoingPaymentService.fund({
+        id: cardOutgoingPayment.id,
+        tenantId,
+        amount: debitAmount.value,
+        transferId: uuid()
+      })
+      await expect(
+        OutgoingPaymentEvent.query(knex).where({
+          outgoingPaymentId: cardOutgoingPayment.id,
+          type: OutgoingPaymentEventType.PaymentFunded
+        })
+      ).resolves.not.toHaveLength(0)
+
+      // Create non-card outgoing payment
+      const nonCard = await createOutgoingPayment(deps, {
+        tenantId,
+        walletAddressId,
+        client,
+        receiver,
+        debitAmount,
+        validDestination: true,
+        method: 'ilp'
+      })
+      await outgoingPaymentService.fund({
+        id: nonCard.id,
+        tenantId,
+        amount: debitAmount.value,
+        transferId: uuid()
+      })
+      await expect(
+        OutgoingPaymentEvent.query(knex).where({
+          outgoingPaymentId: nonCard.id,
+          type: OutgoingPaymentEventType.PaymentFunded
+        })
+      ).resolves.toHaveLength(0)
+    })
+
+    test('emits cancelled only for card flows', async (): Promise<void> => {
+      // Create card flow outgoing payment and cancel
+      const cardIncomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: receiverWalletAddress.id,
+        tenantId: Config.operatorTenantId,
+        initiationReason: IncomingPaymentInitiationReason.Card
+      })
+      const cardOptions: CreateFromCardPayment = {
+        walletAddressId,
+        debitAmount,
+        incomingPayment: cardIncomingPayment.getUrl(config.openPaymentsUrl),
+        tenantId,
+        cardDetails: { expiry: '12/30', signature: 'sig', requestId: 'req-2' }
+      }
+      const cardOutgoingPayment =
+        await outgoingPaymentService.create(cardOptions)
+      assert.ok(!isOutgoingPaymentError(cardOutgoingPayment))
+
+      await outgoingPaymentService.cancel({
+        id: cardOutgoingPayment.id,
+        tenantId
+      })
+      await expect(
+        OutgoingPaymentEvent.query(knex).where({
+          outgoingPaymentId: cardOutgoingPayment.id,
+          type: OutgoingPaymentEventType.PaymentCancelled
+        })
+      ).resolves.not.toHaveLength(0)
+
+      // Create non-card outgoing payment and cancel
+      const nonCard = await createOutgoingPayment(deps, {
+        tenantId,
+        walletAddressId,
+        client,
+        receiver,
+        debitAmount,
+        validDestination: true,
+        method: 'ilp'
+      })
+      await outgoingPaymentService.cancel({ id: nonCard.id, tenantId })
+      await expect(
+        OutgoingPaymentEvent.query(knex).where({
+          outgoingPaymentId: nonCard.id,
+          type: OutgoingPaymentEventType.PaymentCancelled
+        })
+      ).resolves.toHaveLength(0)
     })
   })
 

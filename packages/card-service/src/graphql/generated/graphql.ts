@@ -185,6 +185,8 @@ export type CancelIncomingPaymentResponse = {
 };
 
 export type CancelOutgoingPaymentInput = {
+  /** If card flow, optional machine-readable failure reason */
+  cardPaymentFailureReason?: InputMaybe<CardPaymentFailureReason>;
   /** Unique identifier of the outgoing payment to cancel. */
   id: Scalars['ID']['input'];
   /** Reason why this outgoing payment has been canceled. This value will be publicly visible in the metadata field if this outgoing payment is requested through Open Payments. */
@@ -196,6 +198,10 @@ export type CardDetailsInput = {
   initiatedAt: Scalars['String']['input'];
   requestId: Scalars['String']['input'];
 };
+
+export enum CardPaymentFailureReason {
+  InvalidSignature = 'invalid_signature'
+}
 
 export type CreateAssetInput = {
   /** Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets). */
@@ -571,8 +577,10 @@ export type FeesConnection = {
 };
 
 export type FilterString = {
-  /** Array of strings to filter by. */
-  in: Array<Scalars['String']['input']>;
+  /** Array of strings to include. */
+  in?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Array of strings to exclude. */
+  notIn?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type Http = {
@@ -1945,6 +1953,7 @@ export type ResolversTypes = {
   CancelIncomingPaymentResponse: ResolverTypeWrapper<Partial<CancelIncomingPaymentResponse>>;
   CancelOutgoingPaymentInput: ResolverTypeWrapper<Partial<CancelOutgoingPaymentInput>>;
   CardDetailsInput: ResolverTypeWrapper<Partial<CardDetailsInput>>;
+  CardPaymentFailureReason: ResolverTypeWrapper<Partial<CardPaymentFailureReason>>;
   CreateAssetInput: ResolverTypeWrapper<Partial<CreateAssetInput>>;
   CreateAssetLiquidityWithdrawalInput: ResolverTypeWrapper<Partial<CreateAssetLiquidityWithdrawalInput>>;
   CreateIncomingPaymentInput: ResolverTypeWrapper<Partial<CreateIncomingPaymentInput>>;
