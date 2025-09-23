@@ -1145,23 +1145,7 @@
           },
           {
             "name": "requestId",
-            "description": "Unique card request identifier from POS/Card Service",
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "signature",
-            "description": "Signature",
+            "description": null,
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1775,18 +1759,6 @@
         "isOneOf": false,
         "fields": null,
         "inputFields": [
-          {
-            "name": "cardDetails",
-            "description": "Used for the card service to provide the card signature",
-            "type": {
-              "kind": "INPUT_OBJECT",
-              "name": "CardDetailsInput",
-              "ofType": null
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
           {
             "name": "idempotencyKey",
             "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
@@ -4545,11 +4517,6 @@
           },
           {
             "kind": "OBJECT",
-            "name": "OutgoingPaymentCardDetails",
-            "ofType": null
-          },
-          {
-            "kind": "OBJECT",
             "name": "Payment",
             "ofType": null
           },
@@ -5793,18 +5760,6 @@
         "isOneOf": null,
         "fields": [
           {
-            "name": "cardDetails",
-            "description": "Used for the card service to provide the card expiry and signature",
-            "args": [],
-            "type": {
-              "kind": "OBJECT",
-              "name": "OutgoingPaymentCardDetails",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "client",
             "description": "Information about the wallet address of the Open Payments client that created the outgoing payment.",
             "args": [],
@@ -6040,116 +5995,6 @@
             "name": "BasePayment",
             "ofType": null
           },
-          {
-            "kind": "INTERFACE",
-            "name": "Model",
-            "ofType": null
-          }
-        ],
-        "enumValues": null,
-        "possibleTypes": null
-      },
-      {
-        "kind": "OBJECT",
-        "name": "OutgoingPaymentCardDetails",
-        "description": null,
-        "isOneOf": null,
-        "fields": [
-          {
-            "name": "createdAt",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "id",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "ID",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "outgoingPaymentId",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "ID",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "requestId",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "signature",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "updatedAt",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          }
-        ],
-        "inputFields": null,
-        "interfaces": [
           {
             "kind": "INTERFACE",
             "name": "Model",

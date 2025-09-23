@@ -201,9 +201,6 @@ export class OutgoingPayment
       createdAt: new Date(+this.createdAt).toISOString(),
       balance: balance.toString()
     }
-    if (this.cardDetails?.requestId) {
-      data.cardDetails = { requestId: this.cardDetails.requestId }
-    }
     if (this.metadata) {
       data.metadata = this.metadata
     }
