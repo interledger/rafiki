@@ -1536,44 +1536,7 @@ describe('OutgoingPaymentService', (): void => {
       })
 
       expect(cardDetails).toHaveLength(1)
-    })
-
-    test('persists requestId in cardDetails and includes in webhook data', async () => {
-      const paymentMethods: OpenPaymentsPaymentMethod[] = [
-        {
-          type: 'ilp',
-          ilpAddress: 'test.ilp' as IlpAddress,
-          sharedSecret: ''
-        }
-      ]
-      const debitAmount = {
-        value: BigInt(123),
-        assetCode: receiverWalletAddress.asset.code,
-        assetScale: receiverWalletAddress.asset.scale
-      }
-      const requestId = 'req-123'
-      const options: CreateFromCardPayment = {
-        walletAddressId: receiverWalletAddress.id,
-        debitAmount,
-        incomingPayment: incomingPayment.toOpenPaymentsTypeWithMethods(
-          config.openPaymentsUrl,
-          receiverWalletAddress,
-          paymentMethods
-        ).id,
-        tenantId,
-        cardDetails: {
-          expiry: '12/30',
-          signature: 'sig',
-          requestId
-        }
-      }
-      const created = await outgoingPaymentService.create(options)
-      assert.ok(!isOutgoingPaymentError(created))
-      const fetched = await OutgoingPayment.query(knex)
-        .findById(created.id)
-        .withGraphFetched('cardDetails')
-      assert.ok(fetched?.cardDetails)
-      expect(fetched.cardDetails.requestId).toBe(requestId)
+      expect(cardDetails[0].requestId).toBe(options.cardDetails.requestId)
     })
   })
 
