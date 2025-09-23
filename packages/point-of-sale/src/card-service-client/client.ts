@@ -8,32 +8,31 @@ import { CardServiceClientError } from './errors'
 import { v4 as uuid } from 'uuid'
 import { BaseService } from '../shared/baseService'
 
-export interface Card {
-  signature: string
-  walletAddress: string
+interface Amount {
+  value: string
+  assetScale: number
+  assetCode: string
 }
 
-export interface PaymentOptions {
-  merchantWalletAddress: string
+export interface SendPaymentArgs {
+  signature: string
+  payload: string
+  amount: Amount
   incomingPaymentUrl: string
-  date: string
-  card: Card
-  incomingAmount: {
-    assetCode: string
-    assetScale: number
-    value: string
-  }
+  senderWalletAddress: string
+  timestamp: number
+}
+
+interface CardServicePaymentRequest extends SendPaymentArgs {
+  requestId: string
 }
 
 export interface CardServiceClient {
-  sendPayment(cardServiceUrl: string, options: PaymentOptions): Promise<Result>
+  sendPayment(cardServiceUrl: string, options: SendPaymentArgs): Promise<Result>
 }
 
 interface ServiceDependencies extends BaseService {
   axios: AxiosInstance
-}
-interface PaymentOptionsWithReqId extends PaymentOptions {
-  requestId: string
 }
 
 export enum Result {
@@ -74,7 +73,7 @@ export async function createCardServiceClient({
 async function sendPayment(
   deps: ServiceDependencies,
   cardServiceUrl: string,
-  options: PaymentOptions
+  args: SendPaymentArgs
 ): Promise<Result> {
   try {
     const config: AxiosRequestConfig = {
@@ -82,8 +81,8 @@ async function sendPayment(
         'Content-Type': 'application/json'
       }
     }
-    const requestBody: PaymentOptionsWithReqId = {
-      ...options,
+    const requestBody: CardServicePaymentRequest = {
+      ...args,
       requestId: uuid()
     }
     const response = await deps.axios.post<PaymentResponse>(

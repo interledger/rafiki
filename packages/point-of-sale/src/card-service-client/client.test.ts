@@ -1,6 +1,6 @@
 import {
   CardServiceClient,
-  PaymentOptions,
+  SendPaymentArgs,
   PaymentResponse,
   Result,
   createCardServiceClient
@@ -33,15 +33,13 @@ describe('CardServiceClient', () => {
     result: result ?? Result.APPROVED
   })
 
-  const options: PaymentOptions = {
+  const options: SendPaymentArgs = {
     incomingPaymentUrl: 'incomingPaymentUrl',
-    merchantWalletAddress: '',
-    date: new Date(),
-    card: {
-      walletAddress: faker.internet.url(),
-      signature: ''
-    },
-    incomingAmount: {
+    senderWalletAddress: faker.internet.url(),
+    timestamp: new Date().getTime(),
+    signature: '',
+    payload: '',
+    amount: {
       assetCode: 'USD',
       assetScale: 2,
       value: '100'

@@ -1,6 +1,5 @@
 import { AppContext } from '../app'
-import { Card, CardServiceClient, Result } from '../card-service-client/client'
-import { AmountInput } from '../graphql/generated/graphql'
+import { CardServiceClient, Result } from '../card-service-client/client'
 import { BaseService } from '../shared/baseService'
 import { PaymentService } from './service'
 import { CardServiceClientError } from '../card-service-client/errors'
@@ -20,13 +19,23 @@ interface ServiceDependencies extends BaseService {
   cardServiceClient: CardServiceClient
 }
 
-export type PaymentBody = {
-  card: Card
-  value: bigint
-  merchantWalletAddress: string
+interface Amount {
+  value: string
+  assetScale: number
+  assetCode: string
 }
+
+export interface PaymentRequestBody {
+  signature: string
+  payload: string
+  amount: Amount
+  senderWalletAddress: string
+  receiverWalletAddress: string
+  timestamp: number
+}
+
 type PaymentRequest = Exclude<AppContext['request'], 'body'> & {
-  body: PaymentBody
+  body: PaymentRequestBody
 }
 
 export type PaymentContext = Exclude<AppContext, 'request'> & {
@@ -58,24 +67,21 @@ async function payment(
 ): Promise<void> {
   const body = ctx.request.body
   try {
-    const cardWalletAddress = body.card.walletAddress.replace(
-      /^https:/,
-      'http:'
-    )
-    const walletAddress =
-      await deps.paymentService.getWalletAddress(cardWalletAddress)
-    const incomingAmount: AmountInput = {
-      assetCode: walletAddress.assetCode,
-      assetScale: walletAddress.assetScale,
-      value: body.value
-    }
-    const walletAddressId = await deps.paymentService.getWalletAddressIdByUrl(
-      body.merchantWalletAddress
+    const senderWalletAddress = await deps.paymentService.getWalletAddress(
+      body.senderWalletAddress.replace(/^https:/, 'http:')
     )
 
+    const receiverWalletAddressId =
+      await deps.paymentService.getWalletAddressIdByUrl(
+        body.receiverWalletAddress
+      )
+
     const incomingPayment = await deps.paymentService.createIncomingPayment(
-      walletAddressId,
-      incomingAmount
+      receiverWalletAddressId,
+      {
+        ...body.amount,
+        value: BigInt(body.amount.value)
+      }
     )
     const deferred = new Deferred<WebhookBody>()
     webhookWaitMap.setWithExpiry(
@@ -84,16 +90,14 @@ async function payment(
       deps.config.webhookTimeoutMs
     )
     const result = await deps.cardServiceClient.sendPayment(
-      walletAddress.cardService,
+      senderWalletAddress.cardService,
       {
-        merchantWalletAddress: body.merchantWalletAddress,
+        signature: body.signature,
+        payload: body.payload,
+        amount: body.amount,
+        senderWalletAddress: body.senderWalletAddress,
         incomingPaymentUrl: incomingPayment.url,
-        date: new Date().toISOString(),
-        card: body.card,
-        incomingAmount: {
-          ...incomingAmount,
-          value: incomingAmount.value.toString()
-        }
+        timestamp: body.timestamp
       }
     )
 

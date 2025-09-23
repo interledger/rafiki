@@ -4,18 +4,20 @@ export interface CardDetails {
   signature: string
 }
 
+interface Amount {
+  value: string
+  assetScale: number
+  assetCode: string
+}
+
 export interface PaymentBody {
   requestId: string
-  card: CardDetails
-  merchantWalletAddress: string
+  signature: string
+  payload: string
+  amount: Amount
+  senderWalletAddress: string
   incomingPaymentUrl: string
-  date: string
-  //  terminalCert: string
-  incomingAmount: {
-    assetCode: string
-    assetScale: number
-    value: string
-  }
+  timestamp: number
 }
 
 export type PaymentContext = Omit<AppContext, 'request'> & {
