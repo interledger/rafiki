@@ -10,10 +10,8 @@ import { CreateOutgoingPaymentOptions } from '../open_payments/payment/outgoing/
 import { LiquidityAccountType } from '../accounting/service'
 import { WalletAddress } from '../open_payments/wallet_address/model'
 import { CreateIncomingPaymentOptions } from '../open_payments/payment/incoming/service'
-import {
-  IncomingPayment,
-  IncomingPaymentInitiationReason
-} from '../open_payments/payment/incoming/model'
+import { IncomingPayment } from '../open_payments/payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../open_payments/payment/incoming/types'
 import { createIncomingPayment } from './incomingPayment'
 import assert from 'assert'
 import { Config } from '../config/app'

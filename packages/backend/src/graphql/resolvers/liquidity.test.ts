@@ -28,7 +28,7 @@ import {
   IncomingPayment,
   IncomingPaymentEventType
 } from '../../open_payments/payment/incoming/model'
-import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/types'
 import {
   OutgoingPayment,
   OutgoingPaymentEvent,

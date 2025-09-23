@@ -10,9 +10,9 @@ import {
   IncomingPayment,
   IncomingPaymentEvent,
   IncomingPaymentEventType,
-  IncomingPaymentState,
-  IncomingPaymentInitiationReason
+  IncomingPaymentState
 } from './model'
+import { IncomingPaymentInitiationReason } from './types'
 import { Config, IAppConfig } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'

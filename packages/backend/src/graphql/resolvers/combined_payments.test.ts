@@ -26,7 +26,7 @@ import {
 } from '../../open_payments/payment/combined/model'
 import { getPageTests } from './page.test'
 import { createTenant } from '../../tests/tenant'
-import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/types'
 
 describe('Payment', (): void => {
   let deps: IocContract<AppServices>

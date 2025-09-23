@@ -19,9 +19,9 @@ import { IncomingPaymentService } from '../../open_payments/payment/incoming/ser
 import { AccountingService } from '../../accounting/service'
 import {
   IncomingPayment as IncomingPaymentModel,
-  IncomingPaymentState,
-  IncomingPaymentInitiationReason
+  IncomingPaymentState
 } from '../../open_payments/payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/types'
 import {
   IncomingPayment,
   IncomingPaymentResponse,

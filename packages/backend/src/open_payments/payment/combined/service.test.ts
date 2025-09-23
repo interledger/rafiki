@@ -21,7 +21,7 @@ import {
   toCombinedPayment
 } from '../../../tests/combinedPayment'
 import { createTenant } from '../../../tests/tenant'
-import { IncomingPaymentInitiationReason } from '../incoming/model'
+import { IncomingPaymentInitiationReason } from '../incoming/types'
 
 describe('Combined Payment Service', (): void => {
   let deps: IocContract<AppServices>

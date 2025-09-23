@@ -21,9 +21,9 @@ import { truncateTables } from '../../tests/tableManager'
 import { AssetOptions } from '../../asset/service'
 import {
   IncomingPayment,
-  IncomingPaymentState,
-  IncomingPaymentInitiationReason
+  IncomingPaymentState
 } from '../payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../payment/incoming/types'
 import { getTests } from '../wallet_address/model.test'
 import { WalletAddress } from '../wallet_address/model'
 import { Fee, FeeType } from '../../fee/model'

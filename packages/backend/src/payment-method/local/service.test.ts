@@ -18,9 +18,9 @@ import { createOutgoingPaymentWithReceiver } from '../../tests/outgoingPayment'
 import { OutgoingPayment } from '../../open_payments/payment/outgoing/model'
 import {
   IncomingPayment,
-  IncomingPaymentState,
-  IncomingPaymentInitiationReason
+  IncomingPaymentState
 } from '../../open_payments/payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/types'
 import { IncomingPaymentService } from '../../open_payments/payment/incoming/service'
 import { errorToMessage, TransferError } from '../../accounting/errors'
 import { PaymentMethodHandlerError } from '../handler/errors'

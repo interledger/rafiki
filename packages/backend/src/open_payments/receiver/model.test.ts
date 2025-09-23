@@ -7,10 +7,8 @@ import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
 import { Receiver } from './model'
-import {
-  IncomingPaymentState,
-  IncomingPaymentInitiationReason
-} from '../payment/incoming/model'
+import { IncomingPaymentState } from '../payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../payment/incoming/types'
 
 describe('Receiver Model', (): void => {
   let deps: IocContract<AppServices>

@@ -2,9 +2,9 @@ import {
   IncomingPayment,
   IncomingPaymentEvent,
   IncomingPaymentEventType,
-  IncomingPaymentState,
-  IncomingPaymentInitiationReason
+  IncomingPaymentState
 } from './model'
+import { IncomingPaymentInitiationReason } from './types'
 import { AccountingService } from '../../../accounting/service'
 import { BaseService } from '../../../shared/baseService'
 import { Knex } from 'knex'

@@ -6,7 +6,7 @@ import { WalletAddress } from '../open_payments/wallet_address/model'
 import { Receiver } from '../open_payments/receiver/model'
 import { createIncomingPayment } from './incomingPayment'
 import { OpenPaymentsPaymentMethod } from '../payment-method/provider/service'
-import { IncomingPaymentInitiationReason } from '../open_payments/payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../open_payments/payment/incoming/types'
 
 type CreateReceiverOptions = Omit<
   CreateIncomingPaymentOptions,
