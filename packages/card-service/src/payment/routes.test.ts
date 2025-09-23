@@ -16,7 +16,6 @@ import { IocContract } from '@adonisjs/fold'
 import { PaymentRoutes } from './routes'
 import { createContext } from '../tests/context'
 import { PaymentTimeoutError } from './errors'
-import { truncateTables } from '../tests/tableManager'
 
 describe('PaymentRoutes', () => {
   const method = 'POST'
@@ -55,14 +54,6 @@ describe('PaymentRoutes', () => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     routes = await deps.use('paymentRoutes')
-  })
-
-  beforeEach(() => {
-    jest.clearAllMocks()
-  })
-
-  afterEach(async (): Promise<void> => {
-    await truncateTables(deps)
   })
 
   afterAll(async () => {

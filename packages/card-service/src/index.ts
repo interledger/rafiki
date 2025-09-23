@@ -1,3 +1,4 @@
+import { createHmac } from 'crypto'
 import { App, AppServices } from './app'
 import { Config } from './config/app'
 import { Ioc, IocContract } from '@adonisjs/fold'
@@ -20,7 +21,6 @@ import { onError } from '@apollo/client/link/error'
 import { setContext } from '@apollo/client/link/context'
 import { print } from 'graphql'
 import { canonicalize } from 'json-canonicalize'
-import { createHmac } from 'crypto'
 
 export function initIocContainer(
   config: typeof Config
