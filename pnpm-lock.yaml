@@ -615,6 +615,9 @@ importers:
       '@types/koa__router':
         specifier: ^12.0.4
         version: 12.0.4
+      '@types/node':
+        specifier: ^20.14.15
+        version: 20.14.15
       '@types/uuid':
         specifier: ^9.0.8
         version: 9.0.8
