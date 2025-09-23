@@ -1091,6 +1091,7 @@ type OutgoingPaymentCardDetails implements Model {
   id: ID!
   outgoingPaymentId: ID!
   signature: String!
+  requestId: String
   createdAt: String!
   updatedAt: String!
 }
@@ -1277,6 +1278,8 @@ input CreateOutgoingPaymentInput {
 input CardDetailsInput {
   "Signature"
   signature: String!
+  "Unique card request identifier from POS/Card Service"
+  requestId: String
 }
 
 input CardDetailsInput {

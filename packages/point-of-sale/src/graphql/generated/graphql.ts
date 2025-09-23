@@ -196,6 +196,7 @@ export type CancelOutgoingPaymentInput = {
 export type CardDetailsInput = {
   data: Scalars['JSONObject']['input'];
   initiatedAt: Scalars['String']['input'];
+  /** Unique card request identifier from POS/Card Service */
   requestId: Scalars['String']['input'];
   /** Signature */
   signature: Scalars['String']['input'];
@@ -1083,6 +1084,7 @@ export type OutgoingPaymentCardDetails = Model & {
   createdAt: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   outgoingPaymentId: Scalars['ID']['output'];
+  requestId?: Maybe<Scalars['String']['output']>;
   signature: Scalars['String']['output'];
   updatedAt: Scalars['String']['output'];
 };
@@ -2543,6 +2545,7 @@ export type OutgoingPaymentCardDetailsResolvers<ContextType = any, ParentType ex
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   outgoingPaymentId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  requestId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   signature?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
