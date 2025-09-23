@@ -845,6 +845,7 @@ export const start = async (
   if (error) throw error
 
   await app.boot()
+  await loadRoutesFromDatabase(container)
   await app.startAdminServer(config.adminPort)
   logger.info(`Admin listening on ${app.getAdminPort()}`)
 
@@ -861,8 +862,6 @@ export const start = async (
       `Auto-peering server listening on ${config.autoPeeringServerPort}`
     )
   }
-
-  await loadRoutesFromDatabase(container)
 }
 
 // If this script is run directly, start the server
