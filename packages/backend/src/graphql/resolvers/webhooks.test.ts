@@ -177,8 +177,7 @@ describe('Webhook Events Query', (): void => {
       .then((q): WebhookEventsConnection => q.data!.webhookEvents)
 
     const typesWith = withFilter.edges.map((e) => e.node.type)
-    expect(typesWith).toBeUndefined()
-    expect(typesWith).toBeUndefined()
+    expect(typesWith).toStrictEqual([])
   })
 
   describe('tenant boundaries', (): void => {
