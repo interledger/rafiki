@@ -23,7 +23,11 @@ export const getWebhookEvents: QueryResolvers<TenantedApolloContext>['webhookEve
     const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
     const webhookService = await ctx.container.use('webhookService')
     const type = { ...(filter?.type ?? {}) }
-    if (!('notIn' in type)) {
+    if (
+      !('notIn' in type) ||
+      !Array.isArray(type.notIn) ||
+      type.notIn.length === 0
+    ) {
       type.notIn = DEFAULT_EXCLUDED_TYPES
     }
     const filterOrDefaults = { ...filter, type }
