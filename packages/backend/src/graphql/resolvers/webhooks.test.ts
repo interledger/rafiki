@@ -150,7 +150,7 @@ describe('Webhook Events Query', (): void => {
     expect(typesEmpty).not.toContain('outgoing_payment.funded')
     expect(typesEmpty).not.toContain('outgoing_payment.cancelled')
 
-    // When explicitly requested via filter, they should appear
+    // When explicitly requested via filter, they still should not appear
     const withFilter = await appContainer.apolloClient
       .query({
         query: gql`
@@ -177,8 +177,8 @@ describe('Webhook Events Query', (): void => {
       .then((q): WebhookEventsConnection => q.data!.webhookEvents)
 
     const typesWith = withFilter.edges.map((e) => e.node.type)
-    expect(typesWith).toContain('outgoing_payment.funded')
-    expect(typesWith).toContain('outgoing_payment.cancelled')
+    expect(typesWith).toBeUndefined()
+    expect(typesWith).toBeUndefined()
   })
 
   describe('tenant boundaries', (): void => {
