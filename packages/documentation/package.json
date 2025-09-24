@@ -19,6 +19,7 @@
     "remark-math": "^6.0.0",
     "spectaql": "^3.0.4",
     "starlight-fullview-mode": "^0.2.3",
-    "starlight-links-validator": "^0.17.0"
+    "starlight-links-validator": "^0.17.0",
+    "starlight-versions": "^0.5.4"
   }
 }
