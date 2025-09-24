@@ -127,6 +127,29 @@ describe('Webhook Events Query', (): void => {
     expect(typesWithout).not.toContain('outgoing_payment.funded')
     expect(typesWithout).not.toContain('outgoing_payment.cancelled')
 
+    // Explicit empty array filter should behave like no filter and still exclude them
+    const withEmptyIn = await appContainer.apolloClient
+      .query({
+        query: gql`
+          query WebhookEvents($filter: WebhookEventFilter) {
+            webhookEvents(filter: $filter) {
+              edges {
+                node {
+                  id
+                  type
+                }
+              }
+            }
+          }
+        `,
+        variables: { filter: { type: { in: [] } } }
+      })
+      .then((q): WebhookEventsConnection => q.data!.webhookEvents)
+
+    const typesEmpty = withEmptyIn.edges.map((e) => e.node.type)
+    expect(typesEmpty).not.toContain('outgoing_payment.funded')
+    expect(typesEmpty).not.toContain('outgoing_payment.cancelled')
+
     // When explicitly requested via filter, they should appear
     const withFilter = await appContainer.apolloClient
       .query({
