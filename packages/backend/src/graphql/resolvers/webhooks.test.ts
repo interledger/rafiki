@@ -168,7 +168,8 @@ describe('Webhook Events Query', (): void => {
         variables: {
           filter: {
             type: {
-              in: ['outgoing_payment.funded', 'outgoing_payment.cancelled']
+              in: ['outgoing_payment.funded', 'outgoing_payment.cancelled'],
+              notIn: []
             }
           }
         }
