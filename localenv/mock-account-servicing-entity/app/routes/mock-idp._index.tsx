@@ -8,7 +8,7 @@ import type { Dispatch, SetStateAction } from 'react'
 import { useEffect, useState } from 'react'
 import { Button } from '~/components'
 import { ApiClient } from '~/lib/apiClient'
-import type { Access, InstanceConfig } from '~/lib/types'
+import type { Access, InstanceConfig, SubjectId } from '~/lib/types'
 import { CONFIG } from '~/lib/parse_config.server'
 
 interface ConsentScreenContext {
@@ -20,6 +20,7 @@ interface ConsentScreenContext {
   returnUrl: string
   accesses: Array<Access> | null
   outgoingPaymentAccess: Access | null
+  subjectId: SubjectId | null
   price: GrantAmount | null
   costToUser: GrantAmount | null
   errors: Array<Error>
@@ -51,7 +52,8 @@ function ConsentScreenBody({
   costToUser,
   interactId,
   nonce,
-  returnUrl
+  returnUrl,
+  subjectId
 }: {
   _thirdPartyUri: string
   thirdPartyName: string
@@ -60,6 +62,7 @@ function ConsentScreenBody({
   interactId: string
   nonce: string
   returnUrl: string
+  subjectId: SubjectId | null
 }) {
   const chooseConsent = (accept: boolean) => {
     const href = new URL(returnUrl)
@@ -82,9 +85,16 @@ function ConsentScreenBody({
         </div>
         <div className='row mt-2'>
           <div className='col-12'>
+            {subjectId && (
+              <p>You are being asked to confirm ownership of {subjectId.id}.</p>
+            )}
+          </div>
+        </div>
+        <div className='row mt-2'>
+          <div className='col-12'>
             {costToUser && (
               <p>
-                This will cost you {costToUser.currencyDisplayCode}{' '}
+                You will be charged {costToUser.currencyDisplayCode}{' '}
                 {costToUser.amount.toFixed(2)}
               </p>
             )}
@@ -238,6 +248,7 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
     //TODO returnUrl: 'http://localhost:3030/mock-idp/consent?interactid=demo-interact-id&nonce=demo-interact-nonce',
     accesses: null,
     outgoingPaymentAccess: null,
+    subjectId: null,
     price: null,
     costToUser: null,
     errors: new Array<Error>()
@@ -292,14 +303,14 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
               ...ctx,
               errors: response.errors.map((e) => new Error(e))
             })
-          } else if (!response.payload) {
+          } else if (!response.payload.access && !response.payload.subject) {
             setCtx({
               ...ctx,
-              errors: [new Error('no accesses in grant')]
+              errors: [new Error('no accesses or subjects in grant')]
             })
           } else {
             const outgoingPaymentAccess =
-              response.payload.find(
+              response.payload.access.find(
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (p: Record<string, any>) => p.type === 'outgoing-payment'
               ) || null
@@ -344,7 +355,8 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
             )
             setCtx({
               ...ctx,
-              accesses: response.payload,
+              accesses: response.payload.access,
+              subjectId: response.payload.subject.sub_ids[0],
               outgoingPaymentAccess: outgoingPaymentAccess,
               thirdPartyName: ctx.thirdPartyName,
               thirdPartyUri: ctx.thirdPartyUri,
@@ -438,6 +450,7 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
                 interactId={ctx.interactId}
                 nonce={ctx.nonce}
                 returnUrl={ctx.returnUrl}
+                subjectId={ctx.subjectId}
               />
             )}
           </>
