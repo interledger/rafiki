@@ -22,9 +22,15 @@ export const getWebhookEvents: QueryResolvers<TenantedApolloContext>['webhookEve
     const { filter, sortOrder, tenantId, ...pagination } = args
     const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
     const webhookService = await ctx.container.use('webhookService')
-    const filterOrDefaults = filter ?? {
-      type: { notIn: DEFAULT_EXCLUDED_TYPES }
+    const type = { ...(filter?.type ?? {}) }
+    if (
+      !('notIn' in type) ||
+      !Array.isArray(type.notIn) ||
+      type.notIn.length === 0
+    ) {
+      type.notIn = DEFAULT_EXCLUDED_TYPES
     }
+    const filterOrDefaults = { ...filter, type }
     const getPageFn = (pagination_: Pagination, sortOrder_?: SortOrder) =>
       webhookService.getPage({
         pagination: pagination_,
