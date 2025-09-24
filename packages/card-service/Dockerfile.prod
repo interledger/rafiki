@@ -60,3 +60,6 @@ USER root
 # For additional paranoia, we make it so that the Rafiki user has no write access to the packages
 RUN chown -R :rafiki /home/rafiki/packages
 RUN chmod -R 750 /home/rafiki/packages
+
+USER rafiki
+CMD ["node", "/home/rafiki/packages/card-service/dist/index.js"]
