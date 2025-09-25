@@ -220,8 +220,8 @@ importers:
         specifier: ^4.4.1
         version: 4.4.1
       koa-session:
-        specifier: ^6.4.0
-        version: 6.4.0
+        specifier: ^7.0.2
+        version: 7.0.2
       objection:
         specifier: ^3.1.5
         version: 3.1.5(knex@3.1.0)
@@ -14618,10 +14618,6 @@ packages:
     resolution: {integrity: sha512-1BC0BVFhS/p0qtw6enp8e+8OD0UrK0oFLztSjNzhcKA3WDuJxxAPXzPuPtKkjEY9UUoEWlX/8fgKeu2S8i9JTA==}
     engines: {node: '>= 0.4'}
 
-  /is-class-hotfix@0.0.6:
-    resolution: {integrity: sha512-0n+pzCC6ICtVr/WXnN2f03TK/3BfXY7me4cjCAqT8TYXEl0+JBRoqBo94JJHXcyDSLUeWbNX8Fvy5g5RJdAstQ==}
-    dev: false
-
   /is-core-module@2.13.0:
     resolution: {integrity: sha512-Z7dk6Qo8pOCp3l4tsX2C5ZVas4V+UxwQodwZhLopL91TX8UyyHEXafPcyoeeWuLrwzHcr3igO78wNLwHJHsMCQ==}
     dependencies:
@@ -14876,12 +14872,8 @@ packages:
       safe-regex-test: 1.1.0
     dev: true
 
-  /is-type-of@1.2.1:
-    resolution: {integrity: sha512-uK0kyX9LZYhSDS7H2sVJQJop1UnWPWmo5RvR3q2kFH6AUHYs7sOrVg0b4nyBHw29kRRNFofYN/JbHZDlHiItTA==}
-    dependencies:
-      core-util-is: 1.0.3
-      is-class-hotfix: 0.0.6
-      isstream: 0.1.2
+  /is-type-of@2.2.0:
+    resolution: {integrity: sha512-72axShMJMnMy5HSU/jLGNOonZD5rWM0MwJSCYpKCTQCbggQZBJO/CLMMVP5HgS8kPSYFBkTysJexsD6NMvGKDQ==}
     dev: false
 
   /is-typed-array@1.1.10:
@@ -14987,10 +14979,6 @@ packages:
     dependencies:
       ws: 8.18.0
     dev: true
-
-  /isstream@0.1.2:
-    resolution: {integrity: sha512-Yljz7ffyPbrLpLngrMtZ7NduUgVvi6wG9RJ9IUcyCd59YQ911PBJphODUcbOVbqYfxe1wuYf/LJ8PauMRwsM/g==}
-    dev: false
 
   /istanbul-lib-coverage@3.2.0:
     resolution: {integrity: sha512-eOeJ5BHCmHYvQK7xt9GkdHuzuCGS1Y6g9Gvnx3Ym33fz/HpLRYxiS0wHNr+m/MBC8B647Xt608vCDEvhl9c6Mw==}
@@ -15768,16 +15756,13 @@ packages:
       co: 4.6.0
       koa-compose: 4.1.0
 
-  /koa-session@6.4.0:
-    resolution: {integrity: sha512-h/dxmSOvNEXpHQPRs4TV03TZVFyZIjmYQiTAW5JBFTYBOZ0VdpZ8QEE6Dud75g8z9JNGXi3m++VqRmqToB+c2A==}
-    engines: {node: '>=8.0.0'}
+  /koa-session@7.0.2:
+    resolution: {integrity: sha512-nMWJndLmIuKQMTYPr5NokGQOGD2Aqal5GVi1xAhrQjrrzKq1ASy1WTFVkZ/xhwhtC4KpWi5KdqNYewZo7KJb4w==}
+    engines: {node: '>= 18.19.0'}
     dependencies:
       crc: 3.8.0
-      debug: 4.3.4
-      is-type-of: 1.2.1
-      uuid: 8.3.2
-    transitivePeerDependencies:
-      - supports-color
+      is-type-of: 2.2.0
+      zod: 3.24.2
     dev: false
 
   /koa@2.15.3:
