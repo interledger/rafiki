@@ -213,7 +213,7 @@ export type CancelOutgoingPaymentOptions = {
   id: string
   tenantId: string
   reason?: string
-  cardPaymentFailureReason?: 'invalid_signature'
+  cardPaymentFailureReason?: 'invalid_signature' | 'invalid_request'
 }
 
 export type CreateOutgoingPaymentOptions =

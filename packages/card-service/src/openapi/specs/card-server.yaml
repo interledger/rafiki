@@ -54,17 +54,46 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - requestId
+                  - result
                 properties:
                   requestId:
                     type: string
+                    format: uuid
                   result:
-                    type: string
-                    enum:
-                      - approved
+                    type: object
+                    required:
+                      - code
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - approved
+                          - invalid_signature
+                      description:
+                        type: string
         '400':
           description: Invalid request
-        '401':
-          description: Card expired or invalid signature
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                properties:
+                  error:
+                    type: object
+                    required:
+                      - code
+                      - description
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - invalid_request
+                      description:
+                        type: string
         '500':
           description: Internal server error
   /payment-event:
@@ -78,31 +107,54 @@ paths:
             schema:
               type: object
               required:
-                - requestId
-                - outgoingPaymentId
-                - result
+                - id
+                - type
+                - data
               properties:
-                requestId:
+                id:
                   type: string
                   format: uuid
-                outgoingPaymentId:
+                type:
                   type: string
-                  format: uuid
-                result:
+                  enum:
+                    - outgoing_payment.funded
+                    - outgoing_payment.cancelled
+                data:
                   type: object
                   required:
-                    - code
+                    - id
+                    - cardDetails
                   properties:
-                    code:
+                    id:
                       type: string
-                      enum:
-                        - completed
-                        - card_expired
-                        - invalid_signature
+                      format: uuid
+                    cardDetails:
+                      type: object
+                      required:
+                        - requestId
+                      properties:
+                        requestId:
+                          type: string
+                          format: uuid
+                        initiatedAt:
+                          type: string
+                          format: date-time
+                        data:
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: true
+                    metadata:
+                      type: object
+                      properties:
+                        cardPaymentFailureReason:
+                          type: string
+                          enum:
+                            - invalid_signature
+                            - invalid_request
+                      additionalProperties: true
+                  additionalProperties: true
       responses:
-        '202':
-          description: Payment event accepted and forwarded
+        '200':
+          description: Payment event accepted
         '400':
           description: Malformed request body
-        '404':
-          description: Request not found

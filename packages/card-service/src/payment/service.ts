@@ -1,4 +1,4 @@
-import { PaymentBody, PaymentEventBody } from './types'
+import { PaymentBody, PaymentResult } from './types'
 import { IAppConfig } from '../config/app'
 import { Deferred } from '../utils/deferred'
 import { paymentWaitMap } from './wait-map'
@@ -25,7 +25,7 @@ interface ServiceDependencies extends BaseService {
 }
 
 export interface PaymentService {
-  create(payment: PaymentBody): Promise<PaymentEventBody>
+  create(payment: PaymentBody): Promise<PaymentResult>
 }
 
 export async function createPaymentService({
@@ -49,10 +49,10 @@ export async function createPaymentService({
 async function handleCreatePayment(
   deps: ServiceDependencies,
   payment: PaymentBody
-): Promise<PaymentEventBody> {
+): Promise<PaymentResult> {
   const { requestId } = payment
   try {
-    const deferred = new Deferred<PaymentEventBody>()
+    const deferred = new Deferred<PaymentResult>()
     paymentWaitMap.set(requestId, deferred)
     const { data } = await deps.apolloClient.query<
       GetWalletAddressByUrl,
@@ -114,8 +114,8 @@ async function handleCreatePayment(
 
 async function waitForPaymentEvent(
   config: IAppConfig,
-  deferred: Deferred<PaymentEventBody>
-): Promise<PaymentEventBody | void> {
+  deferred: Deferred<PaymentResult>
+): Promise<PaymentResult> {
   return Promise.race([
     deferred.promise,
     new Promise<void>((_, reject) =>
