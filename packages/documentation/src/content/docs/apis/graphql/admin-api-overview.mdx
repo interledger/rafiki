@@ -8,7 +8,9 @@ Rafiki provides two GraphQL APIs, described below. As described on <LinkOut href
 
 ## Backend Admin API
 
-The Backend Admin API provides you with comprehensive capabilities to manage your Rafiki instance. Core functionality includes managing peering relationships, assets, wallet addresses and their public keys, as well as liquidity management through deposits and withdrawals. Another important aspect of the Backend Admin API is to manage Open Payments resources like payments and quotes.
+The Backend Admin API provides you with comprehensive capabilities to manage your Rafiki instance. Core functionality includes managing tenants, peering relationships, assets, wallet addresses and their public keys, as well as liquidity management through deposits and withdrawals, all within a tenant's context. Another important aspect of the Backend Admin API is to manage Open Payments resources like payments and quotes.
+
+All requests to the Backend Admin API must be authenticated using HTTP signatures. See [Backend service](/integration/deployment/services/backend-service#authentication-and-authorization) for more information.
 
 This API is complemented by the Rafiki Admin application, a frontend interface for Rafiki management that directly interacts with the Backend Admin API. Check out the [Rafiki Admin Application User Guide](/admin/admin-user-guide) for more information.
 

@@ -1,0 +1,48 @@
+---
+title: Multi-tenancy
+---
+
+Multi-tenancy is an architectural approach that enables a single Rafiki instance to service multiple account servicing entities (ASEs). This allows organizations to share application services and database resources while maintaining data isolation and security. By implementing multi-tenancy, Rafiki simplifies the integration process for ASEs, making onboarding faster and easier.
+
+In a multi-tenant environment, the entity responsible for managing a Rafiki instance that serves multiple ASEs is called an **operator**. Each ASE that uses the shared Rafiki instance is called a **tenant**.
+
+## Operator and tenant roles and responsibilities
+
+Both operators and tenants have distinct roles and responsibilities.
+
+### Operator
+
+An operator oversees operational and administrative tasks associated with managing a shared Rafiki instance, including:
+
+- Creating, updating, and deleting tenants
+- Managing assets, liquidity, peering relationships, rate information, and other details, including the ability to manage these on behalf of other tenants
+- Onboarding new tenants
+- Holding Open Payments resources
+- Owning the wallet root domain
+- Configuring global settings for the Rafiki instance
+- Monitoring the health and performance of the Rafiki instance
+- Managing the underlying infrastructure of the Rafiki instance
+- The operator also has the same capabilities as a tenant, in addition to their operator-specific privileges
+
+### Tenant
+
+A tenant is an ASE that connects to a shared Rafiki instance rather than running its own environment. To connect the shared environment, each tenant must install and run their own integration service. Tenants are responsible for the following:
+
+- Creating and managing wallet addresses for their users
+- Sending and receiving payments
+- Configuring tenant-specific settings, such as the webhook URL and exchange rates URL
+- Managing their own assets and liquidity
+
+Tenants are added through the Backend Admin API or the [Rafiki Admin application](/admin/admin-user-guide/#tenants). Only operators can create new tenants in a Rafiki instance. When adding new tenants, operators should communicate credentials out-of-band with the tenant.
+
+## What multi-tenancy enables
+
+With multi-tenancy, ASEs can benefit from:
+
+- Centralized maintenance lets operators perform updates once for all tenants.
+- Enhanced onboarding allows new ASEs to connect to the shared environment without deploying their own Rafiki instance.
+- Simplified administration provides operators with a quick way to add and remove tenants.
+
+### Key considerations
+
+With centralized maintenance, all changes affect all tenants. There's no way to isolate upgrades or environment maintenance activities. Tenants have limited customization capabilities beyond basic configuration like ILP addresses and identity provider URLs.
