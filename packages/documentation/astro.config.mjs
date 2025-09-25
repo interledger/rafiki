@@ -359,13 +359,22 @@ export default defineConfig({
         }
       ],
       plugins: [
-        starlightVersions({ versions: [{ slug: 'v1' }] }),
+        starlightVersions({
+          current: {
+            label: 'v2-beta'
+          },
+          versions: [{ slug: 'v1-beta' }]
+        }),
         starlightLinksValidator({
           exclude: [
             '/apis/graphql/auth',
             '/apis/graphql/backend',
             '/apis/graphql/auth/*',
-            '/apis/graphql/backend/*'
+            '/apis/graphql/backend/*',
+            '/v1-beta/apis/graphql/auth',
+            '/v1-beta/apis/graphql/backend',
+            '/v1-beta/apis/graphql/auth/*',
+            '/v1-beta/apis/graphql/backend/*'
           ],
           errorOnLocalLinks: false,
           errorOnFallbackPages: false,
