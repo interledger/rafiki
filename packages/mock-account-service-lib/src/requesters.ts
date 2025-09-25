@@ -17,7 +17,9 @@ import {
   type Asset,
   type TenantMutationResponse,
   type CreateTenantInput,
-  TenantSettingKey
+  TenantSettingKey,
+  type UpdatePeerMutationResponse,
+  type UpdatePeerInput
 } from './generated/graphql'
 import { v4 as uuid } from 'uuid'
 
@@ -35,9 +37,11 @@ export function createRequesters(
     outgoingEndpoint: string,
     assetId: string,
     name: string,
+    routes: string[],
     liquidityThreshold: number,
     incomingTokens: string[],
-    outgoingToken: string
+    outgoingToken: string,
+    maxPacketAmount?: number
   ) => Promise<CreatePeerMutationResponse>
   createAutoPeer: (
     peerUrl: string,
@@ -77,6 +81,7 @@ export function createRequesters(
     staticIlpAddress: string,
     assetId: string
   ) => Promise<Peer | null>
+  updatePeer: (input: UpdatePeerInput) => Promise<UpdatePeerMutationResponse>
 } {
   return {
     createAsset: (code, scale, liquidityThreshold) =>
@@ -86,9 +91,11 @@ export function createRequesters(
       outgoingEndpoint,
       assetId,
       name,
+      routes,
       liquidityThreshold,
       incomingToken,
-      outgoingToken
+      outgoingToken,
+      maxPacketAmount
     ) =>
       createPeer(
         apolloClient,
@@ -97,9 +104,11 @@ export function createRequesters(
         outgoingEndpoint,
         assetId,
         name,
+        routes,
         liquidityThreshold,
         incomingToken,
-        outgoingToken
+        outgoingToken,
+        maxPacketAmount
       ),
     createAutoPeer: (peerUrl, assetId) =>
       createAutoPeer(apolloClient, logger, peerUrl, assetId),
@@ -123,7 +132,9 @@ export function createRequesters(
       getAssetByCodeAndScale(apolloClient, code, scale),
     getWalletAddressByURL: (url) => getWalletAddressByURL(apolloClient, url),
     getPeerByAddressAndAsset: (staticIlpAddress, assetId) =>
-      getPeerByAddressAndAsset(apolloClient, staticIlpAddress, assetId)
+      getPeerByAddressAndAsset(apolloClient, staticIlpAddress, assetId),
+    updatePeer: (input: UpdatePeerInput) =>
+      updatePeer(apolloClient, logger, input)
   }
 }
 
@@ -223,9 +234,11 @@ export async function createPeer(
   outgoingEndpoint: string,
   assetId: string,
   name: string,
+  routes: string[],
   liquidityThreshold: number,
   incomingTokens: string[],
-  outgoingToken: string
+  outgoingToken: string,
+  maxPacketAmount?: number
 ): Promise<CreatePeerMutationResponse> {
   const createPeerMutation = gql`
     mutation CreatePeer($input: CreatePeerInput!) {
@@ -248,9 +261,16 @@ export async function createPeer(
       },
       assetId,
       name,
-      liquidityThreshold
+      liquidityThreshold,
+      maxPacketAmount,
+      routes
     }
   }
+
+  if (maxPacketAmount) {
+    createPeerInput.input.maxPacketAmount = maxPacketAmount
+  }
+
   return apolloClient
     .mutate({
       mutation: createPeerMutation,
@@ -262,6 +282,35 @@ export async function createPeer(
         throw new Error('Data was empty')
       }
       return data.createPeer
+    })
+}
+
+export async function updatePeer(
+  apolloClient: ApolloClient<NormalizedCacheObject>,
+  logger: Logger,
+  input: UpdatePeerInput
+): Promise<UpdatePeerMutationResponse> {
+  const updatePeerMutation = gql`
+    mutation UpdatePeer($input: UpdatePeerInput!) {
+      updatePeer(input: $input) {
+        peer {
+          id
+        }
+      }
+    }
+  `
+
+  return apolloClient
+    .mutate({
+      mutation: updatePeerMutation,
+      variables: { input }
+    })
+    .then(({ data }): UpdatePeerMutationResponse => {
+      logger.debug(data)
+      if (!data?.updatePeer) {
+        throw new Error('Data was empty')
+      }
+      return data.updatePeer
     })
 }
 

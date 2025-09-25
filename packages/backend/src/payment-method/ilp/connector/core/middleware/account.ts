@@ -101,10 +101,12 @@ export function createAccountMiddleware(): ILPMiddleware {
           return walletAddress
         }
       }
+
       const address = ctx.request.prepare.destination
       const peer = await peers.getByDestinationAddress(
         address,
-        incomingAccount.tenantId
+        incomingAccount.tenantId,
+        incomingAccount.id
       )
       if (peer) {
         return peer
@@ -133,6 +135,7 @@ export function createAccountMiddleware(): ILPMiddleware {
         return outgoingAccount!
       }
     }
+
     await next()
   }
 }
