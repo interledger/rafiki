@@ -9,7 +9,7 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/markdown-remark": "^6.3.2",
+    "@astrojs/markdown-remark": "^6.3.7",
     "@astrojs/starlight": "^0.34.4",
     "@interledger/docs-design-system": "^0.8.0",
     "astro": "5.11.0",
