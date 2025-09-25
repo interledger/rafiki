@@ -129,7 +129,7 @@ describe('PaymentRoutes', () => {
       })
     })
 
-    test('returns 200 and invalid signature result when webhook reports invalid signature', async () => {
+    test('returns 201 and invalid signature result when webhook reports invalid signature', async () => {
       const ctx: PaymentContext = createContext<PaymentContext>(
         { method, url },
         {},
@@ -147,7 +147,7 @@ describe('PaymentRoutes', () => {
       })
 
       await expect(routes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(200)
+      expect(ctx.status).toBe(201)
       expect(ctx.body).toEqual({
         requestId,
         result: {
@@ -233,6 +233,37 @@ describe('PaymentRoutes', () => {
         result: {
           code: PaymentResultCode.InvalidSignature,
           description: 'Invalid card signature'
+        }
+      })
+      expect(ctx.status).toBe(200)
+    })
+
+    test('resolves invalid_request error on cancelled payment with invalid request reason', async () => {
+      const ctx: PaymentEventContext = createContext<PaymentEventContext>(
+        { method, url },
+        {},
+        deps
+      )
+      ctx.request.body = {
+        ...paymentEventFixture,
+        type: PaymentEventType.Cancelled,
+        data: {
+          ...paymentEventFixture.data,
+          metadata: {
+            ...paymentEventFixture.data.metadata,
+            cardPaymentFailureReason: PaymentCancellationReason.InvalidRequest
+          }
+        }
+      }
+
+      const deferred = new Deferred<PaymentResult>()
+      const resolveSpy = jest.spyOn(deferred, 'resolve')
+      paymentWaitMap.set(requestId, deferred)
+      await expect(routes.handlePaymentEvent(ctx)).resolves.toBeUndefined()
+      expect(resolveSpy).toHaveBeenCalledWith({
+        error: {
+          code: PaymentErrorCode.InvalidRequest,
+          description: expect.stringContaining('invalid_request')
         }
       })
       expect(ctx.status).toBe(200)
