@@ -264,7 +264,7 @@ async function cancelOutgoingPayment(
             : {})
         }
       })
-      .withGraphFetched('[quote, cardDetails')
+      .withGraphFetched('[quote, cardDetails]')
     const asset = await deps.assetService.get(payment.quote.assetId)
     if (asset) payment.quote.asset = asset
 
