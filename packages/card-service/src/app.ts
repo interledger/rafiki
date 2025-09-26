@@ -9,10 +9,12 @@ import cors from '@koa/cors'
 import { createValidatorMiddleware, HttpMethod } from '@interledger/openapi'
 import { PaymentContext } from './payment/types'
 import { PaymentEventContext } from './payment/types'
+import { PaymentRoutes } from './payment/routes'
 
 export interface AppServices {
   logger: Promise<Logger>
   config: Promise<IAppConfig>
+  paymentRoutes: Promise<PaymentRoutes>
 }
 
 export type AppContainer = IocContract<AppServices>
