@@ -82,7 +82,6 @@ export interface PaymentErrorResult {
   }
 }
 
-
 export interface PaymentEventParams {}
 
 export type PaymentEventContext = Omit<AppContext, 'request'> & {
