@@ -8,6 +8,11 @@ import { getPageInfo } from '../../shared/pagination'
 import { WebhookEvent } from '../../webhook/event/model'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 
+const DEFAULT_EXCLUDED_TYPES = [
+  'outgoing_payment.funded',
+  'outgoing_payment.cancelled'
+]
+
 export const getWebhookEvents: QueryResolvers<TenantedApolloContext>['webhookEvents'] =
   async (
     parent,
@@ -17,10 +22,19 @@ export const getWebhookEvents: QueryResolvers<TenantedApolloContext>['webhookEve
     const { filter, sortOrder, tenantId, ...pagination } = args
     const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
     const webhookService = await ctx.container.use('webhookService')
+    const type = { ...(filter?.type ?? {}) }
+    if (
+      !('notIn' in type) ||
+      !Array.isArray(type.notIn) ||
+      type.notIn.length === 0
+    ) {
+      type.notIn = DEFAULT_EXCLUDED_TYPES
+    }
+    const filterOrDefaults = { ...filter, type }
     const getPageFn = (pagination_: Pagination, sortOrder_?: SortOrder) =>
       webhookService.getPage({
         pagination: pagination_,
-        filter,
+        filter: filterOrDefaults,
         sortOrder: sortOrder_,
         tenantId: ctx.isOperator ? tenantId : ctx.tenant.id
       })

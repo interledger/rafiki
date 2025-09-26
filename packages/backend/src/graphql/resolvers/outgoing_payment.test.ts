@@ -897,53 +897,6 @@ describe('OutgoingPayment Resolvers', (): void => {
       }
       expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
     })
-
-    test('works with card details', async (): Promise<void> => {
-      const { id: walletAddressId } = await createWalletAddress(deps, {
-        tenantId,
-        assetId: asset.id
-      })
-      const payment = await createPayment({
-        tenantId,
-        walletAddressId
-      })
-
-      const createSpy = jest
-        .spyOn(outgoingPaymentService, 'create')
-        .mockResolvedValueOnce(payment)
-
-      const input = {
-        walletAddressId: payment.walletAddressId,
-        quoteId: payment.quote.id,
-        cardDetails: {
-          signature: 'test-signature'
-        }
-      }
-
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            mutation CreateOutgoingPayment(
-              $input: CreateOutgoingPaymentInput!
-            ) {
-              createOutgoingPayment(input: $input) {
-                payment {
-                  id
-                  state
-                }
-              }
-            }
-          `,
-          variables: { input }
-        })
-        .then(
-          (query): OutgoingPaymentResponse => query.data?.createOutgoingPayment
-        )
-
-      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
-      expect(query.payment?.id).toBe(payment.id)
-      expect(query.payment?.state).toBe(SchemaPaymentState.Funding)
-    })
   })
 
   describe('Mutation.createOutgoingPaymentFromIncomingPayment', (): void => {
@@ -978,9 +931,9 @@ describe('OutgoingPayment Resolvers', (): void => {
         }
       }
 
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
+      const mutation = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
             mutation CreateOutgoingPaymentFromIncomingPayment(
               $input: CreateOutgoingPaymentFromIncomingPaymentInput!
             ) {
@@ -995,13 +948,69 @@ describe('OutgoingPayment Resolvers', (): void => {
           variables: { input }
         })
         .then(
-          (query): OutgoingPaymentResponse =>
-            query.data?.createOutgoingPaymentFromIncomingPayment
+          (response) => response.data?.createOutgoingPaymentFromIncomingPayment
         )
 
       expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
-      expect(query.payment?.id).toBe(payment.id)
-      expect(query.payment?.state).toBe(SchemaPaymentState.Funding)
+      expect(mutation.payment?.id).toBe(payment.id)
+      expect(mutation.payment?.state).toBe(SchemaPaymentState.Funding)
+    })
+
+    test('create', async (): Promise<void> => {
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId,
+        assetId: asset.id
+      })
+      const payment = await createPayment({
+        tenantId,
+        walletAddressId: walletAddress.id
+      })
+
+      const createSpy = jest
+        .spyOn(outgoingPaymentService, 'create')
+        .mockResolvedValueOnce(payment)
+
+      const input = {
+        walletAddressId: payment.walletAddressId,
+        incomingPayment: mockIncomingPaymentUrl,
+        debitAmount: {
+          value: BigInt(56),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
+        cardDetails: {
+          data: {
+            signature: 'test-signature',
+            payload: 'payload'
+          },
+          requestId: crypto.randomUUID(),
+          initiatedAt: new Date().toISOString()
+        }
+      }
+
+      const mutation = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation CreateOutgoingPaymentFromIncomingPayment(
+              $input: CreateOutgoingPaymentFromIncomingPaymentInput!
+            ) {
+              createOutgoingPaymentFromIncomingPayment(input: $input) {
+                payment {
+                  id
+                  state
+                }
+              }
+            }
+          `,
+          variables: { input }
+        })
+        .then(
+          (response) => response.data?.createOutgoingPaymentFromIncomingPayment
+        )
+
+      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
+      expect(mutation.payment?.id).toBe(payment.id)
+      expect(mutation.payment?.state).toBe(SchemaPaymentState.Funding)
     })
 
     test('unknown wallet address', async (): Promise<void> => {

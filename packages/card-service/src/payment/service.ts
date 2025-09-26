@@ -79,13 +79,21 @@ async function handleCreatePayment(
           walletAddressId,
           incomingPayment: payment.incomingPaymentUrl,
           cardDetails: {
-            signature: payment.signature
+            requestId: payment.requestId,
+            initiatedAt: new Date(payment.timestamp).toISOString(),
+            data: {
+              signature: payment.signature,
+              payload: payment.payload
+            }
           }
         }
       }
     })
 
-    if (!outgoingPaymentFromIncomingPayment?.data)
+    if (
+      !outgoingPaymentFromIncomingPayment?.data
+        ?.createOutgoingPaymentFromIncomingPayment.payment
+    )
       throw new PaymentCreationFailedError()
 
     const result = await waitForPaymentEvent(deps.config, deferred)

@@ -18,6 +18,7 @@ import {
   OutgoingPaymentState,
   OutgoingPaymentEventType
 } from './model'
+import { OutgoingPaymentInitiationReason } from './model'
 import { Grant } from '../../auth/middleware'
 import {
   AccountingService,
@@ -202,8 +203,9 @@ export interface CreateFromIncomingPayment extends BaseOptions {
 
 export interface CreateFromCardPayment extends CreateFromIncomingPayment {
   cardDetails: {
-    expiry: string
-    signature: string
+    requestId: string
+    data: Record<string, unknown>
+    initiatedAt: Date
   }
 }
 
@@ -211,6 +213,7 @@ export type CancelOutgoingPaymentOptions = {
   id: string
   tenantId: string
   reason?: string
+  cardPaymentFailureReason?: 'invalid_signature'
 }
 
 export type CreateOutgoingPaymentOptions =
@@ -221,11 +224,7 @@ export type CreateOutgoingPaymentOptions =
 export function isCreateFromCardPayment(
   options: CreateOutgoingPaymentOptions
 ): options is CreateFromCardPayment {
-  return (
-    'cardDetails' in options &&
-    'expiry' in options.cardDetails &&
-    'signature' in options.cardDetails
-  )
+  return 'cardDetails' in options && 'requestId' in options.cardDetails
 }
 
 export function isCreateFromIncomingPayment(
@@ -259,7 +258,10 @@ async function cancelOutgoingPayment(
         state: OutgoingPaymentState.Cancelled,
         metadata: {
           ...payment.metadata,
-          ...(options.reason ? { cancellationReason: options.reason } : {})
+          ...(options.reason ? { cancellationReason: options.reason } : {}),
+          ...(options.cardPaymentFailureReason
+            ? { cardPaymentFailureReason: options.cardPaymentFailureReason }
+            : {})
         }
       })
       .withGraphFetched('quote')
@@ -269,6 +271,15 @@ async function cancelOutgoingPayment(
     payment.walletAddress = await deps.walletAddressService.get(
       payment.walletAddressId
     )
+
+    if (payment.initiatedBy === OutgoingPaymentInitiationReason.Card) {
+      await sendWebhookEvent(
+        deps,
+        payment,
+        OutgoingPaymentEventType.PaymentCancelled,
+        trx
+      )
+    }
 
     return addSentAmount(deps, payment)
   })
@@ -388,6 +399,15 @@ async function createOutgoingPayment(
             }
           )
 
+          let initiatedBy: OutgoingPaymentInitiationReason
+          if (isCreateFromCardPayment(options)) {
+            initiatedBy = OutgoingPaymentInitiationReason.Card
+          } else if (options.grant) {
+            initiatedBy = OutgoingPaymentInitiationReason.OpenPayments
+          } else {
+            initiatedBy = OutgoingPaymentInitiationReason.Admin
+          }
+
           const payment = await OutgoingPayment.query(trx).insertAndFetch({
             id: quoteId,
             tenantId,
@@ -395,21 +415,20 @@ async function createOutgoingPayment(
             client: options.client,
             metadata: options.metadata,
             state: OutgoingPaymentState.Funding,
-            grantId
+            grantId,
+            initiatedBy
           })
 
           if (isCreateFromCardPayment(options)) {
-            const { expiry, signature } = options.cardDetails
-
-            if (!isExpiryFormat(expiry))
-              throw OutgoingPaymentError.InvalidCardExpiry
+            const { data, requestId, initiatedAt } = options.cardDetails
 
             payment.cardDetails = await OutgoingPaymentCardDetails.query(
               trx
             ).insertAndFetch({
               outgoingPaymentId: payment.id,
-              expiry,
-              signature
+              requestId,
+              data,
+              initiatedAt
             })
           }
 
@@ -738,6 +757,15 @@ async function fundPayment(
       return error
     }
     await payment.$query(trx).patch({ state: OutgoingPaymentState.Sending })
+
+    if (payment.initiatedBy === OutgoingPaymentInitiationReason.Card) {
+      await sendWebhookEvent(
+        deps,
+        payment,
+        OutgoingPaymentEventType.PaymentFunded,
+        trx
+      )
+    }
     return await addSentAmount(deps, payment)
   })
 }
@@ -822,8 +850,4 @@ function validateSentAmount(
     errorMessage
   )
   throw new Error(errorMessage)
-}
-
-function isExpiryFormat(expiry: string): boolean {
-  return !!expiry.match(/^(0[1-9]|1[0-2])\/(\d{2})$/)
 }
