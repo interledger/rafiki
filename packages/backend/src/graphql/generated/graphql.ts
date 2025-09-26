@@ -200,6 +200,7 @@ export type CardDetailsInput = {
 };
 
 export enum CardPaymentFailureReason {
+  InvalidRequest = 'invalid_request',
   InvalidSignature = 'invalid_signature'
 }
 

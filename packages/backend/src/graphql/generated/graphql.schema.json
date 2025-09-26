@@ -1174,6 +1174,12 @@
         "interfaces": null,
         "enumValues": [
           {
+            "name": "invalid_request",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "invalid_signature",
             "description": null,
             "isDeprecated": false,
