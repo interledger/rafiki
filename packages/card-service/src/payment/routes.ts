@@ -6,7 +6,6 @@ import {
   PaymentCancellationReason,
   PaymentErrorCode,
   PaymentErrorResult,
-  PaymentResolution,
   PaymentResult,
   PaymentResultCode
 } from './types'
@@ -106,7 +105,7 @@ function toPaymentResolution(
   deps: ServiceDependencies,
   body: PaymentEventBody,
   identifiers: PaymentIdentifiers
-): PaymentResolution {
+): PaymentResult {
   const { requestId, outgoingPaymentId } = identifiers
   const cardPaymentFailureReason = body.data.metadata?.cardPaymentFailureReason
 

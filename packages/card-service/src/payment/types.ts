@@ -82,7 +82,6 @@ export interface PaymentErrorResult {
   }
 }
 
-export type PaymentResolution = PaymentSuccessResult | PaymentErrorResult
 
 export interface PaymentEventParams {}
 
@@ -93,4 +92,4 @@ export type PaymentEventContext = Omit<AppContext, 'request'> & {
   }
 }
 
-export type PaymentResult = PaymentResolution | void
+export type PaymentResult = PaymentSuccessResult | PaymentErrorResult
