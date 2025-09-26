@@ -37,13 +37,14 @@ interface ServiceDependencies extends BaseService {
 
 export enum Result {
   APPROVED = 'approved',
-  CARD_EXPIRED = 'card_expired',
   INVALID_SIGNATURE = 'invalid_signature'
 }
 
 export type PaymentResponse = {
   requestId: string
-  result: Result
+  result: {
+    code: Result
+  }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -97,14 +98,14 @@ async function sendPayment(
         HttpStatusCode.NotFound
       )
     }
-    return payment.result
+    return payment.result.code
   } catch (error) {
     deps.logger.debug(error)
     if (error instanceof CardServiceClientError) throw error
 
     if (error instanceof AxiosError) {
       if (isPaymentResponse(error.response?.data)) {
-        return error.response.data.result
+        return error.response.data.result.code
       }
       throw new CardServiceClientError(
         error.response?.data ?? 'Unknown Axios error',
