@@ -86,7 +86,10 @@ function ConsentScreenBody({
         <div className='row mt-2'>
           <div className='col-12'>
             {subjectId && (
-              <p>You are being asked to confirm ownership of {subjectId.id}.</p>
+              <p>
+                {thirdPartyName} is asking you to confirm ownership of{' '}
+                {subjectId.id}.
+              </p>
             )}
           </div>
         </div>
