@@ -1,4 +1,4 @@
 import { Deferred } from '../utils/deferred'
-import { PaymentEventBody } from './types'
+import { PaymentResult } from './types'
 
-export const paymentWaitMap = new Map<string, Deferred<PaymentEventBody>>()
+export const paymentWaitMap = new Map<string, Deferred<PaymentResult>>()

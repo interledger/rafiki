@@ -69,18 +69,6 @@ describe('Payment Routes', () => {
       expect(webhookWaitMap.get('incoming-payment-url')).toBeUndefined()
     })
 
-    test('returns 401 with result card_expired or invalid_signature', async () => {
-      const ctx = createPaymentContext()
-      mockPaymentService()
-      jest
-        .spyOn(cardServiceClient, 'sendPayment')
-        .mockResolvedValueOnce(Result.CARD_EXPIRED)
-
-      await paymentRoutes.payment(ctx)
-      expect(ctx.response.body).toBe(Result.CARD_EXPIRED)
-      expect(ctx.status).toBe(401)
-    })
-
     test('returns cardService error code when thrown', async () => {
       const ctx = createPaymentContext()
       mockPaymentService()

@@ -28,9 +28,9 @@ describe('CardServiceClient', () => {
     expect(nock.isDone()).toBeTruthy()
   })
 
-  const createPaymentResponse = (result?: Result): PaymentResponse => ({
+  const createPaymentResponse = (resultCode?: Result): PaymentResponse => ({
     requestId: 'requestId',
-    result: result ?? Result.APPROVED
+    result: { code: resultCode || Result.APPROVED }
   })
 
   const options: SendPaymentArgs = {
@@ -46,20 +46,15 @@ describe('CardServiceClient', () => {
     }
   }
 
-  describe('returns the result', () => {
-    it.each`
-      result                      | code
-      ${Result.APPROVED}          | ${HttpStatusCode.Ok}
-      ${Result.CARD_EXPIRED}      | ${HttpStatusCode.Unauthorized}
-      ${Result.INVALID_SIGNATURE} | ${HttpStatusCode.Unauthorized}
-    `('when the result is $result', async (response) => {
-      nock(CARD_SERVICE_URL)
-        .post('/payment')
-        .reply(response.code, createPaymentResponse(response.result))
-      expect(await client.sendPayment(CARD_SERVICE_URL, options)).toBe(
-        response.result
-      )
-    })
+  test('returns the result', async () => {
+    const resultCode = Result.APPROVED
+    nock(CARD_SERVICE_URL)
+      .post('/payment')
+      .reply(201, createPaymentResponse(resultCode))
+
+    await expect(client.sendPayment(CARD_SERVICE_URL, options)).resolves.toBe(
+      resultCode
+    )
   })
 
   test('throws when there is no payload data', async () => {

@@ -1,10 +1,10 @@
 import { paymentWaitMap } from './wait-map'
 import { Deferred } from '../utils/deferred'
-import { PaymentEventBody } from './types'
+import { PaymentResult } from './types'
 
 describe('paymentWaitMap', () => {
   test('stores and retrieves Deferreds by key', () => {
-    const d = new Deferred<PaymentEventBody>()
+    const d = new Deferred<PaymentResult>()
     paymentWaitMap.set('abc', d)
     expect(paymentWaitMap.get('abc')).toBe(d)
     paymentWaitMap.delete('abc')

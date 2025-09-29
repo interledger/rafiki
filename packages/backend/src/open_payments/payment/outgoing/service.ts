@@ -213,7 +213,7 @@ export type CancelOutgoingPaymentOptions = {
   id: string
   tenantId: string
   reason?: string
-  cardPaymentFailureReason?: 'invalid_signature'
+  cardPaymentFailureReason?: 'invalid_signature' | 'invalid_request'
 }
 
 export type CreateOutgoingPaymentOptions =
@@ -264,7 +264,7 @@ async function cancelOutgoingPayment(
             : {})
         }
       })
-      .withGraphFetched('quote')
+      .withGraphFetched('[quote, cardDetails]')
     const asset = await deps.assetService.get(payment.quote.assetId)
     if (asset) payment.quote.asset = asset
 
@@ -719,7 +719,7 @@ async function fundPayment(
         tenantId
       })
       .forUpdate()
-      .withGraphFetched('quote')
+      .withGraphFetched('[quote, cardDetails]')
     if (!payment) return FundingError.UnknownPayment
 
     const asset = await deps.assetService.get(payment.quote.assetId)

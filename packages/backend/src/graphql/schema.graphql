@@ -1252,6 +1252,7 @@ input CancelOutgoingPaymentInput {
 
 enum CardPaymentFailureReason {
   invalid_signature
+  invalid_request
 }
 
 input CreateOutgoingPaymentFromIncomingPaymentInput {
