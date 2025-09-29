@@ -2,6 +2,12 @@ openapi: 3.0.3
 info:
   title: Card Service API
   version: 1.0.0
+  description: Card Service API specs
+  contact:
+    email: tech@interledger.org
+tags:
+  - name: payment
+    description: Operations related to payments
 paths:
   /payment:
     post:
@@ -96,6 +102,9 @@ paths:
                         type: string
         '500':
           description: Internal server error
+      description: 'POS service calls this endpoint to initiate a payment request.'
+      tags:
+        - payment
   /payment-event:
     post:
       summary: Handle payment event result from backend
@@ -158,3 +167,8 @@ paths:
           description: Payment event accepted
         '400':
           description: Malformed request body
+        '404':
+          description: Request not found
+      description: 'Rafiki backend calls this endpoint to send the payment result.'
+      tags:
+        - payment
