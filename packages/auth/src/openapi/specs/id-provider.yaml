@@ -54,7 +54,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './auth-server.yaml#/components/schemas/error-request-denied'
+                $ref: '#/components/schemas/error-request-denied'
       operationId: get-interact
       parameters:
         - schema:
@@ -109,7 +109,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: './auth-server.yaml#/components/schemas/error-invalid-request'
+                  - $ref: '#/components/schemas/error-invalid-request'
                   - $ref: '#/components/schemas/error-invalid-interaction'
         '404':
           description: Not Found
@@ -145,31 +145,9 @@ paths:
                 type: object
                 properties:
                   access:
-                    $ref: ./auth-server.yaml#/components/schemas/access
+                    $ref: '#/components/schemas/access'
                   subject:
-                    # $ref: ./auth-server.yaml#/components/schemas/subject
-                    # TODO replace with $ref when the schema is available
-                    title: subject
-                    type: object
-                    description: Information about the subject for which the client is requesting information
-                    properties:
-                      sub_ids:
-                        type: array
-                        description: List of subject identifiers
-                        items:
-                          type: object
-                          properties:
-                            id:
-                              type: string
-                              description: Specific identifier for the subject for which the client is requesting information
-                            format:
-                              type: string
-                              description: The format of subject identifier that the client can accept
-                              enum:
-                                - uri
-                        minItems: 1
-                    required:
-                      - sub_ids
+                    $ref: '#/components/schemas/subject'
                   state:
                     description: |-
                       Interaction state:
@@ -189,7 +167,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './auth-server.yaml#/components/schemas/error-invalid-request'
+                $ref: '#/components/schemas/error-invalid-request'
         '404':
           description: Not Found
           content:
@@ -228,7 +206,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/error-invalid-interaction'
-                  - $ref: './auth-server.yaml#/components/schemas/error-invalid-request'
+                  - $ref: '#/components/schemas/error-invalid-request'
         '401':
           description: Unauthorized
           content:
@@ -270,6 +248,149 @@ paths:
         - back-channel
 components:
   schemas:
+    access:
+      type: array
+      description: A description of the rights associated with this access token.
+      items:
+        $ref: '#/components/schemas/access-item'
+      uniqueItems: true
+      maxItems: 3
+    access-item:
+      oneOf:
+        - $ref: '#/components/schemas/access-incoming'
+        - $ref: '#/components/schemas/access-outgoing'
+        - $ref: '#/components/schemas/access-quote'
+      description: The access associated with the access token is described using objects that each contain multiple dimensions of access.
+      unevaluatedProperties: false
+    access-incoming:
+      title: access-incoming
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - incoming-payment
+          description: The type of resource request as a string.  This field defines which other fields are allowed in the request object.
+        actions:
+          type: array
+          description: The types of actions the client instance will take at the RS as an array of strings.
+          items:
+            type: string
+            enum:
+              - create
+              - complete
+              - read
+              - read-all
+              - list
+              - list-all
+          uniqueItems: true
+        identifier:
+          type: string
+          format: uri
+          description: A string identifier indicating a specific resource at the RS.
+      required:
+        - type
+        - actions
+    access-outgoing:
+      title: access-outgoing
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - outgoing-payment
+          description: The type of resource request as a string.  This field defines which other fields are allowed in the request object.
+        actions:
+          type: array
+          description: The types of actions the client instance will take at the RS as an array of strings.
+          items:
+            type: string
+            enum:
+              - create
+              - read
+              - read-all
+              - list
+              - list-all
+          uniqueItems: true
+        identifier:
+          type: string
+          format: uri
+          description: A string identifier indicating a specific resource at the RS.
+        limits:
+          $ref: '#/components/schemas/limits-outgoing'
+      required:
+        - type
+        - actions
+        - identifier
+    access-quote:
+      title: access-quote
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - quote
+          description: The type of resource request as a string.  This field defines which other fields are allowed in the request object.
+        actions:
+          type: array
+          description: The types of actions the client instance will take at the RS as an array of strings.
+          items:
+            type: string
+            enum:
+              - create
+              - read
+              - read-all
+          uniqueItems: true
+      required:
+        - type
+        - actions
+    subject:
+      title: subject
+      type: object
+      description: Information about the subject for which the client is requesting information.
+      properties:
+        sub_ids:
+          type: array
+          description: A list of subject identifiers.
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Specific identifier for the subject for which the client is requesting information.
+              format:
+                type: string
+                description: The format of subject identifier that the client can accept.
+                enum:
+                  - uri
+          minItems: 1
+          maxItems: 1
+      required:
+        - sub_ids
+    error-invalid-request:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            description:
+              type: string
+            code:
+              type: string
+              enum:
+                - invalid_request
+    error-request-denied:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            description:
+              type: string
+            code:
+              type: string
+              enum:
+                - request_denied
     error-unknown-interaction:
       type: object
       properties:
