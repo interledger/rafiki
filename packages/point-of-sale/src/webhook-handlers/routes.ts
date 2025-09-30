@@ -53,7 +53,7 @@ async function handleWebhook(
   const deferred = webhookWaitMap.get(id)
   if (deferred) {
     deferred.resolve(ctx.request.body)
-    ctx.status = 202
+    ctx.status = 200
   } else {
     ctx.throw(404, 'Not awaiting webhook for incoming payment id')
   }
