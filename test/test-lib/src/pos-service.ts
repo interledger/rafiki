@@ -1,0 +1,45 @@
+import axios, { Axios, AxiosRequestConfig } from 'axios'
+
+export interface PaymentDetails {
+  signature: string
+  payload: string
+  amount: {
+    value: string
+    assetScale: number
+    assetCode: string
+  }
+  senderWalletAddress: string
+  receiverWalletAddress: string
+  timestamp: number
+}
+
+export enum Result {
+  APPROVED = 'approved',
+  CARD_EXPIRED = 'card_expired',
+  INVALID_SIGNATURE = 'invalid_signature'
+}
+
+export class PosService {
+  private client: Axios | undefined
+  constructor(baseURL?: string) {
+    if (baseURL) {
+      this.client = axios.create({
+        baseURL,
+        timeout: 30_000
+      })
+    }
+  }
+
+  async createPayment(args: PaymentDetails): Promise<Result> {
+    if (!this.client) {
+      throw new Error('POS service not configured')
+    }
+    const config: AxiosRequestConfig = {
+      headers: {
+        Accept: 'application/json'
+      }
+    }
+    const result = await this.client.post<Result>('/payment', args, config)
+    return result.data
+  }
+}
