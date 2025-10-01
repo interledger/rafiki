@@ -5,7 +5,7 @@ title: Auth service
 import { LinkOut } from '@interledger/docs-design-system'
 import Auth from '/src/partials/auth-variables.mdx'
 
-Rafiki’s <LinkOut href="https://github.com/interledger/rafiki/tree/main/packages/auth">`auth`</LinkOut> service provides you with a reference implementation of an Open Payments authorization server. You can use the `auth` service as an alternative to developing your own in-house service for grant authorization and authentication.
+Rafiki’s <LinkOut href="https://github.com/interledger/rafiki/tree/main/packages/auth">`auth`</LinkOut> service provides you with a reference implementation of an Open Payments authorization server and manages authentication and authorization on a per-tenant basis. You can use the `auth` service as an alternative to developing your own in-house service for grant authorization and authentication.
 
 The authorization server:
 
@@ -36,7 +36,7 @@ Review the <LinkOut href="https://openpayments.dev/identity/client-keys/">Open P
 
 ## Identity provider (IdP)
 
-An identity provider (IdP) is a system or service that manages user authentication, identity information, and consent. When you use your Google Account credentials to “Sign in with Google” on an app or website, for example, Google is acting as your identity provider.
+An identity provider (IdP) is a system or service that manages user authentication, identity information, and consent. When you use your Google Account credentials to “Sign in with Google” on an app or website, for example, Google is acting as your identity provider. Each tenant must use their own IdP for authentication.
 
 You must integrate with an [IdP](/integration/requirements/open-payments/idp) when using Rafiki's `auth` service because the Open Payments standard requires interactive outgoing payment _grant_ requests. In an interactive request, there must be explicit interaction by an individual (for example, a client's end-user) to approve or deny the grant. In this case, the grant must be explicitly approved before an outgoing payment is created.
 

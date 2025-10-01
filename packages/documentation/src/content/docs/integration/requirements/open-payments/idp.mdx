@@ -16,6 +16,8 @@ Responsibilities of your IdP include:
 - Sending a request to the authorization server to finish the interaction
 - Redirecting the user after the interaction is complete
 
+Each tenant must use their own IdP.
+
 :::note
 We provide Ory Kratos, a cloud-based user management system, for the identity and user management of your Rafiki Admin users. Kratos is for internal use only and **cannot** be used as your IdP for Open Payments.
 :::
@@ -45,7 +47,7 @@ Rafiki's authorization server also extends an [API](#interaction-endpoints) that
 
 ### Environment variables
 
-The following variables must be configured for the `auth` service.
+The following variables must be configured for the `auth` service. Operators configure the `IDENTITY_SERVER_URL` and `IDENTITY_SERVER_SECRET` variables on a per-tenant basis. These values are stored in the `auth` service's tenant table and are used to secure communications between the `auth` service and the tenant's IdP.
 
 <div class="overflow-table wide-column">
 
@@ -133,7 +135,7 @@ The `x-idp-secret` header is specific to Rafiki's authorization server and is us
 - `POST /grant/:id/:nonce/accept`
 - `POST /grant/:id/:nonce/reject`
 
-The header's purpose is to secure communications between the IdP and the authorization server. Its value should be a shared secret known to both entities. When the IdP server sends requests to the authorization server, the IdP must provide the secret via this header.
+The header's purpose is to secure communications between the IdP and the authorization server. Its value should be the `IDENTITY_SERVER_SECRET` configured for the specific tenant. When the IdP server sends requests to the authorization server, the IdP must provide the secret via this header.
 
 :::note
 If you're running your own authorization server rather than using the server provided by Rafiki, you can add security in any way you see fit. You aren't required to use the `x-idp-secret` header.

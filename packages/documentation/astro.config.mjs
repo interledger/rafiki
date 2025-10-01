@@ -114,6 +114,10 @@ export default defineConfig({
                   link: '/overview/concepts/account-servicing-entity'
                 },
                 {
+                  label: 'Multi-tenancy',
+                  link: '/overview/concepts/multi-tenancy'
+                },
+                {
                   label: 'Accounting',
                   translations: {
                     es: 'Transacciones en Rafiki'
@@ -184,6 +188,10 @@ export default defineConfig({
                 {
                   label: 'Overview and checklist',
                   link: '/integration/requirements/overview'
+                },
+                {
+                  label: 'Tenants',
+                  link: '/integration/requirements/tenants'
                 },
                 {
                   label: 'Assets',

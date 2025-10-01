@@ -7,7 +7,7 @@ tableOfContents:
 import { Tabs, TabItem } from '@astrojs/starlight/components'
 import IdempotencyNote from '/src/partials/liquidity-idempotency.mdx'
 
-Peer liquidity is the line of credit you extend to a peer, denominated in your agreed upon asset. A peer's liquidity account balance represents the amount of credit the peer still has available to them.
+Peer liquidity is the line of credit you extend to a peer, denominated in your agreed upon asset. Peer liquidity is managed separately for each tenant. A peer's liquidity account balance represents the amount of credit the peer still has available to them.
 
 A peer's liquidity increases when payments are made to the peer and decreases when payments are made from the peer. For example, if a customer of your peer sends your customer a payment of $20 USD, then your peer's liquidity account decreases by 20.
 
@@ -17,7 +17,7 @@ For more information about how Rafiki handles liquidity, see the [Accounting](/o
 
 ## Manage peer liquidity using Rafiki Admin
 
-You can deposit and withdraw peer liquidity through the Rafiki Admin application's [Peers](/admin/admin-user-guide/#edit-peer) screen.
+You can deposit and withdraw peer liquidity through the Rafiki Admin application's [Peers](/admin/admin-user-guide/#edit-peer) screen. Operators can manage peer liquidity for any tenant, while tenants cannot manage peer liquidity at all.
 
 ## Manage peer liquidity using the Backend Admin API
 
