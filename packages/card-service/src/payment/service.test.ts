@@ -1,6 +1,6 @@
 import { createPaymentService } from './service'
 import { paymentWaitMap } from './wait-map'
-import { PaymentEventResultEnum, PaymentBody } from './types'
+import { PaymentBody, PaymentResultCode } from './types'
 import { initIocContainer } from '../index'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
@@ -81,21 +81,19 @@ describe('PaymentService', () => {
   })
 
   describe('create', () => {
-    test('resolves when paymentEvent is received', async () => {
+    test('resolves when payment event result is received', async () => {
       setTimeout(() => {
         const d = paymentWaitMap.get(requestId)
         d?.resolve({
-          requestId: requestId,
-          outgoingPaymentId: requestId,
-          result: { code: PaymentEventResultEnum.Completed }
+          requestId,
+          result: { code: PaymentResultCode.Approved }
         })
       }, 10)
 
       const result = await service.create(paymentFixture)
       expect(result).toEqual({
-        requestId: requestId,
-        outgoingPaymentId: requestId,
-        result: { code: PaymentEventResultEnum.Completed }
+        requestId,
+        result: { code: PaymentResultCode.Approved }
       })
 
       expect(querySpy).toHaveBeenCalledWith({

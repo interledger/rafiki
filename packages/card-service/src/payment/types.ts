@@ -26,21 +26,59 @@ export type PaymentContext = Omit<AppContext, 'request'> & {
   }
 }
 
-export enum PaymentResultEnum {
-  Approved = 'approved'
-}
-
-export enum PaymentEventResultEnum {
-  Completed = 'completed',
-  CardExpired = 'card_expired',
+export enum PaymentResultCode {
+  Approved = 'approved',
   InvalidSignature = 'invalid_signature'
 }
 
+export enum PaymentErrorCode {
+  InvalidRequest = 'invalid_request'
+}
+
+export enum PaymentEventType {
+  Funded = 'outgoing_payment.funded',
+  Cancelled = 'outgoing_payment.cancelled'
+}
+
+export enum PaymentCancellationReason {
+  InvalidSignature = 'invalid_signature',
+  InvalidRequest = 'invalid_request'
+}
+
+export interface PaymentEventCardDetails {
+  requestId?: string
+  initiatedAt?: string
+  data?: Record<string, unknown>
+}
+
+export interface PaymentEventMetadata extends Record<string, unknown> {
+  cardPaymentFailureReason?: PaymentCancellationReason | string
+}
+
+export interface PaymentEventData {
+  id: string
+  cardDetails?: PaymentEventCardDetails
+  metadata?: PaymentEventMetadata
+}
+
 export interface PaymentEventBody {
+  id: string
+  type: PaymentEventType | string
+  data: PaymentEventData
+}
+
+export interface PaymentSuccessResult {
   requestId: string
-  outgoingPaymentId: string
   result: {
-    code: PaymentEventResultEnum
+    code: PaymentResultCode
+    description?: string
+  }
+}
+
+export interface PaymentErrorResult {
+  error: {
+    code: PaymentErrorCode
+    description: string
   }
 }
 
@@ -53,4 +91,4 @@ export type PaymentEventContext = Omit<AppContext, 'request'> & {
   }
 }
 
-export type PaymentResult = PaymentEventBody | void
+export type PaymentResult = PaymentSuccessResult | PaymentErrorResult
