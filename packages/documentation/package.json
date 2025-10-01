@@ -5,6 +5,7 @@
   "scripts": {
     "start": "astro dev",
     "build:docs": "astro build",
+    "build:docs:graphql": "spectaql config-auth.yml && spectaql config-backend.yml",
     "preview": "astro preview",
     "astro": "astro"
   },
