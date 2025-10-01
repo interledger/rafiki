@@ -239,9 +239,6 @@ components:
             balance:
               type: string
               format: uint64
-            peerId:
-              type: string
-              format: uuid
             grantId:
               type: string
               format: uuid
