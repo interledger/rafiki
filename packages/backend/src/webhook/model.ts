@@ -36,6 +36,7 @@ export class Webhook extends BaseModel {
 
   public event?: WebhookEvent
   public tenant?: Tenant
+  public metadata?: Record<string, unknown>
 }
 
 export interface WebhookWithEvent extends Webhook {
