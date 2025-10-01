@@ -585,8 +585,8 @@ importers:
         specifier: ^0.17.0
         version: 0.17.0(@astrojs/starlight@0.34.4)
       starlight-versions:
-        specifier: ^0.5.4
-        version: 0.5.4(@astrojs/starlight@0.34.4)
+        specifier: ^0.5.5
+        version: 0.5.5(@astrojs/starlight@0.34.4)
 
   packages/frontend:
     dependencies:
@@ -5754,7 +5754,7 @@ packages:
       recma-jsx: 1.0.0(acorn@8.14.1)
       recma-stringify: 1.0.0
       rehype-recma: 1.0.0
-      remark-mdx: 3.0.1
+      remark-mdx: 3.1.1
       remark-parse: 11.0.0
       remark-rehype: 11.1.2
       source-map: 0.7.4
@@ -19637,15 +19637,6 @@ packages:
       - supports-color
     dev: true
 
-  /remark-mdx@3.0.1:
-    resolution: {integrity: sha512-3Pz3yPQ5Rht2pM5R+0J2MrGoBSrzf+tJG94N+t/ilfdh8YLyyKYtidAYwTveB20BoHAcwIopOUqhcmh2F7hGYA==}
-    dependencies:
-      mdast-util-mdx: 3.0.0
-      micromark-extension-mdxjs: 3.0.0
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
-
   /remark-mdx@3.1.1:
     resolution: {integrity: sha512-Pjj2IYlUY3+D8x00UJsIOg5BEvfMyeI+2uLPn9VO9Wg4MEtN/VTIq2NEJQfde9PnX15KgtHyl9S0BcTnWrIuWg==}
     dependencies:
@@ -20729,8 +20720,8 @@ packages:
       - supports-color
     dev: false
 
-  /starlight-versions@0.5.4(@astrojs/starlight@0.34.4):
-    resolution: {integrity: sha512-RwoauWVAiFaks2fh1fZgQPIi62FK8tndyyTOtCPlrB8sr/6Mg8o+3iU1f019AaJADyCta90z91uouCrG8cdqww==}
+  /starlight-versions@0.5.5(@astrojs/starlight@0.34.4):
+    resolution: {integrity: sha512-Mn+opWq9BqLTX3wFsMH/0yQ2L5aqzv2o1Ah6R/dcgWdy+mbDAt857xW/ABMW5NF5DsHes4tXvIHGu51xH9yH4Q==}
     engines: {node: '>=18'}
     peerDependencies:
       '@astrojs/starlight': '>=0.32.0'
