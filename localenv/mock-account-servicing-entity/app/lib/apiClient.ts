@@ -52,7 +52,9 @@ export class ApiClient {
         isFailure: false,
         payload: {
           access: response.data.access,
-          subject: response.data.subject
+          subject: response.data.subject,
+          grantId: response.data.grantId,
+          state: response.data.state
         },
         contextUpdates: {
           grant: response.data

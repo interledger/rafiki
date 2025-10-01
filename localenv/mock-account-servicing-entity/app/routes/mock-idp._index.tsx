@@ -48,6 +48,7 @@ export function loader() {
 function ConsentScreenBody({
   _thirdPartyUri,
   thirdPartyName,
+  accesses,
   price,
   costToUser,
   interactId,
@@ -57,6 +58,7 @@ function ConsentScreenBody({
 }: {
   _thirdPartyUri: string
   thirdPartyName: string
+  accesses: Access[] | null
   price: GrantAmount | null
   costToUser: GrantAmount | null
   interactId: string
@@ -75,20 +77,22 @@ function ConsentScreenBody({
   return (
     <>
       <div className='bg-white rounded-md p-8 px-16'>
-        <div className='col-12'>
-          {price && (
-            <p>
-              {thirdPartyName} wants to send {price.currencyDisplayCode}{' '}
-              {price.amount.toFixed(2)} to its account.
-            </p>
-          )}
-        </div>
         <div className='row mt-2'>
           <div className='col-12'>
             {subjectId && (
               <p>
                 {thirdPartyName} is asking you to confirm ownership of{' '}
                 {subjectId.id}.
+              </p>
+            )}
+          </div>
+        </div>
+        <div className='row mt-2'>
+          <div className='col-12'>
+            {price && (
+              <p>
+                {thirdPartyName} wants to send {price.currencyDisplayCode}{' '}
+                {price.amount.toFixed(2)} to its account.
               </p>
             )}
           </div>
@@ -105,7 +109,7 @@ function ConsentScreenBody({
         </div>
         <div className='row mt-2'>
           <div className='col-12'>
-            {!price && !costToUser && (
+            {accesses?.length && !price && !costToUser && (
               <p>
                 {thirdPartyName} is requesting grant for an unlimited amount
               </p>
@@ -320,7 +324,7 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
             const returnUrlObject = new URL(ctx.returnUrl)
             returnUrlObject.searchParams.append(
               'grantId',
-              outgoingPaymentAccess.grantId
+              response.payload.grantId
             )
             returnUrlObject.searchParams.append(
               'thirdPartyName',
@@ -448,6 +452,7 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
               <ConsentScreenBody
                 _thirdPartyUri={ctx.thirdPartyUri}
                 thirdPartyName={ctx.thirdPartyName}
+                accesses={ctx.accesses}
                 price={ctx.price}
                 costToUser={ctx.costToUser}
                 interactId={ctx.interactId}
