@@ -10,6 +10,15 @@ import { LinkOut } from '@interledger/docs-design-system'
 
 An asset represents an item of value that can be transferred via the Interledger Protocol. Assets in Rafiki are added through the Backend Admin API or the [Rafiki Admin](/admin/admin-user-guide/#assets) application.
 
+**Permissions**
+
+- Operators can create assets for any tenant
+- Operators can view any asset
+- Operators can edit and delete assets that belong to any tenant
+- Tenants can only view their own assets
+- Tenants can only edit and delete their own assets
+- Tenants cannot create assets
+
 ## Add an asset
 
 <Tabs>
@@ -24,6 +33,7 @@ An asset represents an item of value that can be transferred via the Interledger
           id
           code
           scale
+          tenantId
         }
       }
     }
@@ -39,6 +49,11 @@ An asset represents an item of value that can be transferred via the Interledger
     }
     ```
     For more information about this mutation's input object, see [`CreateAssetInput`](/apis/graphql/backend/#definition-CreateAssetInput).
+
+:::note[Tenant ID and HTTP signatures]
+The `tenantId` is determined from the HTTP signature. All requests to create an asset must be signed using the HTTP signature method. The request must include a `tenantId` header, and the `Signature-Input` header must include the `tenantId` header in its list of signed components.
+:::
+
   </TabItem>
   <TabItem label="Response">
     ```json
@@ -51,11 +66,17 @@ An asset represents an item of value that can be transferred via the Interledger
           "asset": {
             "id": "b3dffeda-1e0e-47d4-82a3-69b1a622eeb9",
             "code": "USD",
-            "scale": 2
+            "scale": 2,
+            "tenantId": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
           }
         }
       }
     }
     ```
+
+:::note[Tenant ID in the asset response]
+The `asset` object in the response will include the `tenantId` of the tenant to which the asset belongs. This `tenantId` is used to identify the tenant when processing requests related to the asset.
+:::
+
   </TabItem>
 </Tabs>
