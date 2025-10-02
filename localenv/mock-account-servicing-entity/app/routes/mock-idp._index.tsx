@@ -109,7 +109,7 @@ function ConsentScreenBody({
         </div>
         <div className='row mt-2'>
           <div className='col-12'>
-            {accesses?.length && !price && !costToUser && (
+            {(accesses?.length ?? 0 > 0) && !price && !costToUser && (
               <p>
                 {thirdPartyName} is requesting grant for an unlimited amount
               </p>
@@ -352,13 +352,19 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
                 outgoingPaymentAccess?.limits?.receiveAmount?.assetScale ??
                 null
             )
+            if (outgoingPaymentAccess) {
+              returnUrlObject.searchParams.append(
+                'amountType',
+                outgoingPaymentAccess.limits?.receiveAmount
+                  ? AmountType.RECEIVE
+                  : outgoingPaymentAccess.limits?.debitAmount
+                    ? AmountType.DEBIT
+                    : AmountType.UNLIMITED
+              )
+            }
             returnUrlObject.searchParams.append(
-              'amountType',
-              outgoingPaymentAccess?.limits?.receiveAmount
-                ? AmountType.RECEIVE
-                : outgoingPaymentAccess?.limits?.debitAmount
-                  ? AmountType.DEBIT
-                  : AmountType.UNLIMITED
+              'subjectId',
+              response.payload.subject.sub_ids[0]?.id ?? null
             )
             setCtx({
               ...ctx,
