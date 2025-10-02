@@ -43,6 +43,9 @@ services:
       OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
       API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       API_SIGNATURE_VERSION: 1
+      POS_WEBHOOK_SERVICE_URL: http://happy-life-bank-test-point-of-sale:4105/webhook
+      SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964= # webhook signature
+      SIGNATURE_VERSION: 1
     volumes:
       - ../private-key.pem:/workspace/private-key.pem
     depends_on:
@@ -106,5 +109,6 @@ services:
       GRAPHQL_URL: http://happy-life-bank-test-backend:4101/graphql
       WEBHOOK_SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       WEBHOOK_SIGNATURE_VERSION: 1
+      WEBHOOK_TIMEOUT_MS: 10_000
     depends_on:
       - shared-database

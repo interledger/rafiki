@@ -45,6 +45,9 @@ services:
       OPERATOR_TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
       API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       API_SIGNATURE_VERSION: 1
+      CARD_WEBHOOK_SERVICE_URL: http://cloud-nine-wallet-test-card-service:3104/payment-event
+      SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964= # webhook signature
+      SIGNATURE_VERSION: 1
     volumes:
       - ../private-key.pem:/workspace/private-key.pem
     depends_on:
