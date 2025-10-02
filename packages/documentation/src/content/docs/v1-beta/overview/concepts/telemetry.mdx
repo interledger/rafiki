@@ -124,6 +124,7 @@ Another factor that obscures sensitive data is currency conversion. In cross-cur
 The following table shows the values in the algorithm when running transactions for different amounts. The raw value increases as you move down the rows of the table. All values are in scale 4.
 
 <div class="overflow-table">
+
   | Raw value | Bucket size | Rounded value | Privacy parameter | Laplace noise | Final value |
   | --------- | ----------- | ------------- | ----------------- | ------------- | ----------- |
   | 8300      | 10000       | 10000         | 1000              | 2037          | 12037       |
@@ -134,6 +135,7 @@ The following table shows the values in the algorithm when running transactions 
   | 90422400  | 10000000    | 90000000      | 1000000           | 2210649       | 92210649    |
   | 112400400 | 10000000    | 100000000     | 1000000           | 407847        | 100407847   |
   | 222290500 | 10000000    | 100000000     | 1000000           | -686149       | 99313851    |
+
 </div>
 
 ### References
@@ -163,14 +165,17 @@ You must deploy your own OTEL Collector that acts as a sidecar container to Rafi
 When the `ENABLE_TELEMETRY` variable is `true`, the following are required.
 
 <div class="overflow-table">
+
   | Variable name   | Type   | Description                                                                                                                                                                                      |
   | --------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
   | `INSTANCE_NAME` | String | Your Rafiki instance's name used to communicate for telemetry and auto-peering. For telemetry, it's used to distinguish between the different instances pushing data to the telemetry collector. |
+
 </div>
 
 #### Optional
 
 <div class="overflow-table">
+
   | Variable name                    | Type    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
   | -------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
   | `ENABLE_TELEMETRY`               | Boolean | Enables the telemetry service on Rafiki. Defaults to `true`.                                                                                                                                                                                                                                                                                                                                                                                                                                             |
@@ -178,6 +183,7 @@ When the `ENABLE_TELEMETRY` variable is `true`, the following are required.
   | `OPEN_TELEMETRY_COLLECTOR_URLS`  | String  | A CSV of URLs for OTEL Collectors (e.g., `http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317,http://happy-life-otel-collector:4317`).                                                                                                                                                                                                                                                                                                                                           |
   | `OPEN_TELEMETRY_EXPORT_INTERVAL` | Number  | Indicates, in milliseconds, how often the instrumented Rafiki instance should send metrics. Defaults to`15000`.                                                                                                                                                                                                                                                                                                                                                                                          |
   | `TELEMETRY_EXCHANGE_RATES_URL`   | String  | <p>Defines the endpoint Rafiki queries for exchange rates. Used as a fallback if/when [exchange rates](/v1-beta/integration/requirements/exchange-rates) aren’t provided.</p><p>When set, the response format of the external exchange rates API should be of type `rates`, as is expected by the rate service.</p><p>Defaults to `https://telemetry-exchange-rates.s3.amazonaws.com/exchange-rates-usd.json`, which points to a public S3 that has the previously mentioned required format, updated daily.</p> |
+
 </div>
 
 ### Example Docker OTEL Collector image and configuration

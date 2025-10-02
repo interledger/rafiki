@@ -27,11 +27,13 @@ Part of Rafiki's [integration requirements](/es/v1-beta/integration/requirements
 An asset is made up of the following properties.
 
 <div class="overflow-table" style="border-bottom: 1px solid var(--sl-color-gray-6);">
+
   | Property     | Type    | Description                                                                                                                                                 | Example |
   | ------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
   | `value`      | BigInt  | A numerical amount                                                                                                                                          | `10000` |
   | `assetCode`  | String  | A code representing the asset. An <LinkOut href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</LinkOut> should be used whenever possible. | `"USD"` |
   | `assetScale` | Integer | Difference in order of magnitude between the standard unit and a fractional unit                                                                            | `2`     |
+
 </div>
 
 To convert an asset’s value into an amount that’s easier to interpret, apply the following formula.
@@ -53,6 +55,7 @@ Liquidity accounts track deposits, withdrawals, and transfers that occur during 
 Liquidity accounts hold either a zero or a positive balance. Rafiki ensures that the total debits to a liquidity account will not exceed the account's total credits.
 
 <div class="overflow-table" style="border-bottom: 1px solid var(--sl-color-gray-6);">
+
   | Account type                                                       | What the account represents                                                                               | Number of accounts       |
   | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- | ------------------------ |
   | [Asset liquidity](#asset-liquidity-accounts)                       | The value, denominated in a given asset, that Rafiki has available to support cross-currency transactions | One per asset            |
@@ -60,6 +63,7 @@ Liquidity accounts hold either a zero or a positive balance. Rafiki ensures that
   | [Incoming payment liquidity](#incoming-payment-liquidity-accounts) | The value received from a completed incoming payment                                                      | One per incoming payment |
   | [Outgoing payment liquidity](#outgoing-payment-liquidity-accounts) | The value that Rafiki will attempt to send in an outgoing payment                                         | One per outgoing payment |
   | [Wallet address liquidity](#wallet-address-liquidity-accounts)     | The value that a wallet address received via SPSP                                                         | One per wallet address   |
+
 </div>
 
 #### Asset liquidity accounts
@@ -137,11 +141,13 @@ You should define and adjust each peer's liquidity based on your liquidity risk 
 Payment liquidity is the amount that's available because of an incoming or outgoing payment. Rafiki has three types of payment liquidity accounts.
 
 <div class="overflow-table" style="border-bottom: 1px solid var(--sl-color-gray-6);">
+
   | Payment type                                         | Purpose                                                 |
   | ---------------------------------------------------- | ------------------------------------------------------- |
   | [Incoming](#incoming-payment-liquidity-accounts)     | For incoming payments created via the Open Payments API |
   | [Outgoing](#outgoing-payment-liquidity-accounts)     | For outgoing payments created via the Open Payments API |
   | [Wallet address](#wallet-address-liquidity-accounts) | For payments sent via SPSP                              |
+  
 </div>
 
 ##### Incoming payment liquidity accounts

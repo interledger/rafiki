@@ -77,6 +77,7 @@ https://auth.wallet.example.com/interact/{id}/{nonce}
 The endpoints are called in the sequence listed below.
 
 <div class="overflow-table">
+
   | Method                                               | Endpoint                        | Purpose                                                           | Called by            | Publicly exposed |
   | ---------------------------------------------------- | ------------------------------- | ----------------------------------------------------------------- | -------------------- | ---------------- |
   | <Badge text="GET" variant="note" size="medium" />     | `/interact/{id}/{nonce}`        | [Start user interaction session](#start-user-interaction-session) | Open Payments client | Yes              |
@@ -84,6 +85,7 @@ The endpoints are called in the sequence listed below.
   | <Badge text="POST" variant="success" size="medium" /> | `/grant/{id}/{nonce}/{choice}`  | [Accept or reject grant](#accept-or-reject-grant)                 | Identity provider    | No               |
   | <Badge text="GET" variant="note" size="medium" />     | `/interact/{id}/{nonce}/finish` | [Finish user interaction](#finish-interaction)                    | Identity provider    | Yes              |
   | <Badge text="POST" variant="success" size="medium" /> | `/interact/{id}/{nonce}`        | [Continue grant](#continue-grant)                                 | Open Payments client | Yes              |
+
 </div>
 
 We also provide an <LinkOut href="https://github.com/interledger/rafiki/blob/main/packages/auth/src/openapi/specs/id-provider.yaml">OpenAPI specification</LinkOut> that describes the endpoints. Note that the *Continue grant* endpoint is not included in the spec because it's part of the <LinkOut href="https://openpayments.dev/apis/auth-server/operations/post-continue/">Open Payments Auth Server API</LinkOut>.

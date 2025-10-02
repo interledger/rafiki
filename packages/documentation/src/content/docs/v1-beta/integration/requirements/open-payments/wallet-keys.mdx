@@ -61,11 +61,13 @@ Use the `createWalletAddressKey` GraphQL mutation to create a key pair and assoc
     Open Payments <LinkOut href="https://openpayments.dev/apis/wallet-address-server/operations/get-wallet-address-keys/">requires</LinkOut> the following values.
 
     <div class="overflow-table">
+
       | Parameter | Required value | Description                                                                   |
       | --------- | -------------- | ----------------------------------------------------------------------------- |
       | `alg`     | `EdDSA`        | The algorithm used to generate the key pair                                   |
       | `kty`     | `OKP`          | The key type identifying the cryptographic algorithm family used with the key |
       | `crv`     | `Ed25519`      | The cryptographic curve used with the key                                     |
+    
     </div>
 
     Additionally, the request must contain the `walletAddressId` of the wallet address that the key pair will be associated with.

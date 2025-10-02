@@ -493,12 +493,14 @@ volumes:
 Create Nginx configuration files for every exposed domain:
 
 <div class="overflow-table">
+
   | Service                       | URL          | Example            | Nginx config file                                               |
   | ----------------------------- | ------------ | ------------------ | --------------------------------------------------------------- |
   | Open Payments resource server | DOMAIN       | myrafiki.com       | /etc/nginx/sites-available/open\_payments\_resource\_server.config |
   | ILP connector                 | ilp.DOMAIN   | ilp.myrafiki.com   | /etc/nginx/sites-available/ilp.config                           |
   | Open Payments auth server     | auth.DOMAIN  | auth.myrafiki.com  | /etc/nginx/sites-available/open\_payments\_auth\_server.config     |
   | Admin UI                      | admin.DOMAIN | admin.myrafiki.com | /etc/nginx/sites-available/admin.config                         |
+
 </div>
 
 :::note
