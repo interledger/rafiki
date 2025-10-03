@@ -68,173 +68,6 @@ describe('Lifecycle', (): void => {
     code: 'USD'
   }
 
-  // async function createAndFundGrantPaymen2(
-  //   debitAmountValue: bigint,
-  //   grant: Grant,
-  //   shouldComplete: boolean = true
-  // ) {
-  //   await OutgoingPaymentGrant.query(knex).insertAndFetch({
-  //     id: grant.id
-  //   })
-  //   const quote = await createQuote(deps, {
-  //     walletAddressId,
-  //     receiver,
-  //     debitAmount: {
-  //       value: debitAmountValue,
-  //       assetCode: asset.code,
-  //       assetScale: asset.scale
-  //     },
-  //     method: 'ilp',
-  //     exchangeRate: 1
-  //   })
-  //   const payment = await outgoingPaymentService.create({
-  //     walletAddressId,
-  //     quoteId: quote.id,
-  //     grant
-  //   })
-  //   assert.ok(!isOutgoingPaymentError(payment))
-
-  //   // Fund the payment (simulate funding)
-  //   const fundResult = await outgoingPaymentService.fund({
-  //     id: payment.id,
-  //     amount: payment.debitAmount.value,
-  //     transferId: uuid()
-  //   })
-  //   assert.ok(fundResult instanceof OutgoingPayment)
-  //   // assert.ok(!isOutgoingPaymentError(fundResult)
-
-  //   expect(fundResult.state).toBe(OutgoingPaymentState.Sending)
-
-  //   // Mock the payment handler to complete or partially complete
-  //   const mockPay = jest.spyOn(paymentMethodHandlerService, 'pay')
-
-  //   if (shouldComplete) {
-  //     // Full payment completion
-  //     mockPay.mockImplementationOnce(async (_, args) => {
-  //       // Simulate successful transfer
-  //       const transfer = await accountingService.createTransfer({
-  //         sourceAccount: payment,
-  //         destinationAccount: await createIncomingPayment(deps, {
-  //           walletAddressId: receiverWalletAddressId
-  //         }),
-  //         sourceAmount: args.finalDebitAmount,
-  //         destinationAmount: args.finalReceiveAmount,
-  //         timeout: 0
-  //       })
-  //       assert.ok(transfer && typeof transfer === 'object')
-  //       await transfer.post()
-  //       return args.finalReceiveAmount
-  //     })
-  //   } else {
-  //     // Partial payment - send half
-  //     const partialDebit = 75n //debitAmountValue / 2n
-  //     const partialReceive = 75n //payment.receiveAmount.value / 2n
-
-  //     mockPay.mockImplementationOnce(async () => {
-  //       const transfer = await accountingService.createTransfer({
-  //         sourceAccount: payment,
-  //         destinationAccount: await createIncomingPayment(deps, {
-  //           walletAddressId: receiverWalletAddressId
-  //         }),
-  //         sourceAmount: partialDebit,
-  //         destinationAmount: partialReceive,
-  //         timeout: 0
-  //       })
-  //       assert.ok(transfer && typeof transfer === 'object')
-  //       await transfer.post()
-
-  //       // Throw error to simulate partial completion
-  //       throw new Error('Partial payment completed')
-  //     })
-  //   }
-
-  //   // const processedPaymentId = await outgoingPaymentService.processNext()
-  //   // expect(processedPaymentId).toBe(payment.id)
-
-  //   return payment
-  // }
-
-  // async function createAndFundGrantPayment3(
-  //   debitAmountValue: bigint,
-  //   grant: Grant,
-  //   partialAmounts?: {
-  //     debit: bigint
-  //     receive: bigint
-  //   }
-  // ) {
-  //   await OutgoingPaymentGrant.query(knex).insertAndFetch({
-  //     id: grant.id
-  //   })
-
-  //   const quote = await createQuote(deps, {
-  //     walletAddressId,
-  //     receiver,
-  //     debitAmount: {
-  //       value: debitAmountValue,
-  //       assetCode: asset.code,
-  //       assetScale: asset.scale
-  //     },
-  //     method: 'ilp',
-  //     exchangeRate: 1
-  //   })
-
-  //   const payment = await outgoingPaymentService.create({
-  //     walletAddressId,
-  //     quoteId: quote.id,
-  //     grant
-  //   })
-  //   assert.ok(!isOutgoingPaymentError(payment))
-
-  //   // Fund the payment (simulate funding)
-  //   const fundResult = await outgoingPaymentService.fund({
-  //     id: payment.id,
-  //     amount: payment.debitAmount.value,
-  //     transferId: uuid()
-  //   })
-  //   assert.ok(fundResult instanceof OutgoingPayment)
-
-  //   expect(fundResult.state).toBe(OutgoingPaymentState.Sending)
-
-  //   // Mock the payment handler to complete or partially complete
-  //   const mockPay = jest.spyOn(paymentMethodHandlerService, 'pay')
-
-  //   if (partialAmounts) {
-  //     // Partial payment
-  //     mockPay.mockImplementationOnce(async () => {
-  //       const transfer = await accountingService.createTransfer({
-  //         sourceAccount: payment,
-  //         destinationAccount: await createIncomingPayment(deps, {
-  //           walletAddressId: receiverWalletAddressId
-  //         }),
-  //         sourceAmount: partialAmounts.debit,
-  //         destinationAmount: partialAmounts.receive,
-  //         timeout: 0
-  //       })
-  //       assert.ok(transfer && typeof transfer === 'object')
-  //       await transfer.post()
-  //       return partialAmounts.receive
-  //     })
-  //   } else {
-  //     // Full payment completion
-  //     mockPay.mockImplementationOnce(async (_, args) => {
-  //       const transfer = await accountingService.createTransfer({
-  //         sourceAccount: payment,
-  //         destinationAccount: await createIncomingPayment(deps, {
-  //           walletAddressId: receiverWalletAddressId
-  //         }),
-  //         sourceAmount: args.finalDebitAmount,
-  //         destinationAmount: args.finalReceiveAmount,
-  //         timeout: 0
-  //       })
-  //       assert.ok(transfer && typeof transfer === 'object')
-  //       await transfer.post()
-  //       return args.finalReceiveAmount
-  //     })
-  //   }
-
-  //   return payment
-  // }
-
   async function createAndFundGrantPayment(
     debitAmountValue: bigint,
     grant: Grant,
@@ -244,9 +77,12 @@ describe('Lifecycle', (): void => {
       payment: OutgoingPayment
     ) => jest.Mock
   ) {
-    await OutgoingPaymentGrant.query(knex).insertAndFetch({
-      id: grant.id
-    })
+    await OutgoingPaymentGrant.query(knex)
+      .insert({
+        id: grant.id
+      })
+      .onConflict('id')
+      .ignore()
 
     const quote = await createQuote(deps, {
       walletAddressId,
@@ -308,6 +144,7 @@ describe('Lifecycle', (): void => {
         })
         assert.ok(transfer && typeof transfer === 'object')
         await transfer.post()
+        return amount
       })
   }
 
@@ -329,6 +166,7 @@ describe('Lifecycle', (): void => {
         })
         assert.ok(transfer && typeof transfer === 'object')
         await transfer.post()
+        return partial.receive
       })
   }
 
@@ -344,11 +182,6 @@ describe('Lifecycle', (): void => {
 
   describe('Grant Spent Amounts', (): void => {
     beforeAll(async (): Promise<void> => {
-      // deps = initIocContainer({
-      //   ...Config
-      //   // exchangeRatesUrl,
-      //   // localCacheDuration: 0
-      // })
       deps = initIocContainer(Config)
       appContainer = await createTestApp(deps)
       outgoingPaymentService = await deps.use('outgoingPaymentService')
@@ -389,193 +222,385 @@ describe('Lifecycle', (): void => {
       await appContainer.shutdown()
     })
 
-    test('Successful full payment should not change grant spent amounts', async (): Promise<void> => {
-      const grant: Grant = {
-        id: uuid(),
-        limits: {
-          debitAmount: {
-            value: 1000n,
-            assetCode: asset.code,
-            assetScale: asset.scale
+    describe('Initial Payment', (): void => {
+      test('Successful full payment should not change grant spent amounts', async (): Promise<void> => {
+        const grant: Grant = {
+          id: uuid(),
+          limits: {
+            debitAmount: {
+              value: 1000n,
+              assetCode: asset.code,
+              assetScale: asset.scale
+            }
           }
         }
-      }
-      const paymentAmount = 100n
+        const paymentAmount = 100n
 
-      const payment = await createAndFundGrantPayment(
-        paymentAmount,
-        grant,
-        mockPaySuccessFactory()
-      )
+        const payment = await createAndFundGrantPayment(
+          paymentAmount,
+          grant,
+          mockPaySuccessFactory()
+        )
 
-      const startSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
-        knex
-      )
-        .where({ outgoingPaymentId: payment.id })
-        .first()
+        const startSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ outgoingPaymentId: payment.id })
+          .first()
 
-      // Initital spent amount records should reflect outgoing payment amounts
-      expect(startSpentAmounts).toMatchObject({
-        grantId: grant.id,
-        outgoingPaymentId: payment.id,
-        receiveAmountScale: assetDetails.scale,
-        receiveAmountCode: assetDetails.code,
-        paymentReceiveAmountValue: 100n,
-        intervalReceiveAmountValue: null,
-        grantTotalReceiveAmountValue: 100n,
-        debitAmountScale: assetDetails.scale,
-        debitAmountCode: assetDetails.code,
-        paymentDebitAmountValue: paymentAmount,
-        intervalDebitAmountValue: null,
-        grantTotalDebitAmountValue: paymentAmount,
-        paymentState: OutgoingPaymentState.Funding,
-        intervalStart: null,
-        intervalEnd: null
+        // Initital spent amount records should reflect outgoing payment amounts
+        expect(startSpentAmounts).toMatchObject({
+          grantId: grant.id,
+          outgoingPaymentId: payment.id,
+          receiveAmountScale: assetDetails.scale,
+          receiveAmountCode: assetDetails.code,
+          paymentReceiveAmountValue: paymentAmount,
+          intervalReceiveAmountValue: null,
+          grantTotalReceiveAmountValue: paymentAmount,
+          debitAmountScale: assetDetails.scale,
+          debitAmountCode: assetDetails.code,
+          paymentDebitAmountValue: paymentAmount,
+          intervalDebitAmountValue: null,
+          grantTotalDebitAmountValue: paymentAmount,
+          paymentState: OutgoingPaymentState.Funding,
+          intervalStart: null,
+          intervalEnd: null
+        })
+
+        const processedPaymentId = await outgoingPaymentService.processNext()
+        expect(processedPaymentId).toBe(payment.id)
+
+        const finalPayment = await outgoingPaymentService.get({
+          id: payment.id
+        })
+        expect(finalPayment?.state).toBe(OutgoingPaymentState.Completed)
+
+        // There should not be a new spent amounts record
+        const endSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ outgoingPaymentId: payment.id })
+          .orderBy('createdAt', 'desc')
+          .first()
+        assert(endSpentAmounts)
+        expect(endSpentAmounts).toEqual(startSpentAmounts)
       })
 
-      const processedPaymentId = await outgoingPaymentService.processNext()
-      expect(processedPaymentId).toBe(payment.id)
+      test('Partial payment should add new, settled grant payment amount', async (): Promise<void> => {
+        const grant: Grant = {
+          id: uuid(),
+          limits: {
+            debitAmount: {
+              value: 1000n,
+              assetCode: asset.code,
+              assetScale: asset.scale
+            }
+          }
+        }
+        const paymentAmount = 100n
+        const settledAmount = 75n
 
-      const finalPayment = await outgoingPaymentService.get({ id: payment.id })
-      expect(finalPayment?.state).toBe(OutgoingPaymentState.Completed)
+        const payment = await createAndFundGrantPayment(
+          paymentAmount,
+          grant,
+          mockPayPartialFactory({
+            debit: settledAmount,
+            receive: settledAmount
+          })
+        )
 
-      // There should not be a new spent amounts record
-      const endSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(knex)
-        .where({ outgoingPaymentId: payment.id })
-        .first()
-      assert(endSpentAmounts)
-      expect(endSpentAmounts).toEqual(startSpentAmounts)
+        const startSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ outgoingPaymentId: payment.id })
+          .first()
+
+        assert(startSpentAmounts)
+        // Initital spent amount records should reflect outgoing payment amounts
+        expect(startSpentAmounts).toMatchObject({
+          grantId: grant.id,
+          outgoingPaymentId: payment.id,
+          receiveAmountScale: assetDetails.scale,
+          receiveAmountCode: assetDetails.code,
+          paymentReceiveAmountValue: 100n,
+          intervalReceiveAmountValue: null,
+          grantTotalReceiveAmountValue: 100n,
+          debitAmountScale: assetDetails.scale,
+          debitAmountCode: assetDetails.code,
+          paymentDebitAmountValue: paymentAmount,
+          intervalDebitAmountValue: null,
+          grantTotalDebitAmountValue: paymentAmount,
+          paymentState: OutgoingPaymentState.Funding,
+          intervalStart: null,
+          intervalEnd: null
+        })
+
+        const processedPaymentId = await outgoingPaymentService.processNext()
+        expect(processedPaymentId).toBe(payment.id)
+
+        const finalPayment = await outgoingPaymentService.get({
+          id: payment.id
+        })
+        expect(finalPayment?.state).toBe(OutgoingPaymentState.Completed)
+
+        const endSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ outgoingPaymentId: payment.id })
+          .orderBy('createdAt', 'desc')
+          .first()
+
+        assert(endSpentAmounts)
+
+        // expect new spent amount record with the settled amounts
+        expect(endSpentAmounts.id).not.toBe(startSpentAmounts.id)
+        expect(endSpentAmounts).toMatchObject({
+          grantId: grant.id,
+          outgoingPaymentId: payment.id,
+          receiveAmountScale: assetDetails.scale,
+          receiveAmountCode: assetDetails.code,
+          paymentReceiveAmountValue: settledAmount,
+          intervalReceiveAmountValue: null,
+          grantTotalReceiveAmountValue: settledAmount,
+          debitAmountScale: assetDetails.scale,
+          debitAmountCode: assetDetails.code,
+          paymentDebitAmountValue: settledAmount,
+          intervalDebitAmountValue: null,
+          grantTotalDebitAmountValue: settledAmount,
+          paymentState: OutgoingPaymentState.Funding,
+          intervalStart: null,
+          intervalEnd: null
+        })
+      })
+
+      test('Failed payment should remove latest amount', async (): Promise<void> => {
+        const grant: Grant = {
+          id: uuid(),
+          limits: {
+            debitAmount: {
+              value: 1000n,
+              assetCode: asset.code,
+              assetScale: asset.scale
+            }
+          }
+        }
+        const paymentAmount = 100n
+        const payment = await createAndFundGrantPayment(
+          paymentAmount,
+          grant,
+          mockPayErrorFactory()
+        )
+        const startSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ outgoingPaymentId: payment.id })
+          .first()
+
+        // Initital spent amount records should reflect outgoing payment amounts
+        expect(startSpentAmounts).toMatchObject({
+          grantId: grant.id,
+          outgoingPaymentId: payment.id,
+          receiveAmountScale: assetDetails.scale,
+          receiveAmountCode: assetDetails.code,
+          paymentReceiveAmountValue: 100n,
+          intervalReceiveAmountValue: null,
+          grantTotalReceiveAmountValue: 100n,
+          debitAmountScale: assetDetails.scale,
+          debitAmountCode: assetDetails.code,
+          paymentDebitAmountValue: paymentAmount,
+          intervalDebitAmountValue: null,
+          grantTotalDebitAmountValue: paymentAmount,
+          paymentState: OutgoingPaymentState.Funding,
+          intervalStart: null,
+          intervalEnd: null
+        })
+
+        const processedPaymentId = await outgoingPaymentService.processNext()
+        expect(processedPaymentId).toBe(payment.id)
+
+        const endSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ outgoingPaymentId: payment.id })
+          .orderBy('createdAt', 'desc')
+          .first()
+
+        expect(endSpentAmounts).toBe(undefined)
+      })
     })
 
-    test('Partial payment should add grant payment amount to settled amount', async (): Promise<void> => {
-      const grant: Grant = {
-        id: uuid(),
-        limits: {
-          debitAmount: {
-            value: 1000n,
-            assetCode: asset.code,
-            assetScale: asset.scale
+    describe('Successive Payment', (): void => {
+      test('Successful full payment should not change grant spent amounts', async (): Promise<void> => {
+        const grant: Grant = {
+          id: uuid(),
+          limits: {
+            debitAmount: {
+              value: 1000n,
+              assetCode: asset.code,
+              assetScale: asset.scale
+            }
           }
         }
-      }
-      const paymentAmount = 100n
-      const settledAmount = 75n
+        const paymentAmount = 100n
 
-      const payment = await createAndFundGrantPayment(
-        paymentAmount,
-        grant,
-        mockPayPartialFactory({ debit: settledAmount, receive: settledAmount })
-      )
+        // Create and process first payment
+        await createAndFundGrantPayment(
+          paymentAmount,
+          grant,
+          mockPaySuccessFactory()
+        )
+        await outgoingPaymentService.processNext()
 
-      const startSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
-        knex
-      )
-        .where({ outgoingPaymentId: payment.id })
-        .first()
+        // Create second payment
+        const secondPayment = await createAndFundGrantPayment(
+          paymentAmount,
+          grant,
+          mockPaySuccessFactory()
+        )
 
-      assert(startSpentAmounts)
-      // Initital spent amount records should reflect outgoing payment amounts
-      expect(startSpentAmounts).toMatchObject({
-        grantId: grant.id,
-        outgoingPaymentId: payment.id,
-        receiveAmountScale: assetDetails.scale,
-        receiveAmountCode: assetDetails.code,
-        paymentReceiveAmountValue: 100n,
-        intervalReceiveAmountValue: null,
-        grantTotalReceiveAmountValue: 100n,
-        debitAmountScale: assetDetails.scale,
-        debitAmountCode: assetDetails.code,
-        paymentDebitAmountValue: paymentAmount,
-        intervalDebitAmountValue: null,
-        grantTotalDebitAmountValue: paymentAmount,
-        paymentState: OutgoingPaymentState.Funding,
-        intervalStart: null,
-        intervalEnd: null
+        const startSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ outgoingPaymentId: secondPayment.id })
+          .first()
+
+        // Initital spent amount records should reflect outgoing payment amounts
+        expect(startSpentAmounts).toMatchObject({
+          grantId: grant.id,
+          outgoingPaymentId: secondPayment.id,
+          receiveAmountScale: assetDetails.scale,
+          receiveAmountCode: assetDetails.code,
+          paymentReceiveAmountValue: paymentAmount,
+          intervalReceiveAmountValue: null,
+          grantTotalReceiveAmountValue: paymentAmount * 2n,
+          debitAmountScale: assetDetails.scale,
+          debitAmountCode: assetDetails.code,
+          paymentDebitAmountValue: paymentAmount,
+          intervalDebitAmountValue: null,
+          grantTotalDebitAmountValue: paymentAmount * 2n,
+          paymentState: OutgoingPaymentState.Funding,
+          intervalStart: null,
+          intervalEnd: null
+        })
+
+        const processedPaymentId = await outgoingPaymentService.processNext()
+        expect(processedPaymentId).toBe(secondPayment.id)
+
+        const finalPayment = await outgoingPaymentService.get({
+          id: secondPayment.id
+        })
+        expect(finalPayment?.state).toBe(OutgoingPaymentState.Completed)
+
+        // There should not be a new spent amounts record from the worker
+        const endSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ outgoingPaymentId: secondPayment.id })
+          .orderBy('createdAt', 'desc')
+          .first()
+        assert(endSpentAmounts)
+        expect(endSpentAmounts).toEqual(startSpentAmounts)
       })
 
-      const processedPaymentId = await outgoingPaymentService.processNext()
-      expect(processedPaymentId).toBe(payment.id)
-
-      const finalPayment = await outgoingPaymentService.get({ id: payment.id })
-      expect(finalPayment?.state).toBe(OutgoingPaymentState.Completed)
-
-      const endSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(knex)
-        .where({ outgoingPaymentId: payment.id })
-        .first()
-
-      assert(endSpentAmounts)
-
-      // expect new spent amount record with the settled amounts
-      expect(endSpentAmounts.id).not.toBe(startSpentAmounts.id)
-      expect(endSpentAmounts).toMatchObject({
-        grantId: grant.id,
-        outgoingPaymentId: payment.id,
-        receiveAmountScale: assetDetails.scale,
-        receiveAmountCode: assetDetails.code,
-        paymentReceiveAmountValue: settledAmount,
-        intervalReceiveAmountValue: null,
-        grantTotalReceiveAmountValue: settledAmount,
-        debitAmountScale: assetDetails.scale,
-        debitAmountCode: assetDetails.code,
-        paymentDebitAmountValue: settledAmount,
-        intervalDebitAmountValue: null,
-        grantTotalDebitAmountValue: settledAmount,
-        paymentState: OutgoingPaymentState.Funding,
-        intervalStart: null,
-        intervalEnd: null
-      })
-    })
-
-    test('Failed payment should remove latest amount', async (): Promise<void> => {
-      const grant: Grant = {
-        id: uuid(),
-        limits: {
-          debitAmount: {
-            value: 1000n,
-            assetCode: asset.code,
-            assetScale: asset.scale
+      test.only('Partial payment should add new, settled grant payment amount', async (): Promise<void> => {
+        const grant: Grant = {
+          id: uuid(),
+          limits: {
+            debitAmount: {
+              value: 1000n,
+              assetCode: asset.code,
+              assetScale: asset.scale
+            }
           }
         }
-      }
-      const paymentAmount = 100n
-      const payment = await createAndFundGrantPayment(
-        paymentAmount,
-        grant,
-        mockPayErrorFactory()
-      )
-      const startSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
-        knex
-      )
-        .where({ outgoingPaymentId: payment.id })
-        .first()
 
-      // Initital spent amount records should reflect outgoing payment amounts
-      expect(startSpentAmounts).toMatchObject({
-        grantId: grant.id,
-        outgoingPaymentId: payment.id,
-        receiveAmountScale: assetDetails.scale,
-        receiveAmountCode: assetDetails.code,
-        paymentReceiveAmountValue: 100n,
-        intervalReceiveAmountValue: null,
-        grantTotalReceiveAmountValue: 100n,
-        debitAmountScale: assetDetails.scale,
-        debitAmountCode: assetDetails.code,
-        paymentDebitAmountValue: paymentAmount,
-        intervalDebitAmountValue: null,
-        grantTotalDebitAmountValue: paymentAmount,
-        paymentState: OutgoingPaymentState.Funding,
-        intervalStart: null,
-        intervalEnd: null
+        // Create and process full payment
+        const paymentAmount = 100n
+        await createAndFundGrantPayment(
+          paymentAmount,
+          grant,
+          mockPaySuccessFactory()
+        )
+        await outgoingPaymentService.processNext()
+
+        // Create second payment with partially settled amount
+        const secondPaymentSettledAmount = 75n
+        const secondPayment = await createAndFundGrantPayment(
+          paymentAmount,
+          grant,
+          mockPayPartialFactory({
+            debit: secondPaymentSettledAmount,
+            receive: secondPaymentSettledAmount
+          })
+        )
+
+        const startSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ outgoingPaymentId: secondPayment.id })
+          .first()
+
+        assert(startSpentAmounts)
+        // Initital spent amount records should reflect full outgoing payment amounts
+        expect(startSpentAmounts).toMatchObject({
+          grantId: grant.id,
+          outgoingPaymentId: secondPayment.id,
+          receiveAmountScale: assetDetails.scale,
+          receiveAmountCode: assetDetails.code,
+          paymentReceiveAmountValue: paymentAmount,
+          intervalReceiveAmountValue: null,
+          grantTotalReceiveAmountValue: paymentAmount * 2n,
+          debitAmountScale: assetDetails.scale,
+          debitAmountCode: assetDetails.code,
+          paymentDebitAmountValue: paymentAmount,
+          intervalDebitAmountValue: null,
+          grantTotalDebitAmountValue: paymentAmount * 2n,
+          paymentState: OutgoingPaymentState.Funding,
+          intervalStart: null,
+          intervalEnd: null
+        })
+
+        const processedPaymentId = await outgoingPaymentService.processNext()
+        expect(processedPaymentId).toBe(secondPayment.id)
+
+        const finalPayment = await outgoingPaymentService.get({
+          id: secondPayment.id
+        })
+        expect(finalPayment?.state).toBe(OutgoingPaymentState.Completed)
+
+        const endSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ outgoingPaymentId: secondPayment.id })
+          .orderBy('createdAt', 'desc')
+          .first()
+
+        assert(endSpentAmounts)
+
+        console.log({ endSpentAmounts })
+
+        // There should be a new spent amounts record from the worker with the settled amounts
+        expect(endSpentAmounts.id).not.toBe(startSpentAmounts.id)
+        expect(endSpentAmounts).toMatchObject({
+          grantId: grant.id,
+          outgoingPaymentId: secondPayment.id,
+          receiveAmountScale: assetDetails.scale,
+          receiveAmountCode: assetDetails.code,
+          paymentReceiveAmountValue: secondPaymentSettledAmount,
+          intervalReceiveAmountValue: null,
+          grantTotalReceiveAmountValue:
+            paymentAmount + secondPaymentSettledAmount,
+          debitAmountScale: assetDetails.scale,
+          debitAmountCode: assetDetails.code,
+          paymentDebitAmountValue: secondPaymentSettledAmount,
+          intervalDebitAmountValue: null,
+          grantTotalDebitAmountValue:
+            paymentAmount + secondPaymentSettledAmount,
+          paymentState: OutgoingPaymentState.Funding,
+          intervalStart: null,
+          intervalEnd: null
+        })
       })
-
-      const processedPaymentId = await outgoingPaymentService.processNext()
-      expect(processedPaymentId).toBe(payment.id)
-
-      const endSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(knex)
-        .where({ outgoingPaymentId: payment.id })
-        .first()
-
-      expect(endSpentAmounts).toBe(undefined)
     })
   })
 })
