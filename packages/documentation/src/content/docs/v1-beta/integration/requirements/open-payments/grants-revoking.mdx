@@ -1,0 +1,192 @@
+---
+title: Viewing and revoking grants
+slug: v1-beta/integration/requirements/open-payments/grants-revoking
+---
+
+import { Badge, Tabs, TabItem } from '@astrojs/starlight/components'
+import { LinkOut } from '@interledger/docs-design-system'
+
+Grants are the mechanism in Open Payments by which your account holders give permission to a client application to access their accounts and send payments on their behalf. Providing your account holders the ability to view and revoke grants is not required to implement and operate Rafiki, but allowing them to do so is critical to providing an optimal user experience.
+
+## View grants
+
+Use the `Grants` GraphQL query to look up all grants associated with a wallet address.
+
+<Tabs>
+  <TabItem label="Operation">
+    ```graphql
+    query Grants(
+      $after: String
+      $before: String
+      $first: Int
+      $last: Int
+      $filter: GrantFilter
+    ) {
+      grants(
+        after: $after
+        before: $before
+        first: $first
+        last: $last
+        filter: $filter
+      ) {
+        edges {
+          cursor
+          node {
+            id
+            client
+            createdAt
+            state
+            access {
+              createdAt
+              id
+              identifier
+              limits {
+                interval
+                receiveAmount {
+                  assetScale
+                  value
+                  assetCode
+                }
+                receiver
+                debitAmount {
+                  assetCode
+                  assetScale
+                  value
+                }
+              }
+              actions
+              type
+            }
+          }
+        }
+        pageInfo {
+          endCursor
+          hasNextPage
+          hasPreviousPage
+          startCursor
+        }
+      }
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Variables">
+    ```json
+    {
+      "input": {
+        "after": null,
+        "before": null,
+        "first": null,
+        "last": null,
+        "filter": {
+            "state": {
+                "in": ["PROCESSING", "PENDING", "APPROVED", "FINALIZED"]
+            },
+            "identifier": {
+                "in": ["https://cloud-nine-wallet-backend/accounts/gfranklin"]
+            }
+        }
+    }
+    }
+    ```
+
+    For more information about this query's variables, see [`grants`](/v1-beta/apis/graphql/auth/#query-grants).
+
+  </TabItem>
+
+  <TabItem label="Response">
+    ```json
+    {
+      "data": {
+        "grants": {
+          "edges": [
+            {
+              "cursor": "82637448-30d2-4242-9c85-464821dfbaf5",
+              "node": {
+                "id": "82637448-30d2-4242-9c85-464821dfbaf5",
+                "client": "https://happy-life-bank-backend/accounts/pfry",
+                "createdAt": "2025-03-27T13:48:23.615Z",
+                "state": "APPROVED",
+                "access": [
+                  {
+                    "createdAt": "2025-03-27T13:48:23.617Z",
+                    "id": "05a5413b-7009-4ce1-949a-e0ff1b243268",
+                    "identifier": "https://cloud-nine-wallet-backend/accounts/gfranklin",
+                    "limits": {
+                      "interval": null,
+                      "receiveAmount": {
+                        "assetScale": 2,
+                        "value": "100",
+                        "assetCode": "USD"
+                      },
+                      "receiver": null,
+                      "debitAmount": {
+                        "assetCode": "USD",
+                        "assetScale": 2,
+                        "value": "205"
+                      }
+                    },
+                    "actions": [
+                      "create",
+                      "read",
+                      "list"
+                    ],
+                    "type": "outgoing-payment"
+                  }
+                ]
+              }
+            }
+          ],
+          "pageInfo": {
+            "endCursor": "82637448-30d2-4242-9c85-464821dfbaf5",
+            "hasNextPage": false,
+            "hasPreviousPage": false,
+            "startCursor": "82637448-30d2-4242-9c85-464821dfbaf5"
+          }
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+## Revoke a grant
+
+Use the `revokeGrant` GraphQL mutation to revoke a particular grant.
+
+<Tabs>
+  <TabItem label="Operation">
+    ```graphql
+    mutation revokeGrant($input: RevokeGrantInput!) {
+        revokeGrant(input: $input) {
+            id
+        }
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Variables">
+    ```json
+    {
+        "input": {
+            "grantId": "2117891e-4b89-42ae-984e-e0762d5888c1"
+        }
+    }
+    ```
+
+    For more information about this mutation's input object, see [`RevokeGrantInput`](/v1-beta/apis/graphql/auth/#definition-RevokeGrantInput).
+
+  </TabItem>
+
+  <TabItem label="Response">
+    ```json
+    {
+      "data": {
+        "revokeGrant": {
+          "id": "2117891e-4b89-42ae-984e-e0762d5888c1"
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
