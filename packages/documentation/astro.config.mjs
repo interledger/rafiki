@@ -375,16 +375,10 @@ export default defineConfig({
         }),
         starlightLinksValidator({
           exclude: [
-            '/apis/graphql/auth',
-            '/apis/graphql/backend',
-            '/apis/graphql/auth/*',
-            '/apis/graphql/backend/*',
-            '/v1-beta/apis/graphql/auth',
-            '/v1-beta/apis/graphql/backend',
-            '/v1-beta/apis/graphql/auth/*',
-            '/v1-beta/apis/graphql/backend/*',
-            'es/v1-beta/apis/graphql/backend/*',
-            'es/v1-beta/apis/graphql/backend/*'
+            '**/apis/graphql/auth',
+            '**/apis/graphql/backend',
+            '**/apis/graphql/auth/*',
+            '**/apis/graphql/backend/*'
           ],
           errorOnLocalLinks: false,
           errorOnFallbackPages: false,
