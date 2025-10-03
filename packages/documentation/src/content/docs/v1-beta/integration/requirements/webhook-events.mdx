@@ -13,7 +13,7 @@ The main communication channel between you and your Rafiki instance is composed 
 Most events require you to interact with Rafiki to provide wallet address information or manage (deposit or withdraw) liquidity. This page describes how you should handle each webhook event.
 
 :::note
-Rafiki doesn't hold *user* account balances. Instead, Rafiki keeps track of the liquidity within your instance's asset, peer, and payment accounts within its own database.
+Rafiki doesn't hold _user_ account balances. Instead, Rafiki keeps track of the liquidity within your instance's asset, peer, and payment accounts within its own database.
 :::
 
 ## Specify your webhook endpoint
@@ -24,9 +24,9 @@ When an event occurs, the [`backend`](/v1-beta/integration/deployment/services/b
 
 <div class="overflow-table">
 
-  | Variable      | Type      | Description                                                         |
-  | ------------- | --------- | ------------------------------------------------------------------- |
-  | `WEBHOOK_URL` | `backend` | The endpoint to where requests are made when a webhook event occurs |
+| Variable      | Type      | Description                                                         |
+| ------------- | --------- | ------------------------------------------------------------------- |
+| `WEBHOOK_URL` | `backend` | The endpoint to where requests are made when a webhook event occurs |
 
 </div>
 
@@ -36,11 +36,11 @@ Each webhook event is sent as a JSON payload with the following structure in the
 
 <div class="overflow-table">
 
-  | Attribute | Type   | Description                                         | Required |
-  | --------- | ------ | --------------------------------------------------- | -------- |
-  | `id`      | String | UUID for the event                                  | Y        |
-  | `type`    | Enum   | The `EventType`                                     | Y        |
-  | `data`    | Object | Additional data that coincides with the `EventType` | Y        |
+| Attribute | Type   | Description                                         | Required |
+| --------- | ------ | --------------------------------------------------- | -------- |
+| `id`      | String | UUID for the event                                  | Y        |
+| `type`    | Enum   | The `EventType`                                     | Y        |
+| `data`    | Object | Additional data that coincides with the `EventType` | Y        |
 
 </div>
 
@@ -133,6 +133,7 @@ The `id` in the webhook event payload is unique. Your system can use the ID to d
       }
       ```
     </TabItem>
+
   </Tabs>
 </details>
 
@@ -154,16 +155,16 @@ The `Rafiki-Signature` header in each webhook request has the following format:
 Rafiki-Signature: t=<timestamp>, v<version>=<signature_digest>
 ```
 
-* `t=<timestamp>`: The UNIX timestamp (in seconds) when the signature was generated.
-* `v<version>=<digest>`: The versioned HMAC SHA-256 signature digest. The default version is `v1`.
+- `t=<timestamp>`: The UNIX timestamp (in seconds) when the signature was generated.
+- `v<version>=<digest>`: The versioned HMAC SHA-256 signature digest. The default version is `v1`.
 
 ### Prepare the signed payload string
 
 To recreate the signed payload string, concatenate the following.
 
-* The timestamp extracted from the header
-* A period (.) character
-* The actual JSON payload from the request body, containing the `id`, `type`, and `data` attributes
+- The timestamp extracted from the header
+- A period (.) character
+- The actual JSON payload from the request body, containing the `id`, `type`, and `data` attributes
 
 This string format is essential for accurate signature validation.
 
@@ -209,10 +210,10 @@ If a non-200 status is returned, indicating an error, or the request times out, 
 
 <div class="overflow-table">
 
-  | Variable            | Type      | Description                                                                                                     |
-  | ------------------- | --------- | --------------------------------------------------------------------------------------------------------------- |
-  | `WEBHOOK_TIMEOUT`   | `backend` | The amount of time, in milliseconds, after which a webhook request times out                                    |
-  | `WEBHOOK_MAX_RETRY` | `backend` | The maximum number of retries for a webhook event when a non-200 status is returned or if the request timed out |
+| Variable            | Type      | Description                                                                                                     |
+| ------------------- | --------- | --------------------------------------------------------------------------------------------------------------- |
+| `WEBHOOK_TIMEOUT`   | `backend` | The amount of time, in milliseconds, after which a webhook request times out                                    |
+| `WEBHOOK_MAX_RETRY` | `backend` | The maximum number of retries for a webhook event when a non-200 status is returned or if the request timed out |
 
 </div>
 
@@ -222,11 +223,11 @@ If a non-200 status is returned, indicating an error, or the request times out, 
 
 <div class="overflow-table">
 
-  | Event type                                                  | Description                                                                       |
-  | ----------------------------------------------------------- | --------------------------------------------------------------------------------- |
-  | [`incoming_payment.created`](#incoming-payment-created)     | An incoming payment was created                                                   |
-  | [`incoming_payment.completed`](#incoming-payment-completed) | An incoming payment is complete and will not accept any additional incoming funds |
-  | [`incoming_payment.expired`](#incoming-payment-expired)     | An incoming payment expired and will not accept any additional incoming funds     |
+| Event type                                                  | Description                                                                       |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| [`incoming_payment.created`](#incoming-payment-created)     | An incoming payment was created                                                   |
+| [`incoming_payment.completed`](#incoming-payment-completed) | An incoming payment is complete and will not accept any additional incoming funds |
+| [`incoming_payment.expired`](#incoming-payment-expired)     | An incoming payment expired and will not accept any additional incoming funds     |
 
 </div>
 
@@ -244,7 +245,8 @@ If a non-200 status is returned, indicating an error, or the request times out, 
       ASE->>ASE: No action required
 
 `}
-  />
+/>
+
 </details>
 
 The `incoming_payment.created` event indicates an incoming payment was created. At this point, the incoming payment has not received any funds.
@@ -256,10 +258,12 @@ The incoming payment either completes or expires.
 <details>
   <summary>Expand for event sequences</summary>
 
-  {' '}
+{' '}
 
-  <Badge text="Single-phase transfer" variant="tip" size="medium" /> An incoming payment
-  of $10 was completed.
+{' '}
+
+<Badge text='Single-phase transfer' variant='tip' size='medium' /> An incoming payment
+of $10 was completed.
 
   <Mermaid
     graph={`sequenceDiagram
@@ -272,12 +276,14 @@ The incoming payment either completes or expires.
       ASE->>ASE: Credit recipient's account with $10
 
 `}
-  />
+/>
 
-  {' '}
+{' '}
 
-  <Badge text="Two-phase transfer" variant="tip" size="medium" /> An incoming payment
-  of $10 was completed.
+{' '}
+
+<Badge text='Two-phase transfer' variant='tip' size='medium' /> An incoming payment
+of $10 was completed.
 
   <Mermaid
     graph={`sequenceDiagram
@@ -293,7 +299,8 @@ The incoming payment either completes or expires.
       R->>R: Two-phase transfer completed
 
 `}
-  />
+/>
+
 </details>
 
 The `incoming_payment.completed` event indicates the payment completed either automatically or manually, and that any funds received into the incoming payment should be withdrawn and then credited to the recipient's account on your ledger.
@@ -315,7 +322,8 @@ The `incoming_payment.completed` event indicates the payment completed either au
       ASE->>ASE: Credit recipient's account with $2.55
 
 `}
-  />
+/>
+
 </details>
 
 The `incoming_payment.expired` event will only fire if funds were received for the incoming payment. The event signals the end of any additional payments.
@@ -330,11 +338,11 @@ In some scenarios, a sender may not have specified an `incomingAmount` when the 
 
 <div class="overflow-table">
 
-  | Event type                                                  | Description                                        |
-  | ----------------------------------------------------------- | -------------------------------------------------- |
-  | [`outgoing_payment.created`](#outgoing-payment-created)     | An outgoing payment has been created               |
-  | [`outgoing_payment.completed`](#outgoing-payment-completed) | An outgoing payment has completed                  |
-  | [`outgoing_payment.failed`](#outgoing-payment-failed)       | An outgoing payment partially or completely failed |
+| Event type                                                  | Description                                        |
+| ----------------------------------------------------------- | -------------------------------------------------- |
+| [`outgoing_payment.created`](#outgoing-payment-created)     | An outgoing payment has been created               |
+| [`outgoing_payment.completed`](#outgoing-payment-completed) | An outgoing payment has completed                  |
+| [`outgoing_payment.failed`](#outgoing-payment-failed)       | An outgoing payment partially or completely failed |
 
 </div>
 
@@ -361,7 +369,8 @@ In some scenarios, a sender may not have specified an `incomingAmount` when the 
       end
 
 `}
-  />
+/>
+
 </details>
 
 The `outgoing_payment.created` event indicates an outgoing payment was created and is awaiting liquidity. Verify the sender's account balance and perform any other necessary verifications before funding the payment.
@@ -373,10 +382,12 @@ If the sender has insufficient funds or if the payment should otherwise not be f
 <details>
   <summary>Expand for event sequences</summary>
 
-  {' '}
+{' '}
 
-  <Badge text="Single-phase transfer" variant="tip" size="medium" /> An outgoing payment
-  for $12 is complete. $11.50 was sent. You choose to keep $0.50 as a service fee.
+{' '}
+
+<Badge text='Single-phase transfer' variant='tip' size='medium' /> An outgoing payment
+for $12 is complete. $11.50 was sent. You choose to keep $0.50 as a service fee.
 
   <Mermaid
     graph={`sequenceDiagram
@@ -389,9 +400,12 @@ If the sender has insufficient funds or if the payment should otherwise not be f
       ASE->>ASE: Remove hold and deduct $12 from sender's account,<br/>credit your account with $0.50
 
 `}
-  />
+/>
 
-  <Badge text="Two-phase transfer" variant="tip" size="medium" /> An outgoing payment  for $12 is complete. $11.50 was sent. You choose to keep $0.50 as a service fee.
+{' '}
+
+<Badge text='Two-phase transfer' variant='tip' size='medium' /> An outgoing payment
+for $12 is complete. $11.50 was sent. You choose to keep $0.50 as a service fee.
 
   <Mermaid
     graph={`sequenceDiagram
@@ -407,7 +421,8 @@ If the sender has insufficient funds or if the payment should otherwise not be f
       R->>R: Two-phase transfer complete
 
 `}
-  />
+/>
+
 </details>
 
 The `outgoing.payment_completed` event indicates that as much as possible has been sent to the recipient against their incoming payment.
@@ -431,7 +446,8 @@ If there is excess liquidity in Rafiki due to differences between the sent and r
       ASE->>ASE: Remove hold and deduct $8 from the sender's account
 
 `}
-  />
+/>
+
 </details>
 
 The `outgoing_payment.failed` event indicates that an outgoing payment has either partially or completely failed and a retry was unsuccessful. Withdraw any remaining liquidity from the outgoing payment in Rafiki. If the payment failed completely (the `sentAmount` is `0`), remove the hold from your sender's account. If the payment partially failed, remove the hold from your sender's account, then debit the sender's account on your ledger with the amount that was sent successfully. Since there will be a discrepancy between the quoted amount and the actual sent amount, we suggest you refrain from taking a sending fee.
@@ -440,10 +456,10 @@ The `outgoing_payment.failed` event indicates that an outgoing payment has eithe
 
 <div class="overflow-table">
 
-  | Event type                                                            | Description                                                        |
-  | --------------------------------------------------------------------- | ------------------------------------------------------------------ |
-  | [`wallet_address.not_found`](#wallet-address-not-found)               | The requested wallet address was not found on this Rafiki instance |
-  | [`wallet_address.web_monetization`](#wallet-address-web-monetization) | Web Monetization payments have been received via STREAM            |
+| Event type                                                            | Description                                                        |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| [`wallet_address.not_found`](#wallet-address-not-found)               | The requested wallet address was not found on this Rafiki instance |
+| [`wallet_address.web_monetization`](#wallet-address-web-monetization) | Web Monetization payments have been received via STREAM            |
 
 </div>
 
@@ -463,7 +479,8 @@ The `outgoing_payment.failed` event indicates that an outgoing payment has eithe
       R-->>ASE: success: true
 
 `}
-  />
+/>
+
 </details>
 
 The `wallet_address.not_found` event indicates that a wallet address was requested via the Open Payments <Badge text="GET" variant="note" size="medium" /> wallet address API call, but the address doesn’t exist in your Rafiki instance.
@@ -472,9 +489,9 @@ When you receive this event, look up the associated account in your system and c
 
 <div class="overflow-table">
 
-  | Environment variable               | Type      | Description                                                                                                    |
-  | ---------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------- |
-  | `WALLET_ADDRESS_LOOKUP_TIMEOUT_MS` | `backend` | The time in milliseconds that you have to create a missing wallet address before the initial request times out |
+| Environment variable               | Type      | Description                                                                                                    |
+| ---------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------- |
+| `WALLET_ADDRESS_LOOKUP_TIMEOUT_MS` | `backend` | The time in milliseconds that you have to create a missing wallet address before the initial request times out |
 
 </div>
 
@@ -495,7 +512,8 @@ When you receive this event, look up the associated account in your system and c
       ASE->>ASE: Credit recipient's account with $0.33
 
 `}
-  />
+/>
+
 </details>
 
 The `wallet_address.web_monetization` event indicates that a wallet address received Web Monetization payments via the ILP STREAM protocol. Withdraw the liquidity from the wallet address in Rafiki and credit the recipient's account on your ledger.
@@ -504,9 +522,9 @@ The `wallet_address.web_monetization` event indicates that a wallet address rece
 
 <div class="overflow-table">
 
-  | Event type                                    | Description                                                   |
-  | --------------------------------------------- | ------------------------------------------------------------- |
-  | [`asset.liquidity_low`](#asset-liquidity-low) | Your asset liquidity has dropped below your defined threshold |
+| Event type                                    | Description                                                   |
+| --------------------------------------------- | ------------------------------------------------------------- |
+| [`asset.liquidity_low`](#asset-liquidity-low) | Your asset liquidity has dropped below your defined threshold |
 
 </div>
 
@@ -526,7 +544,8 @@ The `wallet_address.web_monetization` event indicates that a wallet address rece
       R-->>ASE: success: true
 
 `}
-  />
+/>
+
 </details>
 
 The `asset.liquidity_low` event indicates that an asset's liquidity has dropped below your predefined liquidity threshold. Check if you already have, or can acquire, additional liquidity for that specific asset. If so, deposit it in Rafiki. Cross-currency transfers will fail if you don't increase the asset's liquidity.
@@ -535,9 +554,9 @@ The `asset.liquidity_low` event indicates that an asset's liquidity has dropped 
 
 <div class="overflow-table">
 
-  | Event type                                  | Description                                                  |
-  | ------------------------------------------- | ------------------------------------------------------------ |
-  | [`peer.liquidity_low`](#peer-liquidity-low) | Your peer liquidity has dropped below your defined threshold |
+| Event type                                  | Description                                                  |
+| ------------------------------------------- | ------------------------------------------------------------ |
+| [`peer.liquidity_low`](#peer-liquidity-low) | Your peer liquidity has dropped below your defined threshold |
 
 </div>
 
@@ -557,7 +576,8 @@ The `asset.liquidity_low` event indicates that an asset's liquidity has dropped 
       R-->>ASE: success: true
 
 `}
-  />
+/>
+
 </details>
 
 The `peer.liquidity_low` event indicates that a peer's liquidity has dropped below your predefined liquidity threshold. Decide whether you want to extend the peer's credit line or if your peer must settle before you will extend a new line of credit. If you cannot or do not increase the peer liquidity in Rafiki, transfers to that peer will fail.

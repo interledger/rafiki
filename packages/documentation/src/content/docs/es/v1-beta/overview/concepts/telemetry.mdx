@@ -7,17 +7,17 @@ import { LinkOut } from '@interledger/docs-design-system'
 
 The objective of the telemetry feature is to gather metrics and establish an infrastructure for visualizing valuable network insights. Some of the metrics that we at the Interledger Foundation collect include:
 
-* The total amount of money transferred via packet data within a specified time frame (daily, weekly, monthly)
-* The number of transactions that have been at least partially successful
-* The number of ILP packets flowing through the network
-* The average amount of money held within the network per transaction
-* The average time it takes for an outgoing payment to complete
+- The total amount of money transferred via packet data within a specified time frame (daily, weekly, monthly)
+- The number of transactions that have been at least partially successful
+- The number of ILP packets flowing through the network
+- The average amount of money held within the network per transaction
+- The average time it takes for an outgoing payment to complete
 
 Our goals are to:
 
-* Track the growth of the network in terms of transaction sizes and the number of transactions processed
-* Use the data for our own insights
-* Enable you to gain your own insights
+- Track the growth of the network in terms of transaction sizes and the number of transactions processed
+- Use the data for our own insights
+- Enable you to gain your own insights
 
 ### Privacy and optionality
 
@@ -56,7 +56,7 @@ AMP offers limited configuration options and cannot crawl data outside of AWS. T
 Grafana Cloud is used for data visualization dashboards and offers multiple tools that extend Prometheus Promql.
 
 :::note
-The Interledger Foundation initially used Amazon-hosted Grafana which did not meet our needs for embedding dashboards. Grafana Cloud offers a feature called *public dashboards* which allows us to share dashboards. However, embedding may still pose a challenge.
+The Interledger Foundation initially used Amazon-hosted Grafana which did not meet our needs for embedding dashboards. Grafana Cloud offers a feature called _public dashboards_ which allows us to share dashboards. However, embedding may still pose a challenge.
 :::
 
 ### Exchange rates
@@ -127,16 +127,16 @@ The following table shows the values in the algorithm when running transactions 
 
 <div class="overflow-table">
 
-  | Raw value | Bucket size | Rounded value | Privacy parameter | Laplace noise | Final value |
-  | --------- | ----------- | ------------- | ----------------- | ------------- | ----------- |
-  | 8300      | 10000       | 10000         | 1000              | 2037          | 12037       |
-  | 13200     | 15000       | 15000         | 1500              | 1397          | 16397       |
-  | 147700    | 160000      | 160000        | 16000             | -27128        | 132872      |
-  | 1426100   | 2560000     | 2560000       | 256000            | -381571       | 2178429     |
-  | 1788200   | 2560000     | 2560000       | 256000            | 463842        | 3023842     |
-  | 90422400  | 10000000    | 90000000      | 1000000           | 2210649       | 92210649    |
-  | 112400400 | 10000000    | 100000000     | 1000000           | 407847        | 100407847   |
-  | 222290500 | 10000000    | 100000000     | 1000000           | -686149       | 99313851    |
+| Raw value | Bucket size | Rounded value | Privacy parameter | Laplace noise | Final value |
+| --------- | ----------- | ------------- | ----------------- | ------------- | ----------- |
+| 8300      | 10000       | 10000         | 1000              | 2037          | 12037       |
+| 13200     | 15000       | 15000         | 1500              | 1397          | 16397       |
+| 147700    | 160000      | 160000        | 16000             | -27128        | 132872      |
+| 1426100   | 2560000     | 2560000       | 256000            | -381571       | 2178429     |
+| 1788200   | 2560000     | 2560000       | 256000            | 463842        | 3023842     |
+| 90422400  | 10000000    | 90000000      | 1000000           | 2210649       | 92210649    |
+| 112400400 | 10000000    | 100000000     | 1000000           | 407847        | 100407847   |
+| 222290500 | 10000000    | 100000000     | 1000000           | -686149       | 99313851    |
 
 </div>
 
@@ -144,13 +144,13 @@ The following table shows the values in the algorithm when running transactions 
 
 Rafiki’s telemetry solution is a combination of techniques described in various white papers on privacy-preserving data collection. More information can be found in the following papers:
 
-* <LinkOut href="https://jwcn-eurasipjournals.springeropen.com/articles/10.1186/s13638-020-01675-8">
+- <LinkOut href='https://jwcn-eurasipjournals.springeropen.com/articles/10.1186/s13638-020-01675-8'>
     Local differential privacy for human-centered computing
   </LinkOut>
-* <LinkOut href="https://www.microsoft.com/en-us/research/blog/collecting-telemetry-data-privately/">
+- <LinkOut href='https://www.microsoft.com/en-us/research/blog/collecting-telemetry-data-privately/'>
     Collecting telemetry data privately
   </LinkOut>
-* <LinkOut href="https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/42852.pdf">
+- <LinkOut href='https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/42852.pdf'>
     RAPPOR: Randomized aggregatable privacy-preserving ordinal response
   </LinkOut>
 
@@ -168,9 +168,9 @@ When the `ENABLE_TELEMETRY` variable is `true`, the following are required.
 
 <div class="overflow-table">
 
-  | Variable name   | Type   | Description                                                                                                                                                                                      |
-  | --------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-  | `INSTANCE_NAME` | String | Your Rafiki instance's name used to communicate for telemetry and auto-peering. For telemetry, it's used to distinguish between the different instances pushing data to the telemetry collector. |
+| Variable name   | Type   | Description                                                                                                                                                                                      |
+| --------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `INSTANCE_NAME` | String | Your Rafiki instance's name used to communicate for telemetry and auto-peering. For telemetry, it's used to distinguish between the different instances pushing data to the telemetry collector. |
 
 </div>
 
@@ -178,13 +178,13 @@ When the `ENABLE_TELEMETRY` variable is `true`, the following are required.
 
 <div class="overflow-table">
 
-  | Variable name                    | Type    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-  | -------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-  | `ENABLE_TELEMETRY`               | Boolean | Enables the telemetry service on Rafiki. Defaults to `true`.                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-  | `LIVENET`                        | Boolean | Determines where to send metrics. Defaults to `false`, resulting in metrics being sent to the testnet OTEL Collector. <p>Set to `true` on production environments dealing with real money.</p>                                                                                                                                                                                                                                                                                                           |
-  | `OPEN_TELEMETRY_COLLECTOR_URLS`  | String  | A CSV of URLs for OTEL Collectors (e.g., `http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317,http://happy-life-otel-collector:4317`).                                                                                                                                                                                                                                                                                                                                           |
-  | `OPEN_TELEMETRY_EXPORT_INTERVAL` | Number  | Indicates, in milliseconds, how often the instrumented Rafiki instance should send metrics. Defaults to`15000`.                                                                                                                                                                                                                                                                                                                                                                                          |
-  | `TELEMETRY_EXCHANGE_RATES_URL`   | String  | <p>Defines the endpoint Rafiki queries for exchange rates. Used as a fallback if/when [exchange rates](/v1-beta/integration/requirements/exchange-rates) aren’t provided.</p><p>When set, the response format of the external exchange rates API should be of type `rates`, as is expected by the rate service.</p><p>Defaults to `https://telemetry-exchange-rates.s3.amazonaws.com/exchange-rates-usd.json`, which points to a public S3 that has the previously mentioned required format, updated daily.</p> |
+| Variable name                    | Type    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| -------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ENABLE_TELEMETRY`               | Boolean | Enables the telemetry service on Rafiki. Defaults to `true`.                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `LIVENET`                        | Boolean | Determines where to send metrics. Defaults to `false`, resulting in metrics being sent to the testnet OTEL Collector. <p>Set to `true` on production environments dealing with real money.</p>                                                                                                                                                                                                                                                                                                                   |
+| `OPEN_TELEMETRY_COLLECTOR_URLS`  | String  | A CSV of URLs for OTEL Collectors (e.g., `http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317,http://happy-life-otel-collector:4317`).                                                                                                                                                                                                                                                                                                                                                   |
+| `OPEN_TELEMETRY_EXPORT_INTERVAL` | Number  | Indicates, in milliseconds, how often the instrumented Rafiki instance should send metrics. Defaults to`15000`.                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `TELEMETRY_EXCHANGE_RATES_URL`   | String  | <p>Defines the endpoint Rafiki queries for exchange rates. Used as a fallback if/when [exchange rates](/v1-beta/integration/requirements/exchange-rates) aren’t provided.</p><p>When set, the response format of the external exchange rates API should be of type `rates`, as is expected by the rate service.</p><p>Defaults to `https://telemetry-exchange-rates.s3.amazonaws.com/exchange-rates-usd.json`, which points to a public S3 that has the previously mentioned required format, updated daily.</p> |
 
 </div>
 

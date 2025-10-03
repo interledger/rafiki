@@ -11,17 +11,18 @@ import { LinkOut } from '@interledger/docs-design-system'
 Each payment account belonging to your users (for example, your customers) must have at least one associated wallet address for the account to be able to send and receive payments over Interledger and Open Payments. A wallet address serves as a publicly shareable standardized ID for a payment account.
 
 :::note[Wallet address requirements]
-* Your Rafiki instance must be set up with at least one asset before wallet addresses can be created as each wallet address must have an asset assigned to it.
-* Wallet address URLs are treated as case-insensitive, meaning that both lowercase and uppercase variations of the same address will be recognized as identical.
-:::
+
+- Your Rafiki instance must be set up with at least one asset before wallet addresses can be created as each wallet address must have an asset assigned to it.
+- Wallet address URLs are treated as case-insensitive, meaning that both lowercase and uppercase variations of the same address will be recognized as identical.
+  :::
 
 ## Create wallet addresses
 
 There are a few ways in which you can create wallet addresses.
 
-* [Through a script](#create-wallet-addresses-through-a-script)
-* [In response to the `wallet_address.not_found` webhook event](#create-wallet-addresses-in-response-to-a-webhook-event)
-* [In the Rafiki Admin app](/v1-beta/admin/admin-user-guide#create-wallet-address)
+- [Through a script](#create-wallet-addresses-through-a-script)
+- [In response to the `wallet_address.not_found` webhook event](#create-wallet-addresses-in-response-to-a-webhook-event)
+- [In the Rafiki Admin app](/v1-beta/admin/admin-user-guide#create-wallet-address)
 
 ### Create wallet addresses through a script
 
@@ -53,6 +54,7 @@ Ensure your script calls the `createWalletAddress` GraphQL mutation.
     ```
 
     We strongly recommend you store at least the `walletAddress.id` in your internal database to be able to reference the account and wallet address later.
+
   </TabItem>
 
   <TabItem label="Variables">
@@ -79,6 +81,7 @@ Ensure your script calls the `createWalletAddress` GraphQL mutation.
     ```
 
     For more information about this mutation's input object, see [`CreateWalletAddressInput`](/v1-beta/apis/graphql/backend/#definition-CreateWalletAddressInput).
+
   </TabItem>
 
   <TabItem label="Response">

@@ -12,9 +12,9 @@ This guide explains how to deploy Rafiki using Helm charts on a Kubernetes clust
 
 Rafiki uses the following key components:
 
-* **Tigerbeetle**: High-performance accounting database used for financial transaction processing and ledger management
-* **PostgreSQL**: Used for storing application data and metadata
-* **Redis**: Used for caching and messaging between components
+- **Tigerbeetle**: High-performance accounting database used for financial transaction processing and ledger management
+- **PostgreSQL**: Used for storing application data and metadata
+- **Redis**: Used for caching and messaging between components
 
 ## Prerequisites
 
@@ -24,10 +24,10 @@ We recommended using the latest vendor supported version for each of the softwar
 
 Before you begin, ensure you have the following:
 
-* <LinkOut href="https://kubernetes.io/">Kubernetes</LinkOut> cluster deployed
-* <LinkOut href="https://kubernetes.io/docs/tasks/tools/">kubectl</LinkOut>
+- <LinkOut href='https://kubernetes.io/'>Kubernetes</LinkOut> cluster deployed
+- <LinkOut href='https://kubernetes.io/docs/tasks/tools/'>kubectl</LinkOut>
   installed and configured
-* <LinkOut href="https://helm.sh/docs/intro/install/">Helm</LinkOut> installed
+- <LinkOut href='https://helm.sh/docs/intro/install/'>Helm</LinkOut> installed
 
 ## Install Rafiki using Helm
 
@@ -112,8 +112,8 @@ kubectl get services -w nginx-ingress-ingress-nginx-controller
 
 Once the Load Balancer has an external IP or hostname assigned, create DNS records:
 
-* `auth.example.com` pointing to the Load Balancer IP/hostname
-* `backend.example.com` pointing to the Load Balancer IP/hostname
+- `auth.example.com` pointing to the Load Balancer IP/hostname
+- `backend.example.com` pointing to the Load Balancer IP/hostname
 
 :::note
 The example domain and subdomain values are for demonstration purposes only. You must use the actual domain names that you set up with your DNS host.
@@ -308,12 +308,12 @@ kubectl get ingress
 
 When deploying Rafiki in production, consider the following security practices:
 
-* **Use secure passwords**: Replace all default passwords with strong, unique passwords
-* **Enable TLS**: Use HTTPS for all external communications
-* **Implement network policies**: Use Kubernetes network policies to restrict traffic between pods
-* **Use RBAC**: Use Kubernetes Role-Based Access Control to limit access to your cluster
-* **Use secrets management**: Consider using a secrets management solution
-* **Perform regular updates**: Keep your Rafiki deployment updated
+- **Use secure passwords**: Replace all default passwords with strong, unique passwords
+- **Enable TLS**: Use HTTPS for all external communications
+- **Implement network policies**: Use Kubernetes network policies to restrict traffic between pods
+- **Use RBAC**: Use Kubernetes Role-Based Access Control to limit access to your cluster
+- **Use secrets management**: Consider using a secrets management solution
+- **Perform regular updates**: Keep your Rafiki deployment updated
 
 ## Backup and recovery
 

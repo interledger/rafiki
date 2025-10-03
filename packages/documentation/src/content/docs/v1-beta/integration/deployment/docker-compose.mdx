@@ -29,16 +29,16 @@ We recommended using the latest vendor supported version for each of the softwar
 
 Deploy a general purpose VM with the following minimum specifications:
 
-* OS: Linux distro
-* RAM: 4 GB
-* vCPUs: 2
+- OS: Linux distro
+- RAM: 4 GB
+- vCPUs: 2
 
 Install the following software on the VM:
 
-* <LinkOut href="https://docs.docker.com/engine/install/">
+- <LinkOut href='https://docs.docker.com/engine/install/'>
     Docker Engine
   </LinkOut>
-* <LinkOut href="https://docs.docker.com/compose/install/#scenario-two-install-the-compose-plugin">
+- <LinkOut href='https://docs.docker.com/compose/install/#scenario-two-install-the-compose-plugin'>
     Docker Compose
   </LinkOut>
 
@@ -75,12 +75,14 @@ crontab -e
 Map the [Open Payments resource server](/v1-beta/integration/deployment/services/backend-service#open-payments) to your domain, and the [ILP connector](/v1-beta/integration/deployment/services/backend-service#interledger-connector), [Open Payments auth server](/v1-beta/integration/deployment/services/auth-service), and [Admin UI](/v1-beta/integration/deployment/services/frontend-service) to subdomains. Using the DNS host of your choice, set up your domain and subdomains according to the following recommended convention:
 
 <div class="overflow-table">
+
   | Service                       | Exposes                                                           | URL          | Example            |
   | ----------------------------- | ----------------------------------------------------------------- | ------------ | ------------------ |
   | Open Payments resource server | Open Payments APIs                                                | DOMAIN       | myrafiki.com       |
   | ILP connector                 | ILP connector to send and receive ILP packets between peers       | ilp.DOMAIN   | ilp.myrafiki.com   |
   | Open Payments auth server     | Reference implementation of an Open Payments authorization server | auth.DOMAIN  | auth.myrafiki.com  |
   | Admin UI                      | Admin UI to manage Rafiki                                         | admin.DOMAIN | admin.myrafiki.com |
+
 </div>
 
 :::note
@@ -107,8 +109,8 @@ The Rafiki `auth` service is responsible for handling authentication and authori
 
 Ports exposed:
 
-* 3003 (`ADMIN_PORT`) is used for the Auth Admin API
-* 3006 (`AUTH_PORT`) is used for the Open Payments authorization server
+- 3003 (`ADMIN_PORT`) is used for the Auth Admin API
+- 3006 (`AUTH_PORT`) is used for the Open Payments authorization server
 
 Make sure to configure the `AUTH_DATABASE_URL` and `REDIS_URL` environment variables to point to your database instances.
 
@@ -158,9 +160,9 @@ TigerBeetle is recommended, but if you would rather use Postgres as an accountin
 
 Ports exposed:
 
-* 3000 (`OPEN_PAYMENTS_PORT`) is used for the Open Payments resource server
-* 3001 (`ADMIN_PORT`) is used for the Backend Admin API
-* 3002 (`CONNECTOR_PORT`) is used for the ILP connector to send and receive ILP packets
+- 3000 (`OPEN_PAYMENTS_PORT`) is used for the Open Payments resource server
+- 3001 (`ADMIN_PORT`) is used for the Backend Admin API
+- 3002 (`CONNECTOR_PORT`) is used for the ILP connector to send and receive ILP packets
 
 Make sure to configure the `DATABASE_URL` and `REDIS_URL` environment variables to point to your database instances.
 
@@ -213,7 +215,7 @@ The Rafiki `frontend` service provides an internal admin interface for managing 
 
 Ports exposed:
 
-* 3005 (`PORT`) is used to host the Rafiki Admin app
+- 3005 (`PORT`) is used to host the Rafiki Admin app
 
 Make sure to configure the `GRAPHQL_URL` and `OPEN_PAYMENTS_URL` environment variables to point to the appropriate endpoints.
 
@@ -494,12 +496,12 @@ Create Nginx configuration files for every exposed domain:
 
 <div class="overflow-table">
 
-  | Service                       | URL          | Example            | Nginx config file                                               |
-  | ----------------------------- | ------------ | ------------------ | --------------------------------------------------------------- |
-  | Open Payments resource server | DOMAIN       | myrafiki.com       | /etc/nginx/sites-available/open\_payments\_resource\_server.config |
-  | ILP connector                 | ilp.DOMAIN   | ilp.myrafiki.com   | /etc/nginx/sites-available/ilp.config                           |
-  | Open Payments auth server     | auth.DOMAIN  | auth.myrafiki.com  | /etc/nginx/sites-available/open\_payments\_auth\_server.config     |
-  | Admin UI                      | admin.DOMAIN | admin.myrafiki.com | /etc/nginx/sites-available/admin.config                         |
+| Service                       | URL          | Example            | Nginx config file                                               |
+| ----------------------------- | ------------ | ------------------ | --------------------------------------------------------------- |
+| Open Payments resource server | DOMAIN       | myrafiki.com       | /etc/nginx/sites-available/open_payments_resource_server.config |
+| ILP connector                 | ilp.DOMAIN   | ilp.myrafiki.com   | /etc/nginx/sites-available/ilp.config                           |
+| Open Payments auth server     | auth.DOMAIN  | auth.myrafiki.com  | /etc/nginx/sites-available/open_payments_auth_server.config     |
+| Admin UI                      | admin.DOMAIN | admin.myrafiki.com | /etc/nginx/sites-available/admin.config                         |
 
 </div>
 

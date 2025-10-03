@@ -9,9 +9,9 @@ When a payment is made over traditional banking rails, the money doesn’t move 
 
 The [Interledger Protocol (ILP)](/v1-beta/overview/concepts/interledger) is not a traditional clearing network, but does function in a similar way.
 
-* ASEs that implement the protocol must become [peers](/v1-beta/integration/requirements/peers) to transact with one another. This is comparable to traditional banking, where ASEs must use the same clearing network. An ASE can't use Interledger to transact with another ASE unless they have both implemented the protocol and have peered with one another.
-* Peered ASEs exchange ILP packets, which are packets of value that contain transaction information. ILP packets are akin to the messages exchanged during the traditional clearing process.
-* The successful exchange of ILP packets between peers creates obligations between them that must be settled. The receipt of a fulfilled ILP packet is basically a conditional IOU—a promise to pay—that affects the financial accounting balances between the peers.
+- ASEs that implement the protocol must become [peers](/v1-beta/integration/requirements/peers) to transact with one another. This is comparable to traditional banking, where ASEs must use the same clearing network. An ASE can't use Interledger to transact with another ASE unless they have both implemented the protocol and have peered with one another.
+- Peered ASEs exchange ILP packets, which are packets of value that contain transaction information. ILP packets are akin to the messages exchanged during the traditional clearing process.
+- The successful exchange of ILP packets between peers creates obligations between them that must be settled. The receipt of a fulfilled ILP packet is basically a conditional IOU—a promise to pay—that affects the financial accounting balances between the peers.
 
 You can read more about clearing as it relates to ILP in the [Interledger developer docs](https://interledger.org/developers/rfcs/peering-clearing-settling/).
 

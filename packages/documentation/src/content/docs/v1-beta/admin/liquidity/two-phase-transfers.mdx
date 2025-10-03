@@ -13,11 +13,11 @@ Rafiki allows for two-phase transfers, which moves funds in two stages.
 
 The following transactions support two-phase transfers:
 
-* Asset liquidity withdrawal
-* Peer liquidity withdrawal
-* Incoming payment withdrawal
-* Outgoing payment withdrawal
-* Wallet address withdrawal
+- Asset liquidity withdrawal
+- Peer liquidity withdrawal
+- Incoming payment withdrawal
+- Outgoing payment withdrawal
+- Wallet address withdrawal
 
 When a withdraw-liquidity transaction is requested with a timeout greater than `0`, the transaction processes as a two-phase transfer. A `0` denotes the absence of a timeout.
 
@@ -52,6 +52,7 @@ If the timeout interval passes before the transaction posts or is voided, the tr
     ```
 
     For more information about this mutation's input object, see [`PostLiquidityWithdrawalInput`](https://rafiki.dev/apis/graphql/backend/inputobjects/#postliquiditywithdrawalinput).
+
   </TabItem>
 
   <TabItem label="Response">
@@ -64,6 +65,7 @@ If the timeout interval passes before the transaction posts or is voided, the tr
       }
     }
     ```
+
   </TabItem>
 </Tabs>
 
@@ -92,6 +94,7 @@ If the timeout interval passes before the transaction posts or is voided, the tr
     ```
 
     For more information about this mutation's input object, see [`VoidLiquidityWithdrawalInput`](https://rafiki.dev/apis/graphql/backend/inputobjects/#voidliquiditywithdrawalinput).
+
   </TabItem>
 
   <TabItem label="Response">
@@ -104,5 +107,6 @@ If the timeout interval passes before the transaction posts or is voided, the tr
       }
     }
     ```
+
   </TabItem>
 </Tabs>

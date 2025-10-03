@@ -28,17 +28,17 @@ An asset is made up of the following properties.
 
 <div class="overflow-table" style="border-bottom: 1px solid var(--sl-color-gray-6);">
 
-  | Property     | Type    | Description                                                                                                                                                 | Example |
-  | ------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-  | `value`      | BigInt  | A numerical amount                                                                                                                                          | `10000` |
-  | `assetCode`  | String  | A code representing the asset. An <LinkOut href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</LinkOut> should be used whenever possible. | `"USD"` |
-  | `assetScale` | Integer | Difference in order of magnitude between the standard unit and a fractional unit                                                                            | `2`     |
+| Property     | Type    | Description                                                                                                                                                 | Example |
+| ------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `value`      | BigInt  | A numerical amount                                                                                                                                          | `10000` |
+| `assetCode`  | String  | A code representing the asset. An <LinkOut href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</LinkOut> should be used whenever possible. | `"USD"` |
+| `assetScale` | Integer | Difference in order of magnitude between the standard unit and a fractional unit                                                                            | `2`     |
 
 </div>
 
 To convert an asset’s value into an amount that’s easier to interpret, apply the following formula.
 
-$\frac{value}{10^{assetScale}}$ = *currencyAmount*
+$\frac{value}{10^{assetScale}}$ = _currencyAmount_
 
 Using the example data from the preceding table, the formula looks like this:
 
@@ -56,13 +56,13 @@ Liquidity accounts hold either a zero or a positive balance. Rafiki ensures that
 
 <div class="overflow-table" style="border-bottom: 1px solid var(--sl-color-gray-6);">
 
-  | Account type                                                       | What the account represents                                                                               | Number of accounts       |
-  | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- | ------------------------ |
-  | [Asset liquidity](#asset-liquidity-accounts)                       | The value, denominated in a given asset, that Rafiki has available to support cross-currency transactions | One per asset            |
-  | [Peer liquidity](#peer-liquidity-accounts)                         | The credit line, denominated in the asset of your peering relationship, that you extend to a peer         | One per peer             |
-  | [Incoming payment liquidity](#incoming-payment-liquidity-accounts) | The value received from a completed incoming payment                                                      | One per incoming payment |
-  | [Outgoing payment liquidity](#outgoing-payment-liquidity-accounts) | The value that Rafiki will attempt to send in an outgoing payment                                         | One per outgoing payment |
-  | [Wallet address liquidity](#wallet-address-liquidity-accounts)     | The value that a wallet address received via SPSP                                                         | One per wallet address   |
+| Account type                                                       | What the account represents                                                                               | Number of accounts       |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- | ------------------------ |
+| [Asset liquidity](#asset-liquidity-accounts)                       | The value, denominated in a given asset, that Rafiki has available to support cross-currency transactions | One per asset            |
+| [Peer liquidity](#peer-liquidity-accounts)                         | The credit line, denominated in the asset of your peering relationship, that you extend to a peer         | One per peer             |
+| [Incoming payment liquidity](#incoming-payment-liquidity-accounts) | The value received from a completed incoming payment                                                      | One per incoming payment |
+| [Outgoing payment liquidity](#outgoing-payment-liquidity-accounts) | The value that Rafiki will attempt to send in an outgoing payment                                         | One per outgoing payment |
+| [Wallet address liquidity](#wallet-address-liquidity-accounts)     | The value that a wallet address received via SPSP                                                         | One per wallet address   |
 
 </div>
 
@@ -90,19 +90,20 @@ You should define and adjust asset liquidity based on your liquidity risk profil
   <summary>Asset liquidity example - cross-currency transactions</summary>
   Your Rafiki instance is configured for two assets: EUR and USD.
 
-  * Rafiki holds an asset liquidity account for both EUR and USD.
-  * You’ve set the asset scale of both currencies to 0.
-  * Your starting EUR liquidity is 10 and your USD liquidity is 50.
+- Rafiki holds an asset liquidity account for both EUR and USD.
+- You’ve set the asset scale of both currencies to 0.
+- Your starting EUR liquidity is 10 and your USD liquidity is 50.
 
-  **Cross-currency transaction #1:**
+**Cross-currency transaction #1:**
 
   <Steps>
     1. Rafiki receives packets from a peer. These packets are all denominated in EUR, worth €10. 10 EUR move from the peer's liquidity account on your Rafiki instance to your EUR asset liquidity account. Your EUR liquidity increases to 20 (10 + 10).
 
     2. The EUR-to-USD exchange rate is applied, with €10 equating to $12 USD. Since your starting USD liquidity is 50, your USD asset liquidity account can cover the transfer of $12 USD to an incoming payment liquidity account. Your USD liquidity decreases to 38 (50 - 12).
+
   </Steps>
 
-  **Cross-currency transaction #2:**
+**Cross-currency transaction #2:**
 
   <Steps>
     1. Rafiki receives packets from a peer. These packets are all denominated in EUR, worth €50. Your EUR liquidity increases to 70 (20 + 50).
@@ -110,6 +111,7 @@ You should define and adjust asset liquidity based on your liquidity risk profil
     2. The current EUR-to-USD exchange rate is applied, with €50 equating to $55 USD. The transaction fails. Your USD liquidity account is 38, so you don't have enough liquidity to cover the transaction.
 
     3. Your EUR liquidity reduces back to 20 (70 - 50).
+
   </Steps>
 </details>
 
@@ -133,7 +135,13 @@ You should define and adjust each peer's liquidity based on your liquidity risk 
 
 <details>
   <summary>Peer liquidity example</summary>
-  You and Cloud Nine Wallet are peers. You’ve agreed to extend Cloud Nine Wallet a line of credit worth $100.00 USD. This means Cloud Nine Wallet has $100.00 in their peer liquidity account on your Rafiki instance. Your Rafiki instance can receive packets that total up to $100.00 from Cloud Nine Wallet. When the $100.00 is used up, Cloud Nine Wallet settles with you by sending $100.00 via the shared settlement mechanism outlined in your peering agreement. When you receive the funds, you reset their liquidity in Rafiki.
+  You and Cloud Nine Wallet are peers. You’ve agreed to extend Cloud Nine Wallet
+  a line of credit worth $100.00 USD. This means Cloud Nine Wallet has $100.00 in
+  their peer liquidity account on your Rafiki instance. Your Rafiki instance can
+  receive packets that total up to $100.00 from Cloud Nine Wallet. When the $100.00
+  is used up, Cloud Nine Wallet settles with you by sending $100.00 via the shared
+  settlement mechanism outlined in your peering agreement. When you receive the funds,
+  you reset their liquidity in Rafiki.
 </details>
 
 #### Payment liquidity accounts
@@ -142,12 +150,12 @@ Payment liquidity is the amount that's available because of an incoming or outgo
 
 <div class="overflow-table" style="border-bottom: 1px solid var(--sl-color-gray-6);">
 
-  | Payment type                                         | Purpose                                                 |
-  | ---------------------------------------------------- | ------------------------------------------------------- |
-  | [Incoming](#incoming-payment-liquidity-accounts)     | For incoming payments created via the Open Payments API |
-  | [Outgoing](#outgoing-payment-liquidity-accounts)     | For outgoing payments created via the Open Payments API |
-  | [Wallet address](#wallet-address-liquidity-accounts) | For payments sent via SPSP                              |
-  
+| Payment type                                         | Purpose                                                 |
+| ---------------------------------------------------- | ------------------------------------------------------- |
+| [Incoming](#incoming-payment-liquidity-accounts)     | For incoming payments created via the Open Payments API |
+| [Outgoing](#outgoing-payment-liquidity-accounts)     | For outgoing payments created via the Open Payments API |
+| [Wallet address](#wallet-address-liquidity-accounts) | For payments sent via SPSP                              |
+
 </div>
 
 ##### Incoming payment liquidity accounts
@@ -188,11 +196,12 @@ Rafiki ensures that the total credits to a settlement account do not exceed its 
   <summary>Settlement account example</summary>
   You deposit $10,000 into a peer's liquidity account, meaning you've extended a credit line of $10,000 to your peer.
 
-  Your peer liquidity account balance is $10,000 and your USD settlement account balance is now -$10,000.
+Your peer liquidity account balance is $10,000 and your USD settlement account balance is now -$10,000.
 
-  An incoming payment from your peer for $100 is created, meaning your peer is using $100 of their line of credit. Since Rafiki doesn't hold funds, you must withdraw the liquidity and credit the amount to the recipient's account on your ledger.
+An incoming payment from your peer for $100 is created, meaning your peer is using $100 of their line of credit. Since Rafiki doesn't hold funds, you must withdraw the liquidity and credit the amount to the recipient's account on your ledger.
 
-  Now, your peer liquidity account's balance is $9,900 and your USD settlement account's balance is -$9,900.
+Now, your peer liquidity account's balance is $9,900 and your USD settlement account's balance is -$9,900.
+
 </details>
 
 ## Accounting databases
@@ -258,10 +267,10 @@ You can [post and commit](/es/v1-beta/admin/liquidity/two-phase-transfers#post-a
 
 Remember that a settlement account will always have a zero or negative balance and a liquidity account will always have a zero or positive balance.
 
-* [Deposits](#deposits)
-* [Withdrawals](#withdrawals)
-* [Payments in the same asset](#payments-in-the-same-asset)
-* [Cross currency payments](#cross-currency-payments)
+- [Deposits](#deposits)
+- [Withdrawals](#withdrawals)
+- [Payments in the same asset](#payments-in-the-same-asset)
+- [Cross currency payments](#cross-currency-payments)
 
 #### Deposits
 
@@ -309,6 +318,7 @@ A deposit is the act of debiting the settlement account and crediting the liquid
         </tr>
       </table>
     </td>
+
   </tr>
 </table>
 
@@ -356,6 +366,7 @@ A deposit is the act of debiting the settlement account and crediting the liquid
         </tr>
       </table>
     </td>
+
   </tr>
 </table>
 
@@ -403,6 +414,7 @@ A deposit is the act of debiting the settlement account and crediting the liquid
         </tr>
       </table>
     </td>
+
   </tr>
 </table>
 
@@ -454,6 +466,7 @@ A withdrawal is the act of debiting the liquidity account and crediting the sett
         </tr>
       </table>
     </td>
+
   </tr>
 </table>
 
@@ -501,6 +514,7 @@ A withdrawal is the act of debiting the liquidity account and crediting the sett
         </tr>
       </table>
     </td>
+
   </tr>
 </table>
 
@@ -548,6 +562,7 @@ A withdrawal is the act of debiting the liquidity account and crediting the sett
         </tr>
       </table>
     </td>
+
   </tr>
 </table>
 
@@ -595,6 +610,7 @@ A withdrawal is the act of debiting the liquidity account and crediting the sett
         </tr>
       </table>
     </td>
+
   </tr>
 </table>
 
@@ -642,6 +658,7 @@ A withdrawal is the act of debiting the liquidity account and crediting the sett
         </tr>
       </table>
     </td>
+
   </tr>
 </table>
 
@@ -708,6 +725,7 @@ A withdrawal is the act of debiting the liquidity account and crediting the sett
         </tr>
       </table>
     </td>
+
   </tr>
 </table>
 
@@ -772,6 +790,7 @@ A withdrawal is the act of debiting the liquidity account and crediting the sett
         </tr>
       </table>
     </td>
+
   </tr>
 </table>
 
@@ -822,12 +841,15 @@ A withdrawal is the act of debiting the liquidity account and crediting the sett
         </tr>
       </table>
     </td>
+
   </tr>
 
-  <tr class="header-row">
-    <th style="text-align: left">EUR asset liquidity acct</th>
-    <th style="text-align: left">EUR incoming payment liquidity acct</th>
-  </tr>
+{' '}
+
+<tr class='header-row'>
+  <th style='text-align: left'>EUR asset liquidity acct</th>
+  <th style='text-align: left'>EUR incoming payment liquidity acct</th>
+</tr>
 
   <tr>
     <td>
@@ -859,6 +881,7 @@ A withdrawal is the act of debiting the liquidity account and crediting the sett
         </tr>
       </table>
     </td>
+
   </tr>
 </table>
 
@@ -870,12 +893,12 @@ In these examples, the sender and receiver do not have wallet addresses at the s
 
 Remember that a settlement account will always have a zero or negative balance and a liquidity account will always have a zero or positive balance.
 
-* [Sending connector - same asset](#sending-connector---same-asset)
-* [Sending connector - cross currency](#sending-connector---cross-currency)
-* [Receiving connector - same asset](#receiving-connector---same-asset)
-* [Receiving connector - cross currency](#receiving-connector---cross-currency)
-* [Connector - same asset](#connector---same-asset)
-* [Connector - cross currency](#connector---cross-currency)
+- [Sending connector - same asset](#sending-connector---same-asset)
+- [Sending connector - cross currency](#sending-connector---cross-currency)
+- [Receiving connector - same asset](#receiving-connector---same-asset)
+- [Receiving connector - cross currency](#receiving-connector---cross-currency)
+- [Connector - same asset](#connector---same-asset)
+- [Connector - cross currency](#connector---cross-currency)
 
 #### Sending connector - same asset
 
@@ -921,6 +944,7 @@ Remember that a settlement account will always have a zero or negative balance a
         </tr>
       </table>
     </td>
+
   </tr>
 </table>
 
@@ -971,12 +995,15 @@ Remember that a settlement account will always have a zero or negative balance a
         </tr>
       </table>
     </td>
+
   </tr>
 
-  <tr class="header-row">
-    <th style="text-align: left">EUR asset liquidity acct</th>
-    <th style="text-align: left">EUR peer liquidity acct</th>
-  </tr>
+{' '}
+
+<tr class='header-row'>
+  <th style='text-align: left'>EUR asset liquidity acct</th>
+  <th style='text-align: left'>EUR peer liquidity acct</th>
+</tr>
 
   <tr>
     <td>
@@ -1008,6 +1035,7 @@ Remember that a settlement account will always have a zero or negative balance a
         </tr>
       </table>
     </td>
+
   </tr>
 </table>
 
@@ -1057,6 +1085,7 @@ Remember that a settlement account will always have a zero or negative balance a
         </tr>
       </table>
     </td>
+
   </tr>
 </table>
 
@@ -1107,12 +1136,15 @@ Remember that a settlement account will always have a zero or negative balance a
         </tr>
       </table>
     </td>
+
   </tr>
 
-  <tr class="header-row">
-    <th style="text-align: left">EUR asset liquidity acct</th>
-    <th style="text-align: left">EUR incoming payment liquidity acct</th>
-  </tr>
+{' '}
+
+<tr class='header-row'>
+  <th style='text-align: left'>EUR asset liquidity acct</th>
+  <th style='text-align: left'>EUR incoming payment liquidity acct</th>
+</tr>
 
   <tr>
     <td>
@@ -1144,6 +1176,7 @@ Remember that a settlement account will always have a zero or negative balance a
         </tr>
       </table>
     </td>
+
   </tr>
 </table>
 
@@ -1193,6 +1226,7 @@ Remember that a settlement account will always have a zero or negative balance a
         </tr>
       </table>
     </td>
+
   </tr>
 </table>
 
@@ -1243,12 +1277,15 @@ Remember that a settlement account will always have a zero or negative balance a
         </tr>
       </table>
     </td>
+
   </tr>
 
-  <tr class="header-row">
-    <th style="text-align: left">EUR asset liquidity acct</th>
-    <th style="text-align: left">EUR peer "B" liquidity acct</th>
-  </tr>
+{' '}
+
+<tr class='header-row'>
+  <th style='text-align: left'>EUR asset liquidity acct</th>
+  <th style='text-align: left'>EUR peer "B" liquidity acct</th>
+</tr>
 
   <tr>
     <td>
@@ -1280,5 +1317,6 @@ Remember that a settlement account will always have a zero or negative balance a
         </tr>
       </table>
     </td>
+
   </tr>
 </table>

@@ -12,10 +12,10 @@ Open Payments requires any authorization server that issues interactive grants b
 
 Responsibilities of your IdP include:
 
-* Providing an interface to gather end-user consent for a particular action
-* Sending the interaction choice (approve or deny) to the authorization server
-* Sending a request to the authorization server to finish the interaction
-* Redirecting the user after the interaction is complete
+- Providing an interface to gather end-user consent for a particular action
+- Sending the interaction choice (approve or deny) to the authorization server
+- Sending a request to the authorization server to finish the interaction
+- Redirecting the user after the interaction is complete
 
 :::note
 We provide Ory Kratos, a cloud-based user management system, for the identity and user management of your Rafiki Admin users. Kratos is for internal use only and **cannot** be used as your IdP for Open Payments.
@@ -25,14 +25,14 @@ We provide Ory Kratos, a cloud-based user management system, for the identity an
 
 In Open Payments, grants indicate a resource owner, such as an account holder, has given a piece of software, such as a mobile app, permission (consent) to act on their behalf.
 
-Rafiki's implementation of an Open Payments authorization server requires that consent is collected via an interactive grant before an <LinkOut href="https://openpayments.dev/concepts/resources/#outgoing-payment">outgoing payment</LinkOut> request is issued. A grant is interactive when explicit interaction by a resource owner (for example, the software's end user) is required to approve or deny the grant. Tapping an *Approve* button to authorize a payment is an example of an explicit interaction.
+Rafiki's implementation of an Open Payments authorization server requires that consent is collected via an interactive grant before an <LinkOut href="https://openpayments.dev/concepts/resources/#outgoing-payment">outgoing payment</LinkOut> request is issued. A grant is interactive when explicit interaction by a resource owner (for example, the software's end user) is required to approve or deny the grant. Tapping an _Approve_ button to authorize a payment is an example of an explicit interaction.
 
 Interactive grants can be optional for incoming payments and quotes; however, they're enabled by default in Rafiki (the `LIST_ALL_ACCESS_INTERACTION` environment variable is `true`). When a grant request includes a `list-all` action for incoming payments and quotes, the request requires interaction. The `list-all` action is used when the client asks to list resources that it did not create.
 
 If `LIST_ALL_ACCESS_INTERACTION` is `false`, you can still force interactive grants for quotes and/or incoming payments by setting the respective variables to `true`.
 
-* `QUOTE_INTERACTION`
-* `INCOMING_PAYMENT_INTERACTION`
+- `QUOTE_INTERACTION`
+- `INCOMING_PAYMENT_INTERACTION`
 
 See the <LinkOut href="https://openpayments.dev/identity/grants/">Open Payments documentation</LinkOut> for more information on grant negotiation and authorization.
 
@@ -49,6 +49,7 @@ Rafiki's authorization server also extends an [API](#interaction-endpoints) that
 The following variables must be configured for the `auth` service.
 
 <div class="overflow-table wide-column">
+
   | Variable                       | Helm value name                    | Default | Description                                                                                                                                                                                                                                                                                                         |
   | ------------------------------ | ---------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
   | `IDENTITY_SERVER_URL`          | `auth.identityServer.domain`       | N/A     | The URL of your IdP's server, used by the authorization server to inform an Open Payments client of where to redirect the end-user to start interactions.                                                                                                                                                           |
@@ -58,6 +59,7 @@ The following variables must be configured for the `auth` service.
   | `INTERACTION_PORT`             | `auth.port.interaction`            | `3009`  | The port number for the [interaction endpoints](#interaction-endpoints)                                                                                                                                                                                                                                             |
   | `LIST_ALL_ACCESS_INTERACTION`  | N/A                                | `true`  | Specifies whether grant requests including a `list-all` action should require interaction. In these requests, the client asks to list resources that they themselves did not create.                                                                                                                                |
   | `QUOTE_INTERACTION`            | `auth.interaction.quote`           | `false` | When `true`, quote grants are interactive.                                                                                                                                                                                                                                                                          |
+
 </div>
 
 ## Interaction endpoints
@@ -78,17 +80,17 @@ The endpoints are called in the sequence listed below.
 
 <div class="overflow-table">
 
-  | Method                                               | Endpoint                        | Purpose                                                           | Called by            | Publicly exposed |
-  | ---------------------------------------------------- | ------------------------------- | ----------------------------------------------------------------- | -------------------- | ---------------- |
-  | <Badge text="GET" variant="note" size="medium" />     | `/interact/{id}/{nonce}`        | [Start user interaction session](#start-user-interaction-session) | Open Payments client | Yes              |
-  | <Badge text="GET" variant="note" size="medium" />     | `/grant/{id}/{nonce}`           | [Look up grant information](#look-up-grant-information)           | Identity provider    | No               |
-  | <Badge text="POST" variant="success" size="medium" /> | `/grant/{id}/{nonce}/{choice}`  | [Accept or reject grant](#accept-or-reject-grant)                 | Identity provider    | No               |
-  | <Badge text="GET" variant="note" size="medium" />     | `/interact/{id}/{nonce}/finish` | [Finish user interaction](#finish-interaction)                    | Identity provider    | Yes              |
-  | <Badge text="POST" variant="success" size="medium" /> | `/interact/{id}/{nonce}`        | [Continue grant](#continue-grant)                                 | Open Payments client | Yes              |
+| Method                                                | Endpoint                        | Purpose                                                           | Called by            | Publicly exposed |
+| ----------------------------------------------------- | ------------------------------- | ----------------------------------------------------------------- | -------------------- | ---------------- |
+| <Badge text="GET" variant="note" size="medium" />     | `/interact/{id}/{nonce}`        | [Start user interaction session](#start-user-interaction-session) | Open Payments client | Yes              |
+| <Badge text="GET" variant="note" size="medium" />     | `/grant/{id}/{nonce}`           | [Look up grant information](#look-up-grant-information)           | Identity provider    | No               |
+| <Badge text="POST" variant="success" size="medium" /> | `/grant/{id}/{nonce}/{choice}`  | [Accept or reject grant](#accept-or-reject-grant)                 | Identity provider    | No               |
+| <Badge text="GET" variant="note" size="medium" />     | `/interact/{id}/{nonce}/finish` | [Finish user interaction](#finish-interaction)                    | Identity provider    | Yes              |
+| <Badge text="POST" variant="success" size="medium" /> | `/interact/{id}/{nonce}`        | [Continue grant](#continue-grant)                                 | Open Payments client | Yes              |
 
 </div>
 
-We also provide an <LinkOut href="https://github.com/interledger/rafiki/blob/main/packages/auth/src/openapi/specs/id-provider.yaml">OpenAPI specification</LinkOut> that describes the endpoints. Note that the *Continue grant* endpoint is not included in the spec because it's part of the <LinkOut href="https://openpayments.dev/apis/auth-server/operations/post-continue/">Open Payments Auth Server API</LinkOut>.
+We also provide an <LinkOut href="https://github.com/interledger/rafiki/blob/main/packages/auth/src/openapi/specs/id-provider.yaml">OpenAPI specification</LinkOut> that describes the endpoints. Note that the _Continue grant_ endpoint is not included in the spec because it's part of the <LinkOut href="https://openpayments.dev/apis/auth-server/operations/post-continue/">Open Payments Auth Server API</LinkOut>.
 
 #### Start user interaction session
 
@@ -109,11 +111,13 @@ Called by the IdP server to end the interaction. If a `finish` URI was provided 
 The `result` query parameter in the response indicates the success or failure of the grant authorization. The following are examples of the possible response types.
 
 <div class="overflow-table wider-column">
+
   | Response | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Example                                                                                                                          |
   | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
   | Rejected | The end-user rejected the interaction                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | `?result=grant_rejected`                                                                                                         |
   | Invalid  | The grant was not in a state where it could be accepted or rejected (for example, the grant was already approved)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `?result=grant_invalid`                                                                                                          |
   | Success  | The grant was successful with the following returned in the response:<br /><ul><li>A hash representing the SHA-256 hash of values provided by the client in the <LinkOut href="https://openpayments.dev/apis/auth-server/operations/post-request/">grant initialization request</LinkOut> (`interact.finish.nonce`), and the values in the response returned from the authorization server (`interact.finish`).</li><li>The `interact_ref` that identifies the interaction on the authorization server alongside the hash</li><li>The URI of the grant initialization request (for example, `https://www.auth-server.com`)</li></ul> | `hash=p28jsq0Y2KK3WS__a42tavNC64ldGTBroywsWxT4md_jZQ1R\HZT8BOWYHcLmObM7XHPAdJzTZMtKBsaraJ64A &interact_ref=4IFWWIKYBC2PQ6U56NL1` |
+
 </div>
 
 When successful, the SHA-256 hash of the interaction is sent in the response to the client, along with an `interact_ref` that identifies the interaction on the authorization server and the URI of the grant initialization request. The client must verify the hash before the client requests the grant to continue.
@@ -126,9 +130,9 @@ The client requests a grant from the authorization server for an accepted intera
 
 The `x-idp-secret` header is specific to Rafiki's authorization server and is used for requests to the following endpoints:
 
-* `GET /grant/:id/:nonce`
-* `POST /grant/:id/:nonce/accept`
-* `POST /grant/:id/:nonce/reject`
+- `GET /grant/:id/:nonce`
+- `POST /grant/:id/:nonce/accept`
+- `POST /grant/:id/:nonce/reject`
 
 The header's purpose is to secure communications between the IdP and the authorization server. Its value should be a shared secret known to both entities. When the IdP server sends requests to the authorization server, the IdP must provide the secret via this header.
 

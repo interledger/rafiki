@@ -17,18 +17,22 @@ This suite of packages includes:
 
 <div class="overflow-table">
 
-  | Package name                                                    | Services                                                                                             |
-  | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-  | [`backend`](/v1-beta/integration/deployment/services/backend-service)   | <ul><li>SPSP</li><li>Open Payments APIs</li><li>GraphQL Admin APIs</li><li>STREAM endpoint</li></ul> |
-  | [`auth`](/v1-beta/integration/deployment/services/auth-service)         | GNAP auth server                                                                                     |
-  | `mock-account-servicing-entity`                                 | mocks an account servicing entity                                                                    |
-  | [`frontend`](/v1-beta/integration/deployment/services/frontend-service) | Remix app to expose a UI for Rafiki admin management via interaction with the Backend Admin APIs     |
+| Package name                                                            | Services                                                                                             |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| [`backend`](/v1-beta/integration/deployment/services/backend-service)   | <ul><li>SPSP</li><li>Open Payments APIs</li><li>GraphQL Admin APIs</li><li>STREAM endpoint</li></ul> |
+| [`auth`](/v1-beta/integration/deployment/services/auth-service)         | GNAP auth server                                                                                     |
+| `mock-account-servicing-entity`                                         | mocks an account servicing entity                                                                    |
+| [`frontend`](/v1-beta/integration/deployment/services/frontend-service) | Remix app to expose a UI for Rafiki admin management via interaction with the Backend Admin APIs     |
 
 </div>
 
 These packages depend on the following databases:
 
-<img src="/img/v1-beta/localenv-databases.png" alt="Databases required to run Rafiki" style="max-width:300px" />
+<img
+  src='/img/v1-beta/localenv-databases.png'
+  alt='Databases required to run Rafiki'
+  style='max-width:300px'
+/>
 
 The Local Playground comes with containerized versions of the Rafiki packages and two pre-configured docker-compose files (<LinkOut href="https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml">Cloud Nine Wallet</LinkOut> and <LinkOut href="https://github.com/interledger/rafiki/blob/main/localenv/happy-life-bank/docker-compose.yml">Happy Life Bank</LinkOut>) to start two mock account servicing entities with their respective Rafiki `backend` and `auth` servers. They automatically peer, and two to three user accounts are created on both of them.
 
@@ -42,9 +46,9 @@ The Mock ASE provided in this repository is intended solely for internal use and
 
 To spin up the Local Playground install the following software on your machine:
 
-* A <LinkOut href="https://github.com/interledger/rafiki/blob/main/README.md#environment-setup">Rafiki local environment setup</LinkOut>
-* The <LinkOut href="https://docs.docker.com/engine/install/">Docker</LinkOut> platform.
-* An open-source API client <LinkOut href="https://www.usebruno.com/downloads">Bruno</LinkOut>
+- A <LinkOut href="https://github.com/interledger/rafiki/blob/main/README.md#environment-setup">Rafiki local environment setup</LinkOut>
+- The <LinkOut href="https://docs.docker.com/engine/install/">Docker</LinkOut> platform.
+- An open-source API client <LinkOut href="https://www.usebruno.com/downloads">Bruno</LinkOut>
 
 ### Setup
 
@@ -76,7 +80,7 @@ The secondary Happy Life Bank docker-compose file (`./happy-life-bank/docker-com
 
 The following components are made available via the Local Playground:
 
-<LargeImg src="/img/localenv.png" alt="Overview of components" />
+<LargeImg src='/img/localenv.png' alt='Overview of components' />
 
 #### Mock account servicing entity 1 - Cloud Nine Wallet
 
@@ -88,7 +92,7 @@ The following components are made available via the Local Playground:
 | d     | Auth Admin API                     | `http://localhost:3003/graphql` |
 | e     | Open Payments Auth API             | `http://localhost:3006`         |
 | f     | Rafiki Admin UI                    | `http://localhost:3010`         |
-| g     | Kratos API - *disabled by default* | `http://localhost:4433`         |
+| g     | Kratos API - _disabled by default_ | `http://localhost:4433`         |
 
 #### Mock account servicing entity 2 - Happy Life Bank
 
@@ -100,13 +104,13 @@ The following components are made available via the Local Playground:
 | k     | Auth Admin API                     | `http://localhost:4003/graphql` |
 | l     | Open Payments Auth API             | `http://localhost:4006`         |
 | m     | Rafiki Admin UI                    | `http://localhost:4010`         |
-| n     | Kratos API - *disabled by default* | `http://localhost:4432`         |
+| n     | Kratos API - _disabled by default_ | `http://localhost:4432`         |
 
 #### Mail Slurper
 
 | Label | Component                       | URL                     |
 | ----- | ------------------------------- | ----------------------- |
-| o     | Mail UI - *disabled by default* | `http://localhost:4436` |
+| o     | Mail UI - _disabled by default_ | `http://localhost:4436` |
 
 #### Database
 
@@ -118,8 +122,8 @@ The following components are made available via the Local Playground:
 
 Manage and view information about the Rafiki instance(s) through the [Rafiki Admin](/v1-beta/admin/admin-user-guide/) application. Rafiki Admin is a Remix app for querying info and executing mutations against the Rafiki [Backend Admin API](https://rafiki.dev/integration/playground/overview#admin-apis).
 
-* Cloud Nine Wallet - `http://localhost:3010`
-* Happy Life Bank - `http://localhost:4010`
+- Cloud Nine Wallet - `http://localhost:3010`
+- Happy Life Bank - `http://localhost:4010`
 
 We have secured access to Rafiki Admin using <LinkOut href="https://www.ory.sh/docs/kratos/ory-kratos-intro">Ory Kratos</LinkOut>; however, in our local playground setup we've chosen to disable user authentication for easier development and testing interactions.
 
@@ -134,7 +138,7 @@ Follow these steps to reset a user's Rafiki Admin password.
 
 1. Select the forgot password link and enter an email for a registered user.
 2. Open [Mail Slurper](http://localhost:4436/) to access the recovery link for the account.
-:::
+   :::
 
 ### Exploring Accounts on Cloud Nine Wallet
 
@@ -295,7 +299,8 @@ The Examples folder in the Bruno collection includes an [Open Payments](https://
     SW-->>B: 200 OK
 
 `}
-  />
+/>
+
 </MermaidWrapper>
 
 The sequence of steps outlined below corresponds to the interactions depicted in the diagram above:

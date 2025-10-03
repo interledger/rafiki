@@ -11,8 +11,8 @@ import IdempotencyNote from '/src/partials/liquidity-idempotency.mdx'
 
 Payment liquidity represents:
 
-* The value received from a completed incoming payment
-* The value available to send in an outgoing payment
+- The value received from a completed incoming payment
+- The value available to send in an outgoing payment
 
 Because Rafiki doesn't hold funds, anything you receive in an incoming payment must be withdrawn and then credited to the recipient's account on your ledger. Listen for the [incoming payments](/v1-beta/integration/requirements/webhook-events#incoming-payments) webhook events to know when you need to interact with Rafiki.
 
@@ -53,6 +53,7 @@ For more information about how Rafiki handles liquidity, see the [Accounting](/v
     ```
 
     For more information about this mutation's input object, see [`CreateIncomingPaymentWithdrawalInput`](https://rafiki.dev/apis/graphql/backend/inputobjects/#createincomingpaymentwithdrawalinput).
+
   </TabItem>
 
   <TabItem label="Response">
@@ -65,6 +66,7 @@ For more information about how Rafiki handles liquidity, see the [Accounting](/v
       }
     }
     ```
+
   </TabItem>
 </Tabs>
 
@@ -92,6 +94,7 @@ For more information about how Rafiki handles liquidity, see the [Accounting](/v
     ```
 
     For more information about this mutation's input object, see [`DepositOutgoingPaymentLiquidityInput`](https://rafiki.dev/apis/graphql/backend/inputobjects/#depositoutgoingpaymentliquidityinput).
+
   </TabItem>
 
   <TabItem label="Response">
@@ -104,6 +107,7 @@ For more information about how Rafiki handles liquidity, see the [Accounting](/v
       }
     }
     ```
+
   </TabItem>
 </Tabs>
 
@@ -132,6 +136,7 @@ For more information about how Rafiki handles liquidity, see the [Accounting](/v
     ```
 
     For more information about this mutation's input object, see [`CreateOutgoingPaymentWithdrawalInput`](https://rafiki.dev/apis/graphql/backend/inputobjects/#createoutgoingpaymentwithdrawalinput).
+
   </TabItem>
 
   <TabItem label="Response">
@@ -144,5 +149,6 @@ For more information about how Rafiki handles liquidity, see the [Accounting](/v
       }
     }
     ```
+
   </TabItem>
 </Tabs>
