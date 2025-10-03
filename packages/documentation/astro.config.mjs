@@ -382,7 +382,9 @@ export default defineConfig({
             '/v1-beta/apis/graphql/auth',
             '/v1-beta/apis/graphql/backend',
             '/v1-beta/apis/graphql/auth/*',
-            '/v1-beta/apis/graphql/backend/*'
+            '/v1-beta/apis/graphql/backend/*',
+            'es/v1-beta/apis/graphql/backend/*',
+            'es/v1-beta/apis/graphql/backend/*'
           ],
           errorOnLocalLinks: false,
           errorOnFallbackPages: false,
