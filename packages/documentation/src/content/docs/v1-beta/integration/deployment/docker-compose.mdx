@@ -73,12 +73,12 @@ Map the [Open Payments resource server](/v1-beta/integration/deployment/services
 
 <div class="overflow-table">
 
-  | Service                       | Exposes                                                           | URL          | Example            |
-  | ----------------------------- | ----------------------------------------------------------------- | ------------ | ------------------ |
-  | Open Payments resource server | Open Payments APIs                                                | DOMAIN       | myrafiki.com       |
-  | ILP connector                 | ILP connector to send and receive ILP packets between peers       | ilp.DOMAIN   | ilp.myrafiki.com   |
-  | Open Payments auth server     | Reference implementation of an Open Payments authorization server | auth.DOMAIN  | auth.myrafiki.com  |
-  | Admin UI                      | Admin UI to manage Rafiki                                         | admin.DOMAIN | admin.myrafiki.com |
+| Service                       | Exposes                                                           | URL          | Example            |
+| ----------------------------- | ----------------------------------------------------------------- | ------------ | ------------------ |
+| Open Payments resource server | Open Payments APIs                                                | DOMAIN       | myrafiki.com       |
+| ILP connector                 | ILP connector to send and receive ILP packets between peers       | ilp.DOMAIN   | ilp.myrafiki.com   |
+| Open Payments auth server     | Reference implementation of an Open Payments authorization server | auth.DOMAIN  | auth.myrafiki.com  |
+| Admin UI                      | Admin UI to manage Rafiki                                         | admin.DOMAIN | admin.myrafiki.com |
 
 </div>
 
@@ -177,7 +177,6 @@ rafiki-auth:
 | `WAIT_SECONDS`                    | N        | The wait time, in seconds, included in a grant request response (`grant.continue`).                                                                                                                                                                                                                                                                                |
 
 </div>
-
 
 #### Backend service
 
@@ -310,7 +309,6 @@ rafiki-backend:
 
 </div>
 
-
 #### Frontend service
 
 The Rafiki `frontend` service provides an internal admin interface for managing your Rafiki instance. It communicates with the Backend Admin API to facilitate administrative tasks. See [Frontend service](/v1-beta/integration/deployment/services/frontend-service) for more information.
@@ -362,7 +360,6 @@ rafiki-frontend:
 | `SIGNATURE_VERSION`              | N        | The signature version number used to authenticate requests to the Backend Admin API.                                                                                                                                 |
 
 </div>
-
 
 #### TigerBeetle
 
@@ -473,164 +470,165 @@ volumes:
 <details>
   <summary>Click to expand</summary>
 
-  ```sh
-  name: 'my-rafiki'
-  services:
-    rafiki-auth:
-      image: ghcr.io/interledger/rafiki-auth:<newest-version>
-      container_name: rafiki-auth
-      environment:
-        AUTH_DATABASE_URL: {postgresql://...}
-        AUTH_SERVER_URL: {https://auth.myrafiki.com}
-        ADMIN_PORT: 3003
-        AUTH_PORT: 3006
-        INTROSPECTION_PORT: 3007
-        INTERACTION_PORT: 3009
-        SERVICE_API_PORT: 3011
-        COOKIE_KEY: {...}
-        IDENTITY_SERVER_SECRET: {...}
-        IDENTITY_SERVER_URL: {https://idp.mysystem.com}
-        REDIS_URL: {redis://...}
-        TRUST_PROXY: true
-      depends_on:
-        - postgres
-      networks:
-        - rafiki
-      ports:
-        - '3003:3003'
-        - '3006:3006'
-        - '3007:3007'
-        - '3009:3009'
-        - '3011:3011'
-      restart: always
-
-  rafiki-backend:
-    image: ghcr.io/interledger/rafiki-backend:<newest-version>
-    container_name: rafiki-backend
-    depends_on: 
-      - postgres 
-      - redis
+```sh
+name: 'my-rafiki'
+services:
+  rafiki-auth:
+    image: ghcr.io/interledger/rafiki-auth:<newest-version>
+    container_name: rafiki-auth
     environment:
-      AUTH_SERVER_GRANT_URL: {https://auth.myrafiki.com}
-      AUTH_SERVER_INTROSPECTION_URL: {https://auth.myrafiki.com/3007}
-      AUTH_SERVICE_API_URL: {https://auth.myrafiki.com/3011}
-      DATABASE_URL: {postgresql://...}
-      ILP_ADDRESS: {test.myrafiki}
-      ADMIN_PORT: 3001
-      CONNECTOR_PORT: 3002
-      OPEN_PAYMENTS_PORT: 3000
-      OPEN_PAYMENTS_URL: {https://myrafiki.com}
+      AUTH_DATABASE_URL: {postgresql://...}
+      AUTH_SERVER_URL: {https://auth.myrafiki.com}
+      ADMIN_PORT: 3003
+      AUTH_PORT: 3006
+      INTROSPECTION_PORT: 3007
+      INTERACTION_PORT: 3009
+      SERVICE_API_PORT: 3011
+      COOKIE_KEY: {...}
+      IDENTITY_SERVER_SECRET: {...}
+      IDENTITY_SERVER_URL: {https://idp.mysystem.com}
       REDIS_URL: {redis://...}
-      WALLET_ADDRESS_URL: {https://myrafiki.com/rafiki-instance}
-      WEBHOOK_URL: {https://mysystem.com/webhooks}
-      EXCHANGE_RATES_URL: {https://mysystem.com/rates}
-      ILP_CONNECTOR_URL: {https://ilp.myrafiki.com}
-      INSTANCE_NAME: {'My ASE name'}
       TRUST_PROXY: true
-      KEY_ID: ...
-      USE_TIGERBEETLE: true
-      TIGERBEETLE_CLUSTER_ID: 0
-      TIGERBEETLE_REPLICA_ADDRESSES: 10.5.0.50:4342
-    networks: 
-      - rafiki
-    ports: 
-      - '3000:3000' 
-      - '3001:3001' 
-      - '3002:3002'
-    privileged: true
-    restart: always
-    volumes:  
-      - ../temp/:/workspace/temp/
-
-  rafiki-frontend:
-    image: ghcr.io/interledger/rafiki-frontend:<newest-version>
-    container_name: rafiki-frontend
-    depends_on: 
-      - rafiki-backend
-    environment:
-      PORT: 3005
-      GRAPHQL_URL: {https://myrafiki.com:3001}
-      OPEN_PAYMENTS_URL: {https://myrafiki.com}
-      KRATOS_CONTAINER_PUBLIC_URL: {http://kratos:4433}
-      KRATOS_BROWSER_PUBLIC_URL: {https://admin.myrafiki.com/kratos}
-      KRATOS_ADMIN_URL: {http://kratos:4434/admin}
-    networks: 
-      - rafiki
-    restart: always
-    privileged: true
-    ports:
-       - '3005:3005'
-
-  tigerbeetle:
-    image: ghcr.io/tigerbeetle/tigerbeetle:0.16.29
-    privileged: true
-    volumes:
-      - tigerbeetle-data:/var/lib/tigerbeetle
+    depends_on:
+      - postgres
     networks:
-      rafiki:
-        ipv4_address: 10.5.0.50
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        set -ex
-        DATA_FILE=/var/lib/tigerbeetle/cluster_0_replica_0.tigerbeetle
-        set +e
-        ls $$DATA_FILE
-        DATA_FILE_EXISTS="$$?"
-        set -e
-        echo $$DATA_FILE_EXISTS
-        if [ "$$DATA_FILE_EXISTS" != 0 ]; then 
-          ./tigerbeetle format --cluster=0 --replica=0 --replica-count=1 $$DATA_FILE; 
-        fi
-        hostname -i
-        ls /var/lib/tigerbeetle
-        ./tigerbeetle start --addresses=0.0.0.0:4342 --development $$DATA_FILE
-        
-  postgres:
-    image: 'postgres:16'
-    container_name: postgres
-    environment:
-      POSTGRES_USER: ...
-      POSTGRES_PASSWORD: ...
-    networks: 
       - rafiki
-    restart: unless-stopped
-    volumes: 
-      - pg-data:/var/lib/postgresql/data 
-      - ../dbinit.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - '3003:3003'
+      - '3006:3006'
+      - '3007:3007'
+      - '3009:3009'
+      - '3011:3011'
+    restart: always
 
-  redis:
-    image: 'redis:7'
-    restart: unless-stopped
-    networks: 
-      - rafiki
+rafiki-backend:
+  image: ghcr.io/interledger/rafiki-backend:<newest-version>
+  container_name: rafiki-backend
+  depends_on:
+    - postgres
+    - redis
+  environment:
+    AUTH_SERVER_GRANT_URL: {https://auth.myrafiki.com}
+    AUTH_SERVER_INTROSPECTION_URL: {https://auth.myrafiki.com/3007}
+    AUTH_SERVICE_API_URL: {https://auth.myrafiki.com/3011}
+    DATABASE_URL: {postgresql://...}
+    ILP_ADDRESS: {test.myrafiki}
+    ADMIN_PORT: 3001
+    CONNECTOR_PORT: 3002
+    OPEN_PAYMENTS_PORT: 3000
+    OPEN_PAYMENTS_URL: {https://myrafiki.com}
+    REDIS_URL: {redis://...}
+    WALLET_ADDRESS_URL: {https://myrafiki.com/rafiki-instance}
+    WEBHOOK_URL: {https://mysystem.com/webhooks}
+    EXCHANGE_RATES_URL: {https://mysystem.com/rates}
+    ILP_CONNECTOR_URL: {https://ilp.myrafiki.com}
+    INSTANCE_NAME: {'My ASE name'}
+    TRUST_PROXY: true
+    KEY_ID: ...
+    USE_TIGERBEETLE: true
+    TIGERBEETLE_CLUSTER_ID: 0
+    TIGERBEETLE_REPLICA_ADDRESSES: 10.5.0.50:4342
+  networks:
+    - rafiki
+  ports:
+    - '3000:3000'
+    - '3001:3001'
+    - '3002:3002'
+  privileged: true
+  restart: always
+  volumes:
+    - ../temp/:/workspace/temp/
 
-  kratos:
-    image: 'oryd/kratos:v1.2.0'
-    privileged: true
-    ports: 
-      - '4433:4433'
-    volumes: 
-      - ../entrypoint.sh:/entrypoint.sh 
-      - ../identity.schema.json:/etc/config/kratos/identity.schema.json 
-      - ./kratos.yml:/etc/config/kratos/kratos.yml
-    entrypoint: ['/entrypoint.sh']
-    networks: 
-      - rafiki
+rafiki-frontend:
+  image: ghcr.io/interledger/rafiki-frontend:<newest-version>
+  container_name: rafiki-frontend
+  depends_on:
+    - rafiki-backend
+  environment:
+    PORT: 3005
+    GRAPHQL_URL: {https://myrafiki.com:3001}
+    OPEN_PAYMENTS_URL: {https://myrafiki.com}
+    KRATOS_CONTAINER_PUBLIC_URL: {http://kratos:4433}
+    KRATOS_BROWSER_PUBLIC_URL: {https://admin.myrafiki.com/kratos}
+    KRATOS_ADMIN_URL: {http://kratos:4434/admin}
+  networks:
+    - rafiki
+  restart: always
+  privileged: true
+  ports:
+     - '3005:3005'
 
+tigerbeetle:
+  image: ghcr.io/tigerbeetle/tigerbeetle:0.16.29
+  privileged: true
+  volumes:
+    - tigerbeetle-data:/var/lib/tigerbeetle
   networks:
     rafiki:
-      driver: bridge
-      ipam:
-      config: - subnet: 10.5.0.0/24
-      gateway: 10.5.0.1
+      ipv4_address: 10.5.0.50
+  entrypoint:
+    - /bin/sh
+    - -c
+    - |
+      set -ex
+      DATA_FILE=/var/lib/tigerbeetle/cluster_0_replica_0.tigerbeetle
+      set +e
+      ls $$DATA_FILE
+      DATA_FILE_EXISTS="$$?"
+      set -e
+      echo $$DATA_FILE_EXISTS
+      if [ "$$DATA_FILE_EXISTS" != 0 ]; then
+        ./tigerbeetle format --cluster=0 --replica=0 --replica-count=1 $$DATA_FILE;
+      fi
+      hostname -i
+      ls /var/lib/tigerbeetle
+      ./tigerbeetle start --addresses=0.0.0.0:4342 --development $$DATA_FILE
 
+postgres:
+  image: 'postgres:16'
+  container_name: postgres
+  environment:
+    POSTGRES_USER: ...
+    POSTGRES_PASSWORD: ...
+  networks:
+    - rafiki
+  restart: unless-stopped
   volumes:
-    pg-data:
-    tigerbeetle-data:
+    - pg-data:/var/lib/postgresql/data
+    - ../dbinit.sql:/docker-entrypoint-initdb.d/init.sql
 
-  ```
+redis:
+  image: 'redis:7'
+  restart: unless-stopped
+  networks:
+    - rafiki
+
+kratos:
+  image: 'oryd/kratos:v1.2.0'
+  privileged: true
+  ports:
+    - '4433:4433'
+  volumes:
+    - ../entrypoint.sh:/entrypoint.sh
+    - ../identity.schema.json:/etc/config/kratos/identity.schema.json
+    - ./kratos.yml:/etc/config/kratos/kratos.yml
+  entrypoint: ['/entrypoint.sh']
+  networks:
+    - rafiki
+
+networks:
+  rafiki:
+    driver: bridge
+    ipam:
+    config: - subnet: 10.5.0.0/24
+    gateway: 10.5.0.1
+
+volumes:
+  pg-data:
+  tigerbeetle-data:
+
+```
+
 </details>
 
 ## Create Nginx config files
