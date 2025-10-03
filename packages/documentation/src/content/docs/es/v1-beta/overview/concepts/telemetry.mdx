@@ -74,15 +74,17 @@ If an ASE does not provide the necessary exchange rate for a transaction, the te
 Rafiki has the following metrics. All data points (counter increases) are exported to collection endpoints at a configurable interval. The default interval is 15 seconds.
 
 <div class="overflow-table wide-column">
-  | Metric                    | Type      | Description                                | Behavior                                                                       |
-  | ------------------------- | --------- | ------------------------------------------ | ------------------------------------------------------------------------------ |
-  | `transactions_total`      | Counter   | Count of funded outgoing transactions      | Increases by 1 for each successfully funded outgoing payment resource          |
-  | `packet_count_prepare`    | Counter   | Count of ILP Prepare packets that are sent | Increases by 1 for each Prepare packet that's sent                             |
-  | `packet_count_fulfill`    | Counter   | Count of ILP Fulfill packets               | Increases by 1 for each Fulfill packet that's received                         |
-  | `packet_count_reject`     | Counter   | Count of ILP Reject packets                | Increases by 1 for each Reject packet that's received                          |
-  | `packet_amount_fulfill`   | Counter   | Amount sent through the network            | Increases by the amount sent in each ILP packet                                |
-  | `transaction_fee_amounts` | Counter   | Fee amount sent through network            | Increases by the amount sent minus the amount received for an outgoing payment |
-  | `ilp_pay_time_ms`         | Histogram | Time to complete an ILP payment            | Records the time taken to make an ILP payment                                  |
+
+| Metric                    | Type      | Description                                | Behavior                                                                       |
+| ------------------------- | --------- | ------------------------------------------ | ------------------------------------------------------------------------------ |
+| `transactions_total`      | Counter   | Count of funded outgoing transactions      | Increases by 1 for each successfully funded outgoing payment resource          |
+| `packet_count_prepare`    | Counter   | Count of ILP Prepare packets that are sent | Increases by 1 for each Prepare packet that's sent                             |
+| `packet_count_fulfill`    | Counter   | Count of ILP Fulfill packets               | Increases by 1 for each Fulfill packet that's received                         |
+| `packet_count_reject`     | Counter   | Count of ILP Reject packets                | Increases by 1 for each Reject packet that's received                          |
+| `packet_amount_fulfill`   | Counter   | Amount sent through the network            | Increases by the amount sent in each ILP packet                                |
+| `transaction_fee_amounts` | Counter   | Fee amount sent through network            | Increases by the amount sent minus the amount received for an outgoing payment |
+| `ilp_pay_time_ms`         | Histogram | Time to complete an ILP payment            | Records the time taken to make an ILP payment                                  |
+
 </div>
 
 The current implementation only collects metrics on the SENDING side of a transaction. Metrics for external Open Payments transactions RECEIVED by a Rafiki instance in the network are not collected.
