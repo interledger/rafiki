@@ -99,7 +99,7 @@ You should define and adjust asset liquidity based on your liquidity risk profil
   <Steps>
     1. Rafiki receives packets from a peer. These packets are all denominated in EUR, worth €10. 10 EUR move from the peer's liquidity account on your Rafiki instance to your EUR asset liquidity account. Your EUR liquidity increases to 20 (10 + 10).
 
-    2. The EUR-to-USD exchange rate is applied, with €10 equating to $12 USD. Since your starting USD liquidity is 50, your USD asset liquidity account can cover the transfer of $12 USD to an incoming payment liquidity account. Your USD liquidity decreases to 38 (50 - 12).
+    2. The EUR-to-USD exchange rate is applied, with €10 equating to \$12 USD. Since your starting USD liquidity is 50, your USD asset liquidity account can cover the transfer of \$12 USD to an incoming payment liquidity account. Your USD liquidity decreases to 38 (50 - 12).
 
   </Steps>
 
@@ -108,7 +108,7 @@ You should define and adjust asset liquidity based on your liquidity risk profil
   <Steps>
     1. Rafiki receives packets from a peer. These packets are all denominated in EUR, worth €50. Your EUR liquidity increases to 70 (20 + 50).
 
-    2. The current EUR-to-USD exchange rate is applied, with €50 equating to $55 USD. The transaction fails. Your USD liquidity account is 38, so you don't have enough liquidity to cover the transaction.
+    2. The current EUR-to-USD exchange rate is applied, with €50 equating to \$55 USD. The transaction fails. Your USD liquidity account is 38, so you don't have enough liquidity to cover the transaction.
 
     3. Your EUR liquidity reduces back to 20 (70 - 50).
 
@@ -135,13 +135,7 @@ You should define and adjust each peer's liquidity based on your liquidity risk 
 
 <details>
   <summary>Peer liquidity example</summary>
-  You and Cloud Nine Wallet are peers. You’ve agreed to extend Cloud Nine Wallet
-  a line of credit worth $100.00 USD. This means Cloud Nine Wallet has $100.00 in
-  their peer liquidity account on your Rafiki instance. Your Rafiki instance can
-  receive packets that total up to $100.00 from Cloud Nine Wallet. When the $100.00
-  is used up, Cloud Nine Wallet settles with you by sending $100.00 via the shared
-  settlement mechanism outlined in your peering agreement. When you receive the funds,
-  you reset their liquidity in Rafiki.
+  You and Cloud Nine Wallet are peers. You’ve agreed to extend Cloud Nine Wallet a line of credit worth \$100.00 USD. This means Cloud Nine Wallet has \$100.00 in their peer liquidity account on your Rafiki instance. Your Rafiki instance can receive packets that total up to \$100.00 from Cloud Nine Wallet. When the \$100.00 is used up, Cloud Nine Wallet settles with you by sending \$100.00 via the shared settlement mechanism outlined in your peering agreement. When you receive the funds, you reset their liquidity in Rafiki.
 </details>
 
 #### Payment liquidity accounts
@@ -194,13 +188,13 @@ Rafiki ensures that the total credits to a settlement account do not exceed its 
 
 <details>
   <summary>Settlement account example</summary>
-  You deposit $10,000 into a peer's liquidity account, meaning you've extended a credit line of $10,000 to your peer.
+  You deposit \$10,000 into a peer's liquidity account, meaning you've extended a credit line of \$10,000 to your peer.
 
-Your peer liquidity account balance is $10,000 and your USD settlement account balance is now -$10,000.
+Your peer liquidity account balance is \$10,000 and your USD settlement account balance is now -\$10,000.
 
-An incoming payment from your peer for $100 is created, meaning your peer is using $100 of their line of credit. Since Rafiki doesn't hold funds, you must withdraw the liquidity and credit the amount to the recipient's account on your ledger.
+An incoming payment from your peer for \$100 is created, meaning your peer is using \$100 of their line of credit. Since Rafiki doesn't hold funds, you must withdraw the liquidity and credit the amount to the recipient's account on your ledger.
 
-Now, your peer liquidity account's balance is $9,900 and your USD settlement account's balance is -$9,900.
+Now, your peer liquidity account's balance is \$9,900 and your USD settlement account's balance is -\$9,900.
 
 </details>
 
