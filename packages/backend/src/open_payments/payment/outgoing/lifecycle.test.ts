@@ -502,7 +502,7 @@ describe('Lifecycle', (): void => {
         expect(endSpentAmounts).toEqual(startSpentAmounts)
       })
 
-      test.only('Partial payment should add new, settled grant payment amount', async (): Promise<void> => {
+      test('Partial payment should add new, settled grant payment amount', async (): Promise<void> => {
         const grant: Grant = {
           id: uuid(),
           limits: {
@@ -577,8 +577,6 @@ describe('Lifecycle', (): void => {
 
         assert(endSpentAmounts)
 
-        console.log({ endSpentAmounts })
-
         // There should be a new spent amounts record from the worker with the settled amounts
         expect(endSpentAmounts.id).not.toBe(startSpentAmounts.id)
         expect(endSpentAmounts).toMatchObject({
@@ -600,6 +598,85 @@ describe('Lifecycle', (): void => {
           intervalStart: null,
           intervalEnd: null
         })
+      })
+
+      test('Failed payment should remove latest amount', async (): Promise<void> => {
+        const grant: Grant = {
+          id: uuid(),
+          limits: {
+            debitAmount: {
+              value: 1000n,
+              assetCode: asset.code,
+              assetScale: asset.scale
+            }
+          }
+        }
+        const paymentAmount = 100n
+
+        // Create and process first successful payment
+        const firstPayment = await createAndFundGrantPayment(
+          paymentAmount,
+          grant,
+          mockPaySuccessFactory()
+        )
+        await outgoingPaymentService.processNext()
+
+        // Create second payment which will fail
+        const secondPayment = await createAndFundGrantPayment(
+          paymentAmount,
+          grant,
+          mockPayErrorFactory()
+        )
+
+        const startSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ outgoingPaymentId: secondPayment.id })
+          .first()
+
+        expect(startSpentAmounts).toMatchObject({
+          grantId: grant.id,
+          outgoingPaymentId: secondPayment.id,
+          receiveAmountScale: assetDetails.scale,
+          receiveAmountCode: assetDetails.code,
+          paymentReceiveAmountValue: paymentAmount,
+          intervalReceiveAmountValue: null,
+          grantTotalReceiveAmountValue: paymentAmount * 2n,
+          debitAmountScale: assetDetails.scale,
+          debitAmountCode: assetDetails.code,
+          paymentDebitAmountValue: paymentAmount,
+          intervalDebitAmountValue: null,
+          grantTotalDebitAmountValue: paymentAmount * 2n,
+          paymentState: OutgoingPaymentState.Funding,
+          intervalStart: null,
+          intervalEnd: null
+        })
+
+        const processedPaymentId = await outgoingPaymentService.processNext()
+        expect(processedPaymentId).toBe(secondPayment.id)
+
+        const finalPayment = await outgoingPaymentService.get({
+          id: secondPayment.id
+        })
+        expect(finalPayment?.state).toBe(OutgoingPaymentState.Failed)
+
+        // Grant spent amounts for failed payment should be removed
+        const endSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ outgoingPaymentId: secondPayment.id })
+          .first()
+        expect(endSpentAmounts).toBe(undefined)
+
+        const latestSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ grantId: grant.id })
+          .orderBy('createdAt', 'desc')
+          .first()
+
+        assert(latestSpentAmounts)
+        expect(latestSpentAmounts.outgoingPaymentId).toBe(firstPayment.id)
       })
     })
   })
