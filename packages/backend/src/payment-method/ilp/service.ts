@@ -254,7 +254,7 @@ async function getQuote(
 async function pay(
   deps: ServiceDependencies,
   options: PayOptions
-): Promise<void> {
+): Promise<bigint> {
   const { receiver, outgoingPayment, finalDebitAmount, finalReceiveAmount } =
     options
 
@@ -327,6 +327,7 @@ async function pay(
       },
       'ILP payment completed'
     )
+    return receipt.amountDelivered
   } catch (err) {
     const errorMessage = 'Received error during ILP pay'
     deps.logger.error(

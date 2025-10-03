@@ -55,6 +55,7 @@ import { TelemetryService } from '../../../telemetry/service'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { ReceiverService } from '../../receiver/service'
+import { Interval } from 'luxon'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -164,6 +165,8 @@ describe('OutgoingPaymentService', (): void => {
           debitAmount: args.finalDebitAmount,
           receiveAmount: args.finalReceiveAmount
         })
+
+        return args.finalReceiveAmount
       })
   }
 

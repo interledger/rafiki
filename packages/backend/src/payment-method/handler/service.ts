@@ -35,7 +35,7 @@ export interface PaymentMethodService {
     quoteOptions: StartQuoteOptions,
     trx?: Transaction
   ): Promise<PaymentQuote>
-  pay(payOptions: PayOptions): Promise<void>
+  pay(payOptions: PayOptions): Promise<bigint>
 }
 
 export type PaymentMethod = 'ILP' | 'LOCAL'
@@ -46,7 +46,7 @@ export interface PaymentMethodHandlerService {
     quoteOptions: StartQuoteOptions,
     trx?: Transaction
   ): Promise<PaymentQuote>
-  pay(method: PaymentMethod, payOptions: PayOptions): Promise<void>
+  pay(method: PaymentMethod, payOptions: PayOptions): Promise<bigint>
 }
 
 interface ServiceDependencies extends BaseService {

@@ -205,7 +205,7 @@ async function getQuote(
 async function pay(
   deps: ServiceDependencies,
   options: PayOptions
-): Promise<void> {
+): Promise<bigint> {
   const { outgoingPayment, receiver, finalReceiveAmount, finalDebitAmount } =
     options
 
@@ -300,4 +300,6 @@ async function pay(
       retryable: false
     })
   }
+
+  return finalReceiveAmount
 }
