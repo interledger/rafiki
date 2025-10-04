@@ -64,6 +64,7 @@ async function payment(
   ctx: PaymentContext
 ): Promise<void> {
   const body = ctx.request.body
+  let incomingPaymentId: string | undefined
   try {
     const senderWalletAddress = await deps.paymentService.getWalletAddress(
       body.senderWalletAddress.replace(/^https:/, 'http:')
@@ -87,6 +88,7 @@ async function payment(
       deferred,
       deps.config.webhookTimeoutMs
     )
+    incomingPaymentId = incomingPayment.id
     const result = await deps.cardServiceClient.sendPayment(
       senderWalletAddress.cardService,
       {
@@ -100,7 +102,6 @@ async function payment(
     )
 
     if (result === Result.INVALID_SIGNATURE) {
-      webhookWaitMap.delete(incomingPayment.id)
       ctx.body = { result: { code: Result.INVALID_SIGNATURE } }
       ctx.status = 200
       return
@@ -108,18 +109,19 @@ async function payment(
 
     if (result !== Result.APPROVED) throw new InvalidCardPaymentError(result)
     const event = await waitForIncomingPaymentEvent(deps.config, deferred)
-    webhookWaitMap.delete(incomingPayment.id)
     if (!event || !event.data.completed)
       throw new IncomingPaymentEventTimeoutError(incomingPayment.id)
     ctx.body = { result: { code: Result.APPROVED } }
     ctx.status = 200
   } catch (err) {
     deps.logger.debug(err)
-    if (err instanceof IncomingPaymentEventTimeoutError)
-      webhookWaitMap.delete(err.incomingPaymentId)
     const { body, status } = handlePaymentError(err)
     ctx.body = body
     ctx.status = status
+  } finally {
+    if (incomingPaymentId) {
+      webhookWaitMap.delete(incomingPaymentId)
+    }
   }
 }
 
