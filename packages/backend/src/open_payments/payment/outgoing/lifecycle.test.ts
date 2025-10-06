@@ -49,6 +49,7 @@ import { PaymentMethodHandlerService } from '../../../payment-method/handler/ser
 import { IncomingPayment } from '../incoming/model'
 import { Fee } from '../../../fee/model'
 import { PaymentMethodHandlerError } from '../../../payment-method/handler/errors'
+import { getInterval } from './limits'
 
 describe('Lifecycle', (): void => {
   let deps: IocContract<AppServices>
@@ -190,6 +191,8 @@ describe('Lifecycle', (): void => {
         'paymentMethodHandlerService'
       )
       knex = appContainer.knex
+
+      jest.useFakeTimers()
     })
 
     beforeEach(async (): Promise<void> => {
@@ -219,19 +222,22 @@ describe('Lifecycle', (): void => {
     })
 
     afterAll(async (): Promise<void> => {
+      jest.useRealTimers()
       await appContainer.shutdown()
     })
 
     describe('Initial Payment', (): void => {
       test('Successful full payment should not change grant spent amounts', async (): Promise<void> => {
-        const grant: Grant = {
+        jest.setSystemTime(new Date('2025-01-02T00:00:00Z'))
+        const grant = {
           id: uuid(),
           limits: {
             debitAmount: {
               value: 1000n,
               assetCode: asset.code,
               assetScale: asset.scale
-            }
+            },
+            interval: 'R/2025-01-01T00:00:00Z/P1M'
           }
         }
         const paymentAmount = 100n
@@ -249,24 +255,31 @@ describe('Lifecycle', (): void => {
           .first()
 
         // Initital spent amount records should reflect outgoing payment amounts
+        const interval = getInterval(grant.limits.interval, new Date())
+        assert(interval)
+        assert(interval.start)
+        assert(interval.end)
         expect(startSpentAmounts).toMatchObject({
           grantId: grant.id,
           outgoingPaymentId: payment.id,
           receiveAmountScale: assetDetails.scale,
           receiveAmountCode: assetDetails.code,
           paymentReceiveAmountValue: paymentAmount,
-          intervalReceiveAmountValue: null,
+          intervalReceiveAmountValue: 100n,
           grantTotalReceiveAmountValue: paymentAmount,
           debitAmountScale: assetDetails.scale,
           debitAmountCode: assetDetails.code,
           paymentDebitAmountValue: paymentAmount,
-          intervalDebitAmountValue: null,
+          intervalDebitAmountValue: 100n,
           grantTotalDebitAmountValue: paymentAmount,
           paymentState: OutgoingPaymentState.Funding,
-          intervalStart: null,
-          intervalEnd: null
+          intervalStart: interval.start.toJSDate(),
+          intervalEnd: interval.end.toJSDate()
         })
 
+        // advance time to ensure spents amounts created by processNext, if any, have
+        // later createdAt so that fetching latest is accurate
+        jest.advanceTimersByTime(500)
         const processedPaymentId = await outgoingPaymentService.processNext()
         expect(processedPaymentId).toBe(payment.id)
 
@@ -287,14 +300,16 @@ describe('Lifecycle', (): void => {
       })
 
       test('Partial payment should add new, settled grant payment amount', async (): Promise<void> => {
-        const grant: Grant = {
+        jest.setSystemTime(new Date('2025-01-02T00:00:00Z'))
+        const grant = {
           id: uuid(),
           limits: {
             debitAmount: {
               value: 1000n,
               assetCode: asset.code,
               assetScale: asset.scale
-            }
+            },
+            interval: 'R/2025-01-01T00:00:00Z/P1M'
           }
         }
         const paymentAmount = 100n
@@ -314,27 +329,34 @@ describe('Lifecycle', (): void => {
         )
           .where({ outgoingPaymentId: payment.id })
           .first()
-
         assert(startSpentAmounts)
-        // Initital spent amount records should reflect outgoing payment amounts
+
+        // Initital spent amount records should reflect full outgoing payment amounts
+        const interval = getInterval(grant.limits.interval, new Date())
+        assert(interval)
+        assert(interval.start)
+        assert(interval.end)
         expect(startSpentAmounts).toMatchObject({
           grantId: grant.id,
           outgoingPaymentId: payment.id,
           receiveAmountScale: assetDetails.scale,
           receiveAmountCode: assetDetails.code,
           paymentReceiveAmountValue: 100n,
-          intervalReceiveAmountValue: null,
+          intervalReceiveAmountValue: paymentAmount,
           grantTotalReceiveAmountValue: 100n,
           debitAmountScale: assetDetails.scale,
           debitAmountCode: assetDetails.code,
           paymentDebitAmountValue: paymentAmount,
-          intervalDebitAmountValue: null,
+          intervalDebitAmountValue: paymentAmount,
           grantTotalDebitAmountValue: paymentAmount,
           paymentState: OutgoingPaymentState.Funding,
-          intervalStart: null,
-          intervalEnd: null
+          intervalStart: interval.start.toJSDate(),
+          intervalEnd: interval.end.toJSDate()
         })
 
+        // advance time to ensure spents amounts created by processNext, if any, have
+        // later createdAt so that fetching latest is accurate
+        jest.advanceTimersByTime(500)
         const processedPaymentId = await outgoingPaymentService.processNext()
         expect(processedPaymentId).toBe(payment.id)
 
@@ -360,28 +382,30 @@ describe('Lifecycle', (): void => {
           receiveAmountScale: assetDetails.scale,
           receiveAmountCode: assetDetails.code,
           paymentReceiveAmountValue: settledAmount,
-          intervalReceiveAmountValue: null,
+          intervalReceiveAmountValue: settledAmount,
           grantTotalReceiveAmountValue: settledAmount,
           debitAmountScale: assetDetails.scale,
           debitAmountCode: assetDetails.code,
           paymentDebitAmountValue: settledAmount,
-          intervalDebitAmountValue: null,
+          intervalDebitAmountValue: settledAmount,
           grantTotalDebitAmountValue: settledAmount,
           paymentState: OutgoingPaymentState.Funding,
-          intervalStart: null,
-          intervalEnd: null
+          intervalStart: interval.start.toJSDate(),
+          intervalEnd: interval.end.toJSDate()
         })
       })
 
       test('Failed payment should remove latest amount', async (): Promise<void> => {
-        const grant: Grant = {
+        jest.setSystemTime(new Date('2025-01-02T00:00:00Z'))
+        const grant = {
           id: uuid(),
           limits: {
             debitAmount: {
               value: 1000n,
               assetCode: asset.code,
               assetScale: asset.scale
-            }
+            },
+            interval: 'R/2025-01-01T00:00:00Z/P1M'
           }
         }
         const paymentAmount = 100n
@@ -397,24 +421,31 @@ describe('Lifecycle', (): void => {
           .first()
 
         // Initital spent amount records should reflect outgoing payment amounts
+        const interval = getInterval(grant.limits.interval, new Date())
+        assert(interval)
+        assert(interval.start)
+        assert(interval.end)
         expect(startSpentAmounts).toMatchObject({
           grantId: grant.id,
           outgoingPaymentId: payment.id,
           receiveAmountScale: assetDetails.scale,
           receiveAmountCode: assetDetails.code,
           paymentReceiveAmountValue: 100n,
-          intervalReceiveAmountValue: null,
+          intervalReceiveAmountValue: paymentAmount,
           grantTotalReceiveAmountValue: 100n,
           debitAmountScale: assetDetails.scale,
           debitAmountCode: assetDetails.code,
           paymentDebitAmountValue: paymentAmount,
-          intervalDebitAmountValue: null,
+          intervalDebitAmountValue: paymentAmount,
           grantTotalDebitAmountValue: paymentAmount,
           paymentState: OutgoingPaymentState.Funding,
-          intervalStart: null,
-          intervalEnd: null
+          intervalStart: interval.start.toJSDate(),
+          intervalEnd: interval.end.toJSDate()
         })
 
+        // advance time to ensure spents amounts created by processNext, if any, have
+        // later createdAt so that fetching latest is accurate
+        jest.advanceTimersByTime(500)
         const processedPaymentId = await outgoingPaymentService.processNext()
         expect(processedPaymentId).toBe(payment.id)
 
@@ -431,14 +462,16 @@ describe('Lifecycle', (): void => {
 
     describe('Successive Payment', (): void => {
       test('Successful full payment should not change grant spent amounts', async (): Promise<void> => {
-        const grant: Grant = {
+        jest.setSystemTime(new Date('2025-01-02T00:00:00Z'))
+        const grant = {
           id: uuid(),
           limits: {
             debitAmount: {
               value: 1000n,
               assetCode: asset.code,
               assetScale: asset.scale
-            }
+            },
+            interval: 'R/2025-01-01T00:00:00Z/P1M'
           }
         }
         const paymentAmount = 100n
@@ -464,25 +497,32 @@ describe('Lifecycle', (): void => {
           .where({ outgoingPaymentId: secondPayment.id })
           .first()
 
-        // Initital spent amount records should reflect outgoing payment amounts
+        // Initital spent amount records should reflect full outgoing payment amounts
+        const interval = getInterval(grant.limits.interval, new Date())
+        assert(interval)
+        assert(interval.start)
+        assert(interval.end)
         expect(startSpentAmounts).toMatchObject({
           grantId: grant.id,
           outgoingPaymentId: secondPayment.id,
           receiveAmountScale: assetDetails.scale,
           receiveAmountCode: assetDetails.code,
           paymentReceiveAmountValue: paymentAmount,
-          intervalReceiveAmountValue: null,
+          intervalReceiveAmountValue: paymentAmount * 2n,
           grantTotalReceiveAmountValue: paymentAmount * 2n,
           debitAmountScale: assetDetails.scale,
           debitAmountCode: assetDetails.code,
           paymentDebitAmountValue: paymentAmount,
-          intervalDebitAmountValue: null,
+          intervalDebitAmountValue: paymentAmount * 2n,
           grantTotalDebitAmountValue: paymentAmount * 2n,
           paymentState: OutgoingPaymentState.Funding,
-          intervalStart: null,
-          intervalEnd: null
+          intervalStart: interval.start.toJSDate(),
+          intervalEnd: interval.end.toJSDate()
         })
 
+        // advance time to ensure spents amounts created by processNext, if any, have
+        // later createdAt so that fetching latest is accurate
+        jest.advanceTimersByTime(500)
         const processedPaymentId = await outgoingPaymentService.processNext()
         expect(processedPaymentId).toBe(secondPayment.id)
 
@@ -503,14 +543,16 @@ describe('Lifecycle', (): void => {
       })
 
       test('Partial payment should add new, settled grant payment amount', async (): Promise<void> => {
-        const grant: Grant = {
+        jest.setSystemTime(new Date('2025-01-02T00:00:00Z'))
+        const grant = {
           id: uuid(),
           limits: {
             debitAmount: {
               value: 1000n,
               assetCode: asset.code,
               assetScale: asset.scale
-            }
+            },
+            interval: 'R/2025-01-01T00:00:00Z/P1M'
           }
         }
 
@@ -521,7 +563,12 @@ describe('Lifecycle', (): void => {
           grant,
           mockPaySuccessFactory()
         )
+
         await outgoingPaymentService.processNext()
+
+        // advance time to ensure spents amounts created by outgoing payment create
+        // has later createdAt so that fetching latest is accurate
+        jest.advanceTimersByTime(500)
 
         // Create second payment with partially settled amount
         const secondPaymentSettledAmount = 75n
@@ -542,24 +589,31 @@ describe('Lifecycle', (): void => {
 
         assert(startSpentAmounts)
         // Initital spent amount records should reflect full outgoing payment amounts
+        const interval = getInterval(grant.limits.interval, new Date())
+        assert(interval)
+        assert(interval.start)
+        assert(interval.end)
         expect(startSpentAmounts).toMatchObject({
           grantId: grant.id,
           outgoingPaymentId: secondPayment.id,
           receiveAmountScale: assetDetails.scale,
           receiveAmountCode: assetDetails.code,
           paymentReceiveAmountValue: paymentAmount,
-          intervalReceiveAmountValue: null,
+          intervalReceiveAmountValue: paymentAmount * 2n,
           grantTotalReceiveAmountValue: paymentAmount * 2n,
           debitAmountScale: assetDetails.scale,
           debitAmountCode: assetDetails.code,
           paymentDebitAmountValue: paymentAmount,
-          intervalDebitAmountValue: null,
+          intervalDebitAmountValue: paymentAmount * 2n,
           grantTotalDebitAmountValue: paymentAmount * 2n,
           paymentState: OutgoingPaymentState.Funding,
-          intervalStart: null,
-          intervalEnd: null
+          intervalStart: interval.start.toJSDate(),
+          intervalEnd: interval.end.toJSDate()
         })
 
+        // advance time to ensure spents amounts created by processNext, if any, have
+        // later createdAt so that fetching latest is accurate
+        jest.advanceTimersByTime(500)
         const processedPaymentId = await outgoingPaymentService.processNext()
         expect(processedPaymentId).toBe(secondPayment.id)
 
@@ -585,30 +639,33 @@ describe('Lifecycle', (): void => {
           receiveAmountScale: assetDetails.scale,
           receiveAmountCode: assetDetails.code,
           paymentReceiveAmountValue: secondPaymentSettledAmount,
-          intervalReceiveAmountValue: null,
+          intervalReceiveAmountValue:
+            paymentAmount + secondPaymentSettledAmount,
           grantTotalReceiveAmountValue:
             paymentAmount + secondPaymentSettledAmount,
           debitAmountScale: assetDetails.scale,
           debitAmountCode: assetDetails.code,
           paymentDebitAmountValue: secondPaymentSettledAmount,
-          intervalDebitAmountValue: null,
+          intervalDebitAmountValue: paymentAmount + secondPaymentSettledAmount,
           grantTotalDebitAmountValue:
             paymentAmount + secondPaymentSettledAmount,
           paymentState: OutgoingPaymentState.Funding,
-          intervalStart: null,
-          intervalEnd: null
+          intervalStart: interval.start.toJSDate(),
+          intervalEnd: interval.end.toJSDate()
         })
       })
 
       test('Failed payment should remove latest amount', async (): Promise<void> => {
-        const grant: Grant = {
+        jest.setSystemTime(new Date('2025-01-02T00:00:00Z'))
+        const grant = {
           id: uuid(),
           limits: {
             debitAmount: {
               value: 1000n,
               assetCode: asset.code,
               assetScale: asset.scale
-            }
+            },
+            interval: 'R/2025-01-01T00:00:00Z/P1M'
           }
         }
         const paymentAmount = 100n
@@ -620,6 +677,10 @@ describe('Lifecycle', (): void => {
           mockPaySuccessFactory()
         )
         await outgoingPaymentService.processNext()
+
+        // advance time to ensure spents amounts created by outgoing payment create
+        // has later createdAt so that fetching latest is accurate
+        jest.advanceTimersByTime(500)
 
         // Create second payment which will fail
         const secondPayment = await createAndFundGrantPayment(
@@ -634,24 +695,31 @@ describe('Lifecycle', (): void => {
           .where({ outgoingPaymentId: secondPayment.id })
           .first()
 
+        const interval = getInterval(grant.limits.interval, new Date())
+        assert(interval)
+        assert(interval.start)
+        assert(interval.end)
         expect(startSpentAmounts).toMatchObject({
           grantId: grant.id,
           outgoingPaymentId: secondPayment.id,
           receiveAmountScale: assetDetails.scale,
           receiveAmountCode: assetDetails.code,
           paymentReceiveAmountValue: paymentAmount,
-          intervalReceiveAmountValue: null,
+          intervalReceiveAmountValue: paymentAmount * 2n,
           grantTotalReceiveAmountValue: paymentAmount * 2n,
           debitAmountScale: assetDetails.scale,
           debitAmountCode: assetDetails.code,
           paymentDebitAmountValue: paymentAmount,
-          intervalDebitAmountValue: null,
+          intervalDebitAmountValue: paymentAmount * 2n,
           grantTotalDebitAmountValue: paymentAmount * 2n,
           paymentState: OutgoingPaymentState.Funding,
-          intervalStart: null,
-          intervalEnd: null
+          intervalStart: interval.start.toJSDate(),
+          intervalEnd: interval.end.toJSDate()
         })
 
+        // advance time to ensure spents amounts created by processNext, if any, have
+        // later createdAt so that fetching latest is accurate
+        jest.advanceTimersByTime(500)
         const processedPaymentId = await outgoingPaymentService.processNext()
         expect(processedPaymentId).toBe(secondPayment.id)
 
