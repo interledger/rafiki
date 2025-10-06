@@ -84,6 +84,32 @@ jobs:
         run: |
           npx @stoplight/spectral-cli lint ./packages/token-introspection/src/openapi/specs/*.yaml
 
+  card-service:
+    runs-on: ubuntu-latest
+    needs: prerequisite
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/workflows/rafiki/env-setup
+      - run: pnpm --filter card-service test:ci
+      - run: pnpm --filter card-service build
+      - name: AsyncAPI extension
+        run: |
+          echo "{\"extends\":[\"spectral:oas\",\"spectral:asyncapi\"]}" >> .spectral.json
+      - name: Validate Open API specs
+        run: |
+          npx @stoplight/spectral-cli lint ./packages/card-service/src/openapi/specs/*.yaml
+
+  point-of-sale:
+    runs-on: ubuntu-latest
+    needs: prerequisite
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/workflows/rafiki/env-setup
+      - run: pnpm --filter point-of-sale build
+      - run: pnpm --filter point-of-sale test:ci
+
   mock-account-servicing-entity:
     runs-on: ubuntu-latest
     needs: prerequisite
@@ -312,7 +338,7 @@ jobs:
   node-build:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [auth, backend, frontend, token-introspection, mock-account-servicing-entity, graphql, codeql-analyze, integration-test]
+    needs: [auth, backend, frontend, token-introspection, card-service, point-of-sale, mock-account-servicing-entity, graphql, codeql-analyze, integration-test]
     steps: 
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
@@ -407,6 +433,8 @@ jobs:
           - auth
           - backend
           - frontend
+          - card-service
+          - point-of-sale
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -442,6 +470,8 @@ jobs:
           - auth
           - backend
           - frontend
+          - card-service
+          - point-of-sale
     steps:
       - uses: actions/checkout@v4
       - name: Fetch docker image from cache
@@ -478,6 +508,8 @@ jobs:
           - auth
           - backend
           - frontend
+          - card-service
+          - point-of-sale
     steps:
       - uses: actions/checkout@v4
       - name: Fetch docker image from cache
@@ -510,6 +542,8 @@ jobs:
           - auth
           - backend
           - frontend
+          - card-service
+          - point-of-sale
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/image-push
@@ -531,6 +565,8 @@ jobs:
           - auth
           - backend
           - frontend
+          - card-service
+          - point-of-sale
     steps:
       - uses: actions/checkout@v4
       - name: Push manifest list

@@ -28,6 +28,7 @@ import {
 import { OutgoingPayment } from '../../open_payments/payment/outgoing/model'
 import { AccountingService } from '../../accounting/service'
 import { IncomingPayment } from '../../open_payments/payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/types'
 import { truncateTables } from '../../tests/tableManager'
 import { createOutgoingPaymentWithReceiver } from '../../tests/outgoingPayment'
 import { v4 as uuid } from 'uuid'
@@ -364,7 +365,8 @@ describe('IlpPaymentService', (): void => {
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD'], {
           incomingAmount,
-          tenantId: Config.operatorTenantId
+          tenantId: Config.operatorTenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
       }
 
@@ -460,7 +462,8 @@ describe('IlpPaymentService', (): void => {
             assetScale: 2,
             value: 100n
           },
-          tenantId: Config.operatorTenantId
+          tenantId: Config.operatorTenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
       }
 
@@ -614,7 +617,8 @@ describe('IlpPaymentService', (): void => {
         receiver: await createReceiver(deps, walletAddressMap['USD'], {
           incomingAmount,
           tenantId: Config.operatorTenantId,
-          paymentMethods: []
+          paymentMethods: [],
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
       }
 
@@ -1118,7 +1122,8 @@ describe('IlpPaymentService', (): void => {
       const receiver = await createReceiver(deps, walletAddressMap['USD'], {
         incomingAmount,
         tenantId: Config.operatorTenantId,
-        paymentMethods: []
+        paymentMethods: [],
+        initiationReason: IncomingPaymentInitiationReason.Admin
       })
 
       expect.assertions(4)
@@ -1152,7 +1157,8 @@ describe('IlpPaymentService', (): void => {
             ilpAddress: '',
             sharedSecret: ''
           }
-        ]
+        ],
+        initiationReason: IncomingPaymentInitiationReason.Admin
       })
 
       expect.assertions(4)

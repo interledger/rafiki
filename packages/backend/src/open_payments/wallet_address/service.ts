@@ -396,7 +396,10 @@ async function getOrPollByUrl(
       walletAddressUrl: url
     },
     tenantId: deps.config.operatorTenantId,
-    webhooks: finalizeWebhookRecipients(webhookRecipients, deps.config)
+    webhooks: finalizeWebhookRecipients(
+      { tenantIds: webhookRecipients },
+      deps.config
+    )
   })
 
   deps.logger.debug(
@@ -543,7 +546,10 @@ async function createWithdrawalEvent(
       amount
     },
     tenantId: walletAddress.tenantId,
-    webhooks: finalizeWebhookRecipients([walletAddress.tenantId], deps.config)
+    webhooks: finalizeWebhookRecipients(
+      { tenantIds: [walletAddress.tenantId] },
+      deps.config
+    )
   })
 
   await walletAddress.$query(deps.knex).patch({

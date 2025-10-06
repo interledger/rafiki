@@ -18,6 +18,7 @@ import { getPageInfo, parsePaginationQueryParameters } from './pagination'
 import { AssetService } from '../asset/service'
 import { PeerService } from '../payment-method/ilp/peer/service'
 import { createPeer } from '../tests/peer'
+import { IncomingPaymentInitiationReason } from '../open_payments/payment/incoming/types'
 
 describe('Pagination', (): void => {
   let deps: IocContract<AppServices>
@@ -124,7 +125,8 @@ describe('Pagination', (): void => {
             for (let i = 0; i < num; i++) {
               const payment = await createIncomingPayment(deps, {
                 walletAddressId: defaultWalletAddress.id,
-                tenantId: Config.operatorTenantId
+                tenantId: Config.operatorTenantId,
+                initiationReason: IncomingPaymentInitiationReason.Admin
               })
               paymentIds.push(payment.id)
             }

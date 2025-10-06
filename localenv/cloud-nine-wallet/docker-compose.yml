@@ -1,5 +1,78 @@
 name: c9
 services:
+  cloud-nine-wallet-card-service:
+    hostname: cloud-nine-wallet-card-service
+    image: rafiki-card-service
+    build:
+      context: ../..
+      dockerfile: ./packages/card-service/Dockerfile.dev
+    restart: always
+    networks:
+      - rafiki
+    ports:
+      - '3007:3007'
+      - '9234:9229'
+    volumes:
+      - type: bind
+        source: ../../packages/card-service/src
+        target: /home/rafiki/packages/card-service/src
+        read_only: true
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      INSTANCE_NAME: CLOUD-NINE
+      TRUST_PROXY: ${TRUST_PROXY}
+      LOG_LEVEL: debug
+      CARD_SERVICE_PORT: 3007
+      DATABASE_URL: postgresql://cloud_nine_wallet_card_service:cloud_nine_wallet_card_service@shared-database/cloud_nine_wallet_card_service
+      GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
+      TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
+      TENANT_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      TENANT_SIGNATURE_VERSION: 1
+    depends_on:
+      - shared-database
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:3007/healthz"]
+      start_period: 60s
+      start_interval: 5s
+      interval: 30s
+      retries: 1
+      timeout: 3s
+  cloud-nine-wallet-point-of-sale: 
+    hostname: cloud-nine-wallet-point-of-sale
+    image: rafiki-point-of-sale
+    build: 
+      context: ../.. 
+      dockerfile: ./packages/point-of-sale/Dockerfile.dev 
+    restart: always 
+    networks: 
+      - rafiki 
+    ports: 
+      - '3008:3008' 
+    volumes: 
+      - type: bind 
+        source: ../../packages/point-of-sale/src 
+        target: /home/rafiki/packages/point-of-sale/src 
+        read_only: true 
+    environment: 
+      NODE_ENV: ${NODE_ENV:-development} 
+      INSTANCE_NAME: CLOUD-NINE 
+      TRUST_PROXY: ${TRUST_PROXY} 
+      LOG_LEVEL: debug 
+      PORT: 3008
+      DATABASE_URL: postgresql://cloud_nine_wallet_point_of_sale:cloud_nine_wallet_point_of_sale@shared-database/cloud_nine_wallet_point_of_sale 
+      TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
+      TENANT_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
+      WEBHOOK_SIGNATURE_SECRET: webhook_secret
+    depends_on: 
+      - shared-database 
+    healthcheck: 
+      test: ["CMD", "wget", "--spider", "http://localhost:3008/healthz"] 
+      start_period: 60s 
+      start_interval: 5s 
+      interval: 30s 
+      retries: 1 
+      timeout: 3s 
   cloud-nine-mock-ase:
     hostname: cloud-nine-wallet
     image: rafiki-mock-ase
@@ -82,6 +155,8 @@ services:
       ENABLE_TELEMETRY: true
       KEY_ID: 7097F83B-CB84-469E-96C6-2141C72E22C0
       OPERATOR_TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
+      CARD_SERVICE_URL: 'http://cloud-nine-wallet-card-service:3007'
+      CARD_WEBHOOK_SERVICE_URL: 'http://cloud-nine-wallet-card-service:3007/payment-event'
     depends_on:
       - shared-database
       - shared-redis
