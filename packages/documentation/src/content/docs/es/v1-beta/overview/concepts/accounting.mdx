@@ -12,7 +12,7 @@ import {
 } from '@interledger/docs-design-system'
 import { Steps } from '@astrojs/starlight/components'
 
-Rafiki uses <LinkOut href="https://en.wikipedia.org/wiki/Double-entry_bookkeeping">double-entry accounting</LinkOut> to record financial transactions. In this method of bookkeeping, a transaction recorded to one account results in an equal and opposite entry to another account. For example, a $50 credit to one account results in a $50 debit from another account.
+Rafiki uses <LinkOut href="https://en.wikipedia.org/wiki/Double-entry_bookkeeping">double-entry accounting</LinkOut> to record financial transactions. In this method of bookkeeping, a transaction recorded to one account results in an equal and opposite entry to another account. For example, a \$50 credit to one account results in a \$50 debit from another account.
 
 Transactions in Rafiki represent Interledger packet interactions, denominated in a given [asset](#assets). Packet interactions can be successful, fail, or be rejected. Rafiki's accounting layer processes the interactions and converts the activities into financial records, which are then written to your [accounting database](#accounting-databases).
 
