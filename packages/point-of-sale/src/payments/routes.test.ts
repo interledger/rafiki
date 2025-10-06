@@ -63,21 +63,34 @@ describe('Payment Routes', () => {
         })
 
       await paymentRoutes.payment(ctx)
-      expect(ctx.response.body).toBe(Result.APPROVED)
+      expect(ctx.response.body).toEqual({ result: { code: Result.APPROVED } })
       expect(ctx.status).toBe(200)
 
       expect(webhookWaitMap.get('incoming-payment-url')).toBeUndefined()
     })
 
-    test('returns cardService error code when thrown', async () => {
+    test('returns 200 with invalid_signature result when card service returns invalid signature', async () => {
+      const ctx = createPaymentContext()
+      mockPaymentService()
+      jest
+        .spyOn(cardServiceClient, 'sendPayment')
+        .mockResolvedValueOnce(Result.INVALID_SIGNATURE)
+      await paymentRoutes.payment(ctx)
+      expect(ctx.response.body).toEqual({
+        result: { code: Result.INVALID_SIGNATURE }
+      })
+      expect(ctx.status).toBe(200)
+    })
+
+    test('returns 400 invalid_request body when an error is thrown', async () => {
       const ctx = createPaymentContext()
       mockPaymentService()
       jest
         .spyOn(cardServiceClient, 'sendPayment')
         .mockRejectedValue(new CardServiceClientError('Some error', 404))
       await paymentRoutes.payment(ctx)
-      expect(ctx.response.body).toBe('Some error')
-      expect(ctx.status).toBe(404)
+      expect(ctx.response.body).toEqual({ error: { code: 'invalid_request' } })
+      expect(ctx.status).toBe(400)
     })
 
     test('returns 400 when there is a paymentService error', async () => {
@@ -86,22 +99,22 @@ describe('Payment Routes', () => {
         .spyOn(paymentService, 'getWalletAddress')
         .mockRejectedValueOnce(new Error('Wallet address error'))
       await paymentRoutes.payment(ctx)
-      expect(ctx.response.body).toBe('Wallet address error')
+      expect(ctx.response.body).toEqual({ error: { code: 'invalid_request' } })
       expect(ctx.status).toBe(400)
     })
 
-    test('returns 500 when an unknown error is thrown', async () => {
+    test('returns 400 when an unknown error is thrown', async () => {
       const ctx = createPaymentContext()
       jest
         .spyOn(paymentService, 'getWalletAddress')
         .mockRejectedValueOnce('Unknown error')
       await paymentRoutes.payment(ctx)
-      expect(ctx.response.body).toBe('Unknown error')
-      expect(ctx.status).toBe(500)
+      expect(ctx.response.body).toEqual({ error: { code: 'invalid_request' } })
+      expect(ctx.status).toBe(400)
     })
 
     test(
-      'returns 504 if incoming payment event times out',
+      'returns 400 if incoming payment event times out',
       withConfigOverride(
         () => config,
         { webhookTimeoutMs: 1 },
@@ -118,10 +131,10 @@ describe('Payment Routes', () => {
             .spyOn(cardServiceClient, 'sendPayment')
             .mockResolvedValueOnce(Result.APPROVED)
           await paymentRoutes.payment(ctx)
-          expect(ctx.response.body).toBe(
-            'Timed out waiting for incoming payment event'
-          )
-          expect(ctx.status).toBe(504)
+          expect(ctx.response.body).toEqual({
+            error: { code: 'invalid_request' }
+          })
+          expect(ctx.status).toBe(400)
 
           expect(deleteSpy).toHaveBeenCalled()
         }

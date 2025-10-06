@@ -51,7 +51,7 @@ describe('Webhook Handler Routes Tests', (): void => {
     )
 
     await webhookHandlerRoutes.handleWebhook(ctx)
-    expect(ctx.status).toEqual(202)
+    expect(ctx.status).toEqual(200)
     expect(deferredSpy).toHaveBeenCalledWith(ctx.request.body)
   })
 
