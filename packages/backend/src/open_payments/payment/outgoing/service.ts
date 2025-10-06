@@ -726,7 +726,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
       ? !latestSpentAmounts ||
         (latestSpentAmounts.intervalEnd &&
           paymentLimits.paymentInterval?.start &&
-          latestSpentAmounts.intervalEnd <
+          latestSpentAmounts.intervalEnd <=
             paymentLimits.paymentInterval.start.toJSDate())
       : false
 
