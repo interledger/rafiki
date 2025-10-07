@@ -6,7 +6,7 @@ import { LinkOut } from '@interledger/docs-design-system'
 
 | Variable            | Helm value name                          | Default     | Description                                  |
 | ------------------- | ---------------------------------------- | ----------- | -------------------------------------------- |
-| `GRAPHQL_URL`       | `frontend.serviceUrls.GRAPHQL_URL`       | _undefined_ | URL for Rafiki’s GraphQL Auth Admin API      |
+| `GRAPHQL_URL`       | `frontend.serviceUrls.GRAPHQL_URL`       | _undefined_ | URL for Rafiki’s GraphQL Backend Admin API   |
 | `OPEN_PAYMENTS_URL` | `frontend.serviceUrls.OPEN_PAYMENTS_URL` | _undefined_ | Your Open Payments API endpoint              |
 | `PORT`              | `frontend.port`                          | _undefined_ | Port from which to host the Rafiki Remix app |
 
@@ -33,8 +33,8 @@ The following variables are required only when `AUTH_ENABLED` is set to `true`.
 | Variable                         | Helm value name                        | Default      | Description                                                                                                                                                            |
 | -------------------------------- | -------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `AUTH_ENABLED`                   | `frontend.authEnabled`                 | `true`       | When `true`, only authenticated users can be granted access to Rafiki Admin by an administrator                                                                        |
-| `SIGNATURE_SECRET`               | `frontend.quoteSignatureSecret`        | _undefined_  | The signature secret used to authenticate requests to the Backend Admin API.                                                                                           |
-| `SIGNATURE_VERSION`              | `frontend.signatureVersion`            | `1`          | The signature version number used to authenticate requests to the Backend Admin API.                                                                                   |
+| `SIGNATURE_SECRET`               | `frontend.quoteSignatureSecret`        | _undefined_  | The signature secret used to HMAC-sign requests to the Backend Admin API.                                                                                              |
+| `SIGNATURE_VERSION`              | `frontend.signatureVersion`            | `1`          | The signature version number used when HMAC-signing requests to the Backend Admin API (HMAC SHA-256).                                                                  |
 | `ENABLE_INSECURE_MESSAGE_COOKIE` | `frontend.enableInsecureMessageCookie` | `true`       | When set to `true`, `t`, or `1`, cookie will be transmitted over insecure HTTP connection. Insecure message cookies are required for flash messages to work over HTTP. |
 | `NODE_ENV`                       | `frontend.nodeEnv`                     | `production` | The type of node environment: `development`, `test`, or `production`.                                                                                                  |
 | `LOG_LEVEL`                      | `frontend.logLevel`                    | `info`       | <LinkOut href="https://getpino.io/#/docs/api?id=levels">Pino log level</LinkOut>                                                                                       |
