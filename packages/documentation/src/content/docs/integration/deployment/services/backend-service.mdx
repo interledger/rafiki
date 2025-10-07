@@ -61,7 +61,7 @@ The `backend` service exposes a GraphQL [Backend Admin API](/apis/graphql/admin-
 
 ### Authentication and authorization
 
-To ensure the security and integrity of your Rafiki instance, all requests to the Backend Admin API must include a `tenant-id` header and be authenticated using HMAC SHA-256 with the tenant's API secret. Rafiki validates the signature, derives the tenant context from the signed headers, and applies tenant-based access control. This HMAC-based request signing is distinct from HTTP Message Signatures used by Open Payments and from webhook verification (Rafiki-Signature). The [Rafiki Admin application](/admin/admin-user-guide/) automatically signs requests and includes the `tenant-id` header.
+To ensure the security and integrity of your Rafiki instance, all requests to the Backend Admin API must include a `tenant-id` header and be signed using HMAC SHA-256 with the tenant's API secret. Include a `signature` header containing the request signature and a `tenant-id` header identifying the tenant on whose behalf the request is made. Rafiki validates the signature, derives the tenant context from the signed headers, and applies tenant-based access control. The [Rafiki Admin application](/admin/admin-user-guide/) automatically signs requests and includes the `tenant-id` header.
 
 ## Tenant management
 
