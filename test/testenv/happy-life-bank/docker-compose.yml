@@ -7,13 +7,13 @@ services:
     restart: always
     privileged: true
     ports:
-      - "4100:4100"
-      - "4101:4101"
-      - "4102:4102"
+      - '4100:4100'
+      - '4101:4101'
+      - '4102:4102'
     networks:
       - rafiki-test
     extra_hosts:
-      - 'host.docker.internal:host-gateway'  
+      - 'host.docker.internal:host-gateway'
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
@@ -43,6 +43,9 @@ services:
       OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
       API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       API_SIGNATURE_VERSION: 1
+      POS_WEBHOOK_SERVICE_URL: http://happy-life-bank-test-point-of-sale:4105/webhook
+      SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964= # webhook signature
+      SIGNATURE_VERSION: 1
     volumes:
       - ../private-key.pem:/workspace/private-key.pem
     depends_on:
@@ -83,3 +86,29 @@ services:
       OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
     depends_on:
       - cloud-nine-wallet-test-auth
+  happy-life-bank-test-point-of-sale:
+    hostname: happy-life-bank-test-point-of-sale
+    image: rafiki-point-of-sale
+    build:
+      context: ../../..
+      dockerfile: ./packages/point-of-sale/Dockerfile.prod
+    restart: always
+    networks:
+      - rafiki-test
+    ports:
+      - '4105:4105'
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      INSTANCE_NAME: HAPPY-LIFE
+      TRUST_PROXY: ${TRUST_PROXY}
+      LOG_LEVEL: debug
+      PORT: 4105
+      DATABASE_URL: postgresql://happy_life_bank_test_point_of_sale:happy_life_bank_test_point_of_sale@shared-database/happy_life_bank_test_point_of_sale
+      TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
+      TENANT_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      GRAPHQL_URL: http://happy-life-bank-test-backend:4101/graphql
+      WEBHOOK_SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      WEBHOOK_SIGNATURE_VERSION: 1
+      WEBHOOK_TIMEOUT_MS: 10_000
+    depends_on:
+      - shared-database

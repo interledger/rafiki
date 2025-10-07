@@ -14,6 +14,8 @@ export type TestConfig = Config & {
   signatureSecret: string
   signatureVersion: string
   operatorTenantId: string
+  cardServiceUrl?: string
+  posServiceUrl?: string
 }
 
 type EnvConfig = {
@@ -31,6 +33,8 @@ type EnvConfig = {
   IS_TENANT: string
   AUTH_IDP_SERVICE_DOMAIN: string
   INTERACTION_RETURN_URL: string
+  CARD_SERVICE_URL?: string
+  POS_SERVICE_URL?: string
 }
 
 const REQUIRED_KEYS: (keyof EnvConfig)[] = [
@@ -88,7 +92,9 @@ const createConfig = (name: string): TestConfig => {
     operatorTenantId: env.OPERATOR_TENANT_ID,
     isTenant: env.IS_TENANT === 'true',
     authIdpServiceDomain: env.AUTH_IDP_SERVICE_DOMAIN,
-    interactionReturnUrl: env.INTERACTION_RETURN_URL
+    interactionReturnUrl: env.INTERACTION_RETURN_URL,
+    cardServiceUrl: env.CARD_SERVICE_URL,
+    posServiceUrl: env.POS_SERVICE_URL
   }
 }
 
