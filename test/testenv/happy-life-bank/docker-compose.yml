@@ -91,7 +91,7 @@ services:
     image: rafiki-point-of-sale
     build:
       context: ../../..
-      dockerfile: ./packages/point-of-sale/Dockerfile.dev
+      dockerfile: ./packages/point-of-sale/Dockerfile.prod
     restart: always
     networks:
       - rafiki-test

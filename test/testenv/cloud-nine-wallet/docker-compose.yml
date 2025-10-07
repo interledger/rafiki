@@ -91,7 +91,7 @@ services:
     image: rafiki-card-service
     build:
       context: ../../..
-      dockerfile: ./packages/card-service/Dockerfile.dev
+      dockerfile: ./packages/card-service/Dockerfile.prod
     restart: always
     networks:
       - rafiki-test
