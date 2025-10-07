@@ -120,7 +120,7 @@ export async function handleSending(
   }
   stopTimer()
 
-  handleGrantSpentAmounts(deps, payment, receiveAmount)
+  await handleGrantSpentAmounts(deps, payment, receiveAmount)
 
   await Promise.all([
     deps.telemetry.incrementCounter('transactions_total', 1, {
