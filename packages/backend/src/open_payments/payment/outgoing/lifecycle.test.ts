@@ -919,6 +919,149 @@ describe('Lifecycle', (): void => {
           firstInterval.start.toJSDate()
         )
       })
+      test('Payment created at interval boundary should use creation-time interval', async (): Promise<void> => {
+        const grant = {
+          id: uuid(),
+          limits: {
+            debitAmount: {
+              value: 1000n,
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            interval: 'R/2025-01-01T00:00:00Z/P1M'
+          }
+        }
+        const paymentAmount = 100n
+
+        // Create payment at the very end of January
+        jest.setSystemTime(new Date('2025-01-31T23:59:59Z'))
+        const payment = await createAndFundGrantPayment(
+          paymentAmount,
+          grant,
+          mockPaySuccessFactory()
+        )
+
+        const creationInterval = getInterval(grant.limits.interval, new Date())
+        assert(creationInterval)
+        assert(creationInterval.start)
+        assert(creationInterval.end)
+
+        const startSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ outgoingPaymentId: payment.id })
+          .orderBy('createdAt', 'desc')
+          .first()
+        assert(startSpentAmounts)
+
+        // Process payment after interval boundary (in February)
+        jest.setSystemTime(new Date('2025-02-01T00:00:01Z'))
+        const processedPaymentId = await outgoingPaymentService.processNext()
+        expect(processedPaymentId).toBe(payment.id)
+
+        const finishSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ outgoingPaymentId: payment.id })
+          .orderBy('createdAt', 'desc')
+          .first()
+        assert(finishSpentAmounts)
+
+        // Should still be original spent amounts in January's interval
+        expect(finishSpentAmounts).toMatchObject(startSpentAmounts)
+        expect(finishSpentAmounts.intervalStart).toEqual(
+          creationInterval.start.toJSDate()
+        )
+        expect(finishSpentAmounts.intervalEnd).toEqual(
+          creationInterval.end.toJSDate()
+        )
+      })
+      test('Partial payment at interval boundary should preserve Screation-time interval in new record', async (): Promise<void> => {
+        const grant = {
+          id: uuid(),
+          limits: {
+            debitAmount: {
+              value: 1000n,
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            interval: 'R/2025-01-01T00:00:00Z/P1M'
+          }
+        }
+        const paymentAmount = 100n
+        const settledAmount = 75n
+
+        // Create payment at the very end of January
+        jest.setSystemTime(new Date('2025-01-31T23:59:59Z'))
+        const payment = await createAndFundGrantPayment(
+          paymentAmount,
+          grant,
+          mockPayPartialFactory({
+            debit: settledAmount,
+            receive: settledAmount
+          })
+        )
+
+        const creationInterval = getInterval(grant.limits.interval, new Date())
+        assert(creationInterval)
+        assert(creationInterval.start)
+        assert(creationInterval.end)
+
+        const startSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ outgoingPaymentId: payment.id })
+          .first()
+        assert(startSpentAmounts)
+
+        // Initial record should have full payment amount in January's interval
+        expect(startSpentAmounts).toMatchObject({
+          paymentReceiveAmountValue: paymentAmount,
+          intervalReceiveAmountValue: paymentAmount,
+          grantTotalReceiveAmountValue: paymentAmount,
+          paymentDebitAmountValue: paymentAmount,
+          intervalDebitAmountValue: paymentAmount,
+          grantTotalDebitAmountValue: paymentAmount,
+          intervalStart: creationInterval.start.toJSDate(),
+          intervalEnd: creationInterval.end.toJSDate()
+        })
+
+        // Process payment after interval boundary (in February)
+        jest.setSystemTime(new Date('2025-02-01T00:00:01Z'))
+        jest.advanceTimersByTime(500)
+        const processedPaymentId = await outgoingPaymentService.processNext()
+        expect(processedPaymentId).toBe(payment.id)
+
+        const endSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ outgoingPaymentId: payment.id })
+          .orderBy('createdAt', 'desc')
+          .first()
+        assert(endSpentAmounts)
+
+        // New record should be created with settled amounts and use January interval
+        expect(endSpentAmounts.id).not.toBe(startSpentAmounts.id)
+        expect(endSpentAmounts).toMatchObject({
+          paymentReceiveAmountValue: settledAmount,
+          intervalReceiveAmountValue: settledAmount,
+          grantTotalReceiveAmountValue: settledAmount,
+          paymentDebitAmountValue: settledAmount,
+          intervalDebitAmountValue: settledAmount,
+          grantTotalDebitAmountValue: settledAmount,
+          intervalStart: creationInterval.start.toJSDate(),
+          intervalEnd: creationInterval.end.toJSDate()
+        })
+        const februaryInterval = getInterval(
+          grant.limits.interval,
+          new Date('2025-02-01T00:00:01Z')
+        )
+        assert(februaryInterval)
+        assert(februaryInterval.start)
+        expect(endSpentAmounts.intervalStart).not.toEqual(
+          februaryInterval.start.toJSDate()
+        )
+      })
     })
   })
 })
