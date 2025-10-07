@@ -177,7 +177,6 @@ async function handleGrantSpentAmounts(
 ) {
   if (!payment.grantId) return
 
-  // TODO: can i consolidate the edge case query into this one? no interval or first invterval where intervalEnd > payment.createdAt?
   let latestSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
     deps.knex
   )
@@ -193,26 +192,6 @@ async function handleGrantSpentAmounts(
     )
     return
   }
-  // TODO: the edge case
-  // edge case: if payment failed after the interval ended, find record where interval > paymentCreatedAt
-  // if (
-  //   latestSpentAmounts.intervalEnd &&
-  //   failedAt > latestSpentAmounts.intervalEnd
-  // ) {
-  //   const record = await OutgoingPaymentGrantSpentAmounts.query(deps.knex)
-  //     .where('grantId', grantId)
-  //     .andWhere('intervalEnd', '>', payment.createdAt)
-  //     .orderBy('createdAt', 'desc')
-  //     .first()
-
-  //   if (record) {
-  //     deps.logger.warn(
-  //       { grantId, failedAt, paymentCreatedAt: payment.createdAt },
-  //       'Payment failed in a later interval than it was created'
-  //     )
-  //   }
-  //   //  TODO: what to do if no record?
-  // }
 
   if (latestSpentAmounts) {
     const reservedDebitAmount = latestSpentAmounts.paymentDebitAmountValue
@@ -271,101 +250,6 @@ async function handleGrantSpentAmounts(
       paymentReceiveAmountValue: settledReceiveAmount,
       intervalReceiveAmountValue: newIntervalReceiveAmountValue,
       grantTotalReceiveAmountValue: newGrantTotalReceiveAmountValue,
-      createdAt: new Date()
-    })
-  } else {
-    deps.logger.warn(
-      { grantId: payment.grantId },
-      'No outgoingPaymentGrantSpentAmounts record found for grantId on payment failure'
-    )
-  }
-}
-
-// TODO: use or lose
-async function updateGrantSpentAmounts(
-  deps: ServiceDependencies,
-  grantId: string,
-  payment: OutgoingPayment,
-  failedAt: Date
-) {
-  // TODO: can i consolidate the edge case query into this one? no interval or first invterval where intervalEnd > payment.createdAt?
-  let latestSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
-    deps.knex
-  )
-    .where('grantId', grantId)
-    .orderBy('createdAt', 'desc')
-    .first()
-
-  // TODO: this shouldnt happen. should we error instead?
-  if (!latestSpentAmounts) {
-    deps.logger.warn(
-      { grantId },
-      'No outgoingPaymentGrantSpentAmounts record found for grantId on payment failure'
-    )
-    return
-  }
-  // TODO: the edge case
-  // edge case: if payment failed after the interval ended, find record where interval > paymentCreatedAt
-  if (
-    latestSpentAmounts.intervalEnd &&
-    failedAt > latestSpentAmounts.intervalEnd
-  ) {
-    const record = await OutgoingPaymentGrantSpentAmounts.query(deps.knex)
-      .where('grantId', grantId)
-      .andWhere('intervalEnd', '>', payment.createdAt)
-      .orderBy('createdAt', 'desc')
-      .first()
-
-    if (record) {
-      deps.logger.warn(
-        { grantId, failedAt, paymentCreatedAt: payment.createdAt },
-        'Payment failed in a later interval than it was created'
-      )
-    }
-    //  TODO: what to do if no record?
-  }
-
-  // otherwise, get the most recent record for the grant
-  // const latestSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
-  //   deps.knex
-  // )
-  //   .where('grantId', grantId)
-  //   .orderBy('createdAt', 'desc')
-  //   .first()
-
-  if (latestSpentAmounts) {
-    const reservedDebitAmount = latestSpentAmounts.paymentDebitAmountValue
-    const settledDebitAmount = await deps.accountingService.getTotalSent(
-      payment.id
-    )
-
-    if (settledDebitAmount === undefined) {
-      // TODO: handle null case better?
-      throw new Error(
-        `Could not find debit amount for grant spent amount when trying to update grant spent amount for outgoing payment id: ${payment.id}`
-      )
-    }
-
-    const debitAmountDifference = reservedDebitAmount - settledDebitAmount
-    const newGrantTotalDebitAmountValue =
-      latestSpentAmounts.grantTotalDebitAmountValue - debitAmountDifference
-    const newIntervalDebitAmountValue =
-      latestSpentAmounts.intervalDebitAmountValue !== null
-        ? latestSpentAmounts.intervalDebitAmountValue - debitAmountDifference
-        : latestSpentAmounts.intervalDebitAmountValue
-
-    // TOOD: Also adjust receive amounts
-
-    // TODO: handle case where these new values are negative? presumably that is an invalid state.
-    // In practice it may never happen but is theorhetically possible.
-
-    await OutgoingPaymentGrantSpentAmounts.query(deps.knex).insert({
-      ...latestSpentAmounts,
-      id: v4(),
-      paymentDebitAmountValue: settledDebitAmount,
-      intervalDebitAmountValue: newIntervalDebitAmountValue,
-      grantTotalDebitAmountValue: newGrantTotalDebitAmountValue,
-      paymentState: OutgoingPaymentState.Failed,
       createdAt: new Date()
     })
   } else {

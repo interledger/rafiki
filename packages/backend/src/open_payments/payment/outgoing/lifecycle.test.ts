@@ -1073,6 +1073,99 @@ describe('Lifecycle', (): void => {
           februaryInterval.start.toJSDate()
         )
       })
+      test('Failed payment created in one interval but processed in next should remove spent amounts', async (): Promise<void> => {
+        const grant = {
+          id: uuid(),
+          limits: {
+            debitAmount: {
+              value: 1000n,
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            interval: 'R/2025-01-01T00:00:00Z/P1M'
+          }
+        }
+        const paymentAmount = 100n
+
+        // Create and process first payment fully in January
+        jest.setSystemTime(new Date('2025-01-15T12:00:00Z'))
+        const firstPayment = await createAndFundGrantPayment(
+          paymentAmount,
+          grant,
+          mockPaySuccessFactory()
+        )
+        await outgoingPaymentService.processNext()
+
+        const initialSpentAmounts =
+          await OutgoingPaymentGrantSpentAmounts.query(knex)
+            .where({ grantId: grant.id })
+            .orderBy('createdAt', 'desc')
+            .first()
+        assert(initialSpentAmounts)
+
+        // Create second payment at the very end of January
+        jest.setSystemTime(new Date('2025-01-31T23:59:59Z'))
+        const payment = await createAndFundGrantPayment(
+          paymentAmount,
+          grant,
+          mockPayErrorFactory()
+        )
+
+        const creationInterval = getInterval(grant.limits.interval, new Date())
+        assert(creationInterval)
+        assert(creationInterval.start)
+        assert(creationInterval.end)
+
+        const startSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ outgoingPaymentId: payment.id })
+          .first()
+        assert(startSpentAmounts)
+
+        // Initial record should have full payment amount in January's interval
+        // with cumulative amounts from first payment
+        expect(startSpentAmounts).toMatchObject({
+          paymentReceiveAmountValue: paymentAmount,
+          intervalReceiveAmountValue: paymentAmount * 2n,
+          grantTotalReceiveAmountValue: paymentAmount * 2n,
+          paymentDebitAmountValue: paymentAmount,
+          intervalDebitAmountValue: paymentAmount * 2n,
+          grantTotalDebitAmountValue: paymentAmount * 2n,
+          intervalStart: creationInterval.start.toJSDate(),
+          intervalEnd: creationInterval.end.toJSDate()
+        })
+
+        // Process payment after interval boundary (in February)
+        jest.setSystemTime(new Date('2025-02-01T00:00:01Z'))
+        jest.advanceTimersByTime(500)
+        const processedPaymentId = await outgoingPaymentService.processNext()
+        expect(processedPaymentId).toBe(payment.id)
+
+        const finalPayment = await outgoingPaymentService.get({
+          id: payment.id
+        })
+        expect(finalPayment?.state).toBe(OutgoingPaymentState.Failed)
+
+        // Grant spent amounts for failed payment should be removed
+        const endSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ outgoingPaymentId: payment.id })
+          .first()
+        expect(endSpentAmounts).toBe(undefined)
+
+        // Only the first successful spent amounts should remain
+        const latestSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ grantId: grant.id })
+          .orderBy('createdAt', 'desc')
+          .first()
+
+        assert(latestSpentAmounts)
+        expect(latestSpentAmounts).toMatchObject(initialSpentAmounts)
+      })
     })
   })
 })
