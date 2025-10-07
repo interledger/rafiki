@@ -291,7 +291,6 @@ export async function handleFailed(
 
   if (payment.grantId) {
     deleteGrantSpentAmounts(deps, payment.grantId)
-    // updateGrantSpentAmounts(deps, payment.grantId, payment, failedAt)
   }
 
   await sendWebhookEvent(deps, payment, OutgoingPaymentEventType.PaymentFailed)
