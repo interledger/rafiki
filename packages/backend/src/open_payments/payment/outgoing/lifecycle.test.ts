@@ -976,7 +976,7 @@ describe('Lifecycle', (): void => {
           creationInterval.end.toJSDate()
         )
       })
-      test('Partial payment at interval boundary should preserve Screation-time interval in new record', async (): Promise<void> => {
+      test('Partial payment at interval boundary should preserve creation-time interval in new record', async (): Promise<void> => {
         const grant = {
           id: uuid(),
           limits: {
@@ -991,7 +991,16 @@ describe('Lifecycle', (): void => {
         const paymentAmount = 100n
         const settledAmount = 75n
 
-        // Create payment at the very end of January
+        // Create and process first payment fully in January
+        jest.setSystemTime(new Date('2025-01-15T12:00:00Z'))
+        const firstPayment = await createAndFundGrantPayment(
+          paymentAmount,
+          grant,
+          mockPaySuccessFactory()
+        )
+        await outgoingPaymentService.processNext()
+
+        // Create second payment at the very end of January
         jest.setSystemTime(new Date('2025-01-31T23:59:59Z'))
         const payment = await createAndFundGrantPayment(
           paymentAmount,
@@ -1015,13 +1024,14 @@ describe('Lifecycle', (): void => {
         assert(startSpentAmounts)
 
         // Initial record should have full payment amount in January's interval
+        // with cumulative amounts from first payment
         expect(startSpentAmounts).toMatchObject({
           paymentReceiveAmountValue: paymentAmount,
-          intervalReceiveAmountValue: paymentAmount,
-          grantTotalReceiveAmountValue: paymentAmount,
+          intervalReceiveAmountValue: paymentAmount * 2n,
+          grantTotalReceiveAmountValue: paymentAmount * 2n,
           paymentDebitAmountValue: paymentAmount,
-          intervalDebitAmountValue: paymentAmount,
-          grantTotalDebitAmountValue: paymentAmount,
+          intervalDebitAmountValue: paymentAmount * 2n,
+          grantTotalDebitAmountValue: paymentAmount * 2n,
           intervalStart: creationInterval.start.toJSDate(),
           intervalEnd: creationInterval.end.toJSDate()
         })
@@ -1040,15 +1050,16 @@ describe('Lifecycle', (): void => {
           .first()
         assert(endSpentAmounts)
 
-        // New record should be created with settled amounts and use January interval
+        // New record should be created with first payment + second payment
+        // in initial January interval
         expect(endSpentAmounts.id).not.toBe(startSpentAmounts.id)
         expect(endSpentAmounts).toMatchObject({
           paymentReceiveAmountValue: settledAmount,
-          intervalReceiveAmountValue: settledAmount,
-          grantTotalReceiveAmountValue: settledAmount,
+          intervalReceiveAmountValue: paymentAmount + settledAmount,
+          grantTotalReceiveAmountValue: paymentAmount + settledAmount,
           paymentDebitAmountValue: settledAmount,
-          intervalDebitAmountValue: settledAmount,
-          grantTotalDebitAmountValue: settledAmount,
+          intervalDebitAmountValue: paymentAmount + settledAmount,
+          grantTotalDebitAmountValue: paymentAmount + settledAmount,
           intervalStart: creationInterval.start.toJSDate(),
           intervalEnd: creationInterval.end.toJSDate()
         })
