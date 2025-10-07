@@ -200,11 +200,6 @@ async function handleGrantSpentAmounts(
       payment.id
     )
 
-    console.log(
-      'settled debit from accounting service vs. from amount passed into pay',
-      { settledDebitAmount }
-    )
-
     if (settledDebitAmount === undefined) {
       // TODO: handle null case better?
       throw new Error(
@@ -234,12 +229,6 @@ async function handleGrantSpentAmounts(
 
     // TODO: handle case where these new values are negative? presumably that is an invalid state.
     // In practice it may never happen but is theorhetically possible.
-
-    console.log('inserting new spent amount record', {
-      paymentDebitAmountValue: settledDebitAmount,
-      intervalDebitAmountValue: newIntervalDebitAmountValue,
-      grantTotalDebitAmountValue: newGrantTotalDebitAmountValue
-    })
 
     await OutgoingPaymentGrantSpentAmounts.query(deps.knex).insert({
       ...latestSpentAmounts,
