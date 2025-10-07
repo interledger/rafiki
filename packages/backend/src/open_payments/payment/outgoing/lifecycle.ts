@@ -177,7 +177,7 @@ async function handleGrantSpentAmounts(
 ) {
   if (!payment.grantId) return
 
-  let latestSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+  const latestSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
     deps.knex
   )
     .where('grantId', payment.grantId)

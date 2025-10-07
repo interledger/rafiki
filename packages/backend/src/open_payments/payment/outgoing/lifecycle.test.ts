@@ -1,26 +1,3 @@
-// mock outgoing payment, lifecycle, grant etc. as needed
-// do setup for creating an outgoing payment (wallet address, incoming payment, grant, etc.)
-// - need to simulate (or actually do?) the outgoing payment fund. probably just update the state (SENDING)?
-// call the "worker" manually
-// - basically just the outgoingPayment.processNext?
-// verify grant spent amounts are correct
-
-// questions
-// - what about accounting stuff? any problems/mocking required there?
-
-// factors:
-// - failed or partial payment
-// - with or without interval
-//   - if with interval, if in or out of interval
-// cases:
-// Full payment (no adjustments)
-// Failed payment, no interval, new amt correct
-// Failed payment, interval (inside), new amt correct
-// Failed payment, interval (outside), new amt correct
-// Partial payment, no interval, new amt correct
-// Partial payment, interval (inside), new amt correct
-// Partial payment, interval (outside), new amt correct
-
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../../app'
 import { Config } from '../../../config/app'
@@ -41,15 +18,15 @@ import {
   OutgoingPaymentState
 } from './model'
 import { createQuote } from '../../../tests/quote'
-import { AccountingService } from '../../../accounting/service'
+import { AccountingService, Transaction } from '../../../accounting/service'
 import { OutgoingPaymentService } from './service'
 import assert from 'assert'
 import { isOutgoingPaymentError } from './errors'
 import { PaymentMethodHandlerService } from '../../../payment-method/handler/service'
 import { IncomingPayment } from '../incoming/model'
-import { Fee } from '../../../fee/model'
 import { PaymentMethodHandlerError } from '../../../payment-method/handler/errors'
 import { getInterval } from './limits'
+import { TransferError } from '../../../accounting/errors'
 
 describe('Lifecycle', (): void => {
   let deps: IocContract<AppServices>
@@ -132,7 +109,7 @@ describe('Lifecycle', (): void => {
       receiverWalletAddressId: string,
       payment: OutgoingPayment
     ) =>
-      jest.fn(async (_: any, args: any) => {
+      jest.fn(async (_: unknown, args: { finalDebitAmount: bigint }) => {
         const amount = args.finalDebitAmount
         const transfer = await accountingService.createTransfer({
           sourceAccount: payment,
@@ -156,15 +133,16 @@ describe('Lifecycle', (): void => {
       payment: OutgoingPayment
     ) =>
       jest.fn(async () => {
-        const transfer = await accountingService.createTransfer({
-          sourceAccount: payment,
-          destinationAccount: await createIncomingPayment(deps, {
-            walletAddressId: receiverWalletAddressId
-          }),
-          sourceAmount: partial.debit,
-          destinationAmount: partial.receive,
-          timeout: 0
-        })
+        const transfer: Transaction | TransferError =
+          await accountingService.createTransfer({
+            sourceAccount: payment,
+            destinationAccount: await createIncomingPayment(deps, {
+              walletAddressId: receiverWalletAddressId
+            }),
+            sourceAmount: partial.debit,
+            destinationAmount: partial.receive,
+            timeout: 0
+          })
         assert.ok(transfer && typeof transfer === 'object')
         await transfer.post()
         return partial.receive
@@ -831,7 +809,7 @@ describe('Lifecycle', (): void => {
 
         // First interval - 2 payments
         jest.setSystemTime(new Date('2025-01-02T00:00:00Z'))
-        const firstPayment = await createAndFundGrantPayment(
+        await createAndFundGrantPayment(
           paymentAmount,
           grant,
           mockPaySuccessFactory()
@@ -867,7 +845,7 @@ describe('Lifecycle', (): void => {
         jest.setSystemTime(new Date('2025-01-08T00:00:00Z'))
         jest.advanceTimersByTime(500)
 
-        const thirdPayment = await createAndFundGrantPayment(
+        await createAndFundGrantPayment(
           paymentAmount,
           grant,
           mockPaySuccessFactory()
@@ -993,7 +971,7 @@ describe('Lifecycle', (): void => {
 
         // Create and process first payment fully in January
         jest.setSystemTime(new Date('2025-01-15T12:00:00Z'))
-        const firstPayment = await createAndFundGrantPayment(
+        await createAndFundGrantPayment(
           paymentAmount,
           grant,
           mockPaySuccessFactory()
@@ -1089,7 +1067,7 @@ describe('Lifecycle', (): void => {
 
         // Create and process first payment fully in January
         jest.setSystemTime(new Date('2025-01-15T12:00:00Z'))
-        const firstPayment = await createAndFundGrantPayment(
+        await createAndFundGrantPayment(
           paymentAmount,
           grant,
           mockPaySuccessFactory()
