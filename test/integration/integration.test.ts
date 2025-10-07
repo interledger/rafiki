@@ -707,20 +707,18 @@ describe('Integration tests', (): void => {
         expect(incomingPayment.state).toBe(IncomingPaymentState.Processing)
       })
     })
-    describe('Card-POS Payments', () => {
-      let testActions: TestActions
+  })
 
-      beforeAll(async () => {
-        testActions = createTestActions({ sendingASE: c9, receivingASE: hlb })
-      })
+  describe('Card-POS Payments', () => {
+    let testActions: TestActions
 
-      test('POS payment', async () => {
-        const { createPayment } = testActions.pos
-        const result = await createPayment(posServicePaymentBody)
-        expect(result).toBe(Result.APPROVED)
-      })
+    beforeAll(async () => {
+      testActions = createTestActions({ sendingASE: c9, receivingASE: hlb })
+    })
 
-      const posServicePaymentBody = {
+    test('Completes payment successfully', async () => {
+      const { createPayment } = testActions.pos
+      const result = await createPayment({
         signature: 'signature',
         payload: 'payload',
         amount: {
@@ -733,7 +731,8 @@ describe('Integration tests', (): void => {
         receiverWalletAddress:
           'https://happy-life-bank-test-backend:4100/accounts/pfry',
         timestamp: 1758105181325
-      }
+      })
+      expect(result).toBe(Result.APPROVED)
     })
   })
 })

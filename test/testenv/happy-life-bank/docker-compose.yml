@@ -7,17 +7,17 @@ services:
     restart: always
     privileged: true
     ports:
-      - "4100:4100"
-      - "4101:4101"
-      - "4102:4102"
+      - '4100:4100'
+      - '4101:4101'
+      - '4102:4102'
     networks:
       - rafiki-test
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - 'host.docker.internal:host-gateway'
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
-      INSTANCE_NAME: "Happy Life Test"
+      INSTANCE_NAME: 'Happy Life Test'
       OPEN_PAYMENTS_URL: https://happy-life-bank-test-backend:4100
       WALLET_ADDRESS_URL: https://happy-life-bank-test-backend:4100/.well-known/pay
       ADMIN_PORT: 4101
@@ -27,9 +27,9 @@ services:
       AUTH_SERVER_GRANT_URL: http://happy-life-bank-test-auth:4106
       AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-test-auth:4107
       CARD_SERVICE_URL: http://happy-life-bank-card-service:3007
-      AUTH_ADMIN_API_URL: "http://happy-life-bank-test-auth:4003/graphql"
-      AUTH_ADMIN_API_SECRET: "test-secret"
-      AUTH_SERVICE_API_URL: "http://happy-life-bank-test-auth:4111/"
+      AUTH_ADMIN_API_URL: 'http://happy-life-bank-test-auth:4003/graphql'
+      AUTH_ADMIN_API_SECRET: 'test-secret'
+      AUTH_SERVICE_API_URL: 'http://happy-life-bank-test-auth:4111/'
       # matches pfry key id
       KEY_ID: keyid-97a3a431-8ee1-48fc-ac85-70e2f5eba8e5
       PRIVATE_KEY_FILE: /workspace/private-key.pem
@@ -63,11 +63,11 @@ services:
     networks:
       - rafiki-test
     ports:
-      - "4103:4103"
-      - "4106:4106"
-      - "4107:4107"
-      - "4109:4109"
-      - "4111:4111"
+      - '4103:4103'
+      - '4106:4106'
+      - '4107:4107'
+      - '4109:4109'
+      - '4111:4111'
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://happy_life_bank_test_auth:happy_life_bank_test_auth@shared-database/happy_life_bank_test_auth
@@ -96,7 +96,7 @@ services:
     networks:
       - rafiki-test
     ports:
-      - "4105:4105"
+      - '4105:4105'
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       INSTANCE_NAME: HAPPY-LIFE

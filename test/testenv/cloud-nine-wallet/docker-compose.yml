@@ -9,17 +9,17 @@ services:
     restart: always
     privileged: true
     ports:
-      - "3100:3100"
-      - "3101:3101"
-      - "3102:3102"
+      - '3100:3100'
+      - '3101:3101'
+      - '3102:3102'
     networks:
       - rafiki-test
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - 'host.docker.internal:host-gateway'  
     environment:
       LOG_LEVEL: debug
       NODE_ENV: development
-      INSTANCE_NAME: "Rafiki"
+      INSTANCE_NAME: 'Rafiki'
       CONNECTOR_PORT: 3102
       ADMIN_PORT: 3101
       OPEN_PAYMENTS_PORT: 3100
@@ -32,9 +32,9 @@ services:
       AUTH_SERVER_INTROSPECTION_URL: http://cloud-nine-wallet-test-auth:3107
       CARD_SERVICE_URL: http://cloud-nine-wallet-test-card-service:3104
       AUTH_SERVER_GRANT_URL: http://cloud-nine-wallet-test-auth:3106
-      AUTH_ADMIN_API_URL: "http://cloud-nine-wallet-test-auth:3003/graphql"
-      AUTH_ADMIN_API_SECRET: "test-secret"
-      AUTH_SERVICE_API_URL: "http://cloud-nine-wallet-auth:3111/"
+      AUTH_ADMIN_API_URL: 'http://cloud-nine-wallet-test-auth:3003/graphql'
+      AUTH_ADMIN_API_SECRET: 'test-secret'
+      AUTH_SERVICE_API_URL: 'http://cloud-nine-wallet-auth:3111/'
       ILP_ADDRESS: test.cloud-nine-wallet-test
       ILP_CONNECTOR_URL: http://cloud-nine-wallet-test-backend:3102
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
@@ -63,11 +63,11 @@ services:
     networks:
       - rafiki-test
     ports:
-      - "3103:3103"
-      - "3106:3106"
-      - "3107:3107"
-      - "3109:3109"
-      - "3111:3111"
+      - '3103:3103'
+      - '3106:3106'
+      - '3107:3107'
+      - '3109:3109'
+      - '3111:3111'
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       AUTH_SERVER_URL: http://cloud-nine-wallet-test-auth:3106
@@ -96,7 +96,7 @@ services:
     networks:
       - rafiki-test
     ports:
-      - "3104:3104"
+      - '3104:3104'
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       INSTANCE_NAME: CLOUD-NINE
