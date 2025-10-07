@@ -19,7 +19,7 @@ Each tenant on a given Rafiki instance has the following properties:
 
 - `id`: The unique identifier for the tenant used to identify the tenant in API requests and webhook events.
 - `email`: The tenant's email address.
-- `apiSecret`: The API secret used to secure requests made for this tenant. This secret is used to generate HTTP signatures, which are used to authenticate requests to the Backend Admin API.
+- `apiSecret`: The secret used to sign Backend Admin API requests (HMAC SHA-256) for this tenant.
 - `idpConsentUrl`: The URL of the tenant's identity provider's (IdP) consent screen. This URL is used to redirect users to the IdP to grant consent for Open Payments requests.
 - `idpSecret`: The secret used to secure requests from the tenant's IdP. This secret is used to authenticate requests from the IdP to the Rafiki instance.
 - `publicName`: The public display name for the tenant. This name is displayed in the Rafiki Admin application and can be used to identify the tenant.
@@ -35,7 +35,7 @@ The following tenant settings are available:
 - `WEBHOOK_URL`: The URL of the tenant's webhook endpoint. This setting is used to configure the endpoint that will receive webhook events for the tenant.
 - `WEBHOOK_TIMEOUT`: The timeout for the tenant's webhook requests (in milliseconds). This setting is used to configure the maximum amount of time to wait for a response from the webhook endpoint.
 - `WEBHOOK_MAX_RETRY`: The maximum number of retries for the tenant's webhook event when a non-200 status is returned or if the request timed out.
-- `WALLET_ADDRESS_URL`: The URL of the tenant's wallet address service. This setting is used to configure the base URL for wallet addresses created for the tenant.
+- `WALLET_ADDRESS_URL`: The URL of the tenant's wallet address service. This setting is used to configure the base URL for wallet addresses created for the tenant and **cannot** be updated once set.
 - `ILP_ADDRESS`: The tenant's Interledger Protocol (ILP) address. This setting is used to configure the base ILP address for the tenant.
 
 :::note
@@ -43,6 +43,8 @@ Only operators can create, edit, and delete tenants.
 :::
 
 ## Create a tenant
+
+After you create a tenant, securely communication the tenant `id` and `apiSecret` to the tenant out-of-band.
 
 <Tabs>
   <TabItem label="Operation">

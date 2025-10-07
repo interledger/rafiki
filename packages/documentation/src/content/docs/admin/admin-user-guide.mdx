@@ -6,7 +6,17 @@ import { LinkOut } from '@interledger/docs-design-system'
 import { LargeImg } from '@interledger/docs-design-system'
 import KratosWarn from '/src/partials/kratos-warning.mdx'
 
-The Rafiki Admin application provides tools to manage tenants, assets, peers wallet addresses, webhook events, payments, and account settings. It functions as an interface to the Rafiki [backend service](/integration/deployment/services/backend-service/) and all actions performed, such as fetching data or executing commands, are passed to the Rafiki `backend` service. The purpose of this document is to help you navigate and use the Rafiki Admin application effectively.
+The Rafiki Admin application provides tools to manage:
+
+- Tenants
+- Assets
+- Peers
+- Wallet addresses
+- Webhook events
+- Payments
+- Account settings
+
+It functions as an interface to the [Rafiki Admin APIs](/apis/graphql/admin-api-overview) and all actions performed, such as fetching data or executing commands, are passed to the Rafiki `backend` service. The purpose of this document is to help you navigate and use the Rafiki Admin application effectively.
 
 ## Getting started
 
@@ -14,6 +24,26 @@ The Rafiki Admin application provides tools to manage tenants, assets, peers wal
 
 - Familiarity with general Rafiki concepts. The [Rafiki overview](/overview/overview) is a great place to start.
 - Running the Rafiki `frontend` package. See [Frontend service](/integration/deployment/services/frontend-service) for more information.
+
+### API credential configuration
+
+To access your data and manage resources within your tenant, you must configure your API credentials. Enter your tenant ID and API secret and select **Save Credentials**
+
+The Rafiki Admin application HMAC‑signs requests (HMAC SHA‑256) to the Backend Admin API and includes a `tenant-id` header. Requests are scoped to the tenant whose credentials you provide.
+
+<LargeImg
+  src='/img/admin-guide/home-pre.png'
+  alt='A screenshot of the Rafiki Admin application user interface displaying the API credentials screen before the credentials have been entered. It shows two text fields: one for tenant ID and one for API secret, and an empty navigation menu.'
+/>
+
+After successfully configuring your API credentials, a message will appear indicating that the credentials have been configured, and the left navigation menu will be populated with the available options.
+
+<LargeImg
+  src='/img/admin-guide/home-post.png'
+  alt='A screenshot of the Rafiki Admin application user interface displaying the API credentials screen after the credentials have been entered. It shows a success message, a "Clear Credentials" button, and the full navigation menu.'
+/>
+
+The **Clear Credentials** button allows you to clear your stored API credentials. You must clear your credentials in order to switch tenants. Requests will then be scoped to the new tenant.
 
 ## Identity and user management
 
@@ -80,28 +110,10 @@ Ory Kratos provides frontend components (such as forms and buttons) for identity
 
 <KratosWarn />
 
-### API credential configuration
-
-To access your data and manage resources within your tenant, you must configure your API credentials. Enter your tenant ID and API secret and select **Save Credentials**
-
-<LargeImg
-  src='/img/admin-guide/home-pre.png'
-  alt='A screenshot of the Rafiki Admin application user interface displaying the API credentials screen before the credentials have been entered. It shows two text fields: one for tenant ID and one for API secret, and an empty navigation menu.'
-/>
-
-After successfully configuring your API credentials, a message will appear indicating that the credentials have been configured, and the left navigation menu will be populated with the available options.
-
-<LargeImg
-  src='/img/admin-guide/home-post.png'
-  alt='A screenshot of the Rafiki Admin application user interface displaying the API credentials screen after the credentials have been entered. It shows a success message, a "Clear Credentials" button, and the full navigation menu.'
-/>
-
-The **Clear Credentials** button allows you to clear your stored API credentials. You might want to clear your credentials in order to switch tenants or troubleshoot connection issues.
-
 ## Navigation
 
 :::note
-The screenshots in this guide may not perfectly reflect the appearance of the Rafiki Admin UI in all environments. Specifically, the left navigation menu may differ slightly depending on whether authentication is enabled.
+The screenshots in this guide may not perfectly reflect the appearance of the Rafiki Admin UI in all environments. Specifically, the left navigation menu may differ slightly depending on whether authentication via Kratos is enabled.
 :::
 
 After logging in, you’ll be greeted by the main landing page with a left-hand navigation menu. This menu provides access to the main functionality needed to manage your Rafiki instance.
@@ -264,6 +276,16 @@ The final section of the Edit Asset page is the irreversible action of deleting 
 
 Confirm the deletion by typing "delete asset" into the text field and selecting **Delete this asset**.
 
+:::note[Prerequisites for deleting an asset]
+You can only delete an asset if it’s not in use. Before deletion, ensure:
+
+- No wallet addresses are associated with the asset
+- No peers reference the asset
+- No payments exist that reference the asset
+
+If the asset is still referenced, the backend prevents deletion and returns an error.
+:::
+
 ## Peers
 
 The Peers page allows you to manage peering relationships in your Rafiki instance, including viewing, creating, editing, and deleting peers.
@@ -364,11 +386,12 @@ To create a new wallet address, select **Create wallet address** from the main W
 
 Fill out the following fields to create a new wallet address:
 
-| Section             | Field               | Description                                                                 |
-| ------------------- | ------------------- | --------------------------------------------------------------------------- |
-| General Information | Wallet address name | The case-insensitive URL of the wallet. Once set, it cannot be changed.     |
-|                     | Public name         | The name associated with the wallet that is visible to anyone with the URL. |
-|                     | Tenant              | Select a tenant to associate with this wallet.                              |
+| Section             | Field               | Description                                                                                                          |
+| ------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| General Information | Wallet address name | The case-insensitive URL of the wallet. Once set, it cannot be changed.                                              |
+|                     | Public name         | The name associated with the wallet that is visible to anyone with the URL.                                          |
+|                     | Tenant              | Select a tenant to associate with this wallet.                                                                       |
+|                     | Asset               | Select an asset for the wallet. The list is populated after you select a tenant and shows only that tenant's assets. |
 
 :::note[Wallet address requirements]
 
@@ -437,7 +460,7 @@ To view the webhook event as a JSON representation, select **View data**.
 
 The Payments page allows you to view all incoming and outgoing payments in your Rafiki instance. This allows you to monitor payment activity as well as track the status of payments.
 
-All payments appear in the table. For each payment, you can view the unique payment ID, type of payment, state of the payment, and the date and time the payment was created. Fields at the top of the page allow you to filter the table by payment type and wallet address ID, making it easier to drill down into specific transactions.
+All payments appear in the table. For each payment, you can view the unique payment ID, type of payment, state of the payment, and the date and time the payment was created. Fields at the top of the page allow you to filter the table by payment type and wallet address ID, making it easier to investigate specific transactions.
 
 <LargeImg
   src='/img/admin-guide/payments.png'

@@ -22,22 +22,20 @@ An operator oversees operational and administrative tasks associated with managi
 - Configuring global settings for the Rafiki instance
 - Monitoring the health and performance of the Rafiki instance
 - Managing the underlying infrastructure of the Rafiki instance
-- The operator also has the same capabilities as a tenant, in addition to their operator-specific privileges
+- The operator also has the same capabilities as a tenant.
+
+Tenants are added through the Backend Admin API or the [Rafiki Admin application](/admin/admin-user-guide/#tenants). Only operators can create new tenants in a Rafiki instance. When adding new tenants, operators should communicate credentials out-of-band with the tenant.
 
 ### Tenant
 
-A tenant is an ASE that connects to a shared Rafiki instance rather than running its own environment. To connect the shared environment, each tenant must install and run their own integration service. Tenants are responsible for the following:
+A tenant is an ASE that connects to a shared Rafiki instance rather than running its own environment. To connect to the shared environment, each tenant must install and run their own integration service. Tenants are responsible for the following:
 
-- Creating and managing wallet addresses for their users
+- Creating and managing wallet addresses for their users (for example, their customers)
 - Sending and receiving payments
 - Configuring tenant-specific settings, such as the webhook URL and exchange rates URL
 - Managing their own assets and liquidity
 
-Tenants are added through the Backend Admin API or the [Rafiki Admin application](/admin/admin-user-guide/#tenants). Only operators can create new tenants in a Rafiki instance. When adding new tenants, operators should communicate credentials out-of-band with the tenant.
-
-## What multi-tenancy enables
-
-With multi-tenancy, ASEs can benefit from:
+## Benefits of multi-tenancy
 
 - Centralized maintenance lets operators perform updates once for all tenants.
 - Enhanced onboarding allows new ASEs to connect to the shared environment without deploying their own Rafiki instance.
