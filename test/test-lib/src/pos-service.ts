@@ -15,7 +15,6 @@ export interface PaymentDetails {
 
 export enum Result {
   APPROVED = 'approved',
-  CARD_EXPIRED = 'card_expired',
   INVALID_SIGNATURE = 'invalid_signature'
 }
 
