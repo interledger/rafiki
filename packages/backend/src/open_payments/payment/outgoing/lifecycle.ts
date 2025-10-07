@@ -193,60 +193,52 @@ async function handleGrantSpentAmounts(
     return
   }
 
-  if (latestSpentAmounts) {
-    const reservedDebitAmount = latestSpentAmounts.paymentDebitAmountValue
-    const reservedReceiveAmount = latestSpentAmounts.paymentReceiveAmountValue
-    const settledDebitAmount = await deps.accountingService.getTotalSent(
-      payment.id
-    )
+  const reservedDebitAmount = latestSpentAmounts.paymentDebitAmountValue
+  const reservedReceiveAmount = latestSpentAmounts.paymentReceiveAmountValue
+  const settledDebitAmount = await deps.accountingService.getTotalSent(
+    payment.id
+  )
 
-    if (settledDebitAmount === undefined) {
-      // TODO: handle null case better?
-      throw new Error(
-        `Could not find debit amount for grant spent amount when trying to update grant spent amount for outgoing payment id: ${payment.id}`
-      )
-    }
-
-    const debitAmountDifference = reservedDebitAmount - settledDebitAmount
-    const receiveAmountDifference = reservedReceiveAmount - settledReceiveAmount
-
-    if (debitAmountDifference === 0n && receiveAmountDifference === 0n) return
-
-    const newGrantTotalDebitAmountValue =
-      latestSpentAmounts.grantTotalDebitAmountValue - debitAmountDifference
-    const newIntervalDebitAmountValue =
-      latestSpentAmounts.intervalDebitAmountValue !== null
-        ? latestSpentAmounts.intervalDebitAmountValue - debitAmountDifference
-        : latestSpentAmounts.intervalDebitAmountValue
-
-    const newGrantTotalReceiveAmountValue =
-      latestSpentAmounts.grantTotalReceiveAmountValue - receiveAmountDifference
-    const newIntervalReceiveAmountValue =
-      latestSpentAmounts.intervalReceiveAmountValue !== null
-        ? latestSpentAmounts.intervalReceiveAmountValue -
-          receiveAmountDifference
-        : latestSpentAmounts.intervalReceiveAmountValue
-
-    // TODO: handle case where these new values are negative? presumably that is an invalid state.
-    // In practice it may never happen but is theorhetically possible.
-
-    await OutgoingPaymentGrantSpentAmounts.query(deps.knex).insert({
-      ...latestSpentAmounts,
-      id: v4(),
-      paymentDebitAmountValue: settledDebitAmount,
-      intervalDebitAmountValue: newIntervalDebitAmountValue,
-      grantTotalDebitAmountValue: newGrantTotalDebitAmountValue,
-      paymentReceiveAmountValue: settledReceiveAmount,
-      intervalReceiveAmountValue: newIntervalReceiveAmountValue,
-      grantTotalReceiveAmountValue: newGrantTotalReceiveAmountValue,
-      createdAt: new Date()
-    })
-  } else {
-    deps.logger.warn(
-      { grantId: payment.grantId },
-      'No outgoingPaymentGrantSpentAmounts record found for grantId on payment failure'
+  if (settledDebitAmount === undefined) {
+    // TODO: handle null case better?
+    throw new Error(
+      `Could not find debit amount for grant spent amount when trying to update grant spent amount for outgoing payment id: ${payment.id}`
     )
   }
+
+  const debitAmountDifference = reservedDebitAmount - settledDebitAmount
+  const receiveAmountDifference = reservedReceiveAmount - settledReceiveAmount
+
+  if (debitAmountDifference === 0n && receiveAmountDifference === 0n) return
+
+  const newGrantTotalDebitAmountValue =
+    latestSpentAmounts.grantTotalDebitAmountValue - debitAmountDifference
+  const newIntervalDebitAmountValue =
+    latestSpentAmounts.intervalDebitAmountValue !== null
+      ? latestSpentAmounts.intervalDebitAmountValue - debitAmountDifference
+      : latestSpentAmounts.intervalDebitAmountValue
+
+  const newGrantTotalReceiveAmountValue =
+    latestSpentAmounts.grantTotalReceiveAmountValue - receiveAmountDifference
+  const newIntervalReceiveAmountValue =
+    latestSpentAmounts.intervalReceiveAmountValue !== null
+      ? latestSpentAmounts.intervalReceiveAmountValue - receiveAmountDifference
+      : latestSpentAmounts.intervalReceiveAmountValue
+
+  // TODO: handle case where these new values are negative? presumably that is an invalid state.
+  // In practice it may never happen but is theorhetically possible.
+
+  await OutgoingPaymentGrantSpentAmounts.query(deps.knex).insert({
+    ...latestSpentAmounts,
+    id: v4(),
+    paymentDebitAmountValue: settledDebitAmount,
+    intervalDebitAmountValue: newIntervalDebitAmountValue,
+    grantTotalDebitAmountValue: newGrantTotalDebitAmountValue,
+    paymentReceiveAmountValue: settledReceiveAmount,
+    intervalReceiveAmountValue: newIntervalReceiveAmountValue,
+    grantTotalReceiveAmountValue: newGrantTotalReceiveAmountValue,
+    createdAt: new Date()
+  })
 }
 
 async function deleteGrantSpentAmounts(
