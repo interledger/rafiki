@@ -21,7 +21,7 @@ You must also set the environment variables for the `frontend` service.
 
 ## Rafiki Admin settings
 
-While the `frontend` service is not required to run a Rafiki instance, it's highly recommended. A number of administrative tasks could be performed programmatically via the Backend Admin API, but the `frontend` service makes these functions available through a user-friendly interface. The Rafiki Admin application allows operators to manage tenants and their resources, and to configure tenant-specific settings such as the wallet address prefix. The `frontend` service uses HTTP signature authentication to communicate with the Backend Admin API. The `tenantId` is used to identify the tenant that the request is being made on behalf of.
+While the `frontend` service is not required to run a Rafiki instance, it's highly recommended. A number of administrative tasks could be performed programmatically via the Backend Admin API, but the `frontend` service makes these functions available through a user-friendly interface. The Rafiki Admin application allows operators to manage tenants and their resources, and to configure tenant-specific settings such as the wallet address prefix. The `frontend` service HMAC-signs requests (HMAC SHA-256) to the Backend Admin API and includes a `tenant-id` header. The `tenant-id` header identifies the tenant on whose behalf the request is made.
 
 ## Environment variables
 

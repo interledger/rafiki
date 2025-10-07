@@ -13,6 +13,12 @@ An account servicing entity (ASE) is an entity that provides and maintains payme
 
 Rafiki should not be used in production by non-regulated entities.
 
+## Configure multi-tenancy <Badge text="Required" variant="danger" />
+
+You must configure multi‑tenancy by establishing the operator and enabling tenant‑scoped access. Generate a UUID v4 for `OPERATOR_TENANT_ID` and a strong, random `API_SECRET`, create the operator tenant record in the backend service’s Postgres database before startup, and plan a secure out‑of‑band process to deliver each tenant’s `id` and `apiSecret` after creation.
+
+[Manage tenants](/integration/requirements/tenants)
+
 ## Support at least one asset <Badge text="Required" variant="danger" />
 
 You must set up Rafiki to support at least one asset. An asset in Rafiki represents an item of value that can be transferred via the Interledger Protocol. Since the Interledger Protocol aims to create an internet of value, it allows for the transfer of any asset, not just currency. In practice, however, assets are usually denominated in a currency (fiat or branded currencies).
@@ -64,6 +70,9 @@ You must integrate with an IdP if you plan to use the authorization server provi
 Ensure you've completed the following tasks before you deploy Rafiki to a production environment and join the Interledger network.
 
 - [ ] You are a licensed financial account servicing entity within the jurisdictions you operate in
+- [ ] You have generated a UUID v4 for `OPERATOR_TENANT_ID` and a strong, random `API_SECRET`
+- [ ] You are HMAC-signing Backend Admin API requests (HMAC SHA-256) and include `tenant-id` and `signature` headers (or you're using the Rafiki Admin app, which handles this automatically)
+- [ ] You have established a secure, out-of-band process to deliver tenant credentials (`id` and `apiSecret`) to each tenant after creation
 - [ ] You have added at least one asset, either through the Backend Admin API or the Rafiki Admin app
 - [ ] You have implemented a strategy for creating wallet addresses for your account holders
 - [ ] You have set up your webhook endpoint and understand how to handle each webhook event

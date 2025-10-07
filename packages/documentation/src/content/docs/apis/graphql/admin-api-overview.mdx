@@ -10,7 +10,7 @@ Rafiki provides two GraphQL APIs, described below. As described on <LinkOut href
 
 The Backend Admin API provides you with comprehensive capabilities to manage your Rafiki instance. Core functionality includes managing tenants, peering relationships, assets, wallet addresses and their public keys, as well as liquidity management through deposits and withdrawals, all within a tenant's context. Another important aspect of the Backend Admin API is to manage Open Payments resources like payments and quotes.
 
-All requests to the Backend Admin API must be authenticated using HTTP signatures. See [Backend service](/integration/deployment/services/backend-service#authentication-and-authorization) for more information.
+All requests to the Backend Admin API are HMAC-signed using the tenant's API secret and include a `tenant-id` header. See [Backend service](/integration/deployment/services/backend-service#authentication-and-authorization) for more information.
 
 This API is complemented by the Rafiki Admin application, a frontend interface for Rafiki management that directly interacts with the Backend Admin API. Check out the [Rafiki Admin Application User Guide](/admin/admin-user-guide) for more information.
 
@@ -22,8 +22,8 @@ The Auth Admin API allows you to get information about a grant, such as its stat
 
 Wikipedia describes <LinkOut href="https://en.wikipedia.org/wiki/Idempotence">idempotence</LinkOut> as being the property of “certain operations in…computer science whereby [the operations] can be applied multiple times without changing the result beyond the initial application.” “An operation can be repeated or retried as often as necessary without causing unintended effects. With non-idempotent operations, the algorithm may have to keep track of whether the operation was already performed.”
 
-Several mutations in the Admin APIs utilize an idempotency key to allow for safely retrying requests without performing operations multiple times. The key should be unique, typically a V4 UUID.
+Several mutations in the Admin APIs utilize an idempotency key to allow for safely retrying requests without performing operations multiple times. The key should be unique, typically a UUID v4.
 
-For the Admin APIs, whenever a mutation with an `idempotencyKey` is called, the request payload and the request response are saved under that key. Any subsequent requests made with the same idempotency key will return the original response and status of the request, regardless of whether the request was successful. Keys are cached for a default of 24 hours. The default can be changed via the `backend` service’s `GRAPHQL_IDEMPOTENCY_KEY_TTL_MS backend` environment flag.
+For the Admin APIs, whenever a mutation with an `idempotencyKey` is called, the request payload and the request response are saved under that key. Any subsequent requests made with the same idempotency key will return the original response and status of the request, regardless of whether the request was successful. Keys are cached for a default of 24 hours. The default can be changed via the `backend` service’s `GRAPHQL_IDEMPOTENCY_KEY_TTL_MS` environment flag.
 
-Additionally, in the chance that a request is made while still concurrently processing the first request under the same `idempotencyKey`, the APIs will return an error. This provides further safeguards from potential errors in the system. The timing to prevent processing concurrent requests is `2` seconds by default. The default can be changed via the `backend` service’s `GRAPHQL_IDEMPOTENCY_KEY_LOCK_MS` environment flag.
+If a request is made while the first request under the same `idempotencyKey`, is still processing, the APIs return an error to prevent concurrent duplicates. The concurrency lock duration is `2` seconds by default and can be changed via the `backend` service’s `GRAPHQL_IDEMPOTENCY_KEY_LOCK_MS` environment flag.

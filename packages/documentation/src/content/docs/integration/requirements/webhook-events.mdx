@@ -7,7 +7,7 @@ tableOfContents:
 import { Badge, Tabs, TabItem, Steps } from '@astrojs/starlight/components'
 import { Mermaid, LinkOut } from '@interledger/docs-design-system'
 
-The main communication channel between you and your Rafiki instance is composed of the Backend Admin API and a set of webhook events. The operator can choose to receive webhook events for all tenants by setting the `SEND_TENANT_WEBHOOKS_TO_OPERATOR` environment variable to `true`.
+The main communication channel between you and your Rafiki instance consists of the Backend Admin API and webhook events sent by the `backend` service. By default, events are sent only to the tenant's configured webhook URL. The operator can choose to receive webhook events for all tenants by setting the `SEND_TENANT_WEBHOOKS_TO_OPERATOR` environment variable to `true` on the `backend` service.
 
 Most events require you to interact with Rafiki to provide wallet address information or manage (deposit or withdraw) liquidity. This page describes how you should handle each webhook event.
 
@@ -46,7 +46,7 @@ Each webhook event is sent as a JSON payload with the following structure in the
 </div>
 
 :::tip[Duplicate events]
-The `id` in the webhook event payload is unique. Your system can use the ID to determine whether the event has was previously received, preventing duplicate event processing.
+The `id` in the webhook event payload is unique. Your system can use the ID to determine whether the event was previously received, preventing duplicate event processing.
 :::
 
 <details>
@@ -409,7 +409,7 @@ for \$12 is complete. \$11.50 was sent. You choose to keep \$0.50 as a service f
 
 </details>
 
-The `outgoing.payment_completed` event indicates that as much as possible has been sent to the recipient against their incoming payment.
+The `outgoing_payment.completed` event indicates that as much as possible has been sent to the recipient against their incoming payment.
 
 If there is excess liquidity in Rafiki due to differences between the sent and received amounts, withdraw the excess from the outgoing payment. What you choose to do with the excess is a business decision. One option is to return the excess to the sender. Another option is to retain the excess as a service fee. Lastly, remove the hold on your sender's account and debit their account on your ledger.
 
