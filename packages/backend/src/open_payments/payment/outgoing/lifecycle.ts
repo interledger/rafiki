@@ -3,12 +3,15 @@ import {
   OutgoingPayment,
   OutgoingPaymentState,
   OutgoingPaymentEvent,
-  OutgoingPaymentEventType
+  OutgoingPaymentEventType,
+  OutgoingPaymentGrantSpentAmounts
 } from './model'
 import { ServiceDependencies } from './service'
 import { Receiver } from '../../receiver/model'
 import { TransactionOrKnex } from 'objection'
 import { ValueType } from '@opentelemetry/api'
+import { v4 } from 'uuid'
+import { SettledAmounts } from '../../../payment-method/handler/service'
 
 // "payment" is locked by the "deps.knex" transaction.
 export async function handleSending(
@@ -85,6 +88,7 @@ export async function handleSending(
     description: 'Time to complete a payment',
     callName: 'PaymentMethodHandlerService:pay'
   })
+  let settledAmounts: SettledAmounts
   if (receiver.isLocal) {
     if (
       !payment.quote.debitAmountMinusFees ||
@@ -98,14 +102,14 @@ export async function handleSending(
       )
       throw LifecycleError.BadState
     }
-    await deps.paymentMethodHandlerService.pay('LOCAL', {
+    settledAmounts = await deps.paymentMethodHandlerService.pay('LOCAL', {
       receiver,
       outgoingPayment: payment,
       finalDebitAmount: payment.quote.debitAmountMinusFees,
       finalReceiveAmount: maxReceiveAmount
     })
   } else {
-    await deps.paymentMethodHandlerService.pay('ILP', {
+    settledAmounts = await deps.paymentMethodHandlerService.pay('ILP', {
       receiver,
       outgoingPayment: payment,
       finalDebitAmount: maxDebitAmount,
@@ -113,6 +117,8 @@ export async function handleSending(
     })
   }
   stopTimer()
+
+  await handleGrantSpentAmounts(deps, payment, settledAmounts)
 
   await Promise.all([
     deps.telemetry.incrementCounter('transactions_total', 1, {
@@ -158,6 +164,84 @@ function getAdjustedAmounts(
   return { maxDebitAmount, maxReceiveAmount }
 }
 
+/**
+ * Compares the final settled amounts with the amounts on hold
+ * and inserts a new OutgoingPaymentGrantSpentAmount record if needed.
+ */
+async function handleGrantSpentAmounts(
+  deps: ServiceDependencies,
+  payment: OutgoingPayment,
+  settledAmounts: SettledAmounts
+) {
+  if (!payment.grantId) return
+
+  const latestSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+    deps.knex
+  )
+    .where('grantId', payment.grantId)
+    .orderBy('createdAt', 'desc')
+    .first()
+
+  // TODO: this shouldnt happen. should we error instead?
+  if (!latestSpentAmounts) {
+    deps.logger.warn(
+      { grantId: payment.grantId },
+      'No outgoingPaymentGrantSpentAmounts record found for grantId on payment failure'
+    )
+    return
+  }
+
+  const reservedDebitAmount = latestSpentAmounts.paymentDebitAmountValue
+  const reservedReceiveAmount = latestSpentAmounts.paymentReceiveAmountValue
+  const debitAmountDifference = reservedDebitAmount - settledAmounts.debit
+  const receiveAmountDifference = reservedReceiveAmount - settledAmounts.receive
+
+  if (debitAmountDifference === 0n && receiveAmountDifference === 0n) return
+
+  const newGrantTotalDebitAmountValue =
+    latestSpentAmounts.grantTotalDebitAmountValue - debitAmountDifference
+  const newIntervalDebitAmountValue =
+    latestSpentAmounts.intervalDebitAmountValue !== null
+      ? latestSpentAmounts.intervalDebitAmountValue - debitAmountDifference
+      : latestSpentAmounts.intervalDebitAmountValue
+
+  const newGrantTotalReceiveAmountValue =
+    latestSpentAmounts.grantTotalReceiveAmountValue - receiveAmountDifference
+  const newIntervalReceiveAmountValue =
+    latestSpentAmounts.intervalReceiveAmountValue !== null
+      ? latestSpentAmounts.intervalReceiveAmountValue - receiveAmountDifference
+      : latestSpentAmounts.intervalReceiveAmountValue
+
+  // TODO: handle case where these new values are negative? presumably that is an invalid state.
+  // In practice it may never happen but is theorhetically possible.
+
+  await OutgoingPaymentGrantSpentAmounts.query(deps.knex).insert({
+    ...latestSpentAmounts,
+    id: v4(),
+    paymentDebitAmountValue: settledAmounts.debit,
+    intervalDebitAmountValue: newIntervalDebitAmountValue,
+    grantTotalDebitAmountValue: newGrantTotalDebitAmountValue,
+    paymentReceiveAmountValue: settledAmounts.receive,
+    intervalReceiveAmountValue: newIntervalReceiveAmountValue,
+    grantTotalReceiveAmountValue: newGrantTotalReceiveAmountValue,
+    createdAt: new Date()
+  })
+}
+
+async function deleteGrantSpentAmounts(
+  deps: ServiceDependencies,
+  grantId: string
+) {
+  // TODO: if keeping the delete, soft delete via deletedAt instead
+  const latestRecord = await OutgoingPaymentGrantSpentAmounts.query()
+    .where('grantId', grantId)
+    .orderBy('createdAt', 'desc')
+    .first()
+  if (latestRecord) {
+    await OutgoingPaymentGrantSpentAmounts.query().deleteById(latestRecord.id)
+  }
+}
+
 export async function handleFailed(
   deps: ServiceDependencies,
   payment: OutgoingPayment,
@@ -166,10 +250,17 @@ export async function handleFailed(
   const stopTimer = deps.telemetry.startTimer('handle_failed_ms', {
     callName: 'OutgoingPaymentLifecycle:handleFailed'
   })
+  const failedAt = new Date()
   await payment.$query(deps.knex).patch({
     state: OutgoingPaymentState.Failed,
-    error
+    error,
+    updatedAt: failedAt
   })
+
+  if (payment.grantId) {
+    deleteGrantSpentAmounts(deps, payment.grantId)
+  }
+
   await sendWebhookEvent(deps, payment, OutgoingPaymentEventType.PaymentFailed)
   stopTimer()
 }

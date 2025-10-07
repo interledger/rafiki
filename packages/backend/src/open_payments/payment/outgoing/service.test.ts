@@ -164,6 +164,8 @@ describe('OutgoingPaymentService', (): void => {
           debitAmount: args.finalDebitAmount,
           receiveAmount: args.finalReceiveAmount
         })
+
+        return args.finalReceiveAmount
       })
   }
 

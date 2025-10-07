@@ -369,7 +369,8 @@ async function createOutgoingPayment(
             client: options.client,
             metadata: options.metadata,
             state: OutgoingPaymentState.Funding,
-            grantId
+            grantId,
+            createdAt: new Date()
           })
           payment.walletAddress = walletAddress
           payment.quote = quote
@@ -725,7 +726,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
       ? !latestSpentAmounts ||
         (latestSpentAmounts.intervalEnd &&
           paymentLimits.paymentInterval?.start &&
-          latestSpentAmounts.intervalEnd <
+          latestSpentAmounts.intervalEnd <=
             paymentLimits.paymentInterval.start.toJSDate())
       : false
 
