@@ -732,7 +732,7 @@ describe('Integration tests', (): void => {
           'https://happy-life-bank-test-backend:4100/accounts/pfry',
         timestamp: 1758105181325
       })
-      expect(result).toBe(Result.APPROVED)
+      expect(result).toStrictEqual({ result: { code: Result.APPROVED } })
     })
   })
 })

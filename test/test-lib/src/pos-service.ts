@@ -13,6 +13,12 @@ export interface PaymentDetails {
   timestamp: number
 }
 
+export interface PaymentResponse {
+  result: {
+    code: Result
+  }
+}
+
 export enum Result {
   APPROVED = 'approved',
   INVALID_SIGNATURE = 'invalid_signature'
@@ -29,7 +35,7 @@ export class PosService {
     }
   }
 
-  async createPayment(args: PaymentDetails): Promise<Result> {
+  async createPayment(args: PaymentDetails): Promise<PaymentResponse> {
     if (!this.client) {
       throw new Error('POS service not configured')
     }
@@ -38,7 +44,11 @@ export class PosService {
         Accept: 'application/json'
       }
     }
-    const result = await this.client.post<Result>('/payment', args, config)
+    const result = await this.client.post<PaymentResponse>(
+      '/payment',
+      args,
+      config
+    )
     return result.data
   }
 }

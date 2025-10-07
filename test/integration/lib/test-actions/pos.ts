@@ -1,5 +1,5 @@
 import type { MockASE } from 'test-lib'
-import { PaymentDetails, Result } from 'test-lib/dist/pos-service'
+import { PaymentDetails, PaymentResponse } from 'test-lib/dist/pos-service'
 
 interface POSActionsDeps {
   sendingASE: MockASE
@@ -7,7 +7,7 @@ interface POSActionsDeps {
 }
 
 export interface POSActions {
-  createPayment(input: PaymentDetails): Promise<Result>
+  createPayment(input: PaymentDetails): Promise<PaymentResponse>
 }
 
 export function createPOSActions(deps: POSActionsDeps): POSActions {
@@ -19,6 +19,6 @@ export function createPOSActions(deps: POSActionsDeps): POSActions {
 async function createPayment(
   deps: POSActionsDeps,
   input: PaymentDetails
-): Promise<Result> {
+): Promise<PaymentResponse> {
   return await deps.receivingASE.posService.createPayment(input)
 }
