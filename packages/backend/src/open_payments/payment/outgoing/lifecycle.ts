@@ -11,6 +11,7 @@ import { Receiver } from '../../receiver/model'
 import { TransactionOrKnex } from 'objection'
 import { ValueType } from '@opentelemetry/api'
 import { v4 } from 'uuid'
+import { SettledAmounts } from '../../../payment-method/handler/service'
 
 // "payment" is locked by the "deps.knex" transaction.
 export async function handleSending(
@@ -87,8 +88,7 @@ export async function handleSending(
     description: 'Time to complete a payment',
     callName: 'PaymentMethodHandlerService:pay'
   })
-  let receiveAmount: bigint
-  let debitAmount: bigint
+  let settledAmounts: SettledAmounts
   if (receiver.isLocal) {
     if (
       !payment.quote.debitAmountMinusFees ||
@@ -102,16 +102,14 @@ export async function handleSending(
       )
       throw LifecycleError.BadState
     }
-    debitAmount = payment.quote.debitAmountMinusFees
-    receiveAmount = await deps.paymentMethodHandlerService.pay('LOCAL', {
+    settledAmounts = await deps.paymentMethodHandlerService.pay('LOCAL', {
       receiver,
       outgoingPayment: payment,
-      finalDebitAmount: debitAmount,
+      finalDebitAmount: payment.quote.debitAmountMinusFees,
       finalReceiveAmount: maxReceiveAmount
     })
   } else {
-    debitAmount = maxDebitAmount
-    receiveAmount = await deps.paymentMethodHandlerService.pay('ILP', {
+    settledAmounts = await deps.paymentMethodHandlerService.pay('ILP', {
       receiver,
       outgoingPayment: payment,
       finalDebitAmount: maxDebitAmount,
@@ -120,7 +118,7 @@ export async function handleSending(
   }
   stopTimer()
 
-  await handleGrantSpentAmounts(deps, payment, receiveAmount)
+  await handleGrantSpentAmounts(deps, payment, settledAmounts)
 
   await Promise.all([
     deps.telemetry.incrementCounter('transactions_total', 1, {
@@ -173,7 +171,7 @@ function getAdjustedAmounts(
 async function handleGrantSpentAmounts(
   deps: ServiceDependencies,
   payment: OutgoingPayment,
-  settledReceiveAmount: bigint
+  settledAmounts: SettledAmounts
 ) {
   if (!payment.grantId) return
 
@@ -195,19 +193,8 @@ async function handleGrantSpentAmounts(
 
   const reservedDebitAmount = latestSpentAmounts.paymentDebitAmountValue
   const reservedReceiveAmount = latestSpentAmounts.paymentReceiveAmountValue
-  const settledDebitAmount = await deps.accountingService.getTotalSent(
-    payment.id
-  )
-
-  if (settledDebitAmount === undefined) {
-    // TODO: handle null case better?
-    throw new Error(
-      `Could not find debit amount for grant spent amount when trying to update grant spent amount for outgoing payment id: ${payment.id}`
-    )
-  }
-
-  const debitAmountDifference = reservedDebitAmount - settledDebitAmount
-  const receiveAmountDifference = reservedReceiveAmount - settledReceiveAmount
+  const debitAmountDifference = reservedDebitAmount - settledAmounts.debit
+  const receiveAmountDifference = reservedReceiveAmount - settledAmounts.receive
 
   if (debitAmountDifference === 0n && receiveAmountDifference === 0n) return
 
@@ -231,10 +218,10 @@ async function handleGrantSpentAmounts(
   await OutgoingPaymentGrantSpentAmounts.query(deps.knex).insert({
     ...latestSpentAmounts,
     id: v4(),
-    paymentDebitAmountValue: settledDebitAmount,
+    paymentDebitAmountValue: settledAmounts.debit,
     intervalDebitAmountValue: newIntervalDebitAmountValue,
     grantTotalDebitAmountValue: newGrantTotalDebitAmountValue,
-    paymentReceiveAmountValue: settledReceiveAmount,
+    paymentReceiveAmountValue: settledAmounts.receive,
     intervalReceiveAmountValue: newIntervalReceiveAmountValue,
     grantTotalReceiveAmountValue: newGrantTotalReceiveAmountValue,
     createdAt: new Date()

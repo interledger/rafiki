@@ -122,7 +122,7 @@ describe('Lifecycle', (): void => {
         })
         assert.ok(transfer && typeof transfer === 'object')
         await transfer.post()
-        return amount
+        return { debit: amount, receive: amount }
       })
   }
 
@@ -145,7 +145,7 @@ describe('Lifecycle', (): void => {
           })
         assert.ok(transfer && typeof transfer === 'object')
         await transfer.post()
-        return partial.receive
+        return { debit: partial.debit, receive: partial.receive }
       })
   }
 
