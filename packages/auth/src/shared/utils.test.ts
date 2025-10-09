@@ -1,43 +1,137 @@
 import { IocContract } from '@adonisjs/fold'
 import { Redis } from 'ioredis'
-
+import assert from 'assert'
 import { AppContext, AppServices } from '../app'
-import { Config } from '../config/app'
+import { Config, IAppConfig } from '../config/app'
 import { createContext } from '../tests/context'
 import { generateApiSignature } from '../tests/apiSignature'
 import { initIocContainer } from '..'
-import { verifyApiSignature, isValidDateString } from './utils'
+import { getTenantFromApiSignature, isValidDateString } from './utils'
 import { TestContainer, createTestApp } from '../tests/app'
+import { Tenant } from '../tenant/model'
+import { truncateTables } from '../tests/tableManager'
+import { faker } from '@faker-js/faker'
 
-describe('utils', (): void => {
-  let deps: IocContract<AppServices>
-  let appContainer: TestContainer
-  let redis: Redis
+describe('Tenant Signature', (): void => {
+  describe('getTenantFromApiSignature', (): void => {
+    let deps: IocContract<AppServices>
+    let appContainer: TestContainer
+    let tenant: Tenant
+    let operator: Tenant
+    let config: IAppConfig
+    let redis: Redis
 
-  describe('admin api signatures', (): void => {
+    const operatorApiSecret = crypto.randomUUID()
+
     beforeAll(async (): Promise<void> => {
       deps = initIocContainer({
         ...Config,
-        adminApiSecret: 'test-secret'
+        adminApiSecret: operatorApiSecret
       })
       appContainer = await createTestApp(deps)
+      config = await deps.use('config')
       redis = await deps.use('redis')
     })
 
+    beforeEach(async (): Promise<void> => {
+      tenant = await Tenant.query().insertAndFetch({
+        apiSecret: crypto.randomUUID(),
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret'
+      })
+
+      operator = await Tenant.query().insertAndFetch({
+        apiSecret: operatorApiSecret,
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret'
+      })
+    })
+
     afterEach(async (): Promise<void> => {
-      jest.useRealTimers()
       await redis.flushall()
+      await truncateTables(deps)
     })
 
     afterAll(async (): Promise<void> => {
-      await redis.quit()
       await appContainer.shutdown()
     })
 
-    test('Can verify a signature', async (): Promise<void> => {
+    test.each`
+      isOperator | description
+      ${false}   | ${'tenanted non-operator'}
+      ${true}    | ${'tenanted operator'}
+    `(
+      'returns if $description request has valid signature',
+      async ({ isOperator }): Promise<void> => {
+        const requestBody = { test: 'value' }
+
+        const signature = isOperator
+          ? generateApiSignature(
+              operator.apiSecret,
+              Config.adminApiSignatureVersion,
+              requestBody
+            )
+          : generateApiSignature(
+              tenant.apiSecret,
+              Config.adminApiSignatureVersion,
+              requestBody
+            )
+
+        const ctx = createContext<AppContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              signature,
+              'tenant-id': isOperator ? operator.id : tenant.id
+            },
+            url: '/graphql'
+          },
+          {},
+          appContainer.container
+        )
+        ctx.request.body = requestBody
+
+        const result = await getTenantFromApiSignature(ctx, config)
+        assert(result)
+        expect(result.tenant).toEqual(isOperator ? operator : tenant)
+
+        if (isOperator) {
+          expect(result.isOperator).toEqual(true)
+        } else {
+          expect(result.isOperator).toEqual(false)
+        }
+      }
+    )
+
+    test("returns undefined when signature isn't signed with tenant secret", async (): Promise<void> => {
       const requestBody = { test: 'value' }
       const signature = generateApiSignature(
-        'test-secret',
+        'wrongsecret',
+        Config.adminApiSignatureVersion,
+        requestBody
+      )
+      const ctx = createContext<AppContext>(
+        {
+          headers: {
+            Accept: 'application/json',
+            signature,
+            'tenant-id': tenant.id
+          },
+          url: '/graphql'
+        },
+        {},
+        appContainer.container
+      )
+      ctx.request.body = requestBody
+
+      const result = await getTenantFromApiSignature(ctx, config)
+      expect(result).toBeUndefined
+    })
+
+    test('returns undefined if tenant id is not included', async (): Promise<void> => {
+      const requestBody = { test: 'value' }
+      const signature = generateApiSignature(
+        tenant.apiSecret,
         Config.adminApiSignatureVersion,
         requestBody
       )
@@ -52,102 +146,40 @@ describe('utils', (): void => {
         {},
         appContainer.container
       )
+
       ctx.request.body = requestBody
 
-      const verified = await verifyApiSignature(ctx, {
-        ...Config,
-        adminApiSecret: 'test-secret'
-      })
-      expect(verified).toBe(true)
+      const result = await getTenantFromApiSignature(ctx, config)
+      expect(result).toBeUndefined()
     })
 
-    test('verification fails if header is not present', async (): Promise<void> => {
-      const requestBody = { test: 'value' }
-      const ctx = createContext<AppContext>(
-        {
-          headers: {
-            Accept: 'application/json'
-          },
-          url: '/graphql'
-        },
-        {},
-        appContainer.container
-      )
-      ctx.request.body = requestBody
-
-      const verified = await verifyApiSignature(ctx, {
-        ...Config,
-        adminApiSecret: 'test-secret'
-      })
-      expect(verified).toBe(false)
-    })
-
-    test('Cannot verify signature that is too old', async (): Promise<void> => {
+    test('returns undefined if tenant does not exist', async (): Promise<void> => {
       const requestBody = { test: 'value' }
       const signature = generateApiSignature(
-        'test-secret',
+        tenant.apiSecret,
         Config.adminApiSignatureVersion,
         requestBody
       )
-
-      const timestamp = signature.split(', ')[0].split('=')[1]
-      const now = new Date(
-        Number(timestamp) + (Config.adminApiSignatureTtlSeconds + 1) * 1000
-      )
-      jest.useFakeTimers({ now })
       const ctx = createContext<AppContext>(
         {
           headers: {
             Accept: 'application/json',
-            signature
+            signature,
+            'tenant-id': crypto.randomUUID()
           },
           url: '/graphql'
         },
         {},
         appContainer.container
       )
+
       ctx.request.body = requestBody
 
-      const verified = await verifyApiSignature(ctx, {
-        ...Config,
-        adminApiSecret: 'test-secret'
-      })
-      expect(verified).toBe(false)
-    })
-
-    test('Cannot verify signature that has already been processed', async (): Promise<void> => {
-      const requestBody = { test: 'value' }
-      const signature = generateApiSignature(
-        'test-secret',
-        Config.adminApiSignatureVersion,
-        requestBody
-      )
-
-      const ctx = createContext<AppContext>(
-        {
-          headers: {
-            Accept: 'application/json',
-            signature
-          },
-          url: '/graphql'
-        },
-        {},
-        appContainer.container
-      )
-      ctx.request.body = requestBody
-
-      await expect(
-        verifyApiSignature(ctx, {
-          ...Config,
-          adminApiSecret: 'test-secret'
-        })
-      ).resolves.toBe(true)
-
-      const verified = await verifyApiSignature(ctx, {
-        ...Config,
-        adminApiSecret: 'test-secret'
-      })
-      expect(verified).toBe(false)
+      const tenantService = await deps.use('tenantService')
+      const getSpy = jest.spyOn(tenantService, 'get')
+      const result = await getTenantFromApiSignature(ctx, config)
+      expect(result).toBeUndefined()
+      expect(getSpy).toHaveBeenCalled()
     })
   })
 

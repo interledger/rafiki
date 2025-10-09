@@ -2,6 +2,7 @@ import * as crypto from 'crypto'
 import { AppContext } from '../app'
 import { canonicalize } from 'json-canonicalize'
 import { IAppConfig } from '../config/app'
+import { Tenant } from '../tenant/model'
 
 export function generateNonce(): string {
   return crypto.randomBytes(8).toString('hex').toUpperCase()
@@ -41,24 +42,28 @@ function getSignatureParts(signature: string) {
   }
 }
 
-function verifyApiSignatureDigest(
-  signature: string,
-  request: AppContext['request'],
-  config: IAppConfig
-): boolean {
+interface VerifyApiSignatureArgs {
+  signature: string
+  request: AppContext['request']
+  tenantApiSecret: string
+  apiSignatureVersion: number
+}
+
+function verifyApiSignatureDigest(args: VerifyApiSignatureArgs): boolean {
+  const { signature, request, tenantApiSecret, apiSignatureVersion } = args
   const { body } = request
   const {
     version: signatureVersion,
     digest: signatureDigest,
     timestamp
-  } = getSignatureParts(signature as string)
+  } = getSignatureParts(signature)
 
-  if (Number(signatureVersion) !== config.adminApiSignatureVersion) {
+  if (Number(signatureVersion) !== apiSignatureVersion) {
     return false
   }
 
   const payload = `${timestamp}.${canonicalize(body)}`
-  const hmac = crypto.createHmac('sha256', config.adminApiSecret as string)
+  const hmac = crypto.createHmac('sha256', tenantApiSecret)
   hmac.update(payload)
   const digest = hmac.digest('hex')
 
@@ -89,20 +94,40 @@ async function canApiSignatureBeProcessed(
   return true
 }
 
-export async function verifyApiSignature(
+export interface TenantApiSignatureResult {
+  tenant: Tenant
+  isOperator: boolean
+}
+
+export async function getTenantFromApiSignature(
   ctx: AppContext,
   config: IAppConfig
-): Promise<boolean> {
+): Promise<TenantApiSignatureResult | undefined> {
   const { headers } = ctx.request
-  const signature = headers['signature']
+  const signature = headers['signature'] as string | undefined
   if (!signature) {
-    return false
+    return
   }
 
-  if (!(await canApiSignatureBeProcessed(signature as string, ctx, config)))
-    return false
+  const tenantService = await ctx.container.use('tenantService')
+  const tenantId = headers['tenant-id'] as string | undefined
+  const tenant = tenantId ? await tenantService.get(tenantId) : undefined
 
-  return verifyApiSignatureDigest(signature as string, ctx.request, config)
+  if (!tenant) return
+
+  if (!(await canApiSignatureBeProcessed(signature, ctx, config))) return
+
+  if (
+    tenant.apiSecret &&
+    verifyApiSignatureDigest({
+      signature,
+      request: ctx.request,
+      tenantApiSecret: tenant.apiSecret,
+      apiSignatureVersion: config.adminApiSignatureVersion
+    })
+  ) {
+    return { tenant, isOperator: tenant.apiSecret === config.adminApiSecret }
+  }
 }
 
 // Intended for Date strings like "2024-12-05T15:10:09.545Z" (e.g., from new Date().toISOString())

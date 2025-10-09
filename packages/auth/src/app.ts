@@ -53,9 +53,13 @@ import { ApolloArmor } from '@escape.tech/graphql-armor'
 import { Redis } from 'ioredis'
 import { LoggingPlugin } from './graphql/plugin'
 import { gnapServerErrorMiddleware } from './shared/gnapErrors'
-import { verifyApiSignature } from './shared/utils'
+import {
+  getTenantFromApiSignature,
+  TenantApiSignatureResult
+} from './shared/utils'
 import { TenantService } from './tenant/service'
 import { TenantRoutes } from './tenant/routes'
+import { Tenant } from './tenant/model'
 
 export interface AppContextData extends DefaultContext {
   logger: Logger
@@ -89,6 +93,18 @@ export interface DatabaseCleanupRule {
    * this table will be considered safe to delete during clean up
    */
   defaultExpirationOffsetDays: number
+}
+
+export interface TenantedAppContext extends AppContext {
+  tenantApiSignatureResult: {
+    tenant: Tenant
+    isOperator: boolean
+  }
+}
+
+export interface TenantedApolloContext extends ApolloContext {
+  tenant: Tenant
+  isOperator: boolean
 }
 
 export interface AppServices {
@@ -220,20 +236,61 @@ export class App {
       }
     )
 
-    if (this.config.adminApiSecret) {
-      koa.use(async (ctx, next: Koa.Next): Promise<void> => {
-        if (!(await verifyApiSignature(ctx, this.config))) {
+    const tenantSignatureMiddleware = async (
+      ctx: TenantedAppContext,
+      next: Koa.Next
+    ): Promise<void> => {
+      const result = await getTenantFromApiSignature(ctx, this.config)
+      if (!result) {
+        ctx.throw(401, 'Unauthorized')
+      } else {
+        ctx.tenantApiSignatureResult = {
+          tenant: result.tenant,
+          isOperator: result.isOperator ? true : false
+        }
+      }
+      return next()
+    }
+
+    const testTenantSignatureMiddleware = async (
+      ctx: TenantedAppContext,
+      next: Koa.Next
+    ): Promise<void> => {
+      if (ctx.headers['tenant-id']) {
+        const tenantService = await ctx.container.use('tenantService')
+        const tenant = await tenantService.get(
+          ctx.headers['tenant-id'] as string
+        )
+
+        if (tenant) {
+          ctx.tenantApiSignatureResult = {
+            tenant,
+            isOperator: tenant.apiSecret === this.config.adminApiSecret
+          }
+        } else {
           ctx.throw(401, 'Unauthorized')
         }
-
-        return next()
-      })
+      }
+      return next()
     }
+
+    // For tests, we still need to get the tenant in the middleware, but
+    // we don't need to verify the signature nor prevent replay attacks
+    koa.use(
+      this.config.env !== 'test'
+        ? tenantSignatureMiddleware
+        : testTenantSignatureMiddleware
+    )
 
     koa.use(
       koaMiddleware(apolloServer, {
-        context: async (): Promise<ApolloContext> => {
+        context: async ({
+          ctx
+        }: {
+          ctx: TenantedAppContext
+        }): Promise<TenantedApolloContext> => {
           return {
+            ...ctx.tenantApiSignatureResult,
             container: this.container,
             logger: await this.container.use('logger')
           }
