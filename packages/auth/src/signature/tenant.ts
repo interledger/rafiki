@@ -1,8 +1,9 @@
 import { canonicalize } from 'json-canonicalize'
-import { AppContext } from '../app'
+import { AppContext, TenantedAppContext } from '../app'
 import { IAppConfig } from '../config/app'
 import { Tenant } from '../tenant/model'
 import * as crypto from 'crypto'
+import Koa from 'koa'
 
 function getSignatureParts(signature: string) {
   const signatureParts = signature?.split(', ')
@@ -70,12 +71,12 @@ async function canApiSignatureBeProcessed(
   return true
 }
 
-export interface TenantApiSignatureResult {
+interface TenantApiSignatureResult {
   tenant: Tenant
   isOperator: boolean
 }
 
-export async function getTenantFromApiSignature(
+async function getTenantFromApiSignature(
   ctx: AppContext,
   config: IAppConfig
 ): Promise<TenantApiSignatureResult | undefined> {
@@ -104,4 +105,44 @@ export async function getTenantFromApiSignature(
   ) {
     return { tenant, isOperator: tenant.apiSecret === config.adminApiSecret }
   }
+}
+
+export async function authenticatedTenantMiddleware(
+  ctx: TenantedAppContext,
+  next: Koa.Next
+): Promise<void> {
+  const config = await ctx.container.use('config')
+  const result = await getTenantFromApiSignature(ctx, config)
+  if (!result) {
+    ctx.throw(401, 'Unauthorized')
+  } else {
+    ctx.tenantApiSignatureResult = {
+      tenant: result.tenant,
+      isOperator: result.isOperator ? true : false
+    }
+  }
+  return next()
+}
+
+// Used in test environment only
+export async function unauthenticatedTenantMiddleware(
+  ctx: TenantedAppContext,
+  next: Koa.Next
+): Promise<void> {
+  const config = await ctx.container.use('config')
+
+  if (ctx.headers['tenant-id']) {
+    const tenantService = await ctx.container.use('tenantService')
+    const tenant = await tenantService.get(ctx.headers['tenant-id'] as string)
+
+    if (tenant) {
+      ctx.tenantApiSignatureResult = {
+        tenant,
+        isOperator: tenant.apiSecret === config.adminApiSecret
+      }
+    } else {
+      ctx.throw(401, 'Unauthorized')
+    }
+  }
+  return next()
 }
