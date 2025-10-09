@@ -109,11 +109,14 @@ function ConsentScreenBody({
         </div>
         <div className='row mt-2'>
           <div className='col-12'>
-            {(accesses?.length ?? 0 > 0) && !price && !costToUser && (
+            {accesses?.length &&
+            accesses.length > 0 &&
+            !price &&
+            !costToUser ? (
               <p>
                 {thirdPartyName} is requesting grant for an unlimited amount
               </p>
-            )}
+            ) : undefined}
           </div>
         </div>
         <div className='row mt-2'>

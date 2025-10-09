@@ -1,5 +1,5 @@
 meta {
-  name: Grant Request Outgoing Payment
+  name: Grant Request for Subject Information
   type: http
   seq: 7
 }
@@ -12,20 +12,14 @@ post {
 
 body:json {
   {
-      "access_token": {
-          "access": [
-              {
-                  "type": "outgoing-payment",
-                  "actions": [
-                      "create", "read", "list"
-                  ],
-                  "identifier": "{{senderWalletAddress}}",
-                  "limits": {
-                      "debitAmount": {{quoteDebitAmount}}
-                  }
-              }
+      "subject": {
+          "sub_ids": [
+            {
+              "id": "{{senderWalletAddress}}",
+              "format": "uri"
+            }
           ]
-      },
+        },
       "client": "{{clientWalletAddress}}",
       "interact": {
           "start": [
