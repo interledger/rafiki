@@ -55,6 +55,7 @@ import { LoggingPlugin } from './graphql/plugin'
 import { gnapServerErrorMiddleware } from './shared/gnapErrors'
 import { verifyApiSignature } from './shared/utils'
 import { TenantService } from './tenant/service'
+import { TenantRoutes } from './tenant/routes'
 
 export interface AppContextData extends DefaultContext {
   logger: Logger
@@ -104,6 +105,7 @@ export interface AppServices {
   interactionRoutes: Promise<InteractionRoutes>
   redis: Promise<Redis>
   tenantService: Promise<TenantService>
+  tenantRoutes: Promise<TenantRoutes>
 }
 
 export type AppContainer = IocContract<AppServices>

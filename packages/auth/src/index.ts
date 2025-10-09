@@ -59,6 +59,7 @@ export function initIocContainer(
         directory: './',
         tableName: 'auth_knex_migrations'
       },
+      searchPath: config.dbSchema,
       log: {
         warn(message) {
           logger.warn(message)
@@ -80,6 +81,9 @@ export function initIocContainer(
       'text',
       BigInt
     )
+    if (config.dbSchema) {
+      await db.raw(`CREATE SCHEMA IF NOT EXISTS "${config.dbSchema}"`)
+    }
     return db
   })
 
@@ -141,7 +145,8 @@ export function initIocContainer(
     async (deps: IocContract<AppServices>) => {
       return createTenantService({
         logger: await deps.use('logger'),
-        knex: await deps.use('knex')
+        knex: await deps.use('knex'),
+        config: await deps.use('config')
       })
     }
   )
@@ -316,6 +321,10 @@ export const start = async (
   }
 
   Model.knex(knex)
+
+  // Update Operator Tenant from config
+  const tenantService = await container.use('tenantService')
+  await tenantService.updateOperatorApiSecretFromConfig()
 
   await app.boot()
 
