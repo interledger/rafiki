@@ -53,10 +53,7 @@ import { ApolloArmor } from '@escape.tech/graphql-armor'
 import { Redis } from 'ioredis'
 import { LoggingPlugin } from './graphql/plugin'
 import { gnapServerErrorMiddleware } from './shared/gnapErrors'
-import {
-  getTenantFromApiSignature,
-  TenantApiSignatureResult
-} from './shared/utils'
+import { getTenantFromApiSignature } from './signature/tenant'
 import { TenantService } from './tenant/service'
 import { TenantRoutes } from './tenant/routes'
 import { Tenant } from './tenant/model'
