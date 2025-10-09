@@ -1591,6 +1591,8 @@ type Tenant implements Model {
   idpSecret: String
   "Public name for the tenant."
   publicName: String
+  "Prefix for wallet addresses belonging to this tenant."
+  walletAddressPrefix: String
   "The date and time that this tenant was created."
   createdAt: String!
   "The date and time that this tenant was deleted."
@@ -1618,7 +1620,6 @@ enum TenantSettingKey {
   WEBHOOK_URL
   WEBHOOK_TIMEOUT
   WEBHOOK_MAX_RETRY
-  WALLET_ADDRESS_URL
   ILP_ADDRESS
 }
 
@@ -1642,6 +1643,8 @@ input CreateTenantInput {
   idpSecret: String
   "Public name for the tenant."
   publicName: String
+  "Prefix for all wallet addresses belonging to this tenant."
+  walletAddressPrefix: String
   "Initial settings for tenant."
   settings: [TenantSettingInput!]
 }
@@ -1659,6 +1662,8 @@ input UpdateTenantInput {
   idpSecret: String
   "Public name for the tenant."
   publicName: String
+  "Prefix for all wallet addresses belonging to this tenant."
+  walletAddressPrefix: String
 }
 
 type TenantMutationResponse {

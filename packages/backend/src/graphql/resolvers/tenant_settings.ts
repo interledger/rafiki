@@ -65,8 +65,6 @@ const tenantSettingNameToGraphQl: { [key: string]: SchemaTenantSettingKey } = {
     SchemaTenantSettingKey.WebhookTimeout,
   [TenantSettingKeys.WEBHOOK_MAX_RETRY.name]:
     SchemaTenantSettingKey.WebhookMaxRetry,
-  [TenantSettingKeys.WALLET_ADDRESS_URL.name]:
-    SchemaTenantSettingKey.WalletAddressUrl,
   [TenantSettingKeys.ILP_ADDRESS.name]: SchemaTenantSettingKey.IlpAddress
 }
 
