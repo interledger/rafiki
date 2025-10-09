@@ -22,6 +22,7 @@ type TenantContext<BodyT = never, QueryT = ParsedUrlQuery> = Exclude<
 
 interface CreateTenantBody {
   id: string
+  apiSecret: string
   idpConsentUrl?: string
   idpSecret?: string
 }

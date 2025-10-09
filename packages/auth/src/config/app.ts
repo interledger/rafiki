@@ -57,7 +57,7 @@ export const Config = {
   identityServerUrl: envString('IDENTITY_SERVER_URL'),
   identityServerSecret: envString('IDENTITY_SERVER_SECRET'),
   authServerUrl: envString('AUTH_SERVER_URL'),
-  adminApiSecret: process.env.ADMIN_API_SECRET, // optional
+  adminApiSecret: envString('ADMIN_API_SECRET'),
   adminApiSignatureVersion: envInt('ADMIN_API_SIGNATURE_VERSION', 1),
   adminApiSignatureTtlSeconds: envInt('ADMIN_API_SIGNATURE_TTL_SECONDS', 30),
   waitTimeSeconds: envInt('WAIT_SECONDS', 5),
