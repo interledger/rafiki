@@ -143,11 +143,8 @@ export async function createTenant(
     publicName,
     idpConsentUrl,
     idpSecret,
+    walletAddressPrefix: walletAddressUrl,
     settings: [
-      {
-        key: TenantSettingKey.WalletAddressUrl,
-        value: walletAddressUrl
-      },
       {
         key: TenantSettingKey.WebhookUrl,
         value: webhookUrl

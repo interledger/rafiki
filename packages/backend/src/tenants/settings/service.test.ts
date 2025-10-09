@@ -22,8 +22,6 @@ import {
   UpdateOptions
 } from './service'
 import { AuthServiceClient } from '../../auth-service-client/client'
-import { v4 as uuid } from 'uuid'
-import { createTenant } from '../../tests/tenant'
 import { isTenantSettingError, TenantSettingError } from './errors'
 import { isTenantError } from '../errors'
 
@@ -139,7 +137,6 @@ describe('TenantSetting Service', (): void => {
       ${TenantSettingKeys.WEBHOOK_MAX_RETRY.name}
       ${TenantSettingKeys.WEBHOOK_TIMEOUT.name}
       ${TenantSettingKeys.WEBHOOK_URL.name}
-      ${TenantSettingKeys.WALLET_ADDRESS_URL.name}
     `(
       'cannot use invalid setting value for $key',
       async ({ key }): Promise<void> => {
@@ -163,7 +160,6 @@ describe('TenantSetting Service', (): void => {
       key
       ${TenantSettingKeys.EXCHANGE_RATES_URL.name}
       ${TenantSettingKeys.WEBHOOK_URL.name}
-      ${TenantSettingKeys.WALLET_ADDRESS_URL.name}
     `(
       'accepts URL string for $key tenant setting',
       async ({ key }): Promise<void> => {
@@ -416,7 +412,6 @@ describe('TenantSetting Service', (): void => {
       ${TenantSettingKeys.WEBHOOK_MAX_RETRY.name}
       ${TenantSettingKeys.WEBHOOK_TIMEOUT.name}
       ${TenantSettingKeys.WEBHOOK_URL.name}
-      ${TenantSettingKeys.WALLET_ADDRESS_URL.name}
     `(
       'cannot use invalid setting value for $key',
       async ({ key }): Promise<void> => {
@@ -436,7 +431,6 @@ describe('TenantSetting Service', (): void => {
       key
       ${TenantSettingKeys.EXCHANGE_RATES_URL.name}
       ${TenantSettingKeys.WEBHOOK_URL.name}
-      ${TenantSettingKeys.WALLET_ADDRESS_URL.name}
     `(
       'accepts URL string for $key tenant setting',
       async ({ key }): Promise<void> => {
@@ -721,69 +715,6 @@ describe('TenantSetting Service', (): void => {
       })
 
       expect(result).toEqual([])
-    })
-  })
-
-  describe('get settings by value', (): void => {
-    test('can get settings by wallet address prefix setting', async (): Promise<void> => {
-      const secondTenant = await createTenant(deps)
-      const baseUrl = `https://${faker.internet.domainName()}/${uuid()}`
-      const settings = (
-        await Promise.all([
-          tenantSettingService.create({
-            tenantId: tenant.id,
-            setting: [
-              {
-                key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
-                value: `${baseUrl}/${uuid()}`
-              }
-            ]
-          }),
-          tenantSettingService.create({
-            tenantId: secondTenant.id,
-            setting: [
-              {
-                key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
-                value: `${baseUrl}/${uuid()}`
-              }
-            ]
-          })
-        ])
-      ).flat()
-
-      const retrievedSettings =
-        await tenantSettingService.getSettingsByPrefix(baseUrl)
-      expect(retrievedSettings).toEqual(settings)
-    })
-
-    test('does not retrieve tenants if no wallet address prefix matches', async (): Promise<void> => {
-      const secondTenant = await createTenant(deps)
-      const baseUrl = `https://${faker.internet.domainName()}/${uuid()}`
-      await Promise.all([
-        tenantSettingService.create({
-          tenantId: tenant.id,
-          setting: [
-            {
-              key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
-              value: `${baseUrl}/${uuid()}`
-            }
-          ]
-        }),
-        tenantSettingService.create({
-          tenantId: secondTenant.id,
-          setting: [
-            {
-              key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
-              value: `${baseUrl}/${uuid()}`
-            }
-          ]
-        })
-      ])
-
-      const retrievedSettings = await tenantSettingService.getSettingsByPrefix(
-        faker.internet.url()
-      )
-      expect(retrievedSettings).toHaveLength(0)
     })
   })
 })

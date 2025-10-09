@@ -34,7 +34,7 @@ export default function CreateTenantPage() {
   const [webhookUrl, setWebhookUrl] = useState<string>()
   const [webhookTimeout, setWebhookTimeout] = useState<number>()
   const [webhookMaxRetry, setWebhookMaxRetry] = useState<number>()
-  const [walletAddressUrl, setWalletAddressUrl] = useState<string>()
+  const [walletAddressPrefix, setWalletAddressPrefix] = useState<string>()
   const [ilpAddress, setIlpAddress] = useState<string>()
 
   const tenantSettings: {
@@ -48,6 +48,13 @@ export default function CreateTenantPage() {
     placeholder: string
     label: string
   }[] = [
+    {
+      name: 'walletAddressPrefix',
+      placeholder: 'Wallet Address Url',
+      label: 'Wallet Address Url',
+      value: walletAddressPrefix,
+      setValue: setWalletAddressPrefix
+    },
     {
       name: 'exchangeRatesUrl',
       placeholder: 'Exhange Rates Url',
@@ -75,13 +82,6 @@ export default function CreateTenantPage() {
       label: 'Webhook Max Retry',
       value: webhookMaxRetry,
       setValue: setWebhookMaxRetry
-    },
-    {
-      name: 'walletAddressUrl',
-      placeholder: 'Wallet Address Url',
-      label: 'Wallet Address Url',
-      value: walletAddressUrl,
-      setValue: setWalletAddressUrl
     },
     {
       name: 'ilpAddress',
@@ -256,7 +256,6 @@ export async function action({ request }: ActionFunctionArgs) {
     webhookUrl,
     webhookTimeout,
     webhookMaxRetry,
-    walletAddressUrl,
     ilpAddress,
     ...restOfData
   } = result.data
@@ -266,7 +265,6 @@ export async function action({ request }: ActionFunctionArgs) {
     webhookUrl,
     webhookTimeout,
     webhookMaxRetry,
-    walletAddressUrl,
     ilpAddress
   }
   const settingNameToKey = {
@@ -274,7 +272,6 @@ export async function action({ request }: ActionFunctionArgs) {
     webhookUrl: TenantSettingKey.WebhookUrl,
     webhookTimeout: TenantSettingKey.WebhookTimeout,
     webhookMaxRetry: TenantSettingKey.WebhookMaxRetry,
-    walletAddressUrl: TenantSettingKey.WalletAddressUrl,
     ilpAddress: TenantSettingKey.IlpAddress
   }
   const tenantSettings = []

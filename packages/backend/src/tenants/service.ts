@@ -14,10 +14,11 @@ import { TenantSettingInput } from '../graphql/generated/graphql'
 export interface TenantService {
   get: (id: string, includeDeleted?: boolean) => Promise<Tenant | undefined>
   create: (options: CreateTenantOptions) => Promise<Tenant | TenantError>
-  update: (options: UpdateTenantOptions) => Promise<Tenant>
+  update: (options: UpdateTenantOptions) => Promise<Tenant | TenantError>
   delete: (id: string) => Promise<void>
   getPage: (pagination?: Pagination, sortOrder?: SortOrder) => Promise<Tenant[]>
   updateOperatorApiSecretFromConfig: () => Promise<undefined | TenantError>
+  getTenantsByPrefix: (prefix: string) => Promise<Tenant[]>
 }
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
@@ -44,7 +45,8 @@ export async function createTenantService(
     getPage: (pagination, sortOrder) =>
       getTenantPage(deps, pagination, sortOrder),
     updateOperatorApiSecretFromConfig: () =>
-      updateOperatorApiSecretFromConfig(deps)
+      updateOperatorApiSecretFromConfig(deps),
+    getTenantsByPrefix: (prefix) => getTenantsByPrefix(deps, prefix)
   }
 }
 
@@ -81,6 +83,7 @@ interface CreateTenantOptions {
   apiSecret: string
   idpSecret?: string
   idpConsentUrl?: string
+  walletAddressPrefix?: string
   publicName?: string
   settings?: TenantSettingInput[]
 }
@@ -98,18 +101,28 @@ async function createTenant(
       publicName,
       idpSecret,
       idpConsentUrl,
+      walletAddressPrefix,
       settings
     } = options
     if (id && !validateUuid(id)) {
       throw TenantError.InvalidTenantId
     }
+
+    if (
+      walletAddressPrefix &&
+      !validateWalletAddressPrefix(walletAddressPrefix)
+    ) {
+      throw TenantError.InvalidTenantInput
+    }
+
     const tenant = await Tenant.query(trx).insertAndFetch({
       id,
       email,
       publicName,
       apiSecret,
       idpSecret,
-      idpConsentUrl
+      idpConsentUrl,
+      walletAddressPrefix
     })
 
     await deps.authServiceClient.tenant.create({
@@ -175,18 +188,33 @@ interface UpdateTenantOptions {
   apiSecret?: string
   idpConsentUrl?: string
   idpSecret?: string
+  walletAddressPrefix?: string
 }
 
 async function updateTenant(
   deps: ServiceDependencies,
   options: UpdateTenantOptions
-): Promise<Tenant> {
+): Promise<Tenant | TenantError> {
   const trx = await deps.knex.transaction()
 
   try {
-    const { id, apiSecret, email, publicName, idpConsentUrl, idpSecret } =
-      options
-    const tenant = await Tenant.query(trx)
+    const {
+      id,
+      apiSecret,
+      email,
+      publicName,
+      idpConsentUrl,
+      idpSecret,
+      walletAddressPrefix
+    } = options
+
+    if (
+      walletAddressPrefix &&
+      !validateWalletAddressPrefix(walletAddressPrefix)
+    )
+      throw TenantError.InvalidTenantInput
+
+    let tenant = await Tenant.query(trx)
       .patchAndFetchById(options.id, {
         email,
         publicName,
@@ -205,11 +233,20 @@ async function updateTenant(
       })
     }
 
+    if (!tenant.walletAddressPrefix && walletAddressPrefix) {
+      tenant = await tenant.$query(trx).patchAndFetch({
+        walletAddressPrefix: walletAddressPrefix.toLowerCase()
+      })
+    } else if (tenant.walletAddressPrefix && walletAddressPrefix) {
+      throw TenantError.InvalidTenantInput
+    }
+
     await trx.commit()
     await deps.tenantCache.set(tenant.id, tenant)
     return tenant
   } catch (err) {
     await trx.rollback()
+    if (isTenantError(err)) return err
     throw err
   }
 }
@@ -256,5 +293,24 @@ async function updateOperatorApiSecretFromConfig(
   if (tenant.apiSecret !== adminApiSecret) {
     await tenant.$query(deps.knex).patch({ apiSecret: adminApiSecret })
     await deps.tenantCache.set(operatorTenantId, tenant)
+  }
+}
+
+async function getTenantsByPrefix(
+  deps: ServiceDependencies,
+  prefix: string
+): Promise<Tenant[]> {
+  return await Tenant.query(deps.knex).whereILike(
+    'walletAddressPrefix',
+    `${prefix}%`
+  )
+}
+
+function validateWalletAddressPrefix(prefix: string): boolean {
+  try {
+    new URL(prefix)
+    return true
+  } catch (err) {
+    return false
   }
 }

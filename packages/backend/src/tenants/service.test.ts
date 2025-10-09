@@ -113,6 +113,30 @@ describe('Tenant Service', (): void => {
       const tenantDel = await tenantService.get(dbTenant.id, true)
       expect(tenantDel?.deletedAt).toBeDefined()
     })
+
+    test('can get tenants by wallet address prefix', async (): Promise<void> => {
+      const baseUrl = `https://${faker.internet.domainName()}`
+      await Promise.all([
+        createTenant(deps, { walletAddressPrefix: `${baseUrl}/${v4()}` }),
+        createTenant(deps, { walletAddressPrefix: `${baseUrl}/${v4()}` })
+      ])
+
+      const retrievedTenants = await tenantService.getTenantsByPrefix(baseUrl)
+      expect(retrievedTenants).toHaveLength(2)
+    })
+
+    test('does not retrieve tenants if no prefix matches', async (): Promise<void> => {
+      const baseUrl = `https://${faker.internet.domainName()}`
+      await Promise.all([
+        createTenant(deps, { walletAddressPrefix: `${baseUrl}/${v4()}` }),
+        createTenant(deps, { walletAddressPrefix: `${baseUrl}/${v4()}` })
+      ])
+
+      const retrievedTenants = await tenantService.getTenantsByPrefix(
+        faker.internet.url()
+      )
+      expect(retrievedTenants).toHaveLength(0)
+    })
   })
 
   describe('create', (): void => {
@@ -122,7 +146,8 @@ describe('Tenant Service', (): void => {
         publicName: 'test tenant',
         email: faker.internet.email(),
         idpConsentUrl: faker.internet.url(),
-        idpSecret: 'test-idp-secret'
+        idpSecret: 'test-idp-secret',
+        walletAddressPrefix: `${config.openPaymentsUrl}/${v4()}`
       }
 
       const spy = jest
@@ -149,7 +174,7 @@ describe('Tenant Service', (): void => {
     })
 
     test('can create a tenant with a setting', async () => {
-      const walletAddressUrl = 'https://example.com'
+      const webhookUrl = 'https://example.com'
       const createOptions = {
         apiSecret: 'test-api-secret',
         publicName: 'test tenant',
@@ -158,8 +183,8 @@ describe('Tenant Service', (): void => {
         idpSecret: 'test-idp-secret',
         settings: [
           {
-            key: SchemaTenantSettingKey.WalletAddressUrl,
-            value: walletAddressUrl
+            key: SchemaTenantSettingKey.WebhookUrl,
+            value: webhookUrl
           }
         ]
       }
@@ -172,10 +197,10 @@ describe('Tenant Service', (): void => {
       assert(!isTenantError(tenant))
       const tenantSetting = await TenantSetting.query()
         .where('tenantId', tenant.id)
-        .andWhere('key', SchemaTenantSettingKey.WalletAddressUrl)
+        .andWhere('key', SchemaTenantSettingKey.WebhookUrl)
 
       expect(tenantSetting.length).toBe(1)
-      expect(tenantSetting[0].value).toEqual(walletAddressUrl)
+      expect(tenantSetting[0].value).toEqual(webhookUrl)
     })
 
     test('can create tenant with a specified id', async (): Promise<void> => {
@@ -231,6 +256,21 @@ describe('Tenant Service', (): void => {
           })
         )
       }
+    })
+
+    test('cannot create tenant with invalid url for wallet address prefix', async (): Promise<void> => {
+      const createOptions = {
+        apiSecret: 'test-api-secret',
+        publicName: 'test tenant',
+        email: faker.internet.email(),
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret',
+        walletAddressPrefix: `invalid-url-prefix`
+      }
+
+      const tenantError = await tenantService.create(createOptions)
+      assert(isTenantError(tenantError))
+      expect(tenantError).toEqual(TenantError.InvalidTenantInput)
     })
   })
 
@@ -322,6 +362,42 @@ describe('Tenant Service', (): void => {
       }
     })
 
+    test('rolls back tenant if wallet address prefix is already set', async (): Promise<void> => {
+      const originalTenantInfo = {
+        apiSecret: 'test-api-secret',
+        email: faker.internet.url(),
+        publicName: 'test name',
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret',
+        walletAddressPrefix: `${config.openPaymentsUrl}/${v4()}`
+      }
+
+      jest
+        .spyOn(authServiceClient.tenant, 'create')
+        .mockImplementationOnce(async () => undefined)
+
+      const tenant = await tenantService.create(originalTenantInfo)
+      assert(!isTenantError(tenant))
+
+      const updatedTenantInfo = {
+        id: tenant.id,
+        walletAddressPrefix: `${config.openPaymentsUrl}/${v4()}`
+      }
+
+      jest
+        .spyOn(authServiceClient.tenant, 'update')
+        .mockImplementationOnce(async () => undefined)
+      const tenantError = await tenantService.update(updatedTenantInfo)
+      assert(isTenantError(tenantError))
+      expect(tenantError).toEqual(TenantError.InvalidTenantInput)
+
+      const dbTenant = await tenantService.get(tenant.id)
+      assert(!isTenantError(dbTenant))
+      expect(dbTenant?.walletAddressPrefix).toEqual(
+        originalTenantInfo.walletAddressPrefix
+      )
+    })
+
     test('Cannot update deleted tenant', async (): Promise<void> => {
       const originalSecret = 'test-secret'
       const dbTenant = await Tenant.query(knex).insertAndFetch({
@@ -347,6 +423,26 @@ describe('Tenant Service', (): void => {
         expect(dbTenantAfterUpdate.apiSecret).toEqual(originalSecret)
         expect(spy).toHaveBeenCalledTimes(0)
       }
+    })
+
+    test('Cannot update tenant prefix with invalid url', async (): Promise<void> => {
+      const tenant = await createTenant(deps)
+
+      const updatedTenantInfo = {
+        id: tenant.id,
+        walletAddressPrefix: 'invalid-url-prefix'
+      }
+
+      jest
+        .spyOn(authServiceClient.tenant, 'update')
+        .mockImplementationOnce(async () => undefined)
+      const tenantError = await tenantService.update(updatedTenantInfo)
+      assert(isTenantError(tenantError))
+      expect(tenantError).toEqual(TenantError.InvalidTenantInput)
+
+      const dbTenant = await tenantService.get(tenant.id)
+      assert(!isTenantError(dbTenant))
+      expect(dbTenant?.walletAddressPrefix).toBeNull()
     })
   })
 

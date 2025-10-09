@@ -5,7 +5,7 @@ export enum WalletAddressError {
   UnknownAsset = 'UnknownAsset',
   UnknownWalletAddress = 'UnknownWalletAddress',
   DuplicateWalletAddress = 'DuplicateWalletAddress',
-  WalletAddressSettingNotFound = 'WalletAddressSettingNotFound'
+  WalletAddressPrefixNotFound = 'WalletAddressPrefixNotFound'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -19,7 +19,7 @@ export const errorToCode: {
   [WalletAddressError.UnknownAsset]: GraphQLErrorCode.BadUserInput,
   [WalletAddressError.UnknownWalletAddress]: GraphQLErrorCode.NotFound,
   [WalletAddressError.DuplicateWalletAddress]: GraphQLErrorCode.Duplicate,
-  [WalletAddressError.WalletAddressSettingNotFound]: GraphQLErrorCode.NotFound
+  [WalletAddressError.WalletAddressPrefixNotFound]: GraphQLErrorCode.NotFound
 }
 
 export const errorToMessage: {
@@ -30,6 +30,6 @@ export const errorToMessage: {
   [WalletAddressError.UnknownWalletAddress]: 'unknown wallet address',
   [WalletAddressError.DuplicateWalletAddress]:
     'Duplicate wallet address found with the same url',
-  [WalletAddressError.WalletAddressSettingNotFound]:
-    'Setting for wallet address has not been found.'
+  [WalletAddressError.WalletAddressPrefixNotFound]:
+    'Prefix configuration for wallet address has not been found.'
 }

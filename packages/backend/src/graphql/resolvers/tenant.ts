@@ -144,9 +144,13 @@ export const updateTenant: MutationResolvers<TenantedApolloContext>['updateTenan
 
     const tenantService = await ctx.container.use('tenantService')
     try {
-      const updatedTenant = await tenantService.update(args.input)
-      return { tenant: tenantToGraphQl(updatedTenant) }
+      const updatedTenantOrError = await tenantService.update(args.input)
+      if (isTenantError(updatedTenantOrError)) {
+        throw updatedTenantOrError
+      }
+      return { tenant: tenantToGraphQl(updatedTenantOrError) }
     } catch (err) {
+      if (isTenantError(err)) throw err
       throw new GraphQLError('failed to update tenant', {
         extensions: {
           code: GraphQLErrorCode.NotFound
@@ -191,6 +195,7 @@ export function tenantToGraphQl(tenant: Tenant): SchemaTenant {
     idpConsentUrl: tenant.idpConsentUrl,
     idpSecret: tenant.idpSecret,
     publicName: tenant.publicName,
+    walletAddressPrefix: tenant.walletAddressPrefix,
     settings: tenantSettingsToGraphql(tenant.settings),
     createdAt: new Date(+tenant.createdAt).toISOString(),
     deletedAt: tenant.deletedAt
