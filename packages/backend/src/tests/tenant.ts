@@ -14,11 +14,12 @@ import { TestContainer } from './app'
 import { isTenantError } from '../tenants/errors'
 
 interface CreateOptions {
-  email: string
+  email?: string
   publicName?: string
-  apiSecret: string
-  idpConsentUrl: string
-  idpSecret: string
+  apiSecret?: string
+  idpConsentUrl?: string
+  idpSecret?: string
+  walletAddressPrefix?: string
 }
 
 export function createTenantedApolloClient(
@@ -76,15 +77,14 @@ export async function createTenant(
   jest
     .spyOn(authServiceClient.tenant, 'create')
     .mockImplementationOnce(async () => undefined)
-  const tenantOrError = await tenantService.create(
-    options || {
-      email: faker.internet.email(),
-      apiSecret: 'test-api-secret',
-      publicName: faker.company.name(),
-      idpConsentUrl: faker.internet.url(),
-      idpSecret: 'test-idp-secret'
-    }
-  )
+  const tenantOrError = await tenantService.create({
+    email: faker.internet.email(),
+    apiSecret: 'test-api-secret',
+    publicName: faker.company.name(),
+    idpConsentUrl: faker.internet.url(),
+    idpSecret: 'test-idp-secret',
+    ...options
+  })
 
   if (!tenantOrError || isTenantError(tenantOrError)) {
     throw Error('Failed to create test tenant')

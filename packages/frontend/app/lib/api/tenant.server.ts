@@ -180,6 +180,7 @@ export const getTenantInfo = async (
           idpConsentUrl
           idpSecret
           publicName
+          walletAddressPrefix
           createdAt
           deletedAt
           settings {
