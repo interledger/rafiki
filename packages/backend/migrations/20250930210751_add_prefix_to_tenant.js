@@ -13,10 +13,14 @@ exports.up = function (knex) {
       )
     })
     .then(() => {
-      return knex.raw(`DELETE FROM "tenantSettings" WHERE "key" = 'WALLET_ADDRESS_URL'`)
+      return knex.raw(
+        `DELETE FROM "tenantSettings" WHERE "key" = 'WALLET_ADDRESS_URL'`
+      )
     })
     .then(() => {
-      return knex.raw(`UPDATE "tenants" SET "walletAddressPrefix" = '${process.env.OPEN_PAYMENTS_URL}/' || gen_random_uuid() WHERE "walletAddressPrefix" IS NULL`)
+      return knex.raw(
+        `UPDATE "tenants" SET "walletAddressPrefix" = '${process.env.OPEN_PAYMENTS_URL}/' || gen_random_uuid() WHERE "walletAddressPrefix" IS NULL`
+      )
     })
     .then(() => {
       return knex.schema.alterTable('tenants', (table) => {

@@ -17,7 +17,7 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { Asset } from '../../asset/model'
 import { initIocContainer } from '../..'
-import { Config, IAppConfig } from '../../config/app'
+import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import {
   WalletAddressError,
@@ -88,9 +88,7 @@ describe('Wallet Address Resolvers', (): void => {
     await appContainer.shutdown()
   })
 
-  beforeEach(async () => {
-    
-  })
+  beforeEach(async () => {})
 
   describe('Create Wallet Address', (): void => {
     let asset: Asset
