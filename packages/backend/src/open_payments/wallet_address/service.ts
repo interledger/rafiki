@@ -180,7 +180,7 @@ async function createWalletAddressUrl(
   const tenant = await deps.tenantService.get(options.tenantId)
 
   if (!tenant) return WalletAddressError.UnknownTenant
-  let tenantWalletAddressUrl = new URL(tenant.walletAddressPrefix)
+  const tenantWalletAddressUrl = new URL(tenant.walletAddressPrefix)
 
   let tenantBaseUrl = tenantWalletAddressUrl.toString()
   if (!tenantWalletAddressUrl.pathname.endsWith('/')) {

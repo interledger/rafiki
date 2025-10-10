@@ -1,6 +1,5 @@
 import axios from 'axios'
 import { IocContract } from '@adonisjs/fold'
-import { faker } from '@faker-js/faker'
 import { Scope } from 'nock'
 import { URL } from 'url'
 import assert from 'assert'
@@ -13,7 +12,6 @@ import { isWalletAddressError } from '../open_payments/wallet_address/errors'
 import { WalletAddress } from '../open_payments/wallet_address/model'
 import { CreateOptions as BaseCreateOptions } from '../open_payments/wallet_address/service'
 import { LiquidityAccountType } from '../accounting/service'
-import { isTenantError } from '../tenants/errors'
 import { v4 } from 'uuid'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
@@ -39,7 +37,7 @@ export async function createWalletAddress(
     : await createTenant(deps)
   assert.ok(tenantToUse)
 
-  let baseWalletAddressUrl = new URL(
+  const baseWalletAddressUrl = new URL(
     options.address || tenantToUse.walletAddressPrefix
   )
 
@@ -53,8 +51,7 @@ export async function createWalletAddress(
       (await createAsset(deps, { tenantId: tenantToUse.id })).id,
     tenantId: tenantToUse.id,
     address:
-      options.address ||
-      `${baseWalletAddressUrl.href}/${v4()}/.well-known/pay`
+      options.address || `${baseWalletAddressUrl.href}/${v4()}/.well-known/pay`
   })) as MockWalletAddress
   if (isWalletAddressError(walletAddressOrError)) {
     throw new Error(walletAddressOrError)
