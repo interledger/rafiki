@@ -197,7 +197,7 @@ async function updateTenant(
       .whereNull('deletedAt')
       .throwIfNotFound()
 
-    if (idpConsentUrl || idpSecret) {
+    if (idpConsentUrl || idpSecret || apiSecret) {
       await deps.authServiceClient.tenant.update(id, {
         apiSecret,
         idpConsentUrl,
