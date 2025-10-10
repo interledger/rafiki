@@ -177,17 +177,10 @@ async function createWalletAddressUrl(
   deps: ServiceDependencies,
   options: CreateOptions
 ): Promise<string | WalletAddressError> {
-  let tenantWalletAddressUrl = new URL(deps.config.openPaymentsUrl)
-
   const tenant = await deps.tenantService.get(options.tenantId)
 
-  if (!tenant?.walletAddressPrefix) {
-    if (!options.isOperator) {
-      return WalletAddressError.WalletAddressPrefixNotFound
-    }
-  } else {
-    tenantWalletAddressUrl = new URL(tenant.walletAddressPrefix)
-  }
+  if (!tenant) return WalletAddressError.UnknownTenant
+  let tenantWalletAddressUrl = new URL(tenant.walletAddressPrefix)
 
   let tenantBaseUrl = tenantWalletAddressUrl.toString()
   if (!tenantWalletAddressUrl.pathname.endsWith('/')) {
@@ -207,7 +200,7 @@ async function createWalletAddressUrl(
   let finalWalletAddressUrl: string
   if (isValidUrl(options.address)) {
     // in case that client provided full url, verify that it starts with the tenant's URL
-    const walletAddressUrl = new URL(options.address.toLowerCase())
+    const walletAddressUrl = new URL(options.address)
     if (!walletAddressUrl.href.startsWith(tenantWalletAddressUrl.href)) {
       return WalletAddressError.InvalidUrl
     }
