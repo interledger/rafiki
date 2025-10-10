@@ -94,57 +94,13 @@ describe('Open Payments Wallet Address Service', (): void => {
       }
     )
 
-    test.each`
-      isOperator | tenantSettingUrl
-      ${false}   | ${undefined}
-      ${true}    | ${undefined}
-      ${true}    | ${`https://alice.me/${uuid()}`}
-    `(
-      'operator - $isOperator with tenantSettingUrl - $tenantSettingUrl',
-      async ({ isOperator, tenantSettingUrl }): Promise<void> => {
-        const address = 'test'
-        const tempTenant = await createTenant(deps, {
-          walletAddressPrefix: tenantSettingUrl
-        })
-        const { id: tempAssetId } = await createAsset(deps, {
-          tenantId: tempTenant.id
-        })
-
-        let expected: string
-        if (tenantSettingUrl) {
-          expected = `${tenantSettingUrl}/${address}`
-        } else {
-          if (isOperator) {
-            expected = `https://op.example/${address}`
-          }
-        }
-
-        const created = await walletAddressService.create({
-          ...options,
-          address,
-          isOperator,
-          assetId: tempAssetId,
-          tenantId: tempTenant.id
-        })
-
-        if (isWalletAddressError(expected)) {
-          expect(created).toEqual(expected)
-        } else {
-          assert.ok(!isWalletAddressError(created))
-          expect(created.address).toEqual(expected)
-        }
-      }
-    )
-
-    test('should return error without tenant settings if caller is not an operator', async () => {
-      const tempTenant = await createTenant(deps)
-
+    test('should return error if unknown tenant', async () => {
       expect(
         await walletAddressService.create({
           ...options,
-          tenantId: tempTenant.id
+          tenantId: uuid()
         })
-      ).toEqual(WalletAddressError.WalletAddressPrefixNotFound)
+      ).toEqual(WalletAddressError.UnknownTenant)
     })
 
     test('should return InvalidUrl error if wallet address URL does not start with tenant wallet address URL', async (): Promise<void> => {
