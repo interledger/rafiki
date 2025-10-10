@@ -160,7 +160,7 @@ export const tenantSettingsSchema = z.object({
   webhookUrl: z.string().url().or(z.literal('')).optional(),
   webhookTimeout: z.coerce.number().or(z.literal('')).optional(),
   webhookMaxRetry: z.coerce.number().or(z.literal('')).optional(),
-  walletAddressPrefix: z.string().url().or(z.literal('')).optional(),
+  walletAddressPrefix: z.string().url().or(z.literal('')),
   ilpAddress: z.string().optional()
 })
 

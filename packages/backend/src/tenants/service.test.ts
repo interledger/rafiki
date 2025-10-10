@@ -69,7 +69,8 @@ describe('Tenant Service', (): void => {
         publicName: 'test tenant',
         email: faker.internet.email(),
         idpConsentUrl: faker.internet.url(),
-        idpSecret: 'test-idp-secret'
+        idpSecret: 'test-idp-secret',
+        walletAddressPrefix: faker.internet.url()
       }
 
       const createdTenant =
@@ -86,7 +87,8 @@ describe('Tenant Service', (): void => {
         email: faker.internet.email(),
         idpConsentUrl: faker.internet.url(),
         idpSecret: 'test-idp-secret',
-        deletedAt: new Date()
+        deletedAt: new Date(),
+        walletAddressPrefix: faker.internet.url()
       })
 
       const tenant = await tenantService.get(dbTenant.id)
@@ -103,7 +105,8 @@ describe('Tenant Service', (): void => {
         email: faker.internet.email(),
         idpConsentUrl: faker.internet.url(),
         idpSecret: 'test-idp-secret',
-        deletedAt: new Date()
+        deletedAt: new Date(),
+        walletAddressPrefix: faker.internet.url()
       })
 
       const tenant = await tenantService.get(dbTenant.id)
@@ -181,6 +184,7 @@ describe('Tenant Service', (): void => {
         email: faker.internet.email(),
         idpConsentUrl: faker.internet.url(),
         idpSecret: 'test-idp-secret',
+        walletAddressPrefix: faker.internet.url(),
         settings: [
           {
             key: SchemaTenantSettingKey.WebhookUrl,
@@ -211,7 +215,8 @@ describe('Tenant Service', (): void => {
         publicName: 'test tenant',
         email: faker.internet.email(),
         idpConsentUrl: faker.internet.url(),
-        idpSecret: 'test-idp-secret'
+        idpSecret: 'test-idp-secret',
+        walletAddressPrefix: faker.internet.url()
       }
 
       jest
@@ -229,7 +234,8 @@ describe('Tenant Service', (): void => {
         publicName: 'test tenant',
         email: faker.internet.email(),
         idpConsentUrl: faker.internet.url(),
-        idpSecret: 'test-idp-secret'
+        idpSecret: 'test-idp-secret',
+        walletAddressPrefix: faker.internet.url()
       }
 
       const spy = jest
@@ -272,6 +278,33 @@ describe('Tenant Service', (): void => {
       assert(isTenantError(tenantError))
       expect(tenantError).toEqual(TenantError.InvalidTenantInput)
     })
+
+    test('cannot create tenant with duplicate wallet address prefix', async (): Promise<void> => {
+      const walletAddressPrefix = `${config.openPaymentsUrl}/something}`
+      const createOptions1 = {
+        apiSecret: 'test-api-secret',
+        publicName: 'test tenant1',
+        email: faker.internet.email(),
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret1',
+        walletAddressPrefix
+      }
+      const createOptions2 = {
+        apiSecret: 'test-api-secret',
+        publicName: 'test tenant2',
+        email: faker.internet.email(),
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret2',
+        walletAddressPrefix
+      }
+
+      const tenant1Error = await tenantService.create(createOptions1)
+      assert(!isTenantError(tenant1Error))
+
+      const tenant2Error = await tenantService.create(createOptions2)
+      assert(isTenantError(tenant2Error))
+      expect(tenant2Error).toEqual(TenantError.DuplicateWalletAddressPrefix)
+    })
   })
 
   describe('update', (): void => {
@@ -281,7 +314,8 @@ describe('Tenant Service', (): void => {
         email: faker.internet.url(),
         publicName: 'test name',
         idpConsentUrl: faker.internet.url(),
-        idpSecret: 'test-idp-secret'
+        idpSecret: 'test-idp-secret',
+        walletAddressPrefix: faker.internet.url()
       }
 
       jest
@@ -297,7 +331,8 @@ describe('Tenant Service', (): void => {
         email: faker.internet.url(),
         publicName: 'second test name',
         idpConsentUrl: faker.internet.url(),
-        idpSecret: 'test-idp-secret-two'
+        idpSecret: 'test-idp-secret-two',
+        walletAddressPrefix: faker.internet.url()
       }
 
       const spy = jest
@@ -319,7 +354,8 @@ describe('Tenant Service', (): void => {
         email: faker.internet.url(),
         publicName: 'test name',
         idpConsentUrl: faker.internet.url(),
-        idpSecret: 'test-idp-secret'
+        idpSecret: 'test-idp-secret',
+        walletAddressPrefix: faker.internet.url()
       }
 
       jest
@@ -334,7 +370,8 @@ describe('Tenant Service', (): void => {
         email: faker.internet.url(),
         publicName: 'second test name',
         idpConsentUrl: faker.internet.url(),
-        idpSecret: 'test-idp-secret-two'
+        idpSecret: 'test-idp-secret-two',
+        walletAddressPrefix: faker.internet.url()
       }
 
       const spy = jest
@@ -362,42 +399,6 @@ describe('Tenant Service', (): void => {
       }
     })
 
-    test('rolls back tenant if wallet address prefix is already set', async (): Promise<void> => {
-      const originalTenantInfo = {
-        apiSecret: 'test-api-secret',
-        email: faker.internet.url(),
-        publicName: 'test name',
-        idpConsentUrl: faker.internet.url(),
-        idpSecret: 'test-idp-secret',
-        walletAddressPrefix: `${config.openPaymentsUrl}/${v4()}`
-      }
-
-      jest
-        .spyOn(authServiceClient.tenant, 'create')
-        .mockImplementationOnce(async () => undefined)
-
-      const tenant = await tenantService.create(originalTenantInfo)
-      assert(!isTenantError(tenant))
-
-      const updatedTenantInfo = {
-        id: tenant.id,
-        walletAddressPrefix: `${config.openPaymentsUrl}/${v4()}`
-      }
-
-      jest
-        .spyOn(authServiceClient.tenant, 'update')
-        .mockImplementationOnce(async () => undefined)
-      const tenantError = await tenantService.update(updatedTenantInfo)
-      assert(isTenantError(tenantError))
-      expect(tenantError).toEqual(TenantError.InvalidTenantInput)
-
-      const dbTenant = await tenantService.get(tenant.id)
-      assert(!isTenantError(dbTenant))
-      expect(dbTenant?.walletAddressPrefix).toEqual(
-        originalTenantInfo.walletAddressPrefix
-      )
-    })
-
     test('Cannot update deleted tenant', async (): Promise<void> => {
       const originalSecret = 'test-secret'
       const dbTenant = await Tenant.query(knex).insertAndFetch({
@@ -405,7 +406,8 @@ describe('Tenant Service', (): void => {
         apiSecret: originalSecret,
         idpSecret: 'test-idp-secret',
         idpConsentUrl: faker.internet.url(),
-        deletedAt: new Date()
+        deletedAt: new Date(),
+        walletAddressPrefix: faker.internet.url()
       })
 
       const spy = jest.spyOn(authServiceClient.tenant, 'update')
@@ -442,7 +444,7 @@ describe('Tenant Service', (): void => {
 
       const dbTenant = await tenantService.get(tenant.id)
       assert(!isTenantError(dbTenant))
-      expect(dbTenant?.walletAddressPrefix).toBeNull()
+      expect(dbTenant?.walletAddressPrefix).toEqual(tenant.walletAddressPrefix)
     })
   })
 
@@ -453,7 +455,8 @@ describe('Tenant Service', (): void => {
         email: faker.internet.url(),
         publicName: 'test name',
         idpConsentUrl: faker.internet.url(),
-        idpSecret: 'test-idp-secret'
+        idpSecret: 'test-idp-secret',
+        walletAddressPrefix: faker.internet.url()
       }
 
       jest
@@ -486,7 +489,8 @@ describe('Tenant Service', (): void => {
         email: faker.internet.url(),
         publicName: 'test name',
         idpConsentUrl: faker.internet.url(),
-        idpSecret: 'test-idp-secret'
+        idpSecret: 'test-idp-secret',
+        walletAddressPrefix: faker.internet.url()
       }
 
       jest
@@ -535,7 +539,8 @@ describe('Tenant Service', (): void => {
               publicName: faker.company.name(),
               apiSecret: 'test-api-secret',
               idpConsentUrl: faker.internet.url(),
-              idpSecret: 'test-idp-secret'
+              idpSecret: 'test-idp-secret',
+              walletAddressPrefix: faker.internet.url()
             }
 
             jest

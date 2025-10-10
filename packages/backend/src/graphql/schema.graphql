@@ -1694,7 +1694,7 @@ input CreateTenantInput {
   "Public name for the tenant."
   publicName: String
   "Prefix for all wallet addresses belonging to this tenant."
-  walletAddressPrefix: String
+  walletAddressPrefix: String!
   "Initial settings for tenant."
   settings: [TenantSettingInput!]
 }

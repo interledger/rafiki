@@ -64,7 +64,8 @@ export function generateTenantInput() {
     apiSecret: faker.string.alphanumeric(8),
     idpConsentUrl: faker.internet.url(),
     idpSecret: faker.string.alphanumeric(8),
-    publicName: faker.company.name()
+    publicName: faker.company.name(),
+    walletAddressPrefix: faker.internet.url()
   }
 }
 
@@ -83,6 +84,7 @@ export async function createTenant(
     publicName: faker.company.name(),
     idpConsentUrl: faker.internet.url(),
     idpSecret: 'test-idp-secret',
+    walletAddressPrefix: faker.internet.url(),
     ...options
   })
 

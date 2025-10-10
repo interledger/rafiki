@@ -40,18 +40,11 @@ export async function createWalletAddress(
   assert.ok(tenantToUse)
 
   let baseWalletAddressUrl = new URL(
-    options.address || `https://${faker.internet.domainName()}`
+    options.address || tenantToUse.walletAddressPrefix
   )
 
-  if (!tenantToUse.walletAddressPrefix && tenantToUse.id) {
-    const updatedTenant = await tenantService.update({
-      id: tenantToUse.id,
-      walletAddressPrefix: baseWalletAddressUrl.origin
-    })
-    assert(!isTenantError(updatedTenant))
-  } else {
-    baseWalletAddressUrl = new URL(tenantToUse.walletAddressPrefix)
-  }
+  console.log('prefix=', tenantToUse.walletAddressPrefix)
+  console.log('input=', `${baseWalletAddressUrl.href}/${v4()}/.well-known/pay`)
 
   const walletAddressOrError = (await walletAddressService.create({
     ...options,
@@ -61,7 +54,7 @@ export async function createWalletAddress(
     tenantId: tenantToUse.id,
     address:
       options.address ||
-      `${baseWalletAddressUrl.origin}/${v4()}/.well-known/pay`
+      `${baseWalletAddressUrl.href}/${v4()}/.well-known/pay`
   })) as MockWalletAddress
   if (isWalletAddressError(walletAddressOrError)) {
     throw new Error(walletAddressOrError)

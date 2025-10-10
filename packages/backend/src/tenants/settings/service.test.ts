@@ -57,7 +57,8 @@ describe('TenantSetting Service', (): void => {
       apiSecret: faker.string.uuid(),
       email: faker.internet.email(),
       idpConsentUrl: faker.internet.url(),
-      idpSecret: faker.string.uuid()
+      idpSecret: faker.string.uuid(),
+      walletAddressPrefix: faker.internet.url()
     })
     assert(!isTenantError(tenantOrError))
     tenant = tenantOrError

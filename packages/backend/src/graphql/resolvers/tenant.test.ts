@@ -241,6 +241,7 @@ describe('Tenant Resolvers', (): void => {
                     idpConsentUrl
                     idpSecret
                     publicName
+                    walletAddressPrefix
                   }
                 }
               }
@@ -274,6 +275,7 @@ describe('Tenant Resolvers', (): void => {
                     idpConsentUrl
                     idpSecret
                     publicName
+                    walletAddressPrefix
                   }
                 }
               }
@@ -406,6 +408,7 @@ describe('Tenant Resolvers', (): void => {
                     idpConsentUrl
                     idpSecret
                     publicName
+                    walletAddressPrefix
                   }
                 }
               }
@@ -441,6 +444,7 @@ describe('Tenant Resolvers', (): void => {
                     idpConsentUrl
                     idpSecret
                     publicName
+                    walletAddressPrefix
                   }
                 }
               }

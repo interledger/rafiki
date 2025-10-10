@@ -1,7 +1,7 @@
 import { validate as validateUuid } from 'uuid'
 import { Tenant } from './model'
 import { BaseService } from '../shared/baseService'
-import { TransactionOrKnex } from 'objection'
+import { TransactionOrKnex, UniqueViolationError } from 'objection'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { CacheDataStore } from '../middleware/cache/data-stores'
 import type { AuthServiceClient } from '../auth-service-client/client'
@@ -115,7 +115,7 @@ async function createTenant(
       throw TenantError.InvalidTenantInput
     }
 
-    const tenant = await Tenant.query(trx).insertAndFetch({
+    let tenant = await Tenant.query(trx).insertAndFetch({
       id,
       email,
       publicName,
@@ -176,6 +176,7 @@ async function createTenant(
     return tenant
   } catch (err) {
     await trx.rollback()
+    if (err instanceof UniqueViolationError) return TenantError.DuplicateWalletAddressPrefix
     if (isTenantError(err)) return err
     throw err
   }
@@ -232,13 +233,11 @@ async function updateTenant(
         idpSecret
       })
     }
-
-    if (!tenant.walletAddressPrefix && walletAddressPrefix) {
+    
+    if (walletAddressPrefix) {
       tenant = await tenant.$query(trx).patchAndFetch({
-        walletAddressPrefix: walletAddressPrefix.toLowerCase()
+        walletAddressPrefix
       })
-    } else if (tenant.walletAddressPrefix && walletAddressPrefix) {
-      throw TenantError.InvalidTenantInput
     }
 
     await trx.commit()

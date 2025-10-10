@@ -110,7 +110,7 @@ describe('Open Payments Wallet Address Service', (): void => {
           tenantId: tempTenant.id
         })
 
-        let expected: string = WalletAddressError.WalletAddressPrefixNotFound
+        let expected: string
         if (tenantSettingUrl) {
           expected = `${tenantSettingUrl}/${address}`
         } else {
@@ -156,17 +156,17 @@ describe('Open Payments Wallet Address Service', (): void => {
     })
 
     test.each`
-      setting                      | address                          | generated
+      prefix                       | address                          | generated
       ${'https://alice.me/ilp/1'}  | ${'https://alice.me/ilp/1/test'} | ${'https://alice.me/ilp/1/test'}
       ${'https://alice.me/ilp/2'}  | ${'test'}                        | ${'https://alice.me/ilp/2/test'}
       ${'https://alice.me/ilp/3'}  | ${'/test'}                       | ${'https://alice.me/ilp/3/test'}
       ${'https://alice.me/ilp/4/'} | ${'test'}                        | ${'https://alice.me/ilp/4/test'}
       ${'https://alice.me/ilp/5'}  | ${'/test'}                       | ${'https://alice.me/ilp/5/test'}
     `(
-      'should create address $generated with address $address and setting $setting',
-      async ({ setting, address, generated }): Promise<void> => {
+      'should create address $generated with address $address and prefix $prefix',
+      async ({ prefix, address, generated }): Promise<void> => {
         const tenant = await createTenant(deps, {
-          walletAddressPrefix: setting
+          walletAddressPrefix: prefix
         })
         const asset = await createAsset(deps, { tenantId: tenant.id })
         const options = {

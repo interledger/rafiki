@@ -8,12 +8,20 @@ exports.up = function (knex) {
       table.string('walletAddressPrefix').unique()
     })
     .then(() => {
-      knex.raw(
+      return knex.raw(
         `UPDATE "tenants" SET "walletAddressPrefix" = (SELECT "value" from "tenantSettings" WHERE "tenantId" = "tenants"."id" AND "key" = 'WALLET_ADDRESS_URL')`
       )
     })
     .then(() => {
-      knex.raw(`DELETE "tenantSettings" WHERE "key" = 'WALLET_ADDRESS_URL'`)
+      return knex.raw(`DELETE FROM "tenantSettings" WHERE "key" = 'WALLET_ADDRESS_URL'`)
+    })
+    .then(() => {
+      return knex.raw(`UPDATE "tenants" SET "walletAddressPrefix" = '${process.env.OPEN_PAYMENTS_URL}/' || gen_random_uuid() WHERE "walletAddressPrefix" IS NULL`)
+    })
+    .then(() => {
+      return knex.schema.alterTable('tenants', (table) => {
+        table.dropNullable('walletAddressPrefix')
+      })
     })
 }
 

@@ -402,7 +402,7 @@ export type CreateTenantInput = {
   /** Initial settings for tenant. */
   settings?: InputMaybe<Array<TenantSettingInput>>;
   /** Prefix for all wallet addresses belonging to this tenant. */
-  walletAddressPrefix?: InputMaybe<Scalars['String']['input']>;
+  walletAddressPrefix: Scalars['String']['input'];
 };
 
 export type CreateTenantSettingsInput = {
