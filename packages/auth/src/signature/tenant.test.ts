@@ -3,7 +3,7 @@ import { faker } from '@faker-js/faker'
 import Redis from 'ioredis'
 import { initIocContainer } from '..'
 import { AppServices, AppContext, TenantedAppContext } from '../app'
-import { Config } from '../config/app'
+import { Config, IAppConfig } from '../config/app'
 import { Tenant } from '../tenant/model'
 import { generateApiSignature } from '../tests/apiSignature'
 import { TestContainer, createTestApp } from '../tests/app'
@@ -19,6 +19,7 @@ describe('Tenant Middlewares', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let tenantService: TenantService
+  let config: IAppConfig
   let tenant: Tenant
   let operator: Tenant
   let redis: Redis
@@ -30,6 +31,7 @@ describe('Tenant Middlewares', (): void => {
       ...Config,
       adminApiSecret: operatorApiSecret
     })
+    config = await deps.use('config')
     appContainer = await createTestApp(deps)
     redis = await deps.use('redis')
     tenantService = await deps.use('tenantService')
@@ -159,6 +161,97 @@ describe('Tenant Middlewares', (): void => {
       ) as TenantedAppContext
 
       ctx.request.body = requestBody
+
+      const next = jest.fn()
+      const ctxThrowSpy = jest.spyOn(ctx, 'throw')
+
+      await expect(authenticatedTenantMiddleware(ctx, next)).rejects.toThrow()
+      expect(next).not.toHaveBeenCalled()
+      expect(ctxThrowSpy).toHaveBeenCalledWith(401, 'Unauthorized')
+    })
+
+    test('throws if signature is not included', async (): Promise<void> => {
+      const requestBody = { test: 'value' }
+
+      const ctx = createContext<AppContext>(
+        {
+          headers: {
+            Accept: 'application/json'
+          },
+          url: '/graphql'
+        },
+        {},
+        appContainer.container
+      ) as TenantedAppContext
+
+      ctx.request.body = requestBody
+
+      const next = jest.fn()
+      const ctxThrowSpy = jest.spyOn(ctx, 'throw')
+
+      await expect(authenticatedTenantMiddleware(ctx, next)).rejects.toThrow()
+      expect(next).not.toHaveBeenCalled()
+      expect(ctxThrowSpy).toHaveBeenCalledWith(401, 'Unauthorized')
+    })
+
+    test('throws if signature is too old', async (): Promise<void> => {
+      const requestBody = { test: 'value' }
+      const signature = generateApiSignature(
+        tenant.apiSecret,
+        Config.adminApiSignatureVersion,
+        requestBody,
+        new Date().getTime() - config.adminApiSignatureTtlSeconds * 1000
+      )
+
+      const ctx = createContext<AppContext>(
+        {
+          headers: {
+            Accept: 'application/json',
+            signature,
+            'tenant-id': tenant.id
+          },
+          url: '/graphql'
+        },
+        {},
+        appContainer.container
+      ) as TenantedAppContext
+
+      ctx.request.body = requestBody
+
+      const next = jest.fn()
+      const ctxThrowSpy = jest.spyOn(ctx, 'throw')
+
+      await expect(authenticatedTenantMiddleware(ctx, next)).rejects.toThrow()
+      expect(next).not.toHaveBeenCalled()
+      expect(ctxThrowSpy).toHaveBeenCalledWith(401, 'Unauthorized')
+    })
+
+    test('throws if signature has already been processed', async (): Promise<void> => {
+      const requestBody = { test: 'value' }
+      const signature = generateApiSignature(
+        tenant.apiSecret,
+        Config.adminApiSignatureVersion,
+        requestBody
+      )
+
+      const ctx = createContext<AppContext>(
+        {
+          headers: {
+            Accept: 'application/json',
+            signature,
+            'tenant-id': tenant.id
+          },
+          url: '/graphql'
+        },
+        {},
+        appContainer.container
+      ) as TenantedAppContext
+
+      ctx.request.body = requestBody
+
+      await expect(
+        authenticatedTenantMiddleware(ctx, jest.fn())
+      ).resolves.toBeUndefined()
 
       const next = jest.fn()
       const ctxThrowSpy = jest.spyOn(ctx, 'throw')
