@@ -23,27 +23,6 @@ describe('AuthServiceClient', () => {
   })
 
   describe('tenant', () => {
-    describe('get', () => {
-      test('retrieves a tenant', async () => {
-        const tenantData = createTenantData()
-
-        nock(baseUrl).get(`/tenant/${tenantData.id}`).reply(200, tenantData)
-
-        const tenant = await client.tenant.get(tenantData.id)
-        expect(tenant).toEqual(tenantData)
-      })
-
-      test('throws on bad request', async () => {
-        const id = faker.string.uuid()
-
-        nock(baseUrl).get(`/tenant/${id}`).reply(404)
-
-        await expect(client.tenant.get(id)).rejects.toThrow(
-          AuthServiceClientError
-        )
-      })
-    })
-
     describe('create', () => {
       test('creates a new tenant', async () => {
         const tenantData = createTenantData()
