@@ -17,7 +17,7 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { Asset } from '../../asset/model'
 import { initIocContainer } from '../..'
-import { Config } from '../../config/app'
+import { Config, IAppConfig } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import {
   WalletAddressError,
@@ -49,6 +49,7 @@ import { faker } from '@faker-js/faker'
 import { Tenant } from '../../tenants/model'
 import { createTenant } from '../../tests/tenant'
 import { TenantService } from '../../tenants/service'
+import { isTenantError } from '../../tenants/errors'
 
 describe('Wallet Address Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -57,6 +58,7 @@ describe('Wallet Address Resolvers', (): void => {
   let walletAddressService: WalletAddressService
   let assetService: AssetService
   let tenantService: TenantService
+  let prefix: string
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
@@ -68,6 +70,13 @@ describe('Wallet Address Resolvers', (): void => {
     walletAddressService = await deps.use('walletAddressService')
     assetService = await deps.use('assetService')
     tenantService = await deps.use('tenantService')
+    const tenant = await tenantService.update({
+      id: Config.operatorTenantId,
+      walletAddressPrefix: 'https://alice.me'
+    })
+    assert.ok(!isTenantError(tenant))
+    assert.ok(tenant.walletAddressPrefix)
+    prefix = tenant.walletAddressPrefix
   })
 
   afterEach(async (): Promise<void> => {
@@ -80,10 +89,7 @@ describe('Wallet Address Resolvers', (): void => {
   })
 
   beforeEach(async () => {
-    await tenantService.update({
-      id: Config.operatorTenantId,
-      walletAddressPrefix: 'https://alice.me'
-    })
+    
   })
 
   describe('Create Wallet Address', (): void => {
@@ -95,7 +101,7 @@ describe('Wallet Address Resolvers', (): void => {
       input = {
         assetId: asset.id,
         tenantId: Config.operatorTenantId,
-        address: 'https://alice.me/.well-known/pay'
+        address: `${prefix}/.well-known/pay`
       }
     })
 
