@@ -141,6 +141,19 @@ async function createTenantSetting(
     ) {
       return TenantSettingError.InvalidSetting
     }
+
+    if (setting.key === TenantSettingKeys.WALLET_ADDRESS_URL.name) {
+      const existingSetting = await TenantSetting.query(
+        extra?.trx ?? deps.knex
+      ).findOne({
+        key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+        value: setting.value
+      })
+
+      if (existingSetting) {
+        return TenantSettingError.DuplicateWalletAddressUrl
+      }
+    }
   }
 
   const dataToUpsert = options.setting

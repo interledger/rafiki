@@ -286,6 +286,28 @@ describe('TenantSetting Service', (): void => {
         tenantSettingService.create(invalidIlpAddressSetting)
       ).resolves.toEqual(TenantSettingError.InvalidSetting)
     })
+
+    test('cannot create setting with a non-unique wallet address url', async (): Promise<void> => {
+      const existingTenant = await createTenant(deps)
+      const existingSetting = [
+        {
+          key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+          value: faker.internet.url()
+        }
+      ]
+      await createTenantSettings(deps, {
+        tenantId: existingTenant.id,
+        setting: existingSetting
+      })
+
+      const newTenant = await createTenant(deps)
+      await expect(
+        tenantSettingService.create({
+          tenantId: newTenant.id,
+          setting: existingSetting
+        })
+      ).resolves.toEqual(TenantSettingError.DuplicateWalletAddressUrl)
+    })
   })
 
   describe('get', () => {
