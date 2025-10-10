@@ -115,7 +115,7 @@ async function createTenant(
       throw TenantError.InvalidTenantInput
     }
 
-    let tenant = await Tenant.query(trx).insertAndFetch({
+    const tenant = await Tenant.query(trx).insertAndFetch({
       id,
       email,
       publicName,
@@ -176,7 +176,8 @@ async function createTenant(
     return tenant
   } catch (err) {
     await trx.rollback()
-    if (err instanceof UniqueViolationError) return TenantError.DuplicateWalletAddressPrefix
+    if (err instanceof UniqueViolationError)
+      return TenantError.DuplicateWalletAddressPrefix
     if (isTenantError(err)) return err
     throw err
   }
@@ -233,7 +234,7 @@ async function updateTenant(
         idpSecret
       })
     }
-    
+
     if (walletAddressPrefix) {
       tenant = await tenant.$query(trx).patchAndFetch({
         walletAddressPrefix
