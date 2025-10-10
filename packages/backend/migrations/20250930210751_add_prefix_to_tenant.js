@@ -19,6 +19,11 @@ exports.up = function (knex) {
     })
     .then(() => {
       return knex.raw(
+        `UPDATE "tenants" SET "walletAddressPrefix" = '${process.env.OPEN_PAYMENTS_URL}' WHERE "id" = '${process.env.OPERATOR_TENANT_ID}'`
+      )
+    })
+    .then(() => {
+      return knex.raw(
         `UPDATE "tenants" SET "walletAddressPrefix" = '${process.env.OPEN_PAYMENTS_URL}/' || gen_random_uuid() WHERE "walletAddressPrefix" IS NULL`
       )
     })
