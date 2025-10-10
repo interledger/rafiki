@@ -1541,7 +1541,7 @@ export type Tenant = Model & {
   /** List of settings for the tenant. */
   settings: Array<TenantSetting>;
   /** Prefix for wallet addresses belonging to this tenant. */
-  walletAddressPrefix?: Maybe<Scalars['String']['output']>;
+  walletAddressPrefix: Scalars['String']['output'];
 };
 
 export type TenantEdge = {
@@ -2687,7 +2687,7 @@ export type TenantResolvers<ContextType = any, ParentType extends ResolversParen
   idpSecret?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   publicName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   settings?: Resolver<Array<ResolversTypes['TenantSetting']>, ParentType, ContextType>;
-  walletAddressPrefix?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  walletAddressPrefix?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -3086,7 +3086,7 @@ export type ListTenantsQueryVariables = Exact<{
 }>;
 
 
-export type ListTenantsQuery = { __typename?: 'Query', tenants: { __typename?: 'TenantsConnection', edges: Array<{ __typename?: 'TenantEdge', node: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null, createdAt: string, deletedAt?: string | null, settings: Array<{ __typename?: 'TenantSetting', key: TenantSettingKey, value: string }> } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
+export type ListTenantsQuery = { __typename?: 'Query', tenants: { __typename?: 'TenantsConnection', edges: Array<{ __typename?: 'TenantEdge', node: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, walletAddressPrefix: string, publicName?: string | null, createdAt: string, deletedAt?: string | null, settings: Array<{ __typename?: 'TenantSetting', key: TenantSettingKey, value: string }> } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
 
 export type CreateTenantMutationVariables = Exact<{
   input: CreateTenantInput;
@@ -3114,7 +3114,7 @@ export type GetTenantQueryVariables = Exact<{
 }>;
 
 
-export type GetTenantQuery = { __typename?: 'Query', tenant: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null, walletAddressPrefix?: string | null, createdAt: string, deletedAt?: string | null, settings: Array<{ __typename?: 'TenantSetting', key: TenantSettingKey, value: string }> } };
+export type GetTenantQuery = { __typename?: 'Query', tenant: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null, walletAddressPrefix: string, createdAt: string, deletedAt?: string | null, settings: Array<{ __typename?: 'TenantSetting', key: TenantSettingKey, value: string }> } };
 
 export type GetWalletAddressQueryVariables = Exact<{
   id: Scalars['String']['input'];

@@ -1541,7 +1541,7 @@ export type Tenant = Model & {
   /** List of settings for the tenant. */
   settings: Array<TenantSetting>;
   /** Prefix for wallet addresses belonging to this tenant. */
-  walletAddressPrefix?: Maybe<Scalars['String']['output']>;
+  walletAddressPrefix: Scalars['String']['output'];
 };
 
 export type TenantEdge = {
@@ -2687,7 +2687,7 @@ export type TenantResolvers<ContextType = any, ParentType extends ResolversParen
   idpSecret?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   publicName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   settings?: Resolver<Array<ResolversTypes['TenantSetting']>, ParentType, ContextType>;
-  walletAddressPrefix?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  walletAddressPrefix?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

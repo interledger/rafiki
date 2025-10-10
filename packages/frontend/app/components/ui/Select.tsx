@@ -22,7 +22,7 @@ type SelectProps = {
   defaultValue?: SelectOption
   description?: ReactNode
   onChange?: (value: React.SetStateAction<SelectOption | undefined>) => void
-  bringForward?: boolean
+  bringForward?: 1 | 2
 }
 
 export const Select = ({
@@ -69,7 +69,9 @@ export const Select = ({
       {name ? (
         <input type='hidden' name={name} value={internalValue.value} />
       ) : null}
-      <div className={`relative ${bringForward ? 'forward' : ''}`}>
+      <div
+        className={`relative ${bringForward ? `forward-${bringForward}` : ''}`}
+      >
         {label ? (
           <Combobox.Label as={Label} htmlFor={id} required={required}>
             {label}

@@ -1642,7 +1642,7 @@ type Tenant implements Model {
   "Public name for the tenant."
   publicName: String
   "Prefix for wallet addresses belonging to this tenant."
-  walletAddressPrefix: String
+  walletAddressPrefix: String!
   "The date and time that this tenant was created."
   createdAt: String!
   "The date and time that this tenant was deleted."

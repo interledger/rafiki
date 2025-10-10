@@ -56,6 +56,7 @@ export const listTenants = async (request: Request, args: QueryTenantsArgs) => {
               apiSecret
               idpConsentUrl
               idpSecret
+              walletAddressPrefix
               publicName
               createdAt
               deletedAt

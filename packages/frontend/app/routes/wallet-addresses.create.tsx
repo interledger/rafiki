@@ -14,24 +14,11 @@ import { createWalletAddress } from '~/lib/api/wallet-address.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createWalletAddressSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
-import {
-  getOpenPaymentsUrl,
-  removeTrailingAndLeadingSlash
-} from '~/shared/utils'
+import { removeTrailingAndLeadingSlash } from '~/shared/utils'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
 import type { listTenants } from '~/lib/api/tenant.server'
 import { whoAmI, loadTenants, getTenantInfo } from '~/lib/api/tenant.server'
-
-const WALLET_ADDRESS_URL_KEY = 'WALLET_ADDRESS_URL'
-
-const findWASetting = (
-  tenantSettings: Awaited<ReturnType<typeof getTenantInfo>>['settings']
-) => {
-  return tenantSettings.find(
-    (setting) => setting.key === WALLET_ADDRESS_URL_KEY
-  )?.value
-}
 
 const findTenant = (
   tenants: Awaited<ReturnType<typeof listTenants>>['edges'],
@@ -49,14 +36,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   let tenants
   let tenantWAPrefix
   if (isOperator) {
-    const loadedTenants = await loadTenants(request)
-    tenants = loadedTenants.filter(
-      (tenant) => findWASetting(tenant.node.settings) || tenant.node.id === id
-    )
+    tenants = await loadTenants(request)
   } else {
     const tenant = await getTenantInfo(request, { id })
-    const waPrefixSetting = findWASetting(tenant.settings)
-    tenantWAPrefix = waPrefixSetting ?? getOpenPaymentsUrl()
+    tenantWAPrefix = tenant.walletAddressPrefix
   }
   return json({ assets, tenants, tenantWAPrefix })
 }
@@ -80,9 +63,6 @@ export default function CreateWalletAddressPage() {
 
   const currentTenant =
     tenants && tenantId ? findTenant(tenants, tenantId.value) : null
-  const waPrefix = currentTenant
-    ? findWASetting(currentTenant.node.settings)
-    : tenantWAPrefix
 
   return (
     <div className='pt-4 flex flex-col space-y-4'>
@@ -107,25 +87,6 @@ export default function CreateWalletAddressPage() {
               </div>
               <div className='md:col-span-2 bg-white rounded-md shadow-md'>
                 <div className='w-full p-4 space-y-3'>
-                  <Input
-                    name='waPrefix'
-                    value={waPrefix ?? getOpenPaymentsUrl()}
-                    type={'hidden'}
-                  />
-                  <Input
-                    required
-                    addOn={waPrefix ?? getOpenPaymentsUrl()}
-                    name='name'
-                    label='Wallet address name'
-                    placeholder='jdoe'
-                    error={response?.errors?.fieldErrors.name}
-                  />
-                  <Input
-                    name='publicName'
-                    label='Public name'
-                    placeholder='Public name'
-                    error={response?.errors?.fieldErrors.publicName}
-                  />
                   {tenants ? (
                     <Select
                       options={tenants.map((tenant) => ({
@@ -137,7 +98,7 @@ export default function CreateWalletAddressPage() {
                       label='Tenant'
                       required
                       onChange={(value) => setTenantId(value)}
-                      bringForward
+                      bringForward={2}
                     />
                   ) : (
                     <Select
@@ -150,6 +111,7 @@ export default function CreateWalletAddressPage() {
                       placeholder='Select asset...'
                       label='Asset'
                       required
+                      bringForward={1}
                     />
                   )}
                   {tenants && tenantId && (
@@ -160,8 +122,32 @@ export default function CreateWalletAddressPage() {
                       placeholder='Select asset...'
                       label='Asset'
                       required
+                      bringForward={1}
                     />
                   )}
+                  <Input
+                    name='waPrefix'
+                    value={
+                      currentTenant?.node.walletAddressPrefix ?? tenantWAPrefix
+                    }
+                    type={'hidden'}
+                  />
+                  <Input
+                    required
+                    addOn={
+                      currentTenant?.node.walletAddressPrefix ?? tenantWAPrefix
+                    }
+                    name='name'
+                    label='Wallet address name'
+                    placeholder='jdoe'
+                    error={response?.errors?.fieldErrors.name}
+                  />
+                  <Input
+                    name='publicName'
+                    label='Public name'
+                    placeholder='Public name'
+                    error={response?.errors?.fieldErrors.publicName}
+                  />
                 </div>
               </div>
             </div>
