@@ -1,5 +1,6 @@
 interface Tenant {
   id: string
+  apiSecret: string
   idpConsentUrl?: string
   idpSecret?: string
 }

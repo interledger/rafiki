@@ -22,6 +22,7 @@ type TenantContext<BodyT = never, QueryT = ParsedUrlQuery> = Exclude<
 
 interface CreateTenantBody {
   id: string
+  apiSecret: string
   idpConsentUrl?: string
   idpSecret?: string
 }
@@ -34,6 +35,7 @@ interface TenantParams {
 
 interface TenantResponse {
   id: string
+  apiSecret: string
   idpConsentUrl?: string
   idpSecret?: string
 }
@@ -141,6 +143,7 @@ async function getTenant(
 function toTenantResponse(tenant: Tenant): TenantResponse {
   return {
     id: tenant.id,
+    apiSecret: tenant.apiSecret,
     idpConsentUrl: tenant.idpConsentUrl,
     idpSecret: tenant.idpSecret
   }

@@ -73,7 +73,7 @@ describe('Interaction Routes', (): void => {
   afterEach(async (): Promise<void> => {
     jest.restoreAllMocks()
     jest.useRealTimers()
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -95,6 +95,7 @@ describe('Interaction Routes', (): void => {
         'Interaction start fails if tenant for $description grant has no configured idp',
         async ({ isFinishableGrant }): Promise<void> => {
           const unconfiguredTenant = await Tenant.query().insertAndFetch({
+            apiSecret: v4(),
             idpConsentUrl: undefined,
             idpSecret: undefined
           })
@@ -966,6 +967,7 @@ describe('Interaction Routes', (): void => {
 
       test('cannot accept/reject interaction with unconfigured tenant', async (): Promise<void> => {
         const unconfiguredTenant = await Tenant.query().insertAndFetch({
+          apiSecret: v4(),
           idpConsentUrl: undefined,
           idpSecret: undefined
         })
