@@ -15,7 +15,7 @@ import {
 } from './tenant'
 import { TenantService } from '../tenant/service'
 
-describe('getTenantFromApiSignature', (): void => {
+describe('Tenant Middlewares', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let tenantService: TenantService
