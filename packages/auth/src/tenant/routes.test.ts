@@ -69,6 +69,7 @@ describe('Tenant Routes', (): void => {
       expect(ctx.status).toBe(200)
       expect(ctx.body).toEqual({
         id: tenant.id,
+        apiSecret: tenant.apiSecret,
         idpConsentUrl: tenant.idpConsentUrl,
         idpSecret: tenant.idpSecret
       })
@@ -119,6 +120,7 @@ describe('Tenant Routes', (): void => {
 
       const tenant = await Tenant.query().findById(tenantData.id)
       expect(tenant).toBeDefined()
+      expect(tenant?.apiSecret).toBe(tenantData.apiSecret)
       expect(tenant?.idpConsentUrl).toBe(tenantData.idpConsentUrl)
       expect(tenant?.idpSecret).toBe(tenantData.idpSecret)
     })
