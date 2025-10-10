@@ -1,12 +1,22 @@
-import { ApolloError, ApolloQueryResult, gql } from '@apollo/client'
+import {
+  ApolloClient,
+  ApolloError,
+  ApolloQueryResult,
+  gql,
+  NormalizedCacheObject
+} from '@apollo/client'
 import { v4 as uuid } from 'uuid'
 import assert from 'assert'
 
-import { createTestApp, TestContainer } from '../../tests/app'
+import {
+  createApolloClient,
+  createTestApp,
+  TestContainer
+} from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
-import { Config } from '../../config/app'
+import { Config, IAppConfig } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import {
   GrantFinalization,
@@ -20,8 +30,8 @@ import { Grant, Grant as GrantModel } from '../../grant/model'
 import { getPageTests } from './page.test'
 import { createGrant } from '../../tests/grant'
 import { GraphQLErrorCode } from '../errors'
-import { Tenant } from '../../tenant/model'
 import { generateTenant } from '../../tests/tenant'
+import { Tenant } from '../../tenant/model'
 
 const responseHandler = (query: ApolloQueryResult<Query>): GrantsConnection => {
   if (query.data) {
@@ -33,16 +43,18 @@ const responseHandler = (query: ApolloQueryResult<Query>): GrantsConnection => {
 
 describe('Grant Resolvers', (): void => {
   let deps: IocContract<AppServices>
+  let config: IAppConfig
   let appContainer: TestContainer
-  let tenant: Tenant
+  let operatorApolloClient: ApolloClient<NormalizedCacheObject>
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-  })
-
-  beforeEach(async (): Promise<void> => {
-    tenant = await Tenant.query().insertAndFetch(generateTenant())
+    config = await deps.use('config')
+    operatorApolloClient = await createApolloClient(
+      appContainer.container,
+      appContainer.app
+    )
   })
 
   afterEach(async (): Promise<void> => {
@@ -50,14 +62,15 @@ describe('Grant Resolvers', (): void => {
   })
 
   afterAll(async (): Promise<void> => {
-    await appContainer.apolloClient.stop()
+    operatorApolloClient.stop()
     await appContainer.shutdown()
   })
 
   describe('Grants Queries', (): void => {
     getPageTests({
-      getClient: () => appContainer.apolloClient,
-      createModel: () => createGrant(deps, tenant.id) as Promise<GrantModel>,
+      getClient: () => operatorApolloClient,
+      createModel: () =>
+        createGrant(deps, config.operatorTenantId) as Promise<GrantModel>,
       pagedQuery: 'grants'
     })
 
@@ -65,10 +78,10 @@ describe('Grant Resolvers', (): void => {
       const grants: GrantModel[] = []
 
       for (let i = 0; i < 2; i++) {
-        grants[1 - i] = await createGrant(deps, tenant.id)
+        grants[1 - i] = await createGrant(deps, config.operatorTenantId)
       }
 
-      const query = await appContainer.apolloClient
+      const query = await operatorApolloClient
         .query({
           query: gql`
             query grants {
@@ -113,7 +126,9 @@ describe('Grant Resolvers', (): void => {
           { identifier: 'https://abc.com/xyz' }
         ]
         for (const { identifier } of grantData) {
-          const grant = await createGrant(deps, tenant.id, { identifier })
+          const grant = await createGrant(deps, config.operatorTenantId, {
+            identifier
+          })
           grants.push(grant)
         }
       })
@@ -123,7 +138,7 @@ describe('Grant Resolvers', (): void => {
       })
 
       test('ASC', async (): Promise<void> => {
-        const query = await appContainer.apolloClient
+        const query = await operatorApolloClient
           .query({
             query: gql`
               query grants($sortOrder: SortOrder) {
@@ -145,7 +160,7 @@ describe('Grant Resolvers', (): void => {
       })
 
       test('DESC', async (): Promise<void> => {
-        const query = await appContainer.apolloClient
+        const query = await operatorApolloClient
           .query({
             query: gql`
               query grants($sortOrder: SortOrder) {
@@ -177,7 +192,9 @@ describe('Grant Resolvers', (): void => {
           { identifier: 'https://abc.com/xyz' }
         ]
         for (const { identifier } of grantData) {
-          const grant = await createGrant(deps, tenant.id, { identifier })
+          const grant = await createGrant(deps, config.operatorTenantId, {
+            identifier
+          })
           grants.push(grant)
         }
 
@@ -189,7 +206,7 @@ describe('Grant Resolvers', (): void => {
           }
         }
 
-        const query = await appContainer.apolloClient
+        const query = await operatorApolloClient
           .query({
             query: gql`
               query grants($filter: GrantFilter) {
@@ -238,7 +255,7 @@ describe('Grant Resolvers', (): void => {
           }
         ]
         for (const patch of grantPatches) {
-          const grant = await createGrant(deps, tenant.id)
+          const grant = await createGrant(deps, config.operatorTenantId)
           await grant.$query().patch(patch)
         }
 
@@ -248,7 +265,7 @@ describe('Grant Resolvers', (): void => {
           }
         }
 
-        const query = await appContainer.apolloClient
+        const query = await operatorApolloClient
           .query({
             query: gql`
               query grants($filter: GrantFilter) {
@@ -287,7 +304,7 @@ describe('Grant Resolvers', (): void => {
           { state: GrantState.Approved }
         ]
         for (const patch of grantPatches) {
-          const grant = await createGrant(deps, tenant.id)
+          const grant = await createGrant(deps, config.operatorTenantId)
           await grant.$query().patch(patch)
         }
 
@@ -297,7 +314,7 @@ describe('Grant Resolvers', (): void => {
           }
         }
 
-        const query = await appContainer.apolloClient
+        const query = await operatorApolloClient
           .query({
             query: gql`
               query grants($filter: GrantFilter) {
@@ -346,7 +363,7 @@ describe('Grant Resolvers', (): void => {
           }
         ]
         for (const patch of grantPatches) {
-          const grant = await createGrant(deps, tenant.id)
+          const grant = await createGrant(deps, config.operatorTenantId)
           await grant.$query().patch(patch)
         }
 
@@ -356,7 +373,7 @@ describe('Grant Resolvers', (): void => {
           }
         }
 
-        const query = await appContainer.apolloClient
+        const query = await operatorApolloClient
           .query({
             query: gql`
               query grants($filter: GrantFilter) {
@@ -409,7 +426,7 @@ describe('Grant Resolvers', (): void => {
           }
         ]
         for (const patch of grantPatches) {
-          const grant = await createGrant(deps, tenant.id)
+          const grant = await createGrant(deps, config.operatorTenantId)
           await grant.$query().patch(patch)
         }
 
@@ -419,7 +436,7 @@ describe('Grant Resolvers', (): void => {
           }
         }
 
-        const query = await appContainer.apolloClient
+        const query = await operatorApolloClient
           .query({
             query: gql`
               query grants($filter: GrantFilter) {
@@ -456,16 +473,151 @@ describe('Grant Resolvers', (): void => {
         )
       })
     })
+
+    describe('Tenant boundaries', (): void => {
+      test('Operator can view grants across all tenants', async (): Promise<void> => {
+        const tenant = await Tenant.query().insertAndFetch(generateTenant())
+        const secondTenant =
+          await Tenant.query().insertAndFetch(generateTenant())
+
+        await Promise.all([
+          createGrant(deps, config.operatorTenantId),
+          createGrant(deps, tenant.id),
+          createGrant(deps, tenant.id),
+          createGrant(deps, secondTenant.id)
+        ])
+
+        const query = await operatorApolloClient
+          .query({
+            query: gql`
+              query grants($tenantId: ID) {
+                grants(tenantId: $tenantId) {
+                  edges {
+                    node {
+                      id
+                      state
+                      tenantId
+                    }
+                    cursor
+                  }
+                }
+              }
+            `,
+            variables: {}
+          })
+          .then((query): GrantsConnection => {
+            if (query.data) {
+              return query.data.grants
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(query.edges).toHaveLength(4)
+      })
+
+      test('Operator can filter grants by tenantId', async (): Promise<void> => {
+        const tenant = await Tenant.query().insertAndFetch(generateTenant())
+        const secondTenant =
+          await Tenant.query().insertAndFetch(generateTenant())
+
+        await Promise.all([
+          createGrant(deps, config.operatorTenantId),
+          createGrant(deps, tenant.id),
+          createGrant(deps, tenant.id),
+          createGrant(deps, secondTenant.id)
+        ])
+
+        const query = await operatorApolloClient
+          .query({
+            query: gql`
+              query grants($tenantId: ID) {
+                grants(tenantId: $tenantId) {
+                  edges {
+                    node {
+                      id
+                      state
+                      tenantId
+                    }
+                    cursor
+                  }
+                }
+              }
+            `,
+            variables: { tenantId: tenant.id }
+          })
+          .then((query): GrantsConnection => {
+            if (query.data) {
+              return query.data.grants
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(query.edges).toHaveLength(2)
+        expect(
+          query.edges.every((edge) => edge.node.tenantId === tenant.id)
+        ).toBeTruthy()
+      })
+
+      test("Tenant cannot view other tenant's grants", async (): Promise<void> => {
+        const tenant = await Tenant.query().insertAndFetch(generateTenant())
+        const secondTenant =
+          await Tenant.query().insertAndFetch(generateTenant())
+
+        await createGrant(deps, tenant.id)
+        await createGrant(deps, tenant.id)
+        await createGrant(deps, secondTenant.id)
+
+        const tenantedApolloClient = await createApolloClient(
+          appContainer.container,
+          appContainer.app,
+          tenant.id
+        )
+
+        const query = await tenantedApolloClient
+          .query({
+            query: gql`
+              query grants($tenantId: ID) {
+                grants(tenantId: $tenantId) {
+                  edges {
+                    node {
+                      id
+                      state
+                      tenantId
+                    }
+                    cursor
+                  }
+                }
+              }
+            `,
+            variables: { tenantId: tenant.id }
+          })
+          .then((query): GrantsConnection => {
+            if (query.data) {
+              return query.data.grants
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(query.edges).toHaveLength(2)
+        expect(
+          query.edges.every((edge) => edge.node.tenantId === tenant.id)
+        ).toBeTruthy()
+        tenantedApolloClient.stop()
+      })
+    })
   })
 
   describe('Grant By id Queries', (): void => {
     let grant: GrantModel
     beforeEach(async (): Promise<void> => {
-      grant = await createGrant(deps, tenant.id)
+      grant = await createGrant(deps, config.operatorTenantId)
     })
 
     test('Can get a grant', async (): Promise<void> => {
-      const response = await appContainer.apolloClient
+      const response = await operatorApolloClient
         .mutate({
           mutation: gql`
             query GetGrant($id: ID!) {
@@ -492,7 +644,7 @@ describe('Grant Resolvers', (): void => {
     test('Returns error for unknown grant', async (): Promise<void> => {
       expect.assertions(2)
       try {
-        await appContainer.apolloClient
+        await operatorApolloClient
           .mutate({
             mutation: gql`
               query GetGrant($id: ID!) {
@@ -530,12 +682,98 @@ describe('Grant Resolvers', (): void => {
         )
       }
     })
+
+    describe('Tenant boundaries', (): void => {
+      test("Operator can get tenant's grant", async (): Promise<void> => {
+        const tenant = await Tenant.query().insertAndFetch(generateTenant())
+        const tenantGrant = await createGrant(deps, tenant.id)
+
+        const response = await operatorApolloClient
+          .mutate({
+            mutation: gql`
+              query GetGrant($id: ID!) {
+                grant(id: $id) {
+                  id
+                }
+              }
+            `,
+            variables: {
+              id: tenantGrant.id
+            }
+          })
+          .then((query): Grant => {
+            if (query.data) {
+              return query.data.grant
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(response.id).toStrictEqual(tenantGrant.id)
+      })
+
+      test("Tenant cannot get other tenant's grant", async (): Promise<void> => {
+        const tenant = await Tenant.query().insertAndFetch(generateTenant())
+        const secondTenant =
+          await Tenant.query().insertAndFetch(generateTenant())
+
+        const grantForSecondTenant = await createGrant(deps, secondTenant.id)
+
+        const tenantedApolloClient = await createApolloClient(
+          appContainer.container,
+          appContainer.app,
+          tenant.id
+        )
+
+        expect.assertions(2)
+        try {
+          await tenantedApolloClient
+            .mutate({
+              mutation: gql`
+                query GetGrant($id: ID!) {
+                  grant(id: $id) {
+                    id
+                    client
+                    state
+                    access {
+                      id
+                      identifier
+                      createdAt
+                      actions
+                      type
+                    }
+                    createdAt
+                  }
+                }
+              `,
+              variables: {
+                id: grantForSecondTenant.id
+              }
+            })
+            .then((query): Grant => {
+              if (query.data) {
+                return query.data.grant
+              } else {
+                throw new Error('Data was empty')
+              }
+            })
+        } catch (error) {
+          assert.ok(error instanceof ApolloError)
+          expect(error.message).toBe('No grant')
+          expect(error.graphQLErrors[0].extensions?.code).toEqual(
+            GraphQLErrorCode.NotFound
+          )
+        }
+
+        tenantedApolloClient.stop()
+      })
+    })
   })
 
   describe('Revoke grant', (): void => {
     let grant: GrantModel
     beforeEach(async (): Promise<void> => {
-      grant = await createGrant(deps, tenant.id)
+      grant = await createGrant(deps, config.operatorTenantId)
     })
 
     test('Can revoke a grant', async (): Promise<void> => {
@@ -543,7 +781,7 @@ describe('Grant Resolvers', (): void => {
         grantId: grant.id
       }
 
-      const response = await appContainer.apolloClient
+      const response = await operatorApolloClient
         .mutate({
           mutation: gql`
             mutation revokeGrant($input: RevokeGrantInput!) {
@@ -574,7 +812,7 @@ describe('Grant Resolvers', (): void => {
           grantId: ''
         }
 
-        await appContainer.apolloClient
+        await operatorApolloClient
           .mutate({
             mutation: gql`
               mutation revokeGrant($input: RevokeGrantInput!) {
@@ -610,7 +848,7 @@ describe('Grant Resolvers', (): void => {
           grantId: uuid()
         }
 
-        await appContainer.apolloClient
+        await operatorApolloClient
           .mutate({
             mutation: gql`
               mutation revokeGrant($input: RevokeGrantInput!) {
@@ -647,7 +885,7 @@ describe('Grant Resolvers', (): void => {
           grantId: '123'
         }
 
-        await appContainer.apolloClient
+        await operatorApolloClient
           .mutate({
             mutation: gql`
               mutation revokeGrant($input: RevokeGrantInput!) {
@@ -673,6 +911,122 @@ describe('Grant Resolvers', (): void => {
           GraphQLErrorCode.InternalServerError
         )
       }
+    })
+
+    describe('Tenant boundaries', (): void => {
+      test('Operator can revoke tenants grant', async (): Promise<void> => {
+        const tenant = await Tenant.query().insertAndFetch(generateTenant())
+        const tenantGrant = await createGrant(deps, tenant.id)
+        const input: RevokeGrantInput = {
+          grantId: tenantGrant.id
+        }
+
+        const response = await operatorApolloClient
+          .mutate({
+            mutation: gql`
+              mutation revokeGrant($input: RevokeGrantInput!) {
+                revokeGrant(input: $input) {
+                  id
+                }
+              }
+            `,
+            variables: {
+              input
+            }
+          })
+          .then((query): RevokeGrantMutationResponse => {
+            if (query.data) {
+              return query.data.revokeGrant
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(response.id).toEqual(tenantGrant.id)
+      })
+
+      test('Tenant can revoke own grant', async (): Promise<void> => {
+        const tenant = await Tenant.query().insertAndFetch(generateTenant())
+        const tenantGrant = await createGrant(deps, tenant.id)
+        const tenantedApolloClient = await createApolloClient(
+          appContainer.container,
+          appContainer.app,
+          tenant.id
+        )
+
+        const input: RevokeGrantInput = {
+          grantId: tenantGrant.id
+        }
+
+        const response = await tenantedApolloClient
+          .mutate({
+            mutation: gql`
+              mutation revokeGrant($input: RevokeGrantInput!) {
+                revokeGrant(input: $input) {
+                  id
+                }
+              }
+            `,
+            variables: {
+              input
+            }
+          })
+          .then((query): RevokeGrantMutationResponse => {
+            if (query.data) {
+              return query.data.revokeGrant
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(response.id).toEqual(tenantGrant.id)
+        tenantedApolloClient.stop()
+      })
+
+      test("Tenant cannot revoke other tenant's grant", async (): Promise<void> => {
+        const tenant = await Tenant.query().insertAndFetch(generateTenant())
+        const secondTenant =
+          await Tenant.query().insertAndFetch(generateTenant())
+
+        const tenantedApolloClient = await createApolloClient(
+          appContainer.container,
+          appContainer.app,
+          tenant.id
+        )
+
+        try {
+          const input: RevokeGrantInput = {
+            grantId: (await createGrant(deps, secondTenant.id)).id
+          }
+
+          await tenantedApolloClient
+            .mutate({
+              mutation: gql`
+                mutation revokeGrant($input: RevokeGrantInput!) {
+                  revokeGrant(input: $input) {
+                    id
+                  }
+                }
+              `,
+              variables: {
+                input
+              }
+            })
+            .then((query): RevokeGrantMutationResponse => {
+              if (query.data) {
+                return query.data.revokeGrant
+              } else {
+                throw new Error('Data was empty')
+              }
+            })
+        } catch (error) {
+          assert.ok(error instanceof ApolloError)
+          expect(error.graphQLErrors[0].extensions?.code).toEqual(
+            GraphQLErrorCode.NotFound
+          )
+        }
+        tenantedApolloClient.stop()
+      })
     })
   })
 })
