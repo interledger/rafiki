@@ -252,6 +252,8 @@ export const gracefulShutdown = async (
   await app.shutdown()
   const knex = await container.use('knex')
   await knex.destroy()
+  const redis = await container.use('redis')
+  redis.disconnect()
 }
 
 export const start = async (

@@ -7,56 +7,63 @@ import {
   Access as SchemaAccess,
   QueryResolvers
 } from '../generated/graphql'
-import { ApolloContext } from '../../app'
+import { TenantedApolloContext } from '../../app'
 import { Grant } from '../../grant/model'
-import { Pagination } from '../../shared/baseModel'
+import { Pagination, SortOrder } from '../../shared/baseModel'
 import { getPageInfo } from '../../shared/pagination'
 import { Access } from '../../access/model'
 import { GraphQLErrorCode } from '../errors'
 
-export const getGrants: QueryResolvers<ApolloContext>['grants'] = async (
-  _,
-  args,
-  ctx
-): Promise<ResolversTypes['GrantsConnection']> => {
-  const grantService = await ctx.container.use('grantService')
-  const { filter, sortOrder, ...pagination } = args
-  const grants = await grantService.getPage(pagination, filter, sortOrder)
-  const pageInfo = await getPageInfo(
-    (pagination: Pagination) =>
-      grantService.getPage(pagination, filter, sortOrder),
-    grants
-  )
+export const getGrants: QueryResolvers<TenantedApolloContext>['grants'] =
+  async (_, args, ctx): Promise<ResolversTypes['GrantsConnection']> => {
+    const grantService = await ctx.container.use('grantService')
+    const { filter, sortOrder, tenantId, ...pagination } = args
 
-  return {
-    pageInfo,
-    edges: grants.map((grant: Grant) => ({
-      cursor: grant.id,
-      node: grantToGraphql(grant)
-    }))
-  }
-}
+    const getPageFn = (pagination_: Pagination, sortOrder_?: SortOrder) =>
+      grantService.getPage(
+        pagination_,
+        filter,
+        sortOrder_,
+        ctx.isOperator ? tenantId : ctx.tenant.id
+      )
 
-export const getGrantById: QueryResolvers<ApolloContext>['grant'] = async (
-  _,
-  args,
-  ctx
-): Promise<ResolversTypes['Grant']> => {
-  const grantService = await ctx.container.use('grantService')
-  const grant = await grantService.getByIdWithAccess(args.id)
+    const grants = await getPageFn(pagination, sortOrder)
 
-  if (!grant) {
-    throw new GraphQLError('No grant', {
-      extensions: {
-        code: GraphQLErrorCode.NotFound
-      }
-    })
+    const pageInfo = await getPageInfo(
+      (pagination_: Pagination, sortOrder_?: SortOrder) =>
+        getPageFn(pagination_, sortOrder_),
+      grants
+    )
+
+    return {
+      pageInfo,
+      edges: grants.map((grant: Grant) => ({
+        cursor: grant.id,
+        node: grantToGraphql(grant)
+      }))
+    }
   }
 
-  return grantToGraphql(grant)
-}
+export const getGrantById: QueryResolvers<TenantedApolloContext>['grant'] =
+  async (_, args, ctx): Promise<ResolversTypes['Grant']> => {
+    const grantService = await ctx.container.use('grantService')
+    const grant = await grantService.getByIdWithAccess(
+      args.id,
+      ctx.isOperator ? undefined : ctx.tenant.id
+    )
 
-export const revokeGrant: MutationResolvers<ApolloContext>['revokeGrant'] =
+    if (!grant) {
+      throw new GraphQLError('No grant', {
+        extensions: {
+          code: GraphQLErrorCode.NotFound
+        }
+      })
+    }
+
+    return grantToGraphql(grant)
+  }
+
+export const revokeGrant: MutationResolvers<TenantedApolloContext>['revokeGrant'] =
   async (
     _,
     args,
@@ -72,7 +79,10 @@ export const revokeGrant: MutationResolvers<ApolloContext>['revokeGrant'] =
     }
 
     const grantService = await ctx.container.use('grantService')
-    const revoked = await grantService.revokeGrant(grantId)
+    const revoked = await grantService.revokeGrant(
+      grantId,
+      ctx.isOperator ? undefined : ctx.tenant.id
+    )
     if (!revoked) {
       throw new GraphQLError('Revoke grant was not successful', {
         extensions: {
@@ -92,7 +102,8 @@ export const grantToGraphql = (grant: Grant): SchemaGrant => ({
   access: grant.access?.map((item) => accessToGraphql(item)),
   state: grant.state,
   finalizationReason: grant.finalizationReason,
-  createdAt: grant.createdAt.toISOString()
+  createdAt: grant.createdAt.toISOString(),
+  tenantId: grant.tenantId
 })
 
 export const accessToGraphql = (access: Access): SchemaAccess => ({
