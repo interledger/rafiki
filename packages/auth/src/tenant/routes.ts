@@ -32,7 +32,6 @@ interface TenantParams {
   id: string
 }
 
-export type GetContext = TenantContext<never, TenantParams>
 export type CreateContext = TenantContext<CreateTenantBody>
 export type UpdateContext = TenantContext<UpdateTenantBody, TenantParams>
 export type DeleteContext = TenantContext<{ deletedAt: string }, TenantParams>
