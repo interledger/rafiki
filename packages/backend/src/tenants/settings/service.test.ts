@@ -535,6 +535,29 @@ describe('TenantSetting Service', (): void => {
         tenantSettingService.update(negativeOption)
       ).resolves.toEqual(TenantSettingError.InvalidSetting)
     })
+
+    test('cannot update wallet address url to already existing value', async (): Promise<void> => {
+      const walletAddressUrl = faker.internet.url()
+      const existingTenant = await createTenant(deps)
+      await createTenantSettings(deps, {
+        tenantId: existingTenant.id,
+        setting: [
+          {
+            key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+            value: walletAddressUrl
+          }
+        ]
+      })
+      const newTenant = await createTenant(deps)
+
+      await expect(
+        tenantSettingService.update({
+          tenantId: newTenant.id,
+          key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+          value: walletAddressUrl
+        })
+      ).resolves.toEqual(TenantSettingError.DuplicateWalletAddressUrl)
+    })
   })
 
   describe('delete', (): void => {
