@@ -1,0 +1,120 @@
+---
+title: Auth service
+slug: v1-beta/integration/deployment/services/auth-service
+---
+
+import { LinkOut } from '@interledger/docs-design-system'
+import Auth from '/src/partials/auth-variables.mdx'
+
+Rafiki’s <LinkOut href="https://github.com/interledger/rafiki/tree/main/packages/auth">`auth`</LinkOut> service provides you with a reference implementation of an Open Payments authorization server. You can use the `auth` service as an alternative to developing your own in-house service for grant authorization and authentication.
+
+The authorization server:
+
+- Authorizes incoming requests from clients (for example, third-party applications) to create payments and quotes on the backend
+- Relays information about the interaction to the client and records the response
+- Issues access tokens, which describe access rights, to clients and communicates with the resource server to validate those rights
+
+## Requirements
+
+You must have the following when using the `auth` service.
+
+- A Redis database for storing session data
+- A Postgres database, separate from the `backend` service’s database, to store auth-related resources (grants, access tokens, and interactions)
+  :::note
+  You can use the same Postgres database instance for both the `backend` and `auth` services, but separate database schemas are required within that instance to maintain a boundary between the objects those services manage.
+  :::
+- Integration with an [identity provider](#identity-provider-idp)
+
+You must also set the environment variables for the `auth` service.
+
+## Incoming client auth requests
+
+When a request comes from a client with an account known to your local instance of Rafiki, the `auth` service uses data stored in the `auth` service’s Postgres database.
+
+When a request comes from a client registered with another instance of Rafiki, the `auth` service resolves the client's key endpoint (for example, `https://wallet.example.com/alice/jwks.json`) to retrieve the client's public keys, then filters out the correct key using the key id (`kid`) in the client's signature.
+
+Review the <LinkOut href="https://openpayments.dev/identity/client-keys/">Open Payments documentation</LinkOut> for more information about client keys.
+
+## Identity provider (IdP)
+
+An identity provider (IdP) is a system or service that manages user authentication, identity information, and consent. When you use your Google Account credentials to “Sign in with Google” on an app or website, for example, Google is acting as your identity provider.
+
+You must integrate with an [IdP](/v1-beta/integration/requirements/open-payments/idp) when using Rafiki's `auth` service because the Open Payments standard requires interactive outgoing payment _grant_ requests. In an interactive request, there must be explicit interaction by an individual (for example, a client's end-user) to approve or deny the grant. In this case, the grant must be explicitly approved before an outgoing payment is created.
+
+:::note
+Rafiki’s [`frontend`](/v1-beta/integration/deployment/services/frontend-service) service requires an IdP for authentication and user management of your [Rafiki Admin](/v1-beta/admin/admin-user-guide) users. Out of the box, Rafiki uses Ory Kratos, a cloud-based user management system. Kratos is for internal use only and **cannot** be used as your customer-facing Open Payments authorization server.
+:::
+
+For more information about interactive grants and how they work with identity providers, review the [Identity Provider](/v1-beta/integration/requirements/open-payments/idp) page and the <LinkOut href="https://openpayments.dev/identity/grants/">Grant negotiation and authorization</LinkOut> page in the Open Payments docs.
+
+## GraphQL Auth Admin API
+
+The `auth` service exposes a [GraphQL Auth Admin API](/v1-beta/apis/graphql/admin-api-overview#auth-admin-api) to manage auth-related resources, such as Open Payments grants.
+
+## Environment variables
+
+### Required
+
+<div class="overflow-table wider-column">
+
+| Variable                 | Helm value name                                                                                                                                        | Default                                                          | Description                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `AUTH_DATABASE_URL`      | `auth.postgresql.host`,<br />`auth.postgresql.port`,<br />`auth.postgresql.username`,<br />`auth.postgresql.database`,<br />`auth.postgresql.password` | `postgresql://postgres:password@localhost:5432/auth_development` | The URL of the Postgres database storing your Open Payments grant data. For Helm, these components are provided individually.                                                                                                                                                                                                                                      |
+| `AUTH_SERVER_URL`        | `auth.server.domain`                                                                                                                                   | _undefined_                                                      | The public endpoint for your Rafiki instance’s public Open Payments routes.                                                                                                                                                                                                                                                                                        |
+| `COOKIE_KEY`             | `auth.cookieKey`                                                                                                                                       | _undefined_                                                      | The <LinkOut href="https://koajs.com/#app-keys-">koa KeyGrip key</LinkOut> that is used to sign cookies for an interaction session.                                                                                                                                                                                                                                |
+| `IDENTITY_SERVER_URL`    | `auth.identityServer.domain`                                                                                                                           | _undefined_                                                      | The URL of your IdP's server, used by the authorization server to inform an Open Payments client of where to redirect the end-user to start interactions.                                                                                                                                                                                                          |
+| `IDENTITY_SERVER_SECRET` | `auth.identityServer.secret`                                                                                                                           | _undefined_                                                      | A shared secret between the authorization server and the IdP server; the authorization server will use the secret to secure its IdP-related endpoints.<br/>When the IdP server sends requests to the authorization server, the IdP server must provide the secret via an [`x-idp-secret`](/integration/requirements/open-payments/idp#x-idp-secret-header) header. |
+| `REDIS_URL`              | `auth.redis.host`,<br />`auth.redis.port`                                                                                                              | `redis://127.0.0.1:6379`                                         | The connection URL for Redis. For Helm, these components are provided individually.                                                                                                                                                                                                                                                                                |
+
+</div>
+
+### Conditionally required
+
+<div class="overflow-table">
+
+| Variable      | Helm value name   | Default | Description                                                                                                                                           |
+| ------------- | ----------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TRUST_PROXY` | `auth.trustProxy` | `false` | Must be set to `true` when running Rafiki behind a proxy. When `true`, the `X-Forwarded-Proto` header is used to determine if connections are secure. |
+
+</div>
+
+### Optional
+
+<div class="overflow-table wider-column">
+
+| Variable                          | Helm value name                     | Default            | Description                                                                                                                                                         |
+| --------------------------------- | ----------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ACCESS_TOKEN_DELETION_DAYS`      | `auth.accessToken.deletionDays`     | `30`               | The days until expired and/or revoked access tokens are deleted.                                                                                                    |
+| `ACCESS_TOKEN_EXPIRY_SECONDS`     | `auth.accessToken.expirySeconds`    | `600` (10 minutes) | The expiry time, in seconds, for access tokens.                                                                                                                     |
+| `ADMIN_API_SIGNATURE_VERSION`     | `auth.adminApi.signatureVersion`    | `1`                | The version of the request signing algorithm used to generate signatures.                                                                                           |
+| `ADMIN_API_SIGNATURE_TTL_SECONDS` | `auth.adminAPI.signatureTtlSeconds` | `30`               | The TTL, in seconds, for which a request’s signature will be valid.                                                                                                 |
+| `ADMIN_PORT`                      | `auth.port.admin`                   | `3003`             | The port of your Rafiki Auth Admin API server.                                                                                                                      |
+| `AUTH_PORT`                       | `auth.port.auth`                    | `3006`             | The port of your Open Payments authorization server.                                                                                                                |
+| `DATABASE_CLEANUP_WORKERS`        | `auth.workers.cleanup`              | `1`                | The number of workers processing expired or revoked access tokens.                                                                                                  |
+| `ENABLE_MANUAL_MIGRATIONS`        | `auth.enableManualMigrations`       | `false`            | When `true`, you must run the auth Postgres database manually with the command `npm run knex – migrate:latest –envproduction`                                       |
+| `INCOMING_PAYMENT_INTERACTION`    | `auth.interaction.incomingPayment`  | `false`            | When `true`, incoming Open Payments grant requests are interactive                                                                                                  |
+| `INTERACTION_EXPIRY_SECONDS`      | `auth.interactionExpirySeconds`     | `600` (10 minutes) | The time, in seconds, for which a user can interact with a grant request before the request expires.                                                                |
+| `INTERACTION_PORT`                | `auth.port.interaction`             | `3009`             | The port number of your Open Payments interaction-related APIs.                                                                                                     |
+| `INTROSPECTION_PORT`              | `auth.port.introspection`           | `3007`             | The port of your Open Payments access token introspection server.                                                                                                   |
+| `SERVICE_API_PORT`                | `auth.port.serviceAPIPort`          | `3011`             | The port to expose the internal service api.                                                                                                                        |
+| `LIST_ALL_ACCESS_INTERACTION`     | `auth.interaction.listAll`          | `true`             | When `true`, grant requests that include a `list-all` action will require interaction. In these requests, the client asks to list resources that it did not create. |
+| `LOG_LEVEL`                       | `auth.logLevel`                     | `info`             | <LinkOut href="https://getpino.io/#/docs/api?id=levels">Pino log level</LinkOut>                                                                                    |
+| `NODE_ENV`                        | `auth.nodeEnv`                      | `development`      | The type of node environment: `development`, `test`, or `production`.                                                                                               |
+| `QUOTE_INTERACTION`               | `auth.interaction.quote`            | `false`            | When `true`, quote grants are interactive.                                                                                                                          |
+| `REDIS_TLS_CA_FILE_PATH`          | `auth.redis.tlsCaFile`              | `''`               | <LinkOut href="https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/">Redis TLS config</LinkOut>                                       |
+| `REDIS_TLS_CERT_FILE_PATH`        | `auth.redis.tlsCertFile`            | `''`               | <LinkOut href="https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/">Redis TLS config</LinkOut>                                       |
+| `REDIS_TLS_KEY_FILE_PATH`         | `auth.redis.tlsKeyFile`             | `''`               | <LinkOut href="https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/">Redis TLS config</LinkOut>                                       |
+| `WAIT_SECONDS`                    | `auth.grant.waitSeconds`            | `5`                | The wait time, in seconds, included in a grant request response (`grant.continue`).                                                                                 |
+
+</div>
+
+## Token introspection
+
+When a client makes a request to a resource server, the resource server communicates with the authorization server to:
+
+- Check the validity of the client’s access token
+- Determine whether the client is authorized to access protected resources
+
+This process is called token introspection.
+
+The `token-introspection` <LinkOut href="https://github.com/interledger/rafiki/tree/main/packages">package</LinkOut> is a client library for making <LinkOut href="https://datatracker.ietf.org/doc/draft-ietf-gnap-core-protocol/">GNAP</LinkOut> token introspection requests to an authorization server. It describes how the Rafiki `backend` and `auth` services communicate to validate access tokens. If you’re using Rafiki’s `auth` service, there’s nothing you need to do with this package. Rafiki automatically runs the package internally. If you’re writing your own auth service, you may find the files within the package to be helpful.

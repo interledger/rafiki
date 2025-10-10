@@ -1,0 +1,850 @@
+---
+title: Docker Compose
+tableOfContents:
+  maxHeadingLevel: 4
+slug: v1-beta/integration/deployment/docker-compose
+---
+
+import { LinkOut } from '@interledger/docs-design-system'
+import KratosWarn from '/src/partials/kratos-warning.mdx'
+
+This guide is an example of deploying Rafiki using Docker Compose with Nginx as a reverse proxy on a virtual machine (VM) in a cloud environment. This guide also uses <LinkOut href="https://certbot.eff.org/">Certbot</LinkOut> to generate <LinkOut href="https://letsencrypt.org/">Let’s Encrypt TLS certificates</LinkOut> to secure exposed ports using HTTPS.
+
+From <LinkOut href="https://docs.docker.com/compose/">Docker's documentation</LinkOut>, Docker Compose is a tool for defining and running multi-container applications using a single YAML file. It simplifies the process of configuring and running multiple services.
+
+:::note
+While Docker Compose could serve as a production deployment, it is an environment best suited for development and testing. For more information, refer to Docker's <LinkOut href="https://docs.docker.com/compose/intro/features-uses/#common-use-cases-of-docker-compose">documentation</LinkOut> on common use cases.
+:::
+
+## Prerequisites
+
+### Deploy VM and install Docker
+
+:::caution[Recommended software version]
+We recommended using the latest vendor supported version for each of the software dependencies listed in this section.
+:::
+
+Deploy a general purpose VM with the following minimum specifications:
+
+- OS: Linux distro
+- RAM: 4 GB
+- vCPUs: 2
+
+Install the following software on the VM:
+
+- <LinkOut href='https://docs.docker.com/engine/install/'>
+    Docker Engine
+  </LinkOut>
+- <LinkOut href='https://docs.docker.com/compose/install/#scenario-two-install-the-compose-plugin'>
+    Docker Compose
+  </LinkOut>
+
+### Install Nginx and Certbot
+
+Once you have provisioned the VM in your cloud environment, install Nginx along with Certbot:
+
+```sh
+sudo apt update && sudo apt install nginx certbot python3-certbot-nginx
+```
+
+### Domain preparation
+
+Generate the Let’s Encrypt certificates using Certbot:
+
+```sh wrap
+certbot certonly --manual --preferred-challenges=dns --email EMAIL --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d DOMAIN
+```
+
+:::caution[Update TXT record]
+Domain can be in wildcard format. You will also need to update the TXT record in this step.
+:::
+
+As Let's Encrypt certificates are valid for 90 days, you must set up a cron process to renew the certificate on a regular schedule:
+
+```sh
+crontab -e
+​
+0 3 * * * certbot renew
+```
+
+### Domain and DNS configuration
+
+Map the [Open Payments resource server](/v1-beta/integration/deployment/services/backend-service#open-payments) to your domain, and the [ILP connector](/v1-beta/integration/deployment/services/backend-service#interledger-connector), [Open Payments auth server](/v1-beta/integration/deployment/services/auth-service), and [Admin UI](/v1-beta/integration/deployment/services/frontend-service) to subdomains. Using the DNS host of your choice, set up your domain and subdomains according to the following recommended convention:
+
+<div class="overflow-table">
+
+| Service                       | Exposes                                                           | URL          | Example            |
+| ----------------------------- | ----------------------------------------------------------------- | ------------ | ------------------ |
+| Open Payments resource server | Open Payments APIs                                                | DOMAIN       | myrafiki.com       |
+| ILP connector                 | ILP connector to send and receive ILP packets between peers       | ilp.DOMAIN   | ilp.myrafiki.com   |
+| Open Payments auth server     | Reference implementation of an Open Payments authorization server | auth.DOMAIN  | auth.myrafiki.com  |
+| Admin UI                      | Admin UI to manage Rafiki                                         | admin.DOMAIN | admin.myrafiki.com |
+
+</div>
+
+:::note
+The example domain and subdomain values are for demonstration purposes only. You must use the actual domain names that you set up with your DNS host.
+:::
+
+Next, update the DNS records (A records) to point to the static external IP address of the virtual machine according to the table above.
+
+## Configure Compose file
+
+The Docker Compose file is a YAML configuration file used to define the services, networks, and volumes that make up a multi-container application. In this section, we'll explore the Compose file by breaking it down into the individual Rafiki services.
+
+:::note[Update Compose file]
+Before using the Compose file, you must update the variables with values relevant to your environment. Specifically, change the values enclosed within the brackets and substitute `newest-version` with the latest Rafiki <LinkOut href="https://github.com/interledger/rafiki/releases">version</LinkOut>.
+:::
+
+### Docker Compose example
+
+While the actual Compose file is a single YAML file containing all of the services, this page will guide you through each service one by one. For each service, we'll look at the relevant configuration details along with the corresponding environment variables.
+
+#### Auth service
+
+The Rafiki `auth` service is responsible for handling authentication and authorization for your application. It connects to a Postgres database to store auth-related resources and a Redis database for storing session data. See [Auth service](/v1-beta/integration/deployment/services/auth-service/) for more information.
+
+Ports exposed:
+
+- 3003 (`ADMIN_PORT`) is used for the Auth Admin API
+- 3006 (`AUTH_PORT`) is used for the Open Payments authorization server
+
+Make sure to configure the `AUTH_DATABASE_URL` and `REDIS_URL` environment variables to point to your database instances.
+
+:::caution[Running Rafiki behind a proxy]
+If you plan to run your Rafiki instance behind a proxy, you must set the `TRUST_PROXY` variable to `true`
+:::
+
+```sh
+rafiki-auth:
+    image: ghcr.io/interledger/rafiki-auth:<newest-version>
+    container_name: rafiki-auth
+    environment:
+      AUTH_DATABASE_URL: {postgresql://postgres:password@localhost:5432/auth_development}
+      AUTH_SERVER_URL: {https://auth.myrafiki.com}
+      ADMIN_PORT: 3003
+      AUTH_PORT: 3006
+      INTROSPECTION_PORT: 3007
+      INTERACTION_PORT: 3009
+      COOKIE_KEY: {...}
+      IDENTITY_SERVER_SECRET: {...}
+      IDENTITY_SERVER_URL: {https://idp.mysystem.com}
+      REDIS_URL: {redis://127.0.0.1:6379}
+      TRUST_PROXY: true
+    depends_on:
+      - postgres
+    networks:
+      - rafiki
+    ports:
+      - '3003:3003'
+      - '3006:3006'
+      - '3007:3007'
+      - '3009:3009'
+    restart: always
+```
+
+##### Environment variables
+
+<div class="overflow-table">
+
+| Variable                          | Required | Description                                                                                                                                                                                                                                                                                                                                                        |
+| --------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `AUTH_DATABASE_URL`               | Y        | The URL of the Postgres database storing your Open Payments grant data.                                                                                                                                                                                                                                                                                            |
+| `AUTH_SERVER_URL`                 | Y        | The public endpoint for your Rafiki instance’s public Open Payments routes.                                                                                                                                                                                                                                                                                        |
+| `COOKIE_KEY`                      | Y        | The <LinkOut href="https://koajs.com/#app-keys-">koa KeyGrip key</LinkOut> that is used to sign cookies for an interaction session.                                                                                                                                                                                                                                |
+| `IDENTITY_SERVER_SECRET`          | Y        | A shared secret between the authorization server and the IdP server; the authorization server will use the secret to secure its IdP-related endpoints.<br/>When the IdP server sends requests to the authorization server, the IdP server must provide the secret via an [`x-idp-secret`](/integration/requirements/open-payments/idp#x-idp-secret-header) header. |
+| `IDENTITY_SERVER_URL`             | Y        | The URL of your IdP's server, used by the authorization server to inform an Open Payments client of where to redirect the end-user to start interactions.                                                                                                                                                                                                          |
+| `REDIS_URL`                       | Y        | The connection URL for Redis.                                                                                                                                                                                                                                                                                                                                      |
+| `ACCESS_TOKEN_DELETION_DAYS`      | N        | The days until expired and/or revoked access tokens are deleted.                                                                                                                                                                                                                                                                                                   |
+| `ACCESS_TOKEN_EXPIRY_SECONDS`     | N        | The expiry time, in seconds, for access tokens.                                                                                                                                                                                                                                                                                                                    |
+| `ADMIN_API_SIGNATURE_TTL_SECONDS` | N        | The TTL, in seconds, for which a request’s signature will be valid.                                                                                                                                                                                                                                                                                                |
+| `ADMIN_API_SIGNATURE_VERSION`     | N        | The version of the request signing algorithm used to generate signatures.                                                                                                                                                                                                                                                                                          |
+| `ADMIN_PORT`                      | N        | The port of your Rafiki Auth Admin API server.                                                                                                                                                                                                                                                                                                                     |
+| `AUTH_PORT`                       | N        | The port of your Open Payments authorization server.                                                                                                                                                                                                                                                                                                               |
+| `INCOMING_PAYMENT_INTERACTION`    | N        | When `true`, incoming Open Payments grant requests are interactive.                                                                                                                                                                                                                                                                                                |
+| `INCOMING_PAYMENT_WORKERS`        | N        | The number of workers processing incoming payment requests.                                                                                                                                                                                                                                                                                                        |
+| `INTERACTION_EXPIRY_SECONDS`      | N        | The time, in seconds, for which a user can interact with a grant request before the request expires.                                                                                                                                                                                                                                                               |
+| `INTERACTION_PORT`                | N        | The port number of your Open Payments interaction-related APIs.                                                                                                                                                                                                                                                                                                    |
+| `INTROSPECTION_PORT`              | N        | The port of your Open Payments access token introspection server.                                                                                                                                                                                                                                                                                                  |
+| `LIST_ALL_ACCESS_INTERACTION`     | N        | When `true`, grant requests that include a `list-all` action will require interaction. In these requests, the client asks to list resources that it did not create.                                                                                                                                                                                                |
+| `LOG_LEVEL`                       | N        | <LinkOut href="https://getpino.io/#/docs/api?id=levels">Pino log level</LinkOut>.                                                                                                                                                                                                                                                                                  |
+| `NODE_ENV`                        | N        | The type of node environment: `development`, `test`, or `production`.                                                                                                                                                                                                                                                                                              |
+| `QUOTE_INTERACTION`               | N        | When `true`, quote grants are interactive.                                                                                                                                                                                                                                                                                                                         |
+| `REDIS_TLS_CA_FILE_PATH`          | N        | <LinkOut href="https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/">Redis TLS config</LinkOut>.                                                                                                                                                                                                                                     |
+| `REDIS_TLS_CERT_FILE_PATH`        | N        | <LinkOut href="https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/">Redis TLS config</LinkOut>.                                                                                                                                                                                                                                     |
+| `REDIS_TLS_KEY_FILE_PATH`         | N        | <LinkOut href="https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/">Redis TLS config</LinkOut>.                                                                                                                                                                                                                                     |
+| `TRUST_PROXY`                     | N        | Must be set to `true` when running Rafiki behind a proxy. When `true`, the `X-Forwarded-Proto` header is used to determine if connections are secure.                                                                                                                                                                                                              |
+| `WAIT_SECONDS`                    | N        | The wait time, in seconds, included in a grant request response (`grant.continue`).                                                                                                                                                                                                                                                                                |
+
+</div>
+
+#### Backend service
+
+The Rafiki `backend` service handles business logic and external communication. It exposes the Open Payments APIs and an Interledger connector for sending and receiving packets. It connects to a Redis database for caching, a Postgres database for Open Payments resources, and TigerBeetle for accounting liquidity. See [Backend service](/v1-beta/integration/deployment/services/backend-service) for more information.
+
+:::note[TigerBeetle or Postgres for accounting database]
+TigerBeetle is recommended, but if you would rather use Postgres as an accounting database make sure to set `USE_TIGERBEETLE` to false.
+:::
+
+Ports exposed:
+
+- 3000 (`OPEN_PAYMENTS_PORT`) is used for the Open Payments resource server
+- 3001 (`ADMIN_PORT`) is used for the Backend Admin API
+- 3002 (`CONNECTOR_PORT`) is used for the ILP connector to send and receive ILP packets
+
+Make sure to configure the `DATABASE_URL` and `REDIS_URL` environment variables to point to your database instances.
+
+```sh
+rafiki-backend:
+    image: ghcr.io/interledger/rafiki-backend:<newest-version>
+    container_name: rafiki-backend
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      AUTH_SERVER_GRANT_URL: {https://auth.myrafiki.com}
+      AUTH_SERVER_INTROSPECTION_URL: {https://auth.myrafiki.com/3007}
+      DATABASE_URL: {postgresql://postgres:password@localhost:5432/development}
+      ILP_ADDRESS: {test.myrafiki}
+      ADMIN_PORT: 3001
+      CONNECTOR_PORT: 3002
+      OPEN_PAYMENTS_PORT: 3000
+      OPEN_PAYMENTS_URL: {https://myrafiki.com}
+      REDIS_URL: {redis://127.0.0.1:6379}
+      WALLET_ADDRESS_URL: {https://myrafiki.com/rafiki-instance}
+      WEBHOOK_URL: {https://mysystem.com/webhooks}
+      EXCHANGE_RATES_URL: {https://mysystem.com/rates}
+      ILP_CONNECTOR_URL: {https://ilp.myrafiki.com}
+      INSTANCE_NAME: {'My ASE name'}
+      TRUST_PROXY: true
+      KEY_ID: ...
+      USE_TIGERBEETLE: true
+      TIGERBEETLE_CLUSTER_ID: 0
+      TIGERBEETLE_REPLICA_ADDRESSES: 10.5.0.50:4342
+    networks:
+      - rafiki
+    ports:
+      - '3000:3000'
+      - '3001:3001'
+      - '3002:3002'
+    privileged: true
+    restart: always
+    volumes:
+      - ../temp/:/workspace/temp/
+```
+
+##### Environment variables
+
+<div class="overflow-table">
+
+| Variable                                              | Required | Description                                                                                                                                                                                                                                 |
+| ----------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AUTH_SERVER_GRANT_URL`                               | Y        | The endpoint on your Open Payments authorization server to grant a request.                                                                                                                                                                 |
+| `AUTH_SERVER_INTROSPECTION_URL`                       | Y        | The endpoint on your Open Payments authorization server to introspect an access token.                                                                                                                                                      |
+| `DATABASE_URL`                                        | Y        | The Postgres database URL of the database storing your resource data.                                                                                                                                                                       |
+| `EXCHANGE_RATES_URL`                                  | Y        | The endpoint your Rafiki instance uses to request exchange rates.                                                                                                                                                                           |
+| `ILP_ADDRESS`                                         | Y        | The ILP address of your Rafiki instance.                                                                                                                                                                                                    |
+| `ILP_CONNECTOR_URL`                                   | Y        | The ILP connector address where ILP packets are received.                                                                                                                                                                                   |
+| `KEY_ID`                                              | Y        | Your Rafiki instance’s client key ID.                                                                                                                                                                                                       |
+| `OPEN_PAYMENTS_URL`                                   | Y        | The public endpoint of your Open Payments resource server.                                                                                                                                                                                  |
+| `REDIS_URL`                                           | Y        | The Redis URL of the database handling ILP packet data.                                                                                                                                                                                     |
+| `USE_TIGERBEETLE`                                     | Y        | When `true`, a TigerBeetle database is used for accounting. When `false`, a Postgres database is used.                                                                                                                                      |
+| `WEBHOOK_URL`                                         | Y        | Your endpoint that consumes webhook events.                                                                                                                                                                                                 |
+| `ADMIN_PORT`                                          | N        | The port of your Backend Auth API server.                                                                                                                                                                                                   |
+| `API_SECRET`                                          | N        | N/A                                                                                                                                                                                                                                         |
+| `API_SIGNATURE_VERSION`                               | N        | The version of the request signing algorithm used to generate signatures.                                                                                                                                                                   |
+| `AUTO_PEERING_SERVER_PORT`                            | N        | If auto-peering is enabled, the server will use this port.                                                                                                                                                                                  |
+| `CONNECTOR_PORT`                                      | N        | The port of the ILP connector for sending packets via ILP over HTTP.                                                                                                                                                                        |
+| `ENABLE_AUTO_PEERING`                                 | N        | When `true`, auto-peering is enabled.                                                                                                                                                                                                       |
+| `ENABLE_MANUAL_MIGRATIONS`                            | N        | When `true`, you must run the database manually with the command `npm run knex – migrate:latest –env production`                                                                                                                            |
+| `ENABLE_SPSP_PAYMENT_POINTERS`                        | N        | When `true`, the SPSP route is enabled.                                                                                                                                                                                                     |
+| `ENABLE_TELEMETRY`                                    | N        | Enables the telemetry service on Rafiki.                                                                                                                                                                                                    |
+| `ENABLE_TELEMETRY_TRACES`                             | N        | N/A                                                                                                                                                                                                                                         |
+| `EXCHANGE_RATES_LIFETIME`                             | N        | The time, in milliseconds, the exchange rates you provide via the `EXCHANGE_RATES_URL` are valid.                                                                                                                                           |
+| `GRAPHQL_IDEMPOTENCY_KEY_LOCK_MS`                     | N        | The TTL, in milliseconds, for `idempotencyKey` concurrency lock on GraphQL mutations on the Backend Admin API.                                                                                                                              |
+| `GRAPHQL_IDEMPOTENCY_KEY_TTL_MS`                      | N        | The TTL, in milliseconds, for `idempotencyKey` on GraphQL mutations on the Backend Admin API.                                                                                                                                               |
+| `INCOMING_PAYMENT_CREATED_POLL_FREQUENCY_MS`          | N        | N/A                                                                                                                                                                                                                                         |
+| `INCOMING_PAYMENT_CREATED_POLL_TIMEOUT_MS`            | N        | N/A                                                                                                                                                                                                                                         |
+| `INCOMING_PAYMENT_EXPIRY_MAX_MS`                      | N        | The maximum into the future, in milliseconds, incoming payments expiry can be set to on creation.                                                                                                                                           |
+| `INCOMING_PAYMENT_WORKER_IDLE`                        | N        | The time, in milliseconds, that `INCOMING_PAYMENT_WORKERS` will wait until checking an empty incoming payment request queue again.                                                                                                          |
+| `INCOMING_PAYMENT_WORKERS`                            | N        | The number of workers processing incoming payment requests.                                                                                                                                                                                 |
+| `INSTANCE_NAME`                                       | N        | Your Rafiki instance's name used to communicate for auto-peering and/or [telemetry](/overview/concepts/telemetry). Required when auto-peering and/or telemetry is enabled.                                                                  |
+| `LOG_LEVEL`                                           | N        | <LinkOut href="https://getpino.io/#/docs/api?id=levels">Pino log level</LinkOut>                                                                                                                                                            |
+| `MAX_OUTGOING_PAYMENT_RETRY_ATTEMPTS`                 | N        | Specifies how many times an outgoing payment is retried before failing completely.                                                                                                                                                          |
+| `NODE_ENVIRONMENT`                                    | N        | The type of node environment: `development`, `test`, or `production`.                                                                                                                                                                       |
+| `OPEN_PAYMENTS_PORT`                                  | N        | The port of your Open Payments resource server.                                                                                                                                                                                             |
+| `OPEN_TELEMETRY_COLLECTOR_URLS`                       | N        | N/A                                                                                                                                                                                                                                         |
+| `OPEN_TELEMETRY_EXPORT_INTERVAL`                      | N        | N/A                                                                                                                                                                                                                                         |
+| `OPEN_TELEMETRY_TRACE_COLLECTOR_URLS`                 | N        | N/A                                                                                                                                                                                                                                         |
+| `OUTGOING_PAYMENT_WORKER_IDLE`                        | N        | The time, in milliseconds, that `OUTGOING_PAYMENT_WORKERS` wait until they check an empty outgoing payment request queue again.                                                                                                             |
+| `OUTGOING_PAYMENT_WORKERS`                            | N        | The number of workers processing outgoing payment requests.                                                                                                                                                                                 |
+| `POLL_INCOMING_PAYMENT_CREATED_WEBHOOK`               | N        | N/A                                                                                                                                                                                                                                         |
+| `PRIVATE_KEY_FILE`                                    | N        | The path to your Rafiki instance’s client private key.                                                                                                                                                                                      |
+| `QUOTE_LIFESPAN`                                      | N        | The time, in milliseconds, an Open Payments quote is valid for.                                                                                                                                                                             |
+| `REDIS_TLS_CA_FILE_PATH`                              | N        | <LinkOut href="https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/">Redis TLS config</LinkOut>                                                                                                               |
+| `REDIS_TLS_CERT_FILE_PATH`                            | N        | <LinkOut href="https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/">Redis TLS config</LinkOut>                                                                                                               |
+| `REDIS_TLS_KEY_FILE_PATH`                             | N        | <LinkOut href="https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/">Redis TLS config</LinkOut>                                                                                                               |
+| `SIGNATURE_SECRET`                                    | N        | The secret to generate request header signatures for webhook event requests.                                                                                                                                                                |
+| `SIGNATURE_VERSION`                                   | N        | The version number to generate request header signatures for webhook events.                                                                                                                                                                |
+| `SLIPPAGE`                                            | N        | The accepted ILP rate fluctuation.                                                                                                                                                                                                          |
+| `STREAM_SECRET`                                       | N        | The seed secret to generate shared STREAM secrets.                                                                                                                                                                                          |
+| `TELEMETRY_EXCHANGE_RATES_LIFETIME`                   | N        | N/A                                                                                                                                                                                                                                         |
+| `TELEMETRY_EXCHANGE_RATES_URL`                        | N        | The endpoint Rafiki will query for exchange rates. Used as a fallback if/when [exchange rates](/integration/requirements/exchange-rates) aren’t provided.                                                                                   |
+| `TIGERBEETLE_CLUSTER_ID`                              | N        | The TigerBeetle cluster ID picked by the system that starts the TigerBeetle cluster to create a <LinkOut href="https://docs.tigerbeetle.com/clients/node/#creating-a-client">TigerBeetle client</LinkOut>.                                  |
+| `TIGERBEETLE_REPLICA_ADDRESSES`                       | N        | TigerBeetle replica addresses for all replicas in the cluster. The addresses are comma-separated IP addresses/ports, to create a <LinkOut href="https://docs.tigerbeetle.com/clients/node/#creating-a-client">TigerBeetle client</LinkOut>. |
+| `TIGERBEETLE_REPLICA_ADDRESSES.SPLIT`                 | N        | N/A                                                                                                                                                                                                                                         |
+| `TIGERBEETLE_TWO_PHASE_TIMEOUT_SECONDS`               | N        | N/A                                                                                                                                                                                                                                         |
+| `TRUST_PROXY`                                         | N        | Must be set to `true` when running Rafiki behind a proxy. When `true`, the `X-Forwarded-Proto` header is used to determine if connections are secure.                                                                                       |
+| `WALLET_ADDRESS_DEACTIVATION_PAYMENT_GRACE_PERIOD_MS` | N        | The time into the future, in milliseconds, to set expiration of Open Payments incoming payments when deactivating a wallet address.                                                                                                         |
+| `WALLET_ADDRESS_LOOKUP_TIMEOUT_MS`                    | N        | The time, in milliseconds, you have to create a missing wallet address before timeout.                                                                                                                                                      |
+| `WALLET_ADDRESS_POLLING_FREQUENCY_MS`                 | N        | The frequency of polling while waiting for you to create a missing wallet address.                                                                                                                                                          |
+| `WALLET_ADDRESS_URL`                                  | N        | Your Rafiki instance’s internal wallet address.                                                                                                                                                                                             |
+| `WALLET_ADDRESS_WORKER_IDLE`                          | N        | The time, in milliseconds, that `WALLET_ADDRESS_WORKERS` wait until checking the empty wallet address request queue again.                                                                                                                  |
+| `WALLET_ADDRESS_WORKERS`                              | N        | The number of workers processing wallet address requests.                                                                                                                                                                                   |
+| `WEBHOOK_MAX_RETRY`                                   | N        | The maximum number of times your Rafiki instance’s backend retries sending a certain webhook event to your configured `WEBHOOK_URL`.                                                                                                        |
+| `WEBHOOK_TIMEOUT`                                     | N        | The time, in milliseconds, that your Rafiki instance will wait for a `200` response from your webhook endpoint. If a `200` response is not received, Rafiki will time out and try to send the webhook event again.                          |
+| `WEBHOOK_WORKER_IDLE`                                 | N        | The time, in milliseconds, that `WEBHOOK_WORKERS` will wait until they check the empty webhook event queue again.                                                                                                                           |
+| `WEBHOOK_WORKERS`                                     | N        | The number of workers processing webhook events.                                                                                                                                                                                            |
+| `WITHDRAWAL_THROTTLE_DELAY`                           | N        | The delay in liquidity withdrawal processing.                                                                                                                                                                                               |
+
+</div>
+
+#### Frontend service
+
+The Rafiki `frontend` service provides an internal admin interface for managing your Rafiki instance. It communicates with the Backend Admin API to facilitate administrative tasks. See [Frontend service](/v1-beta/integration/deployment/services/frontend-service) for more information.
+
+Ports exposed:
+
+- 3005 (`PORT`) is used to host the Rafiki Admin app
+
+Make sure to configure the `GRAPHQL_URL` and `OPEN_PAYMENTS_URL` environment variables to point to the appropriate endpoints.
+
+```sh
+rafiki-frontend:
+    image: ghcr.io/interledger/rafiki-frontend:<newest-version>
+    container_name: rafiki-frontend
+    depends_on:
+      - rafiki-backend
+    environment:
+      PORT: 3005
+      GRAPHQL_URL: {https://myrafiki.com:3001}
+      OPEN_PAYMENTS_URL: {https://myrafiki.com}
+      KRATOS_CONTAINER_PUBLIC_URL: {http://kratos:4433}
+      KRATOS_BROWSER_PUBLIC_URL: {https://admin.myrafiki.com/kratos}
+      KRATOS_ADMIN_URL: {http://kratos:4434/admin}
+    networks:
+      - rafiki
+    restart: always
+    privileged: true
+    ports:
+      - '3005:3005'
+```
+
+##### Environment variables
+
+<div class="overflow-table">
+
+| Variable                         | Required | Description                                                                                                                                                                                                          |
+| -------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GRAPHQL_URL`                    | Y        | URL for Rafiki’s GraphQL Auth Admin API.                                                                                                                                                                             |
+| `OPEN_PAYMENTS_URL`              | Y        | Your Open Payments API endpoint.                                                                                                                                                                                     |
+| `PORT`                           | Y        | Port from which to host the Rafiki Remix app.                                                                                                                                                                        |
+| `AUTH_ENABLED`                   | N        | When `true`, only authenticated users can be granted access to Rafiki Admin by an administrator.                                                                                                                     |
+| `ENABLE_INSECURE_MESSAGE_COOKIE` | N        | When set to `true`, `t`, or `1`, cookie will be transmitted over insecure HTTP connection. Insecure message cookies are required for flash messages to work over HTTP.                                               |
+| `KRATOS_ADMIN_URL`               | N        | The admin endpoint/container address for Kratos.                                                                                                                                                                     |
+| `KRATOS_BROWSER_PUBLIC_URL`      | N        | The URL for you to access the Kratos Docker container from a browser outside of the Docker network. This is used for calls from a browser (what you see in the Rafiki Admin UI) to the Kratos server on the backend. |
+| `KRATOS_CONTAINER_PUBLIC_URL`    | N        | The URL for you to access the Kratos Docker container from within the Docker network. This is used for backend calls to Kratos.                                                                                      |
+| `LOG_LEVEL`                      | N        | <LinkOut href="https://getpino.io/#/docs/api?id=levels">Pino log level</LinkOut>.                                                                                                                                    |
+| `NODE_ENV`                       | N        | The type of node environment: `development`, `test`, or `production`.                                                                                                                                                |
+| `SIGNATURE_SECRET`               | N        | The signature secret used to authenticate requests to the Backend Admin API.                                                                                                                                         |
+| `SIGNATURE_VERSION`              | N        | The signature version number used to authenticate requests to the Backend Admin API.                                                                                                                                 |
+
+</div>
+
+#### TigerBeetle
+
+TigerBeetle is a high-performance database designed to handle double-entry/double-ledger accounting. It is recommended for managing liquidity and settlement accounts due to its speed and efficiency. See [Accounting](/v1-beta/overview/concepts/accounting/#tigerbeetle) for more information.
+
+To use TigerBeetle, make sure that `USE_TIGERBEETLE` is set to true in the backend service environment variables.
+
+```sh
+tigerbeetle:
+    image: ghcr.io/tigerbeetle/tigerbeetle:0.16.29
+    privileged: true
+    volumes:
+      - tigerbeetle-data:/var/lib/tigerbeetle
+    networks:
+      rafiki:
+        ipv4_address: 10.5.0.50
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -ex
+        DATA_FILE=/var/lib/tigerbeetle/cluster_0_replica_0.tigerbeetle
+        set +e
+        ls $$DATA_FILE
+        DATA_FILE_EXISTS="$$?"
+        set -e
+        echo $$DATA_FILE_EXISTS
+        if [ "$$DATA_FILE_EXISTS" != 0 ]; then
+          ./tigerbeetle format --cluster=0 --replica=0 --replica-count=1 $$DATA_FILE;
+        fi
+        hostname -i
+        ls /var/lib/tigerbeetle
+        ./tigerbeetle start --addresses=0.0.0.0:4342 $$DATA_FILE
+```
+
+#### Postgres
+
+The Postgres service is a relational database management system used to store and manage application data. Both the `auth` and `backend` services rely on Postgres databases.
+
+```sh
+postgres:
+    image: 'postgres:16'
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ...
+      POSTGRES_PASSWORD: ...
+    networks:
+      - rafiki
+    restart: unless-stopped
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ../dbinit.sql:/docker-entrypoint-initdb.d/init.sql
+```
+
+#### Redis
+
+The Redis service is used for caching and session management across the application. Both the `auth` and `backend` services rely on Redis databases.
+
+```sh
+redis:
+    image: 'redis:7'
+    restart: unless-stopped
+    networks:
+      - rafiki
+```
+
+#### Kratos
+
+The Kratos service is an identity and user management solution used by Rafiki's `frontend` service for handling authentication and user management tasks.
+
+<KratosWarn />
+
+```sh
+kratos:
+    image: 'oryd/kratos:v1.2.0'
+    privileged: true
+    ports:
+      - '4433:4433'
+    volumes:
+      - ../entrypoint.sh:/entrypoint.sh
+      - ../identity.schema.json:/etc/config/kratos/identity.schema.json
+      - ./kratos.yml:/etc/config/kratos/kratos.yml
+    entrypoint: ['/entrypoint.sh']
+    networks:
+      - rafiki
+```
+
+#### Networks and volumes
+
+In Docker Compose, networks and volumes are necessary for enabling communication between services and persisting data storage for containers.
+
+```sh
+networks:
+  testnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/24
+          gateway: 10.5.0.1
+
+volumes:
+  pg-data:
+  tigerbeetle-data:
+```
+
+#### Complete Docker Compose example
+
+<details>
+  <summary>Click to expand</summary>
+
+```sh
+name: 'my-rafiki'
+services:
+  rafiki-auth:
+    image: ghcr.io/interledger/rafiki-auth:<newest-version>
+    container_name: rafiki-auth
+    environment:
+      AUTH_DATABASE_URL: {postgresql://...}
+      AUTH_SERVER_URL: {https://auth.myrafiki.com}
+      ADMIN_PORT: 3003
+      AUTH_PORT: 3006
+      INTROSPECTION_PORT: 3007
+      INTERACTION_PORT: 3009
+      SERVICE_API_PORT: 3011
+      COOKIE_KEY: {...}
+      IDENTITY_SERVER_SECRET: {...}
+      IDENTITY_SERVER_URL: {https://idp.mysystem.com}
+      REDIS_URL: {redis://...}
+      TRUST_PROXY: true
+    depends_on:
+      - postgres
+    networks:
+      - rafiki
+    ports:
+      - '3003:3003'
+      - '3006:3006'
+      - '3007:3007'
+      - '3009:3009'
+      - '3011:3011'
+    restart: always
+
+rafiki-backend:
+  image: ghcr.io/interledger/rafiki-backend:<newest-version>
+  container_name: rafiki-backend
+  depends_on:
+    - postgres
+    - redis
+  environment:
+    AUTH_SERVER_GRANT_URL: {https://auth.myrafiki.com}
+    AUTH_SERVER_INTROSPECTION_URL: {https://auth.myrafiki.com/3007}
+    AUTH_SERVICE_API_URL: {https://auth.myrafiki.com/3011}
+    DATABASE_URL: {postgresql://...}
+    ILP_ADDRESS: {test.myrafiki}
+    ADMIN_PORT: 3001
+    CONNECTOR_PORT: 3002
+    OPEN_PAYMENTS_PORT: 3000
+    OPEN_PAYMENTS_URL: {https://myrafiki.com}
+    REDIS_URL: {redis://...}
+    WALLET_ADDRESS_URL: {https://myrafiki.com/rafiki-instance}
+    WEBHOOK_URL: {https://mysystem.com/webhooks}
+    EXCHANGE_RATES_URL: {https://mysystem.com/rates}
+    ILP_CONNECTOR_URL: {https://ilp.myrafiki.com}
+    INSTANCE_NAME: {'My ASE name'}
+    TRUST_PROXY: true
+    KEY_ID: ...
+    USE_TIGERBEETLE: true
+    TIGERBEETLE_CLUSTER_ID: 0
+    TIGERBEETLE_REPLICA_ADDRESSES: 10.5.0.50:4342
+  networks:
+    - rafiki
+  ports:
+    - '3000:3000'
+    - '3001:3001'
+    - '3002:3002'
+  privileged: true
+  restart: always
+  volumes:
+    - ../temp/:/workspace/temp/
+
+rafiki-frontend:
+  image: ghcr.io/interledger/rafiki-frontend:<newest-version>
+  container_name: rafiki-frontend
+  depends_on:
+    - rafiki-backend
+  environment:
+    PORT: 3005
+    GRAPHQL_URL: {https://myrafiki.com:3001}
+    OPEN_PAYMENTS_URL: {https://myrafiki.com}
+    KRATOS_CONTAINER_PUBLIC_URL: {http://kratos:4433}
+    KRATOS_BROWSER_PUBLIC_URL: {https://admin.myrafiki.com/kratos}
+    KRATOS_ADMIN_URL: {http://kratos:4434/admin}
+  networks:
+    - rafiki
+  restart: always
+  privileged: true
+  ports:
+     - '3005:3005'
+
+tigerbeetle:
+  image: ghcr.io/tigerbeetle/tigerbeetle:0.16.29
+  privileged: true
+  volumes:
+    - tigerbeetle-data:/var/lib/tigerbeetle
+  networks:
+    rafiki:
+      ipv4_address: 10.5.0.50
+  entrypoint:
+    - /bin/sh
+    - -c
+    - |
+      set -ex
+      DATA_FILE=/var/lib/tigerbeetle/cluster_0_replica_0.tigerbeetle
+      set +e
+      ls $$DATA_FILE
+      DATA_FILE_EXISTS="$$?"
+      set -e
+      echo $$DATA_FILE_EXISTS
+      if [ "$$DATA_FILE_EXISTS" != 0 ]; then
+        ./tigerbeetle format --cluster=0 --replica=0 --replica-count=1 $$DATA_FILE;
+      fi
+      hostname -i
+      ls /var/lib/tigerbeetle
+      ./tigerbeetle start --addresses=0.0.0.0:4342 --development $$DATA_FILE
+
+postgres:
+  image: 'postgres:16'
+  container_name: postgres
+  environment:
+    POSTGRES_USER: ...
+    POSTGRES_PASSWORD: ...
+  networks:
+    - rafiki
+  restart: unless-stopped
+  volumes:
+    - pg-data:/var/lib/postgresql/data
+    - ../dbinit.sql:/docker-entrypoint-initdb.d/init.sql
+
+redis:
+  image: 'redis:7'
+  restart: unless-stopped
+  networks:
+    - rafiki
+
+kratos:
+  image: 'oryd/kratos:v1.2.0'
+  privileged: true
+  ports:
+    - '4433:4433'
+  volumes:
+    - ../entrypoint.sh:/entrypoint.sh
+    - ../identity.schema.json:/etc/config/kratos/identity.schema.json
+    - ./kratos.yml:/etc/config/kratos/kratos.yml
+  entrypoint: ['/entrypoint.sh']
+  networks:
+    - rafiki
+
+networks:
+  rafiki:
+    driver: bridge
+    ipam:
+    config: - subnet: 10.5.0.0/24
+    gateway: 10.5.0.1
+
+volumes:
+  pg-data:
+  tigerbeetle-data:
+
+```
+
+</details>
+
+## Create Nginx config files
+
+Create Nginx configuration files for every exposed domain:
+
+<div class="overflow-table">
+
+| Service                       | URL          | Example            | Nginx config file                                               |
+| ----------------------------- | ------------ | ------------------ | --------------------------------------------------------------- |
+| Open Payments resource server | DOMAIN       | myrafiki.com       | /etc/nginx/sites-available/open_payments_resource_server.config |
+| ILP connector                 | ilp.DOMAIN   | ilp.myrafiki.com   | /etc/nginx/sites-available/ilp.config                           |
+| Open Payments auth server     | auth.DOMAIN  | auth.myrafiki.com  | /etc/nginx/sites-available/open_payments_auth_server.config     |
+| Admin UI                      | admin.DOMAIN | admin.myrafiki.com | /etc/nginx/sites-available/admin.config                         |
+
+</div>
+
+:::note
+The example domain and subdomain values are for demonstration purposes only. You must use the actual domain names that you set up with your DNS host.
+:::
+
+### Open Payments resource server (`backend` package)
+
+Using the editor of your choice, save the following file as `open_payments_resource_server.config` in the `/etc/nginx/sites-available` directory on your VM:
+
+```sh
+
+server {
+      server_name myrafiki.com;
+
+      listen 443 ssl;
+
+      ssl_certificate /etc/letsencrypt/live/myrafiki.com/fullchain.pem;
+      ssl_certificate_key /etc/letsencrypt/live/myrafiki.com/privkey.pem;
+
+      include /etc/letsencrypt/options-ssl-nginx.conf;
+      ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+      location / {
+          proxy_http_version 1.1;
+          proxy_set_header X-Forwarded-Proto $scheme;
+          proxy_set_header Upgrade "";
+          proxy_set_header Connection "";
+          proxy_set_header Host $server_name;
+          proxy_set_header Accept-Encoding "";
+          proxy_cache_bypass $http_upgrade;
+
+          proxy_pass_request_headers on;
+
+          proxy_pass http://localhost:3000;
+    }
+}
+
+server {
+    server_name myrafiki.com;
+
+    listen 80;
+
+    if ($host = myrafiki.com) {
+        return 301 https://$host$request_uri;
+    }
+
+    return 404;
+}
+```
+
+### ILP connector (`backend` package)
+
+Save the following file as `ilp.config` in the `/etc/nginx/sites-available` directory on your VM:
+
+```sh
+server {
+    server_name ilp.myrafiki.com;
+
+    listen 443 ssl;
+
+    ssl_certificate /etc/letsencrypt/live/ilp.myrafiki.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/ilp.myrafiki.com/privkey.pem;
+
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    location / {
+        proxy_http_version 1.1;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade "";
+        proxy_set_header Connection "";
+        proxy_set_header Host $server_name;
+        proxy_set_header Accept-Encoding "";
+        proxy_cache_bypass $http_upgrade;
+
+        proxy_pass_request_headers on;
+
+        proxy_pass http://localhost:3002;
+    }
+}
+
+server {
+    server_name ilp.myrafiki.com;
+
+    listen 80;
+
+    if ($host = ilp.myrafiki.com) {
+        return 301 https://$host$request_uri;
+    }
+
+    return 404;
+}
+```
+
+### Open Payments auth server (`auth` package)
+
+Save the following file as `open_payments_auth_server.config` in the `/etc/nginx/sites-available` directory on your VM:
+
+```sh
+server {
+    server_name auth.myrafiki.com;
+
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/auth.myrafiki.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/auth.myrafiki.com/privkey.pem;
+
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    location / {
+        proxy_http_version 1.1;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade "";
+        proxy_set_header Connection "";
+        proxy_set_header Host $server_name;
+        proxy_set_header Accept-Encoding "";
+        proxy_cache_bypass $http_upgrade;
+
+        proxy_pass_request_headers on;
+
+        proxy_pass http://localhost:3006;
+    }
+}
+
+server {
+    server_name auth.myrafiki.com;
+
+    listen 80;
+
+    if ($host = auth.myrafiki.com) {
+        return 301 https://$host$request_uri;
+    }
+
+    return 404;
+}
+```
+
+### Admin (`frontend` package)
+
+Save the following file as `admin.config` in the `/etc/nginx/sites-available` directory on your VM:
+
+```sh
+server {
+    server_name admin.myrafiki.com;
+
+    listen 443 ssl;
+
+    ssl_certificate /etc/letsencrypt/live/admin.myrafiki.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/admin.myrafiki.com/privkey.pem;
+
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    location / {
+        proxy_http_version 1.1;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade "";
+        proxy_set_header Connection "";
+        proxy_set_header Host $server_name;
+        proxy_set_header Accept-Encoding "";
+        proxy_cache_bypass $http_upgrade;
+
+        proxy_pass_request_headers on;
+
+        proxy_pass http://localhost:3005;
+    }
+}
+
+server {
+    server_name admin.myrafiki.com;
+
+    listen 80;
+
+    if ($host = admin.myrafiki.com) {
+        return 301 https://$host$request_uri;
+    }
+
+    return 404;
+}
+```
+
+## Set up symbolic links
+
+Once the Nginx configuration files have been created, set up symbolic links that will allow Nginx to read those files and redirect the local paths to the exposed domains and ports.
+
+```sh wrap
+sudo ln -s /etc/nginx/sites-available/admin.conf /etc/nginx/sites-enabled/admin.conf
+
+sudo ln -s /etc/nginx/sites-available/open_payments_auth_server.conf /etc/nginx/sites-enabled/open_payments_auth_server.conf
+
+sudo ln -s /etc/nginx/sites-available/ilp.conf /etc/nginx/sites-enabled/ilp.conf
+
+sudo ln -s /etc/nginx/sites-available/open_payments_resource_server.conf /etc/nginx/sites-enabled/open_payments_resource_server.conf
+
+```
+
+## Deploy with Docker Compose
+
+Deploy the configured Rafiki services with Docker Compose:
+
+```sh
+docker compose up -d
+```
