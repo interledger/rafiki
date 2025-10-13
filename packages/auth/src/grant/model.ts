@@ -183,7 +183,7 @@ export function toOpenPaymentsGrant(
 ): OpenPaymentsGrant {
   return {
     access_token:
-      accessToken && accessItems
+      accessToken && accessItems?.length
         ? toOpenPaymentsAccessToken(accessToken, accessItems, {
             authServerUrl: args.authServerUrl
           })
