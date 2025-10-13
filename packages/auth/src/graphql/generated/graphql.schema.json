@@ -1038,7 +1038,7 @@
               },
               {
                 "name": "tenantId",
-                "description": "Unique identifier of the tenant associated with the grant. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature.",
+                "description": "Filter grants by a specific tenant. This can only be performed by the operator.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "ID",
