@@ -128,7 +128,7 @@ describe('Grant Routes', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -336,6 +336,7 @@ describe('Grant Routes', (): void => {
 
       test('Does not create interactive grant if tenant has no idp', async (): Promise<void> => {
         const unconfiguredTenant = await Tenant.query().insertAndFetch({
+          apiSecret: crypto.randomUUID(),
           idpConsentUrl: undefined,
           idpSecret: undefined
         })

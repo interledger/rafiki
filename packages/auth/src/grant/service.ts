@@ -29,7 +29,10 @@ interface GrantFilter {
 }
 
 export interface GrantService {
-  getByIdWithAccessAndSubject(grantId: string): Promise<Grant | undefined>
+  getByIdWithAccessAndSubject(
+    grantId: string,
+    tenantId?: string
+  ): Promise<Grant | undefined>
   create(
     grantRequest: GrantRequest,
     tenantId: string,
@@ -47,7 +50,8 @@ export interface GrantService {
   getPage(
     pagination?: Pagination,
     filter?: GrantFilter,
-    sortOrder?: SortOrder
+    sortOrder?: SortOrder,
+    tenantId?: string
   ): Promise<Grant[]>
   updateLastContinuedAt(id: string): Promise<Grant>
   lock(grantId: string, trx: Transaction, timeoutMs?: number): Promise<void>
@@ -130,8 +134,8 @@ export async function createGrantService({
     knex
   }
   return {
-    getByIdWithAccessAndSubject: (grantId: string) =>
-      getByIdWithAccessAndSubject(grantId),
+    getByIdWithAccessAndSubject: (grantId: string, tenantId?: string) =>
+      getByIdWithAccessAndSubject(grantId, tenantId),
     create: (grantRequest: GrantRequest, tenantId: string, trx?: Transaction) =>
       create(deps, grantRequest, tenantId, trx),
     markPending: (grantId: string, trx?: Transaction) =>
@@ -145,8 +149,8 @@ export async function createGrantService({
     ) => getByContinue(continueId, continueToken, opts),
     revokeGrant: (grantId: string, tenantId?: string) =>
       revokeGrant(deps, grantId, tenantId),
-    getPage: (pagination?, filter?, sortOrder?) =>
-      getGrantsPage(deps, pagination, filter, sortOrder),
+    getPage: (pagination?, filter?, sortOrder?, tenantId?) =>
+      getGrantsPage(deps, pagination, filter, sortOrder, tenantId),
     updateLastContinuedAt: (id) => updateLastContinuedAt(id),
     lock: (grantId: string, trx: Transaction, timeoutMs?: number) =>
       lock(deps, grantId, trx, timeoutMs)
@@ -154,12 +158,19 @@ export async function createGrantService({
 }
 
 async function getByIdWithAccessAndSubject(
-  grantId: string
+  grantId: string,
+  tenantId?: string
 ): Promise<Grant | undefined> {
-  return Grant.query()
+  const query = Grant.query()
     .findById(grantId)
     .withGraphJoined('access')
     .withGraphJoined('subjects')
+
+  if (tenantId) {
+    query.where('tenantId', tenantId)
+  }
+
+  return query
 }
 
 async function approve(grantId: string): Promise<Grant> {
@@ -327,7 +338,8 @@ async function getGrantsPage(
   deps: ServiceDependencies,
   pagination?: Pagination,
   filter?: GrantFilter,
-  sortOrder?: SortOrder
+  sortOrder?: SortOrder,
+  tenantId?: string
 ): Promise<Grant[]> {
   const query = Grant.query(deps.knex).withGraphJoined('access')
   const { identifier, state, finalizationReason } = filter ?? {}
@@ -352,6 +364,10 @@ async function getGrantsPage(
     query
       .whereNull('finalizationReason')
       .orWhereNotIn('finalizationReason', finalizationReason.notIn)
+  }
+
+  if (tenantId) {
+    query.where('tenantId', tenantId)
   }
 
   return query.getPage(pagination, sortOrder)

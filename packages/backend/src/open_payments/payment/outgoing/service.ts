@@ -196,7 +196,7 @@ export interface CreateFromQuote extends BaseOptions {
 }
 export interface CreateFromIncomingPayment extends BaseOptions {
   incomingPayment: string
-  debitAmount: Amount
+  debitAmount?: Amount
 }
 
 export type CancelOutgoingPaymentOptions = {
@@ -212,7 +212,7 @@ export type CreateOutgoingPaymentOptions =
 export function isCreateFromIncomingPayment(
   options: CreateOutgoingPaymentOptions
 ): options is CreateFromIncomingPayment {
-  return 'incomingPayment' in options && 'debitAmount' in options
+  return 'incomingPayment' in options
 }
 
 async function cancelOutgoingPayment(
@@ -282,11 +282,10 @@ async function createOutgoingPayment(
             description: 'Time to create a quote in outgoing payment'
           }
         )
-        const { debitAmount, incomingPayment } = options
         const quoteOrError = await deps.quoteService.create({
           tenantId,
-          receiver: incomingPayment,
-          debitAmount,
+          receiver: options.incomingPayment,
+          debitAmount: options.debitAmount,
           method: 'ilp',
           walletAddressId
         })
