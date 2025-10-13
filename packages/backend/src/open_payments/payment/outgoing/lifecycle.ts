@@ -175,49 +175,72 @@ async function handleGrantSpentAmounts(
 ) {
   if (!payment.grantId) return
 
-  const latestSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+  // Get the latest spent amounts record for this specific payment,
+  // not necessarily the latest for this grant
+  const latestPaymentSpentAmounts =
+    await OutgoingPaymentGrantSpentAmounts.query(deps.knex)
+      .where('outgoingPaymentId', payment.id)
+      .orderBy('createdAt', 'desc')
+      .first()
+
+  // TODO: this shouldnt happen. should we error instead?
+  if (!latestPaymentSpentAmounts) {
+    deps.logger.warn(
+      { outgoingPaymentId: payment.id },
+      'No outgoingPaymentGrantSpentAmounts record found for outgoingPaymentId'
+    )
+    return
+  }
+
+  // Detect if partial payment
+  const reservedDebitAmount = latestPaymentSpentAmounts.paymentDebitAmountValue
+  const reservedReceiveAmount =
+    latestPaymentSpentAmounts.paymentReceiveAmountValue
+  const debitAmountDifference = reservedDebitAmount - settledAmounts.debit
+  const receiveAmountDifference = reservedReceiveAmount - settledAmounts.receive
+
+  if (debitAmountDifference === 0n && receiveAmountDifference === 0n) return
+
+  // Adjust the latest grant spent amounts for this grant (may have been updated by other payments)
+  const latestGrantSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
     deps.knex
   )
     .where('grantId', payment.grantId)
     .orderBy('createdAt', 'desc')
     .first()
 
-  // TODO: this shouldnt happen. should we error instead?
-  if (!latestSpentAmounts) {
+  if (!latestGrantSpentAmounts) {
     deps.logger.warn(
       { grantId: payment.grantId },
-      'No outgoingPaymentGrantSpentAmounts record found for grantId on payment failure'
+      'No outgoingPaymentGrantSpentAmounts record found for grantId'
     )
     return
   }
 
-  const reservedDebitAmount = latestSpentAmounts.paymentDebitAmountValue
-  const reservedReceiveAmount = latestSpentAmounts.paymentReceiveAmountValue
-  const debitAmountDifference = reservedDebitAmount - settledAmounts.debit
-  const receiveAmountDifference = reservedReceiveAmount - settledAmounts.receive
-
-  if (debitAmountDifference === 0n && receiveAmountDifference === 0n) return
-
   const newGrantTotalDebitAmountValue =
-    latestSpentAmounts.grantTotalDebitAmountValue - debitAmountDifference
-  const newIntervalDebitAmountValue =
-    latestSpentAmounts.intervalDebitAmountValue !== null
-      ? latestSpentAmounts.intervalDebitAmountValue - debitAmountDifference
-      : latestSpentAmounts.intervalDebitAmountValue
-
+    latestGrantSpentAmounts.grantTotalDebitAmountValue - debitAmountDifference
   const newGrantTotalReceiveAmountValue =
-    latestSpentAmounts.grantTotalReceiveAmountValue - receiveAmountDifference
+    latestGrantSpentAmounts.grantTotalReceiveAmountValue -
+    receiveAmountDifference
+
+  // TODO: Handle interval amounts fully, such as across interval boundaries
+  const newIntervalDebitAmountValue =
+    latestGrantSpentAmounts.intervalDebitAmountValue === null
+      ? null
+      : latestGrantSpentAmounts.intervalDebitAmountValue - debitAmountDifference
   const newIntervalReceiveAmountValue =
-    latestSpentAmounts.intervalReceiveAmountValue !== null
-      ? latestSpentAmounts.intervalReceiveAmountValue - receiveAmountDifference
-      : latestSpentAmounts.intervalReceiveAmountValue
+    latestGrantSpentAmounts.intervalReceiveAmountValue === null
+      ? null
+      : latestGrantSpentAmounts.intervalReceiveAmountValue -
+        receiveAmountDifference
 
   // TODO: handle case where these new values are negative? presumably that is an invalid state.
-  // In practice it may never happen but is theorhetically possible.
+  // In practice it may never happen but is theoretically possible.
 
   await OutgoingPaymentGrantSpentAmounts.query(deps.knex).insert({
-    ...latestSpentAmounts,
+    ...latestGrantSpentAmounts,
     id: v4(),
+    outgoingPaymentId: payment.id,
     paymentDebitAmountValue: settledAmounts.debit,
     intervalDebitAmountValue: newIntervalDebitAmountValue,
     grantTotalDebitAmountValue: newGrantTotalDebitAmountValue,
