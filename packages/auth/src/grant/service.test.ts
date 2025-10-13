@@ -368,7 +368,7 @@ describe('Grant Service', (): void => {
       })
 
       test('Can filter by tenantId', async () => {
-        const fetchedGrant = await grantService.getByIdWithAccess(
+        const fetchedGrant = await grantService.getByIdWithAccessAndSubject(
           grant.id,
           grant.tenantId
         )
@@ -377,7 +377,7 @@ describe('Grant Service', (): void => {
       })
 
       test('Returns undefined if incorrect tenantId', async () => {
-        const fetchedGrant = await grantService.getByIdWithAccess(
+        const fetchedGrant = await grantService.getByIdWithAccessAndSubject(
           grant.id,
           v4()
         )
