@@ -14,6 +14,7 @@ import {
   IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethod
 } from '@interledger/open-payments'
 import { OpenPaymentsPaymentMethod } from '../../../payment-method/provider/service'
+import { IncomingPaymentInitiationReason } from './types'
 
 export enum IncomingPaymentEventType {
   IncomingPaymentCreated = 'incoming_payment.created',
@@ -102,6 +103,7 @@ export class IncomingPayment
   public processAt!: Date | null
   public approvedAt?: Date | null
   public cancelledAt?: Date | null
+  public initiatedBy!: IncomingPaymentInitiationReason
 
   public readonly assetId!: string
   public asset!: Asset
