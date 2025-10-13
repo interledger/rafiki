@@ -2,13 +2,14 @@
   "name": "card-service",
   "main": "index.js",
   "scripts": {
-    "build": "pnpm clean && tsc --build tsconfig.json",
+    "build": "pnpm clean && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests --maxWorkers=50%",
     "test:ci": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests --maxWorkers=2",
     "test:cov": "pnpm test -- --coverage",
     "dev": "ts-node-dev --inspect=0.0.0.0:9229 --respawn --transpile-only src/index.ts",
-    "knex": "knex"
+    "knex": "knex",
+    "copy-files": "cp -r ./src/openapi ./dist/"
   },
   "dependencies": {
     "@adonisjs/fold": "^8.2.0",

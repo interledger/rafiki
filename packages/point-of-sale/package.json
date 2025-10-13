@@ -20,6 +20,7 @@
   "license": "ISC",
   "dependencies": {
     "@adonisjs/fold": "^8.2.0",
+    "@apollo/client": "^3.11.8",
     "@apollo/server": "^4.11.2",
     "@faker-js/faker": "^8.4.1",
     "@koa/cors": "^5.0.0",
@@ -39,7 +40,6 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@apollo/client": "^3.11.8",
     "@faker-js/faker": "^8.4.1",
     "@graphql-codegen/cli": "5.0.4",
     "@graphql-codegen/introspection": "4.0.3",
