@@ -789,6 +789,46 @@ describe('Lifecycle', (): void => {
           assert(latestSpentAmounts)
           expect(latestSpentAmounts.outgoingPaymentId).toBe(firstPayment.id)
         })
+
+        test('Gets correct spent amounts when multiple outgoing payments are created', async (): Promise<void> => {
+          jest.setSystemTime(new Date('2025-01-02T00:00:00Z'))
+          const grant = {
+            id: uuid(),
+            limits: {
+              debitAmount: {
+                value: 1000n,
+                assetCode: asset.code,
+                assetScale: asset.scale
+              },
+              interval: 'R/2025-01-01T00:00:00Z/P1M'
+            }
+          }
+
+          // Create 2 payments, which create 2 grant spent amounts. Do not process 1st before creating 2nd.
+          const firstPayment = await createAndFundGrantPayment(
+            100n,
+            grant,
+            mockPaySuccessFactory()
+          )
+          jest.advanceTimersByTime(500)
+
+          await createAndFundGrantPayment(200n, grant, mockPaySuccessFactory())
+          jest.advanceTimersByTime(500)
+          const spentAmounts =
+            await OutgoingPaymentGrantSpentAmounts.query(knex)
+          expect(spentAmounts.length).toBe(2)
+
+          // Process next (1st payment)
+          const id = await outgoingPaymentService.processNext()
+          jest.advanceTimersByTime(500)
+          expect(id).toBe(firstPayment.id)
+
+          // Grant spent amounts should correspond to the first payment
+          // Should not detect a difference and insert a new spent amount.
+          const spentAmountsAfterProcessing =
+            await OutgoingPaymentGrantSpentAmounts.query(knex)
+          expect(spentAmountsAfterProcessing.length).toBe(2)
+        })
       })
     })
 
