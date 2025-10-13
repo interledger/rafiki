@@ -16,11 +16,14 @@ Rafiki’s <LinkOut href="https://github.com/interledger/rafiki/tree/main/packag
 
 The following are required when using the `backend` service.
 
-- Generate a UUID v4 for `OPERATOR_TENANT_ID` and a strong, random `API_SECRET`
-- A Redis database as a cache to share STREAM connection details and total amounts received across processes
-- A Postgres database, separate from the `auth` service’s database, for Open Payments resources
+- `OPERATOR_TENANT_ID` (UUID v4) and a strong, random `API_SECRET`
+- Redis database as a cache to share STREAM connection details and total amounts received across processes
+- Postgres database, separate from the `auth` service’s database, for Open Payments resources
 - Create the operator tenant record in the Postgres database with `OPERATOR_TENANT_ID` prior to startup (on startup, the backend syncs the operator's API secret from `API_SECRET`)
-- TigerBeetle or a separate Postgres database for accounting liquidity
+- TigerBeetle or separate Postgres database for accounting liquidity
+
+On startup, the `backend` service seeds/updates the `OPERATOR_TENANT_ID` and syncs its API secret from `API_SECRET`.
+
   :::note
   You can use the same database instance of Postgres for the `backend` service, `auth` service, and accounting liquidity (if not using TigerBeetle). However, separate database schemas are required within the Rafiki instance to maintain boundaries between the managed objects.
   :::

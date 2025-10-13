@@ -17,26 +17,36 @@ Refer to the [Rafiki Admin user guide](/admin/admin-user-guide/#tenants) for det
 
 Each tenant on a given Rafiki instance has the following properties:
 
-- `id`: The unique identifier for the tenant used to identify the tenant in API requests and webhook events.
-- `email`: The tenant's email address.
-- `apiSecret`: The secret used to sign Backend Admin API requests (HMAC SHA-256) for this tenant.
-- `idpConsentUrl`: The URL of the tenant's identity provider's (IdP) consent screen. This URL is used to redirect users to the IdP to grant consent for Open Payments requests.
-- `idpSecret`: The secret used to secure requests from the tenant's IdP. This secret is used to authenticate requests from the IdP to the Rafiki instance.
-- `publicName`: The public display name for the tenant. This name is displayed in the Rafiki Admin application and can be used to identify the tenant.
-- `settings`: A list of key-value pairs for any initial tenant settings, as explained in the next section.
+<div class="overflow-table">
+
+| Property        | Description                                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `id`            | Unique identifier for the tenant used in API requests and webhook events.                                           |
+| `email`         | The tenant's email address.                                                                                         |
+| `apiSecret`     | Secret used to HMAC-sign Backend Admin API requests (HMAC SHA-256) for this tenant.                                 |
+| `idpConsentUrl` | The tenant's identity provider (IdP) consent URL used to redirect end-users for interactive grants (Open Payments). |
+| `idpSecret`     | Secret used to authenticate requests from the tenant's IdP to Rafiki.                                               |
+| `publicName`    | Public display name for the tenant (shown in the Rafiki Admin application).                                         |
+| `settings`      | Key-value pairs for initial tenant settings. See the table below.                                                   |
+
+</div>
 
 ## Tenant settings
 
-Tenant settings allow operators to customize the behavior of a tenant. These settings are stored as key-value pairs in the database and can be managed through the Backend Admin API or Rafiki Admin application.
+Tenant settings allow operators to customize tenant behavior. These settings are stored as key-value pairs and can be managed via the Backend Admin API or the Rafiki Admin application.
 
-The following tenant settings are available:
+<div class="overflow-table">
 
-- `EXCHANGE_RATES_URL`: The URL of the tenant's exchange rates service. This setting is used to configure the source of exchange rate data for the tenant.
-- `WEBHOOK_URL`: The URL of the tenant's webhook endpoint. This setting is used to configure the endpoint that will receive webhook events for the tenant.
-- `WEBHOOK_TIMEOUT`: The timeout for the tenant's webhook requests (in milliseconds). This setting is used to configure the maximum amount of time to wait for a response from the webhook endpoint.
-- `WEBHOOK_MAX_RETRY`: The maximum number of retries for the tenant's webhook event when a non-200 status is returned or if the request timed out.
-- `WALLET_ADDRESS_URL`: The URL of the tenant's wallet address service. This setting is used to configure the base URL for wallet addresses created for the tenant and **cannot** be updated once set.
-- `ILP_ADDRESS`: The tenant's Interledger Protocol (ILP) address. This setting is used to configure the base ILP address for the tenant.
+| Setting              | Description                                                                                                                                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EXCHANGE_RATES_URL` | The URL of the tenant's exchange rates service. This setting is used to configure the source of exchange rate data for the tenant.                                              |
+| `WEBHOOK_URL`        | The URL of the tenant's webhook endpoint. This setting is used to configure the endpoint that will receive webhook events for the tenant.                                       |
+| `WEBHOOK_TIMEOUT`    | The timeout for the tenant's webhook requests (in milliseconds). This setting is used to configure the maximum amount of time to wait for a response from the webhook endpoint. |
+| `WEBHOOK_MAX_RETRY`  | The maximum number of retries for the tenant's webhook event when a non-200 status is returned or if the request timed out.                                                     |
+| `WALLET_ADDRESS_URL` | Base URL for wallet addresses created for the tenant. This setting **cannot** be updated once set.                                                                              |
+| `ILP_ADDRESS`        | Base Interledger Protocol (ILP) address for the tenant.                                                                                                                         |
+
+</div>
 
 :::note
 Only operators can create, edit, and delete tenants.
@@ -44,7 +54,7 @@ Only operators can create, edit, and delete tenants.
 
 ## Create a tenant
 
-After you create a tenant, securely communication the tenant `id` and `apiSecret` to the tenant out-of-band.
+After you create a tenant, securely communicate the tenant `id` and `apiSecret` to the tenant out-of-band.
 
 <Tabs>
   <TabItem label="Operation">
