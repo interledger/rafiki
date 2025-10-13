@@ -3,6 +3,8 @@ FROM node:20-alpine3.20
 RUN adduser -D rafiki
 WORKDIR /home/rafiki
 
+RUN apk update && apk upgrade --no-cache libcrypto3 libssl3
+
 # Install Corepack and pnpm as the Rafiki user
 USER rafiki
 RUN mkdir -p /home/rafiki/.local/bin

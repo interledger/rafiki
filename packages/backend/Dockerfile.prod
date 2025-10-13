@@ -2,6 +2,8 @@ FROM node:20-alpine3.20 AS base
 
 WORKDIR /home/rafiki
 
+RUN apk update && apk upgrade --no-cache libcrypto3 libssl3
+
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 
@@ -30,7 +32,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     --prod \
     | grep -v "cross-device link not permitted\|Falling back to copying packages from store"
 
-FROM base AS builder   
+FROM base AS builder
 
 COPY package.json pnpm-workspace.yaml .npmrc tsconfig.json tsconfig.build.json ./
 COPY packages/backend ./packages/backend
