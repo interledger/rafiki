@@ -242,7 +242,7 @@ export default function CreatePeerPage() {
                             will sent to & received from the peer.
                           </>
                         }
-                        bringForward
+                        bringForward={1}
                       />
                     ) : (
                       <Select
