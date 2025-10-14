@@ -443,7 +443,7 @@ describe('Lifecycle', (): void => {
           })
         })
 
-        test('Failed payment should remove latest amount', async (): Promise<void> => {
+        test('Failed payment should revert latest amount', async (): Promise<void> => {
           jest.setSystemTime(new Date('2025-01-02T00:00:00Z'))
           const grant = {
             id: uuid(),
@@ -496,14 +496,30 @@ describe('Lifecycle', (): void => {
           const processedPaymentId = await outgoingPaymentService.processNext()
           expect(processedPaymentId).toBe(payment.id)
 
-          const endSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
-            knex
-          )
-            .where({ outgoingPaymentId: payment.id })
-            .orderBy('createdAt', 'desc')
-            .first()
+          const latestGrantSpentAmounts =
+            await OutgoingPaymentGrantSpentAmounts.query(knex)
+              .where({ grantId: grant.id })
+              .orderBy('createdAt', 'desc')
+              .first()
 
-          expect(endSpentAmounts).toBe(undefined)
+          // Should have new spent amounts with payment factored out
+          expect(latestGrantSpentAmounts).toMatchObject({
+            grantId: grant.id,
+            outgoingPaymentId: payment.id,
+            receiveAmountScale: assetDetails.scale,
+            receiveAmountCode: assetDetails.code,
+            paymentReceiveAmountValue: 0n,
+            intervalReceiveAmountValue: 0n,
+            grantTotalReceiveAmountValue: 0n,
+            debitAmountScale: assetDetails.scale,
+            debitAmountCode: assetDetails.code,
+            paymentDebitAmountValue: 0n,
+            intervalDebitAmountValue: 0n,
+            grantTotalDebitAmountValue: 0n,
+            paymentState: OutgoingPaymentState.Failed,
+            intervalStart: interval.start.toJSDate(),
+            intervalEnd: interval.end.toJSDate()
+          })
         })
       })
       describe('Successive Payment', (): void => {
@@ -704,7 +720,7 @@ describe('Lifecycle', (): void => {
           })
         })
 
-        test('Failed payment should remove latest amount', async (): Promise<void> => {
+        test('Failed payment should revert latest amount', async (): Promise<void> => {
           jest.setSystemTime(new Date('2025-01-02T00:00:00Z'))
           const grant = {
             id: uuid(),
@@ -776,22 +792,30 @@ describe('Lifecycle', (): void => {
           })
           expect(finalPayment?.state).toBe(OutgoingPaymentState.Failed)
 
-          // Grant spent amounts for failed payment should be removed
-          const endSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
-            knex
-          )
-            .where({ outgoingPaymentId: secondPayment.id })
-            .first()
-          expect(endSpentAmounts).toBe(undefined)
-
-          const latestSpentAmounts =
+          const latestGrantSpentAmounts =
             await OutgoingPaymentGrantSpentAmounts.query(knex)
               .where({ grantId: grant.id })
               .orderBy('createdAt', 'desc')
               .first()
 
-          assert(latestSpentAmounts)
-          expect(latestSpentAmounts.outgoingPaymentId).toBe(firstPayment.id)
+          // Should have new spent amounts with payment factored out
+          expect(latestGrantSpentAmounts).toMatchObject({
+            grantId: grant.id,
+            outgoingPaymentId: secondPayment.id,
+            receiveAmountScale: assetDetails.scale,
+            receiveAmountCode: assetDetails.code,
+            paymentReceiveAmountValue: 0n,
+            intervalReceiveAmountValue: paymentAmount,
+            grantTotalReceiveAmountValue: paymentAmount,
+            debitAmountScale: assetDetails.scale,
+            debitAmountCode: assetDetails.code,
+            paymentDebitAmountValue: 0n,
+            intervalDebitAmountValue: paymentAmount,
+            grantTotalDebitAmountValue: paymentAmount,
+            paymentState: OutgoingPaymentState.Failed,
+            intervalStart: interval.start.toJSDate(),
+            intervalEnd: interval.end.toJSDate()
+          })
         })
 
         describe('Payment Creation vs. Completion race condition', (): void => {
@@ -1290,6 +1314,175 @@ describe('Lifecycle', (): void => {
               intervalEnd: interval.end.toJSDate()
             })
           })
+
+          test('Create, create, fail, complete', async (): Promise<void> => {
+            jest.setSystemTime(new Date('2025-01-02T00:00:00Z'))
+            const grant = {
+              id: uuid(),
+              limits: {
+                debitAmount: {
+                  value: 1000n,
+                  assetCode: asset.code,
+                  assetScale: asset.scale
+                },
+                interval: 'R/2025-01-01T00:00:00Z/P1M'
+              }
+            }
+
+            // Create 1
+            const firstPaymentAmount = 10n
+            const firstPayment = await createAndFundGrantPayment(
+              firstPaymentAmount,
+              grant
+            )
+            jest.advanceTimersByTime(500)
+
+            let latestSpentAmounts = [
+              await OutgoingPaymentGrantSpentAmounts.query(knex)
+                .where({ grantId: grant.id })
+                .first()
+            ]
+
+            let interval = getInterval(
+              grant.limits.interval,
+              firstPayment.createdAt
+            )
+            assert(interval)
+            assert(interval.start)
+            assert(interval.end)
+            expect(latestSpentAmounts[0]).toMatchObject({
+              grantId: grant.id,
+              outgoingPaymentId: firstPayment.id,
+              receiveAmountScale: assetDetails.scale,
+              receiveAmountCode: assetDetails.code,
+              paymentReceiveAmountValue: firstPaymentAmount,
+              intervalReceiveAmountValue: firstPaymentAmount,
+              grantTotalReceiveAmountValue: firstPaymentAmount,
+              debitAmountScale: assetDetails.scale,
+              debitAmountCode: assetDetails.code,
+              paymentDebitAmountValue: firstPaymentAmount,
+              intervalDebitAmountValue: firstPaymentAmount,
+              grantTotalDebitAmountValue: firstPaymentAmount,
+              paymentState: OutgoingPaymentState.Funding,
+              intervalStart: interval.start.toJSDate(),
+              intervalEnd: interval.end.toJSDate()
+            })
+
+            // Create 2
+            const secondPaymentAmount = 20n
+            const secondPayment = await createAndFundGrantPayment(
+              secondPaymentAmount,
+              grant
+            )
+            jest.advanceTimersByTime(500)
+
+            latestSpentAmounts[1] =
+              await OutgoingPaymentGrantSpentAmounts.query(knex)
+                .where({ grantId: grant.id })
+                .first()
+
+            interval = getInterval(
+              grant.limits.interval,
+              firstPayment.createdAt
+            )
+            assert(interval)
+            assert(interval.start)
+            assert(interval.end)
+            expect(latestSpentAmounts[1]).toMatchObject({
+              grantId: grant.id,
+              outgoingPaymentId: secondPayment.id,
+              receiveAmountScale: assetDetails.scale,
+              receiveAmountCode: assetDetails.code,
+              paymentReceiveAmountValue: secondPaymentAmount,
+              intervalReceiveAmountValue:
+                firstPaymentAmount + secondPaymentAmount,
+              grantTotalReceiveAmountValue:
+                firstPaymentAmount + secondPaymentAmount,
+              debitAmountScale: assetDetails.scale,
+              debitAmountCode: assetDetails.code,
+              paymentDebitAmountValue: secondPaymentAmount,
+              intervalDebitAmountValue:
+                firstPaymentAmount + secondPaymentAmount,
+              grantTotalDebitAmountValue:
+                firstPaymentAmount + secondPaymentAmount,
+              paymentState: OutgoingPaymentState.Funding,
+              intervalStart: interval.start.toJSDate(),
+              intervalEnd: interval.end.toJSDate()
+            })
+
+            // Process first payment (fail)
+            jest
+              .spyOn(paymentMethodHandlerService, 'pay')
+              .mockImplementationOnce(mockPayErrorFactory()())
+            let id = await outgoingPaymentService.processNext()
+            jest.advanceTimersByTime(500)
+            expect(id).toBe(firstPayment.id)
+
+            const failedPayment = await outgoingPaymentService.get({
+              id: firstPayment.id
+            })
+            expect(failedPayment?.state).toBe(OutgoingPaymentState.Failed)
+
+            // Should have new record with first payment amounts removed
+            latestSpentAmounts[2] =
+              await OutgoingPaymentGrantSpentAmounts.query(knex)
+                .where({ grantId: grant.id })
+                .first()
+
+            interval = getInterval(
+              grant.limits.interval,
+              secondPayment.createdAt
+            )
+            assert(interval)
+            assert(interval.start)
+            assert(interval.end)
+            // Latest spent amounts should now only reflect the second payment
+            expect(latestSpentAmounts[2]).toMatchObject({
+              grantId: grant.id,
+              outgoingPaymentId: firstPayment.id,
+              receiveAmountScale: assetDetails.scale,
+              receiveAmountCode: assetDetails.code,
+              paymentReceiveAmountValue: 0n,
+              intervalReceiveAmountValue: secondPaymentAmount,
+              grantTotalReceiveAmountValue: secondPaymentAmount,
+              debitAmountScale: assetDetails.scale,
+              debitAmountCode: assetDetails.code,
+              paymentDebitAmountValue: 0n,
+              intervalDebitAmountValue: secondPaymentAmount,
+              grantTotalDebitAmountValue: secondPaymentAmount,
+              paymentState: OutgoingPaymentState.Failed,
+              intervalStart: interval.start.toJSDate(),
+              intervalEnd: interval.end.toJSDate()
+            })
+
+            // Process second payment (success)
+            jest
+              .spyOn(paymentMethodHandlerService, 'pay')
+              .mockImplementationOnce(
+                mockPaySuccessFactory()(
+                  accountingService,
+                  receiverWalletAddressId,
+                  secondPayment
+                )
+              )
+            id = await outgoingPaymentService.processNext()
+            jest.advanceTimersByTime(500)
+            expect(id).toBe(secondPayment.id)
+
+            const completedPayment = await outgoingPaymentService.get({
+              id: secondPayment.id
+            })
+            expect(completedPayment?.state).toBe(OutgoingPaymentState.Completed)
+
+            latestSpentAmounts[3] =
+              await OutgoingPaymentGrantSpentAmounts.query(knex)
+                .where({ grantId: grant.id })
+                .first()
+
+            // Should not detect a difference and insert a new spent amount since payment completed fully
+            assert(latestSpentAmounts[2])
+            expect(latestSpentAmounts[3]).toMatchObject(latestSpentAmounts[2])
+          })
         })
       })
     })
@@ -1553,7 +1746,7 @@ describe('Lifecycle', (): void => {
           februaryInterval.start.toJSDate()
         )
       })
-      test('Failed payment created in one interval but processed in next should remove spent amounts', async (): Promise<void> => {
+      test('Failed payment created in one interval but processed in next should revert spent amounts', async (): Promise<void> => {
         const grant = {
           id: uuid(),
           limits: {
@@ -1627,15 +1820,6 @@ describe('Lifecycle', (): void => {
         })
         expect(finalPayment?.state).toBe(OutgoingPaymentState.Failed)
 
-        // Grant spent amounts for failed payment should be removed
-        const endSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
-          knex
-        )
-          .where({ outgoingPaymentId: payment.id })
-          .first()
-        expect(endSpentAmounts).toBe(undefined)
-
-        // Only the first successful spent amounts should remain
         const latestSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
           knex
         )
@@ -1644,7 +1828,25 @@ describe('Lifecycle', (): void => {
           .first()
 
         assert(latestSpentAmounts)
-        expect(latestSpentAmounts).toMatchObject(initialSpentAmounts)
+
+        // Should have new spent amounts with payment factored out
+        expect(latestSpentAmounts).toMatchObject({
+          grantId: grant.id,
+          outgoingPaymentId: payment.id,
+          receiveAmountScale: assetDetails.scale,
+          receiveAmountCode: assetDetails.code,
+          paymentReceiveAmountValue: 0n,
+          intervalReceiveAmountValue: paymentAmount,
+          grantTotalReceiveAmountValue: paymentAmount,
+          debitAmountScale: assetDetails.scale,
+          debitAmountCode: assetDetails.code,
+          paymentDebitAmountValue: 0n,
+          intervalDebitAmountValue: paymentAmount,
+          grantTotalDebitAmountValue: paymentAmount,
+          paymentState: OutgoingPaymentState.Failed,
+          intervalStart: creationInterval.start.toJSDate(),
+          intervalEnd: creationInterval.end.toJSDate()
+        })
       })
     })
   })

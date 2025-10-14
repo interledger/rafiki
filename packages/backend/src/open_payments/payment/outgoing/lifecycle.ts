@@ -251,18 +251,108 @@ async function handleGrantSpentAmounts(
   })
 }
 
-async function deleteGrantSpentAmounts(
+/**
+ * Reverts the grant spent amounts when a payment fails.
+ * Inserts a spent amount record with the reserved amounts adjusted out.
+ */
+async function revertGrantSpentAmounts(
   deps: ServiceDependencies,
-  grantId: string
-) {
-  // TODO: if keeping the delete, soft delete via deletedAt instead
-  const latestRecord = await OutgoingPaymentGrantSpentAmounts.query()
-    .where('grantId', grantId)
+  payment: OutgoingPayment
+): Promise<void> {
+  if (!payment.grantId) return
+
+  // Get the latest spent amounts record for this specific payment
+  const latestPaymentSpentAmounts =
+    await OutgoingPaymentGrantSpentAmounts.query(deps.knex)
+      .where('outgoingPaymentId', payment.id)
+      .orderBy('createdAt', 'desc')
+      .first()
+
+  if (!latestPaymentSpentAmounts) {
+    deps.logger.warn(
+      { outgoingPaymentId: payment.id },
+      'No outgoingPaymentGrantSpentAmounts record found for failed payment'
+    )
+    return
+  }
+
+  // Get the latest grant spent amounts for this grant.
+  // May differ from latest for this payment if new grant payment has been created
+  const latestGrantSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+    deps.knex
+  )
+    .where('grantId', payment.grantId)
     .orderBy('createdAt', 'desc')
     .first()
-  if (latestRecord) {
-    await OutgoingPaymentGrantSpentAmounts.query().deleteById(latestRecord.id)
+
+  if (!latestGrantSpentAmounts) {
+    deps.logger.warn(
+      { grantId: payment.grantId },
+      'No outgoingPaymentGrantSpentAmounts record found for grantId'
+    )
+    return
   }
+  // Revert the entire reserved amount for this failed payment (clamp to 0)
+  const reservedDebitAmount = latestPaymentSpentAmounts.paymentDebitAmountValue
+  const reservedReceiveAmount =
+    latestPaymentSpentAmounts.paymentReceiveAmountValue
+
+  const newGrantTotalDebitAmountValue = BigInt(
+    Math.max(
+      0,
+      Number(
+        latestGrantSpentAmounts.grantTotalDebitAmountValue - reservedDebitAmount
+      )
+    )
+  )
+  const newGrantTotalReceiveAmountValue = BigInt(
+    Math.max(
+      0,
+      Number(
+        latestGrantSpentAmounts.grantTotalReceiveAmountValue -
+          reservedReceiveAmount
+      )
+    )
+  )
+
+  const newIntervalDebitAmountValue =
+    latestGrantSpentAmounts.intervalDebitAmountValue === null
+      ? null
+      : BigInt(
+          Math.max(
+            0,
+            Number(
+              latestGrantSpentAmounts.intervalDebitAmountValue -
+                reservedDebitAmount
+            )
+          )
+        )
+  const newIntervalReceiveAmountValue =
+    latestGrantSpentAmounts.intervalReceiveAmountValue === null
+      ? null
+      : BigInt(
+          Math.max(
+            0,
+            Number(
+              latestGrantSpentAmounts.intervalReceiveAmountValue -
+                reservedReceiveAmount
+            )
+          )
+        )
+
+  await OutgoingPaymentGrantSpentAmounts.query(deps.knex).insert({
+    ...latestGrantSpentAmounts,
+    id: v4(),
+    outgoingPaymentId: payment.id,
+    paymentDebitAmountValue: BigInt(0),
+    intervalDebitAmountValue: newIntervalDebitAmountValue,
+    grantTotalDebitAmountValue: newGrantTotalDebitAmountValue,
+    paymentReceiveAmountValue: BigInt(0),
+    intervalReceiveAmountValue: newIntervalReceiveAmountValue,
+    grantTotalReceiveAmountValue: newGrantTotalReceiveAmountValue,
+    createdAt: new Date(),
+    paymentState: OutgoingPaymentState.Failed
+  })
 }
 
 export async function handleFailed(
@@ -281,7 +371,7 @@ export async function handleFailed(
   })
 
   if (payment.grantId) {
-    deleteGrantSpentAmounts(deps, payment.grantId)
+    revertGrantSpentAmounts(deps, payment)
   }
 
   await sendWebhookEvent(deps, payment, OutgoingPaymentEventType.PaymentFailed)
