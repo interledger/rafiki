@@ -736,7 +736,7 @@ describe('Lifecycle', (): void => {
           const paymentAmount = 100n
 
           // Create and process first successful payment
-          const firstPayment = await createAndFundGrantPayment(
+          await createAndFundGrantPayment(
             paymentAmount,
             grant,
             mockPaySuccessFactory()
@@ -892,7 +892,7 @@ describe('Lifecycle', (): void => {
             )
             jest.advanceTimersByTime(500)
 
-            let latestSpentAmounts = [
+            const latestSpentAmounts = [
               await OutgoingPaymentGrantSpentAmounts.query(knex)
                 .where({ grantId: grant.id })
                 .first()
@@ -1087,7 +1087,7 @@ describe('Lifecycle', (): void => {
             )
             jest.advanceTimersByTime(500)
 
-            let latestSpentAmounts = [
+            const latestSpentAmounts = [
               await OutgoingPaymentGrantSpentAmounts.query(knex)
                 .where({ grantId: grant.id })
                 .first()
@@ -1337,7 +1337,7 @@ describe('Lifecycle', (): void => {
             )
             jest.advanceTimersByTime(500)
 
-            let latestSpentAmounts = [
+            const latestSpentAmounts = [
               await OutgoingPaymentGrantSpentAmounts.query(knex)
                 .where({ grantId: grant.id })
                 .first()
