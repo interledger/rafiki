@@ -119,6 +119,9 @@ describe('Tenant Service', (): void => {
 
     test('can get tenants by wallet address prefix', async (): Promise<void> => {
       const baseUrl = `https://${faker.internet.domainName()}`
+      jest
+        .spyOn(authServiceClient.tenant, 'create')
+        .mockImplementation(async () => undefined)
       await Promise.all([
         createTenant(deps, { walletAddressPrefix: `${baseUrl}/${v4()}` }),
         createTenant(deps, { walletAddressPrefix: `${baseUrl}/${v4()}` })

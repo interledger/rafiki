@@ -118,17 +118,6 @@ async function updateTenantSetting(
     return TenantSettingError.InvalidSetting
   }
 
-  if (options.key === TenantSettingKeys.WALLET_ADDRESS_URL.name) {
-    const existingSetting = await TenantSetting.query(deps.knex).findOne({
-      key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
-      value: options.value
-    })
-
-    if (existingSetting) {
-      return TenantSettingError.DuplicateWalletAddressUrl
-    }
-  }
-
   return TenantSetting.query(deps.knex)
     .patch({ value: options.value })
     .whereNull('deletedAt')
@@ -149,19 +138,6 @@ async function createTenantSetting(
       !TENANT_SETTING_VALIDATORS[setting.key](setting.value)
     ) {
       return TenantSettingError.InvalidSetting
-    }
-
-    if (setting.key === TenantSettingKeys.WALLET_ADDRESS_URL.name) {
-      const existingSetting = await TenantSetting.query(
-        extra?.trx ?? deps.knex
-      ).findOne({
-        key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
-        value: setting.value
-      })
-
-      if (existingSetting) {
-        return TenantSettingError.DuplicateWalletAddressUrl
-      }
     }
   }
 
