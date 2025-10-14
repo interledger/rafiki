@@ -15,7 +15,7 @@ Rafiki should not be used in production by non-regulated entities.
 
 ## Configure multi-tenancy <Badge text="Required" variant="danger" />
 
-You must configure multi‑tenancy by establishing the operator and enabling tenant‑scoped access. Generate a UUID v4 for `OPERATOR_TENANT_ID` and a strong, random `API_SECRET`, create the operator tenant record in the backend service’s Postgres database before startup, and plan a secure out‑of‑band process to deliver each tenant’s `id` and `apiSecret` after creation.
+You must configure multi‑tenancy by establishing the operator and enabling tenant‑scoped access. Generate a UUID v4 for `OPERATOR_TENANT_ID` and a strong, random `API_SECRET`, and plan a secure out‑of‑band process to deliver each tenant’s `id` and `apiSecret` after creation.
 
 [Manage tenants](/integration/requirements/tenants)
 

@@ -24,9 +24,9 @@ The following are required when using the `backend` service.
 
 On startup, the `backend` service seeds/updates the `OPERATOR_TENANT_ID` and syncs its API secret from `API_SECRET`.
 
-  :::note
-  You can use the same database instance of Postgres for the `backend` service, `auth` service, and accounting liquidity (if not using TigerBeetle). However, separate database schemas are required within the Rafiki instance to maintain boundaries between the managed objects.
-  :::
+:::note
+You can use the same database instance of Postgres for the `backend` service, `auth` service, and accounting liquidity (if not using TigerBeetle). However, separate database schemas are required within the Rafiki instance to maintain boundaries between the managed objects.
+:::
 
 You must also set the environment variables for the `backend` service.
 
