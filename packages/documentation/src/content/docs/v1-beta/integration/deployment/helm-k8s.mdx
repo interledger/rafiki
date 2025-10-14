@@ -1,11 +1,9 @@
 ---
 title: Helm & Kubernetes
+slug: v1-beta/integration/deployment/helm-k8s
 ---
 
 import { LinkOut } from '@interledger/docs-design-system'
-import BackEnv from '/src/partials/backend-variables-helm.mdx'
-import AuthEnv from '/src/partials/auth-variables-helm.mdx'
-import FrontEnv from '/src/partials/frontend-variables-helm.mdx'
 
 This guide explains how to deploy Rafiki using Helm charts on a Kubernetes cluster. Helm is a package manager for Kubernetes that allows you to define, install, and upgrade complex Kubernetes applications through Helm charts.
 
@@ -115,7 +113,7 @@ Once the Load Balancer has an external IP or hostname assigned, create DNS recor
 - `backend.example.com` pointing to the Load Balancer IP/hostname
 
 :::note
-The example domain and subdomain values are for demonstration purposes only. You must use the actual domain names that you set up with your DNS host.  
+The example domain and subdomain values are for demonstration purposes only. You must use the actual domain names that you set up with your DNS host.
 :::
 
 #### Apply the configuration
@@ -168,7 +166,7 @@ To uninstall Rafiki from your cluster:
 helm uninstall rafiki
 ```
 
-Note that this won't delete <LinkOut href='https://kubernetes.io/docs/concepts/storage/persistent-volumes/'>Persistent Volume Claims (PVC)</LinkOut> created by the PostgreSQL and Redis deployments. If you want to delete them as well:
+Note that this won't delete <LinkOut href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/">Persistent Volume Claims (PVC)</LinkOut> created by the PostgreSQL and Redis deployments. If you want to delete them as well:
 
 ```bash
 kubectl delete pvc -l app.kubernetes.io/instance=rafiki
@@ -226,82 +224,82 @@ kubectl get ingress
 
 #### Tigerbeetle initialization failures
 
-1.  Check Tigerbeetle logs:
-    ```
-    kubectl logs pod/tigerbeetle-0
-    ```
-2.  Ensure that the PVC for Tigerbeetle has been created correctly
-    ```
-    kubectl get pvc -l app.kubernetes.io/name=tigerbeetle
-    ```
-3.  Verify that the cluster ID is consistent across all components
+1. Check Tigerbeetle logs:
+   ```
+   kubectl logs pod/tigerbeetle-0
+   ```
+2. Ensure that the PVC for Tigerbeetle has been created correctly
+   ```
+   kubectl get pvc -l app.kubernetes.io/name=tigerbeetle
+   ```
+3. Verify that the cluster ID is consistent across all components
 
 #### Ingress issues
 
-1.  Verify NGINX Ingress Controller is running:
-    ```
-    kubectl get pods -n ingress-nginx
-    ```
-2.  Check if your DNS records are correctly pointing to the ingress controller's external IP
-3.  Check the ingress resource:
-    ```
-    kubectl get ingress
-    ```
-4.  Check ingress controller logs:
-    ```
-    kubectl logs -n ingress-nginx deploy/nginx-ingress-ingress-nginx-controller
-    ```
-5.  Verify that TLS secrets exist if HTTPS is enabled:
-    ```
-    kubectl get secrets
-    ```
+1. Verify NGINX Ingress Controller is running:
+   ```
+   kubectl get pods -n ingress-nginx
+   ```
+2. Check if your DNS records are correctly pointing to the ingress controller's external IP
+3. Check the ingress resource:
+   ```
+   kubectl get ingress
+   ```
+4. Check ingress controller logs:
+   ```
+   kubectl logs -n ingress-nginx deploy/nginx-ingress-ingress-nginx-controller
+   ```
+5. Verify that TLS secrets exist if HTTPS is enabled:
+   ```
+   kubectl get secrets
+   ```
 
 #### TLS certificate problems
 
-1.  If using cert-manager, check if certificates are properly issued:
-    ```
-    kubectl get certificates
-    ```
-2.  Check certificate status:
-    ```
-    kubectl describe certificate [certificate-name]
-    ```
-3.  Check cert-manager logs:
-    ```
-    kubectl logs -n cert-manager deploy/cert-manager
-    ```
+1. If using cert-manager, check if certificates are properly issued:
+   ```
+   kubectl get certificates
+   ```
+2. Check certificate status:
+   ```
+   kubectl describe certificate [certificate-name]
+   ```
+3. Check cert-manager logs:
+   ```
+   kubectl logs -n cert-manager deploy/cert-manager
+   ```
 
 #### Service unavailable
 
-1.  Check if services are running:
-    ```
-    kubectl get services
-    ```
-2.  Verify pod health:
-    ```
-    kubectl describe pod [pod-name]
-    ```
-3.  Check for resource constraints:
-    ```
-    kubectl top pods
-    ```
+1. Check if services are running:
+   ```
+   kubectl get services
+   ```
+2. Verify pod health:
+   ```
+   kubectl describe pod [pod-name]
+   ```
+3. Check for resource constraints:
+   ```
+   kubectl top pods
+   ```
 
 #### Connectivity between components
 
-1.  Ensure all required services are running:
-    ```
-    kubectl get services
-    ```
-2.  Verify service endpoints:
-    ```
-    kubectl get endpoints
-    ```
-3.  Test connectivity between pods using temporary debugging pods:
-    ```
-    kubectl run -it --rm debug --image=busybox -- sh
-    # Inside the pod
-    wget -q -O- http://rafiki-auth-server:3000/health
-    ```
+1. Ensure all required services are running:
+   ```
+   kubectl get services
+   ```
+2. Verify service endpoints:
+   ```
+   kubectl get endpoints
+   ```
+3. Test connectivity between pods using temporary debugging pods:
+   ```
+   kubectl run -it --rm debug --image=busybox -- sh
+   # Inside the pod
+   wget -q -O- http://rafiki-auth-server:3000/health
+   ```
 
 ## Security considerations
 
@@ -352,7 +350,7 @@ EOF
 ```
 
 :::note
-The above example assumes you have a <LinkOut href='https://kubernetes.io/docs/concepts/storage/volumes/#csi'>Container Storage Interface (CSI)</LinkOut> driver capable of volume snapshots. Adjust the `volumeSnapshotClassName` according to your cluster setup.
+The above example assumes you have a <LinkOut href="https://kubernetes.io/docs/concepts/storage/volumes/#csi">Container Storage Interface (CSI)</LinkOut> driver capable of volume snapshots. Adjust the `volumeSnapshotClassName` according to your cluster setup.
 :::
 
 ### Database recovery
