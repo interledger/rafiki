@@ -41,9 +41,6 @@ export async function createWalletAddress(
     options.address || tenantToUse.walletAddressPrefix
   )
 
-  console.log('prefix=', tenantToUse.walletAddressPrefix)
-  console.log('input=', `${baseWalletAddressUrl.href}/${v4()}/.well-known/pay`)
-
   const walletAddressOrError = (await walletAddressService.create({
     ...options,
     assetId:
