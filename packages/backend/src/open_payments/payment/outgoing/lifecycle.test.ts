@@ -1038,8 +1038,257 @@ describe('Lifecycle', (): void => {
               intervalEnd: interval.end.toJSDate()
             })
           })
-          test.skip('Create, create, complete (partial), create, complete (partial)', async (): Promise<void> => {
-            assert(false, 'test not implemented')
+
+          test('Create, create, complete (partial), create, complete (partial)', async (): Promise<void> => {
+            // Create 2 payments, complete first partially, create another payment, complete 2nd,
+            // and ensure spent amounts remain correct at every step
+            jest.setSystemTime(new Date('2025-01-02T00:00:00Z'))
+            const grant = {
+              id: uuid(),
+              limits: {
+                debitAmount: {
+                  value: 1000n,
+                  assetCode: asset.code,
+                  assetScale: asset.scale
+                },
+                interval: 'R/2025-01-01T00:00:00Z/P1M'
+              }
+            }
+
+            // Create 1
+            const firstPaymentAmount = 10n
+            const firstPayment = await createAndFundGrantPayment(
+              firstPaymentAmount,
+              grant
+            )
+            jest.advanceTimersByTime(500)
+
+            let latestSpentAmounts = [
+              await OutgoingPaymentGrantSpentAmounts.query(knex)
+                .where({ grantId: grant.id })
+                .first()
+            ]
+
+            let interval = getInterval(
+              grant.limits.interval,
+              firstPayment.createdAt
+            )
+            assert(interval)
+            assert(interval.start)
+            assert(interval.end)
+            expect(latestSpentAmounts[0]).toMatchObject({
+              grantId: grant.id,
+              outgoingPaymentId: firstPayment.id,
+              receiveAmountScale: assetDetails.scale,
+              receiveAmountCode: assetDetails.code,
+              paymentReceiveAmountValue: firstPaymentAmount,
+              intervalReceiveAmountValue: firstPaymentAmount,
+              grantTotalReceiveAmountValue: firstPaymentAmount,
+              debitAmountScale: assetDetails.scale,
+              debitAmountCode: assetDetails.code,
+              paymentDebitAmountValue: firstPaymentAmount,
+              intervalDebitAmountValue: firstPaymentAmount,
+              grantTotalDebitAmountValue: firstPaymentAmount,
+              paymentState: OutgoingPaymentState.Funding,
+              intervalStart: interval.start.toJSDate(),
+              intervalEnd: interval.end.toJSDate()
+            })
+
+            // Create 2
+            const secondPaymentAmount = 20n
+            const secondPayment = await createAndFundGrantPayment(
+              secondPaymentAmount,
+              grant
+            )
+            jest.advanceTimersByTime(500)
+
+            latestSpentAmounts[1] =
+              await OutgoingPaymentGrantSpentAmounts.query(knex)
+                .where({ grantId: grant.id })
+                .first()
+
+            interval = getInterval(
+              grant.limits.interval,
+              firstPayment.createdAt
+            )
+            assert(interval)
+            assert(interval.start)
+            assert(interval.end)
+            expect(latestSpentAmounts[1]).toMatchObject({
+              grantId: grant.id,
+              outgoingPaymentId: secondPayment.id,
+              receiveAmountScale: assetDetails.scale,
+              receiveAmountCode: assetDetails.code,
+              paymentReceiveAmountValue: secondPaymentAmount,
+              intervalReceiveAmountValue:
+                firstPaymentAmount + secondPaymentAmount,
+              grantTotalReceiveAmountValue:
+                firstPaymentAmount + secondPaymentAmount,
+              debitAmountScale: assetDetails.scale,
+              debitAmountCode: assetDetails.code,
+              paymentDebitAmountValue: secondPaymentAmount,
+              intervalDebitAmountValue:
+                firstPaymentAmount + secondPaymentAmount,
+              grantTotalDebitAmountValue:
+                firstPaymentAmount + secondPaymentAmount,
+              paymentState: OutgoingPaymentState.Funding,
+              intervalStart: interval.start.toJSDate(),
+              intervalEnd: interval.end.toJSDate()
+            })
+
+            // Process first payment (partial)
+            const firstPaymentSettledAmount = 8n
+            jest
+              .spyOn(paymentMethodHandlerService, 'pay')
+              .mockImplementationOnce(
+                mockPayPartialFactory({
+                  debit: firstPaymentSettledAmount,
+                  receive: firstPaymentSettledAmount
+                })(accountingService, receiverWalletAddressId, firstPayment)
+              )
+            let id = await outgoingPaymentService.processNext()
+            jest.advanceTimersByTime(500)
+            expect(id).toBe(firstPayment.id)
+
+            latestSpentAmounts[2] =
+              await OutgoingPaymentGrantSpentAmounts.query(knex)
+                .where({ grantId: grant.id })
+                .first()
+
+            interval = getInterval(
+              grant.limits.interval,
+              secondPayment.createdAt
+            )
+            assert(interval)
+            assert(interval.start)
+            assert(interval.end)
+            expect(latestSpentAmounts[2]).toMatchObject({
+              grantId: grant.id,
+              outgoingPaymentId: firstPayment.id,
+              receiveAmountScale: assetDetails.scale,
+              receiveAmountCode: assetDetails.code,
+              paymentReceiveAmountValue: firstPaymentSettledAmount,
+              intervalReceiveAmountValue:
+                secondPaymentAmount + firstPaymentSettledAmount,
+              grantTotalReceiveAmountValue:
+                secondPaymentAmount + firstPaymentSettledAmount,
+              debitAmountScale: assetDetails.scale,
+              debitAmountCode: assetDetails.code,
+              paymentDebitAmountValue: firstPaymentSettledAmount,
+              intervalDebitAmountValue:
+                secondPaymentAmount + firstPaymentSettledAmount,
+              grantTotalDebitAmountValue:
+                secondPaymentAmount + firstPaymentSettledAmount,
+              paymentState: OutgoingPaymentState.Funding,
+              intervalStart: interval.start.toJSDate(),
+              intervalEnd: interval.end.toJSDate()
+            })
+
+            // Create 3
+            const thirdPaymentAmount = 30n
+            const thirdPayment = await createAndFundGrantPayment(
+              thirdPaymentAmount,
+              grant
+            )
+            jest.advanceTimersByTime(500)
+
+            latestSpentAmounts[3] =
+              await OutgoingPaymentGrantSpentAmounts.query(knex)
+                .where({ grantId: grant.id })
+                .first()
+
+            interval = getInterval(
+              grant.limits.interval,
+              thirdPayment.createdAt
+            )
+            assert(interval)
+            assert(interval.start)
+            assert(interval.end)
+            assert(latestSpentAmounts[2]?.intervalReceiveAmountValue)
+            assert(latestSpentAmounts[2]?.intervalDebitAmountValue)
+            expect(latestSpentAmounts[3]).toMatchObject({
+              grantId: grant.id,
+              outgoingPaymentId: thirdPayment.id,
+              receiveAmountScale: assetDetails.scale,
+              receiveAmountCode: assetDetails.code,
+              paymentReceiveAmountValue: thirdPaymentAmount,
+              intervalReceiveAmountValue:
+                latestSpentAmounts[2].intervalReceiveAmountValue +
+                thirdPaymentAmount,
+              grantTotalReceiveAmountValue:
+                latestSpentAmounts[2].grantTotalReceiveAmountValue +
+                thirdPaymentAmount,
+              debitAmountScale: assetDetails.scale,
+              debitAmountCode: assetDetails.code,
+              paymentDebitAmountValue: thirdPaymentAmount,
+              intervalDebitAmountValue:
+                latestSpentAmounts[2].intervalDebitAmountValue +
+                thirdPaymentAmount,
+              grantTotalDebitAmountValue:
+                latestSpentAmounts[2].grantTotalDebitAmountValue +
+                thirdPaymentAmount,
+              paymentState: OutgoingPaymentState.Funding,
+              intervalStart: interval.start.toJSDate(),
+              intervalEnd: interval.end.toJSDate()
+            })
+
+            // Process 2nd payment (partial)
+            const secondPaymentSettledAmount = 15n
+            jest
+              .spyOn(paymentMethodHandlerService, 'pay')
+              .mockImplementationOnce(
+                mockPayPartialFactory({
+                  debit: secondPaymentSettledAmount,
+                  receive: secondPaymentSettledAmount
+                })(accountingService, receiverWalletAddressId, secondPayment)
+              )
+            id = await outgoingPaymentService.processNext()
+            jest.advanceTimersByTime(500)
+            expect(id).toBe(secondPayment.id)
+
+            latestSpentAmounts[4] =
+              await OutgoingPaymentGrantSpentAmounts.query(knex)
+                .where({ grantId: grant.id })
+                .first()
+
+            interval = getInterval(
+              grant.limits.interval,
+              secondPayment.createdAt
+            )
+            assert(interval)
+            assert(interval.start)
+            assert(interval.end)
+            assert(latestSpentAmounts[3]?.intervalReceiveAmountValue)
+            assert(latestSpentAmounts[3]?.intervalDebitAmountValue)
+            expect(latestSpentAmounts[4]).toMatchObject({
+              grantId: grant.id,
+              outgoingPaymentId: secondPayment.id,
+              receiveAmountScale: assetDetails.scale,
+              receiveAmountCode: assetDetails.code,
+              paymentReceiveAmountValue: secondPaymentSettledAmount,
+              intervalReceiveAmountValue:
+                firstPaymentSettledAmount +
+                thirdPaymentAmount +
+                secondPaymentSettledAmount,
+              grantTotalReceiveAmountValue:
+                firstPaymentSettledAmount +
+                thirdPaymentAmount +
+                secondPaymentSettledAmount,
+              debitAmountScale: assetDetails.scale,
+              debitAmountCode: assetDetails.code,
+              paymentDebitAmountValue: secondPaymentSettledAmount,
+              intervalDebitAmountValue:
+                firstPaymentSettledAmount +
+                thirdPaymentAmount +
+                secondPaymentSettledAmount,
+              grantTotalDebitAmountValue:
+                firstPaymentSettledAmount +
+                thirdPaymentAmount +
+                secondPaymentSettledAmount,
+              paymentState: OutgoingPaymentState.Funding,
+              intervalStart: interval.start.toJSDate(),
+              intervalEnd: interval.end.toJSDate()
+            })
           })
         })
       })
