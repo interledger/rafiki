@@ -27,6 +27,7 @@ import {
   errorToMessage,
   TenantSettingError
 } from '../../tenants/settings/errors'
+import { createTenantSettings } from '../../tests/tenantSettings'
 
 function createTenantedApolloClient(
   appContainer: TestContainer,
@@ -178,6 +179,71 @@ describe('Tenant Settings Resolvers', (): void => {
             message: errorToMessage[TenantSettingError.InvalidSetting],
             extensions: expect.objectContaining({
               code: errorToCode[TenantSettingError.InvalidSetting]
+            })
+          })
+        )
+      }
+    })
+
+    test('errors if existing wallet address url is provided', async (): Promise<void> => {
+      const walletAddressUrl = faker.internet.url()
+      const existingTenant = await createTenant(deps)
+      await createTenantSettings(deps, {
+        tenantId: existingTenant.id,
+        setting: [
+          {
+            key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+            value: walletAddressUrl
+          }
+        ]
+      })
+
+      const newTenant = await createTenant(deps)
+      const client = await createTenantedApolloClient(
+        appContainer,
+        newTenant.id
+      )
+      expect.assertions(2)
+      try {
+        await client
+          .mutate({
+            mutation: gql`
+              mutation CreateTenantSettings(
+                $input: CreateTenantSettingsInput!
+              ) {
+                createTenantSettings(input: $input) {
+                  settings {
+                    key
+                    value
+                  }
+                }
+              }
+            `,
+            variables: {
+              input: {
+                settings: [
+                  {
+                    key: SchemaTenantSettingKey.WalletAddressUrl,
+                    value: walletAddressUrl
+                  }
+                ]
+              }
+            }
+          })
+          .then((query): CreateTenantSettingsMutationResponse => {
+            if (query.data) {
+              return query.data.createTenantSettings
+            }
+            throw new Error('Data was empty')
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message:
+              errorToMessage[TenantSettingError.DuplicateWalletAddressUrl],
+            extensions: expect.objectContaining({
+              code: errorToCode[TenantSettingError.DuplicateWalletAddressUrl]
             })
           })
         )
