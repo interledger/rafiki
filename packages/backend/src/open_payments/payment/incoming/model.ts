@@ -111,6 +111,7 @@ export class IncomingPayment
   private incomingAmountValue?: bigint | null
   private receivedAmountValue?: bigint
   public readonly tenantId!: string
+  public readonly senderWalletAddress?: string | null
 
   public get completed(): boolean {
     return this.state === IncomingPaymentState.Completed
@@ -214,6 +215,9 @@ export class IncomingPayment
     }
     if (this.cancelledAt) {
       data.cancelledAt = new Date(this.cancelledAt).toISOString()
+    }
+    if (this.senderWalletAddress) {
+      data.senderWalletAddress = this.senderWalletAddress
     }
 
     return data

@@ -30,6 +30,7 @@ body:graphql {
           value
         }
         state
+        senderWalletAddress
       }
     }
   }
@@ -44,7 +45,8 @@ body:graphql:vars {
           "description": "Hello World"
       },
       "incomingAmount": null,
-      "walletAddressId": "{{walletAddressId}}"
+      "walletAddressId": "{{walletAddressId}}",
+        "senderWalletAddress": "{{senderWalletAddress}}"
     }
   }
 }

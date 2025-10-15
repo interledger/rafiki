@@ -1440,6 +1440,18 @@
             "deprecationReason": null
           },
           {
+            "name": "senderWalletAddress",
+            "description": "The wallet address of the sender.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "walletAddressId",
             "description": "Unique identifier of the wallet address under which the incoming payment will be created.",
             "type": {
@@ -3820,6 +3832,18 @@
                 "name": "Amount",
                 "ofType": null
               }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "senderWalletAddress",
+            "description": "The wallet address URL of the sender.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
