@@ -54,6 +54,7 @@ export function createKycDecisionMiddleware(): ILPMiddleware {
       decision = await readDecision()
     }
 
+    // TODO Maybe we should return reject instead?
     if (!decision) {
       await next()
       return
