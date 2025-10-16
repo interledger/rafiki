@@ -267,6 +267,7 @@ describe('Tenant Service', (): void => {
 
       expect(updatedTenant).toEqual(expect.objectContaining(updatedTenantInfo))
       expect(spy).toHaveBeenCalledWith(tenant.id, {
+        apiSecret: updatedTenantInfo.apiSecret,
         idpConsentUrl: updatedTenantInfo.idpConsentUrl,
         idpSecret: updatedTenantInfo.idpSecret
       })

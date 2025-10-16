@@ -13,6 +13,8 @@ type Query {
     filter: GrantFilter
     "Specify the sort order of grants based on their creation date, either ascending or descending."
     sortOrder: SortOrder
+    "Filter grants by a specific tenant. This can only be performed by the operator."
+    tenantId: ID
   ): GrantsConnection!
 
   "Fetch a specific grant by its ID."
@@ -102,6 +104,8 @@ type Grant implements Model {
   finalizationReason: GrantFinalization
   "The date and time when the grant was created."
   createdAt: String!
+  "Unique identifier of the tenant associated with the grant."
+  tenantId: ID!
 }
 
 type Access implements Model {

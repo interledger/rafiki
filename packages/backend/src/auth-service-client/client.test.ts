@@ -17,6 +17,7 @@ describe('AuthServiceClient', () => {
 
   const createTenantData = () => ({
     id: faker.string.uuid(),
+    apiSecret: faker.string.hexadecimal(),
     idpConsentUrl: faker.internet.url(),
     idpSecret: faker.string.alphanumeric(32)
   })

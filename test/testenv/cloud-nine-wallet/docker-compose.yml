@@ -79,6 +79,7 @@ services:
       IDENTITY_SERVER_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
       COOKIE_KEY: 42397d1f371dd4b8b7d0308a689a57c882effd4ea909d792302542af47e2cd37
       OPERATOR_TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
+      ADMIN_API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
     depends_on:
       - shared-database
       - shared-redis

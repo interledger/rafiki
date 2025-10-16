@@ -141,7 +141,7 @@ describe('Signature Service', (): void => {
 
     afterEach(async (): Promise<void> => {
       jest.useRealTimers()
-      await truncateTables(appContainer.knex)
+      await truncateTables(deps)
     })
 
     test('Validate grant initiation request with middleware', async (): Promise<void> => {

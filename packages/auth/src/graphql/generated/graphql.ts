@@ -69,6 +69,8 @@ export type Grant = Model & {
   id: Scalars['ID']['output'];
   /** Current state of the grant. */
   state: GrantState;
+  /** Unique identifier of the tenant associated with the grant. */
+  tenantId: Scalars['ID']['output'];
 };
 
 export type GrantEdge = {
@@ -189,6 +191,7 @@ export type QueryGrantsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   sortOrder?: InputMaybe<SortOrder>;
+  tenantId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type RevokeGrantInput = {
@@ -354,6 +357,7 @@ export type GrantResolvers<ContextType = any, ParentType extends ResolversParent
   finalizationReason?: Resolver<Maybe<ResolversTypes['GrantFinalization']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['GrantState'], ParentType, ContextType>;
+  tenantId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

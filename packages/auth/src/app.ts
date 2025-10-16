@@ -53,8 +53,13 @@ import { ApolloArmor } from '@escape.tech/graphql-armor'
 import { Redis } from 'ioredis'
 import { LoggingPlugin } from './graphql/plugin'
 import { gnapServerErrorMiddleware } from './shared/gnapErrors'
-import { verifyApiSignature } from './shared/utils'
+import {
+  authenticatedTenantMiddleware,
+  unauthenticatedTenantMiddleware
+} from './signature/tenant'
 import { TenantService } from './tenant/service'
+import { TenantRoutes } from './tenant/routes'
+import { Tenant } from './tenant/model'
 
 export interface AppContextData extends DefaultContext {
   logger: Logger
@@ -90,6 +95,18 @@ export interface DatabaseCleanupRule {
   defaultExpirationOffsetDays: number
 }
 
+export interface TenantedAppContext extends AppContext {
+  tenantApiSignatureResult: {
+    tenant: Tenant
+    isOperator: boolean
+  }
+}
+
+export interface TenantedApolloContext extends ApolloContext {
+  tenant: Tenant
+  isOperator: boolean
+}
+
 export interface AppServices {
   logger: Promise<Logger>
   knex: Promise<Knex>
@@ -104,6 +121,7 @@ export interface AppServices {
   interactionRoutes: Promise<InteractionRoutes>
   redis: Promise<Redis>
   tenantService: Promise<TenantService>
+  tenantRoutes: Promise<TenantRoutes>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -218,20 +236,23 @@ export class App {
       }
     )
 
-    if (this.config.adminApiSecret) {
-      koa.use(async (ctx, next: Koa.Next): Promise<void> => {
-        if (!(await verifyApiSignature(ctx, this.config))) {
-          ctx.throw(401, 'Unauthorized')
-        }
-
-        return next()
-      })
-    }
+    // For tests, we still need to get the tenant in the middleware, but
+    // we don't need to verify the signature nor prevent replay attacks
+    koa.use(
+      this.config.env !== 'test'
+        ? authenticatedTenantMiddleware
+        : unauthenticatedTenantMiddleware
+    )
 
     koa.use(
       koaMiddleware(apolloServer, {
-        context: async (): Promise<ApolloContext> => {
+        context: async ({
+          ctx
+        }: {
+          ctx: TenantedAppContext
+        }): Promise<TenantedApolloContext> => {
           return {
+            ...ctx.tenantApiSignatureResult,
             container: this.container,
             logger: await this.container.use('logger')
           }
