@@ -1,0 +1,37 @@
+meta {
+  name: 2: Austria Card - Import ZMK
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{hsmEmulatorHost}}/hsm/austria-card/import-zmk
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "component1": "{{zmk_component1}}",
+    "component2": "{{zmk_component2}}",
+    "component3": "{{zmk_component3}}",
+    "kcv": "{{zmk_kcv}}"
+  }
+}
+
+script:post-response {
+  const body = res.getBody();
+  
+  if (body?.tr31Block) bru.setEnvVar("zmk_tr31_lmk_austria_card", body.tr31Block);
+  
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
