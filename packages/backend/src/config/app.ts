@@ -159,8 +159,8 @@ export const Config = {
   signatureSecret: process.env.SIGNATURE_SECRET, // optional
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
 
-  adminApiSecret: envString('API_SECRET'),
-  adminApiSignatureVersion: envInt('API_SIGNATURE_VERSION', 1),
+  adminApiSecret: envString('ADMIN_API_SECRET'),
+  adminApiSignatureVersion: envInt('ADMIN_API_SIGNATURE_VERSION', 1),
   adminApiSignatureTtlSeconds: envInt('ADMIN_API_SIGNATURE_TTL_SECONDS', 30),
 
   keyId: envString('KEY_ID'),
