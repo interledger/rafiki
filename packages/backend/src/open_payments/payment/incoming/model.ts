@@ -216,9 +216,6 @@ export class IncomingPayment
     if (this.cancelledAt) {
       data.cancelledAt = new Date(this.cancelledAt).toISOString()
     }
-    if (this.senderWalletAddress) {
-      data.senderWalletAddress = this.senderWalletAddress
-    }
 
     return data
   }

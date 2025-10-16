@@ -959,7 +959,7 @@ type IncomingPayment implements BasePayment & Model {
   createdAt: String!
   "The tenant UUID associated with the incoming payment. If not provided, it will be obtained from the signature."
   tenantId: String
-  "The wallet address URL of the sender."
+  "The sender's wallet address URL. Applicable only to card payments."
   senderWalletAddress: String
 }
 
@@ -1285,7 +1285,7 @@ input CreateIncomingPaymentInput {
   idempotencyKey: String
   "Whether or not the incoming payment is being created for a card payment."
   isCardPayment: Boolean
-  "The wallet address of the sender."
+  "The sender's wallet address URL. Applicable only to card payments."
   senderWalletAddress: String
 }
 
