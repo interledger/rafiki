@@ -1441,7 +1441,7 @@
           },
           {
             "name": "senderWalletAddress",
-            "description": "The wallet address of the sender.",
+            "description": "The sender's wallet address URL. Applicable only to card payments.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -3838,7 +3838,7 @@
           },
           {
             "name": "senderWalletAddress",
-            "description": "The wallet address URL of the sender.",
+            "description": "The sender's wallet address URL. Applicable only to card payments.",
             "args": [],
             "type": {
               "kind": "SCALAR",

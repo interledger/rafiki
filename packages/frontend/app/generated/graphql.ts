@@ -243,7 +243,7 @@ export type CreateIncomingPaymentInput = {
   isCardPayment?: InputMaybe<Scalars['Boolean']['input']>;
   /** Additional metadata associated with the incoming payment. */
   metadata?: InputMaybe<Scalars['JSONObject']['input']>;
-  /** The wallet address of the sender. */
+  /** The sender's wallet address URL. Applicable only to card payments. */
   senderWalletAddress?: InputMaybe<Scalars['String']['input']>;
   /** Unique identifier of the wallet address under which the incoming payment will be created. */
   walletAddressId: Scalars['String']['input'];
@@ -637,7 +637,7 @@ export type IncomingPayment = BasePayment & Model & {
   metadata?: Maybe<Scalars['JSONObject']['output']>;
   /** The total amount that has been paid into the wallet address under this incoming payment. */
   receivedAmount: Amount;
-  /** The wallet address URL of the sender. */
+  /** The sender's wallet address URL. Applicable only to card payments. */
   senderWalletAddress?: Maybe<Scalars['String']['output']>;
   /** State of the incoming payment. */
   state: IncomingPaymentState;
