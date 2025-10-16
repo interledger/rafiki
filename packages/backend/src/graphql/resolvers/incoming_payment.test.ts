@@ -35,6 +35,7 @@ import {
 import { Amount, serializeAmount } from '../../open_payments/amount'
 import { GraphQLErrorCode } from '../errors'
 import { createTenant } from '../../tests/tenant'
+import { faker } from '@faker-js/faker'
 
 describe('Incoming Payment Resolver', (): void => {
   let deps: IocContract<AppServices>
@@ -100,6 +101,7 @@ describe('Incoming Payment Resolver', (): void => {
 
   describe('Mutation.createIncomingPayment', (): void => {
     let amount: Amount
+    let senderWalletAddress: string
 
     beforeEach((): void => {
       amount = {
@@ -108,6 +110,7 @@ describe('Incoming Payment Resolver', (): void => {
         assetScale: asset.scale
       }
       client = 'incoming-payment-client-create'
+      senderWalletAddress = faker.internet.url()
     })
 
     test.each`
@@ -130,7 +133,8 @@ describe('Incoming Payment Resolver', (): void => {
           expiresAt,
           incomingAmount,
           tenantId,
-          initiationReason: IncomingPaymentInitiationReason.Admin
+          initiationReason: IncomingPaymentInitiationReason.Admin,
+          senderWalletAddress
         })
 
         const createSpy = jest
@@ -141,7 +145,8 @@ describe('Incoming Payment Resolver', (): void => {
           walletAddressId,
           incomingAmount,
           expiresAt,
-          metadata
+          metadata,
+          senderWalletAddress
         }
 
         const query = await appContainer.apolloClient
@@ -168,6 +173,7 @@ describe('Incoming Payment Resolver', (): void => {
                     }
                     metadata
                     createdAt
+                    senderWalletAddress
                   }
                 }
               }
@@ -205,7 +211,8 @@ describe('Incoming Payment Resolver', (): void => {
               ...serializeAmount(payment.receivedAmount)
             },
             metadata: metadata || null,
-            createdAt: payment.createdAt.toISOString()
+            createdAt: payment.createdAt.toISOString(),
+            senderWalletAddress
           }
         })
       }

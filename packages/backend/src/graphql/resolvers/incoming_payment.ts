@@ -119,7 +119,8 @@ export const createIncomingPayment: MutationResolvers<ForTenantIdContext>['creat
       initiationReason:
         ctx.isOperator && args.input.isCardPayment
           ? IncomingPaymentInitiationReason.Card
-          : IncomingPaymentInitiationReason.Admin
+          : IncomingPaymentInitiationReason.Admin,
+      senderWalletAddress: args.input.senderWalletAddress
     })
     const config = await ctx.container.use('config')
     if (isIncomingPaymentError(incomingPaymentOrError)) {
@@ -232,6 +233,7 @@ export function paymentToGraphql(
     incomingAmount: payment.incomingAmount,
     receivedAmount: payment.receivedAmount,
     metadata: payment.metadata,
-    createdAt: new Date(+payment.createdAt).toISOString()
+    createdAt: new Date(+payment.createdAt).toISOString(),
+    senderWalletAddress: payment.senderWalletAddress
   }
 }
