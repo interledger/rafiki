@@ -15,7 +15,7 @@ Rafiki should not be used in production by non-regulated entities.
 
 ## Configure multi-tenancy <Badge text="Required" variant="danger" />
 
-You must configure multi‑tenancy by establishing the operator and enabling tenant‑scoped access. Generate a UUID v4 for `OPERATOR_TENANT_ID` and a strong, random `API_SECRET`, and plan a secure out‑of‑band process to deliver each tenant’s `id` and `apiSecret` after creation.
+You must configure multi‑tenancy by establishing the operator and enabling tenant‑scoped access. Generate a UUID v4 for `OPERATOR_TENANT_ID` and a strong, random `ADMIN_API_SECRET`, and plan a secure out‑of‑band process to deliver each tenant’s `id` and `apiSecret` after creation.
 
 [Manage tenants](/integration/requirements/tenants)
 
@@ -70,7 +70,7 @@ You must integrate with an IdP if you plan to use the authorization server provi
 Ensure you've completed the following tasks before you deploy Rafiki to a production environment and join the Interledger network.
 
 - [ ] You are a licensed financial account servicing entity within the jurisdictions you operate in
-- [ ] You have generated a UUID v4 for `OPERATOR_TENANT_ID` and a strong, random `API_SECRET`
+- [ ] You have generated a UUID v4 for `OPERATOR_TENANT_ID` and a strong, random `ADMIN_API_SECRET`
 - [ ] You are HMAC-signing Backend Admin API requests (HMAC SHA-256) and include `tenant-id` and `signature` headers
 - [ ] You have established a secure, out-of-band process to deliver tenant credentials (`id` and `apiSecret`) to each tenant after creation
 - [ ] You have added at least one asset, either through the Backend Admin API or the Rafiki Admin app

@@ -16,13 +16,13 @@ Rafiki’s <LinkOut href="https://github.com/interledger/rafiki/tree/main/packag
 
 The following are required when using the `backend` service.
 
-- `OPERATOR_TENANT_ID` (UUID v4) and a strong, random `API_SECRET`
+- `OPERATOR_TENANT_ID` (UUID v4) and a strong, random `ADMIN_API_SECRET`
 - Redis database as a cache to share STREAM connection details and total amounts received across processes
 - Postgres database, separate from the `auth` service’s database, for Open Payments resources
-- Create the operator tenant record in the Postgres database with `OPERATOR_TENANT_ID` prior to startup (on startup, the backend syncs the operator's API secret from `API_SECRET`)
+- Create the operator tenant record in the Postgres database with `OPERATOR_TENANT_ID` prior to startup (on startup, the backend syncs the operator's API secret from `ADMIN_API_SECRET`)
 - TigerBeetle or separate Postgres database for accounting liquidity
 
-On startup, the `backend` service seeds/updates the `OPERATOR_TENANT_ID` and syncs its API secret from `API_SECRET`.
+On startup, the `backend` service seeds/updates the `OPERATOR_TENANT_ID` and syncs its API secret from `ADMIN_API_SECRET`.
 
 :::note
 You can use the same database instance of Postgres for the `backend` service, `auth` service, and accounting liquidity (if not using TigerBeetle). However, separate database schemas are required within the Rafiki instance to maintain boundaries between the managed objects.
@@ -68,7 +68,7 @@ To ensure the security and integrity of your Rafiki instance, all requests to th
 
 ## Tenant management
 
-Tenants are added to Rafiki through the Backend Admin API or the Rafiki Admin application. The `auth` service does not expose a public endpoint to create tenants. Tenant creation in the `auth` service is triggered by the `backend` service. The operator tenant is identified by the `OPERATOR_TENANT_ID` environment variable and secured with the `API_SECRET` environment variable. The operator has elevated permissions and can manage resources for all other tenants. The operator can also choose to receive webhook events for all tenants by setting the `SEND_TENANT_WEBHOOKS_TO_OPERATOR` environment variable to `true`.
+Tenants are added to Rafiki through the Backend Admin API or the Rafiki Admin application. The `auth` service does not expose a public endpoint to create tenants. Tenant creation in the `auth` service is triggered by the `backend` service. The operator tenant is identified by the `OPERATOR_TENANT_ID` environment variable and secured with the `ADMIN_API_SECRET` environment variable. The operator has elevated permissions and can manage resources for all other tenants. The operator can also choose to receive webhook events for all tenants by setting the `SEND_TENANT_WEBHOOKS_TO_OPERATOR` environment variable to `true`.
 
 ## Environment variables
 
