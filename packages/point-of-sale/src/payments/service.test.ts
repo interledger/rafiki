@@ -1,10 +1,12 @@
 import { PaymentService, createPaymentService } from './service'
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 import { Logger } from 'pino'
-import { AmountInput } from '../graphql/generated/graphql'
+import { AmountInput, IncomingPaymentState } from '../graphql/generated/graphql'
 import { IAppConfig } from '../config/app'
 import { v4 as uuid, v4 } from 'uuid'
 import { AxiosInstance } from 'axios'
+import { faker } from '@faker-js/faker'
+import { GET_WALLET_ADDRESS_BY_URL } from '../graphql/queries/getWalletAddress'
 
 const mockLogger = {
   child: jest.fn().mockReturnThis(),
@@ -14,7 +16,8 @@ const mockLogger = {
 const mockConfig = { incomingPaymentExpiryMs: 10000 }
 
 const mockApolloClient = {
-  mutate: jest.fn()
+  mutate: jest.fn(),
+  query: jest.fn()
 } as unknown as ApolloClient<NormalizedCacheObject>
 
 const mockAxios: Partial<AxiosInstance> = {
@@ -193,5 +196,70 @@ describe('getWalletAddressByUrl', () => {
     await expect(
       service.getWalletAddressIdByUrl(WALLET_ADDRESS_URL)
     ).rejects.toThrow('Wallet address not found')
+  })
+})
+
+describe('get payments', (): void => {
+  let service: PaymentService
+  const WALLET_ADDRESS_URL = 'https://api.example.com/wallet-address'
+
+  beforeAll(async (): Promise<void> => {
+    service = createPaymentService(deps)
+  })
+
+  test('can obtain incoming payments for the wallet address', async (): Promise<void> => {
+    const id = uuid()
+    mockApolloClient.query = jest.fn().mockResolvedValue({
+      data: {
+        walletAddressByUrl: {
+          id,
+          incomingPayments: {
+            edges: [
+              {
+                node: {
+                  id: uuid(),
+                  url: faker.internet.url(),
+                  walletAddressId: id,
+                  client: faker.internet.url(),
+                  state: IncomingPaymentState.Pending,
+                  incomingAmount: {
+                    value: BigInt(500),
+                    assetCode: 'USD',
+                    assetScale: 2
+                  },
+                  receivedAmount: {
+                    value: BigInt(500),
+                    assetCode: 'USD',
+                    assetScale: 2
+                  },
+                  expiresAt: new Date().toString(),
+                  createdAt: new Date().toString(),
+                  tenantId: uuid()
+                },
+                cursor: id
+              }
+            ],
+            pageInfo: {
+              endCursor: id,
+              hasNextPage: false,
+              hasPreviousPage: false,
+              startCursor: id
+            }
+          }
+        }
+      }
+    })
+
+    const response = await service.getIncomingPayments({
+      receiverWalletAddress: WALLET_ADDRESS_URL
+    })
+    expect(response?.edges.length).toEqual(1)
+    expect(response?.edges[0].node.walletAddressId).toEqual(id)
+    expect(mockApolloClient.query).toHaveBeenCalledWith({
+      query: GET_WALLET_ADDRESS_BY_URL,
+      variables: expect.objectContaining({
+        url: WALLET_ADDRESS_URL
+      })
+    })
   })
 })
