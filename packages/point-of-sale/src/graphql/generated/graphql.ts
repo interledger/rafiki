@@ -3143,3 +3143,15 @@ export type CreateIncomingPaymentVariables = Exact<{
 
 
 export type CreateIncomingPayment = { __typename?: 'Mutation', createIncomingPayment: { __typename?: 'IncomingPaymentResponse', payment?: { __typename?: 'IncomingPayment', id: string, url: string } | null } };
+
+export type GetWalletAddressVariables = Exact<{
+  url: Scalars['String']['input'];
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+  sortOrder?: InputMaybe<SortOrder>;
+}>;
+
+
+export type GetWalletAddress = { __typename?: 'Query', walletAddressByUrl?: { __typename?: 'WalletAddress', id: string, incomingPayments?: { __typename?: 'IncomingPaymentConnection', edges: Array<{ __typename?: 'IncomingPaymentEdge', cursor: string, node: { __typename?: 'IncomingPayment', id: string, url: string, walletAddressId: string, client?: string | null, state: IncomingPaymentState, expiresAt: string, createdAt: string, tenantId?: string | null, incomingAmount?: { __typename?: 'Amount', assetCode: string, assetScale: number, value: bigint } | null, receivedAmount: { __typename?: 'Amount', assetCode: string, assetScale: number, value: bigint } } }>, pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null } } | null } | null };
