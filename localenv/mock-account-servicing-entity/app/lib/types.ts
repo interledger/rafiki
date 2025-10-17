@@ -28,11 +28,6 @@ export interface Access {
   limits?: AccessLimit
 }
 
-export interface SubjectId {
-  id: string
-  format: string
-}
-
 export type InstanceConfig = {
   name: string
   logo: string
