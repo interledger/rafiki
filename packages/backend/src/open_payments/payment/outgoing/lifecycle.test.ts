@@ -2014,6 +2014,153 @@ describe('Lifecycle', (): void => {
             }
           )
         )
+        test(
+          'Payment Created in interval 1, payment 2 created in interval 2, payment 1 fails - should use correct interval amounts',
+          withConfigOverride(
+            () => config,
+            {
+              quoteLifespan: 2592000000,
+              incomingPaymentExpiryMaxMs: 2592000000 * 3,
+              slippage: 0
+            },
+            async (): Promise<void> => {
+              const grant = {
+                id: uuid(),
+                limits: {
+                  debitAmount: {
+                    value: 1000n,
+                    assetCode: asset.code,
+                    assetScale: asset.scale
+                  },
+                  // 1 month repeating interval starting Jan 1
+                  interval: 'R/2025-01-01T00:00:00Z/P1M'
+                }
+              }
+              const firstPaymentAmount = 100n
+              const secondPaymentAmount = 200n
+
+              // Create payment 1 in interval 1 (January)
+              jest.setSystemTime(new Date('2025-01-30T12:00:00Z'))
+              const firstPayment = await createAndFundGrantPayment(
+                firstPaymentAmount,
+                grant
+              )
+              jest.advanceTimersByTime(500)
+
+              const firstInterval = getInterval(
+                grant.limits.interval,
+                new Date()
+              )
+              assert(firstInterval)
+              assert(firstInterval.start)
+              assert(firstInterval.end)
+
+              const firstSpentAmounts =
+                await OutgoingPaymentGrantSpentAmounts.query(knex)
+                  .where({ grantId: grant.id })
+                  .first()
+              assert(firstSpentAmounts)
+
+              expect(firstSpentAmounts).toMatchObject({
+                grantId: grant.id,
+                outgoingPaymentId: firstPayment.id,
+                paymentReceiveAmountValue: firstPaymentAmount,
+                intervalReceiveAmountValue: firstPaymentAmount,
+                grantTotalReceiveAmountValue: firstPaymentAmount,
+                paymentDebitAmountValue: firstPaymentAmount,
+                intervalDebitAmountValue: firstPaymentAmount,
+                grantTotalDebitAmountValue: firstPaymentAmount,
+                intervalStart: firstInterval.start.toJSDate(),
+                intervalEnd: firstInterval.end.toJSDate()
+              })
+
+              // Move to interval 2 (February)
+              jest.setSystemTime(new Date('2025-02-01T12:00:00Z'))
+              jest.advanceTimersByTime(500)
+
+              // Create payment 2 in interval 2
+              const secondPayment = await createAndFundGrantPayment(
+                secondPaymentAmount,
+                grant
+              )
+              jest.advanceTimersByTime(500)
+
+              const secondInterval = getInterval(
+                grant.limits.interval,
+                new Date()
+              )
+              assert(secondInterval)
+              assert(secondInterval.start)
+              assert(secondInterval.end)
+
+              const secondSpentAmounts =
+                await OutgoingPaymentGrantSpentAmounts.query(knex)
+                  .where({ grantId: grant.id })
+                  .first()
+              assert(secondSpentAmounts)
+
+              // Payment 2 should only show this payment in interval amounts (new interval) but accumulated grant totals
+              expect(secondSpentAmounts).toMatchObject({
+                grantId: grant.id,
+                outgoingPaymentId: secondPayment.id,
+                paymentReceiveAmountValue: secondPaymentAmount,
+                intervalReceiveAmountValue: secondPaymentAmount,
+                grantTotalReceiveAmountValue:
+                  firstPaymentAmount + secondPaymentAmount,
+                paymentDebitAmountValue: secondPaymentAmount,
+                intervalDebitAmountValue: secondPaymentAmount,
+                grantTotalDebitAmountValue:
+                  firstPaymentAmount + secondPaymentAmount,
+                intervalStart: secondInterval.start.toJSDate(),
+                intervalEnd: secondInterval.end.toJSDate()
+              })
+
+              // Fail payment 1 within the time period of interval 2
+              jest.advanceTimersByTime(500)
+              jest
+                .spyOn(paymentMethodHandlerService, 'pay')
+                .mockImplementationOnce(mockPayErrorFactory()())
+
+              const processedPaymentId =
+                await outgoingPaymentService.processNext()
+              expect(processedPaymentId).toBe(firstPayment.id)
+
+              const failedPayment = await outgoingPaymentService.get({
+                id: firstPayment.id
+              })
+              expect(failedPayment?.state).toBe(OutgoingPaymentState.Failed)
+
+              // Get latest spent amounts, which should be from the first payment's failure
+              const failedSpentAmounts =
+                await OutgoingPaymentGrantSpentAmounts.query(knex)
+                  .where({ grantId: grant.id })
+                  .first()
+              assert(failedSpentAmounts)
+
+              // New record should be created
+              expect(failedSpentAmounts.id).not.toBe(firstSpentAmounts.id)
+
+              // The updated amounts should:
+              // - Use payment 1's original interval (January)
+              // - Have 0 for payment 1's payment amounts (failed)
+              // - Have 0 for interval amounts (payment 1 was the only one in interval 1)
+              // - Have only payment 2's amount for grant totals
+              expect(failedSpentAmounts).toMatchObject({
+                grantId: grant.id,
+                outgoingPaymentId: firstPayment.id,
+                paymentReceiveAmountValue: 0n,
+                intervalReceiveAmountValue: 0n,
+                grantTotalReceiveAmountValue: secondPaymentAmount,
+                paymentDebitAmountValue: 0n,
+                intervalDebitAmountValue: 0n,
+                grantTotalDebitAmountValue: secondPaymentAmount,
+                paymentState: OutgoingPaymentState.Failed,
+                intervalStart: firstInterval.start.toJSDate(),
+                intervalEnd: firstInterval.end.toJSDate()
+              })
+            }
+          )
+        )
       })
     })
   })
