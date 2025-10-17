@@ -580,8 +580,8 @@ importers:
         specifier: ^3.0.4
         version: 3.0.4
       starlight-fullview-mode:
-        specifier: ^0.2.3
-        version: 0.2.3(@astrojs/starlight@0.34.4)
+        specifier: ^0.2.6
+        version: 0.2.6(@astrojs/starlight@0.34.4)
       starlight-links-validator:
         specifier: ^0.17.0
         version: 0.17.0(@astrojs/starlight@0.34.4)
@@ -20714,8 +20714,8 @@ packages:
     resolution: {integrity: sha512-qoRRSyROncaz1z0mvYqIE4lCd9p2R90i6GxW3uZv5ucSu8tU7B5HXUP1gG8pVZsYNVaXjk8ClXHPttLyxAL48A==}
     dev: false
 
-  /starlight-fullview-mode@0.2.3(@astrojs/starlight@0.34.4):
-    resolution: {integrity: sha512-8sw/VKhWAtcD5eOUBz4T8U/rEtteOXXyKTp0QwNXlwAW4zgIb6qKsnRXOQearHMp3GTSUH/b+tISHrtz9+/ePQ==}
+  /starlight-fullview-mode@0.2.6(@astrojs/starlight@0.34.4):
+    resolution: {integrity: sha512-gXVTOUVkObbfR+iS6Y1i/uR5JHGKow3CtRZnx0IbWW+TWLBaYZ0fsbGrjdH2ELMF2qvkHzco3uQD1xmrMaKy7g==}
     engines: {node: ^18.17.1 || ^20.3.0 || >=21.0.0}
     peerDependencies:
       '@astrojs/starlight': '>=0.32'
