@@ -8,7 +8,7 @@ import type { Dispatch, SetStateAction } from 'react'
 import { useEffect, useState } from 'react'
 import { Button } from '~/components'
 import { ApiClient } from '~/lib/apiClient'
-import type { Access, InstanceConfig, SubjectId } from '~/lib/types'
+import type { Access, InstanceConfig } from '~/lib/types'
 import { CONFIG } from '~/lib/parse_config.server'
 
 interface ConsentScreenContext {
@@ -20,7 +20,7 @@ interface ConsentScreenContext {
   returnUrl: string
   accesses: Array<Access> | null
   outgoingPaymentAccess: Access | null
-  subjectId: SubjectId | null
+  subjectId: string | null
   price: GrantAmount | null
   costToUser: GrantAmount | null
   errors: Array<Error>
@@ -64,7 +64,7 @@ function ConsentScreenBody({
   interactId: string
   nonce: string
   returnUrl: string
-  subjectId: SubjectId | null
+  subjectId: string | null
 }) {
   const chooseConsent = (accept: boolean) => {
     const href = new URL(returnUrl)
@@ -82,7 +82,7 @@ function ConsentScreenBody({
             {subjectId && (
               <p>
                 {thirdPartyName} is asking you to confirm ownership of{' '}
-                {subjectId.id}.
+                {subjectId}.
               </p>
             )}
           </div>
@@ -365,14 +365,15 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
                     : AmountType.UNLIMITED
               )
             }
-            returnUrlObject.searchParams.append(
-              'subjectId',
-              response.payload.subject.sub_ids[0]?.id ?? null
-            )
+
+            const subjectId = response.payload.subject?.sub_ids[0]?.id ?? null
+            if (subjectId) {
+              returnUrlObject.searchParams.append('subjectId', subjectId)
+            }
             setCtx({
               ...ctx,
               accesses: response.payload.access,
-              subjectId: response.payload.subject.sub_ids[0],
+              subjectId,
               outgoingPaymentAccess: outgoingPaymentAccess,
               thirdPartyName: ctx.thirdPartyName,
               thirdPartyUri: ctx.thirdPartyUri,
