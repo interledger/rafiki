@@ -9,7 +9,7 @@ overrides:
   json5@<1.0.2: '>=1.0.2'
   katex: '>=0.16.21'
   jose: '>=4.15.5'
-  undici@>=5.0.0: ^5.28.5
+  undici@>=5.0.0: ^5.29.0
   undici@>=6.0.0: ^6.21.1
   tar@<6.2.1: '>=6.2.1'
   braces@<3.0.3: '>=3.0.3'
@@ -18153,7 +18153,7 @@ packages:
       fast-glob: 3.3.3
       js-yaml: 4.1.0
       supports-color: 9.4.0
-      undici: 5.28.5
+      undici: 5.29.0
       yargs-parser: 21.1.1
     dev: true
 
@@ -21339,7 +21339,7 @@ packages:
       ssh-remote-port-forward: 1.0.4
       tar-fs: 3.1.1
       tmp: 0.2.3
-      undici: 5.28.5
+      undici: 5.29.0
     transitivePeerDependencies:
       - bare-abort-controller
       - bare-buffer
@@ -21907,8 +21907,8 @@ packages:
   /undici-types@5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
 
-  /undici@5.28.5:
-    resolution: {integrity: sha512-zICwjrDrcrUE0pyyJc1I2QzBkLM8FINsgOrt6WjA+BgajVq9Nxu2PbFFXUrAggLfDXlZGZBVZYw7WNV5KiBiBA==}
+  /undici@5.29.0:
+    resolution: {integrity: sha512-raqeBD6NQK4SkWhQzeYKd1KmIG6dllBOTt55Rmkt4HtI9mwdWtJljnrXjAFUBLTSN67HWrOIZ3EPF4kjUw80Bg==}
     engines: {node: '>=14.0'}
     dependencies:
       '@fastify/busboy': 2.1.1
