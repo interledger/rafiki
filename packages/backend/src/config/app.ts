@@ -125,9 +125,6 @@ export const Config = {
 
   authServerGrantUrl: envString('AUTH_SERVER_GRANT_URL'),
   authServerIntrospectionUrl: envString('AUTH_SERVER_INTROSPECTION_URL'),
-  authAdminApiUrl: envString('AUTH_ADMIN_API_URL'),
-  authAdminApiSecret: envString('AUTH_ADMIN_API_SECRET'),
-  authAdminApiSignatureVersion: envInt('AUTH_ADMIN_API_SIGNATURE_VERSION', 1),
   authServiceApiUrl: envString('AUTH_SERVICE_API_URL'),
 
   outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 1),
@@ -162,8 +159,8 @@ export const Config = {
   signatureSecret: process.env.SIGNATURE_SECRET, // optional
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
 
-  adminApiSecret: envString('API_SECRET'),
-  adminApiSignatureVersion: envInt('API_SIGNATURE_VERSION', 1),
+  adminApiSecret: envString('ADMIN_API_SECRET'),
+  adminApiSignatureVersion: envInt('ADMIN_API_SIGNATURE_VERSION', 1),
   adminApiSignatureTtlSeconds: envInt('ADMIN_API_SIGNATURE_TTL_SECONDS', 30),
 
   keyId: envString('KEY_ID'),

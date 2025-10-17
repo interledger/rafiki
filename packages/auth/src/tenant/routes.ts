@@ -2,7 +2,6 @@ import { ParsedUrlQuery } from 'querystring'
 import { AppContext } from '../app'
 import { TenantService } from './service'
 import { BaseService } from '../shared/baseService'
-import { Tenant } from './model'
 import { isValidDateString } from '../shared/utils'
 
 type TenantRequest<BodyT = never, QueryT = ParsedUrlQuery> = Exclude<
@@ -33,20 +32,11 @@ interface TenantParams {
   id: string
 }
 
-interface TenantResponse {
-  id: string
-  apiSecret: string
-  idpConsentUrl?: string
-  idpSecret?: string
-}
-
-export type GetContext = TenantContext<never, TenantParams>
 export type CreateContext = TenantContext<CreateTenantBody>
 export type UpdateContext = TenantContext<UpdateTenantBody, TenantParams>
 export type DeleteContext = TenantContext<{ deletedAt: string }, TenantParams>
 
 export interface TenantRoutes {
-  get(ctx: GetContext): Promise<void>
   create(ctx: CreateContext): Promise<void>
   update(ctx: UpdateContext): Promise<void>
   delete(ctx: DeleteContext): Promise<void>
@@ -67,7 +57,6 @@ export function createTenantRoutes({
   const deps = { tenantService, logger: log }
 
   return {
-    get: (ctx: GetContext) => getTenant(deps, ctx),
     create: (ctx: CreateContext) => createTenant(deps, ctx),
     update: (ctx: UpdateContext) => updateTenant(deps, ctx),
     delete: (ctx: DeleteContext) => deleteTenant(deps, ctx)
@@ -122,29 +111,4 @@ async function deleteTenant(
   }
 
   ctx.status = 204
-}
-
-async function getTenant(
-  deps: ServiceDependencies,
-  ctx: GetContext
-): Promise<void> {
-  const { id } = ctx.params
-  const tenant = await deps.tenantService.get(id)
-
-  if (!tenant) {
-    ctx.status = 404
-    return
-  }
-
-  ctx.status = 200
-  ctx.body = toTenantResponse(tenant)
-}
-
-function toTenantResponse(tenant: Tenant): TenantResponse {
-  return {
-    id: tenant.id,
-    apiSecret: tenant.apiSecret,
-    idpConsentUrl: tenant.idpConsentUrl,
-    idpSecret: tenant.idpSecret
-  }
 }
