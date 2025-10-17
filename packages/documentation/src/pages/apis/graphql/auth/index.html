@@ -960,6 +960,7 @@ https://staging.example.com/graphql
     <span class="hljs-symbol">state</span>
     <span class="hljs-symbol">finalizationReason</span>
     <span class="hljs-symbol">createdAt</span>
+    <span class="hljs-symbol">tenantId</span>
   }</span></span>
 }</span></span>
 </code></pre>
@@ -983,7 +984,8 @@ https://staging.example.com/graphql
       <span class="hljs-attr">"access"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">Access</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"state"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"PROCESSING"</span><span class="hljs-punctuation">,</span>
       <span class="hljs-attr">"finalizationReason"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"ISSUED"</span><span class="hljs-punctuation">,</span>
-      <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
+      <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"tenantId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">4</span>
     <span class="hljs-punctuation">}</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
@@ -1125,6 +1127,21 @@ https://staging.example.com/graphql
                           creation date, either ascending or descending.
                         </td>
                       </tr>
+                      <tr>
+                        <td>
+                          <span class="property-name"
+                            ><code>tenantId</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-ID"><code>ID</code></a></span
+                          >
+                        </td>
+                        <td>
+                          Filter grants by a specific tenant. This can only be
+                          performed by the operator.
+                        </td>
+                      </tr>
                     </tbody>
                   </table>
                 </div>
@@ -1141,15 +1158,17 @@ https://staging.example.com/graphql
   <span class="hljs-code">$first</span>:<span class="hljs-type"> Int,</span>
   <span class="hljs-code">$last</span>:<span class="hljs-type"> Int,</span>
   <span class="hljs-code">$filter</span>:<span class="hljs-type"> GrantFilter,</span>
-  <span class="hljs-code">$sortOrder</span>:<span class="hljs-type"> SortOrder
-</span>)</span> <span class="hljs-tag">{
+  <span class="hljs-code">$sortOrder</span>:<span class="hljs-type"> SortOrder,</span>
+  <span class="hljs-code">$tenantId</span>: ID
+)</span> <span class="hljs-tag">{
   <span class="hljs-symbol">grants<span class="hljs-tag">(
     after: <span class="hljs-code">$after</span>,
     before: <span class="hljs-code">$before</span>,
     first: <span class="hljs-code">$first</span>,
     last: <span class="hljs-code">$last</span>,
     filter: <span class="hljs-code">$filter</span>,
-    sortOrder: <span class="hljs-code">$sortOrder</span>
+    sortOrder: <span class="hljs-code">$sortOrder</span>,
+    tenantId: <span class="hljs-code">$tenantId</span>
   )</span> <span class="hljs-tag">{
     <span class="hljs-symbol">pageInfo <span class="hljs-tag">{
       <span class="hljs-symbol">endCursor</span>
@@ -1173,11 +1192,12 @@ https://staging.example.com/graphql
                   <h5>Variables</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"after"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"before"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"before"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"first"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"last"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">123</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"last"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">987</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"filter"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">GrantFilter</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"sortOrder"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"ASC"</span>
+  <span class="hljs-attr">"sortOrder"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"ASC"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"tenantId"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">4</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
@@ -1282,7 +1302,7 @@ https://staging.example.com/graphql
                   class="example-section example-section-is-code operation-response-example"
                 >
                   <h5>Response</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"revokeGrant"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">4</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"data"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"revokeGrant"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"4"</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -1405,11 +1425,11 @@ https://staging.example.com/graphql
                   <h5>Example</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"4"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"identifier"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"identifier"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"actions"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">"abc123"</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"actions"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"limits"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">LimitData</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
+  <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
@@ -1698,6 +1718,21 @@ https://staging.example.com/graphql
                         </td>
                         <td>The date and time when the grant was created.</td>
                       </tr>
+                      <tr>
+                        <td data-property-name="">
+                          <span class="property-name"
+                            ><code>tenantId</code></span
+                          >
+                          -
+                          <span class="property-type"
+                            ><a href="#definition-ID"><code>ID!</code></a></span
+                          >
+                        </td>
+                        <td>
+                          Unique identifier of the tenant associated with the
+                          grant.
+                        </td>
+                      </tr>
                     </tbody>
                   </table>
                 </div>
@@ -1711,7 +1746,8 @@ https://staging.example.com/graphql
   <span class="hljs-attr">"access"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">Access</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"state"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"PROCESSING"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"finalizationReason"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"ISSUED"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
+  <span class="hljs-attr">"createdAt"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"tenantId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"4"</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
@@ -2091,7 +2127,7 @@ https://staging.example.com/graphql
               <div class="doc-examples">
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-number">123</span>
+                  <pre><code class="hljs language-json"><span class="hljs-number">987</span>
 </code></pre>
                 </div>
               </div>
@@ -2182,10 +2218,10 @@ https://staging.example.com/graphql
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"receiver"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"receiver"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"debitAmount"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">PaymentAmount</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"receiveAmount"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">PaymentAmount</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"interval"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span>
+  <span class="hljs-attr">"interval"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
@@ -2466,7 +2502,7 @@ https://staging.example.com/graphql
                   <h5>Example</h5>
                   <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
   <span class="hljs-attr">"value"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">UInt64</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"assetCode"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"assetCode"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">"assetScale"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">UInt8</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
@@ -2516,7 +2552,7 @@ https://staging.example.com/graphql
               <div class="doc-examples">
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"grantId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"xyz789"</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"grantId"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"abc123"</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -2559,7 +2595,7 @@ https://staging.example.com/graphql
               <div class="doc-examples">
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
-                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">4</span><span class="hljs-punctuation">}</span>
+                  <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"4"</span><span class="hljs-punctuation">}</span>
 </code></pre>
                 </div>
               </div>
@@ -2635,7 +2671,7 @@ https://staging.example.com/graphql
               <div class="doc-examples">
                 <div class="example-section example-section-is-code">
                   <h5>Example</h5>
-                  <pre><code class="hljs language-gql"><span class="hljs-symbol">"xyz789"</span>
+                  <pre><code class="hljs language-gql"><span class="hljs-symbol">"abc123"</span>
 </code></pre>
                 </div>
               </div>
