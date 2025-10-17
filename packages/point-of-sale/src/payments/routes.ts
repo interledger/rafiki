@@ -1,3 +1,4 @@
+import { ParsedUrlQuery } from 'querystring'
 import { AppContext } from '../app'
 import { CardServiceClient, Result } from '../card-service-client/client'
 import { BaseService } from '../shared/baseService'
@@ -10,6 +11,7 @@ import {
   IncomingPaymentEventTimeoutError,
   InvalidCardPaymentError
 } from './errors'
+import { SortOrder } from '../graphql/generated/graphql'
 
 interface ServiceDependencies extends BaseService {
   config: IAppConfig
@@ -40,7 +42,25 @@ export type PaymentContext = Exclude<AppContext, 'request'> & {
   request: PaymentRequest
 }
 
+export interface GetPaymentsQuery {
+  receiverWalletAddress: string
+  sortOrder?: SortOrder
+  first?: number
+  last?: number
+  before?: string
+  after?: string
+}
+
+export type GetPaymentsRequest = Exclude<AppContext['request'], 'query'> & {
+  query: ParsedUrlQuery & GetPaymentsQuery
+}
+
+export type GetPaymentsContext = Exclude<AppContext, 'request'> & {
+  request: GetPaymentsRequest
+}
+
 export interface PaymentRoutes {
+  getPayments(ctx: GetPaymentsContext): Promise<void>
   payment(ctx: PaymentContext): Promise<void>
 }
 
@@ -55,8 +75,20 @@ export function createPaymentRoutes(deps_: ServiceDependencies): PaymentRoutes {
   }
 
   return {
-    payment: (ctx: PaymentContext) => payment(deps, ctx)
+    payment: (ctx: PaymentContext) => payment(deps, ctx),
+    getPayments: (ctx: GetPaymentsContext) => getPayments(deps, ctx)
   }
+}
+
+async function getPayments(
+  deps: ServiceDependencies,
+  ctx: GetPaymentsContext
+): Promise<void> {
+  const incomingPayments = await deps.paymentService.getIncomingPayments(
+    ctx.request.query
+  )
+
+  ctx.body = { incomingPayments }
 }
 
 async function payment(

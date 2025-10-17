@@ -18,7 +18,11 @@ import {
 } from './merchant/devices/routes'
 import { PosDeviceService } from './merchant/devices/service'
 import { MerchantService } from './merchant/service'
-import { PaymentContext, PaymentRoutes } from './payments/routes'
+import {
+  GetPaymentsContext,
+  PaymentContext,
+  PaymentRoutes
+} from './payments/routes'
 import {
   HandleWebhookContext,
   WebhookHandlerRoutes
@@ -103,6 +107,13 @@ export class App {
     router.post<DefaultState, RegisterDeviceContext>(
       '/merchants/:merchantId/devices',
       posDeviceRoutes.register
+    )
+
+    // GET /payments
+    // Get payments made to a given device
+    router.get<DefaultState, GetPaymentsContext>(
+      '/payments',
+      paymentRoutes.getPayments
     )
 
     // POST /payment
