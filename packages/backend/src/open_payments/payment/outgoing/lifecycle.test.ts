@@ -1,6 +1,6 @@
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../../app'
-import { Config } from '../../../config/app'
+import { Config, IAppConfig } from '../../../config/app'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { initIocContainer } from '../../..'
 import { createAsset } from '../../../tests/asset'
@@ -27,6 +27,7 @@ import { IncomingPayment } from '../incoming/model'
 import { PaymentMethodHandlerError } from '../../../payment-method/handler/errors'
 import { getInterval } from './limits'
 import { TransferError } from '../../../accounting/errors'
+import { withConfigOverride } from '../../../tests/helpers'
 
 describe('Lifecycle', (): void => {
   let deps: IocContract<AppServices>
@@ -40,6 +41,7 @@ describe('Lifecycle', (): void => {
   let receiver: string
   let incomingPayment: IncomingPayment
   let asset: Asset
+  let config: IAppConfig
 
   const assetDetails = {
     scale: 2,
@@ -168,6 +170,7 @@ describe('Lifecycle', (): void => {
       paymentMethodHandlerService = await deps.use(
         'paymentMethodHandlerService'
       )
+      config = await deps.use('config')
       knex = appContainer.knex
 
       jest.useFakeTimers()
@@ -1847,6 +1850,170 @@ describe('Lifecycle', (): void => {
           intervalStart: creationInterval.start.toJSDate(),
           intervalEnd: creationInterval.end.toJSDate()
         })
+      })
+
+      describe('Payment Creation vs. Completion race condition', (): void => {
+        test(
+          'Payment Created in interval 1, payment 2 created in interval 2, payment 1 completes partially - should use correct interval amounts',
+          withConfigOverride(
+            () => config,
+            {
+              // adjust resource ages for long intervals
+              quoteLifespan: 2592000000,
+              incomingPaymentExpiryMaxMs: 2592000000 * 3,
+              // 0 slippages makes some results more predictable and easier to
+              // reason about for the purpose of testing. for example,
+              // secondPayment amount of 200n results in receiveAmount of 200n
+              //  with 0 slippage, but 199n with default 0.01
+              slippage: 0
+            },
+            async (): Promise<void> => {
+              const grant = {
+                id: uuid(),
+                limits: {
+                  debitAmount: {
+                    value: 1000n,
+                    assetCode: asset.code,
+                    assetScale: asset.scale
+                  },
+                  // 1 month repeating interval starting Jan 1
+                  interval: 'R/2025-01-01T00:00:00Z/P1M'
+                }
+              }
+              const firstPaymentAmount = 100n
+              const firstPaymentSettledAmount = 75n
+              const secondPaymentAmount = 200n
+
+              // Create payment 1 in interval 1 (January)
+              jest.setSystemTime(new Date('2025-01-30T12:00:00Z'))
+              const firstPayment = await createAndFundGrantPayment(
+                firstPaymentAmount,
+                grant
+              )
+              jest.advanceTimersByTime(500)
+
+              const firstInterval = getInterval(
+                grant.limits.interval,
+                new Date()
+              )
+              assert(firstInterval)
+              assert(firstInterval.start)
+              assert(firstInterval.end)
+
+              const firstSpentAmounts =
+                await OutgoingPaymentGrantSpentAmounts.query(knex)
+                  .where({ grantId: grant.id })
+                  .first()
+              assert(firstSpentAmounts)
+
+              expect(firstSpentAmounts).toMatchObject({
+                grantId: grant.id,
+                outgoingPaymentId: firstPayment.id,
+                paymentReceiveAmountValue: firstPaymentAmount,
+                intervalReceiveAmountValue: firstPaymentAmount,
+                grantTotalReceiveAmountValue: firstPaymentAmount,
+                paymentDebitAmountValue: firstPaymentAmount,
+                intervalDebitAmountValue: firstPaymentAmount,
+                grantTotalDebitAmountValue: firstPaymentAmount,
+                intervalStart: firstInterval.start.toJSDate(),
+                intervalEnd: firstInterval.end.toJSDate()
+              })
+
+              // Move to interval 2 (February)
+              jest.setSystemTime(new Date('2025-02-01T12:00:00Z'))
+              jest.advanceTimersByTime(500)
+
+              // Create payment 2 in interval 2
+              const secondPayment = await createAndFundGrantPayment(
+                secondPaymentAmount,
+                grant
+              )
+              jest.advanceTimersByTime(500)
+
+              const secondInterval = getInterval(
+                grant.limits.interval,
+                new Date()
+              )
+              assert(secondInterval)
+              assert(secondInterval.start)
+              assert(secondInterval.end)
+
+              const secondSpentAmounts =
+                await OutgoingPaymentGrantSpentAmounts.query(knex)
+                  .where({ grantId: grant.id })
+                  .first()
+              assert(secondSpentAmounts)
+
+              // Payment 2 should only show this payment in interval amounts (new interval) but accumulated grant totals
+              expect(secondSpentAmounts).toMatchObject({
+                grantId: grant.id,
+                outgoingPaymentId: secondPayment.id,
+                paymentReceiveAmountValue: secondPaymentAmount,
+                intervalReceiveAmountValue: secondPaymentAmount,
+                grantTotalReceiveAmountValue:
+                  firstPaymentAmount + secondPaymentAmount,
+                paymentDebitAmountValue: secondPaymentAmount,
+                intervalDebitAmountValue: secondPaymentAmount,
+                grantTotalDebitAmountValue:
+                  firstPaymentAmount + secondPaymentAmount,
+                intervalStart: secondInterval.start.toJSDate(),
+                intervalEnd: secondInterval.end.toJSDate()
+              })
+
+              // Complete payment 1 partially within the time period of interval 2
+              jest.advanceTimersByTime(500)
+              jest
+                .spyOn(paymentMethodHandlerService, 'pay')
+                .mockImplementationOnce(
+                  mockPayPartialFactory({
+                    debit: firstPaymentSettledAmount,
+                    receive: firstPaymentSettledAmount
+                  })(accountingService, receiverWalletAddressId, firstPayment)
+                )
+
+              const processedPaymentId =
+                await outgoingPaymentService.processNext()
+              expect(processedPaymentId).toBe(firstPayment.id)
+
+              const completedPayment = await outgoingPaymentService.get({
+                id: firstPayment.id
+              })
+              expect(completedPayment?.state).toBe(
+                OutgoingPaymentState.Completed
+              )
+
+              // Get the new spent amounts for payment 1
+              const updatedFirstSpentAmounts =
+                await OutgoingPaymentGrantSpentAmounts.query(knex)
+                  .where({ grantId: grant.id })
+                  .first()
+              assert(updatedFirstSpentAmounts)
+
+              // New record should be created
+              expect(updatedFirstSpentAmounts.id).not.toBe(firstSpentAmounts.id)
+
+              // The updated amounts should:
+              // - Use payment 1's original interval (January)
+              // - Have payment 1's settled amount for payment amounts
+              // - Have only payment 1's settled amount for interval amounts (payment 2 is in different interval)
+              // - Have payment 1's settled amount + payment 2's full amount for grant totals
+              expect(updatedFirstSpentAmounts).toMatchObject({
+                grantId: grant.id,
+                outgoingPaymentId: firstPayment.id,
+                paymentReceiveAmountValue: firstPaymentSettledAmount,
+                intervalReceiveAmountValue: firstPaymentSettledAmount,
+                grantTotalReceiveAmountValue:
+                  firstPaymentSettledAmount + secondPaymentAmount,
+                paymentDebitAmountValue: firstPaymentSettledAmount,
+                intervalDebitAmountValue: firstPaymentSettledAmount,
+                grantTotalDebitAmountValue:
+                  firstPaymentSettledAmount + secondPaymentAmount,
+                intervalStart: firstInterval.start.toJSDate(),
+                intervalEnd: firstInterval.end.toJSDate()
+              })
+            }
+          )
+        )
       })
     })
   })
