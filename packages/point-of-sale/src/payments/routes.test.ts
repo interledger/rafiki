@@ -199,7 +199,9 @@ describe('Payment Routes', () => {
 
       await paymentRoutes.getPayments(ctx)
       expect(ctx.status).toEqual(200)
-      expect(ctx.body).toEqual(mockServiceResponse)
+      expect(ctx.body).toEqual({
+        incomingPayments: mockServiceResponse
+      })
     })
   })
 })
