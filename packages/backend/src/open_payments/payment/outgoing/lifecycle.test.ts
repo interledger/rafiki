@@ -1854,7 +1854,7 @@ describe('Lifecycle', (): void => {
 
       describe('Payment Creation vs. Completion race condition', (): void => {
         test(
-          'Payment Created in interval 1, payment 2 created in interval 2, payment 1 completes partially - should use correct interval amounts',
+          'Payment Created in interval 1, payment 2 created in interval 1, payment 3 created in interval 2, payment 1 completes partially - should use correct interval amounts',
           withConfigOverride(
             () => config,
             {
@@ -1883,9 +1883,10 @@ describe('Lifecycle', (): void => {
               const firstPaymentAmount = 100n
               const firstPaymentSettledAmount = 75n
               const secondPaymentAmount = 200n
+              const thirdPaymentAmount = 300n
 
               // Create payment 1 in interval 1 (January)
-              jest.setSystemTime(new Date('2025-01-30T12:00:00Z'))
+              jest.setSystemTime(new Date('2025-01-15T12:00:00Z'))
               const firstPayment = await createAndFundGrantPayment(
                 firstPaymentAmount,
                 grant
@@ -1919,13 +1920,47 @@ describe('Lifecycle', (): void => {
                 intervalEnd: firstInterval.end.toJSDate()
               })
 
+              // Create payment 2 in interval 1 (still January)
+              jest.setSystemTime(new Date('2025-01-20T12:00:00Z'))
+              jest.advanceTimersByTime(500)
+
+              const secondPayment = await createAndFundGrantPayment(
+                secondPaymentAmount,
+                grant
+              )
+              jest.advanceTimersByTime(500)
+
+              const secondSpentAmounts =
+                await OutgoingPaymentGrantSpentAmounts.query(knex)
+                  .where({ grantId: grant.id })
+                  .first()
+              assert(secondSpentAmounts)
+
+              // Payment 2 should accumulate with payment 1 in same interval
+              expect(secondSpentAmounts).toMatchObject({
+                grantId: grant.id,
+                outgoingPaymentId: secondPayment.id,
+                paymentReceiveAmountValue: secondPaymentAmount,
+                intervalReceiveAmountValue:
+                  firstPaymentAmount + secondPaymentAmount,
+                grantTotalReceiveAmountValue:
+                  firstPaymentAmount + secondPaymentAmount,
+                paymentDebitAmountValue: secondPaymentAmount,
+                intervalDebitAmountValue:
+                  firstPaymentAmount + secondPaymentAmount,
+                grantTotalDebitAmountValue:
+                  firstPaymentAmount + secondPaymentAmount,
+                intervalStart: firstInterval.start.toJSDate(),
+                intervalEnd: firstInterval.end.toJSDate()
+              })
+
               // Move to interval 2 (February)
               jest.setSystemTime(new Date('2025-02-01T12:00:00Z'))
               jest.advanceTimersByTime(500)
 
-              // Create payment 2 in interval 2
-              const secondPayment = await createAndFundGrantPayment(
-                secondPaymentAmount,
+              // Create payment 3 in interval 2
+              const thirdPayment = await createAndFundGrantPayment(
+                thirdPaymentAmount,
                 grant
               )
               jest.advanceTimersByTime(500)
@@ -1938,24 +1973,24 @@ describe('Lifecycle', (): void => {
               assert(secondInterval.start)
               assert(secondInterval.end)
 
-              const secondSpentAmounts =
+              const thirdSpentAmounts =
                 await OutgoingPaymentGrantSpentAmounts.query(knex)
                   .where({ grantId: grant.id })
                   .first()
-              assert(secondSpentAmounts)
+              assert(thirdSpentAmounts)
 
-              // Payment 2 should only show this payment in interval amounts (new interval) but accumulated grant totals
-              expect(secondSpentAmounts).toMatchObject({
+              // Payment 3 should only show this payment in interval amounts (new interval) but accumulated grant totals
+              expect(thirdSpentAmounts).toMatchObject({
                 grantId: grant.id,
-                outgoingPaymentId: secondPayment.id,
-                paymentReceiveAmountValue: secondPaymentAmount,
-                intervalReceiveAmountValue: secondPaymentAmount,
+                outgoingPaymentId: thirdPayment.id,
+                paymentReceiveAmountValue: thirdPaymentAmount,
+                intervalReceiveAmountValue: thirdPaymentAmount,
                 grantTotalReceiveAmountValue:
-                  firstPaymentAmount + secondPaymentAmount,
-                paymentDebitAmountValue: secondPaymentAmount,
-                intervalDebitAmountValue: secondPaymentAmount,
+                  firstPaymentAmount + secondPaymentAmount + thirdPaymentAmount,
+                paymentDebitAmountValue: thirdPaymentAmount,
+                intervalDebitAmountValue: thirdPaymentAmount,
                 grantTotalDebitAmountValue:
-                  firstPaymentAmount + secondPaymentAmount,
+                  firstPaymentAmount + secondPaymentAmount + thirdPaymentAmount,
                 intervalStart: secondInterval.start.toJSDate(),
                 intervalEnd: secondInterval.end.toJSDate()
               })
@@ -2001,13 +2036,19 @@ describe('Lifecycle', (): void => {
                 grantId: grant.id,
                 outgoingPaymentId: firstPayment.id,
                 paymentReceiveAmountValue: firstPaymentSettledAmount,
-                intervalReceiveAmountValue: firstPaymentSettledAmount,
+                intervalReceiveAmountValue:
+                  secondPaymentAmount + firstPaymentSettledAmount,
                 grantTotalReceiveAmountValue:
-                  firstPaymentSettledAmount + secondPaymentAmount,
+                  firstPaymentSettledAmount +
+                  secondPaymentAmount +
+                  thirdPaymentAmount,
                 paymentDebitAmountValue: firstPaymentSettledAmount,
-                intervalDebitAmountValue: firstPaymentSettledAmount,
+                intervalDebitAmountValue:
+                  secondPaymentAmount + firstPaymentSettledAmount,
                 grantTotalDebitAmountValue:
-                  firstPaymentSettledAmount + secondPaymentAmount,
+                  firstPaymentSettledAmount +
+                  secondPaymentAmount +
+                  thirdPaymentAmount,
                 intervalStart: firstInterval.start.toJSDate(),
                 intervalEnd: firstInterval.end.toJSDate()
               })
@@ -2015,7 +2056,7 @@ describe('Lifecycle', (): void => {
           )
         )
         test(
-          'Payment Created in interval 1, payment 2 created in interval 2, payment 1 fails - should use correct interval amounts',
+          'Payment Created in interval 1, payment 2 created in interval 1, payment 3 created in interval 2, payment 1 fails - should use correct interval amounts',
           withConfigOverride(
             () => config,
             {
@@ -2038,9 +2079,10 @@ describe('Lifecycle', (): void => {
               }
               const firstPaymentAmount = 100n
               const secondPaymentAmount = 200n
+              const thirdPaymentAmount = 300n
 
               // Create payment 1 in interval 1 (January)
-              jest.setSystemTime(new Date('2025-01-30T12:00:00Z'))
+              jest.setSystemTime(new Date('2025-01-15T12:00:00Z'))
               const firstPayment = await createAndFundGrantPayment(
                 firstPaymentAmount,
                 grant
@@ -2074,13 +2116,47 @@ describe('Lifecycle', (): void => {
                 intervalEnd: firstInterval.end.toJSDate()
               })
 
+              // Create payment 2 in interval 1 (still January)
+              jest.setSystemTime(new Date('2025-01-20T12:00:00Z'))
+              jest.advanceTimersByTime(500)
+
+              const secondPayment = await createAndFundGrantPayment(
+                secondPaymentAmount,
+                grant
+              )
+              jest.advanceTimersByTime(500)
+
+              const secondSpentAmounts =
+                await OutgoingPaymentGrantSpentAmounts.query(knex)
+                  .where({ grantId: grant.id })
+                  .first()
+              assert(secondSpentAmounts)
+
+              // Payment 2 should accumulate with payment 1 in same interval
+              expect(secondSpentAmounts).toMatchObject({
+                grantId: grant.id,
+                outgoingPaymentId: secondPayment.id,
+                paymentReceiveAmountValue: secondPaymentAmount,
+                intervalReceiveAmountValue:
+                  firstPaymentAmount + secondPaymentAmount,
+                grantTotalReceiveAmountValue:
+                  firstPaymentAmount + secondPaymentAmount,
+                paymentDebitAmountValue: secondPaymentAmount,
+                intervalDebitAmountValue:
+                  firstPaymentAmount + secondPaymentAmount,
+                grantTotalDebitAmountValue:
+                  firstPaymentAmount + secondPaymentAmount,
+                intervalStart: firstInterval.start.toJSDate(),
+                intervalEnd: firstInterval.end.toJSDate()
+              })
+
               // Move to interval 2 (February)
               jest.setSystemTime(new Date('2025-02-01T12:00:00Z'))
               jest.advanceTimersByTime(500)
 
-              // Create payment 2 in interval 2
-              const secondPayment = await createAndFundGrantPayment(
-                secondPaymentAmount,
+              // Create payment 3 in interval 2
+              const thirdPayment = await createAndFundGrantPayment(
+                thirdPaymentAmount,
                 grant
               )
               jest.advanceTimersByTime(500)
@@ -2093,24 +2169,24 @@ describe('Lifecycle', (): void => {
               assert(secondInterval.start)
               assert(secondInterval.end)
 
-              const secondSpentAmounts =
+              const thirdSpentAmounts =
                 await OutgoingPaymentGrantSpentAmounts.query(knex)
                   .where({ grantId: grant.id })
                   .first()
-              assert(secondSpentAmounts)
+              assert(thirdSpentAmounts)
 
-              // Payment 2 should only show this payment in interval amounts (new interval) but accumulated grant totals
-              expect(secondSpentAmounts).toMatchObject({
+              // Payment 3 should only show this payment in interval amounts (new interval) but accumulated grant totals
+              expect(thirdSpentAmounts).toMatchObject({
                 grantId: grant.id,
-                outgoingPaymentId: secondPayment.id,
-                paymentReceiveAmountValue: secondPaymentAmount,
-                intervalReceiveAmountValue: secondPaymentAmount,
+                outgoingPaymentId: thirdPayment.id,
+                paymentReceiveAmountValue: thirdPaymentAmount,
+                intervalReceiveAmountValue: thirdPaymentAmount,
                 grantTotalReceiveAmountValue:
-                  firstPaymentAmount + secondPaymentAmount,
-                paymentDebitAmountValue: secondPaymentAmount,
-                intervalDebitAmountValue: secondPaymentAmount,
+                  firstPaymentAmount + secondPaymentAmount + thirdPaymentAmount,
+                paymentDebitAmountValue: thirdPaymentAmount,
+                intervalDebitAmountValue: thirdPaymentAmount,
                 grantTotalDebitAmountValue:
-                  firstPaymentAmount + secondPaymentAmount,
+                  firstPaymentAmount + secondPaymentAmount + thirdPaymentAmount,
                 intervalStart: secondInterval.start.toJSDate(),
                 intervalEnd: secondInterval.end.toJSDate()
               })
@@ -2149,11 +2225,13 @@ describe('Lifecycle', (): void => {
                 grantId: grant.id,
                 outgoingPaymentId: firstPayment.id,
                 paymentReceiveAmountValue: 0n,
-                intervalReceiveAmountValue: 0n,
-                grantTotalReceiveAmountValue: secondPaymentAmount,
+                intervalReceiveAmountValue: secondPaymentAmount,
+                grantTotalReceiveAmountValue:
+                  secondPaymentAmount + thirdPaymentAmount,
                 paymentDebitAmountValue: 0n,
-                intervalDebitAmountValue: 0n,
-                grantTotalDebitAmountValue: secondPaymentAmount,
+                intervalDebitAmountValue: secondPaymentAmount,
+                grantTotalDebitAmountValue:
+                  secondPaymentAmount + thirdPaymentAmount,
                 paymentState: OutgoingPaymentState.Failed,
                 intervalStart: firstInterval.start.toJSDate(),
                 intervalEnd: firstInterval.end.toJSDate()
