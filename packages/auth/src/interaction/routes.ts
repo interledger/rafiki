@@ -19,12 +19,15 @@ import {
 import { toOpenPaymentsAccess } from '../access/model'
 import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
 import { generateRouteLogs } from '../shared/utils'
+import { SubjectService } from '../subject/service'
+import { toOpenPaymentsSubject } from '../subject/model'
 import { TenantService } from '../tenant/service'
 import { isTenantWithIdp } from '../tenant/model'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
   accessService: AccessService
+  subjectService: SubjectService
   interactionService: InteractionService
   tenantService: TenantService
   config: IAppConfig
@@ -85,6 +88,7 @@ function isInteractionExpired(interaction: Interaction): boolean {
 export function createInteractionRoutes({
   grantService,
   accessService,
+  subjectService,
   interactionService,
   tenantService,
   logger,
@@ -97,6 +101,7 @@ export function createInteractionRoutes({
   const deps = {
     grantService,
     accessService,
+    subjectService,
     interactionService,
     tenantService,
     logger: log,
@@ -116,7 +121,8 @@ async function getGrantDetails(
   ctx: GetContext
 ): Promise<void> {
   const secret = ctx.headers?.['x-idp-secret']
-  const { interactionService, accessService, tenantService } = deps
+  const { interactionService, accessService, subjectService, tenantService } =
+    deps
   const { id: interactId, nonce } = ctx.params
   const interaction = await interactionService.getBySession(interactId, nonce)
   if (!interaction || isRevokedGrant(interaction.grant)) {
@@ -152,6 +158,7 @@ async function getGrantDetails(
   }
 
   const access = await accessService.getByGrant(interaction.grantId)
+  const subjects = await subjectService.getByGrant(interaction.grantId)
 
   deps.logger.debug(
     {
@@ -164,6 +171,11 @@ async function getGrantDetails(
   ctx.body = {
     grantId: interaction.grant.id,
     access: access.map(toOpenPaymentsAccess),
+    subject: subjects.length
+      ? {
+          sub_ids: subjects.map(toOpenPaymentsSubject)
+        }
+      : undefined,
     state: interaction.state
   }
 }

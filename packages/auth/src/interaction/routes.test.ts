@@ -835,7 +835,8 @@ describe('Interaction Routes', (): void => {
               type: access.type
             }
           ],
-          state: interaction.state
+          state: interaction.state,
+          subject: undefined
         })
       })
 
