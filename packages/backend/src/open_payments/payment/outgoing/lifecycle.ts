@@ -230,33 +230,53 @@ async function handleGrantSpentAmounts(
   let newIntervalDebitAmountValue: bigint | null = null
   let newIntervalReceiveAmountValue: bigint | null = null
 
-  if (latestPaymentSpentAmounts.intervalStart !== null) {
-    const latestIntervalSpentAmounts =
-      await OutgoingPaymentGrantSpentAmounts.query(deps.knex)
-        .where('grantId', payment.grantId)
-        .where('intervalStart', latestPaymentSpentAmounts.intervalStart)
-        .where('intervalEnd', latestPaymentSpentAmounts.intervalEnd)
-        .orderBy('createdAt', 'desc')
-        .first()
+  if (
+    latestPaymentSpentAmounts.intervalStart !== null &&
+    latestPaymentSpentAmounts.intervalEnd !== null
+  ) {
+    const isWithinSameInterval =
+      latestGrantSpentAmounts.intervalStart?.getTime() ===
+        latestPaymentSpentAmounts.intervalStart.getTime() &&
+      latestGrantSpentAmounts.intervalEnd?.getTime() ===
+        latestPaymentSpentAmounts.intervalEnd.getTime()
 
-    if (!latestIntervalSpentAmounts) {
-      deps.logger.warn(
-        {
-          grantId: payment.grantId,
-          intervalStart: latestPaymentSpentAmounts.intervalStart,
-          intervalEnd: latestPaymentSpentAmounts.intervalEnd
-        },
-        'No outgoingPaymentGrantSpentAmounts record found for grant interval'
-      )
-      return
+    if (isWithinSameInterval) {
+      // We're still in the same interval, so use the latest grant spent amounts
+      newIntervalDebitAmountValue =
+        (latestGrantSpentAmounts.intervalDebitAmountValue ?? 0n) -
+        debitAmountDifference
+      newIntervalReceiveAmountValue =
+        (latestGrantSpentAmounts.intervalReceiveAmountValue ?? 0n) -
+        receiveAmountDifference
+    } else {
+      // We're in a different interval, need to query for the latest interval spent amounts
+      const latestIntervalSpentAmounts =
+        await OutgoingPaymentGrantSpentAmounts.query(deps.knex)
+          .where('grantId', payment.grantId)
+          .where('intervalStart', latestPaymentSpentAmounts.intervalStart)
+          .where('intervalEnd', latestPaymentSpentAmounts.intervalEnd)
+          .orderBy('createdAt', 'desc')
+          .first()
+
+      if (!latestIntervalSpentAmounts) {
+        deps.logger.warn(
+          {
+            grantId: payment.grantId,
+            intervalStart: latestPaymentSpentAmounts.intervalStart,
+            intervalEnd: latestPaymentSpentAmounts.intervalEnd
+          },
+          'No outgoingPaymentGrantSpentAmounts record found for grant interval'
+        )
+        return
+      }
+
+      newIntervalDebitAmountValue =
+        (latestIntervalSpentAmounts.intervalDebitAmountValue ?? 0n) -
+        debitAmountDifference
+      newIntervalReceiveAmountValue =
+        (latestIntervalSpentAmounts.intervalReceiveAmountValue ?? 0n) -
+        receiveAmountDifference
     }
-
-    newIntervalDebitAmountValue =
-      (latestIntervalSpentAmounts.intervalDebitAmountValue ?? 0n) -
-      debitAmountDifference
-    newIntervalReceiveAmountValue =
-      (latestIntervalSpentAmounts.intervalReceiveAmountValue ?? 0n) -
-      receiveAmountDifference
   }
 
   await OutgoingPaymentGrantSpentAmounts.query(deps.knex).insert({
@@ -343,46 +363,77 @@ async function revertGrantSpentAmounts(
   let newIntervalDebitAmountValue: bigint | null = null
   let newIntervalReceiveAmountValue: bigint | null = null
 
-  if (latestPaymentSpentAmounts.intervalStart !== null) {
-    // Find the latest spent amounts from the same interval as this payment
-    const latestIntervalSpentAmounts =
-      await OutgoingPaymentGrantSpentAmounts.query(deps.knex)
-        .where('grantId', payment.grantId)
-        .where('intervalStart', latestPaymentSpentAmounts.intervalStart)
-        .where('intervalEnd', latestPaymentSpentAmounts.intervalEnd)
-        .orderBy('createdAt', 'desc')
-        .first()
+  if (
+    latestPaymentSpentAmounts.intervalStart !== null &&
+    latestPaymentSpentAmounts.intervalEnd !== null
+  ) {
+    const isWithinSameInterval =
+      latestGrantSpentAmounts.intervalStart?.getTime() ===
+        latestPaymentSpentAmounts.intervalStart.getTime() &&
+      latestGrantSpentAmounts.intervalEnd?.getTime() ===
+        latestPaymentSpentAmounts.intervalEnd.getTime()
 
-    if (!latestIntervalSpentAmounts) {
-      deps.logger.warn(
-        {
-          grantId: payment.grantId,
-          intervalStart: latestPaymentSpentAmounts.intervalStart,
-          intervalEnd: latestPaymentSpentAmounts.intervalEnd
-        },
-        'No outgoingPaymentGrantSpentAmounts record found for grant interval'
+    if (isWithinSameInterval) {
+      // We're still in the same interval, so use the latest grant spent amounts
+      newIntervalDebitAmountValue = BigInt(
+        Math.max(
+          0,
+          Number(
+            (latestGrantSpentAmounts.intervalDebitAmountValue ?? 0n) -
+              reservedDebitAmount
+          )
+        )
       )
-      return
+      newIntervalReceiveAmountValue = BigInt(
+        Math.max(
+          0,
+          Number(
+            (latestGrantSpentAmounts.intervalReceiveAmountValue ?? 0n) -
+              reservedReceiveAmount
+          )
+        )
+      )
+    } else {
+      // We're in a different interval, need to query for the latest interval spent amounts
+      const latestIntervalSpentAmounts =
+        await OutgoingPaymentGrantSpentAmounts.query(deps.knex)
+          .where('grantId', payment.grantId)
+          .where('intervalStart', latestPaymentSpentAmounts.intervalStart)
+          .where('intervalEnd', latestPaymentSpentAmounts.intervalEnd)
+          .orderBy('createdAt', 'desc')
+          .first()
+
+      if (!latestIntervalSpentAmounts) {
+        deps.logger.warn(
+          {
+            grantId: payment.grantId,
+            intervalStart: latestPaymentSpentAmounts.intervalStart,
+            intervalEnd: latestPaymentSpentAmounts.intervalEnd
+          },
+          'No outgoingPaymentGrantSpentAmounts record found for grant interval'
+        )
+        return
+      }
+
+      newIntervalDebitAmountValue = BigInt(
+        Math.max(
+          0,
+          Number(
+            (latestIntervalSpentAmounts.intervalDebitAmountValue ?? 0n) -
+              reservedDebitAmount
+          )
+        )
+      )
+      newIntervalReceiveAmountValue = BigInt(
+        Math.max(
+          0,
+          Number(
+            (latestIntervalSpentAmounts.intervalReceiveAmountValue ?? 0n) -
+              reservedReceiveAmount
+          )
+        )
+      )
     }
-
-    newIntervalDebitAmountValue = BigInt(
-      Math.max(
-        0,
-        Number(
-          (latestIntervalSpentAmounts.intervalDebitAmountValue ?? 0n) -
-            reservedDebitAmount
-        )
-      )
-    )
-    newIntervalReceiveAmountValue = BigInt(
-      Math.max(
-        0,
-        Number(
-          (latestIntervalSpentAmounts.intervalReceiveAmountValue ?? 0n) -
-            reservedReceiveAmount
-        )
-      )
-    )
   }
 
   await OutgoingPaymentGrantSpentAmounts.query(deps.knex).insert({
