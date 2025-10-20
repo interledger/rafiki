@@ -203,6 +203,26 @@ describe('Payment Routes', () => {
         incomingPayments: mockServiceResponse
       })
     })
+
+    test('returns empty page if no incoming payments', async (): Promise<void> => {
+      jest
+        .spyOn(paymentService, 'getIncomingPayments')
+        .mockResolvedValue(undefined)
+
+      const ctx = createGetPaymentsContext()
+
+      await paymentRoutes.getPayments(ctx)
+      expect(ctx.status).toEqual(200)
+      expect(ctx.body).toMatchObject({
+        incomingPayments: {
+          edges: [],
+          pageInfo: {
+            hasNextPage: false,
+            hasPreviousPage: false
+          }
+        }
+      })
+    })
   })
 })
 
