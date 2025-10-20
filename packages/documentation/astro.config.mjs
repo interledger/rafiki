@@ -7,6 +7,7 @@ import starlightLinksValidator from 'starlight-links-validator'
 import starlightFullViewMode from 'starlight-fullview-mode'
 import { rehypeHeadingIds } from '@astrojs/markdown-remark'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
+import starlightVersions from 'starlight-versions'
 
 // https://astro.build/config
 export default defineConfig({
@@ -113,6 +114,10 @@ export default defineConfig({
                   link: '/overview/concepts/account-servicing-entity'
                 },
                 {
+                  label: 'Multi-tenancy',
+                  link: '/overview/concepts/multi-tenancy'
+                },
+                {
                   label: 'Accounting',
                   translations: {
                     es: 'Transacciones en Rafiki'
@@ -183,6 +188,10 @@ export default defineConfig({
                 {
                   label: 'Overview and checklist',
                   link: '/integration/requirements/overview'
+                },
+                {
+                  label: 'Tenants',
+                  link: '/integration/requirements/tenants'
                 },
                 {
                   label: 'Assets',
@@ -358,12 +367,18 @@ export default defineConfig({
         }
       ],
       plugins: [
+        starlightVersions({
+          current: {
+            label: 'v2-beta'
+          },
+          versions: [{ slug: 'v1-beta' }]
+        }),
         starlightLinksValidator({
           exclude: [
-            '/apis/graphql/auth',
-            '/apis/graphql/backend',
-            '/apis/graphql/auth/*',
-            '/apis/graphql/backend/*'
+            '**/apis/graphql/auth',
+            '**/apis/graphql/backend',
+            '**/apis/graphql/auth/*',
+            '**/apis/graphql/backend/*'
           ],
           errorOnLocalLinks: false,
           errorOnFallbackPages: false,

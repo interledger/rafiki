@@ -8,7 +8,7 @@ import type { Dispatch, SetStateAction } from 'react'
 import { useEffect, useState } from 'react'
 import { Button } from '~/components'
 import { ApiClient } from '~/lib/apiClient'
-import type { Access, InstanceConfig } from '~/lib/types'
+import type { Access, InstanceConfig, SubjectId } from '~/lib/types'
 import { CONFIG } from '~/lib/parse_config.server'
 
 interface ConsentScreenContext {
