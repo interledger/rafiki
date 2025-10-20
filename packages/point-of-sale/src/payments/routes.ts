@@ -11,7 +11,13 @@ import {
   IncomingPaymentEventTimeoutError,
   InvalidCardPaymentError
 } from './errors'
-import { SortOrder } from '../graphql/generated/graphql'
+import {
+  IncomingPaymentConnection,
+  SortOrder,
+  Amount as GqlAmount,
+  IncomingPayment,
+  IncomingPaymentEdge
+} from '../graphql/generated/graphql'
 
 interface ServiceDependencies extends BaseService {
   config: IAppConfig
@@ -84,11 +90,13 @@ async function getPayments(
   deps: ServiceDependencies,
   ctx: GetPaymentsContext
 ): Promise<void> {
-  const incomingPayments = await deps.paymentService.getIncomingPayments(
+  const incomingPaymentsPage = await deps.paymentService.getIncomingPayments(
     ctx.request.query
   )
 
-  ctx.body = { incomingPayments }
+  ctx.body = {
+    incomingPayments: incomingPaymentPageToResponse(incomingPaymentsPage)
+  }
 }
 
 async function payment(
@@ -171,4 +179,76 @@ async function waitForIncomingPaymentEvent(
 
 function handlePaymentError(_err: unknown) {
   return { body: { error: { code: 'invalid_request' } }, status: 400 }
+}
+
+type ApiIncomingPaymentsConnection = Exclude<
+  IncomingPaymentConnection,
+  'typename' | 'edges'
+> & {
+  edges: ApiIncomingPaymentsEdge[]
+}
+
+type ApiIncomingPaymentsEdge = Exclude<IncomingPaymentEdge, 'node'> & {
+  node: ApiIncomingPaymentsNode
+}
+
+type ApiIncomingPaymentsNode = Exclude<
+  IncomingPayment,
+  'typename' | 'receivedAmount' | 'incomingAmount'
+> & {
+  receivedAmount?: ApiAmount
+  incomingAmount?: ApiAmount
+}
+
+type ApiAmount = Exclude<GqlAmount, 'typename'>
+
+function incomingPaymentPageToResponse(
+  page: IncomingPaymentConnection | null | undefined
+): ApiIncomingPaymentsConnection | undefined {
+  if (!page)
+    return {
+      edges: [],
+      pageInfo: {
+        hasNextPage: false,
+        hasPreviousPage: false
+      }
+    }
+  const { __typename, edges, ...restOfConnection } = page
+
+  const formattedEdges = edges.map((edge) =>
+    incomingPaymentEdgeToResponse(edge)
+  )
+
+  return {
+    edges: formattedEdges,
+    ...restOfConnection
+  }
+}
+
+function incomingPaymentEdgeToResponse(
+  edge: IncomingPaymentEdge
+): ApiIncomingPaymentsEdge {
+  const { __typename: _, node, ...restOfEdge } = edge
+  const { __typename, incomingAmount, receivedAmount, ...restOfNode } = node
+
+  const formattedEdge = {
+    node: {
+      ...restOfNode,
+      receivedAmount: gqlAmountToResponse(receivedAmount)
+    },
+    ...restOfEdge
+  }
+
+  if (incomingAmount) {
+    Object.assign(formattedEdge.node, {
+      incomingAmount: gqlAmountToResponse(incomingAmount)
+    })
+  }
+
+  return formattedEdge
+}
+
+function gqlAmountToResponse(amount: GqlAmount): ApiAmount {
+  const { __typename, ...restOfAmount } = amount
+  return restOfAmount
 }
