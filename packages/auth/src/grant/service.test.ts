@@ -159,6 +159,7 @@ describe('Grant Service', (): void => {
           type: AccessType.IncomingPayment
         })
       })
+
       test.each`
         type                          | expectedState          | interact
         ${AccessType.IncomingPayment} | ${GrantState.Approved} | ${undefined}
@@ -199,6 +200,28 @@ describe('Grant Service', (): void => {
           })
         }
       )
+
+      it('create a grant with subject in pending state', async () => {
+        const grantRequest: GrantRequest = {
+          ...BASE_GRANT_REQUEST,
+          subject: {
+            sub_ids: [
+              {
+                id: faker.internet.url(),
+                format: 'uri'
+              }
+            ]
+          }
+        }
+
+        const grant = await grantService.create(grantRequest, tenant.id)
+
+        expect(grant).toMatchObject({
+          state: GrantState.Pending,
+          continueId: expect.any(String),
+          continueToken: expect.any(String)
+        })
+      })
     })
 
     describe('pending', (): void => {
@@ -311,15 +334,41 @@ describe('Grant Service', (): void => {
       })
     })
 
-    describe('getByIdWithAccess', (): void => {
+    describe('getByIdWithAccessAndSubject', (): void => {
       test('Can fetch a grant by id with access', async () => {
-        const fetchedGrant = await grantService.getByIdWithAccess(grant.id)
+        const grantRequest: GrantRequest = {
+          ...BASE_GRANT_REQUEST,
+          subject: {
+            sub_ids: [
+              {
+                id: faker.internet.url(),
+                format: 'uri'
+              }
+            ]
+          },
+          access_token: {
+            access: [
+              {
+                ...BASE_GRANT_ACCESS,
+                type: AccessType.IncomingPayment
+              }
+            ]
+          }
+        }
+
+        const grant = await grantService.create(grantRequest, tenant.id)
+        expect(grant?.id).toBeDefined()
+
+        const fetchedGrant = await grantService.getByIdWithAccessAndSubject(
+          grant.id
+        )
         expect(fetchedGrant?.id).toEqual(grant.id)
+        expect(fetchedGrant?.subjects?.length).toBeGreaterThan(0)
         expect(fetchedGrant?.access?.length).toBeGreaterThan(0)
       })
 
       test('Can filter by tenantId', async () => {
-        const fetchedGrant = await grantService.getByIdWithAccess(
+        const fetchedGrant = await grantService.getByIdWithAccessAndSubject(
           grant.id,
           grant.tenantId
         )
@@ -328,7 +377,7 @@ describe('Grant Service', (): void => {
       })
 
       test('Returns undefined if incorrect tenantId', async () => {
-        const fetchedGrant = await grantService.getByIdWithAccess(
+        const fetchedGrant = await grantService.getByIdWithAccessAndSubject(
           grant.id,
           v4()
         )
