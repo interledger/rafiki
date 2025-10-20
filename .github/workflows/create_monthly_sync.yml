@@ -1,9 +1,9 @@
-name: Create Weekly Sync discussion
+name: Create Monthly Sync discussion
 
-# Every Wednesday at 12AM UTC
+# First Wednesday of every month at 12AM UTC
 on:
     schedule:
-        - cron: "0 0 * * 3"
+        - cron: "0 0 1-7 * 3"
 
 jobs:
     create-discussion:
@@ -24,7 +24,7 @@ jobs:
                       query GetRepositoryInformation ($name: String!, $owner: String!) {
                         repository(name: $name, owner: $owner) {
                           id
-                          discussionCategory(slug: "weekly-sync") {
+                          discussionCategory(slug: "monthly-sync") {
                             id
                           }
                         }
@@ -32,7 +32,7 @@ jobs:
 
             - name: Get current date
               id: current-date
-              run: echo "date=$(date -d "next Tue" +'%d %B %Y')" >> $GITHUB_OUTPUT
+              run: echo "date=$(date +'%B %Y')" >> $GITHUB_OUTPUT
 
             - name: Create repository discussion
               id: create-repository-discussion
@@ -41,8 +41,8 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
                   variables: |
-                      body: "<b>Please add agenda items below and give your weekly update in a comment. Thank you!</b><br/><h2>Agenda</h2>"
-                      title: "Weekly Sync - ${{ steps.current-date.outputs.date }}"
+                      body: "<b>Please add agenda items below and give your monthly update in a comment. Thank you!</b><br/><h2>Agenda</h2>"
+                      title: "Monthly Sync - ${{ steps.current-date.outputs.date }}"
                       repositoryId: ${{ fromJSON(steps.get-repository-info.outputs.data).repository.id }}
                       categoryId: ${{ fromJSON(steps.get-repository-info.outputs.data).repository.discussionCategory.id }}
                   query: |
