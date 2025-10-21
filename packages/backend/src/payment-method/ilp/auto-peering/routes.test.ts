@@ -39,7 +39,7 @@ describe('Auto Peering Routes', (): void => {
         url: `/`,
         body: {
           staticIlpAddress: 'test.rafiki-money',
-          ilpConnectorUrl: 'http://peer.rafiki.money',
+          ilpConnectorUrl: 'http://peer.wallet.interledger-test.dev',
           asset: { code: asset.code, scale: asset.scale },
           httpToken: 'someHttpToken',
           maxPacketAmount: 1000,
@@ -66,7 +66,7 @@ describe('Auto Peering Routes', (): void => {
         url: `/`,
         body: {
           staticIlpAddress: 'test.rafiki-money',
-          ilpConnectorUrl: 'http://peer.rafiki.money',
+          ilpConnectorUrl: 'http://peer.wallet.interledger-test.dev',
           asset: { code: 'ABC', scale: 2 },
           httpToken: 'someHttpToken'
         }
