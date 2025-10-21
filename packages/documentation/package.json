@@ -21,6 +21,6 @@
     "spectaql": "^3.0.4",
     "starlight-fullview-mode": "^0.2.3",
     "starlight-links-validator": "^0.17.0",
-    "starlight-versions": "^0.5.5"
+    "starlight-versions": "^0.5.6"
   }
 }

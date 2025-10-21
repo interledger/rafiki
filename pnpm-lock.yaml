@@ -586,8 +586,8 @@ importers:
         specifier: ^0.17.0
         version: 0.17.0(@astrojs/starlight@0.34.4)
       starlight-versions:
-        specifier: ^0.5.5
-        version: 0.5.5(@astrojs/starlight@0.34.4)
+        specifier: ^0.5.6
+        version: 0.5.6(@astrojs/starlight@0.34.4)
 
   packages/frontend:
     dependencies:
@@ -20745,8 +20745,8 @@ packages:
       - supports-color
     dev: false
 
-  /starlight-versions@0.5.5(@astrojs/starlight@0.34.4):
-    resolution: {integrity: sha512-Mn+opWq9BqLTX3wFsMH/0yQ2L5aqzv2o1Ah6R/dcgWdy+mbDAt857xW/ABMW5NF5DsHes4tXvIHGu51xH9yH4Q==}
+  /starlight-versions@0.5.6(@astrojs/starlight@0.34.4):
+    resolution: {integrity: sha512-hpQ2okM+93MKSVtmIfcFyL27x33uw0L1Sm2SwlnBNC01MW33II9lLbSf6lQHt1ngtEwI8ZDbyzUFIflgMGKKjw==}
     engines: {node: '>=18'}
     peerDependencies:
       '@astrojs/starlight': '>=0.32.0'
