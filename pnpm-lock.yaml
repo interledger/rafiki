@@ -103,7 +103,7 @@ importers:
         specifier: ^9.0.8
         version: 9.0.8
       axios:
-        specifier: ^1.12.0
+        specifier: ^1.12.2
         version: 1.12.2(debug@4.3.2)
       class-variance-authority:
         specifier: ^0.7.1
@@ -197,7 +197,7 @@ importers:
         specifier: ^8.12.0
         version: 8.12.0
       axios:
-        specifier: ^1.12.0
+        specifier: ^1.12.2
         version: 1.12.2(debug@4.3.2)
       dotenv:
         specifier: ^16.4.7
@@ -393,7 +393,7 @@ importers:
         specifier: ^8.12.0
         version: 8.12.0
       axios:
-        specifier: ^1.12.0
+        specifier: ^1.12.2
         version: 1.12.2(debug@4.3.2)
       base64url:
         specifier: ^3.0.1
@@ -613,7 +613,7 @@ importers:
         specifier: ^2.16.4
         version: 2.16.4(typescript@5.8.3)
       axios:
-        specifier: ^1.12.0
+        specifier: ^1.12.2
         version: 1.12.2(debug@4.3.2)
       class-variance-authority:
         specifier: ^0.7.1
@@ -732,7 +732,7 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       axios:
-        specifier: ^1.12.0
+        specifier: ^1.12.2
         version: 1.12.2(debug@4.3.2)
       pino:
         specifier: ^8.19.0
@@ -11826,7 +11826,7 @@ packages:
       es-set-tostringtag: 2.1.0
       es-to-primitive: 1.2.1
       function.prototype.name: 1.1.6
-      get-intrinsic: 1.2.4
+      get-intrinsic: 1.2.6
       get-symbol-description: 1.0.2
       globalthis: 1.0.3
       gopd: 1.0.1
@@ -11968,7 +11968,7 @@ packages:
     resolution: {integrity: sha512-3T8uNMC3OQTHkFUsFq8r/BwAXLHvU/9O9mE0fBc/MY5iq/8H7ncvO947LmYA6ldWw9Uh8Yhf25zu6n7nML5QWQ==}
     engines: {node: '>= 0.4'}
     dependencies:
-      get-intrinsic: 1.2.4
+      get-intrinsic: 1.2.6
       has-tostringtag: 1.0.2
       hasown: 2.0.2
     dev: true
