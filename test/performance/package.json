@@ -27,7 +27,7 @@
     "babel-loader": "^9.2.1",
     "core-js": "^3.40.0",
     "json-canonicalize": "^1.0.6",
-    "webpack": "^5.97.1",
+    "webpack": "^5.102.1",
     "webpack-cli": "^6.0.1"
   }
 }
