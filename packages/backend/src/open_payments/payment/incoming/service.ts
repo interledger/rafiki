@@ -35,6 +35,7 @@ export interface CreateIncomingPaymentOptions {
   metadata?: Record<string, unknown>
   tenantId: string
   initiationReason: IncomingPaymentInitiationReason
+  senderWalletAddress?: string
 }
 
 export interface UpdateOptions {
@@ -146,7 +147,8 @@ async function createIncomingPayment(
     incomingAmount,
     metadata,
     tenantId,
-    initiationReason
+    initiationReason,
+    senderWalletAddress
   }: CreateIncomingPaymentOptions,
   trx?: Knex.Transaction
 ): Promise<IncomingPayment | IncomingPaymentError> {
@@ -192,7 +194,8 @@ async function createIncomingPayment(
     state: IncomingPaymentState.Pending,
     processAt: expiresAt,
     tenantId,
-    initiatedBy: initiationReason
+    initiatedBy: initiationReason,
+    senderWalletAddress
   })
 
   const asset = await deps.assetService.get(incomingPayment.assetId)
