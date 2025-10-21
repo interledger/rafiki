@@ -151,12 +151,12 @@ describe('Lifecycle', (): void => {
       })
   }
 
-  function mockPayErrorFactory() {
+  function mockPayErrorFactory(retryable: boolean = false) {
     return () =>
       jest.fn(async () => {
         throw new PaymentMethodHandlerError('Simulated failure', {
           description: 'Payment failed',
-          retryable: false
+          retryable
         })
       })
   }
@@ -276,6 +276,80 @@ describe('Lifecycle', (): void => {
 
         assert(endSpentAmounts)
         expect(endSpentAmounts).toEqual(startSpentAmounts)
+      })
+      test('Retryable failure should not adjust spent amounts', async (): Promise<void> => {
+        const grant = {
+          id: uuid(),
+          limits: {
+            debitAmount: {
+              value: 1000n,
+              assetCode: asset.code,
+              assetScale: asset.scale
+            }
+          }
+        }
+        const paymentAmount = 100n
+
+        // Create payment that will fail with a retryable error
+        const payment = await createAndFundGrantPayment(
+          paymentAmount,
+          grant,
+          mockPayErrorFactory(true)
+        )
+
+        const startSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ outgoingPaymentId: payment.id })
+          .first()
+
+        assert(startSpentAmounts)
+
+        expect(startSpentAmounts).toMatchObject({
+          grantId: grant.id,
+          outgoingPaymentId: payment.id,
+          receiveAmountScale: assetDetails.scale,
+          receiveAmountCode: assetDetails.code,
+          paymentReceiveAmountValue: paymentAmount,
+          intervalReceiveAmountValue: null,
+          grantTotalReceiveAmountValue: paymentAmount,
+          debitAmountScale: assetDetails.scale,
+          debitAmountCode: assetDetails.code,
+          paymentDebitAmountValue: paymentAmount,
+          intervalDebitAmountValue: null,
+          grantTotalDebitAmountValue: paymentAmount,
+          paymentState: OutgoingPaymentState.Funding,
+          intervalStart: null,
+          intervalEnd: null
+        })
+
+        jest.advanceTimersByTime(500)
+        const processedPaymentId = await outgoingPaymentService.processNext()
+        expect(processedPaymentId).toBe(payment.id)
+
+        const finalPayment = await outgoingPaymentService.get({
+          id: payment.id
+        })
+
+        // Payment should still be in Sending state (retryable, not failed)
+        // The latest spent amount record should be unchanged
+        expect(finalPayment?.state).toBe(OutgoingPaymentState.Sending)
+
+        const endSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ outgoingPaymentId: payment.id })
+          .orderBy('createdAt', 'desc')
+          .first()
+
+        assert(endSpentAmounts)
+        expect(endSpentAmounts).toEqual(startSpentAmounts)
+
+        const allSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        ).where({ outgoingPaymentId: payment.id })
+
+        expect(allSpentAmounts.length).toBe(1)
       })
     })
     describe('Inter-Interval', (): void => {
