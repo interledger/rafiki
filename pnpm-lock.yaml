@@ -811,7 +811,7 @@ importers:
         specifier: ^9.0.8
         version: 9.0.8
 
-  packages/point-of-sale:
+  packages/point-of-sale-service:
     dependencies:
       '@adonisjs/fold':
         specifier: ^8.2.0
