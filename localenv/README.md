@@ -79,6 +79,20 @@ Remove volumes and images
 pnpm localenv:compose down --volumes --rmi all
 ```
 
+### Note on git submodules
+
+Rafiki uses a git submodule for Open Payments specifications (`open-payments-specifications/`). Ensure submodules are initialized before building or running the Local Playground:
+
+```sh
+git submodule update --init --recursive
+```
+
+Alternatively, clone the repository with submodules in one step:
+
+```sh
+git clone --recurse-submodules https://github.com/interledger/rafiki.git
+```
+
 # Environment components
 
 ![Docker compose environment](../packages/documentation/public/img/localenv.png)

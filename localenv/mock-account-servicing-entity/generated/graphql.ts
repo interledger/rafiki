@@ -266,7 +266,7 @@ export type CreateOrUpdatePeerByUrlMutationResponse = {
 
 export type CreateOutgoingPaymentFromIncomingPaymentInput = {
   /** Amount to send (fixed send). */
-  debitAmount: AmountInput;
+  debitAmount?: InputMaybe<AmountInput>;
   /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Incoming payment URL to create the outgoing payment from. */

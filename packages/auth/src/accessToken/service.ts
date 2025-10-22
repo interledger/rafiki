@@ -93,7 +93,7 @@ async function introspect(
   if (access) {
     for (const accessItem of access) {
       const { access: grantAccess } = token.grant
-      const foundAccessItem = grantAccess.find((grantAccessItem) =>
+      const foundAccessItem = grantAccess?.find((grantAccessItem) =>
         compareRequestAndGrantAccessItems(
           accessItem,
           toOpenPaymentsAccess(grantAccessItem)

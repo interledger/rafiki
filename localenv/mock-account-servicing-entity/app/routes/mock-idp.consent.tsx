@@ -27,7 +27,8 @@ function AuthorizedView({
   interactId,
   nonce,
   authServerDomain,
-  amountType
+  amountType,
+  subjectId
 }: {
   thirdPartyName: string
   currencyDisplayCode: string
@@ -36,21 +37,30 @@ function AuthorizedView({
   nonce: string
   authServerDomain: string
   amountType: string
+  subjectId: string
 }) {
-  let message = `You gave ${thirdPartyName} permission to `
-  switch (amountType) {
-    case AmountType.RECEIVE:
-      message += `receive ${currencyDisplayCode} ${amount.toFixed(2)} in your account.`
-      break
-    case AmountType.DEBIT:
-      message += `send ${currencyDisplayCode} ${amount.toFixed(2)} out of your account.`
-      break
-    case AmountType.UNLIMITED:
-      message += 'have unlimited access to your account.'
-      break
-    default:
-      message = 'Type of authorization is missing'
+  let message = ''
+  if (amountType) {
+    message += `You gave ${thirdPartyName} permission to `
+    switch (amountType) {
+      case AmountType.RECEIVE:
+        message += `receive ${currencyDisplayCode} ${amount.toFixed(2)} in your account.`
+        break
+      case AmountType.DEBIT:
+        message += `send ${currencyDisplayCode} ${amount.toFixed(2)} out of your account.`
+        break
+      case AmountType.UNLIMITED:
+        message += 'have unlimited access to your account.'
+        break
+      default:
+        message = 'Type of authorization is missing'
+    }
   }
+  if (subjectId) {
+    message += message.length > 0 ? ' Also, you ' : 'You '
+    message += `confirmed ${thirdPartyName} your ownership of ${subjectId}.`
+  }
+
   return (
     <div className='bg-white rounded-md p-8 px-16'>
       <div className='row mt-2 flex flex-row items-center justify-around'>
@@ -132,7 +142,8 @@ export default function Consent() {
     amount:
       Number(queryParams.get('amountValue')) /
       Math.pow(10, Number(queryParams.get('amountScale'))),
-    amountType: queryParams.get('amountType')
+    amountType: queryParams.get('amountType'),
+    subjectId: queryParams.get('subjectId')
   })
 
   useEffect(() => {
@@ -187,6 +198,7 @@ export default function Consent() {
           nonce={ctx.nonce}
           authServerDomain={authServerDomain}
           amountType={ctx.amountType || ''}
+          subjectId={ctx.subjectId || ''}
         />
       ) : (
         <RejectedView

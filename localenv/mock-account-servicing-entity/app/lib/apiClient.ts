@@ -50,7 +50,12 @@ export class ApiClient {
     if (response.status === 200) {
       return {
         isFailure: false,
-        payload: response.data.access,
+        payload: {
+          access: response.data.access,
+          subject: response.data.subject,
+          grantId: response.data.grantId,
+          state: response.data.state
+        },
         contextUpdates: {
           grant: response.data
         }

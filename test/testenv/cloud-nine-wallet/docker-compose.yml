@@ -31,8 +31,6 @@ services:
       PRIVATE_KEY_FILE: /workspace/private-key.pem
       AUTH_SERVER_INTROSPECTION_URL: http://cloud-nine-wallet-test-auth:3107
       AUTH_SERVER_GRANT_URL: http://cloud-nine-wallet-test-auth:3106
-      AUTH_ADMIN_API_URL: 'http://cloud-nine-wallet-test-auth:3003/graphql'
-      AUTH_ADMIN_API_SECRET: 'test-secret'
       AUTH_SERVICE_API_URL: 'http://cloud-nine-wallet-auth:3111/'
       ILP_ADDRESS: test.cloud-nine-wallet-test
       ILP_CONNECTOR_URL: http://cloud-nine-wallet-test-backend:3102
@@ -42,8 +40,8 @@ services:
       REDIS_URL: redis://shared-redis:6379/0
       USE_TIGERBEETLE: false
       OPERATOR_TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
-      API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
-      API_SIGNATURE_VERSION: 1
+      ADMIN_API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      ADMIN_API_SIGNATURE_VERSION: 1
     volumes:
       - ../private-key.pem:/workspace/private-key.pem
     depends_on:
@@ -79,6 +77,7 @@ services:
       IDENTITY_SERVER_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
       COOKIE_KEY: 42397d1f371dd4b8b7d0308a689a57c882effd4ea909d792302542af47e2cd37
       OPERATOR_TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
+      ADMIN_API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
     depends_on:
       - shared-database
       - shared-redis

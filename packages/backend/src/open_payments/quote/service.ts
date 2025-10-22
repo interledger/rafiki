@@ -345,9 +345,9 @@ export async function resolveReceiver(
         debitAmount: options.debitAmount,
         incomingAmount: receiver.incomingAmount
       },
-      'Could not create quote. debitAmount or incomingAmount required.'
+      'Could not create quote. One of receiveAmount, debitAmount or incomingAmount (on the incoming payment) is required.'
     )
-    throw new QuoteError(QuoteErrorCode.InvalidReceiver)
+    throw new QuoteError(QuoteErrorCode.InvalidAmount)
   }
   return receiver
 }

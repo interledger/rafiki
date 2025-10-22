@@ -1252,7 +1252,7 @@ input CreateOutgoingPaymentFromIncomingPaymentInput {
   "Incoming payment URL to create the outgoing payment from."
   incomingPayment: String!
   "Amount to send (fixed send)."
-  debitAmount: AmountInput!
+  debitAmount: AmountInput
   "Additional metadata associated with the outgoing payment."
   metadata: JSONObject
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."

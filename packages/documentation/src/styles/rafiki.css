@@ -120,7 +120,7 @@
 
 @media screen and (min-width: 80rem) {
   .overflow-table {
-    max-width: 755px;
+    max-width: 100%;
   }
 }
 
@@ -146,4 +146,22 @@
 
 .overflow-table tbody tr:not(:last-of-type) td {
   border-block-end: 1px solid var(--sl-color-gray-6);
+}
+
+.main-frame .lg\:sl-flex .main-pane main {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - var(--sl-nav-height));
+}
+
+.main-frame .lg\:sl-flex .main-pane main .content-panel:last-of-type,
+.main-frame
+  .lg\:sl-flex
+  .main-pane
+  main
+  .content-panel:last-of-type
+  .sl-container {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
 }
