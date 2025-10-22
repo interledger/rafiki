@@ -30,6 +30,6 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     --recursive \
     --offline \
     --frozen-lockfile
-RUN pnpm --filter point-of-sale build:deps
+RUN pnpm --filter point-of-sale-service build:deps
 
-CMD pnpm --filter point-of-sale dev
+CMD pnpm --filter point-of-sale-service dev
