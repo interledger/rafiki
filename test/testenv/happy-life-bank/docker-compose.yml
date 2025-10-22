@@ -41,7 +41,7 @@ services:
       OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
       ADMIN_API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       ADMIN_API_SIGNATURE_VERSION: 1
-      POS_WEBHOOK_SERVICE_URL: http://happy-life-bank-test-point-of-sale:4105/webhook
+      POS_WEBHOOK_SERVICE_URL: http://happy-life-bank-test-point-of-sale-service:4105/webhook
       SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964= # webhook signature
       SIGNATURE_VERSION: 1
     volumes:
@@ -85,12 +85,12 @@ services:
       ADMIN_API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
     depends_on:
       - cloud-nine-wallet-test-auth
-  happy-life-bank-test-point-of-sale:
-    hostname: happy-life-bank-test-point-of-sale
-    image: rafiki-point-of-sale
+  happy-life-bank-test-point-of-sale-service:
+    hostname: happy-life-bank-test-point-of-sale-service
+    image: rafiki-point-of-sale-service
     build:
       context: ../../..
-      dockerfile: ./packages/point-of-sale/Dockerfile.prod
+      dockerfile: ./packages/point-of-sale-service/Dockerfile.prod
     restart: always
     networks:
       - rafiki-test

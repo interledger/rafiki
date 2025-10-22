@@ -47,7 +47,7 @@ addHost "cloud-nine-wallet-test-auth"
 addHost "cloud-nine-wallet-test-card-service"
 addHost "happy-life-bank-test-backend"
 addHost "happy-life-bank-test-auth"
-addHost "happy-life-bank-test-point-of-sale"
+addHost "happy-life-bank-test-point-of-sale-service"
 
 # idempotent start
 pnpm --filter integration testenv:compose down --volumes
