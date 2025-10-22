@@ -23,6 +23,7 @@ export const GET_WALLET_ADDRESS_BY_URL = gql`
             id
             url
             walletAddressId
+            senderWalletAddress
             client
             state
             incomingAmount {
