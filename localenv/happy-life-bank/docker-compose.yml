@@ -37,7 +37,7 @@ services:
       interval: 30s
       retries: 1
       timeout: 3s
-  happy-life-bank-point-of-sale: 
+  happy-life-bank-point-of-sale-service: 
     hostname: happy-life-bank-point-of-sale-service
     image: rafiki-point-of-sale-service
     build: 
@@ -155,7 +155,7 @@ services:
       KEY_ID: 53f2d913-e98a-40b9-b270-372d0547f23d
       OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
       CARD_SERVICE_URL: 'http://happy-life-bank-card-service:4007'
-      POS_WEBHOOK_SERVICE_URL: 'http://happy-life-bank-point-of-sale:4008/webhook'
+      POS_WEBHOOK_SERVICE_URL: 'http://happy-life-bank-point-of-sale-service:4008/webhook'
     depends_on:
       - cloud-nine-backend
     healthcheck:
