@@ -4,7 +4,7 @@ import {
   PaymentMethodService,
   StartQuoteOptions,
   PayOptions,
-  SettledAmounts
+  PayResult
 } from '../handler/service'
 import {
   ConvertError,
@@ -206,7 +206,7 @@ async function getQuote(
 async function pay(
   deps: ServiceDependencies,
   options: PayOptions
-): Promise<SettledAmounts> {
+): Promise<PayResult> {
   const { outgoingPayment, receiver, finalReceiveAmount, finalDebitAmount } =
     options
 

@@ -11,7 +11,7 @@ import { Receiver } from '../../receiver/model'
 import { TransactionOrKnex } from 'objection'
 import { ValueType } from '@opentelemetry/api'
 import { v4 } from 'uuid'
-import { SettledAmounts } from '../../../payment-method/handler/service'
+import { PayResult } from '../../../payment-method/handler/service'
 
 // "payment" is locked by the "deps.knex" transaction.
 export async function handleSending(
@@ -88,7 +88,7 @@ export async function handleSending(
     description: 'Time to complete a payment',
     callName: 'PaymentMethodHandlerService:pay'
   })
-  let settledAmounts: SettledAmounts
+  let payResult: PayResult
   if (receiver.isLocal) {
     if (
       !payment.quote.debitAmountMinusFees ||
@@ -102,14 +102,14 @@ export async function handleSending(
       )
       throw LifecycleError.BadState
     }
-    settledAmounts = await deps.paymentMethodHandlerService.pay('LOCAL', {
+    payResult = await deps.paymentMethodHandlerService.pay('LOCAL', {
       receiver,
       outgoingPayment: payment,
       finalDebitAmount: payment.quote.debitAmountMinusFees,
       finalReceiveAmount: maxReceiveAmount
     })
   } else {
-    settledAmounts = await deps.paymentMethodHandlerService.pay('ILP', {
+    payResult = await deps.paymentMethodHandlerService.pay('ILP', {
       receiver,
       outgoingPayment: payment,
       finalDebitAmount: maxDebitAmount,
@@ -118,7 +118,7 @@ export async function handleSending(
   }
   stopTimer()
 
-  await handleGrantSpentAmounts(deps, payment, settledAmounts)
+  await handleGrantSpentAmounts(deps, payment, payResult)
 
   await Promise.all([
     deps.telemetry.incrementCounter('transactions_total', 1, {
@@ -171,7 +171,7 @@ function getAdjustedAmounts(
 async function handleGrantSpentAmounts(
   deps: ServiceDependencies,
   payment: OutgoingPayment,
-  settledAmounts: SettledAmounts
+  finalAmounts: PayResult
 ) {
   if (!payment.grantId) return
 
@@ -194,12 +194,12 @@ async function handleGrantSpentAmounts(
 
   // Detect if partial payment
   // TODO: can partial payments be detected without this grant spent record?
-  // Like just from the payment vs. settledAmounts? If so we could remove the latestPaymentSpentAmounts query
+  // Like just from the payment vs. finalAmounts? If so we could remove the latestPaymentSpentAmounts query
   const reservedDebitAmount = latestPaymentSpentAmounts.paymentDebitAmountValue
   const reservedReceiveAmount =
     latestPaymentSpentAmounts.paymentReceiveAmountValue
-  const debitAmountDifference = reservedDebitAmount - settledAmounts.debit
-  const receiveAmountDifference = reservedReceiveAmount - settledAmounts.receive
+  const debitAmountDifference = reservedDebitAmount - finalAmounts.debit
+  const receiveAmountDifference = reservedReceiveAmount - finalAmounts.receive
 
   if (debitAmountDifference === 0n && receiveAmountDifference === 0n) return
 
@@ -283,10 +283,10 @@ async function handleGrantSpentAmounts(
     ...latestPaymentSpentAmounts,
     id: v4(),
     outgoingPaymentId: payment.id,
-    paymentDebitAmountValue: settledAmounts.debit,
+    paymentDebitAmountValue: finalAmounts.debit,
     intervalDebitAmountValue: newIntervalDebitAmountValue,
     grantTotalDebitAmountValue: newGrantTotalDebitAmountValue,
-    paymentReceiveAmountValue: settledAmounts.receive,
+    paymentReceiveAmountValue: finalAmounts.receive,
     intervalReceiveAmountValue: newIntervalReceiveAmountValue,
     grantTotalReceiveAmountValue: newGrantTotalReceiveAmountValue,
     intervalStart: latestPaymentSpentAmounts.intervalStart,
