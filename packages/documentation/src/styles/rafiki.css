@@ -120,7 +120,7 @@
 
 @media screen and (min-width: 80rem) {
   .overflow-table {
-    max-width: 755px;
+    max-width: 100%;
   }
 }
 
