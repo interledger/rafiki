@@ -38,11 +38,11 @@ services:
       retries: 1
       timeout: 3s
   happy-life-bank-point-of-sale: 
-    hostname: happy-life-bank-point-of-sale
-    image: rafiki-point-of-sale 
+    hostname: happy-life-bank-point-of-sale-service
+    image: rafiki-point-of-sale-service
     build: 
       context: ../.. 
-      dockerfile: ./packages/point-of-sale/Dockerfile.dev 
+      dockerfile: ./packages/point-of-sale-service/Dockerfile.dev 
     restart: always 
     networks: 
       - rafiki 
@@ -51,8 +51,8 @@ services:
       - '9233:9229'
     volumes: 
       - type: bind 
-        source: ../../packages/point-of-sale/src 
-        target: /home/rafiki/packages/point-of-sale/src 
+        source: ../../packages/point-of-sale-service/src 
+        target: /home/rafiki/packages/point-of-sale-service/src 
         read_only: true 
     environment: 
       NODE_ENV: ${NODE_ENV:-development} 
