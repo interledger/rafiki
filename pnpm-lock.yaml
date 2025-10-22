@@ -206,8 +206,8 @@ importers:
         specifier: ^16.11.0
         version: 16.11.0
       ioredis:
-        specifier: ^5.3.2
-        version: 5.3.2
+        specifier: ^5.8.2
+        version: 5.8.2
       json-canonicalize:
         specifier: ^1.0.6
         version: 1.0.6
@@ -423,8 +423,8 @@ importers:
         specifier: ^2.2.4-alpha.2
         version: 2.2.4-alpha.2
       ioredis:
-        specifier: ^5.3.2
-        version: 5.3.2
+        specifier: ^5.8.2
+        version: 5.8.2
       json-canonicalize:
         specifier: ^1.0.6
         version: 1.0.6
@@ -5347,8 +5347,8 @@ packages:
       - supports-color
     dev: false
 
-  /@ioredis/commands@1.2.0:
-    resolution: {integrity: sha512-Sx1pU8EM64o2BrqNpEO1CNLtKQwyhuXuqyfH7oGKCk+1a33d2r5saW8zNwm3j6BTExtjrv2BxTgzzkMwts6vGg==}
+  /@ioredis/commands@1.4.0:
+    resolution: {integrity: sha512-aFT2yemJJo+TZCmieA7qnYGQooOS7QfNmYrzGtsYd3g9j5iDP8AimYYAesf79ohjbLG12XxC4nG5DyEnC88AsQ==}
     dev: false
 
   /@isaacs/cliui@8.0.2:
@@ -14537,13 +14537,13 @@ packages:
       loose-envify: 1.4.0
     dev: true
 
-  /ioredis@5.3.2:
-    resolution: {integrity: sha512-1DKMMzlIHM02eBBVOFQ1+AolGjs6+xEcM4PDL7NqOS6szq7H9jSaEkIUH6/a5Hl241LzW6JLSiAbNvTQjUupUA==}
+  /ioredis@5.8.2:
+    resolution: {integrity: sha512-C6uC+kleiIMmjViJINWk80sOQw5lEzse1ZmvD+S/s8p8CWapftSaC+kocGTx6xrbrJ4WmYQGC08ffHLr6ToR6Q==}
     engines: {node: '>=12.22.0'}
     dependencies:
-      '@ioredis/commands': 1.2.0
+      '@ioredis/commands': 1.4.0
       cluster-key-slot: 1.1.0
-      debug: 4.3.4
+      debug: 4.4.1
       denque: 2.1.0
       lodash.defaults: 4.2.0
       lodash.isarguments: 3.1.0
