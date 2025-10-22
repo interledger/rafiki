@@ -17,9 +17,10 @@ assets:
     liquidityThreshold: 100000
 peeringAsset: 'USD'
 peers:
+  # In multihop mode, route via global-bank and make cloud-nine and cloud-ten unreachable
   - initialLiquidity: '100000000000000'
     peerUrl: http://cloud-nine-wallet-backend:3002
-    peerIlpAddress: test.cloud-nine-wallet
+    peerIlpAddress: test.unreachable.cloud-nine-wallet
     liquidityThreshold: 1000000
     maxPacketAmount: 10000
     tokens:
@@ -27,10 +28,10 @@ peers:
         - cloud-nine-to-happy
       outgoing: happy-to-cloud-nine
     routes:
-      - "test.cloud-nine-wallet"
+      - "test.unreachable.cloud-nine-wallet"
   - initialLiquidity: '100000000000000'
     peerUrl: http://cloud-nine-wallet-backend:3002
-    peerIlpAddress: test.cloud-nine-wallet.bc293b79-8609-47bd-b914-6438b470aff8
+    peerIlpAddress: test.unreachable.cloud-nine-wallet.bc293b79-8609-47bd-b914-6438b470aff8
     liquidityThreshold: 1000000
     maxPacketAmount: 10000
     tokens:
@@ -38,18 +39,17 @@ peers:
         - cloud-ten-to-happy
       outgoing: happy-to-cloud-ten
     routes:
-      - "test.cloud-nine-wallet.bc293b79-8609-47bd-b914-6438b470aff8"
-  # Address and routes for this peer MUST remain unchanged when NOT in multihop mode so that cloud-nine/cloud-ten packets aren't routed through global-bank
+      - "test.unreachable.cloud-nine-wallet.bc293b79-8609-47bd-b914-6438b470aff8"
   - initialLiquidity: '100000000000000'
     peerUrl: http://global-bank-backend:3002
-    peerIlpAddress: test.unreachable.global-bank
+    peerIlpAddress: test.global-bank
     liquidityThreshold: 1000000
     tokens:
       incoming:
         - global-to-happy
       outgoing: happy-to-global
-    routes: 
-      - "test.unreachable.global-bank"
+    routes:
+      - "test.cloud-nine-wallet"
 accounts:
   - name: 'Philip Fry'
     path: accounts/pfry

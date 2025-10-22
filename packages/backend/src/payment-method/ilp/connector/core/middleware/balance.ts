@@ -86,6 +86,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
       }
       const trxOrError =
         await services.accounting.createTransfer(transferOptions)
+
       if (isTransferError(trxOrError)) {
         logger.error(
           { transferOptions, transferError: trxOrError },
