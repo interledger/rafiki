@@ -39,6 +39,43 @@ export const getIncomingPayment: QueryResolvers<TenantedApolloContext>['incoming
     return paymentToGraphql(payment, config)
   }
 
+export const getIncomingPayments: QueryResolvers<TenantedApolloContext>['incomingPayments'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['IncomingPaymentConnection']> => {
+    const incomingPaymentService = await ctx.container.use(
+      'incomingPaymentService'
+    )
+    const { tenantId, filter, sortOrder, ...pagination } = args
+    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+    const getPageFn = (pagination_: Pagination, sortOrder_?: SortOrder) =>
+      incomingPaymentService.getPage({
+        tenantId: ctx.isOperator ? tenantId : ctx.tenant.id,
+        pagination: pagination_,
+        filter,
+        sortOrder: sortOrder_
+      })
+    const incomingPayments = await getPageFn(pagination, order)
+    const pageInfo = await getPageInfo({
+      getPage: (pagination_: Pagination, sortOrder_?: SortOrder) =>
+        getPageFn(pagination_, sortOrder_),
+      page: incomingPayments,
+      sortOrder: order
+    })
+
+    const config = await ctx.container.use('config')
+
+    return {
+      pageInfo,
+      edges: incomingPayments.map((incomingPayment: IncomingPayment) => ({
+        cursor: incomingPayment.id,
+        node: paymentToGraphql(incomingPayment, config)
+      }))
+    }
+  }
+
 export const getWalletAddressIncomingPayments: WalletAddressResolvers<TenantedApolloContext>['incomingPayments'] =
   async (
     parent,

@@ -20,6 +20,8 @@ import { IAppConfig } from '../../../config/app'
 import { poll } from '../../../shared/utils'
 import { AssetService } from '../../../asset/service'
 import { finalizeWebhookRecipients } from '../../../webhook/service'
+import { Pagination, SortOrder } from '../../../shared/baseModel'
+import { IncomingPaymentFilter } from '../../../graphql/generated/graphql'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -43,8 +45,16 @@ export interface UpdateOptions {
   tenantId: string
 }
 
+interface GetPageOptions {
+  pagination?: Pagination
+  filter?: IncomingPaymentFilter
+  sortOrder?: SortOrder
+  tenantId?: string
+}
+
 export interface IncomingPaymentService
   extends WalletAddressSubresourceService<IncomingPayment> {
+  getPage(options?: GetPageOptions): Promise<IncomingPayment[]>
   create(
     options: CreateIncomingPaymentOptions,
     trx?: Knex.Transaction
@@ -93,7 +103,8 @@ export async function createIncomingPaymentService(
     complete: (id, tenantId) => completeIncomingPayment(deps, id, tenantId),
     getWalletAddressPage: (options) => getWalletAddressPage(deps, options),
     processNext: () => processNextIncomingPayment(deps),
-    update: (options) => updateIncomingPayment(deps, options)
+    update: (options) => updateIncomingPayment(deps, options),
+    getPage: (options) => getPage(deps, options)
   }
 }
 
@@ -567,4 +578,69 @@ async function addReceivedAmount(
   }
 
   return payment
+}
+
+async function getPage(
+  deps: ServiceDependencies,
+  options?: GetPageOptions
+): Promise<IncomingPayment[]> {
+  const { filter, pagination, sortOrder, tenantId } = options ?? {}
+  const query = IncomingPayment.query(deps.knex)
+
+  if (tenantId) {
+    query.where('tenantId', tenantId)
+  }
+
+  if (filter?.initiatedBy?.in && filter.initiatedBy.in.length) {
+    query.whereIn('initiatedBy', filter.initiatedBy.in)
+  }
+
+  const page = await query.getPage(pagination, sortOrder)
+  for (const payment of page) {
+    payment.walletAddress = await deps.walletAddressService.get(
+      payment.walletAddressId
+    )
+    const asset = await deps.assetService.get(payment.assetId)
+    if (asset) payment.asset = asset
+  }
+
+  const amounts = await deps.accountingService.getAccountsTotalReceived(
+    page.map((payment: IncomingPayment) => payment.id)
+  )
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+  return page.map((payment: IncomingPayment, i: number) => {
+    payment.receivedAmount = {
+      value: validateReceiveAmount(deps, payment, amounts[i]),
+      assetCode: payment.asset.code,
+      assetScale: payment.asset.scale
+    }
+    return payment
+  })
+}
+
+function validateReceiveAmount(
+  deps: ServiceDependencies,
+  payment: IncomingPayment,
+  sentAmount: bigint | undefined
+): bigint {
+  if (sentAmount !== undefined) {
+    return sentAmount
+  }
+
+  if (
+    [IncomingPaymentState.Pending, IncomingPaymentState.Expired].includes(
+      payment.state
+    )
+  ) {
+    return BigInt(0)
+  }
+
+  const errorMessage =
+    'Could not get amount received for payment. There was a problem getting the associated liquidity account.'
+
+  deps.logger.error(
+    { outgoingPayment: payment.id, state: payment.state },
+    errorMessage
+  )
+  throw new Error(errorMessage)
 }

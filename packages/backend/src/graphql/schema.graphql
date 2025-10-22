@@ -111,6 +111,24 @@ type Query {
     id: String!
   ): IncomingPayment
 
+  "Fetch a paginated list of incoming payments."
+  incomingPayments(
+    "Forward pagination: Cursor (incoming payment ID) to start retrieving incoming payments after this point."
+    after: String
+    "Backward pagination: Cursor (outgoing payment ID) to start retrieving incoming payments before this point."
+    before: String
+    "Forward pagination: Limit the result to the first **n** incoming payments after the `after` cursor."
+    first: Int
+    "Backward pagination: Limit the result to the last **n** incoming payments before the `before` cursor."
+    last: Int
+    "Specify the sort order of incoming payments based on their creation date, either ascending or descending."
+    sortOrder: SortOrder
+    "Filter incoming payments based on specific criteria such as initiation reason."
+    filter: IncomingPaymentFilter
+    "Unique identifier of the tenant associated with the incoming payment. Optional, if not provided, the tenantId will be obtained from the signature."
+    tenantId: String
+  ): IncomingPaymentConnection!
+
   "Fetch a paginated list of webhook events."
   webhookEvents(
     "Forward pagination: Cursor (webhook event ID) to start retrieving webhook events after this point."
@@ -919,6 +937,11 @@ type IncomingPaymentEdge {
   node: IncomingPayment!
   "A cursor for paginating through the incoming payments."
   cursor: String!
+}
+
+input IncomingPaymentFilter {
+  "Filter for incoming payments based on the initiation reason."
+  initiatedBy: FilterString
 }
 
 interface BasePayment {
