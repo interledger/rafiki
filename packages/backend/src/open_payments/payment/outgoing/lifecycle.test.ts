@@ -514,7 +514,7 @@ describe('Lifecycle', (): void => {
             paymentDebitAmountValue: settledAmount,
             intervalDebitAmountValue: settledAmount,
             grantTotalDebitAmountValue: settledAmount,
-            paymentState: OutgoingPaymentState.Funding,
+            paymentState: OutgoingPaymentState.Completed,
             intervalStart: interval.start.toJSDate(),
             intervalEnd: interval.end.toJSDate()
           })
@@ -791,7 +791,7 @@ describe('Lifecycle', (): void => {
               paymentAmount + secondPaymentSettledAmount,
             grantTotalDebitAmountValue:
               paymentAmount + secondPaymentSettledAmount,
-            paymentState: OutgoingPaymentState.Funding,
+            paymentState: OutgoingPaymentState.Completed,
             intervalStart: interval.start.toJSDate(),
             intervalEnd: interval.end.toJSDate()
           })
@@ -1085,7 +1085,7 @@ describe('Lifecycle', (): void => {
                 secondPaymentAmount + firstPaymentSettledAmount,
               grantTotalDebitAmountValue:
                 secondPaymentAmount + firstPaymentSettledAmount,
-              paymentState: OutgoingPaymentState.Funding,
+              paymentState: OutgoingPaymentState.Completed,
               intervalStart: interval.start.toJSDate(),
               intervalEnd: interval.end.toJSDate()
             })
@@ -1134,7 +1134,7 @@ describe('Lifecycle', (): void => {
                 firstPaymentSettledAmount + secondPaymentSettledAmount,
               grantTotalDebitAmountValue:
                 firstPaymentSettledAmount + secondPaymentSettledAmount,
-              paymentState: OutgoingPaymentState.Funding,
+              paymentState: OutgoingPaymentState.Completed,
               intervalStart: interval.start.toJSDate(),
               intervalEnd: interval.end.toJSDate()
             })
@@ -1280,7 +1280,7 @@ describe('Lifecycle', (): void => {
                 secondPaymentAmount + firstPaymentSettledAmount,
               grantTotalDebitAmountValue:
                 secondPaymentAmount + firstPaymentSettledAmount,
-              paymentState: OutgoingPaymentState.Funding,
+              paymentState: OutgoingPaymentState.Completed,
               intervalStart: interval.start.toJSDate(),
               intervalEnd: interval.end.toJSDate()
             })
@@ -1386,7 +1386,7 @@ describe('Lifecycle', (): void => {
                 firstPaymentSettledAmount +
                 thirdPaymentAmount +
                 secondPaymentSettledAmount,
-              paymentState: OutgoingPaymentState.Funding,
+              paymentState: OutgoingPaymentState.Completed,
               intervalStart: interval.start.toJSDate(),
               intervalEnd: interval.end.toJSDate()
             })

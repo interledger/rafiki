@@ -291,7 +291,8 @@ async function handleGrantSpentAmounts(
     grantTotalReceiveAmountValue: newGrantTotalReceiveAmountValue,
     intervalStart: latestPaymentSpentAmounts.intervalStart,
     intervalEnd: latestPaymentSpentAmounts.intervalEnd,
-    createdAt: new Date()
+    createdAt: new Date(),
+    paymentState: OutgoingPaymentState.Completed
   })
 }
 
