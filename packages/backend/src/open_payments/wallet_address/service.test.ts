@@ -108,7 +108,7 @@ describe('Open Payments Wallet Address Service', (): void => {
       isOperator | tenantSettingUrl
       ${false}   | ${undefined}
       ${true}    | ${undefined}
-      ${true}    | ${'https://alice.me'}
+      ${true}    | ${`https://alice.me/${uuid()}`}
     `(
       'operator - $isOperator with tenantSettingUrl - $tenantSettingUrl',
       async ({ isOperator, tenantSettingUrl }): Promise<void> => {

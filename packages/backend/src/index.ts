@@ -7,23 +7,12 @@ import { createClient } from 'tigerbeetle-node'
 import { createClient as createIntrospectionClient } from 'token-introspection'
 import net from 'net'
 import dns from 'dns'
-import { createHmac } from 'crypto'
 
 import { createAuthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
 import { createOpenAPI } from '@interledger/openapi'
 import path from 'path'
 import { StreamServer } from '@interledger/stream-receiver'
 import axios from 'axios'
-import {
-  ApolloClient,
-  ApolloLink,
-  createHttpLink,
-  InMemoryCache
-} from '@apollo/client'
-import { onError } from '@apollo/client/link/error'
-import { setContext } from '@apollo/client/link/context'
-import { canonicalize } from 'json-canonicalize'
-import { print } from 'graphql/language/printer'
 
 import { createAccountingService as createPsqlAccountingService } from './accounting/psql/service'
 import { createAccountingService as createTigerbeetleAccountingService } from './accounting/tigerbeetle/service'
@@ -148,78 +137,6 @@ export function initIocContainer(
       serverSecret: config.streamSecret,
       serverAddress: config.ilpAddress
     })
-  })
-
-  container.singleton('apolloClient', async (deps) => {
-    const [logger, config] = await Promise.all([
-      deps.use('logger'),
-      deps.use('config')
-    ])
-
-    const httpLink = createHttpLink({
-      uri: config.authAdminApiUrl
-    })
-
-    const errorLink = onError(({ graphQLErrors }) => {
-      if (graphQLErrors) {
-        logger.error(graphQLErrors)
-        graphQLErrors.map(({ extensions }) => {
-          if (extensions && extensions.code === 'UNAUTHENTICATED') {
-            logger.error('UNAUTHENTICATED')
-          }
-
-          if (extensions && extensions.code === 'FORBIDDEN') {
-            logger.error('FORBIDDEN')
-          }
-        })
-      }
-    })
-
-    const authLink = setContext((request, { headers }) => {
-      if (!config.authAdminApiSecret || !config.authAdminApiSignatureVersion)
-        return { headers }
-      const timestamp = Date.now()
-      const version = config.authAdminApiSignatureVersion
-
-      const { query, variables, operationName } = request
-      const formattedRequest = {
-        variables,
-        operationName,
-        query: print(query)
-      }
-
-      const payload = `${timestamp}.${canonicalize(formattedRequest)}`
-      const hmac = createHmac('sha256', config.authAdminApiSecret)
-      hmac.update(payload)
-      const digest = hmac.digest('hex')
-
-      return {
-        headers: {
-          ...headers,
-          signature: `t=${timestamp}, v${version}=${digest}`
-        }
-      }
-    })
-
-    const link = ApolloLink.from([errorLink, authLink, httpLink])
-
-    const client = new ApolloClient({
-      cache: new InMemoryCache({}),
-      link: link,
-      defaultOptions: {
-        query: {
-          fetchPolicy: 'no-cache'
-        },
-        mutate: {
-          fetchPolicy: 'no-cache'
-        },
-        watchQuery: {
-          fetchPolicy: 'no-cache'
-        }
-      }
-    })
-
-    return client
   })
 
   container.singleton('tenantCache', async () => {

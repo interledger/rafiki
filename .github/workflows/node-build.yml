@@ -293,7 +293,7 @@ jobs:
             const truncatedLogs = logContent.length > maxLogSize ? `...(truncated)...\n${logContent.slice(-maxLogSize)}` : logContent;
 
             const commentBody = `
-            ### 🚀 Performance Test Results  
+            ### 🚀 Performance Test Results
 
             ${summaryContent}
 
@@ -353,7 +353,7 @@ jobs:
         mock-account-servicing-entity,
         graphql,
         codeql-analyze,
-        integration-test,
+        integration-test
       ]
     steps:
       - uses: actions/checkout@v4
