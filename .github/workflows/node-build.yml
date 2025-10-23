@@ -345,7 +345,10 @@ jobs:
             PUSH_DOCKER_IMAGE=true
             NEW_VERSION="nightly"
           elif [ "${{ github.event_name == 'workflow_dispatch' }}" = true ]; then
-            NEW_VERSION="manual"
+            NEW_VERSION="$GITHUB_REF_NAME"
+            if [[ "${{ github.ref_name }}" != "main" ]]; then
+              PUSH_DOCKER_IMAGE="true"
+            fi
           elif [ "${{ startsWith(github.ref_name, 'release/v')}}" = true ]; then
             PUSH_DOCKER_IMAGE=true
             SHOULD_PUSH_TAG=true
