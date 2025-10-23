@@ -163,17 +163,20 @@ describe('Payment Routes', () => {
         edges: [
           {
             node: {
+              __typename: 'IncomingPayment' as const,
               id: v4(),
               url: faker.internet.url(),
               walletAddressId,
               client: faker.internet.url(),
               state: IncomingPaymentState.Pending,
               incomingAmount: {
+                __typename: 'Amount' as const,
                 value: BigInt(500),
                 assetCode: 'USD',
                 assetScale: 2
               },
               receivedAmount: {
+                __typename: 'Amount' as const,
                 value: BigInt(500),
                 assetCode: 'USD',
                 assetScale: 2
@@ -200,7 +203,27 @@ describe('Payment Routes', () => {
       await paymentRoutes.getPayments(ctx)
       expect(ctx.status).toEqual(200)
       expect(ctx.body).toEqual({
-        incomingPayments: mockServiceResponse
+        incomingPayments: {
+          // Ensure that typename is sanitized
+          result: mockServiceResponse.edges.map((edge) => {
+            const {
+              __typename: _nodeTypename,
+              receivedAmount,
+              incomingAmount,
+              ...restOfNode
+            } = edge.node
+            const { __typename: _receivedTypename, ...restOfReceived } =
+              receivedAmount
+            const { __typename: _incomingTypename, ...restOfIncoming } =
+              incomingAmount
+            return {
+              ...restOfNode,
+              incomingAmount: restOfIncoming,
+              receivedAmount: restOfReceived
+            }
+          }),
+          pagination: mockServiceResponse.pageInfo
+        }
       })
     })
 
@@ -215,8 +238,8 @@ describe('Payment Routes', () => {
       expect(ctx.status).toEqual(200)
       expect(ctx.body).toMatchObject({
         incomingPayments: {
-          edges: [],
-          pageInfo: {
+          result: [],
+          pagination: {
             hasNextPage: false,
             hasPreviousPage: false
           }
