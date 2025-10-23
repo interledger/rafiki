@@ -5,12 +5,13 @@ import {
   errorToCode,
   errorToMessage
 } from '../../tenants/settings/errors'
-import { TenantSetting } from '../../tenants/settings/model'
+import { TenantSetting, TenantSettingKeys } from '../../tenants/settings/model'
 import {
   ResolversTypes,
   TenantResolvers,
   TenantSetting as SchemaTenantSetting,
-  MutationResolvers
+  MutationResolvers,
+  TenantSettingKey as SchemaTenantSettingKey
 } from '../generated/graphql'
 
 export const getTenantSettings: TenantResolvers<TenantedApolloContext>['settings'] =
@@ -56,10 +57,23 @@ export const createTenantSettings: MutationResolvers<TenantedApolloContext>['cre
     }
   }
 
+const tenantSettingNameToGraphQl: { [key: string]: SchemaTenantSettingKey } = {
+  [TenantSettingKeys.EXCHANGE_RATES_URL.name]:
+    SchemaTenantSettingKey.ExchangeRatesUrl,
+  [TenantSettingKeys.WEBHOOK_URL.name]: SchemaTenantSettingKey.WebhookUrl,
+  [TenantSettingKeys.WEBHOOK_TIMEOUT.name]:
+    SchemaTenantSettingKey.WebhookTimeout,
+  [TenantSettingKeys.WEBHOOK_MAX_RETRY.name]:
+    SchemaTenantSettingKey.WebhookMaxRetry,
+  [TenantSettingKeys.WALLET_ADDRESS_URL.name]:
+    SchemaTenantSettingKey.WalletAddressUrl,
+  [TenantSettingKeys.ILP_ADDRESS.name]: SchemaTenantSettingKey.IlpAddress
+}
+
 const tenantSettingToGraphql = (
   tenantSetting: TenantSetting
 ): SchemaTenantSetting => ({
-  key: tenantSetting.key,
+  key: tenantSettingNameToGraphQl[tenantSetting.key],
   value: tenantSetting.value
 })
 

@@ -1,5 +1,6 @@
 interface Tenant {
   id: string
+  apiSecret: string
   idpConsentUrl?: string
   idpSecret?: string
 }
@@ -68,8 +69,6 @@ export class AuthServiceClient {
   }
 
   public tenant = {
-    get: (id: string) =>
-      this.request<Tenant>(`/tenant/${id}`, { method: 'GET' }),
     create: (data: Tenant) =>
       this.request('/tenant', {
         method: 'POST',

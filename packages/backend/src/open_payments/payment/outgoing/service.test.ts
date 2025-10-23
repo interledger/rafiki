@@ -910,8 +910,7 @@ describe('OutgoingPaymentService', (): void => {
               receiveAmount: quote.receiveAmount,
               metadata: options.metadata,
               state: OutgoingPaymentState.Funding,
-              asset: quote.asset,
-              peerId: outgoingPeer ? peer.id : null
+              asset: quote.asset
             })
 
             await expect(
@@ -923,9 +922,6 @@ describe('OutgoingPaymentService', (): void => {
             const expectedPaymentData: Partial<PaymentData> = {
               id: payment.id,
               client: payment.client
-            }
-            if (outgoingPeer) {
-              expectedPaymentData.peerId = peer.id
             }
             await expect(
               OutgoingPaymentEvent.query(knex).where({

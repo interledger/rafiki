@@ -5,7 +5,7 @@ title: Exchange rates
 import { Badge } from '@astrojs/starlight/components'
 import { LinkOut } from '@interledger/docs-design-system'
 
-If you plan to support cross-currency transactions, you must specify from where your Rafiki instance will fetch current exchange rates.
+If you plan to support cross-currency transactions, you must specify where your Rafiki instance fetches exchange rates. Tenants may host their own rates endpoint, but if one isn’t configured, Rafiki falls back to the default `EXCHANGE_RATES_URL`.
 
 A rate probe precedes every Interledger payment. The probe provides a quote that estimates the full cost of transferring value over the network. For a rate probe involving a cross-currency transaction to be successful, Rafiki needs to know the exchange rates for each currency that makes up the transaction.
 
@@ -13,7 +13,7 @@ Often, it's the receiving ASE that provides the exchange rates for each ILP pack
 
 ## Specify your exchange rates endpoint
 
-Rafiki fetches exchange rates from your exchange rates endpoint. Set your endpoint via the `backend` service's `EXCHAGE_RATES_URL` variable. An <LinkOut href="https://github.com/interledger/rafiki/blob/main/packages/backend/src/openapi/specs/exchange-rates.yaml">OpenAPI specification</LinkOut> for the endpoint is available.
+Operators configure a tenant-specific exchange rates endpoint using the Backend Admin API. If a tenant doesn’t have one configured, Rafiki uses the default `EXCHANGE_RATES_URL` environment variable. An <LinkOut href="https://github.com/interledger/rafiki/blob/main/packages/backend/src/openapi/specs/exchange-rates.yaml">OpenAPI specification</LinkOut> for the endpoint is available.
 
 ```bash title='Example'
 EXCHANGE_RATES_URL: http://cloud-nine-wallet/rates
@@ -88,10 +88,10 @@ export function loader({ request }: LoaderFunctionArgs) {
 
 <div class="overflow-table">
 
-| Variable                  | Type      | Description                                                                                     | Required |
-| ------------------------- | --------- | ----------------------------------------------------------------------------------------------- | -------- |
-| `EXCHANGE_RATES_URL`      | `backend` | Your exchange rates endpoint                                                                    | Y        |
-| `EXCHANGE_RATES_LIFETIME` | `backend` | The amount of time Rafiki caches exchange rates, in ms                                          | Y        |
-| `SLIPPAGE`                | `backend` | The variance allowed between a quote and the actual amount required when a payment is initiated | Y        |
+| Variable                  | Type      | Description                                                                                                 | Required |
+| ------------------------- | --------- | ----------------------------------------------------------------------------------------------------------- | -------- |
+| `EXCHANGE_RATES_URL`      | `backend` | The default exchange rates endpoint. This URL is used if a tenant-specific rates endpoint isn't configured. | Y        |
+| `EXCHANGE_RATES_LIFETIME` | `backend` | The amount of time Rafiki caches exchange rates, in ms                                                      | Y        |
+| `SLIPPAGE`                | `backend` | The variance allowed between a quote and the actual amount required when a payment is initiated             | Y        |
 
 </div>

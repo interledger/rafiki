@@ -1,27 +1,30 @@
+import assert from 'assert'
 import { faker } from '@faker-js/faker'
 import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
-import { Config } from '../config/app'
+import { Config, IAppConfig } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { TenantService } from './service'
 import { Tenant } from './model'
+import { withConfigOverride } from '../tests/helpers'
 
 describe('Tenant Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let tenantService: TenantService
 
-  beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
-    appContainer = await createTestApp(deps)
+  const dbSchema = 'tenant_service_test_schema'
 
+  beforeAll(async (): Promise<void> => {
+    deps = initIocContainer({ ...Config, dbSchema })
+    appContainer = await createTestApp(deps)
     tenantService = await deps.use('tenantService')
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -30,6 +33,7 @@ describe('Tenant Service', (): void => {
 
   const createTenantData = () => ({
     id: faker.string.uuid(),
+    apiSecret: faker.string.hexadecimal(),
     idpConsentUrl: faker.internet.url(),
     idpSecret: faker.string.alphanumeric(32)
   })
@@ -41,6 +45,7 @@ describe('Tenant Service', (): void => {
 
       expect(tenant).toEqual({
         id: tenantData.id,
+        apiSecret: tenantData.apiSecret,
         idpConsentUrl: tenantData.idpConsentUrl,
         idpSecret: tenantData.idpSecret,
         createdAt: expect.any(Date),
@@ -65,6 +70,7 @@ describe('Tenant Service', (): void => {
       const tenant = await tenantService.get(created.id)
       expect(tenant).toEqual({
         id: tenantData.id,
+        apiSecret: tenantData.apiSecret,
         idpConsentUrl: tenantData.idpConsentUrl,
         idpSecret: tenantData.idpSecret,
         createdAt: expect.any(Date),
@@ -94,6 +100,7 @@ describe('Tenant Service', (): void => {
       const created = await tenantService.create(tenantData)
 
       const updateData = {
+        apiSecret: faker.string.hexadecimal(),
         idpConsentUrl: faker.internet.url(),
         idpSecret: faker.string.alphanumeric(32)
       }
@@ -119,6 +126,7 @@ describe('Tenant Service', (): void => {
       const updated = await tenantService.update(created.id, updateData)
       expect(updated).toEqual({
         id: created.id,
+        apiSecret: tenantData.apiSecret,
         idpConsentUrl: updateData.idpConsentUrl,
         idpSecret: created.idpSecret,
         createdAt: expect.any(Date),
@@ -178,4 +186,85 @@ describe('Tenant Service', (): void => {
       expect(secondDelete).toBe(false)
     })
   })
+})
+
+describe('updateOperatorApiSecretFromConfig', () => {
+  let deps: IocContract<AppServices>
+  let config: IAppConfig
+  let appContainer: TestContainer
+  let tenantService: TenantService
+  let updateSpyWasCalled: boolean
+  const dbSchema = 'tenant_service_test_schema2'
+
+  beforeAll(async (): Promise<void> => {
+    deps = initIocContainer({
+      ...Config,
+      dbSchema
+    })
+    config = await deps.use('config')
+    tenantService = await deps.use('tenantService')
+
+    const updateOperatorSecretSpy = jest.spyOn(
+      tenantService,
+      'updateOperatorApiSecretFromConfig'
+    )
+    appContainer = await createTestApp(deps)
+    updateSpyWasCalled = updateOperatorSecretSpy.mock.calls.length > 0
+  })
+
+  afterEach(async (): Promise<void> => {
+    await truncateTables(deps)
+  })
+
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+  })
+
+  test('called on application start', async (): Promise<void> => {
+    expect(updateSpyWasCalled).toBe(true)
+  })
+
+  test('updates secret if changed', async (): Promise<void> => {
+    // Setup operator with different secret than the config.
+    // As-if the api secret was set from a different config value originally.
+    const initialApiSecret = '123'
+    assert(initialApiSecret !== config.adminApiSecret)
+    const tenant = await Tenant.query().patchAndFetchById(
+      config.operatorTenantId,
+      { apiSecret: initialApiSecret }
+    )
+    assert(tenant)
+    expect(tenant.apiSecret).toBe(initialApiSecret)
+
+    await tenantService.updateOperatorApiSecretFromConfig()
+
+    const updated = await Tenant.query().findById(tenant.id)
+    assert(updated)
+    expect(updated.apiSecret).toBe(config.adminApiSecret)
+  })
+
+  test('does not update if secret hasnt changed', async (): Promise<void> => {
+    const tenant = await Tenant.query().findById(config.operatorTenantId)
+    assert(tenant)
+    assert(tenant.apiSecret === config.adminApiSecret)
+
+    await tenantService.updateOperatorApiSecretFromConfig()
+
+    const updated = await Tenant.query().findById(tenant.id)
+    assert(updated)
+    expect(updated.updatedAt).toStrictEqual(tenant.updatedAt)
+  })
+
+  test(
+    'throws error if operator tenant not found',
+    withConfigOverride(
+      () => config,
+      { operatorTenantId: crypto.randomUUID() },
+      async (): Promise<void> => {
+        await expect(
+          tenantService.updateOperatorApiSecretFromConfig()
+        ).rejects.toThrow('')
+      }
+    )
+  )
 })

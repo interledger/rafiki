@@ -2,7 +2,6 @@ import crypto from 'crypto'
 import nock from 'nock'
 import { faker } from '@faker-js/faker'
 import { v4 } from 'uuid'
-import { Knex } from 'knex'
 import {
   JWK,
   generateTestKeys,
@@ -36,6 +35,7 @@ import { ContinueContext, CreateContext } from '../grant/routes'
 import { Interaction, InteractionState } from '../interaction/model'
 import { generateNonce } from '../shared/utils'
 import { GNAPErrorCode } from '../shared/gnapErrors'
+import { TransactionOrKnex } from 'objection'
 import { Tenant } from '../tenant/model'
 import { generateTenant } from '../tests/tenant'
 
@@ -62,13 +62,17 @@ describe('Signature Service', (): void => {
     let grant: Grant
     let interaction: Interaction
     let token: AccessToken
-    let trx: Knex.Transaction
+    let trx: TransactionOrKnex
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let next: () => Promise<any>
     let managementId: string
     let tokenManagementUrl: string
     let accessTokenService: AccessTokenService
     let tenant: Tenant
+
+    beforeAll(async (): Promise<void> => {
+      trx = appContainer.knex
+    })
 
     const generateBaseGrant = (overrides?: Partial<Grant>) => ({
       state: GrantState.Pending,
@@ -141,7 +145,7 @@ describe('Signature Service', (): void => {
 
     afterEach(async (): Promise<void> => {
       jest.useRealTimers()
-      await truncateTables(appContainer.knex)
+      await truncateTables(deps)
     })
 
     test('Validate grant initiation request with middleware', async (): Promise<void> => {

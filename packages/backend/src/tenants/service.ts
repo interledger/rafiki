@@ -114,11 +114,15 @@ async function createTenant(
 
     await deps.authServiceClient.tenant.create({
       id: tenant.id,
+      apiSecret,
       idpSecret,
       idpConsentUrl
     })
 
-    const createInitialTenantSettingsOptions = {
+    const createInitialTenantSettingsOptions: {
+      tenantId: string
+      setting: ReturnType<typeof TenantSetting.default>
+    } = {
       tenantId: tenant.id,
       setting: TenantSetting.default()
     }
@@ -130,10 +134,24 @@ async function createTenant(
 
     createInitialTenantSettingsOptions.setting.push(defaultIlpAddressSetting)
 
-    if (settings) {
+    if (
+      settings &&
+      !settings.find(
+        (setting) => setting.key === TenantSettingKeys.ILP_ADDRESS.name
+      )
+    ) {
       createInitialTenantSettingsOptions.setting =
         createInitialTenantSettingsOptions.setting.concat(settings)
+    } else if (settings) {
+      createInitialTenantSettingsOptions.setting = settings
     }
+
+    deps.logger.info(
+      {
+        createInitialTenantSettingsOptions
+      },
+      'initial options'
+    )
 
     await deps.tenantSettingService.create(createInitialTenantSettingsOptions, {
       trx
@@ -179,8 +197,9 @@ async function updateTenant(
       .whereNull('deletedAt')
       .throwIfNotFound()
 
-    if (idpConsentUrl || idpSecret) {
+    if (idpConsentUrl || idpSecret || apiSecret) {
       await deps.authServiceClient.tenant.update(id, {
+        apiSecret,
         idpConsentUrl,
         idpSecret
       })

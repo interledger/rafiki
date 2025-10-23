@@ -9,7 +9,11 @@ import { truncateTables } from '../../tests/tableManager'
 import { Tenant } from '../model'
 import { TenantService } from '../service'
 import { faker } from '@faker-js/faker'
-import { exchangeRatesSetting, randomSetting } from '../../tests/tenantSettings'
+import {
+  exchangeRatesSetting,
+  randomSetting,
+  createTenantSettings
+} from '../../tests/tenantSettings'
 import { TenantSetting, TenantSettingKeys } from './model'
 import {
   CreateOptions,
@@ -282,6 +286,28 @@ describe('TenantSetting Service', (): void => {
         tenantSettingService.create(invalidIlpAddressSetting)
       ).resolves.toEqual(TenantSettingError.InvalidSetting)
     })
+
+    test('cannot create setting with a non-unique wallet address url', async (): Promise<void> => {
+      const existingTenant = await createTenant(deps)
+      const existingSetting = [
+        {
+          key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+          value: faker.internet.url()
+        }
+      ]
+      await createTenantSettings(deps, {
+        tenantId: existingTenant.id,
+        setting: existingSetting
+      })
+
+      const newTenant = await createTenant(deps)
+      await expect(
+        tenantSettingService.create({
+          tenantId: newTenant.id,
+          setting: existingSetting
+        })
+      ).resolves.toEqual(TenantSettingError.DuplicateWalletAddressUrl)
+    })
   })
 
   describe('get', () => {
@@ -290,7 +316,7 @@ describe('TenantSetting Service', (): void => {
     async function createTenantSetting(): Promise<TenantSetting[]> {
       const options: CreateOptions = {
         tenantId: tenant.id,
-        setting: [randomSetting()]
+        setting: [exchangeRatesSetting()]
       }
 
       const createdTenantSetting = await tenantSettingService.create(options)
@@ -321,7 +347,15 @@ describe('TenantSetting Service', (): void => {
     })
 
     test('should get all tenant settings', async () => {
-      const newTenantSetting = await createTenantSetting()
+      const newTenantSetting = await createTenantSettings(deps, {
+        tenantId: tenant.id,
+        setting: [
+          {
+            key: TenantSettingKeys.WEBHOOK_URL.name,
+            value: faker.internet.url()
+          }
+        ]
+      })
       const dbTenantSettings = await tenantSettingService.get({
         tenantId: tenant.id
       })
@@ -500,6 +534,29 @@ describe('TenantSetting Service', (): void => {
       await expect(
         tenantSettingService.update(negativeOption)
       ).resolves.toEqual(TenantSettingError.InvalidSetting)
+    })
+
+    test('cannot update wallet address url to already existing value', async (): Promise<void> => {
+      const walletAddressUrl = faker.internet.url()
+      const existingTenant = await createTenant(deps)
+      await createTenantSettings(deps, {
+        tenantId: existingTenant.id,
+        setting: [
+          {
+            key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+            value: walletAddressUrl
+          }
+        ]
+      })
+      const newTenant = await createTenant(deps)
+
+      await expect(
+        tenantSettingService.update({
+          tenantId: newTenant.id,
+          key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+          value: walletAddressUrl
+        })
+      ).resolves.toEqual(TenantSettingError.DuplicateWalletAddressUrl)
     })
   })
 

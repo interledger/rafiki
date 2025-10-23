@@ -1,22 +1,23 @@
 import { gql, ApolloClient, NormalizedCacheObject } from '@apollo/client'
 import { Logger } from 'pino'
-import type {
-  AssetMutationResponse,
-  CreatePeerMutationResponse,
-  LiquidityMutationResponse,
-  WalletAddress,
-  CreateWalletAddressKeyMutationResponse,
-  CreateWalletAddressKeyInput,
-  CreateWalletAddressInput,
-  JwkInput,
-  SetFeeResponse,
-  FeeType,
-  CreateOrUpdatePeerByUrlMutationResponse,
-  CreateOrUpdatePeerByUrlInput,
-  Peer,
-  Asset,
-  TenantMutationResponse,
-  CreateTenantInput
+import {
+  type AssetMutationResponse,
+  type CreatePeerMutationResponse,
+  type LiquidityMutationResponse,
+  type WalletAddress,
+  type CreateWalletAddressKeyMutationResponse,
+  type CreateWalletAddressKeyInput,
+  type CreateWalletAddressInput,
+  type JwkInput,
+  type SetFeeResponse,
+  type FeeType,
+  type CreateOrUpdatePeerByUrlMutationResponse,
+  type CreateOrUpdatePeerByUrlInput,
+  type Peer,
+  type Asset,
+  type TenantMutationResponse,
+  type CreateTenantInput,
+  TenantSettingKey
 } from './generated/graphql'
 import { v4 as uuid } from 'uuid'
 
@@ -144,11 +145,11 @@ export async function createTenant(
     idpSecret,
     settings: [
       {
-        key: 'WALLET_ADDRESS_URL',
+        key: TenantSettingKey.WalletAddressUrl,
         value: walletAddressUrl
       },
       {
-        key: 'WEBHOOK_URL',
+        key: TenantSettingKey.WebhookUrl,
         value: webhookUrl
       }
     ]
@@ -581,6 +582,7 @@ async function getPeerByAddressAndAsset(
       ) {
         id
         name
+        staticIlpAddress
         asset {
           id
           scale
