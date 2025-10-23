@@ -16,7 +16,8 @@ import {
   SortOrder,
   Amount as GqlAmount,
   IncomingPayment,
-  IncomingPaymentEdge
+  IncomingPaymentEdge,
+  PageInfo
 } from '../graphql/generated/graphql'
 
 interface ServiceDependencies extends BaseService {
@@ -188,15 +189,16 @@ function handlePaymentError(_err: unknown) {
   return { body: { error: { code: 'invalid_request' } }, status: 400 }
 }
 
-type ApiIncomingPaymentsConnection = Exclude<
-  IncomingPaymentConnection,
-  'typename' | 'edges'
-> & {
-  edges: ApiIncomingPaymentsEdge[]
+interface Pagination {
+  startCursor?: string
+  endCursor?: string
+  hasPreviousPage: boolean
+  hasNextPage: boolean
 }
 
-type ApiIncomingPaymentsEdge = Exclude<IncomingPaymentEdge, 'node'> & {
-  node: ApiIncomingPaymentsNode
+interface IncomingPaymentsResponse {
+  pagination: Pagination
+  result: ApiIncomingPaymentsNode[]
 }
 
 type ApiIncomingPaymentsNode = Exclude<
@@ -211,43 +213,49 @@ type ApiAmount = Exclude<GqlAmount, 'typename'>
 
 function incomingPaymentPageToResponse(
   page: IncomingPaymentConnection | null | undefined
-): ApiIncomingPaymentsConnection | undefined {
+): IncomingPaymentsResponse | undefined {
   if (!page)
     return {
-      edges: [],
-      pageInfo: {
+      result: [],
+      pagination: {
         hasNextPage: false,
         hasPreviousPage: false
       }
     }
-  const { __typename, edges, ...restOfConnection } = page
+  const { edges, pageInfo } = page
 
   const formattedEdges = edges.map((edge) =>
     incomingPaymentEdgeToResponse(edge)
   )
 
   return {
-    edges: formattedEdges,
-    ...restOfConnection
+    result: formattedEdges,
+    pagination: pageInfoToResponse(pageInfo)
+  }
+}
+
+function pageInfoToResponse(pageInfo: PageInfo): Pagination {
+  return {
+    endCursor: pageInfo.endCursor ?? undefined,
+    startCursor: pageInfo.startCursor ?? undefined,
+    hasNextPage: pageInfo.hasNextPage,
+    hasPreviousPage: pageInfo.hasPreviousPage
   }
 }
 
 function incomingPaymentEdgeToResponse(
   edge: IncomingPaymentEdge
-): ApiIncomingPaymentsEdge {
-  const { __typename: _, node, ...restOfEdge } = edge
+): ApiIncomingPaymentsNode {
+  const { __typename: _, node } = edge
   const { __typename, incomingAmount, receivedAmount, ...restOfNode } = node
 
   const formattedEdge = {
-    node: {
-      ...restOfNode,
-      receivedAmount: gqlAmountToResponse(receivedAmount)
-    },
-    ...restOfEdge
+    ...restOfNode,
+    receivedAmount: gqlAmountToResponse(receivedAmount)
   }
 
   if (incomingAmount) {
-    Object.assign(formattedEdge.node, {
+    Object.assign(formattedEdge, {
       incomingAmount: gqlAmountToResponse(incomingAmount)
     })
   }
