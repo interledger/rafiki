@@ -295,6 +295,7 @@ export class App {
   public isShuttingDown = false
   private logger!: Logger
   private config!: IAppConfig
+  private redis!: Redis
 
   public constructor(private container: IocContract<AppServices>) {}
 
@@ -307,6 +308,9 @@ export class App {
   public async boot(): Promise<void> {
     this.config = await this.container.use('config')
     this.logger = await this.container.use('logger')
+    this.redis = await this.container.use('redis')
+    // this.redis.on('connect', () => { console.log('boot connect redis')})
+    // this.redis.on('error', () => { console.log('boot error redis')})
 
     // Workers are in the way during tests.
     if (this.config.env !== 'test') {
@@ -403,7 +407,14 @@ export class App {
         next: Koa.Next
       ): Promise<void> => {
         if (ctx.path === '/healthz') {
-          ctx.status = 200
+          const knex = await this.container.use('knex')
+          try {
+            await redis.ping()
+            await knex.raw('SELECT 1')
+            ctx.status = 200
+          } catch (err) {
+            ctx.status = 500
+          }
         } else if (ctx.path !== '/graphql') {
           ctx.status = 404
         } else {
@@ -479,8 +490,16 @@ export class App {
 
     const router = new Router<DefaultState, AppContext>()
     router.use(bodyParser())
-    router.get('/healthz', (ctx: AppContext): void => {
-      ctx.status = 200
+    router.get('/healthz', async (ctx: AppContext): Promise<void> => {
+      const redis = await ctx.container.use('redis')
+      const knex = await ctx.container.use('knex')
+      try {
+        await redis.ping()
+        await knex.raw('SELECT 1')
+        ctx.status = 200
+      } catch (e) {
+        ctx.status = 500
+      }
     })
     router.use(openPaymentsServerErrorMiddleware)
 
