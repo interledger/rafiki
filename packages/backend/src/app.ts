@@ -295,7 +295,6 @@ export class App {
   public isShuttingDown = false
   private logger!: Logger
   private config!: IAppConfig
-  private redis!: Redis
 
   public constructor(private container: IocContract<AppServices>) {}
 
