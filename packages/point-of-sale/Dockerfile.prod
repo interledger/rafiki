@@ -50,7 +50,6 @@ COPY --from=prod-deps /home/rafiki/node_modules ./node_modules
 COPY --from=prod-deps /home/rafiki/packages/point-of-sale/node_modules ./packages/point-of-sale/node_modules
 COPY --from=prod-deps /home/rafiki/packages/point-of-sale/package.json ./packages/point-of-sale/package.json
 
-COPY --from=builder /home/rafiki/packages/point-of-sale/migrations/ ./packages/point-of-sale/migrations
 COPY --from=builder /home/rafiki/packages/point-of-sale/dist ./packages/point-of-sale/dist
 
 USER root
