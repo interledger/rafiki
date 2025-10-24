@@ -35,7 +35,6 @@ describe('Wallet Address Routes', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    jest.restoreAllMocks()
     await truncateTables(deps)
   })
 
@@ -159,6 +158,7 @@ describe('Wallet Address Routes', (): void => {
           const getOrPollByUrlSpy = jest
             .spyOn(walletAddressService, 'getOrPollByUrl')
             .mockResolvedValueOnce(walletAddress)
+          const getByUrlSpy = jest.spyOn(walletAddressService, 'getByUrl')
 
           const ctx = createContext<WalletAddressUrlContext>({
             headers: { Accept: 'application/json' },
@@ -168,6 +168,7 @@ describe('Wallet Address Routes', (): void => {
           await expect(walletAddressRoutes.get(ctx)).resolves.toBeUndefined()
           expect(ctx.response).toSatisfyApiSpec()
           expect(getOrPollByUrlSpy).toHaveBeenCalledTimes(1)
+          expect(getByUrlSpy).not.toHaveBeenCalled()
           expect(ctx.body).toEqual({
             id: walletAddress.address,
             publicName: walletAddress.publicName,
