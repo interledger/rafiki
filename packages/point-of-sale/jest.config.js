@@ -10,8 +10,6 @@ module.exports = {
   testTimeout: 30000,
   roots: [`<rootDir>/packages/${packageName}`],
   setupFiles: [`<rootDir>/packages/${packageName}/jest.env.js`],
-  globalSetup: `<rootDir>/packages/${packageName}/jest.setup.ts`,
-  globalTeardown: `<rootDir>/packages/${packageName}/jest.teardown.js`,
   testRegex: `(packages/${packageName}/.*/__tests__/.*|\\.(test|spec))\\.tsx?$`,
   testEnvironment: `<rootDir>/packages/${packageName}/jest.custom-environment.ts`,
   moduleDirectories: [

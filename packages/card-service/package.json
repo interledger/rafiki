@@ -8,7 +8,6 @@
     "test:ci": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests --maxWorkers=2",
     "test:cov": "pnpm test -- --coverage",
     "dev": "ts-node-dev --inspect=0.0.0.0:9229 --respawn --transpile-only src/index.ts",
-    "knex": "knex",
     "copy-files": "cp -r ./src/openapi ./dist/"
   },
   "dependencies": {
@@ -20,12 +19,8 @@
     "graphql": "^16.11.0",
     "ioredis": "^5.3.2",
     "json-canonicalize": "^1.0.6",
-    "knex": "^3.1.0",
     "koa": "^2.15.4",
     "koa-bodyparser": "^4.4.1",
-    "objection": "^3.1.5",
-    "objection-db-errors": "^1.1.2",
-    "pg": "^8.11.3",
     "pino": "^8.19.0",
     "uuid": "^9.0.1"
   },

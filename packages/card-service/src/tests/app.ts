@@ -1,4 +1,3 @@
-import { Knex } from 'knex'
 import { IocContract } from '@adonisjs/fold'
 
 import { App, AppServices } from '../app'
@@ -6,8 +5,6 @@ import { App, AppServices } from '../app'
 export interface TestContainer {
   cardServicePort: number
   app: App
-  knex: Knex
-  connectionUrl: string
   shutdown: () => Promise<void>
   container: IocContract<AppServices>
 }
@@ -22,13 +19,9 @@ export const createTestApp = async (
   await app.boot()
   await app.startCardServiceServer(config.cardServicePort)
 
-  const knex = await container.use('knex')
-
   return {
     app,
     cardServicePort: app.getCardServicePort(),
-    knex,
-    connectionUrl: process.env.DATABASE_URL || '',
     shutdown: async () => {
       await app.shutdown()
     },

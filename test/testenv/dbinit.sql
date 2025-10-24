@@ -6,10 +6,6 @@ CREATE USER cloud_nine_wallet_test_auth WITH PASSWORD 'cloud_nine_wallet_test_au
 CREATE DATABASE cloud_nine_wallet_test_auth;
 ALTER DATABASE cloud_nine_wallet_test_auth OWNER TO cloud_nine_wallet_test_auth;
 
-CREATE USER cloud_nine_wallet_test_card_service WITH PASSWORD 'cloud_nine_wallet_test_card_service';
-CREATE DATABASE cloud_nine_wallet_test_card_service;
-ALTER DATABASE cloud_nine_wallet_test_card_service OWNER TO cloud_nine_wallet_test_card_service;
-
 CREATE USER happy_life_bank_test_backend WITH PASSWORD 'happy_life_bank_test_backend';
 CREATE DATABASE happy_life_bank_test_backend;
 ALTER DATABASE happy_life_bank_test_backend OWNER TO happy_life_bank_test_backend;
@@ -17,7 +13,3 @@ ALTER DATABASE happy_life_bank_test_backend OWNER TO happy_life_bank_test_backen
 CREATE USER happy_life_bank_test_auth WITH PASSWORD 'happy_life_bank_test_auth';
 CREATE DATABASE happy_life_bank_test_auth;
 ALTER DATABASE happy_life_bank_test_auth OWNER TO happy_life_bank_test_auth;
-
-CREATE USER happy_life_bank_test_point_of_sale WITH PASSWORD 'happy_life_bank_test_point_of_sale';
-CREATE DATABASE happy_life_bank_test_point_of_sale;
-ALTER DATABASE happy_life_bank_test_point_of_sale OWNER TO happy_life_bank_test_point_of_sale;

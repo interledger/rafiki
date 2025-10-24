@@ -1,42 +1,5 @@
 name: hl
 services:
-  happy-life-bank-card-service:
-    hostname: happy-life-bank-card-service
-    image: rafiki-card-service
-    build:
-      context: ../..
-      dockerfile: ./packages/card-service/Dockerfile.dev
-    restart: always
-    networks:
-      - rafiki
-    ports:
-      - '4007:4007'
-    volumes:
-      - type: bind
-        source: ../../packages/card-service/src
-        target: /home/rafiki/packages/card-service/src
-        read_only: true
-    environment:
-      NODE_ENV: ${NODE_ENV:-development}
-      INSTANCE_NAME: HAPPY-LIFE
-      TRUST_PROXY: ${TRUST_PROXY}
-      LOG_LEVEL: debug
-      CARD_SERVICE_PORT: 4007
-      DATABASE_URL: postgresql://happy_life_bank_card_service:happy_life_bank_card_service@shared-database/happy_life_bank_card_service
-      GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
-      TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
-      TENANT_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
-      TENANT_SIGNATURE_VERSION: 1
-    depends_on:
-      - shared-database
-      - cloud-nine-wallet-card-service
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:3007/healthz"]
-      start_period: 60s
-      start_interval: 5s
-      interval: 30s
-      retries: 1
-      timeout: 3s
   happy-life-bank-point-of-sale: 
     hostname: happy-life-bank-point-of-sale
     image: rafiki-point-of-sale 
@@ -60,7 +23,6 @@ services:
       TRUST_PROXY: ${TRUST_PROXY} 
       LOG_LEVEL: debug 
       PORT: 4008 
-      DATABASE_URL: postgresql://happy_life_bank_point_of_sale:happy_life_bank_point_of_sale@shared-database/happy_life_bank_point_of_sale
       TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
       TENANT_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
@@ -68,7 +30,6 @@ services:
       WEBHOOK_SIGNATURE_VERSION: 1
     depends_on: 
       - shared-database
-      - cloud-nine-wallet-point-of-sale
     healthcheck: 
       test: ["CMD", "wget", "--spider", "http://localhost:4008/healthz"] 
       start_period: 60s 

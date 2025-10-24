@@ -27,18 +27,9 @@ dotenv.config({
 
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
-  databaseUrl:
-    process.env.NODE_ENV === 'test'
-      ? `${process.env.DATABASE_URL}_${process.env.JEST_WORKER_ID}`
-      : envString(
-          'DATABASE_URL',
-          'postgresql://postgres:password@localhost:5432/development'
-        ),
   env: envString('NODE_ENV', 'development'),
   port: envInt('PORT', 3008),
   trustProxy: envBool('TRUST_PROXY', false),
-  enableManualMigrations: envBool('ENABLE_MANUAl_MIGRATIONS', false),
-  dbSchema: undefined as string | undefined,
   tenantId: envString('TENANT_ID'),
   tenantSecret: envString('TENANT_SECRET'),
   tenantSignatureVersion: envInt('TENANT_SIGNATURE_VERSION', 1),

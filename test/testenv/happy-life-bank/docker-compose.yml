@@ -102,7 +102,6 @@ services:
       TRUST_PROXY: ${TRUST_PROXY}
       LOG_LEVEL: debug
       PORT: 4105
-      DATABASE_URL: postgresql://happy_life_bank_test_point_of_sale:happy_life_bank_test_point_of_sale@shared-database/happy_life_bank_test_point_of_sale
       TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
       TENANT_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       GRAPHQL_URL: http://happy-life-bank-test-backend:4101/graphql

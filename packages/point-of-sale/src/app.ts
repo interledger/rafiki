@@ -1,4 +1,3 @@
-import { Knex } from 'knex'
 import { Logger } from 'pino'
 import { IAppConfig } from './config/app'
 import { Server } from 'http'
@@ -7,17 +6,7 @@ import Koa, { DefaultState } from 'koa'
 import Router from '@koa/router'
 import bodyParser from 'koa-bodyparser'
 import cors from '@koa/cors'
-import {
-  CreateMerchantContext,
-  DeleteMerchantContext,
-  MerchantRoutes
-} from './merchant/routes'
-import {
-  PosDeviceRoutes,
-  RegisterDeviceContext
-} from './merchant/devices/routes'
-import { PosDeviceService } from './merchant/devices/service'
-import { MerchantService } from './merchant/service'
+
 import { PaymentContext, PaymentRoutes } from './payments/routes'
 import {
   HandleWebhookContext,
@@ -27,12 +16,7 @@ import { webhookHttpSigMiddleware } from './webhook-handlers/middleware'
 
 export interface AppServices {
   logger: Promise<Logger>
-  knex: Promise<Knex>
   config: Promise<IAppConfig>
-  merchantRoutes: Promise<MerchantRoutes>
-  posDeviceRoutes: Promise<PosDeviceRoutes>
-  posDeviceService: Promise<PosDeviceService>
-  merchantService: Promise<MerchantService>
   paymentRoutes: Promise<PaymentRoutes>
   webhookHandlerRoutes: Promise<WebhookHandlerRoutes>
 }
@@ -77,34 +61,10 @@ export class App {
       ctx.status = 200
     })
 
-    const merchantRoutes = await this.container.use('merchantRoutes')
-    const posDeviceRoutes = await this.container.use('posDeviceRoutes')
     const paymentRoutes = await this.container.use('paymentRoutes')
     const webhookHandlerRoutes = await this.container.use(
       'webhookHandlerRoutes'
     )
-
-    // POST /merchants
-    // Create merchant
-    router.post<DefaultState, CreateMerchantContext>(
-      '/merchants',
-      merchantRoutes.create
-    )
-
-    // DELETE /merchants/:merchantId
-    // Delete merchant
-    router.delete<DefaultState, DeleteMerchantContext>(
-      '/merchants/:merchantId',
-      merchantRoutes.delete
-    )
-
-    // POST /merchant/:merchantId/devices
-    // Register a device
-    router.post<DefaultState, RegisterDeviceContext>(
-      '/merchants/:merchantId/devices',
-      posDeviceRoutes.register
-    )
-
     // POST /payment
     // Initiate a payment
     router.post<DefaultState, PaymentContext>('/payment', paymentRoutes.payment)

@@ -5,7 +5,6 @@ import { AppServices } from '../app'
 import { Config, IAppConfig } from '../config/app'
 import { TestContainer, createTestApp } from '../tests/app'
 import { PaymentContext, PaymentRoutes } from './routes'
-import { truncateTables } from '../tests/tableManager'
 import { PaymentService } from './service'
 import { CardServiceClient, Result } from '../card-service-client/client'
 import { createContext } from '../tests/context'
@@ -33,10 +32,6 @@ describe('Payment Routes', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-  })
-
-  afterEach(async (): Promise<void> => {
-    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {

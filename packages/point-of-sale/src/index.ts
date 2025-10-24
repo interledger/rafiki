@@ -1,6 +1,4 @@
 import { Ioc, IocContract } from '@adonisjs/fold'
-import { knex } from 'knex'
-import { Model } from 'objection'
 import { Config } from './config/app'
 import { App, AppServices } from './app'
 import createLogger from 'pino'
@@ -9,17 +7,13 @@ import {
   ApolloLink,
   createHttpLink,
   InMemoryCache
-} from '@apollo/client'
+} from '@apollo/client/core'
 import { onError } from '@apollo/client/link/error'
 import { setContext } from '@apollo/client/link/context'
 import { print } from 'graphql'
 import { canonicalize } from 'json-canonicalize'
 import { createHmac } from 'crypto'
-import { createMerchantService } from './merchant/service'
-import { createPosDeviceService } from './merchant/devices/service'
-import { createMerchantRoutes } from './merchant/routes'
 import { createPaymentService } from './payments/service'
-import { createPosDeviceRoutes } from './merchant/devices/routes'
 import { createPaymentRoutes } from './payments/routes'
 import axios from 'axios'
 import { createCardServiceClient } from './card-service-client/client'
@@ -51,62 +45,6 @@ export function initIocContainer(
     const logger = createLogger()
     logger.level = config.logLevel
     return logger
-  })
-  container.singleton('knex', async (deps: IocContract<AppServices>) => {
-    const logger = await deps.use('logger')
-    const config = await deps.use('config')
-    logger.info({ msg: 'creating knex' })
-    const db = knex({
-      client: 'postgresql',
-      connection: config.databaseUrl,
-      pool: {
-        min: 2,
-        max: 10
-      },
-      migrations: {
-        directory: './',
-        tableName: 'pos_knex_migrations'
-      },
-      log: {
-        warn(message) {
-          logger.warn(message)
-        },
-        error(message) {
-          logger.error(message)
-        },
-        deprecate(message) {
-          logger.warn(message)
-        },
-        debug(message) {
-          logger.debug(message)
-        }
-      }
-    })
-
-    // node pg defaults to returning bigint as string. This ensures it parses to bigint
-    db.client.driver.types.setTypeParser(
-      db.client.driver.types.builtins.INT8,
-      'text',
-      BigInt
-    )
-    return db
-  })
-
-  container.singleton('merchantService', async (deps) => {
-    const [logger, knex, posDeviceService] = await Promise.all([
-      deps.use('logger'),
-      deps.use('knex'),
-      deps.use('posDeviceService')
-    ])
-    return createMerchantService({ logger, knex, posDeviceService })
-  })
-
-  container.singleton('merchantRoutes', async (deps) => {
-    return createMerchantRoutes({
-      logger: await deps.use('logger'),
-      merchantService: await deps.use('merchantService'),
-      posDeviceService: await deps.use('posDeviceService')
-    })
   })
 
   container.singleton('apolloClient', async (deps) => {
@@ -193,28 +131,12 @@ export function initIocContainer(
     })
   })
 
-  container.singleton(
-    'posDeviceService',
-    async (deps: IocContract<AppServices>) => {
-      const logger = await deps.use('logger')
-      const knex = await deps.use('knex')
-      return await createPosDeviceService({ logger, knex })
-    }
-  )
-
   container.singleton('cardServiceClient', async (deps) => {
     return createCardServiceClient({
       logger: await deps.use('logger'),
       axios: await deps.use('axios')
     })
   })
-
-  container.singleton('posDeviceRoutes', async (deps) =>
-    createPosDeviceRoutes({
-      logger: await deps.use('logger'),
-      posDeviceService: await deps.use('posDeviceService')
-    })
-  )
 
   container.singleton('paymentRoutes', async (deps) => {
     return createPaymentRoutes({
@@ -241,8 +163,6 @@ export const gracefulShutdown = async (
   const logger = await container.use('logger')
   logger.info('shutting down.')
   await app.shutdown()
-  const knex = await container.use('knex')
-  await knex.destroy()
 }
 
 export const start = async (
@@ -300,20 +220,6 @@ export const start = async (
 
   const config = await container.use('config')
 
-  // Do migrations
-  const knex = await container.use('knex')
-
-  if (!config.enableManualMigrations) {
-    // Needs a wrapped inline function
-    await callWithRetry(async () => {
-      await knex.migrate.latest({
-        directory: __dirname + '/../migrations'
-      })
-    })
-  }
-
-  Model.knex(knex)
-
   await app.boot()
 
   await app.startPosServer(config.port)
@@ -329,23 +235,4 @@ if (require.main === module) {
     const logger = await container.use('logger')
     logger.error({ err: errInfo })
   })
-}
-
-// Used for running migrations in a try loop with exponential backoff
-const callWithRetry: CallableFunction = async (
-  fn: CallableFunction,
-  depth = 0
-) => {
-  const wait = (ms: number) => new Promise((res) => setTimeout(res, ms))
-
-  try {
-    return await fn()
-  } catch (e) {
-    if (depth > 7) {
-      throw e
-    }
-    await wait(2 ** depth * 30)
-
-    return callWithRetry(fn, depth + 1)
-  }
 }
