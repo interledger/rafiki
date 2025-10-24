@@ -1,6 +1,10 @@
 import { ApolloError, gql } from '@apollo/client'
 import { getPageTests } from './page.test'
-import { createTestApp, TestContainer } from '../../tests/app'
+import {
+  createApolloClient,
+  createTestApp,
+  TestContainer
+} from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
@@ -17,6 +21,7 @@ import {
   IncomingPayment as IncomingPaymentModel,
   IncomingPaymentState
 } from '../../open_payments/payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/types'
 import {
   IncomingPayment,
   IncomingPaymentResponse,
@@ -29,6 +34,8 @@ import {
 } from '../../open_payments/payment/incoming/errors'
 import { Amount, serializeAmount } from '../../open_payments/amount'
 import { GraphQLErrorCode } from '../errors'
+import { createTenant } from '../../tests/tenant'
+import { faker } from '@faker-js/faker'
 
 describe('Incoming Payment Resolver', (): void => {
   let deps: IocContract<AppServices>
@@ -81,7 +88,8 @@ describe('Incoming Payment Resolver', (): void => {
             description: `IncomingPayment`,
             externalRef: '#123'
           },
-          tenantId
+          tenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         }),
       pagedQuery: 'incomingPayments',
       parent: {
@@ -93,6 +101,7 @@ describe('Incoming Payment Resolver', (): void => {
 
   describe('Mutation.createIncomingPayment', (): void => {
     let amount: Amount
+    let senderWalletAddress: string
 
     beforeEach((): void => {
       amount = {
@@ -101,6 +110,7 @@ describe('Incoming Payment Resolver', (): void => {
         assetScale: asset.scale
       }
       client = 'incoming-payment-client-create'
+      senderWalletAddress = faker.internet.url()
     })
 
     test.each`
@@ -122,7 +132,9 @@ describe('Incoming Payment Resolver', (): void => {
           metadata,
           expiresAt,
           incomingAmount,
-          tenantId
+          tenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin,
+          senderWalletAddress
         })
 
         const createSpy = jest
@@ -133,7 +145,8 @@ describe('Incoming Payment Resolver', (): void => {
           walletAddressId,
           incomingAmount,
           expiresAt,
-          metadata
+          metadata,
+          senderWalletAddress
         }
 
         const query = await appContainer.apolloClient
@@ -160,6 +173,7 @@ describe('Incoming Payment Resolver', (): void => {
                     }
                     metadata
                     createdAt
+                    senderWalletAddress
                   }
                 }
               }
@@ -171,7 +185,11 @@ describe('Incoming Payment Resolver', (): void => {
               query.data?.createIncomingPayment
           )
 
-        expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
+        expect(createSpy).toHaveBeenCalledWith({
+          ...input,
+          tenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
+        })
         expect(query).toEqual({
           __typename: 'IncomingPaymentResponse',
           payment: {
@@ -193,7 +211,8 @@ describe('Incoming Payment Resolver', (): void => {
               ...serializeAmount(payment.receivedAmount)
             },
             metadata: metadata || null,
-            createdAt: payment.createdAt.toISOString()
+            createdAt: payment.createdAt.toISOString(),
+            senderWalletAddress
           }
         })
       }
@@ -241,7 +260,11 @@ describe('Incoming Payment Resolver', (): void => {
           })
         )
       }
-      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
+      expect(createSpy).toHaveBeenCalledWith({
+        ...input,
+        tenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
+      })
     })
 
     test('Internal server error', async (): Promise<void> => {
@@ -288,7 +311,107 @@ describe('Incoming Payment Resolver', (): void => {
       }
       expect(createSpy).toHaveBeenCalledWith({
         ...input,
-        tenantId
+        tenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
+      })
+    })
+
+    describe('tenant boundaries', (): void => {
+      test('operator can label incoming payment as card payment', async (): Promise<void> => {
+        const createSpy = jest.spyOn(incomingPaymentService, 'create')
+
+        const input = {
+          walletAddressId,
+          isCardPayment: true
+        }
+
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation CreateIncomingPayment(
+                $input: CreateIncomingPaymentInput!
+              ) {
+                createIncomingPayment(input: $input) {
+                  payment {
+                    id
+                    walletAddressId
+                  }
+                }
+              }
+            `,
+            variables: { input }
+          })
+          .then(
+            (query): IncomingPaymentResponse =>
+              query.data?.createIncomingPayment
+          )
+
+        expect(createSpy).toHaveBeenCalledWith({
+          walletAddressId: input.walletAddressId,
+          tenantId,
+          initiationReason: IncomingPaymentInitiationReason.Card
+        })
+        expect(query).toEqual({
+          __typename: 'IncomingPaymentResponse',
+          payment: {
+            __typename: 'IncomingPayment',
+            id: expect.any(String),
+            walletAddressId
+          }
+        })
+      })
+
+      test('tenant cannot label incoming payment as card payment', async (): Promise<void> => {
+        const tenant = await createTenant(deps)
+        const tenantWalletAddress = await createWalletAddress(deps, {
+          tenantId: tenant.id
+        })
+        const createSpy = jest.spyOn(incomingPaymentService, 'create')
+
+        const input = {
+          walletAddressId: tenantWalletAddress.id,
+          isCardPayment: true
+        }
+
+        const tenantedApolloClient = await createApolloClient(
+          appContainer.container,
+          appContainer.app,
+          tenant.id
+        )
+        const query = await tenantedApolloClient
+          .query({
+            query: gql`
+              mutation CreateIncomingPayment(
+                $input: CreateIncomingPaymentInput!
+              ) {
+                createIncomingPayment(input: $input) {
+                  payment {
+                    id
+                    walletAddressId
+                  }
+                }
+              }
+            `,
+            variables: { input }
+          })
+          .then(
+            (query): IncomingPaymentResponse =>
+              query.data?.createIncomingPayment
+          )
+
+        expect(createSpy).toHaveBeenCalledWith({
+          walletAddressId: input.walletAddressId,
+          tenantId: tenant.id,
+          initiationReason: IncomingPaymentInitiationReason.Admin
+        })
+        expect(query).toEqual({
+          __typename: 'IncomingPaymentResponse',
+          payment: {
+            __typename: 'IncomingPayment',
+            id: expect.any(String),
+            walletAddressId: tenantWalletAddress.id
+          }
+        })
       })
     })
   })
@@ -307,7 +430,8 @@ describe('Incoming Payment Resolver', (): void => {
           assetCode: asset.code,
           assetScale: asset.scale
         },
-        tenantId
+        tenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
       })
     }
 
@@ -484,7 +608,8 @@ describe('Incoming Payment Resolver', (): void => {
           metadata,
           expiresAt,
           incomingAmount,
-          tenantId
+          tenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
         const input = {
           id: payment.id,
@@ -495,6 +620,7 @@ describe('Incoming Payment Resolver', (): void => {
           .spyOn(incomingPaymentService, 'update')
           .mockResolvedValueOnce({
             ...payment,
+            getUrl: payment.getUrl,
             metadata: input.metadata
           } as IncomingPaymentModel)
 

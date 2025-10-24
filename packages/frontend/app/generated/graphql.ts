@@ -185,11 +185,24 @@ export type CancelIncomingPaymentResponse = {
 };
 
 export type CancelOutgoingPaymentInput = {
+  /** If card flow, optional machine-readable failure reason */
+  cardPaymentFailureReason?: InputMaybe<CardPaymentFailureReason>;
   /** Unique identifier of the outgoing payment to cancel. */
   id: Scalars['ID']['input'];
   /** Reason why this outgoing payment has been canceled. This value will be publicly visible in the metadata field if this outgoing payment is requested through Open Payments. */
   reason?: InputMaybe<Scalars['String']['input']>;
 };
+
+export type CardDetailsInput = {
+  data: Scalars['JSONObject']['input'];
+  initiatedAt: Scalars['String']['input'];
+  requestId: Scalars['String']['input'];
+};
+
+export enum CardPaymentFailureReason {
+  InvalidRequest = 'invalid_request',
+  InvalidSignature = 'invalid_signature'
+}
 
 export type CreateAssetInput = {
   /** Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets). */
@@ -226,8 +239,12 @@ export type CreateIncomingPaymentInput = {
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Maximum amount to be received for this incoming payment. */
   incomingAmount?: InputMaybe<AmountInput>;
+  /** Whether or not the incoming payment is being created for a card payment. */
+  isCardPayment?: InputMaybe<Scalars['Boolean']['input']>;
   /** Additional metadata associated with the incoming payment. */
   metadata?: InputMaybe<Scalars['JSONObject']['input']>;
+  /** The sender's wallet address URL. Applicable only to card payments. */
+  senderWalletAddress?: InputMaybe<Scalars['String']['input']>;
   /** Unique identifier of the wallet address under which the incoming payment will be created. */
   walletAddressId: Scalars['String']['input'];
 };
@@ -265,6 +282,8 @@ export type CreateOrUpdatePeerByUrlMutationResponse = {
 };
 
 export type CreateOutgoingPaymentFromIncomingPaymentInput = {
+  /** Used for the card service to provide the card expiry and signature */
+  cardDetails?: InputMaybe<CardDetailsInput>;
   /** Amount to send (fixed send). */
   debitAmount?: InputMaybe<AmountInput>;
   /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
@@ -561,8 +580,10 @@ export type FeesConnection = {
 };
 
 export type FilterString = {
-  /** Array of strings to filter by. */
-  in: Array<Scalars['String']['input']>;
+  /** Array of strings to include. */
+  in?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Array of strings to exclude. */
+  notIn?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type Http = {
@@ -616,10 +637,14 @@ export type IncomingPayment = BasePayment & Model & {
   metadata?: Maybe<Scalars['JSONObject']['output']>;
   /** The total amount that has been paid into the wallet address under this incoming payment. */
   receivedAmount: Amount;
+  /** The sender's wallet address URL. Applicable only to card payments. */
+  senderWalletAddress?: Maybe<Scalars['String']['output']>;
   /** State of the incoming payment. */
   state: IncomingPaymentState;
   /** The tenant UUID associated with the incoming payment. If not provided, it will be obtained from the signature. */
   tenantId?: Maybe<Scalars['String']['output']>;
+  /** The URL of the incoming payment. */
+  url: Scalars['String']['output'];
   /** Unique identifier of the wallet address under which the incoming payment was created. */
   walletAddressId: Scalars['ID']['output'];
 };
@@ -1932,6 +1957,8 @@ export type ResolversTypes = {
   CancelIncomingPaymentInput: ResolverTypeWrapper<Partial<CancelIncomingPaymentInput>>;
   CancelIncomingPaymentResponse: ResolverTypeWrapper<Partial<CancelIncomingPaymentResponse>>;
   CancelOutgoingPaymentInput: ResolverTypeWrapper<Partial<CancelOutgoingPaymentInput>>;
+  CardDetailsInput: ResolverTypeWrapper<Partial<CardDetailsInput>>;
+  CardPaymentFailureReason: ResolverTypeWrapper<Partial<CardPaymentFailureReason>>;
   CreateAssetInput: ResolverTypeWrapper<Partial<CreateAssetInput>>;
   CreateAssetLiquidityWithdrawalInput: ResolverTypeWrapper<Partial<CreateAssetLiquidityWithdrawalInput>>;
   CreateIncomingPaymentInput: ResolverTypeWrapper<Partial<CreateIncomingPaymentInput>>;
@@ -2077,6 +2104,7 @@ export type ResolversParentTypes = {
   CancelIncomingPaymentInput: Partial<CancelIncomingPaymentInput>;
   CancelIncomingPaymentResponse: Partial<CancelIncomingPaymentResponse>;
   CancelOutgoingPaymentInput: Partial<CancelOutgoingPaymentInput>;
+  CardDetailsInput: Partial<CardDetailsInput>;
   CreateAssetInput: Partial<CreateAssetInput>;
   CreateAssetLiquidityWithdrawalInput: Partial<CreateAssetLiquidityWithdrawalInput>;
   CreateIncomingPaymentInput: Partial<CreateIncomingPaymentInput>;
@@ -2362,8 +2390,10 @@ export type IncomingPaymentResolvers<ContextType = any, ParentType extends Resol
   liquidity?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   metadata?: Resolver<Maybe<ResolversTypes['JSONObject']>, ParentType, ContextType>;
   receivedAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
+  senderWalletAddress?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   state?: Resolver<ResolversTypes['IncomingPaymentState'], ParentType, ContextType>;
   tenantId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  url?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   walletAddressId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

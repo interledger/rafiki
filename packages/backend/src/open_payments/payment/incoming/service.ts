@@ -4,6 +4,7 @@ import {
   IncomingPaymentEventType,
   IncomingPaymentState
 } from './model'
+import { IncomingPaymentInitiationReason } from './types'
 import { AccountingService } from '../../../accounting/service'
 import { BaseService } from '../../../shared/baseService'
 import { Knex } from 'knex'
@@ -33,6 +34,8 @@ export interface CreateIncomingPaymentOptions {
   incomingAmount?: Amount
   metadata?: Record<string, unknown>
   tenantId: string
+  initiationReason: IncomingPaymentInitiationReason
+  senderWalletAddress?: string
 }
 
 export interface UpdateOptions {
@@ -143,7 +146,9 @@ async function createIncomingPayment(
     expiresAt,
     incomingAmount,
     metadata,
-    tenantId
+    tenantId,
+    initiationReason,
+    senderWalletAddress
   }: CreateIncomingPaymentOptions,
   trx?: Knex.Transaction
 ): Promise<IncomingPayment | IncomingPaymentError> {
@@ -188,7 +193,9 @@ async function createIncomingPayment(
     metadata,
     state: IncomingPaymentState.Pending,
     processAt: expiresAt,
-    tenantId
+    tenantId,
+    initiatedBy: initiationReason,
+    senderWalletAddress
   })
 
   const asset = await deps.assetService.get(incomingPayment.assetId)
@@ -203,7 +210,10 @@ async function createIncomingPayment(
     type: IncomingPaymentEventType.IncomingPaymentCreated,
     data: incomingPayment.toData(0n),
     tenantId: incomingPayment.tenantId,
-    webhooks: finalizeWebhookRecipients([incomingPayment.tenantId], deps.config)
+    webhooks: finalizeWebhookRecipients(
+      { tenantIds: [incomingPayment.tenantId] },
+      deps.config
+    )
   })
 
   incomingPayment = await addReceivedAmount(deps, incomingPayment, BigInt(0))
@@ -371,8 +381,13 @@ async function handleDeactivated(
       },
       tenantId: incomingPayment.tenantId,
       webhooks: finalizeWebhookRecipients(
-        [incomingPayment.tenantId],
-        deps.config
+        {
+          tenantIds: [incomingPayment.tenantId],
+          sendToPosService:
+            incomingPayment.initiatedBy === IncomingPaymentInitiationReason.Card
+        },
+        deps.config,
+        deps.logger
       )
     })
 

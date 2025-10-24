@@ -64,6 +64,7 @@ import { createTenantService } from './tenants/service'
 import { AuthServiceClient } from './auth-service-client/client'
 import { createTenantSettingService } from './tenants/settings/service'
 import { createPaymentMethodProviderService } from './payment-method/provider/service'
+import { createCardService, createNoopCardService } from './card/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -593,6 +594,16 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       outgoingPaymentService: await deps.use('outgoingPaymentService')
     })
+  })
+
+  container.singleton('cardService', async (deps) => {
+    return config.cardServiceUrl
+      ? createCardService({
+          axios: await deps.use('axios'),
+          logger: await deps.use('logger'),
+          cardServiceUrl: config.cardServiceUrl
+        })
+      : createNoopCardService(await deps.use('logger'))
   })
 
   return container
