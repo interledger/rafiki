@@ -171,6 +171,10 @@ export const Config = {
     'GRAPHQL_IDEMPOTENCY_KEY_TTL_MS',
     86400000
   ),
+  walletAddressNotFoundPollingEnabled: envBool(
+    'WALLET_ADDRESS_NOT_FOUND_POLLING_ENABLED',
+    false
+  ),
   walletAddressLookupTimeoutMs: envInt(
     'WALLET_ADDRESS_LOOKUP_TIMEOUT_MS',
     1500
