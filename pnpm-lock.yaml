@@ -557,7 +557,7 @@ importers:
         version: 8.2.0
       '@apollo/client':
         specifier: ^3.11.8
-        version: 3.11.8(@types/react@18.2.73)(graphql@16.11.0)(react-dom@18.2.0)(react@18.2.0)
+        version: 3.11.8(graphql@16.11.0)
       '@interledger/openapi':
         specifier: 2.0.2
         version: 2.0.2
@@ -576,24 +576,12 @@ importers:
       json-canonicalize:
         specifier: ^1.0.6
         version: 1.0.6
-      knex:
-        specifier: ^3.1.0
-        version: 3.1.0(pg@8.11.3)
       koa:
         specifier: ^2.15.4
         version: 2.16.0
       koa-bodyparser:
         specifier: ^4.4.1
         version: 4.4.1
-      objection:
-        specifier: ^3.1.5
-        version: 3.1.5(knex@3.1.0)
-      objection-db-errors:
-        specifier: ^1.1.2
-        version: 1.1.2(objection@3.1.5)
-      pg:
-        specifier: ^8.11.3
-        version: 8.11.3
       pino:
         specifier: ^8.19.0
         version: 8.19.0
@@ -633,7 +621,7 @@ importers:
         version: 10.16.0
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@swc/core@1.11.29)(@types/node@20.14.15)(typescript@5.8.3)
+        version: 2.0.0(@types/node@20.14.15)(typescript@5.8.3)
 
   packages/documentation:
     dependencies:
@@ -22122,7 +22110,6 @@ packages:
       - '@swc/core'
       - '@swc/wasm'
       - '@types/node'
-    dev: false
 
   /ts-node@10.9.2(@swc/core@1.11.29)(@types/node@20.14.15)(typescript@5.8.3):
     resolution: {integrity: sha512-f0FFpIdcHgn8zcPSbf1dRevwt047YMnaiJM3u2w2RewrB+fob/zePZcrOyQoLMMO7aBIddLcQIEK5dYjkLnGrQ==}
@@ -22184,7 +22171,6 @@ packages:
       typescript: 5.8.3
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
-    dev: false
 
   /tsconfck@3.1.5(typescript@5.8.3):
     resolution: {integrity: sha512-CLDfGgUp7XPswWnezWwsCRxNmgQjhYq3VXHM0/XIRxhVrKw0M1if9agzryh1QS3nxjCROvV+xWxoJO1YctzzWg==}

@@ -22,12 +22,6 @@ function envBool(name: string, value: boolean): boolean {
 
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
-  databaseUrl: envString(
-    'DATABASE_URL',
-    'postgresql://postgres:password@localhost:6543/development'
-  ),
-  dbSchema: undefined as string | undefined,
-  enableManualMigrations: envBool('ENABLE_MANUAL_MIGRATIONS', false),
   trustProxy: envBool('TRUST_PROXY', false),
   env: envString('NODE_ENV', 'development'),
   cardServicePort: envInt('CARD_SERVICE_PORT', 3007),
