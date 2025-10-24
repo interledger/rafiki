@@ -102,7 +102,6 @@ services:
       TRUST_PROXY: ${TRUST_PROXY}
       LOG_LEVEL: debug
       CARD_SERVICE_PORT: 3104
-      DATABASE_URL: postgresql://cloud_nine_wallet_test_card_service:cloud_nine_wallet_test_card_service@shared-database/cloud_nine_wallet_test_card_service
       GRAPHQL_URL: http://cloud-nine-wallet-test-backend:3101/graphql
       TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
       TENANT_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
