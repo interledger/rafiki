@@ -307,10 +307,6 @@ export class App {
    */
   public async boot(): Promise<void> {
     this.config = await this.container.use('config')
-    this.logger = await this.container.use('logger')
-    this.redis = await this.container.use('redis')
-    // this.redis.on('connect', () => { console.log('boot connect redis')})
-    // this.redis.on('error', () => { console.log('boot error redis')})
 
     // Workers are in the way during tests.
     if (this.config.env !== 'test') {
