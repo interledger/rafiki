@@ -50,6 +50,8 @@ interface GetPageOptions {
   filter?: IncomingPaymentFilter
   sortOrder?: SortOrder
   tenantId?: string
+  walletAddressId?: string
+  client?: string
 }
 
 export interface IncomingPaymentService
@@ -411,43 +413,7 @@ async function getWalletAddressPage(
   deps: ServiceDependencies,
   options: ListOptions
 ): Promise<IncomingPayment[]> {
-  const pageQuery = IncomingPayment.query(deps.knex)
-
-  if (options.tenantId) pageQuery.where('tenantId', options.tenantId)
-
-  const page = await pageQuery.list(options)
-
-  for (const payment of page) {
-    const asset = await deps.assetService.get(payment.assetId)
-    if (asset) payment.asset = asset
-
-    payment.walletAddress = await deps.walletAddressService.get(
-      payment.walletAddressId
-    )
-  }
-
-  const amounts = await deps.accountingService.getAccountsTotalReceived(
-    page.map((payment: IncomingPayment) => payment.id)
-  )
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-  return page.map((payment: IncomingPayment, i: number) => {
-    try {
-      payment.receivedAmount = {
-        value: amounts[i] || BigInt(0),
-        assetCode: payment.asset.code,
-        assetScale: payment.asset.scale
-      }
-    } catch (_) {
-      deps.logger.error(
-        { payment: payment.id },
-        'incoming payment account not found'
-      )
-      throw new Error(
-        `Underlying TB account not found, incoming payment id: ${payment.id}`
-      )
-    }
-    return payment
-  })
+  return await getPage(deps, options)
 }
 
 async function approveIncomingPayment(
@@ -584,11 +550,20 @@ async function getPage(
   deps: ServiceDependencies,
   options?: GetPageOptions
 ): Promise<IncomingPayment[]> {
-  const { filter, pagination, sortOrder, tenantId } = options ?? {}
+  const { filter, pagination, sortOrder, tenantId, walletAddressId, client } =
+    options ?? {}
   const query = IncomingPayment.query(deps.knex)
 
   if (tenantId) {
     query.where('tenantId', tenantId)
+  }
+
+  if (client) {
+    query.where('client', client)
+  }
+
+  if (walletAddressId) {
+    query.where('walletAddressId', walletAddressId)
   }
 
   if (filter?.initiatedBy?.in && filter.initiatedBy.in.length) {
@@ -610,37 +585,10 @@ async function getPage(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
   return page.map((payment: IncomingPayment, i: number) => {
     payment.receivedAmount = {
-      value: validateReceiveAmount(deps, payment, amounts[i]),
+      value: amounts[i] || BigInt(0),
       assetCode: payment.asset.code,
       assetScale: payment.asset.scale
     }
     return payment
   })
-}
-
-function validateReceiveAmount(
-  deps: ServiceDependencies,
-  payment: IncomingPayment,
-  sentAmount: bigint | undefined
-): bigint {
-  if (sentAmount !== undefined) {
-    return sentAmount
-  }
-
-  if (
-    [IncomingPaymentState.Pending, IncomingPaymentState.Expired].includes(
-      payment.state
-    )
-  ) {
-    return BigInt(0)
-  }
-
-  const errorMessage =
-    'Could not get amount received for payment. There was a problem getting the associated liquidity account.'
-
-  deps.logger.error(
-    { outgoingPayment: payment.id, state: payment.state },
-    errorMessage
-  )
-  throw new Error(errorMessage)
 }

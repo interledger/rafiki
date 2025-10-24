@@ -9769,6 +9769,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "filter",
+                "description": "Filter incoming payments based on specific criteria such as initiation reason.",
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "IncomingPaymentFilter",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "first",
                 "description": "Forward pagination: Limit the result to the first **n** incoming payments after the `after` cursor.",
                 "type": {

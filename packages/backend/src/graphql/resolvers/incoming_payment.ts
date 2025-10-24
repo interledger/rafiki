@@ -92,21 +92,23 @@ export const getWalletAddressIncomingPayments: WalletAddressResolvers<TenantedAp
     const incomingPaymentService = await ctx.container.use(
       'incomingPaymentService'
     )
-    const { sortOrder, ...pagination } = args
+    const { sortOrder, filter, ...pagination } = args
     const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
-    const incomingPayments = await incomingPaymentService.getWalletAddressPage({
+    const incomingPayments = await incomingPaymentService.getPage({
       walletAddressId: parent.id,
       pagination,
       sortOrder: order,
-      tenantId: ctx.isOperator ? undefined : ctx.tenant.id
+      tenantId: ctx.isOperator ? undefined : ctx.tenant.id,
+      filter
     })
     const pageInfo = await getPageInfo({
       getPage: (pagination: Pagination, sortOrder?: SortOrder) =>
-        incomingPaymentService.getWalletAddressPage({
+        incomingPaymentService.getPage({
           walletAddressId: parent.id as string,
           pagination,
           sortOrder,
-          tenantId: ctx.tenant.id
+          tenantId: ctx.tenant.id,
+          filter
         }),
       page: incomingPayments,
       sortOrder: order

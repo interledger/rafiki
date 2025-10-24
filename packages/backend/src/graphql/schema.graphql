@@ -838,6 +838,8 @@ type WalletAddress implements Model {
     last: Int
     "Specify the sort order of incoming payments based on their creation date, either ascending or descending."
     sortOrder: SortOrder
+    "Filter incoming payments based on specific criteria such as initiation reason."
+    filter: IncomingPaymentFilter
   ): IncomingPaymentConnection
 
   "List of quotes created at this wallet address"
