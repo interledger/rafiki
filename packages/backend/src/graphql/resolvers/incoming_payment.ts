@@ -39,6 +39,43 @@ export const getIncomingPayment: QueryResolvers<TenantedApolloContext>['incoming
     return paymentToGraphql(payment, config)
   }
 
+export const getIncomingPayments: QueryResolvers<TenantedApolloContext>['incomingPayments'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['IncomingPaymentConnection']> => {
+    const incomingPaymentService = await ctx.container.use(
+      'incomingPaymentService'
+    )
+    const { tenantId, filter, sortOrder, ...pagination } = args
+    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+    const getPageFn = (pagination_: Pagination, sortOrder_?: SortOrder) =>
+      incomingPaymentService.getPage({
+        tenantId: ctx.isOperator ? tenantId : ctx.tenant.id,
+        pagination: pagination_,
+        filter,
+        sortOrder: sortOrder_
+      })
+    const incomingPayments = await getPageFn(pagination, order)
+    const pageInfo = await getPageInfo({
+      getPage: (pagination_: Pagination, sortOrder_?: SortOrder) =>
+        getPageFn(pagination_, sortOrder_),
+      page: incomingPayments,
+      sortOrder: order
+    })
+
+    const config = await ctx.container.use('config')
+
+    return {
+      pageInfo,
+      edges: incomingPayments.map((incomingPayment: IncomingPayment) => ({
+        cursor: incomingPayment.id,
+        node: paymentToGraphql(incomingPayment, config)
+      }))
+    }
+  }
+
 export const getWalletAddressIncomingPayments: WalletAddressResolvers<TenantedApolloContext>['incomingPayments'] =
   async (
     parent,
@@ -55,21 +92,23 @@ export const getWalletAddressIncomingPayments: WalletAddressResolvers<TenantedAp
     const incomingPaymentService = await ctx.container.use(
       'incomingPaymentService'
     )
-    const { sortOrder, ...pagination } = args
+    const { sortOrder, filter, ...pagination } = args
     const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
-    const incomingPayments = await incomingPaymentService.getWalletAddressPage({
+    const incomingPayments = await incomingPaymentService.getPage({
       walletAddressId: parent.id,
       pagination,
       sortOrder: order,
-      tenantId: ctx.isOperator ? undefined : ctx.tenant.id
+      tenantId: ctx.isOperator ? undefined : ctx.tenant.id,
+      filter
     })
     const pageInfo = await getPageInfo({
       getPage: (pagination: Pagination, sortOrder?: SortOrder) =>
-        incomingPaymentService.getWalletAddressPage({
+        incomingPaymentService.getPage({
           walletAddressId: parent.id as string,
           pagination,
           sortOrder,
-          tenantId: ctx.tenant.id
+          tenantId: ctx.tenant.id,
+          filter
         }),
       page: incomingPayments,
       sortOrder: order
