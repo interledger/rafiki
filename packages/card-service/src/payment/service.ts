@@ -9,7 +9,7 @@ import {
   PaymentTimeoutError,
   UnknownWalletAddressError
 } from './errors'
-import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
+import { ApolloClient, NormalizedCacheObject } from '@apollo/client/core'
 import {
   CreateOutgoingPaymentFromIncoming,
   GetWalletAddressByUrl,

@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client'
+import { gql } from '@apollo/client/core'
 
 export const GET_WALLET_ADDRESS_BY_URL = gql`
   query GetWalletAddressByUrl($url: String!) {

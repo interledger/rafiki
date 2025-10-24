@@ -13,7 +13,7 @@ import {
   ApolloClient,
   ApolloLink,
   InMemoryCache
-} from '@apollo/client'
+} from '@apollo/client/core'
 import { onError } from '@apollo/client/link/error'
 import { setContext } from '@apollo/client/link/context'
 import { print } from 'graphql'
