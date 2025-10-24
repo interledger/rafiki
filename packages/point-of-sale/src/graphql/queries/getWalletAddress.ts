@@ -24,7 +24,6 @@ export const GET_WALLET_ADDRESS_BY_URL = gql`
             url
             walletAddressId
             senderWalletAddress
-            client
             state
             metadata
             incomingAmount {
@@ -39,7 +38,6 @@ export const GET_WALLET_ADDRESS_BY_URL = gql`
             }
             expiresAt
             createdAt
-            tenantId
           }
           cursor
         }
