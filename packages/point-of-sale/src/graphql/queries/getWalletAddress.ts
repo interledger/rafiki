@@ -26,6 +26,7 @@ export const GET_WALLET_ADDRESS_BY_URL = gql`
             senderWalletAddress
             client
             state
+            metadata
             incomingAmount {
               assetCode
               assetScale
