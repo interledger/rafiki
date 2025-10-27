@@ -40,6 +40,7 @@ services:
       OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
       ADMIN_API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       ADMIN_API_SIGNATURE_VERSION: 1
+      WALLET_ADDRESS_NOT_FOUND_POLLING_ENABLED: true
     volumes:
       - ../private-key.pem:/workspace/private-key.pem
     depends_on:
