@@ -148,7 +148,6 @@ describe('Wallet Address Routes', (): void => {
         { walletAddressNotFoundPollingEnabled: true },
         async (): Promise<void> => {
           const walletAddress = await createWalletAddress(deps, {
-            tenantId: config.operatorTenantId,
             publicName: faker.person.firstName()
           })
 
@@ -161,19 +160,18 @@ describe('Wallet Address Routes', (): void => {
             headers: { Accept: 'application/json' },
             url: '/'
           })
-          ctx.walletAddressUrl = walletAddress.address
+          ctx.walletAddressUrl = walletAddress.url
           await expect(walletAddressRoutes.get(ctx)).resolves.toBeUndefined()
           expect(ctx.response).toSatisfyApiSpec()
           expect(getOrPollByUrlSpy).toHaveBeenCalledTimes(1)
           expect(getByUrlSpy).not.toHaveBeenCalled()
           expect(ctx.body).toEqual({
-            id: walletAddress.address,
+            id: walletAddress.url,
             publicName: walletAddress.publicName,
             assetCode: walletAddress.asset.code,
             assetScale: walletAddress.asset.scale,
-            // Ensure the tenant id is returned for auth and resource server:
-            authServer: `${config.authServerGrantUrl}/${walletAddress.tenantId}`,
-            resourceServer: `${config.openPaymentsUrl}/${walletAddress.tenantId}`
+            authServer: config.authServerGrantUrl,
+            resourceServer: config.openPaymentsUrl
           })
         }
       )
