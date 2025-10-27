@@ -8,7 +8,6 @@ import {
   WebhookBody,
   WebhookHandlerRoutes
 } from './routes'
-import { truncateTables } from '../tests/tableManager'
 import { createContext } from '../tests/context'
 import { v4 } from 'uuid'
 import { faker } from '@faker-js/faker'
@@ -27,7 +26,6 @@ describe('Webhook Handler Routes Tests', (): void => {
   })
 
   afterAll(async (): Promise<void> => {
-    await truncateTables(deps)
     await appContainer.shutdown()
   })
 

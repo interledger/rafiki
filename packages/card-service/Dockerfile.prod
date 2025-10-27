@@ -17,7 +17,6 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 FROM base AS prod-deps
 
 COPY package.json pnpm-workspace.yaml .npmrc ./
-COPY packages/card-service/knexfile.js ./packages/card-service/knexfile.js
 COPY packages/card-service/package.json ./packages/card-service/package.json
 RUN pnpm clean
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
@@ -49,11 +48,8 @@ WORKDIR /home/rafiki
 COPY --from=prod-deps /home/rafiki/node_modules ./node_modules
 COPY --from=prod-deps /home/rafiki/packages/card-service/node_modules ./packages/card-service/node_modules
 COPY --from=prod-deps /home/rafiki/packages/card-service/package.json ./packages/card-service/package.json
-COPY --from=prod-deps /home/rafiki/packages/card-service/knexfile.js ./packages/card-service/knexfile.js
 
-COPY --from=builder /home/rafiki/packages/card-service/migrations/ ./packages/card-service/migrations
 COPY --from=builder /home/rafiki/packages/card-service/dist ./packages/card-service/dist
-COPY --from=builder /home/rafiki/packages/card-service/knexfile.js ./packages/card-service/knexfile.js
 
 USER root
 

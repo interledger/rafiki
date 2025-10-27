@@ -3,10 +3,7 @@ import { App, AppServices } from './app'
 import { Config } from './config/app'
 import { Ioc, IocContract } from '@adonisjs/fold'
 import createLogger from 'pino'
-import { knex } from 'knex'
-import { Model } from 'objection'
 import Redis from 'ioredis'
-import { createPOSStore, PosStoreService } from './pos-store/service'
 import { createPaymentService } from './payment/service'
 import { createPaymentRoutes } from './payment/routes'
 import { createOpenAPI } from '@interledger/openapi'
@@ -16,7 +13,7 @@ import {
   ApolloClient,
   ApolloLink,
   InMemoryCache
-} from '@apollo/client'
+} from '@apollo/client/core'
 import { onError } from '@apollo/client/link/error'
 import { setContext } from '@apollo/client/link/context'
 import { print } from 'graphql'
@@ -33,48 +30,6 @@ export function initIocContainer(
     const logger = createLogger()
     logger.level = config.logLevel
     return logger
-  })
-
-  container.singleton('knex', async (deps: IocContract<AppServices>) => {
-    const logger = await deps.use('logger')
-    const config = await deps.use('config')
-    logger.info({ msg: 'creating knex' })
-    const db = knex({
-      client: 'postgresql',
-      connection: config.databaseUrl,
-      pool: {
-        min: 2,
-        max: 10
-      },
-      migrations: {
-        directory: './',
-        tableName: 'knex_migrations'
-      },
-      searchPath: config.dbSchema,
-      log: {
-        warn(message) {
-          logger.warn(message)
-        },
-        error(message) {
-          logger.error(message)
-        },
-        deprecate(message) {
-          logger.warn(message)
-        },
-        debug(message) {
-          logger.debug(message)
-        }
-      }
-    })
-    db.client.driver.types.setTypeParser(
-      db.client.driver.types.builtins.INT8,
-      'text',
-      BigInt
-    )
-    if (config.dbSchema) {
-      await db.raw(`CREATE SCHEMA IF NOT EXISTS "${config.dbSchema}"`)
-    }
-    return db
   })
 
   container.singleton('redis', async (deps): Promise<Redis> => {
@@ -158,12 +113,6 @@ export function initIocContainer(
     })
 
     return client
-  })
-
-  container.singleton('pos-store', async (deps): Promise<PosStoreService> => {
-    const redis = await deps.use('redis')
-    const logger = await deps.use('logger')
-    return createPOSStore({ redis, logger })
   })
 
   container.singleton('openApi', async () => {
@@ -254,20 +203,6 @@ export const start = async (
 
   const config = await container.use('config')
 
-  // Do migrations
-  const knex = await container.use('knex')
-
-  if (!config.enableManualMigrations) {
-    // Needs a wrapped inline function
-    await callWithRetry(async () => {
-      await knex.migrate.latest({
-        directory: __dirname + '/../migrations'
-      })
-    })
-  }
-
-  Model.knex(knex)
-
   await app.boot()
 
   await app.startCardServiceServer(config.cardServicePort)
@@ -292,25 +227,4 @@ export const gracefulShutdown = async (
   const logger = await container.use('logger')
   logger.info('shutting down.')
   await app.shutdown()
-  const knex = await container.use('knex')
-  await knex.destroy()
-}
-
-// Used for running migrations in a try loop with exponential backoff
-const callWithRetry: CallableFunction = async (
-  fn: CallableFunction,
-  depth = 0
-) => {
-  const wait = (ms: number) => new Promise((res) => setTimeout(res, ms))
-
-  try {
-    return await fn()
-  } catch (e) {
-    if (depth > 7) {
-      throw e
-    }
-    await wait(2 ** depth * 30)
-
-    return callWithRetry(fn, depth + 1)
-  }
 }

@@ -1,4 +1,3 @@
-import { Knex } from 'knex'
 import { IocContract } from '@adonisjs/fold'
 
 import { start, gracefulShutdown } from '..'
@@ -6,8 +5,6 @@ import { App, AppServices } from '../app'
 
 export interface TestContainer {
   app: App
-  knex: Knex
-  connectionUrl: string
   shutdown: () => Promise<void>
   container: IocContract<AppServices>
 }
@@ -29,12 +26,8 @@ export const createTestApp = async (
 
   const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
-  const knex = await container.use('knex')
-
   return {
     app,
-    knex,
-    connectionUrl: config.databaseUrl,
     shutdown: async () => {
       nock.cleanAll()
       nock.abortPendingRequests()

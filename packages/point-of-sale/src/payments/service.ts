@@ -1,7 +1,7 @@
 import { Logger } from 'pino'
 import { CREATE_INCOMING_PAYMENT } from '../graphql/mutations/createIncomingPayment'
 import { IAppConfig } from '../config/app'
-import { ApolloClient, NormalizedCacheObject, gql } from '@apollo/client'
+import { ApolloClient, NormalizedCacheObject, gql } from '@apollo/client/core'
 import {
   AmountInput,
   CreateIncomingPayment,

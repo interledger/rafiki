@@ -17,7 +17,6 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 FROM base AS prod-deps
 
 COPY package.json pnpm-workspace.yaml .npmrc ./
-COPY packages/point-of-sale/knexfile.js ./packages/point-of-sale/knexfile.js
 COPY packages/point-of-sale/package.json ./packages/point-of-sale/package.json
 
 RUN pnpm clean
@@ -50,11 +49,8 @@ WORKDIR /home/rafiki
 COPY --from=prod-deps /home/rafiki/node_modules ./node_modules
 COPY --from=prod-deps /home/rafiki/packages/point-of-sale/node_modules ./packages/point-of-sale/node_modules
 COPY --from=prod-deps /home/rafiki/packages/point-of-sale/package.json ./packages/point-of-sale/package.json
-COPY --from=prod-deps /home/rafiki/packages/point-of-sale/knexfile.js ./packages/point-of-sale/knexfile.js
 
-COPY --from=builder /home/rafiki/packages/point-of-sale/migrations/ ./packages/point-of-sale/migrations
 COPY --from=builder /home/rafiki/packages/point-of-sale/dist ./packages/point-of-sale/dist
-COPY --from=builder /home/rafiki/packages/point-of-sale/knexfile.js ./packages/point-of-sale/knexfile.js
 
 USER root
 
