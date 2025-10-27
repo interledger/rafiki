@@ -63,9 +63,9 @@ export class App {
     )
 
     router.post<DefaultState, PaymentEventContext>(
-      '/payment-event',
+      '/webhook',
       createValidatorMiddleware<PaymentEventContext>(openApi.cardServerSpec, {
-        path: '/payment-event',
+        path: '/webhook',
         method: HttpMethod.POST
       }),
       paymentRoutes.handlePaymentEvent
