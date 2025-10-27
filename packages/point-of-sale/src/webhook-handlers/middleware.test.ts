@@ -58,18 +58,17 @@ describe('Webhook Signature Middleware', (): void => {
     expect(next).toHaveBeenCalled()
   })
 
-  test('Does not verify invalid signature header', async (): Promise<void> => {
+  test('Allows empty signature header', async (): Promise<void> => {
     const ctx = createWebhookSignatureContext(
       webhookBody,
       Config,
       appContainer.container
     )
     ctx.headers['rafiki-signature'] = undefined
-    await expect(webhookHttpSigMiddleware(ctx, next)).rejects.toMatchObject({
-      status: 401,
-      message: 'invalid webhook signature header'
-    })
-    expect(next).not.toHaveBeenCalled()
+
+    await webhookHttpSigMiddleware(ctx, next)
+    expect(ctx.response.status).toEqual(200)
+    expect(next).toHaveBeenCalled()
   })
 
   test('Does not verify invalid signature digest', async (): Promise<void> => {
