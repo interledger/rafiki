@@ -204,6 +204,12 @@ export const Config = {
     'SEND_TENANT_WEBHOOKS_TO_OPERATOR',
     false
   )
+  ,
+  // TODO Maybe rename?
+  enableKycAseDecision: envBool('ENABLE_KYC_ASE_DECISION', false),
+  kycAseDecisionUrl: process.env.KYC_ASE_DECISION_URL,
+  kycDecisionMaxWaitMs: envInt('KYC_DECISION_MAX_WAIT_MS', 1500),
+  kycDecisionSafetyMarginMs: envInt('KYC_DECISION_SAFETY_MARGIN_MS', 100)
 }
 
 function parseRedisTlsConfig(
