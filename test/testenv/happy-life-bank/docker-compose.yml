@@ -37,6 +37,7 @@ services:
       REDIS_URL: redis://shared-redis:6379/2
       USE_TIGERBEETLE: false
       API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      WALLET_ADDRESS_NOT_FOUND_POLLING_ENABLED: true
     volumes:
       - ../private-key.pem:/workspace/private-key.pem
     depends_on:

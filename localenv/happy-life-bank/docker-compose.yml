@@ -69,6 +69,7 @@ services:
       WALLET_ADDRESS_URL: ${HAPPY_LIFE_BANK_WALLET_ADDRESS_URL:-https://happy-life-bank-backend/.well-known/pay}
       ENABLE_TELEMETRY: true
       KEY_ID: 53f2d913-e98a-40b9-b270-372d0547f23d
+      WALLET_ADDRESS_NOT_FOUND_POLLING_ENABLED: true
     depends_on:
       - cloud-nine-backend
     healthcheck:
