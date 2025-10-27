@@ -8,7 +8,8 @@ import {
   GetPaymentsContext,
   GetPaymentsQuery,
   PaymentContext,
-  PaymentRoutes
+  PaymentRoutes,
+  RefundContext
 } from './routes'
 import { PaymentService } from './service'
 import { CardServiceClient, Result } from '../card-service-client/client'

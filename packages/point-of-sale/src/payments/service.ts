@@ -11,8 +11,6 @@ import {
   CreateReceiverVariables,
   GetIncomingPaymentSenderAndAmount,
   GetIncomingPaymentSenderAndAmountVariables,
-  GetWalletAddress,
-  GetWalletAddressVariables,
   MutationCreateIncomingPaymentArgs,
   OutgoingPayment,
   Query,
