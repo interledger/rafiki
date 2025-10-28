@@ -203,27 +203,25 @@ describe('Payment Routes', () => {
       await paymentRoutes.getPayments(ctx)
       expect(ctx.status).toEqual(200)
       expect(ctx.body).toEqual({
-        incomingPayments: {
-          // Ensure that typename is sanitized
-          result: mockServiceResponse.edges.map((edge) => {
-            const {
-              __typename: _nodeTypename,
-              receivedAmount,
-              incomingAmount,
-              ...restOfNode
-            } = edge.node
-            const { __typename: _receivedTypename, ...restOfReceived } =
-              receivedAmount
-            const { __typename: _incomingTypename, ...restOfIncoming } =
-              incomingAmount
-            return {
-              ...restOfNode,
-              incomingAmount: restOfIncoming,
-              receivedAmount: restOfReceived
-            }
-          }),
-          pagination: mockServiceResponse.pageInfo
-        }
+        // Ensure that typename is sanitized
+        result: mockServiceResponse.edges.map((edge) => {
+          const {
+            __typename: _nodeTypename,
+            receivedAmount,
+            incomingAmount,
+            ...restOfNode
+          } = edge.node
+          const { __typename: _receivedTypename, ...restOfReceived } =
+            receivedAmount
+          const { __typename: _incomingTypename, ...restOfIncoming } =
+            incomingAmount
+          return {
+            ...restOfNode,
+            incomingAmount: restOfIncoming,
+            receivedAmount: restOfReceived
+          }
+        }),
+        pagination: mockServiceResponse.pageInfo
       })
     })
 
@@ -237,12 +235,10 @@ describe('Payment Routes', () => {
       await paymentRoutes.getPayments(ctx)
       expect(ctx.status).toEqual(200)
       expect(ctx.body).toMatchObject({
-        incomingPayments: {
-          result: [],
-          pagination: {
-            hasNextPage: false,
-            hasPreviousPage: false
-          }
+        result: [],
+        pagination: {
+          hasNextPage: false,
+          hasPreviousPage: false
         }
       })
     })

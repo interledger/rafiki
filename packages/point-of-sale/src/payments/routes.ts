@@ -94,17 +94,15 @@ async function getPayments(
   const { first, last, ...restOfQuery } = ctx.request.query
   const options: GetPaymentsQuery = restOfQuery
   if (first) {
-    Object.assign('first', Number(first))
+    Object.assign(options, { first: Number(first) })
   }
   if (last) {
-    Object.assign('last', Number(last))
+    Object.assign(options, { last: Number(last) })
   }
   const incomingPaymentsPage =
     await deps.paymentService.getIncomingPayments(options)
 
-  ctx.body = {
-    incomingPayments: incomingPaymentPageToResponse(incomingPaymentsPage)
-  }
+  ctx.body = incomingPaymentPageToResponse(incomingPaymentsPage)
 }
 
 async function payment(
