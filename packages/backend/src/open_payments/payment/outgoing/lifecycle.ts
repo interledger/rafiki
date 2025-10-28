@@ -3,8 +3,7 @@ import {
   OutgoingPayment,
   OutgoingPaymentState,
   OutgoingPaymentEvent,
-  OutgoingPaymentEventType,
-  OutgoingPaymentGrantSpentAmounts
+  OutgoingPaymentEventType
 } from './model'
 import {
   revertGrantSpentAmounts,
@@ -121,7 +120,7 @@ export async function handleSending(
   }
   stopTimer()
 
-  updateGrantSpentAmounts(deps, payment, payResult)
+  await updateGrantSpentAmounts(deps, payment, payResult)
 
   await Promise.all([
     deps.telemetry.incrementCounter('transactions_total', 1, {
@@ -183,7 +182,7 @@ export async function handleFailed(
   })
 
   if (payment.grantId) {
-    revertGrantSpentAmounts(deps, payment)
+    await revertGrantSpentAmounts(deps, payment)
   }
 
   await sendWebhookEvent(deps, payment, OutgoingPaymentEventType.PaymentFailed)
