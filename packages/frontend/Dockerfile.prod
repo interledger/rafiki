@@ -36,7 +36,7 @@ COPY packages/frontend ./packages/frontend
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install \
     --recursive \
-    --offline \
+    --prefer-offline \
     --frozen-lockfile
 RUN pnpm --filter frontend build
 
