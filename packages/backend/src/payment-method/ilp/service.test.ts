@@ -680,7 +680,7 @@ describe('IlpPaymentService', (): void => {
           finalDebitAmount: 100n,
           finalReceiveAmount: 100n
         })
-      ).resolves.toBe(100n)
+      ).resolves.toStrictEqual({ debit: 100n, receive: 100n })
 
       await validateBalances(outgoingPayment, incomingPayment, {
         amountSent: 100n,
@@ -730,7 +730,7 @@ describe('IlpPaymentService', (): void => {
           finalDebitAmount: 100n - 5n,
           finalReceiveAmount: 100n - 5n
         })
-      ).resolves.toBe(95n)
+      ).resolves.toStrictEqual({ debit: 95n, receive: 95n })
 
       await validateBalances(outgoingPayment, incomingPayment, {
         amountSent: 100n,
