@@ -29,3 +29,8 @@ export function generateRouteLogs(ctx: AppContext): {
 export function isValidDateString(date: string): boolean {
   return !isNaN(Date.parse(date))
 }
+
+export function ensureTrailingSlash(str: string): string {
+  if (!str.endsWith('/')) return `${str}/`
+  return str
+}

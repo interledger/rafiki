@@ -199,18 +199,27 @@ describe('Integration tests', (): void => {
           quoteGrant.access_token.value,
           incomingPayment
         )
+
+        const clientNonce = crypto.randomUUID()
+        const finishUri = 'https://example.com'
+
         const outgoingPaymentGrant = await grantRequestOutgoingPayment(
           senderWalletAddress,
           { receiveAmount: quote.receiveAmount },
           {
             method: 'redirect',
-            uri: 'https://example.com',
-            nonce: '456'
+            uri: finishUri,
+            nonce: clientNonce
           }
         )
         const interactRef = await consentInteractionWithInteractRef(
           outgoingPaymentGrant,
-          senderWalletAddress
+          senderWalletAddress,
+          {
+            clientNonce,
+            finishUri,
+            initialGrantUrl: senderWalletAddress.authServer
+          }
         )
         const finalizedGrant = await grantContinue(
           outgoingPaymentGrant,
