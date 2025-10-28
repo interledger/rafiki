@@ -6,8 +6,11 @@ import Koa, { DefaultState } from 'koa'
 import Router from '@koa/router'
 import bodyParser from 'koa-bodyparser'
 import cors from '@koa/cors'
-
-import { PaymentContext, PaymentRoutes } from './payments/routes'
+import {
+  GetPaymentsContext,
+  PaymentContext,
+  PaymentRoutes
+} from './payments/routes'
 import {
   HandleWebhookContext,
   WebhookHandlerRoutes
@@ -65,6 +68,14 @@ export class App {
     const webhookHandlerRoutes = await this.container.use(
       'webhookHandlerRoutes'
     )
+
+    // GET /payments
+    // Get payments made to a given device
+    router.get<DefaultState, GetPaymentsContext>(
+      '/payments',
+      paymentRoutes.getPayments
+    )
+
     // POST /payment
     // Initiate a payment
     router.post<DefaultState, PaymentContext>('/payment', paymentRoutes.payment)

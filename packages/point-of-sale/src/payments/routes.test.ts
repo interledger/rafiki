@@ -4,7 +4,7 @@ import { initIocContainer } from '..'
 import { AppServices } from '../app'
 import { Config, IAppConfig } from '../config/app'
 import { TestContainer, createTestApp } from '../tests/app'
-import { PaymentContext, PaymentRoutes } from './routes'
+import { GetPaymentsContext, PaymentContext, PaymentRoutes } from './routes'
 import { PaymentService } from './service'
 import { CardServiceClient, Result } from '../card-service-client/client'
 import { createContext } from '../tests/context'
@@ -12,6 +12,7 @@ import { CardServiceClientError } from '../card-service-client/errors'
 import { webhookWaitMap } from '../webhook-handlers/request-map'
 import { faker } from '@faker-js/faker'
 import { withConfigOverride } from '../tests/helpers'
+import { IncomingPaymentState } from '../graphql/generated/graphql'
 
 describe('Payment Routes', () => {
   let deps: IocContract<AppServices>
@@ -20,6 +21,24 @@ describe('Payment Routes', () => {
   let paymentService: PaymentService
   let cardServiceClient: CardServiceClient
   let config: IAppConfig
+
+  function mockPaymentService() {
+    jest.spyOn(paymentService, 'getWalletAddress').mockResolvedValueOnce({
+      id: 'id',
+      assetCode: 'USD',
+      assetScale: 1,
+      authServer: 'authServer',
+      resourceServer: 'resourceServer',
+      cardService: 'cardService'
+    })
+    jest.spyOn(paymentService, 'createIncomingPayment').mockResolvedValueOnce({
+      id: 'incoming-payment-url',
+      url: faker.internet.url()
+    })
+    jest
+      .spyOn(paymentService, 'getWalletAddressIdByUrl')
+      .mockResolvedValueOnce(faker.internet.url())
+  }
 
   beforeAll(async () => {
     deps = initIocContainer(Config)
@@ -135,26 +154,94 @@ describe('Payment Routes', () => {
         }
       )
     )
+  })
 
-    function mockPaymentService() {
-      jest.spyOn(paymentService, 'getWalletAddress').mockResolvedValueOnce({
-        id: 'id',
-        assetCode: 'USD',
-        assetScale: 1,
-        authServer: 'authServer',
-        resourceServer: 'resourceServer',
-        cardService: 'cardService'
+  describe('get incoming payments', (): void => {
+    test('can get incoming payments for pos device', async (): Promise<void> => {
+      const walletAddressId = v4()
+      const mockServiceResponse = {
+        edges: [
+          {
+            node: {
+              __typename: 'IncomingPayment' as const,
+              id: v4(),
+              url: faker.internet.url(),
+              walletAddressId,
+              client: faker.internet.url(),
+              state: IncomingPaymentState.Pending,
+              incomingAmount: {
+                __typename: 'Amount' as const,
+                value: BigInt(500),
+                assetCode: 'USD',
+                assetScale: 2
+              },
+              receivedAmount: {
+                __typename: 'Amount' as const,
+                value: BigInt(500),
+                assetCode: 'USD',
+                assetScale: 2
+              },
+              expiresAt: new Date().toString(),
+              createdAt: new Date().toString(),
+              tenantId: v4()
+            },
+            cursor: walletAddressId
+          }
+        ],
+        pageInfo: {
+          endCursor: walletAddressId,
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: walletAddressId
+        }
+      }
+      jest
+        .spyOn(paymentService, 'getIncomingPayments')
+        .mockResolvedValue(mockServiceResponse)
+      const ctx = createGetPaymentsContext()
+
+      await paymentRoutes.getPayments(ctx)
+      expect(ctx.status).toEqual(200)
+      expect(ctx.body).toEqual({
+        // Ensure that typename is sanitized
+        result: mockServiceResponse.edges.map((edge) => {
+          const {
+            __typename: _nodeTypename,
+            receivedAmount,
+            incomingAmount,
+            ...restOfNode
+          } = edge.node
+          const { __typename: _receivedTypename, ...restOfReceived } =
+            receivedAmount
+          const { __typename: _incomingTypename, ...restOfIncoming } =
+            incomingAmount
+          return {
+            ...restOfNode,
+            incomingAmount: restOfIncoming,
+            receivedAmount: restOfReceived
+          }
+        }),
+        pagination: mockServiceResponse.pageInfo
       })
+    })
+
+    test('returns empty page if no incoming payments', async (): Promise<void> => {
       jest
-        .spyOn(paymentService, 'createIncomingPayment')
-        .mockResolvedValueOnce({
-          id: 'incoming-payment-url',
-          url: faker.internet.url()
-        })
-      jest
-        .spyOn(paymentService, 'getWalletAddressIdByUrl')
-        .mockResolvedValueOnce(faker.internet.url())
-    }
+        .spyOn(paymentService, 'getIncomingPayments')
+        .mockResolvedValue(undefined)
+
+      const ctx = createGetPaymentsContext()
+
+      await paymentRoutes.getPayments(ctx)
+      expect(ctx.status).toEqual(200)
+      expect(ctx.body).toMatchObject({
+        result: [],
+        pagination: {
+          hasNextPage: false,
+          hasPreviousPage: false
+        }
+      })
+    })
   })
 })
 
@@ -170,6 +257,17 @@ function createPaymentContext() {
       senderWalletAddress: faker.internet.url(),
       timestamp: new Date().getTime(),
       amount: { assetScale: 2, assetCode: 'USD', value: '100' }
+    }
+  })
+}
+
+function createGetPaymentsContext() {
+  return createContext<GetPaymentsContext>({
+    headers: { Accept: 'application/json' },
+    method: 'GET',
+    url: `/payments`,
+    query: {
+      receiverWalletAddress: faker.internet.url()
     }
   })
 }

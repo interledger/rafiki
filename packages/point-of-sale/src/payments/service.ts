@@ -1,17 +1,21 @@
 import { Logger } from 'pino'
 import { CREATE_INCOMING_PAYMENT } from '../graphql/mutations/createIncomingPayment'
 import { IAppConfig } from '../config/app'
-import { ApolloClient, NormalizedCacheObject, gql } from '@apollo/client/core'
+import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 import {
   AmountInput,
   CreateIncomingPayment,
   MutationCreateIncomingPaymentArgs,
   Query,
-  QueryWalletAddressByUrlArgs
+  QueryWalletAddressByUrlArgs,
+  GetWalletAddress,
+  GetWalletAddressVariables
 } from '../graphql/generated/graphql'
 import { FnWithDeps } from '../shared/types'
 import { v4 } from 'uuid'
 import { AxiosInstance, AxiosRequestConfig } from 'axios'
+import { GET_WALLET_ADDRESS_BY_URL } from '../graphql/queries/getWalletAddress'
+import { GetPaymentsQuery } from './routes'
 
 type ServiceDependencies = {
   logger: Logger
@@ -40,7 +44,15 @@ export type CreatedIncomingPayment = {
   url: string
 }
 
+type IncomingPaymentPage = Exclude<
+  Exclude<GetWalletAddress['walletAddressByUrl'], null>,
+  undefined
+>['incomingPayments']
+
 export type PaymentService = {
+  getIncomingPayments: (
+    options: GetPaymentsQuery
+  ) => Promise<IncomingPaymentPage>
   createIncomingPayment: (
     walletAddressId: string,
     incomingAmount: AmountInput
@@ -61,6 +73,8 @@ export function createPaymentService(
   }
 
   return {
+    getIncomingPayments: (options: GetPaymentsQuery) =>
+      getIncomingPayments(deps, options),
     createIncomingPayment: (
       walletAddressId: string,
       incomingAmount: AmountInput
@@ -70,6 +84,27 @@ export function createPaymentService(
     getWalletAddressIdByUrl: (walletAddressUrl: string) =>
       getWalletAddressIdByUrl(deps, walletAddressUrl)
   }
+}
+
+async function getIncomingPayments(
+  deps: ServiceDependencies,
+  options: GetPaymentsQuery
+): Promise<IncomingPaymentPage> {
+  const { receiverWalletAddress, ...restOfOptions } = options
+
+  const client = deps.apolloClient
+  const { data } = await client.query<
+    GetWalletAddress,
+    GetWalletAddressVariables
+  >({
+    query: GET_WALLET_ADDRESS_BY_URL,
+    variables: {
+      ...restOfOptions,
+      url: receiverWalletAddress
+    }
+  })
+
+  return data?.walletAddressByUrl?.incomingPayments
 }
 
 const createIncomingPayment: FnWithDeps<
@@ -143,13 +178,7 @@ async function getWalletAddressIdByUrl(
     variables: {
       url: walletAddressUrl
     },
-    query: gql`
-      query getWalletAddressByUrl($url: String!) {
-        walletAddressByUrl(url: $url) {
-          id
-        }
-      }
-    `
+    query: GET_WALLET_ADDRESS_BY_URL
   })
   if (!data?.walletAddressByUrl) {
     throw new Error('Wallet address not found')
