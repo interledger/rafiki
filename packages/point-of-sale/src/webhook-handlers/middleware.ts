@@ -42,12 +42,10 @@ export async function webhookHttpSigMiddleware(
   // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   next: () => Promise<any>
 ): Promise<void> {
-  if (!ctx.request.headers['rafiki-signature'])
-    ctx.throw(401, 'invalid webhook signature header')
-
   const config = await ctx.container.use('config')
 
   if (
+    ctx.request.headers['rafiki-signature'] &&
     !verifyWebhookSignatureDigest(
       ctx.request.headers['rafiki-signature'] as string,
       ctx.request,
