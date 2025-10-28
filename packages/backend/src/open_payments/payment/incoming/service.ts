@@ -570,6 +570,10 @@ async function getPage(
     query.whereIn('initiatedBy', filter.initiatedBy.in)
   }
 
+  if (filter?.initiatedBy?.notIn && filter.initiatedBy.notIn.length) {
+    query.whereNotIn('initiatedBy', filter.initiatedBy.notIn)
+  }
+
   const page = await query.getPage(pagination, sortOrder)
   for (const payment of page) {
     payment.walletAddress = await deps.walletAddressService.get(

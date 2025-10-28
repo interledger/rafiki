@@ -1173,26 +1173,46 @@ describe('Incoming Payment Service', (): void => {
           tenantId,
           walletAddressId: otherSenderWalletAddress.id,
           client,
-          initiationReason: IncomingPaymentInitiationReason.Card
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
       })
 
-      test('can filter by initiatedBy', async (): Promise<void> => {
-        const page = await incomingPaymentService.getPage({
-          filter: {
-            initiatedBy: { in: [IncomingPaymentInitiationReason.Card] }
-          }
+      describe('can filter by initiatedBy', () => {
+        test('state: in', async (): Promise<void> => {
+          const page = await incomingPaymentService.getPage({
+            filter: {
+              initiatedBy: { in: [IncomingPaymentInitiationReason.Card] }
+            }
+          })
+
+          expect(page).toContainEqual(
+            expect.objectContaining({ id: incomingPayment.id })
+          )
+          expect(page).not.toContainEqual(
+            expect.objectContaining({
+              id: otherIncomingPayment.id,
+              receiver: otherReceiver
+            })
+          )
         })
 
-        expect(page).toContainEqual(
-          expect.objectContaining({ id: incomingPayment.id })
-        )
-        expect(page).not.toContainEqual(
-          expect.objectContaining({
-            id: otherIncomingPayment.id,
-            receiver: otherReceiver
+        test('state: notIn', async (): Promise<void> => {
+          const page = await incomingPaymentService.getPage({
+            filter: {
+              initiatedBy: { notIn: [IncomingPaymentInitiationReason.Card] }
+            }
           })
-        )
+
+          expect(page).toContainEqual(
+            expect.objectContaining({ id: otherIncomingPayment.id })
+          )
+          expect(page).not.toContainEqual(
+            expect.objectContaining({
+              id: incomingPayment.id,
+              receiver: otherReceiver
+            })
+          )
+        })
       })
 
       test('can filter by tenantId', async (): Promise<void> => {
