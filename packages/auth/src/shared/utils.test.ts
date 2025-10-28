@@ -1,4 +1,4 @@
-import { isValidDateString } from './utils'
+import { ensureTrailingSlash, isValidDateString } from './utils'
 
 describe('utils', (): void => {
   describe('isValidDateString', () => {
@@ -13,6 +13,15 @@ describe('utils', (): void => {
       [undefined, false] // Undefined value
     ])('should return %p for input %p', (input, expected) => {
       expect(isValidDateString(input!)).toBe(expected)
+    })
+  })
+
+  describe('ensureTrailingSlash', (): void => {
+    test('test ensuring trailing slash', async (): Promise<void> => {
+      const path = '/utils'
+
+      expect(ensureTrailingSlash(path)).toBe(`${path}/`)
+      expect(ensureTrailingSlash(`${path}/`)).toBe(`${path}/`)
     })
   })
 })

@@ -10,8 +10,7 @@ import {
   requestWithTimeout,
   sleep,
   getTenantFromApiSignature,
-  ensureTrailingSlash,
-  urlWithoutTenantId
+  ensureTrailingSlash
 } from './utils'
 import { AppServices, AppContext } from '../app'
 import { TestContainer, createTestApp } from '../tests/app'
@@ -456,14 +455,5 @@ describe('utils', (): void => {
 
     expect(ensureTrailingSlash(path)).toBe(`${path}/`)
     expect(ensureTrailingSlash(`${path}/`)).toBe(`${path}/`)
-  })
-
-  test('test tenant id stripped from url', async (): Promise<void> => {
-    expect(
-      urlWithoutTenantId(
-        'http://happy-life-bank-test-auth:4106/cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d'
-      )
-    ).toBe('http://happy-life-bank-test-auth:4106')
-    expect(urlWithoutTenantId('http://happy-life')).toBe('http://happy-life')
   })
 })

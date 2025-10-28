@@ -18,7 +18,7 @@ import {
 } from '../grant/model'
 import { toOpenPaymentsAccess } from '../access/model'
 import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
-import { generateRouteLogs } from '../shared/utils'
+import { ensureTrailingSlash, generateRouteLogs } from '../shared/utils'
 import { SubjectService } from '../subject/service'
 import { toOpenPaymentsSubject } from '../subject/model'
 import { TenantService } from '../tenant/service'
@@ -377,7 +377,8 @@ async function handleFinishableGrant(
 
     const { clientNonce } = grant
     const { nonce: interactNonce, ref: interactRef } = interaction
-    const grantRequestUrl = config.authServerUrl + `/`
+    const grantRequestUrl =
+      ensureTrailingSlash(config.authServerUrl) + grant.tenantId
 
     // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-4.2.3
     const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${grantRequestUrl}`
