@@ -40,7 +40,7 @@ COPY open-payments-specifications/openapi ./open-payments-specifications/openapi
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install \
     --recursive \
-    --prefer-offline \
+    --offline \
     --frozen-lockfile
 RUN pnpm --filter auth build
 
