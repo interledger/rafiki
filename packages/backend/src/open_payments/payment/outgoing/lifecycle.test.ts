@@ -445,7 +445,7 @@ describe('Lifecycle', (): void => {
             paymentAmount,
             grant,
             mockPayPartialFactory({
-              debit: settledAmount,
+              debit: paymentAmount, // pay shouldn't have partial debit amount
               receive: settledAmount
             })
           )
@@ -511,9 +511,9 @@ describe('Lifecycle', (): void => {
             grantTotalReceiveAmountValue: settledAmount,
             debitAmountScale: assetDetails.scale,
             debitAmountCode: assetDetails.code,
-            paymentDebitAmountValue: settledAmount,
-            intervalDebitAmountValue: settledAmount,
-            grantTotalDebitAmountValue: settledAmount,
+            paymentDebitAmountValue: paymentAmount,
+            intervalDebitAmountValue: paymentAmount,
+            grantTotalDebitAmountValue: paymentAmount,
             paymentState: OutgoingPaymentState.Completed,
             intervalStart: interval.start.toJSDate(),
             intervalEnd: interval.end.toJSDate()
@@ -718,7 +718,7 @@ describe('Lifecycle', (): void => {
             paymentAmount,
             grant,
             mockPayPartialFactory({
-              debit: secondPaymentSettledAmount,
+              debit: paymentAmount, // pay shouldn't have partial debit amount
               receive: secondPaymentSettledAmount
             })
           )
@@ -786,11 +786,9 @@ describe('Lifecycle', (): void => {
               paymentAmount + secondPaymentSettledAmount,
             debitAmountScale: assetDetails.scale,
             debitAmountCode: assetDetails.code,
-            paymentDebitAmountValue: secondPaymentSettledAmount,
-            intervalDebitAmountValue:
-              paymentAmount + secondPaymentSettledAmount,
-            grantTotalDebitAmountValue:
-              paymentAmount + secondPaymentSettledAmount,
+            paymentDebitAmountValue: paymentAmount,
+            intervalDebitAmountValue: paymentAmount + paymentAmount,
+            grantTotalDebitAmountValue: paymentAmount + paymentAmount,
             paymentState: OutgoingPaymentState.Completed,
             intervalStart: interval.start.toJSDate(),
             intervalEnd: interval.end.toJSDate()
@@ -1048,7 +1046,7 @@ describe('Lifecycle', (): void => {
               .spyOn(paymentMethodHandlerService, 'pay')
               .mockImplementationOnce(
                 mockPayPartialFactory({
-                  debit: firstPaymentSettledAmount,
+                  debit: firstPaymentAmount, // pay shouldn't have partial debit amount
                   receive: firstPaymentSettledAmount
                 })(accountingService, receiverWalletAddressId, firstPayment)
               )
@@ -1080,11 +1078,11 @@ describe('Lifecycle', (): void => {
                 secondPaymentAmount + firstPaymentSettledAmount,
               debitAmountScale: assetDetails.scale,
               debitAmountCode: assetDetails.code,
-              paymentDebitAmountValue: firstPaymentSettledAmount,
+              paymentDebitAmountValue: firstPaymentAmount,
               intervalDebitAmountValue:
-                secondPaymentAmount + firstPaymentSettledAmount,
+                firstPaymentAmount + secondPaymentAmount,
               grantTotalDebitAmountValue:
-                secondPaymentAmount + firstPaymentSettledAmount,
+                firstPaymentAmount + secondPaymentAmount,
               paymentState: OutgoingPaymentState.Completed,
               intervalStart: interval.start.toJSDate(),
               intervalEnd: interval.end.toJSDate()
@@ -1096,7 +1094,7 @@ describe('Lifecycle', (): void => {
               .spyOn(paymentMethodHandlerService, 'pay')
               .mockImplementationOnce(
                 mockPayPartialFactory({
-                  debit: secondPaymentSettledAmount,
+                  debit: secondPaymentAmount, // pay shouldn't have partial debit amount
                   receive: secondPaymentSettledAmount
                 })(accountingService, receiverWalletAddressId, secondPayment)
               )
@@ -1129,11 +1127,11 @@ describe('Lifecycle', (): void => {
                 firstPaymentSettledAmount + secondPaymentSettledAmount,
               debitAmountScale: assetDetails.scale,
               debitAmountCode: assetDetails.code,
-              paymentDebitAmountValue: secondPaymentSettledAmount,
+              paymentDebitAmountValue: secondPaymentAmount,
               intervalDebitAmountValue:
-                firstPaymentSettledAmount + secondPaymentSettledAmount,
+                firstPaymentAmount + secondPaymentAmount,
               grantTotalDebitAmountValue:
-                firstPaymentSettledAmount + secondPaymentSettledAmount,
+                firstPaymentAmount + secondPaymentAmount,
               paymentState: OutgoingPaymentState.Completed,
               intervalStart: interval.start.toJSDate(),
               intervalEnd: interval.end.toJSDate()
@@ -1243,7 +1241,7 @@ describe('Lifecycle', (): void => {
               .spyOn(paymentMethodHandlerService, 'pay')
               .mockImplementationOnce(
                 mockPayPartialFactory({
-                  debit: firstPaymentSettledAmount,
+                  debit: firstPaymentAmount, // pay shouldn't complete partially
                   receive: firstPaymentSettledAmount
                 })(accountingService, receiverWalletAddressId, firstPayment)
               )
@@ -1275,11 +1273,11 @@ describe('Lifecycle', (): void => {
                 secondPaymentAmount + firstPaymentSettledAmount,
               debitAmountScale: assetDetails.scale,
               debitAmountCode: assetDetails.code,
-              paymentDebitAmountValue: firstPaymentSettledAmount,
+              paymentDebitAmountValue: firstPaymentAmount,
               intervalDebitAmountValue:
-                secondPaymentAmount + firstPaymentSettledAmount,
+                firstPaymentAmount + secondPaymentAmount,
               grantTotalDebitAmountValue:
-                secondPaymentAmount + firstPaymentSettledAmount,
+                firstPaymentAmount + secondPaymentAmount,
               paymentState: OutgoingPaymentState.Completed,
               intervalStart: interval.start.toJSDate(),
               intervalEnd: interval.end.toJSDate()
@@ -1339,7 +1337,7 @@ describe('Lifecycle', (): void => {
               .spyOn(paymentMethodHandlerService, 'pay')
               .mockImplementationOnce(
                 mockPayPartialFactory({
-                  debit: secondPaymentSettledAmount,
+                  debit: secondPaymentAmount, // pay shouldn't complete debit partially
                   receive: secondPaymentSettledAmount
                 })(accountingService, receiverWalletAddressId, secondPayment)
               )
@@ -1377,15 +1375,11 @@ describe('Lifecycle', (): void => {
                 secondPaymentSettledAmount,
               debitAmountScale: assetDetails.scale,
               debitAmountCode: assetDetails.code,
-              paymentDebitAmountValue: secondPaymentSettledAmount,
+              paymentDebitAmountValue: secondPaymentAmount,
               intervalDebitAmountValue:
-                firstPaymentSettledAmount +
-                thirdPaymentAmount +
-                secondPaymentSettledAmount,
+                firstPaymentAmount + secondPaymentAmount + thirdPaymentAmount,
               grantTotalDebitAmountValue:
-                firstPaymentSettledAmount +
-                thirdPaymentAmount +
-                secondPaymentSettledAmount,
+                firstPaymentAmount + secondPaymentAmount + thirdPaymentAmount,
               paymentState: OutgoingPaymentState.Completed,
               intervalStart: interval.start.toJSDate(),
               intervalEnd: interval.end.toJSDate()
@@ -1756,7 +1750,7 @@ describe('Lifecycle', (): void => {
           paymentAmount,
           grant,
           mockPayPartialFactory({
-            debit: settledAmount,
+            debit: paymentAmount, // pay shouldnt complete debit partially
             receive: settledAmount
           })
         )
@@ -1807,9 +1801,9 @@ describe('Lifecycle', (): void => {
           paymentReceiveAmountValue: settledAmount,
           intervalReceiveAmountValue: paymentAmount + settledAmount,
           grantTotalReceiveAmountValue: paymentAmount + settledAmount,
-          paymentDebitAmountValue: settledAmount,
-          intervalDebitAmountValue: paymentAmount + settledAmount,
-          grantTotalDebitAmountValue: paymentAmount + settledAmount,
+          paymentDebitAmountValue: paymentAmount,
+          intervalDebitAmountValue: paymentAmount + paymentAmount,
+          grantTotalDebitAmountValue: paymentAmount + paymentAmount,
           intervalStart: creationInterval.start.toJSDate(),
           intervalEnd: creationInterval.end.toJSDate()
         })
@@ -2075,7 +2069,7 @@ describe('Lifecycle', (): void => {
                 .spyOn(paymentMethodHandlerService, 'pay')
                 .mockImplementationOnce(
                   mockPayPartialFactory({
-                    debit: firstPaymentSettledAmount,
+                    debit: firstPaymentAmount, // pay shouldn't complete partially
                     receive: firstPaymentSettledAmount
                   })(accountingService, receiverWalletAddressId, firstPayment)
                 )
@@ -2116,13 +2110,11 @@ describe('Lifecycle', (): void => {
                   firstPaymentSettledAmount +
                   secondPaymentAmount +
                   thirdPaymentAmount,
-                paymentDebitAmountValue: firstPaymentSettledAmount,
+                paymentDebitAmountValue: firstPaymentAmount,
                 intervalDebitAmountValue:
-                  secondPaymentAmount + firstPaymentSettledAmount,
+                  firstPaymentAmount + secondPaymentAmount,
                 grantTotalDebitAmountValue:
-                  firstPaymentSettledAmount +
-                  secondPaymentAmount +
-                  thirdPaymentAmount,
+                  firstPaymentAmount + secondPaymentAmount + thirdPaymentAmount,
                 intervalStart: firstInterval.start.toJSDate(),
                 intervalEnd: firstInterval.end.toJSDate()
               })
