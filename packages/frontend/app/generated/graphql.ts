@@ -665,6 +665,11 @@ export type IncomingPaymentEdge = {
   node: IncomingPayment;
 };
 
+export type IncomingPaymentFilter = {
+  /** Filter for incoming payments based on the initiation reason. */
+  initiatedBy?: InputMaybe<FilterString>;
+};
+
 export type IncomingPaymentResponse = {
   __typename?: 'IncomingPaymentResponse';
   /** The incoming payment object returned in the response. */
@@ -1232,6 +1237,8 @@ export type Query = {
   assets: AssetsConnection;
   /** Fetch an Open Payments incoming payment by its ID. */
   incomingPayment?: Maybe<IncomingPayment>;
+  /** Fetch a paginated list of incoming payments. */
+  incomingPayments: IncomingPaymentConnection;
   /** Fetch an Open Payments outgoing payment by its ID. */
   outgoingPayment?: Maybe<OutgoingPayment>;
   /** Fetch a paginated list of outgoing payments by receiver. */
@@ -1294,6 +1301,17 @@ export type QueryAssetsArgs = {
 
 export type QueryIncomingPaymentArgs = {
   id: Scalars['String']['input'];
+};
+
+
+export type QueryIncomingPaymentsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<IncomingPaymentFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  sortOrder?: InputMaybe<SortOrder>;
+  tenantId?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1714,6 +1732,7 @@ export type WalletAddress = Model & {
 export type WalletAddressIncomingPaymentsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<IncomingPaymentFilter>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   sortOrder?: InputMaybe<SortOrder>;
@@ -2008,6 +2027,7 @@ export type ResolversTypes = {
   IncomingPayment: ResolverTypeWrapper<Partial<IncomingPayment>>;
   IncomingPaymentConnection: ResolverTypeWrapper<Partial<IncomingPaymentConnection>>;
   IncomingPaymentEdge: ResolverTypeWrapper<Partial<IncomingPaymentEdge>>;
+  IncomingPaymentFilter: ResolverTypeWrapper<Partial<IncomingPaymentFilter>>;
   IncomingPaymentResponse: ResolverTypeWrapper<Partial<IncomingPaymentResponse>>;
   IncomingPaymentState: ResolverTypeWrapper<Partial<IncomingPaymentState>>;
   Int: ResolverTypeWrapper<Partial<Scalars['Int']['output']>>;
@@ -2152,6 +2172,7 @@ export type ResolversParentTypes = {
   IncomingPayment: Partial<IncomingPayment>;
   IncomingPaymentConnection: Partial<IncomingPaymentConnection>;
   IncomingPaymentEdge: Partial<IncomingPaymentEdge>;
+  IncomingPaymentFilter: Partial<IncomingPaymentFilter>;
   IncomingPaymentResponse: Partial<IncomingPaymentResponse>;
   Int: Partial<Scalars['Int']['output']>;
   JSONObject: Partial<Scalars['JSONObject']['output']>;
@@ -2581,6 +2602,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   assetByCodeAndScale?: Resolver<Maybe<ResolversTypes['Asset']>, ParentType, ContextType, RequireFields<QueryAssetByCodeAndScaleArgs, 'code' | 'scale'>>;
   assets?: Resolver<ResolversTypes['AssetsConnection'], ParentType, ContextType, Partial<QueryAssetsArgs>>;
   incomingPayment?: Resolver<Maybe<ResolversTypes['IncomingPayment']>, ParentType, ContextType, RequireFields<QueryIncomingPaymentArgs, 'id'>>;
+  incomingPayments?: Resolver<ResolversTypes['IncomingPaymentConnection'], ParentType, ContextType, Partial<QueryIncomingPaymentsArgs>>;
   outgoingPayment?: Resolver<Maybe<ResolversTypes['OutgoingPayment']>, ParentType, ContextType, RequireFields<QueryOutgoingPaymentArgs, 'id'>>;
   outgoingPayments?: Resolver<ResolversTypes['OutgoingPaymentConnection'], ParentType, ContextType, Partial<QueryOutgoingPaymentsArgs>>;
   payments?: Resolver<ResolversTypes['PaymentConnection'], ParentType, ContextType, Partial<QueryPaymentsArgs>>;
