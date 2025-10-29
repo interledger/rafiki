@@ -241,6 +241,9 @@ async function cancelOutgoingPayment(
     payment.walletAddress = await deps.walletAddressService.get(
       payment.walletAddressId
     )
+    if (payment.grantId) {
+      await revertGrantSpentAmounts({ ...deps, knex: trx }, payment)
+    }
 
     return addSentAmount(deps, payment)
   })
@@ -1187,7 +1190,7 @@ export async function revertGrantSpentAmounts(
     intervalReceiveAmountValue: newIntervalReceiveAmountValue,
     grantTotalReceiveAmountValue: newGrantTotalReceiveAmountValue,
     createdAt: new Date(),
-    paymentState: OutgoingPaymentState.Failed,
+    paymentState: payment.state,
     intervalStart: latestPaymentSpentAmounts.intervalStart,
     intervalEnd: latestPaymentSpentAmounts.intervalEnd
   })
