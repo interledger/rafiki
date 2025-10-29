@@ -5,7 +5,8 @@ import {
   createWalletAddress,
   updateWalletAddress,
   triggerWalletAddressEvents,
-  getWalletAddressByUrl
+  getWalletAddressByUrl,
+  getWalletAddressTenant
 } from './wallet_address'
 import {
   getAsset,
@@ -16,7 +17,8 @@ import {
   getAssetReceivingFee,
   getAssetSendingFee,
   getFees,
-  getAssetByCodeAndScale
+  getAssetByCodeAndScale,
+  getAssetTenant
 } from './asset'
 import {
   getWalletAddressIncomingPayments,
@@ -24,7 +26,8 @@ import {
   getIncomingPayment,
   updateIncomingPayment,
   approveIncomingPayment,
-  cancelIncomingPayment
+  cancelIncomingPayment,
+  getIncomingPaymentTenant
 } from './incoming_payment'
 import { getQuote, createQuote, getWalletAddressQuotes } from './quote'
 import {
@@ -33,7 +36,8 @@ import {
   createOutgoingPayment,
   getWalletAddressOutgoingPayments,
   createOutgoingPaymentFromIncomingPayment,
-  cancelOutgoingPayment
+  cancelOutgoingPayment,
+  getOutgoingPaymentTenant
 } from './outgoing_payment'
 import {
   getPeer,
@@ -41,7 +45,8 @@ import {
   createPeer,
   updatePeer,
   deletePeer,
-  getPeerByAddressAndAsset
+  getPeerByAddressAndAsset,
+  getPeerTenant
 } from './peer'
 import {
   getAssetLiquidity,
@@ -71,10 +76,10 @@ import {
 } from './walletAddressKey'
 import { getWalletAddressAdditionalProperties } from './walletAddressAdditionalProperties'
 import { createReceiver, getReceiver } from './receiver'
-import { getWebhookEvents } from './webhooks'
+import { getWebhookEvents, getWebhookEventTenant } from './webhooks'
 import { setFee } from './fee'
 import { GraphQLJSONObject } from 'graphql-scalars'
-import { getCombinedPayments } from './combined_payments'
+import { getCombinedPayments, getPaymentTenant } from './combined_payments'
 import { createOrUpdatePeerByUrl } from './auto-peering'
 import { getAccountingTransfers } from './accounting_transfer'
 import {
@@ -95,10 +100,12 @@ export const resolvers: Resolvers = {
     liquidity: getAssetLiquidity,
     sendingFee: getAssetSendingFee,
     receivingFee: getAssetReceivingFee,
-    fees: getFees
+    fees: getFees,
+    tenant: getAssetTenant
   },
   Peer: {
-    liquidity: getPeerLiquidity
+    liquidity: getPeerLiquidity,
+    tenant: getPeerTenant
   },
   Query: {
     whoami,
@@ -128,19 +135,26 @@ export const resolvers: Resolvers = {
     outgoingPayments: getWalletAddressOutgoingPayments,
     quotes: getWalletAddressQuotes,
     walletAddressKeys: getWalletAddressKeys,
-    additionalProperties: getWalletAddressAdditionalProperties
+    additionalProperties: getWalletAddressAdditionalProperties,
+    tenant: getWalletAddressTenant
   },
   Tenant: {
     settings: getTenantSettings
   },
   IncomingPayment: {
-    liquidity: getIncomingPaymentLiquidity
+    liquidity: getIncomingPaymentLiquidity,
+    tenant: getIncomingPaymentTenant
   },
   OutgoingPayment: {
-    liquidity: getOutgoingPaymentLiquidity
+    liquidity: getOutgoingPaymentLiquidity,
+    tenant: getOutgoingPaymentTenant
   },
   Payment: {
-    liquidity: getPaymentLiquidity
+    liquidity: getPaymentLiquidity,
+    tenant: getPaymentTenant
+  },
+  WebhookEvent: {
+    tenant: getWebhookEventTenant
   },
   Mutation: {
     createWalletAddressKey,
