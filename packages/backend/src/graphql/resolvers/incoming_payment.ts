@@ -3,7 +3,8 @@ import {
   WalletAddressResolvers,
   MutationResolvers,
   IncomingPayment as SchemaIncomingPayment,
-  QueryResolvers
+  QueryResolvers,
+  IncomingPaymentFilter
 } from '../generated/graphql'
 import { IncomingPayment } from '../../open_payments/payment/incoming/model'
 import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/types'
@@ -50,17 +51,24 @@ export const getIncomingPayments: QueryResolvers<TenantedApolloContext>['incomin
     )
     const { tenantId, filter, sortOrder, ...pagination } = args
     const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
-    const getPageFn = (pagination_: Pagination, sortOrder_?: SortOrder) =>
+    const getPageFn = (
+      pagination_: Pagination,
+      sortOrder_?: SortOrder,
+      filter_?: IncomingPaymentFilter
+    ) =>
       incomingPaymentService.getPage({
         tenantId: ctx.isOperator ? tenantId : ctx.tenant.id,
         pagination: pagination_,
-        filter,
+        filter: filter_,
         sortOrder: sortOrder_
       })
-    const incomingPayments = await getPageFn(pagination, order)
+    const incomingPayments = await getPageFn(pagination, order, filter)
     const pageInfo = await getPageInfo({
-      getPage: (pagination_: Pagination, sortOrder_?: SortOrder) =>
-        getPageFn(pagination_, sortOrder_),
+      getPage: (
+        pagination_: Pagination,
+        sortOrder_?: SortOrder,
+        filter_?: IncomingPaymentFilter
+      ) => getPageFn(pagination_, sortOrder_, filter_),
       page: incomingPayments,
       sortOrder: order
     })
