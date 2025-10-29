@@ -17,7 +17,8 @@ import {
   Amount as GqlAmount,
   IncomingPayment,
   IncomingPaymentEdge,
-  PageInfo
+  PageInfo,
+  IncomingPaymentFilter
 } from '../graphql/generated/graphql'
 
 interface ServiceDependencies extends BaseService {
@@ -56,6 +57,7 @@ export interface GetPaymentsQuery {
   last?: number
   before?: string
   after?: string
+  filter?: IncomingPaymentFilter
 }
 
 export type GetPaymentsRequest = Exclude<AppContext['request'], 'query'> & {
@@ -92,7 +94,10 @@ async function getPayments(
   ctx: GetPaymentsContext
 ): Promise<void> {
   const { first, last, ...restOfQuery } = ctx.request.query
-  const options: GetPaymentsQuery = restOfQuery
+  const options: GetPaymentsQuery = {
+    ...restOfQuery,
+    filter: { initiatedBy: { in: ['CARD'] } }
+  }
   if (first) {
     Object.assign(options, { first: Number(first) })
   }

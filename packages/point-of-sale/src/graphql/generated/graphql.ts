@@ -3173,6 +3173,7 @@ export type GetWalletAddressVariables = Exact<{
   before?: InputMaybe<Scalars['String']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
   sortOrder?: InputMaybe<SortOrder>;
+  filter?: InputMaybe<IncomingPaymentFilter>;
 }>;
 
 

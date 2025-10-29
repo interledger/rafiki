@@ -4,7 +4,12 @@ import { initIocContainer } from '..'
 import { AppServices } from '../app'
 import { Config, IAppConfig } from '../config/app'
 import { TestContainer, createTestApp } from '../tests/app'
-import { GetPaymentsContext, PaymentContext, PaymentRoutes } from './routes'
+import {
+  GetPaymentsContext,
+  GetPaymentsQuery,
+  PaymentContext,
+  PaymentRoutes
+} from './routes'
 import { PaymentService } from './service'
 import { CardServiceClient, Result } from '../card-service-client/client'
 import { createContext } from '../tests/context'
@@ -12,7 +17,7 @@ import { CardServiceClientError } from '../card-service-client/errors'
 import { webhookWaitMap } from '../webhook-handlers/request-map'
 import { faker } from '@faker-js/faker'
 import { withConfigOverride } from '../tests/helpers'
-import { IncomingPaymentState } from '../graphql/generated/graphql'
+import { IncomingPaymentState, SortOrder } from '../graphql/generated/graphql'
 
 describe('Payment Routes', () => {
   let deps: IocContract<AppServices>
@@ -183,7 +188,8 @@ describe('Payment Routes', () => {
               },
               expiresAt: new Date().toString(),
               createdAt: new Date().toString(),
-              tenantId: v4()
+              tenantId: v4(),
+              initiatedBy: 'CARD'
             },
             cursor: walletAddressId
           }
@@ -195,7 +201,7 @@ describe('Payment Routes', () => {
           startCursor: walletAddressId
         }
       }
-      jest
+      const getIncomingPaymentsSpy = jest
         .spyOn(paymentService, 'getIncomingPayments')
         .mockResolvedValue(mockServiceResponse)
       const ctx = createGetPaymentsContext()
@@ -223,6 +229,15 @@ describe('Payment Routes', () => {
         }),
         pagination: mockServiceResponse.pageInfo
       })
+
+      expect(getIncomingPaymentsSpy).toHaveBeenCalledWith({
+        receiverWalletAddress: ctx.query.receiverWalletAddress,
+        filter: {
+          initiatedBy: {
+            in: ['CARD']
+          }
+        }
+      })
     })
 
     test('returns empty page if no incoming payments', async (): Promise<void> => {
@@ -239,6 +254,74 @@ describe('Payment Routes', () => {
         pagination: {
           hasNextPage: false,
           hasPreviousPage: false
+        }
+      })
+    })
+
+    test('passes through pagination filters', async (): Promise<void> => {
+      const beforeWalletAddressId = v4()
+      const afterWalletAddressId = v4()
+      const walletAddressId = v4()
+      const mockServiceResponse = {
+        edges: [
+          {
+            node: {
+              __typename: 'IncomingPayment' as const,
+              id: v4(),
+              url: faker.internet.url(),
+              walletAddressId,
+              client: faker.internet.url(),
+              state: IncomingPaymentState.Pending,
+              incomingAmount: {
+                __typename: 'Amount' as const,
+                value: BigInt(500),
+                assetCode: 'USD',
+                assetScale: 2
+              },
+              receivedAmount: {
+                __typename: 'Amount' as const,
+                value: BigInt(500),
+                assetCode: 'USD',
+                assetScale: 2
+              },
+              expiresAt: new Date().toString(),
+              createdAt: new Date().toString(),
+              tenantId: v4(),
+              initiatedBy: 'CARD'
+            },
+            cursor: walletAddressId
+          }
+        ],
+        pageInfo: {
+          endCursor: afterWalletAddressId,
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: beforeWalletAddressId
+        }
+      }
+      const getIncomingPaymentsSpy = jest
+        .spyOn(paymentService, 'getIncomingPayments')
+        .mockResolvedValue(mockServiceResponse)
+      const ctx = createGetPaymentsContext({
+        sortOrder: SortOrder.Asc,
+        first: 1,
+        last: 1,
+        before: beforeWalletAddressId,
+        after: afterWalletAddressId
+      })
+
+      await paymentRoutes.getPayments(ctx)
+      expect(getIncomingPaymentsSpy).toHaveBeenCalledWith({
+        receiverWalletAddress: ctx.query.receiverWalletAddress,
+        sortOrder: SortOrder.Asc,
+        first: 1,
+        last: 1,
+        before: beforeWalletAddressId,
+        after: afterWalletAddressId,
+        filter: {
+          initiatedBy: {
+            in: ['CARD']
+          }
         }
       })
     })
@@ -261,13 +344,24 @@ function createPaymentContext() {
   })
 }
 
-function createGetPaymentsContext() {
+function createGetPaymentsContext(
+  options?: Omit<GetPaymentsQuery, 'receiverWalletAddress'>
+) {
+  const query = {
+    receiverWalletAddress: faker.internet.url(),
+    ...options
+  }
+  if (options?.first) {
+    Object.assign(query, { first: String(options.first) })
+  }
+
+  if (options?.last) {
+    Object.assign(query, { last: String(options.last) })
+  }
   return createContext<GetPaymentsContext>({
     headers: { Accept: 'application/json' },
     method: 'GET',
     url: `/payments`,
-    query: {
-      receiverWalletAddress: faker.internet.url()
-    }
+    query
   })
 }
