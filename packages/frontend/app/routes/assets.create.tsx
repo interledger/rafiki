@@ -5,7 +5,7 @@ import {
   useLoaderData,
   useNavigation
 } from '@remix-run/react'
-import { PageHeader } from '~/components'
+import { FormGroup, PageHeader } from '~/components'
 import { Button, Select, ErrorPanel, Input } from '~/components/ui'
 import { createAsset } from '~/lib/api/asset.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
@@ -54,51 +54,46 @@ export default function CreateAssetPage() {
 
           <fieldset disabled={isSubmitting}>
             {/* Asset General Info */}
-            <div className='grid grid-cols-1 px-0 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-              <div className='col-span-1 pt-3'>
-                <h3 className='text-lg font-medium'>General Information</h3>
-              </div>
-              <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-                <div className='w-full p-4 space-y-3'>
-                  <Input
+            <FormGroup title='General Information'>
+              <div className='w-full p-4 space-y-3'>
+                <Input
+                  required
+                  name='code'
+                  label='Code'
+                  placeholder='Code'
+                  error={response?.errors?.fieldErrors.code}
+                />
+                <Input
+                  required
+                  name='scale'
+                  label='Scale'
+                  placeholder='Scale'
+                  error={response?.errors?.fieldErrors.scale}
+                />
+                <Input
+                  type='number'
+                  name='withdrawalThreshold'
+                  label='Withdrawal Threshold'
+                  error={response?.errors.fieldErrors.withdrawalThreshold}
+                />
+                {tenants && (
+                  <Select
+                    options={tenants.map((tenant) => ({
+                      label: `${tenant.node.id}${tenant.node.publicName ? ` (${tenant.node.publicName})` : ''}`,
+                      value: tenant.node.id
+                    }))}
+                    name='tenantId'
+                    placeholder='Select tenant...'
+                    label='Tenant Id'
+                    defaultValue={{
+                      label: sessionTenantId,
+                      value: sessionTenantId
+                    }}
                     required
-                    name='code'
-                    label='Code'
-                    placeholder='Code'
-                    error={response?.errors?.fieldErrors.code}
                   />
-                  <Input
-                    required
-                    name='scale'
-                    label='Scale'
-                    placeholder='Scale'
-                    error={response?.errors?.fieldErrors.scale}
-                  />
-                  <Input
-                    type='number'
-                    name='withdrawalThreshold'
-                    label='Withdrawal Threshold'
-                    error={response?.errors.fieldErrors.withdrawalThreshold}
-                  />
-                  {tenants && (
-                    <Select
-                      options={tenants.map((tenant) => ({
-                        label: `${tenant.node.id}${tenant.node.publicName ? ` (${tenant.node.publicName})` : ''}`,
-                        value: tenant.node.id
-                      }))}
-                      name='tenantId'
-                      placeholder='Select tenant...'
-                      label='Tenant Id'
-                      defaultValue={{
-                        label: sessionTenantId,
-                        value: sessionTenantId
-                      }}
-                      required
-                    />
-                  )}
-                </div>
+                )}
               </div>
-            </div>
+            </FormGroup>
             <div className='flex justify-end py-3'>
               <Button aria-label='create asset' type='submit'>
                 {isSubmitting ? 'Creating asset ...' : 'Create'}
