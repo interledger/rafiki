@@ -1067,7 +1067,13 @@ export async function updateGrantSpentAmounts(
     deps,
     payment.id
   )
-  if (!latestPaymentSpentAmounts) return
+  if (!latestPaymentSpentAmounts) {
+    deps.logger.error(
+      { payment, latestPaymentSpentAmounts },
+      'Could not find grant spent amounts for payment when updating spent amounts'
+    )
+    return
+  }
 
   const reservedReceiveAmount =
     latestPaymentSpentAmounts.paymentReceiveAmountValue
@@ -1080,7 +1086,13 @@ export async function updateGrantSpentAmounts(
     payment.grantId,
     latestPaymentSpentAmounts
   )
-  if (!records) return
+  if (!records) {
+    deps.logger.error(
+      { payment, latestPaymentSpentAmounts },
+      'Could not find grant spent amounts for grant when reverting spent amounts'
+    )
+    return
+  }
 
   const { latestGrantSpentAmounts, latestIntervalSpentAmounts } = records
 
@@ -1136,14 +1148,26 @@ export async function revertGrantSpentAmounts(
     deps,
     payment.id
   )
-  if (!latestPaymentSpentAmounts) return
+  if (!latestPaymentSpentAmounts) {
+    deps.logger.error(
+      { payment },
+      'Could not find grant spent amounts by payment when reverting spent amounts'
+    )
+    return
+  }
 
   const records = await getRemainingGrantSpentAmounts(
     deps,
     payment.grantId,
     latestPaymentSpentAmounts
   )
-  if (!records) return
+  if (!records) {
+    deps.logger.error(
+      { payment, latestPaymentSpentAmounts },
+      'Could not find grant spent amounts for grant when reverting spent amounts'
+    )
+    return
+  }
 
   const { latestGrantSpentAmounts, latestIntervalSpentAmounts } = records
 
