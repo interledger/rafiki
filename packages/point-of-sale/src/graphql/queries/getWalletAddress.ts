@@ -8,6 +8,7 @@ export const GET_WALLET_ADDRESS_BY_URL = gql`
     $before: String
     $after: String
     $sortOrder: SortOrder
+    $filter: IncomingPaymentFilter
   ) {
     walletAddressByUrl(url: $url) {
       id
@@ -17,6 +18,7 @@ export const GET_WALLET_ADDRESS_BY_URL = gql`
         before: $before
         after: $after
         sortOrder: $sortOrder
+        filter: $filter
       ) {
         edges {
           node {
