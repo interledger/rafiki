@@ -651,8 +651,7 @@ describe('OutgoingPaymentService', (): void => {
       })
 
       test('should revert grant spent amounts with interval when cancelling payment', async (): Promise<void> => {
-        // jest.useFakeTimers()
-        // jest.setSystemTime(new Date('2025-01-02T00:00:00Z'))
+        jest.setSystemTime(new Date('2025-01-02T00:00:00Z'))
 
         const grant: Grant = {
           id: uuid(),
