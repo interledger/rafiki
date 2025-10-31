@@ -1,0 +1,40 @@
+{
+  "name": "card-service",
+  "main": "index.js",
+  "scripts": {
+    "build": "pnpm clean && tsc --build tsconfig.json && pnpm copy-files",
+    "clean": "rm -fr dist/",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests --maxWorkers=50%",
+    "test:ci": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests --maxWorkers=2",
+    "test:cov": "pnpm test -- --coverage",
+    "dev": "ts-node-dev --inspect=0.0.0.0:9229 --respawn --transpile-only src/index.ts",
+    "copy-files": "cp -r ./src/openapi ./dist/"
+  },
+  "dependencies": {
+    "@adonisjs/fold": "^8.2.0",
+    "@apollo/client": "^3.11.8",
+    "@interledger/openapi": "2.0.2",
+    "@koa/cors": "^5.0.0",
+    "@koa/router": "^12.0.2",
+    "graphql": "^16.11.0",
+    "ioredis": "^5.3.2",
+    "json-canonicalize": "^1.0.6",
+    "koa": "^2.15.4",
+    "koa-bodyparser": "^4.4.1",
+    "pino": "^8.19.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/koa": "2.15.0",
+    "@types/koa-bodyparser": "^4.3.12",
+    "@types/koa__cors": "^5.0.0",
+    "@types/koa__router": "^12.0.4",
+    "@types/node": "^20.14.15",
+    "@types/uuid": "^9.0.8",
+    "jest-environment-node": "^29.7.0",
+    "nock": "14.0.0-beta.19",
+    "node-mocks-http": "^1.16.2",
+    "testcontainers": "^10.16.0",
+    "ts-node-dev": "^2.0.0"
+  }
+}

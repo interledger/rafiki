@@ -121,6 +121,7 @@ describe('Wallet Address Routes', (): void => {
         // Ensure the tenant id is returned for auth and resource server:
         authServer: `${config.authServerGrantUrl}/${config.operatorTenantId}`,
         resourceServer: `${config.openPaymentsUrl}/${config.operatorTenantId}`,
+        cardService: `${config.cardServiceUrl}/`,
         additionalProperties: {
           [addProp.fieldKey]: addProp.fieldValue
         }
@@ -176,7 +177,8 @@ describe('Wallet Address Routes', (): void => {
             assetScale: walletAddress.asset.scale,
             // Ensure the tenant id is returned for auth and resource server:
             authServer: `${config.authServerGrantUrl}/${walletAddress.tenantId}`,
-            resourceServer: `${config.openPaymentsUrl}/${walletAddress.tenantId}`
+            resourceServer: `${config.openPaymentsUrl}/${walletAddress.tenantId}`,
+            cardService: `${config.cardServiceUrl}/`
           })
         }
       )
@@ -210,7 +212,8 @@ describe('Wallet Address Routes', (): void => {
         assetScale: walletAddress.asset.scale,
         // Ensure the tenant id is returned for auth and resource server:
         authServer: `${config.authServerGrantUrl}/${walletAddress.tenantId}`,
-        resourceServer: `${config.openPaymentsUrl}/${walletAddress.tenantId}`
+        resourceServer: `${config.openPaymentsUrl}/${walletAddress.tenantId}`,
+        cardService: `${config.cardServiceUrl}/`
       })
     })
   })

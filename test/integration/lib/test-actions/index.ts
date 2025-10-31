@@ -5,6 +5,7 @@ import { parseCookies, urlWithoutTenantId } from '../utils'
 import { WalletAddress, PendingGrant } from '@interledger/open-payments'
 import { AdminActions, createAdminActions } from './admin'
 import { OpenPaymentsActions, createOpenPaymentsActions } from './open-payments'
+import { POSActions, createPOSActions } from './pos'
 
 export interface TestActionsDeps {
   sendingASE: MockASE
@@ -29,6 +30,7 @@ export interface TestActions {
   ): Promise<string>
   admin: AdminActions
   openPayments: OpenPaymentsActions
+  pos: POSActions
 }
 
 export function createTestActions(deps: TestActionsDeps): TestActions {
@@ -47,7 +49,8 @@ export function createTestActions(deps: TestActionsDeps): TestActions {
         args
       ),
     admin: createAdminActions(deps),
-    openPayments: createOpenPaymentsActions(deps)
+    openPayments: createOpenPaymentsActions(deps),
+    pos: createPOSActions(deps)
   }
 }
 

@@ -47,6 +47,7 @@ import {
 import { faker } from '@faker-js/faker'
 import { GraphQLErrorCode } from '../errors'
 import { createTenant } from '../../tests/tenant'
+import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/types'
 
 describe('OutgoingPayment Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -180,7 +181,8 @@ describe('OutgoingPayment Resolvers', (): void => {
 
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId: firstReceiverWalletAddress.id,
-          tenantId: Config.operatorTenantId
+          tenantId: Config.operatorTenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
         receiver = incomingPayment.getUrl(config.openPaymentsUrl)
         firstOutgoingPayment = await createOutgoingPayment(deps, {
@@ -193,7 +195,8 @@ describe('OutgoingPayment Resolvers', (): void => {
 
         const secondIncomingPayment = await createIncomingPayment(deps, {
           walletAddressId: secondReceiverWalletAddress.id,
-          tenantId: Config.operatorTenantId
+          tenantId: Config.operatorTenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
         const secondReceiver = secondIncomingPayment.getUrl(
           config.openPaymentsUrl
@@ -928,9 +931,9 @@ describe('OutgoingPayment Resolvers', (): void => {
         }
       }
 
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
+      const mutation = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
             mutation CreateOutgoingPaymentFromIncomingPayment(
               $input: CreateOutgoingPaymentFromIncomingPaymentInput!
             ) {
@@ -945,13 +948,69 @@ describe('OutgoingPayment Resolvers', (): void => {
           variables: { input }
         })
         .then(
-          (query): OutgoingPaymentResponse =>
-            query.data?.createOutgoingPaymentFromIncomingPayment
+          (response) => response.data?.createOutgoingPaymentFromIncomingPayment
         )
 
       expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
-      expect(query.payment?.id).toBe(payment.id)
-      expect(query.payment?.state).toBe(SchemaPaymentState.Funding)
+      expect(mutation.payment?.id).toBe(payment.id)
+      expect(mutation.payment?.state).toBe(SchemaPaymentState.Funding)
+    })
+
+    test('create', async (): Promise<void> => {
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId,
+        assetId: asset.id
+      })
+      const payment = await createPayment({
+        tenantId,
+        walletAddressId: walletAddress.id
+      })
+
+      const createSpy = jest
+        .spyOn(outgoingPaymentService, 'create')
+        .mockResolvedValueOnce(payment)
+
+      const input = {
+        walletAddressId: payment.walletAddressId,
+        incomingPayment: mockIncomingPaymentUrl,
+        debitAmount: {
+          value: BigInt(56),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
+        cardDetails: {
+          data: {
+            signature: 'test-signature',
+            payload: 'payload'
+          },
+          requestId: crypto.randomUUID(),
+          initiatedAt: new Date().toISOString()
+        }
+      }
+
+      const mutation = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation CreateOutgoingPaymentFromIncomingPayment(
+              $input: CreateOutgoingPaymentFromIncomingPaymentInput!
+            ) {
+              createOutgoingPaymentFromIncomingPayment(input: $input) {
+                payment {
+                  id
+                  state
+                }
+              }
+            }
+          `,
+          variables: { input }
+        })
+        .then(
+          (response) => response.data?.createOutgoingPaymentFromIncomingPayment
+        )
+
+      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
+      expect(mutation.payment?.id).toBe(payment.id)
+      expect(mutation.payment?.state).toBe(SchemaPaymentState.Funding)
     })
 
     test('unknown wallet address', async (): Promise<void> => {
