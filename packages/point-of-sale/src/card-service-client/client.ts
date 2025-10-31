@@ -59,7 +59,7 @@ export async function createCardServiceClient({
   axios
 }: ServiceDependencies): Promise<CardServiceClient> {
   const log = logger.child({
-    service: 'PosDeviceService'
+    service: 'CardServiceClient'
   })
   const deps: ServiceDependencies = {
     logger: log,
