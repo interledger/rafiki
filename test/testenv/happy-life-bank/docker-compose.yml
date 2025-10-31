@@ -109,5 +109,6 @@ services:
       WEBHOOK_SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       WEBHOOK_SIGNATURE_VERSION: 1
       WEBHOOK_TIMEOUT_MS: 10_000
+      USE_HTTP: true
     depends_on:
       - shared-database
