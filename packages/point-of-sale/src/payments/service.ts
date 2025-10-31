@@ -11,7 +11,6 @@ import {
   GetWalletAddress,
   GetWalletAddressVariables
 } from '../graphql/generated/graphql'
-import { FnWithDeps } from '../shared/types'
 import { v4 } from 'uuid'
 import { AxiosInstance, AxiosRequestConfig } from 'axios'
 import { GET_WALLET_ADDRESS_BY_URL } from '../graphql/queries/getWalletAddress'
@@ -44,6 +43,12 @@ export type CreatedIncomingPayment = {
   url: string
 }
 
+interface CreateIncomingPaymentArgs {
+  walletAddressId: string
+  incomingAmount: AmountInput
+  senderWalletAddress: string
+}
+
 type IncomingPaymentPage = Exclude<
   Exclude<GetWalletAddress['walletAddressByUrl'], null>,
   undefined
@@ -54,8 +59,7 @@ export type PaymentService = {
     options: GetPaymentsQuery
   ) => Promise<IncomingPaymentPage>
   createIncomingPayment: (
-    walletAddressId: string,
-    incomingAmount: AmountInput
+    args: CreateIncomingPaymentArgs
   ) => Promise<CreatedIncomingPayment>
   getWalletAddress: (walletAddressUrl: string) => Promise<WalletAddress>
   getWalletAddressIdByUrl: (walletAddressUrl: string) => Promise<string>
@@ -75,10 +79,8 @@ export function createPaymentService(
   return {
     getIncomingPayments: (options: GetPaymentsQuery) =>
       getIncomingPayments(deps, options),
-    createIncomingPayment: (
-      walletAddressId: string,
-      incomingAmount: AmountInput
-    ) => createIncomingPayment(deps, walletAddressId, incomingAmount),
+    createIncomingPayment: (args: CreateIncomingPaymentArgs) =>
+      createIncomingPayment(deps, args),
     getWalletAddress: (walletAddressUrl: string) =>
       getWalletAddress(deps, walletAddressUrl),
     getWalletAddressIdByUrl: (walletAddressUrl: string) =>
@@ -107,10 +109,11 @@ async function getIncomingPayments(
   return data?.walletAddressByUrl?.incomingPayments
 }
 
-const createIncomingPayment: FnWithDeps<
-  ServiceDependencies,
-  PaymentService['createIncomingPayment']
-> = async (deps, walletAddressId, incomingAmount) => {
+async function createIncomingPayment(
+  deps: ServiceDependencies,
+  args: CreateIncomingPaymentArgs
+): Promise<CreatedIncomingPayment> {
+  const { walletAddressId, incomingAmount, senderWalletAddress } = args
   const client = deps.apolloClient
   const expiresAt = new Date(
     Date.now() + deps.config.incomingPaymentExpiryMs
@@ -126,7 +129,8 @@ const createIncomingPayment: FnWithDeps<
         incomingAmount,
         idempotencyKey: v4(),
         isCardPayment: true,
-        expiresAt
+        expiresAt,
+        senderWalletAddress
       }
     }
   })

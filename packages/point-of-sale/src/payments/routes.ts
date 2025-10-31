@@ -132,13 +132,15 @@ async function payment(
         body.receiverWalletAddress
       )
 
-    const incomingPayment = await deps.paymentService.createIncomingPayment(
-      receiverWalletAddressId,
-      {
-        ...body.amount,
+    const incomingPayment = await deps.paymentService.createIncomingPayment({
+      walletAddressId: receiverWalletAddressId,
+      incomingAmount: {
+        assetCode: body.amount.assetCode,
+        assetScale: body.amount.assetScale,
         value: BigInt(body.amount.value)
-      }
-    )
+      },
+      senderWalletAddress: body.senderWalletAddress
+    })
     const deferred = new Deferred<WebhookBody>()
     webhookWaitMap.setWithExpiry(
       incomingPayment.id,
