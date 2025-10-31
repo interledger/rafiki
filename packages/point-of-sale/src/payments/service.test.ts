@@ -64,11 +64,13 @@ describe('createPaymentService', () => {
     const expiresAt = new Date(
       now + mockConfig.incomingPaymentExpiryMs
     ).toISOString()
+    const senderWalletAddress = faker.internet.url()
 
-    const result = await service.createIncomingPayment(
+    const result = await service.createIncomingPayment({
       walletAddressId,
-      incomingAmount
-    )
+      incomingAmount,
+      senderWalletAddress
+    })
     expect(result).toEqual({ id: uuid, url: expectedUrl })
     expect(mockApolloClient.mutate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -78,7 +80,8 @@ describe('createPaymentService', () => {
             idempotencyKey: expect.any(String),
             incomingAmount,
             isCardPayment: true,
-            walletAddressId
+            walletAddressId,
+            senderWalletAddress
           })
         })
       })
@@ -97,7 +100,11 @@ describe('createPaymentService', () => {
       assetScale: 2
     }
     await expect(
-      service.createIncomingPayment(walletAddressId, incomingAmount)
+      service.createIncomingPayment({
+        walletAddressId,
+        incomingAmount,
+        senderWalletAddress: faker.internet.url()
+      })
     ).rejects.toThrow(/Failed to create incoming payment/)
     expect(mockLogger.error).toHaveBeenCalledWith(
       { walletAddressId },

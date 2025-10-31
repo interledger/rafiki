@@ -28,21 +28,33 @@ describe('Payment Routes', () => {
   let config: IAppConfig
 
   function mockPaymentService() {
-    jest.spyOn(paymentService, 'getWalletAddress').mockResolvedValueOnce({
-      id: 'id',
-      assetCode: 'USD',
-      assetScale: 1,
-      authServer: 'authServer',
-      resourceServer: 'resourceServer',
-      cardService: 'cardService'
-    })
-    jest.spyOn(paymentService, 'createIncomingPayment').mockResolvedValueOnce({
-      id: 'incoming-payment-url',
-      url: faker.internet.url()
-    })
-    jest
+    const getWalletAddressSpy = jest
+      .spyOn(paymentService, 'getWalletAddress')
+      .mockResolvedValueOnce({
+        id: 'id',
+        assetCode: 'USD',
+        assetScale: 1,
+        authServer: 'authServer',
+        resourceServer: 'resourceServer',
+        cardService: 'cardService'
+      })
+
+    const createIncomingPaymentSpy = jest
+      .spyOn(paymentService, 'createIncomingPayment')
+      .mockResolvedValueOnce({
+        id: 'incoming-payment-url',
+        url: faker.internet.url()
+      })
+
+    const getWalletAddressIdByUrlSpy = jest
       .spyOn(paymentService, 'getWalletAddressIdByUrl')
       .mockResolvedValueOnce(faker.internet.url())
+
+    return {
+      getWalletAddressSpy,
+      createIncomingPaymentSpy,
+      getWalletAddressIdByUrlSpy
+    }
   }
 
   beforeAll(async () => {
@@ -156,6 +168,44 @@ describe('Payment Routes', () => {
           expect(ctx.status).toBe(400)
 
           expect(deleteSpy).toHaveBeenCalled()
+        }
+      )
+    )
+
+    test(
+      'falls back to http for payment request if configured',
+      withConfigOverride(
+        () => config,
+        { useHttp: true },
+        async () => {
+          const senderWalletAddress = 'https://example.com/'
+
+          const ctx = createPaymentContext({ senderWalletAddress })
+
+          const { getWalletAddressSpy } = mockPaymentService()
+          jest
+            .spyOn(cardServiceClient, 'sendPayment')
+            .mockResolvedValueOnce(Result.APPROVED)
+
+          jest
+            .spyOn(webhookWaitMap, 'setWithExpiry')
+            .mockImplementationOnce((key, deferred) => {
+              deferred.resolve({
+                id: v4(),
+                type: 'incoming_payment.completed',
+                data: { id: key, completed: true }
+              })
+              return webhookWaitMap
+            })
+
+          await paymentRoutes.payment(ctx)
+          expect(getWalletAddressSpy).toHaveBeenCalledWith(
+            'http://example.com/'
+          )
+          expect(ctx.response.body).toEqual({
+            result: { code: Result.APPROVED }
+          })
+          expect(ctx.status).toBe(200)
         }
       )
     )
@@ -328,7 +378,7 @@ describe('Payment Routes', () => {
   })
 })
 
-function createPaymentContext() {
+function createPaymentContext(bodyOverrides?: Record<string, unknown>) {
   return createContext<PaymentContext>({
     headers: { Accept: 'application/json' },
     method: 'POST',
@@ -339,7 +389,8 @@ function createPaymentContext() {
       receiverWalletAddress: faker.internet.url(),
       senderWalletAddress: faker.internet.url(),
       timestamp: new Date().getTime(),
-      amount: { assetScale: 2, assetCode: 'USD', value: '100' }
+      amount: { assetScale: 2, assetCode: 'USD', value: '100' },
+      ...bodyOverrides
     }
   })
 }
