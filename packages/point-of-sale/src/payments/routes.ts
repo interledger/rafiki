@@ -117,8 +117,14 @@ async function payment(
   const body = ctx.request.body
   let incomingPaymentId: string | undefined
   try {
+    const senderWalletAddressUrl = new URL(body.senderWalletAddress)
+
+    if (deps.config.useHttp) {
+      senderWalletAddressUrl.protocol = 'http:'
+    }
+
     const senderWalletAddress = await deps.paymentService.getWalletAddress(
-      body.senderWalletAddress.replace(/^https:/, 'http:')
+      senderWalletAddressUrl.href
     )
 
     const receiverWalletAddressId =
