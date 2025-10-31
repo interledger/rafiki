@@ -33,7 +33,7 @@
     "koa-bodyparser": "^4.4.1",
     "pino": "^8.19.0",
     "ts-node-dev": "^2.0.0",
-    "uuid": "^9.0.1"
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
