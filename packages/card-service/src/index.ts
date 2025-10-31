@@ -3,7 +3,6 @@ import { App, AppServices } from './app'
 import { Config } from './config/app'
 import { Ioc, IocContract } from '@adonisjs/fold'
 import createLogger from 'pino'
-import Redis from 'ioredis'
 import { createPaymentService } from './payment/service'
 import { createPaymentRoutes } from './payment/routes'
 import { createOpenAPI } from '@interledger/openapi'
@@ -30,14 +29,6 @@ export function initIocContainer(
     const logger = createLogger()
     logger.level = config.logLevel
     return logger
-  })
-
-  container.singleton('redis', async (deps): Promise<Redis> => {
-    const config = await deps.use('config')
-    return new Redis(config.redisUrl, {
-      tls: config.redisTls,
-      stringNumbers: true
-    })
   })
 
   container.singleton('apolloClient', async (deps) => {
