@@ -121,6 +121,7 @@ function getSignatureParts(signature: string) {
 }
 
 function verifyApiSignatureDigest(
+  ctx: AppContext,
   signature: string,
   request: AppContext['request'],
   adminApiSignatureVersion: number,
@@ -134,15 +135,28 @@ function verifyApiSignatureDigest(
   } = getSignatureParts(signature as string)
 
   if (Number(signatureVersion) !== adminApiSignatureVersion) {
+    ctx.logger.debug('Tenant sig verification: signature version mismatch')
     return false
   }
 
   const payload = `${timestamp}.${canonicalize(body)}`
+
+  ctx.logger.debug(
+    { body, payload, signature, scrt: secret },
+    'Tenant sig verification: ready for digest verification'
+  )
+
   const hmac = createHmac('sha256', secret)
   hmac.update(payload)
   const digest = hmac.digest('hex')
 
-  return digest === signatureDigest
+  const isValid = digest === signatureDigest
+
+  if (!isValid) {
+    ctx.logger.debug('Tenant sig verification: digest mismatch')
+  }
+
+  return isValid
 }
 
 async function canApiSignatureBeProcessed(
@@ -155,11 +169,17 @@ async function canApiSignatureBeProcessed(
   const currentTime = Date.now()
   const ttlMilliseconds = config.adminApiSignatureTtlSeconds * 1000
 
-  if (currentTime - signatureTime > ttlMilliseconds) return false
+  if (currentTime - signatureTime > ttlMilliseconds) {
+    ctx.logger.debug('Tenant sig verification: request too old')
+    return false
+  }
 
   const redis = await ctx.container.use('redis')
   const key = `signature:${signature}`
-  if (await redis.get(key)) return false
+  if (await redis.get(key)) {
+    ctx.logger.debug('Tenant sig verification: received duplicate signature')
+    return false
+  }
 
   const op = redis.multi()
   op.set(key, signature)
@@ -196,7 +216,12 @@ export async function getTenantFromApiSignature(
   const tenantId = headers['tenant-id'] as string
   const tenant = tenantId ? await tenantService.get(tenantId) : undefined
 
-  if (!tenant) return undefined
+  if (!tenant) {
+    ctx.logger.debug('Tenant sig verification: tenant not found')
+    return undefined
+  }
+
+  ctx.logger.debug({ tenant }, 'Tenant sig verification: found tenant')
 
   if (!(await canApiSignatureBeProcessed(signature as string, ctx, config)))
     return undefined
@@ -204,6 +229,7 @@ export async function getTenantFromApiSignature(
   if (
     tenant.apiSecret &&
     verifyApiSignatureDigest(
+      ctx,
       signature as string,
       ctx.request,
       config.adminApiSignatureVersion,
@@ -214,27 +240,6 @@ export async function getTenantFromApiSignature(
   }
 
   return undefined
-}
-
-export async function verifyApiSignature(
-  ctx: AppContext,
-  config: IAppConfig
-): Promise<boolean> {
-  const { headers } = ctx.request
-  const signature = headers['signature']
-  if (!signature) {
-    return false
-  }
-
-  if (!(await canApiSignatureBeProcessed(signature as string, ctx, config)))
-    return false
-
-  return verifyApiSignatureDigest(
-    signature as string,
-    ctx.request,
-    config.adminApiSignatureVersion,
-    config.adminApiSecret as string
-  )
 }
 
 export function ensureTrailingSlash(str: string): string {
