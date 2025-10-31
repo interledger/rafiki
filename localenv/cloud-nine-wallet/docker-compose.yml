@@ -10,13 +10,7 @@ services:
     networks:
       - rafiki
     ports:
-      - '3007:3007'
       - '9234:9229'
-    volumes:
-      - type: bind
-        source: ../../packages/card-service/src
-        target: /home/rafiki/packages/card-service/src
-        read_only: true
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       INSTANCE_NAME: CLOUD-NINE

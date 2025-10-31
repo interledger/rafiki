@@ -12,11 +12,6 @@ services:
     ports: 
       - '4008:4008' 
       - '9233:9229'
-    volumes: 
-      - type: bind 
-        source: ../../packages/point-of-sale/src 
-        target: /home/rafiki/packages/point-of-sale/src 
-        read_only: true 
     environment: 
       NODE_ENV: ${NODE_ENV:-development} 
       INSTANCE_NAME: HAPPY-LIFE 
