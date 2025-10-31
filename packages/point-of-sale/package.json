@@ -45,7 +45,7 @@
     "@types/koa": "2.15.0",
     "@types/koa-bodyparser": "^4.3.12",
     "@types/koa__cors": "^5.0.0",
-    "@types/koa__router": "^12.0.4",
+    "@types/koa__router": "^12.0.5",
     "@types/tmp": "^0.2.6",
     "@types/uuid": "^9.0.8",
     "cross-fetch": "^4.1.0",
