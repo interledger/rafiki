@@ -23,6 +23,7 @@ services:
       GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
       WEBHOOK_SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       WEBHOOK_SIGNATURE_VERSION: 1
+      USE_HTTP: true
     depends_on: 
       - shared-database
     healthcheck: 

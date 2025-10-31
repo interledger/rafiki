@@ -37,5 +37,6 @@ export const Config = {
   webhookSignatureVersion: envInt('WEBHOOK_SIGNATURE_VERSION', 1),
   webhookSignatureSecret: envString('WEBHOOK_SIGNATURE_SECRET'),
   webhookTimeoutMs: envInt('WEBHOOK_TIMEOUT_MS', 30000),
-  incomingPaymentExpiryMs: envInt('INCOMING_PAYMENT_EXPIRY_MS', 10000)
+  incomingPaymentExpiryMs: envInt('INCOMING_PAYMENT_EXPIRY_MS', 10000),
+  useHttp: envBool('USE_HTTP', false)
 }

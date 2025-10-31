@@ -117,8 +117,14 @@ async function payment(
   const body = ctx.request.body
   let incomingPaymentId: string | undefined
   try {
+    const senderWalletAddressUrl = new URL(body.senderWalletAddress)
+
+    if (deps.config.useHttp) {
+      senderWalletAddressUrl.protocol = 'http:'
+    }
+
     const senderWalletAddress = await deps.paymentService.getWalletAddress(
-      body.senderWalletAddress.replace(/^https:/, 'http:')
+      senderWalletAddressUrl.href
     )
 
     const receiverWalletAddressId =
@@ -126,13 +132,15 @@ async function payment(
         body.receiverWalletAddress
       )
 
-    const incomingPayment = await deps.paymentService.createIncomingPayment(
-      receiverWalletAddressId,
-      {
-        ...body.amount,
+    const incomingPayment = await deps.paymentService.createIncomingPayment({
+      walletAddressId: receiverWalletAddressId,
+      incomingAmount: {
+        assetCode: body.amount.assetCode,
+        assetScale: body.amount.assetScale,
         value: BigInt(body.amount.value)
-      }
-    )
+      },
+      senderWalletAddress: body.senderWalletAddress
+    })
     const deferred = new Deferred<WebhookBody>()
     webhookWaitMap.setWithExpiry(
       incomingPayment.id,
