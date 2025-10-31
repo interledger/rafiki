@@ -402,6 +402,209 @@ describe('Payment Routes', () => {
       expect(ctx.status).toEqual(400)
       expect(ctx.body).toEqual(refundError.message)
     })
+    test(
+      'falls back to http for payment request if configured',
+      withConfigOverride(
+        () => config,
+        { useHttp: true },
+        async () => {
+          const senderWalletAddress = 'https://example.com/'
+
+          const ctx = createPaymentContext({ senderWalletAddress })
+
+          const { getWalletAddressSpy } = mockPaymentService()
+          jest
+            .spyOn(cardServiceClient, 'sendPayment')
+            .mockResolvedValueOnce(Result.APPROVED)
+
+          jest
+            .spyOn(webhookWaitMap, 'setWithExpiry')
+            .mockImplementationOnce((key, deferred) => {
+              deferred.resolve({
+                id: v4(),
+                type: 'incoming_payment.completed',
+                data: { id: key, completed: true }
+              })
+              return webhookWaitMap
+            })
+
+          await paymentRoutes.payment(ctx)
+          expect(getWalletAddressSpy).toHaveBeenCalledWith(
+            'http://example.com/'
+          )
+          expect(ctx.response.body).toEqual({
+            result: { code: Result.APPROVED }
+          })
+          expect(ctx.status).toBe(200)
+        }
+      )
+    )
+  })
+
+  describe('get incoming payments', (): void => {
+    test('can get incoming payments for pos device', async (): Promise<void> => {
+      const walletAddressId = v4()
+      const mockServiceResponse = {
+        edges: [
+          {
+            node: {
+              __typename: 'IncomingPayment' as const,
+              id: v4(),
+              url: faker.internet.url(),
+              walletAddressId,
+              client: faker.internet.url(),
+              state: IncomingPaymentState.Pending,
+              incomingAmount: {
+                __typename: 'Amount' as const,
+                value: BigInt(500),
+                assetCode: 'USD',
+                assetScale: 2
+              },
+              receivedAmount: {
+                __typename: 'Amount' as const,
+                value: BigInt(500),
+                assetCode: 'USD',
+                assetScale: 2
+              },
+              expiresAt: new Date().toString(),
+              createdAt: new Date().toString(),
+              tenantId: v4(),
+              initiatedBy: 'CARD'
+            },
+            cursor: walletAddressId
+          }
+        ],
+        pageInfo: {
+          endCursor: walletAddressId,
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: walletAddressId
+        }
+      }
+      const getIncomingPaymentsSpy = jest
+        .spyOn(paymentService, 'getIncomingPayments')
+        .mockResolvedValue(mockServiceResponse)
+      const ctx = createGetPaymentsContext()
+
+      await paymentRoutes.getPayments(ctx)
+      expect(ctx.status).toEqual(200)
+      expect(ctx.body).toEqual({
+        // Ensure that typename is sanitized
+        result: mockServiceResponse.edges.map((edge) => {
+          const {
+            __typename: _nodeTypename,
+            receivedAmount,
+            incomingAmount,
+            ...restOfNode
+          } = edge.node
+          const { __typename: _receivedTypename, ...restOfReceived } =
+            receivedAmount
+          const { __typename: _incomingTypename, ...restOfIncoming } =
+            incomingAmount
+          return {
+            ...restOfNode,
+            incomingAmount: restOfIncoming,
+            receivedAmount: restOfReceived
+          }
+        }),
+        pagination: mockServiceResponse.pageInfo
+      })
+
+      expect(getIncomingPaymentsSpy).toHaveBeenCalledWith({
+        receiverWalletAddress: ctx.query.receiverWalletAddress,
+        filter: {
+          initiatedBy: {
+            in: ['CARD']
+          }
+        }
+      })
+    })
+
+    test('returns empty page if no incoming payments', async (): Promise<void> => {
+      jest
+        .spyOn(paymentService, 'getIncomingPayments')
+        .mockResolvedValue(undefined)
+
+      const ctx = createGetPaymentsContext()
+
+      await paymentRoutes.getPayments(ctx)
+      expect(ctx.status).toEqual(200)
+      expect(ctx.body).toMatchObject({
+        result: [],
+        pagination: {
+          hasNextPage: false,
+          hasPreviousPage: false
+        }
+      })
+    })
+
+    test('passes through pagination filters', async (): Promise<void> => {
+      const beforeWalletAddressId = v4()
+      const afterWalletAddressId = v4()
+      const walletAddressId = v4()
+      const mockServiceResponse = {
+        edges: [
+          {
+            node: {
+              __typename: 'IncomingPayment' as const,
+              id: v4(),
+              url: faker.internet.url(),
+              walletAddressId,
+              client: faker.internet.url(),
+              state: IncomingPaymentState.Pending,
+              incomingAmount: {
+                __typename: 'Amount' as const,
+                value: BigInt(500),
+                assetCode: 'USD',
+                assetScale: 2
+              },
+              receivedAmount: {
+                __typename: 'Amount' as const,
+                value: BigInt(500),
+                assetCode: 'USD',
+                assetScale: 2
+              },
+              expiresAt: new Date().toString(),
+              createdAt: new Date().toString(),
+              tenantId: v4(),
+              initiatedBy: 'CARD'
+            },
+            cursor: walletAddressId
+          }
+        ],
+        pageInfo: {
+          endCursor: afterWalletAddressId,
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: beforeWalletAddressId
+        }
+      }
+      const getIncomingPaymentsSpy = jest
+        .spyOn(paymentService, 'getIncomingPayments')
+        .mockResolvedValue(mockServiceResponse)
+      const ctx = createGetPaymentsContext({
+        sortOrder: SortOrder.Asc,
+        first: 1,
+        last: 1,
+        before: beforeWalletAddressId,
+        after: afterWalletAddressId
+      })
+
+      await paymentRoutes.getPayments(ctx)
+      expect(getIncomingPaymentsSpy).toHaveBeenCalledWith({
+        receiverWalletAddress: ctx.query.receiverWalletAddress,
+        sortOrder: SortOrder.Asc,
+        first: 1,
+        last: 1,
+        before: beforeWalletAddressId,
+        after: afterWalletAddressId,
+        filter: {
+          initiatedBy: {
+            in: ['CARD']
+          }
+        }
+      })
+    })
   })
 })
 

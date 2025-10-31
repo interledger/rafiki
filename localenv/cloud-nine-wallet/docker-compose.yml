@@ -30,42 +30,6 @@ services:
       interval: 30s
       retries: 1
       timeout: 3s
-  cloud-nine-wallet-point-of-sale: 
-    hostname: cloud-nine-wallet-point-of-sale
-    image: rafiki-point-of-sale
-    build: 
-      context: ../.. 
-      dockerfile: ./packages/point-of-sale/Dockerfile.dev 
-    restart: always 
-    networks: 
-      - rafiki 
-    ports: 
-      - '3008:3008' 
-    volumes: 
-      - type: bind 
-        source: ../../packages/point-of-sale/src 
-        target: /home/rafiki/packages/point-of-sale/src 
-        read_only: true 
-    environment: 
-      NODE_ENV: ${NODE_ENV:-development} 
-      INSTANCE_NAME: CLOUD-NINE 
-      TRUST_PROXY: ${TRUST_PROXY} 
-      LOG_LEVEL: debug 
-      PORT: 3008
-      DATABASE_URL: postgresql://cloud_nine_wallet_point_of_sale:cloud_nine_wallet_point_of_sale@shared-database/cloud_nine_wallet_point_of_sale 
-      TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
-      TENANT_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
-      GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
-      WEBHOOK_SIGNATURE_SECRET: webhook_secret
-    depends_on: 
-      - shared-database 
-    healthcheck: 
-      test: ["CMD", "wget", "--spider", "http://localhost:3008/healthz"] 
-      start_period: 60s 
-      start_interval: 5s 
-      interval: 30s 
-      retries: 1 
-      timeout: 3s 
   cloud-nine-mock-ase:
     hostname: cloud-nine-wallet
     image: rafiki-mock-ase

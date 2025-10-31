@@ -1,6 +1,3 @@
-import { ConnectionOptions } from 'tls'
-import * as fs from 'fs'
-
 function envString(name: string, defaultValue?: string): string {
   const envValue = process.env[name]
 

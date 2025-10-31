@@ -90,10 +90,6 @@ export class App {
       webhookHandlerRoutes.handleWebhook
     )
 
-    // POST /payment
-    // Initiate a payment
-    router.post<DefaultState, PaymentContext>('/payment', paymentRoutes.payment)
-
     // POST /refund
     // Refund a payment
     router.post<DefaultState, RefundContext>(

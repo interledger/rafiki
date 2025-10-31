@@ -1,7 +1,9 @@
 import { Logger } from 'pino'
 import { CREATE_INCOMING_PAYMENT } from '../graphql/mutations/createIncomingPayment'
 import { IAppConfig } from '../config/app'
-import { ApolloClient, NormalizedCacheObject, gql } from '@apollo/client'
+import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
+import { AxiosInstance, AxiosRequestConfig } from 'axios'
+import { v4 } from 'uuid'
 import {
   AmountInput,
   CreateIncomingPayment,
@@ -18,8 +20,6 @@ import {
   GetWalletAddress,
   GetWalletAddressVariables
 } from '../graphql/generated/graphql'
-import { v4 } from 'uuid'
-import { AxiosInstance, AxiosRequestConfig } from 'axios'
 import { GET_WALLET_ADDRESS_BY_URL } from '../graphql/queries/getWalletAddress'
 import { GetPaymentsQuery } from './routes'
 import { GET_INCOMING_PAYMENT } from '../graphql/queries/getIncomingPayment'
@@ -91,14 +91,14 @@ export function createPaymentService(
   }
 
   return {
-    getIncomingPayments: (options: GetPaymentsQuery) =>
-      getIncomingPayments(deps, options),
     createIncomingPayment: (args: CreateIncomingPaymentArgs) =>
       createIncomingPayment(deps, args),
     getWalletAddress: (walletAddressUrl: string) =>
       getWalletAddress(deps, walletAddressUrl),
     getWalletAddressIdByUrl: (walletAddressUrl: string) =>
       getWalletAddressIdByUrl(deps, walletAddressUrl),
+    getIncomingPayments: (options: GetPaymentsQuery) =>
+      getIncomingPayments(deps, options),
     refundIncomingPayment: (
       incomingPaymentId: string,
       posWalletAddress: string

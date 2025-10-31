@@ -1,6 +1,8 @@
 import { PaymentService, createPaymentService } from './service'
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 import { Logger } from 'pino'
+import { CREATE_RECEIVER } from '../graphql/mutations/createReceiver'
+import { CREATE_OUTGOING_PAYMENT_FROM_INCOMING_PAYMENT } from '../graphql/mutations/createOutgoingPaymentFromIncomingPayment'
 import { AmountInput, IncomingPaymentState } from '../graphql/generated/graphql'
 import { IAppConfig } from '../config/app'
 import { v4 as uuid, v4 } from 'uuid'
@@ -8,8 +10,6 @@ import { AxiosInstance } from 'axios'
 import { faker } from '@faker-js/faker'
 import { GET_WALLET_ADDRESS_BY_URL } from '../graphql/queries/getWalletAddress'
 import { GET_INCOMING_PAYMENT } from '../graphql/queries/getIncomingPayment'
-import { CREATE_RECEIVER } from '../graphql/mutations/createReceiver'
-import { CREATE_OUTGOING_PAYMENT_FROM_INCOMING_PAYMENT } from '../graphql/mutations/createOutgoingPaymentFromIncomingPayment'
 
 const mockLogger = {
   child: jest.fn().mockReturnThis(),
@@ -273,9 +273,9 @@ describe('get payments', (): void => {
     })
   })
 })
+
 describe('refundIncomingPayment', () => {
   let service: PaymentService
-  // const WALLET_ADDRESS_URL = 'https://api.example.com/wallet-address'
 
   beforeAll(() => {
     service = createPaymentService(deps)
