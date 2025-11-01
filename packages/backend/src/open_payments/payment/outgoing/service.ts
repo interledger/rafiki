@@ -1117,14 +1117,18 @@ export async function updateGrantSpentAmounts(
   )
 
   await OutgoingPaymentGrantSpentAmounts.query(deps.knex).insert({
-    ...latestPaymentSpentAmounts,
     id: uuid(),
+    grantId: latestPaymentSpentAmounts.grantId,
     outgoingPaymentId: payment.id,
     paymentDebitAmountValue: finalAmounts.debit,
+    debitAmountScale: latestPaymentSpentAmounts.debitAmountScale,
+    debitAmountCode: latestPaymentSpentAmounts.debitAmountCode,
     intervalDebitAmountValue: newIntervalDebitAmountValue,
     grantTotalDebitAmountValue:
       latestGrantSpentAmounts.grantTotalDebitAmountValue,
     paymentReceiveAmountValue: finalAmounts.receive,
+    receiveAmountScale: latestPaymentSpentAmounts.receiveAmountScale,
+    receiveAmountCode: latestPaymentSpentAmounts.receiveAmountCode,
     intervalReceiveAmountValue: newIntervalReceiveAmountValue,
     grantTotalReceiveAmountValue: newGrantTotalReceiveAmountValue,
     intervalStart: latestPaymentSpentAmounts.intervalStart,
@@ -1204,13 +1208,17 @@ export async function revertGrantSpentAmounts(
   )
 
   await OutgoingPaymentGrantSpentAmounts.query(deps.knex).insert({
-    ...latestPaymentSpentAmounts,
     id: uuid(),
+    grantId: latestPaymentSpentAmounts.grantId,
     outgoingPaymentId: payment.id,
     paymentDebitAmountValue: BigInt(0),
+    debitAmountScale: latestPaymentSpentAmounts.debitAmountScale,
+    debitAmountCode: latestPaymentSpentAmounts.debitAmountCode,
     intervalDebitAmountValue: newIntervalDebitAmountValue,
     grantTotalDebitAmountValue: newGrantTotalDebitAmountValue,
     paymentReceiveAmountValue: BigInt(0),
+    receiveAmountScale: latestPaymentSpentAmounts.receiveAmountScale,
+    receiveAmountCode: latestPaymentSpentAmounts.receiveAmountCode,
     intervalReceiveAmountValue: newIntervalReceiveAmountValue,
     grantTotalReceiveAmountValue: newGrantTotalReceiveAmountValue,
     createdAt: new Date(),

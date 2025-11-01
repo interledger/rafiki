@@ -579,6 +579,10 @@ describe('Lifecycle', (): void => {
               .orderBy('createdAt', 'desc')
               .first()
 
+          assert(latestGrantSpentAmounts)
+          assert(startSpentAmounts)
+          expect(latestGrantSpentAmounts.id).not.toBe(startSpentAmounts.id)
+
           // Should have new spent amounts with payment factored out
           expect(latestGrantSpentAmounts).toMatchObject({
             grantId: grant.id,
