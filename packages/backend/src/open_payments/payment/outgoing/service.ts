@@ -35,10 +35,7 @@ import * as worker from './worker'
 import { DateTime, Interval } from 'luxon'
 import { knex } from 'knex'
 import { AccountAlreadyExistsError } from '../../../accounting/errors'
-import {
-  PaymentMethodHandlerService,
-  PayResult
-} from '../../../payment-method/handler/service'
+import { PaymentMethodHandlerService } from '../../../payment-method/handler/service'
 import { TelemetryService } from '../../../telemetry/service'
 import { Amount } from '../../amount'
 import { QuoteService } from '../../quote/service'
@@ -1059,7 +1056,7 @@ function calculateIntervalAmounts(
 export async function updateGrantSpentAmounts(
   deps: ServiceDependencies,
   payment: OutgoingPayment,
-  finalAmounts: PayResult
+  finalAmounts: { debit: bigint; receive: bigint }
 ) {
   if (!payment.grantId) return
 

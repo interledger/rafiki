@@ -13,7 +13,6 @@ import {
 import { Receiver } from '../../receiver/model'
 import { TransactionOrKnex } from 'objection'
 import { ValueType } from '@opentelemetry/api'
-import { PayResult } from '../../../payment-method/handler/service'
 
 // "payment" is locked by the "deps.knex" transaction.
 export async function handleSending(
@@ -90,7 +89,8 @@ export async function handleSending(
     description: 'Time to complete a payment',
     callName: 'PaymentMethodHandlerService:pay'
   })
-  let payResult: PayResult
+  let amountDelivered
+  let finalDebitAmount
   if (receiver.isLocal) {
     if (
       !payment.quote.debitAmountMinusFees ||
@@ -104,23 +104,28 @@ export async function handleSending(
       )
       throw LifecycleError.BadState
     }
-    payResult = await deps.paymentMethodHandlerService.pay('LOCAL', {
+    finalDebitAmount = payment.quote.debitAmountMinusFees
+    amountDelivered = await deps.paymentMethodHandlerService.pay('LOCAL', {
       receiver,
       outgoingPayment: payment,
-      finalDebitAmount: payment.quote.debitAmountMinusFees,
+      finalDebitAmount,
       finalReceiveAmount: maxReceiveAmount
     })
   } else {
-    payResult = await deps.paymentMethodHandlerService.pay('ILP', {
+    finalDebitAmount = maxDebitAmount
+    amountDelivered = await deps.paymentMethodHandlerService.pay('ILP', {
       receiver,
       outgoingPayment: payment,
-      finalDebitAmount: maxDebitAmount,
+      finalDebitAmount,
       finalReceiveAmount: maxReceiveAmount
     })
   }
   stopTimer()
 
-  await updateGrantSpentAmounts(deps, payment, payResult)
+  await updateGrantSpentAmounts(deps, payment, {
+    debit: finalDebitAmount,
+    receive: amountDelivered
+  })
 
   await Promise.all([
     deps.telemetry.incrementCounter('transactions_total', 1, {

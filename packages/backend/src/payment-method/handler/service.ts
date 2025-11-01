@@ -30,17 +30,12 @@ export interface PayOptions {
   finalReceiveAmount: bigint
 }
 
-export interface PayResult {
-  debit: bigint
-  receive: bigint
-}
-
 export interface PaymentMethodService {
   getQuote(
     quoteOptions: StartQuoteOptions,
     trx?: Transaction
   ): Promise<PaymentQuote>
-  pay(payOptions: PayOptions): Promise<PayResult>
+  pay(payOptions: PayOptions): Promise<bigint>
 }
 
 export type PaymentMethod = 'ILP' | 'LOCAL'
@@ -51,7 +46,7 @@ export interface PaymentMethodHandlerService {
     quoteOptions: StartQuoteOptions,
     trx?: Transaction
   ): Promise<PaymentQuote>
-  pay(method: PaymentMethod, payOptions: PayOptions): Promise<PayResult>
+  pay(method: PaymentMethod, payOptions: PayOptions): Promise<bigint>
 }
 
 interface ServiceDependencies extends BaseService {

@@ -3,8 +3,7 @@ import {
   PaymentQuote,
   PaymentMethodService,
   StartQuoteOptions,
-  PayOptions,
-  PayResult
+  PayOptions
 } from '../handler/service'
 import { RatesService } from '../../rates/service'
 import { IlpPlugin, IlpPluginOptions } from './ilp_plugin'
@@ -255,7 +254,7 @@ async function getQuote(
 async function pay(
   deps: ServiceDependencies,
   options: PayOptions
-): Promise<PayResult> {
+): Promise<bigint> {
   const { receiver, outgoingPayment, finalDebitAmount, finalReceiveAmount } =
     options
 
@@ -328,7 +327,7 @@ async function pay(
       },
       'ILP payment completed'
     )
-    return { receive: receipt.amountDelivered, debit: finalDebitAmount }
+    return receipt.amountDelivered
   } catch (err) {
     const errorMessage = 'Received error during ILP pay'
     deps.logger.error(
