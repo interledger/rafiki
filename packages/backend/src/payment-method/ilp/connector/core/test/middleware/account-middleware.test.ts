@@ -134,7 +134,8 @@ describe('Account Middleware', () => {
     expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
     expect(getByDestinationAddressSpy).toHaveBeenCalledWith(
       'test.123',
-      tenantId
+      tenantId,
+      incomingAccount.id
     )
   })
 

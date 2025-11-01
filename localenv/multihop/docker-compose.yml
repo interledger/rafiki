@@ -1,0 +1,8 @@
+name: multihop
+services:
+  cloud-nine-mock-ase:
+    volumes:
+      - ../cloud-nine-wallet/seed.multihop.yml:/workspace/seed.yml
+  happy-life-mock-ase:
+    volumes:
+      - ../happy-life-bank/seed.multihop.yml:/workspace/seed.yml
