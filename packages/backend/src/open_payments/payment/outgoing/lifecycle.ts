@@ -5,7 +5,11 @@ import {
   OutgoingPaymentEvent,
   OutgoingPaymentEventType
 } from './model'
-import { ServiceDependencies } from './service'
+import {
+  revertGrantSpentAmounts,
+  ServiceDependencies,
+  updateGrantSpentAmounts
+} from './service'
 import { Receiver } from '../../receiver/model'
 import { TransactionOrKnex } from 'objection'
 import { ValueType } from '@opentelemetry/api'
@@ -85,6 +89,8 @@ export async function handleSending(
     description: 'Time to complete a payment',
     callName: 'PaymentMethodHandlerService:pay'
   })
+  let amountDelivered
+  let finalDebitAmount
   if (receiver.isLocal) {
     if (
       !payment.quote.debitAmountMinusFees ||
@@ -98,21 +104,28 @@ export async function handleSending(
       )
       throw LifecycleError.BadState
     }
-    await deps.paymentMethodHandlerService.pay('LOCAL', {
+    finalDebitAmount = payment.quote.debitAmountMinusFees
+    amountDelivered = await deps.paymentMethodHandlerService.pay('LOCAL', {
       receiver,
       outgoingPayment: payment,
-      finalDebitAmount: payment.quote.debitAmountMinusFees,
+      finalDebitAmount,
       finalReceiveAmount: maxReceiveAmount
     })
   } else {
-    await deps.paymentMethodHandlerService.pay('ILP', {
+    finalDebitAmount = maxDebitAmount
+    amountDelivered = await deps.paymentMethodHandlerService.pay('ILP', {
       receiver,
       outgoingPayment: payment,
-      finalDebitAmount: maxDebitAmount,
+      finalDebitAmount,
       finalReceiveAmount: maxReceiveAmount
     })
   }
   stopTimer()
+
+  await updateGrantSpentAmounts(deps, payment, {
+    debit: finalDebitAmount,
+    receive: amountDelivered
+  })
 
   await Promise.all([
     deps.telemetry.incrementCounter('transactions_total', 1, {
@@ -166,10 +179,17 @@ export async function handleFailed(
   const stopTimer = deps.telemetry.startTimer('handle_failed_ms', {
     callName: 'OutgoingPaymentLifecycle:handleFailed'
   })
+  const failedAt = new Date()
   await payment.$query(deps.knex).patch({
     state: OutgoingPaymentState.Failed,
-    error
+    error,
+    updatedAt: failedAt
   })
+
+  if (payment.grantId) {
+    await revertGrantSpentAmounts(deps, payment)
+  }
+
   await sendWebhookEvent(deps, payment, OutgoingPaymentEventType.PaymentFailed)
   stopTimer()
 }

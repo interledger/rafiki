@@ -474,7 +474,7 @@ describe('IlpPaymentService', (): void => {
       jest.spyOn(Pay, 'startQuote').mockResolvedValueOnce({
         maxSourceAmount: 10n,
         highEstimatedExchangeRate: Pay.Ratio.from(0.099)
-      } as Pay.Quote)
+      } as unknown as Pay.Quote)
 
       expect.assertions(5)
       try {
@@ -680,7 +680,7 @@ describe('IlpPaymentService', (): void => {
           finalDebitAmount: 100n,
           finalReceiveAmount: 100n
         })
-      ).resolves.toBeUndefined()
+      ).resolves.toBe(100n)
 
       await validateBalances(outgoingPayment, incomingPayment, {
         amountSent: 100n,
@@ -730,7 +730,7 @@ describe('IlpPaymentService', (): void => {
           finalDebitAmount: 100n - 5n,
           finalReceiveAmount: 100n - 5n
         })
-      ).resolves.toBeUndefined()
+      ).resolves.toBe(95n)
 
       await validateBalances(outgoingPayment, incomingPayment, {
         amountSent: 100n,

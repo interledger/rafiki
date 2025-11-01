@@ -238,6 +238,9 @@ async function cancelOutgoingPayment(
     payment.walletAddress = await deps.walletAddressService.get(
       payment.walletAddressId
     )
+    if (payment.grantId) {
+      await revertGrantSpentAmounts({ ...deps, knex: trx }, payment)
+    }
 
     return addSentAmount(deps, payment)
   })
@@ -369,7 +372,8 @@ async function createOutgoingPayment(
             client: options.client,
             metadata: options.metadata,
             state: OutgoingPaymentState.Funding,
-            grantId
+            grantId,
+            createdAt: new Date()
           })
           payment.walletAddress = walletAddress
           payment.quote = quote
@@ -725,7 +729,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
       ? !latestSpentAmounts ||
         (latestSpentAmounts.intervalEnd &&
           paymentLimits.paymentInterval?.start &&
-          latestSpentAmounts.intervalEnd <
+          latestSpentAmounts.intervalEnd <=
             paymentLimits.paymentInterval.start.toJSDate())
       : false
 
@@ -951,4 +955,272 @@ function validateSentAmount(
     errorMessage
   )
   throw new Error(errorMessage)
+}
+
+/**
+ * Gets the latest spent amounts record by payment.
+ */
+async function getLatestPaymentSpentAmounts(
+  deps: ServiceDependencies,
+  id: string
+): Promise<OutgoingPaymentGrantSpentAmounts | undefined> {
+  return await OutgoingPaymentGrantSpentAmounts.query(deps.knex)
+    .where('outgoingPaymentId', id)
+    .orderBy('createdAt', 'desc')
+    .first()
+}
+
+/**
+ * Gets the latest spent amounts records by grantId and payment interval if needed.
+ */
+async function getRemainingGrantSpentAmounts(
+  deps: ServiceDependencies,
+  grantId: string,
+  latestPaymentSpentAmounts: OutgoingPaymentGrantSpentAmounts
+): Promise<{
+  latestGrantSpentAmounts: OutgoingPaymentGrantSpentAmounts
+  latestIntervalSpentAmounts: OutgoingPaymentGrantSpentAmounts | null
+} | null> {
+  const latestGrantSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+    deps.knex
+  )
+    .where('grantId', grantId)
+    .orderBy('createdAt', 'desc')
+    .first()
+
+  if (!latestGrantSpentAmounts) return null
+
+  // For interval amounts, we need the latest record from this payment's interval
+  // (not necessarily the latest overall, nor this specific payment's spent amount record)
+  let latestIntervalSpentAmounts: OutgoingPaymentGrantSpentAmounts | null = null
+
+  if (
+    latestPaymentSpentAmounts.intervalStart &&
+    latestPaymentSpentAmounts.intervalEnd
+  ) {
+    if (
+      latestGrantSpentAmounts.intervalStart?.getTime() !==
+        latestPaymentSpentAmounts.intervalStart.getTime() ||
+      latestGrantSpentAmounts.intervalEnd?.getTime() !==
+        latestPaymentSpentAmounts.intervalEnd.getTime()
+    ) {
+      latestIntervalSpentAmounts =
+        (await OutgoingPaymentGrantSpentAmounts.query(deps.knex)
+          .where('grantId', grantId)
+          .where('intervalStart', latestPaymentSpentAmounts.intervalStart)
+          .where('intervalEnd', latestPaymentSpentAmounts.intervalEnd)
+          .orderBy('createdAt', 'desc')
+          .first()) ?? null
+    } else {
+      latestIntervalSpentAmounts = latestGrantSpentAmounts
+    }
+  }
+
+  return { latestGrantSpentAmounts, latestIntervalSpentAmounts }
+}
+
+/**
+ * Calculates new interval amounts based on previous interval spent amounts.
+ */
+function calculateIntervalAmounts(
+  latestPaymentSpentAmounts: OutgoingPaymentGrantSpentAmounts,
+  latestIntervalSpentAmounts: OutgoingPaymentGrantSpentAmounts | null,
+  debitAmountDifference: bigint,
+  receiveAmountDifference: bigint
+): { debit: bigint | null; receive: bigint | null } {
+  if (
+    latestPaymentSpentAmounts.intervalStart === null ||
+    latestPaymentSpentAmounts.intervalEnd === null ||
+    !latestIntervalSpentAmounts
+  ) {
+    return { debit: null, receive: null }
+  }
+
+  const newDebit =
+    (latestIntervalSpentAmounts.intervalDebitAmountValue ?? 0n) -
+    debitAmountDifference
+  const newReceive =
+    (latestIntervalSpentAmounts.intervalReceiveAmountValue ?? 0n) -
+    receiveAmountDifference
+
+  return {
+    debit: BigInt(Math.max(0, Number(newDebit))),
+    receive: BigInt(Math.max(0, Number(newReceive)))
+  }
+}
+
+/**
+ * Compares the final settled amounts with the amounts on hold
+ * and inserts a new OutgoingPaymentGrantSpentAmount record if needed.
+ */
+export async function updateGrantSpentAmounts(
+  deps: ServiceDependencies,
+  payment: OutgoingPayment,
+  finalAmounts: { debit: bigint; receive: bigint }
+) {
+  if (!payment.grantId) return
+
+  const latestPaymentSpentAmounts = await getLatestPaymentSpentAmounts(
+    deps,
+    payment.id
+  )
+  if (!latestPaymentSpentAmounts) {
+    deps.logger.error(
+      { payment, latestPaymentSpentAmounts },
+      'Could not find grant spent amounts for payment when updating spent amounts'
+    )
+    return
+  }
+
+  const reservedReceiveAmount =
+    latestPaymentSpentAmounts.paymentReceiveAmountValue
+  const receiveAmountDifference = reservedReceiveAmount - finalAmounts.receive
+
+  if (receiveAmountDifference === 0n) return
+
+  const records = await getRemainingGrantSpentAmounts(
+    deps,
+    payment.grantId,
+    latestPaymentSpentAmounts
+  )
+  if (!records) {
+    deps.logger.error(
+      { payment, latestPaymentSpentAmounts },
+      'Could not find grant spent amounts for grant when reverting spent amounts'
+    )
+    return
+  }
+
+  const { latestGrantSpentAmounts, latestIntervalSpentAmounts } = records
+
+  const newGrantTotalReceiveAmountValue = BigInt(
+    Math.max(
+      0,
+      Number(
+        latestGrantSpentAmounts.grantTotalReceiveAmountValue -
+          receiveAmountDifference
+      )
+    )
+  )
+
+  const {
+    debit: newIntervalDebitAmountValue,
+    receive: newIntervalReceiveAmountValue
+  } = calculateIntervalAmounts(
+    latestPaymentSpentAmounts,
+    latestIntervalSpentAmounts,
+    0n,
+    receiveAmountDifference
+  )
+
+  await OutgoingPaymentGrantSpentAmounts.query(deps.knex).insert({
+    id: uuid(),
+    grantId: latestPaymentSpentAmounts.grantId,
+    outgoingPaymentId: payment.id,
+    paymentDebitAmountValue: finalAmounts.debit,
+    debitAmountScale: latestPaymentSpentAmounts.debitAmountScale,
+    debitAmountCode: latestPaymentSpentAmounts.debitAmountCode,
+    intervalDebitAmountValue: newIntervalDebitAmountValue,
+    grantTotalDebitAmountValue:
+      latestGrantSpentAmounts.grantTotalDebitAmountValue,
+    paymentReceiveAmountValue: finalAmounts.receive,
+    receiveAmountScale: latestPaymentSpentAmounts.receiveAmountScale,
+    receiveAmountCode: latestPaymentSpentAmounts.receiveAmountCode,
+    intervalReceiveAmountValue: newIntervalReceiveAmountValue,
+    grantTotalReceiveAmountValue: newGrantTotalReceiveAmountValue,
+    intervalStart: latestPaymentSpentAmounts.intervalStart,
+    intervalEnd: latestPaymentSpentAmounts.intervalEnd,
+    createdAt: new Date(),
+    paymentState: OutgoingPaymentState.Completed
+  })
+}
+
+/**
+ * Reverts the grant spent amounts when a payment fails.
+ * Inserts a spent amount record with the reserved amounts adjusted out.
+ */
+export async function revertGrantSpentAmounts(
+  deps: ServiceDependencies,
+  payment: OutgoingPayment
+): Promise<void> {
+  if (!payment.grantId) return
+
+  const latestPaymentSpentAmounts = await getLatestPaymentSpentAmounts(
+    deps,
+    payment.id
+  )
+  if (!latestPaymentSpentAmounts) {
+    deps.logger.error(
+      { payment },
+      'Could not find grant spent amounts by payment when reverting spent amounts'
+    )
+    return
+  }
+
+  const records = await getRemainingGrantSpentAmounts(
+    deps,
+    payment.grantId,
+    latestPaymentSpentAmounts
+  )
+  if (!records) {
+    deps.logger.error(
+      { payment, latestPaymentSpentAmounts },
+      'Could not find grant spent amounts for grant when reverting spent amounts'
+    )
+    return
+  }
+
+  const { latestGrantSpentAmounts, latestIntervalSpentAmounts } = records
+
+  const reservedDebitAmount = latestPaymentSpentAmounts.paymentDebitAmountValue
+  const reservedReceiveAmount =
+    latestPaymentSpentAmounts.paymentReceiveAmountValue
+
+  const newGrantTotalDebitAmountValue = BigInt(
+    Math.max(
+      0,
+      Number(
+        latestGrantSpentAmounts.grantTotalDebitAmountValue - reservedDebitAmount
+      )
+    )
+  )
+  const newGrantTotalReceiveAmountValue = BigInt(
+    Math.max(
+      0,
+      Number(
+        latestGrantSpentAmounts.grantTotalReceiveAmountValue -
+          reservedReceiveAmount
+      )
+    )
+  )
+
+  const {
+    debit: newIntervalDebitAmountValue,
+    receive: newIntervalReceiveAmountValue
+  } = calculateIntervalAmounts(
+    latestPaymentSpentAmounts,
+    latestIntervalSpentAmounts,
+    reservedDebitAmount,
+    reservedReceiveAmount
+  )
+
+  await OutgoingPaymentGrantSpentAmounts.query(deps.knex).insert({
+    id: uuid(),
+    grantId: latestPaymentSpentAmounts.grantId,
+    outgoingPaymentId: payment.id,
+    paymentDebitAmountValue: BigInt(0),
+    debitAmountScale: latestPaymentSpentAmounts.debitAmountScale,
+    debitAmountCode: latestPaymentSpentAmounts.debitAmountCode,
+    intervalDebitAmountValue: newIntervalDebitAmountValue,
+    grantTotalDebitAmountValue: newGrantTotalDebitAmountValue,
+    paymentReceiveAmountValue: BigInt(0),
+    receiveAmountScale: latestPaymentSpentAmounts.receiveAmountScale,
+    receiveAmountCode: latestPaymentSpentAmounts.receiveAmountCode,
+    intervalReceiveAmountValue: newIntervalReceiveAmountValue,
+    grantTotalReceiveAmountValue: newGrantTotalReceiveAmountValue,
+    createdAt: new Date(),
+    paymentState: payment.state,
+    intervalStart: latestPaymentSpentAmounts.intervalStart,
+    intervalEnd: latestPaymentSpentAmounts.intervalEnd
+  })
 }

@@ -164,6 +164,8 @@ describe('OutgoingPaymentService', (): void => {
           debitAmount: args.finalDebitAmount,
           receiveAmount: args.finalReceiveAmount
         })
+
+        return args.finalReceiveAmount
       })
   }
 
@@ -607,6 +609,149 @@ describe('OutgoingPaymentService', (): void => {
         }
       }
     )
+
+    describe('Grant Spent Amounts', () => {
+      beforeEach(async (): Promise<void> => {
+        jest.useFakeTimers()
+      })
+      afterEach(async (): Promise<void> => {
+        jest.useRealTimers()
+      })
+
+      test('should not create spent amounts record when cancelling payment without grant', async (): Promise<void> => {
+        const payment = await createOutgoingPayment(deps, {
+          walletAddressId,
+          client,
+          receiver,
+          debitAmount: {
+            value: BigInt(100),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        const cancelResult = await outgoingPaymentService.cancel({
+          id: payment.id
+        })
+
+        assert.ok(cancelResult instanceof OutgoingPayment)
+        expect(cancelResult.state).toBe(OutgoingPaymentState.Cancelled)
+
+        // Verify no spent amounts records exist
+        const spentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        ).where({ outgoingPaymentId: payment.id })
+
+        expect(spentAmounts).toHaveLength(0)
+      })
+
+      test('should revert grant spent amounts with interval when cancelling payment', async (): Promise<void> => {
+        jest.setSystemTime(new Date('2025-01-02T00:00:00Z'))
+
+        const grant: Grant = {
+          id: uuid(),
+          limits: {
+            debitAmount: {
+              value: BigInt(1000),
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            interval: 'R/2025-01-01T00:00:00Z/P1M'
+          }
+        }
+        await OutgoingPaymentGrant.query(knex).insertAndFetch({
+          id: grant.id
+        })
+
+        const paymentAmount = BigInt(100)
+
+        // Create first payment
+        const firstPayment = await createOutgoingPayment(deps, {
+          walletAddressId,
+          client,
+          receiver,
+          debitAmount: {
+            value: paymentAmount,
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        jest.advanceTimersByTime(500)
+
+        // Create second payment
+        const secondPaymentAmount = BigInt(200)
+        const secondPayment = await createOutgoingPayment(deps, {
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: secondPaymentAmount,
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        jest.advanceTimersByTime(500)
+
+        // Verify spent amounts before cancellation
+        const beforeCancelSpentAmounts =
+          await OutgoingPaymentGrantSpentAmounts.query(knex)
+            .where({ grantId: grant.id })
+            .orderBy('createdAt', 'desc')
+            .first()
+
+        assert(beforeCancelSpentAmounts)
+        expect(beforeCancelSpentAmounts).toMatchObject({
+          grantId: grant.id,
+          outgoingPaymentId: secondPayment.id,
+          paymentDebitAmountValue: secondPaymentAmount,
+          intervalDebitAmountValue: paymentAmount + secondPaymentAmount,
+          grantTotalDebitAmountValue: paymentAmount + secondPaymentAmount,
+          paymentState: OutgoingPaymentState.Funding
+        })
+
+        // Cancel the second payment
+        const cancelResult = await outgoingPaymentService.cancel({
+          id: secondPayment.id,
+          reason: 'Testing interval cancellation'
+        })
+
+        assert.ok(cancelResult instanceof OutgoingPayment)
+        expect(cancelResult.state).toBe(OutgoingPaymentState.Cancelled)
+
+        // Verify spent amounts were reverted correctly
+        const afterCancelSpentAmounts =
+          await OutgoingPaymentGrantSpentAmounts.query(knex)
+            .where({ grantId: grant.id })
+            .orderBy('createdAt', 'desc')
+            .first()
+
+        assert(afterCancelSpentAmounts)
+        expect(afterCancelSpentAmounts.id).not.toBe(beforeCancelSpentAmounts.id)
+        expect(afterCancelSpentAmounts).toMatchObject({
+          grantId: grant.id,
+          outgoingPaymentId: secondPayment.id,
+          paymentDebitAmountValue: 0n,
+          paymentReceiveAmountValue: 0n,
+          intervalDebitAmountValue: firstPayment.debitAmount.value,
+          intervalReceiveAmountValue: firstPayment.receiveAmount.value,
+          grantTotalDebitAmountValue: firstPayment.debitAmount.value,
+          grantTotalReceiveAmountValue: firstPayment.receiveAmount.value,
+          paymentState: OutgoingPaymentState.Cancelled,
+          intervalStart: expect.any(Date),
+          intervalEnd: expect.any(Date)
+        })
+      })
+    })
   })
 
   describe('create', (): void => {

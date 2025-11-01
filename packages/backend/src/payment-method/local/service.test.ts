@@ -421,7 +421,7 @@ describe('LocalPaymentService', (): void => {
         finalReceiveAmount: 100n
       })
 
-      expect(payResponse).toBe(undefined)
+      expect(payResponse).toBe(100n)
 
       await validateBalances(outgoingPayment, incomingPayment, {
         amountSent: 100n,
