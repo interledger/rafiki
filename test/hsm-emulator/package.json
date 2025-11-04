@@ -1,0 +1,25 @@
+{
+  "name": "hsm-emulator",
+  "description": "A lightweight emulator that simulates the behavior of a Hardware Security Module (HSM) for development and testing purposes. It provides cryptographic operations such as key management, digital signing, and verification over HTTP, enabling developers to validate HSM-integrated workflows without requiring access to a physical HSM.",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "test": "node --import tsx --test test/*.test.ts",
+    "build": "pnpm clean && tsc --build tsconfig.json",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fastify": "^5.2.1",
+    "pino": "^9.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.11.11",
+    "typescript": "^5.0.0",
+    "tsx": "^4.19.3"
+  }
+}
