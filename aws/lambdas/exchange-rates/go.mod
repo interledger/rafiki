@@ -1,6 +1,6 @@
 module exchange-rates-lambda
 
-go 1.24.0
+go 1.25.4
 
 require (
 	github.com/aws/aws-lambda-go v1.46.0
