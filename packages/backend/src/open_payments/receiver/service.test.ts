@@ -536,4 +536,48 @@ describe('Receiver Service', (): void => {
       })
     })
   })
+
+  describe('complete', () => {
+    describe('local incoming payment', () => {
+      test('completes incoming payment', async () => {
+        const walletAddress = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
+          mockServerPort: Config.openPaymentsPort
+        })
+        const incomingPayment = await createIncomingPayment(deps, {
+          walletAddressId: walletAddress.id,
+          incomingAmount: {
+            value: BigInt(5),
+            assetCode: walletAddress.asset.code,
+            assetScale: walletAddress.asset.scale
+          },
+          tenantId: Config.operatorTenantId
+        })
+
+        jest
+          .spyOn(paymentMethodProviderService, 'getPaymentMethods')
+          .mockResolvedValueOnce([])
+        await expect(
+          receiverService.complete(
+            incomingPayment.getUrl(config.openPaymentsUrl)
+          )
+        ).resolves.toEqual({
+          assetCode: incomingPayment.receivedAmount.assetCode,
+          assetScale: incomingPayment.receivedAmount.assetScale,
+          incomingPayment: {
+            id: incomingPayment.getUrl(config.openPaymentsUrl),
+            walletAddress: walletAddress.address,
+            incomingAmount: incomingPayment.incomingAmount,
+            receivedAmount: incomingPayment.receivedAmount,
+            completed: true,
+            metadata: undefined,
+            expiresAt: incomingPayment.expiresAt,
+            createdAt: incomingPayment.createdAt,
+            methods: []
+          },
+          isLocal: true
+        })
+      })
+    })
+  })
 })
