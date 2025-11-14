@@ -171,6 +171,10 @@ export const Config = {
     'GRAPHQL_IDEMPOTENCY_KEY_TTL_MS',
     86400000
   ),
+  walletAddressNotFoundPollingEnabled: envBool(
+    'WALLET_ADDRESS_NOT_FOUND_POLLING_ENABLED',
+    false
+  ),
   walletAddressLookupTimeoutMs: envInt(
     'WALLET_ADDRESS_LOOKUP_TIMEOUT_MS',
     1500
@@ -199,7 +203,23 @@ export const Config = {
   sendTenantWebhooksToOperator: envBool(
     'SEND_TENANT_WEBHOOKS_TO_OPERATOR',
     false
-  )
+  ),
+  cardServiceUrl: optional(envString, 'CARD_SERVICE_URL'),
+  posServiceUrl: optional(envString, 'POS_SERVICE_URL'),
+  posWebhookServiceUrl: optional(envString, 'POS_WEBHOOK_SERVICE_URL'),
+  cardWebhookUrl: optional(envString, 'CARD_WEBHOOK_SERVICE_URL')
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function optional<T extends (...args: any[]) => ReturnType<T>>(
+  envGetter: T,
+  envVar: string
+): ReturnType<T> | undefined {
+  try {
+    return envGetter(envVar)
+  } catch (err) {
+    return undefined
+  }
 }
 
 function parseRedisTlsConfig(

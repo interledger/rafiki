@@ -22,7 +22,7 @@ import {
 import { Interaction, InteractionState } from './model'
 import { Grant, GrantState, GrantFinalization } from '../grant/model'
 import { Access } from '../access/model'
-import { generateNonce } from '../shared/utils'
+import { ensureTrailingSlash, generateNonce } from '../shared/utils'
 import { GNAPErrorCode } from '../shared/gnapErrors'
 import { generateBaseGrant } from '../tests/grant'
 import { generateBaseInteraction } from '../tests/interaction'
@@ -418,13 +418,14 @@ describe('Interaction Routes', (): void => {
           const { clientNonce } = grant
           const { nonce: interactNonce, ref: interactRef } = interaction
 
-          const grantRequestUrl = config.authServerUrl + `/`
-
+          const grantRequestUrl =
+            ensureTrailingSlash(config.authServerUrl) + grant.tenantId
           const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${grantRequestUrl}`
           const hash = crypto
             .createHash('sha-256')
             .update(data)
             .digest('base64')
+
           clientRedirectUri.searchParams.set('hash', hash)
           assert.ok(interactRef)
           clientRedirectUri.searchParams.set('interact_ref', interactRef)
@@ -434,6 +435,7 @@ describe('Interaction Routes', (): void => {
           await expect(interactionRoutes.finish(ctx)).resolves.toBeUndefined()
           expect(ctx.response).toSatisfyApiSpec()
           expect(ctx.status).toBe(302)
+
           expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
 
           const issuedGrant = await Grant.query().findById(grant.id)

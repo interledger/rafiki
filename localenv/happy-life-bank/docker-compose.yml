@@ -1,5 +1,38 @@
 name: hl
 services:
+  happy-life-bank-point-of-sale: 
+    hostname: happy-life-bank-point-of-sale
+    image: rafiki-point-of-sale 
+    build: 
+      context: ../.. 
+      dockerfile: ./packages/point-of-sale/Dockerfile.dev 
+    restart: always 
+    networks: 
+      - rafiki 
+    ports: 
+      - '4008:4008' 
+      - '9233:9229'
+    environment: 
+      NODE_ENV: ${NODE_ENV:-development} 
+      INSTANCE_NAME: HAPPY-LIFE 
+      TRUST_PROXY: ${TRUST_PROXY} 
+      LOG_LEVEL: debug 
+      PORT: 4008 
+      TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
+      TENANT_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
+      WEBHOOK_SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      WEBHOOK_SIGNATURE_VERSION: 1
+      USE_HTTP: true
+    depends_on: 
+      - shared-database
+    healthcheck: 
+      test: ["CMD", "wget", "--spider", "http://localhost:4008/healthz"] 
+      start_period: 60s 
+      start_interval: 5s 
+      interval: 30s 
+      retries: 1 
+      timeout: 3s 
   happy-life-mock-ase:
     hostname: happy-life-bank
     image: rafiki-mock-ase
@@ -67,6 +100,8 @@ services:
       ILP_ADDRESS: test.happy-life-bank
       ILP_CONNECTOR_URL: http://happy-life-bank-backend:4002
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
+      SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964= # webhook signature
+      SIGNATURE_VERSION: 1
       ADMIN_API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       WEBHOOK_URL: http://happy-life-bank/webhooks
       EXCHANGE_RATES_URL: http://happy-life-bank/rates
@@ -76,6 +111,9 @@ services:
       ENABLE_TELEMETRY: true
       KEY_ID: 53f2d913-e98a-40b9-b270-372d0547f23d
       OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
+      CARD_SERVICE_URL: 'http://happy-life-bank-card-service:4007'
+      POS_WEBHOOK_SERVICE_URL: 'http://happy-life-bank-point-of-sale:4008/webhook'
+      WALLET_ADDRESS_NOT_FOUND_POLLING_ENABLED: true
     depends_on:
       - cloud-nine-backend
     healthcheck:

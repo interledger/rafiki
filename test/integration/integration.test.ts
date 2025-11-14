@@ -4,6 +4,7 @@ import { WebhookEventType } from 'mock-account-service-lib'
 import { poll } from './lib/utils'
 import { TestActions, createTestActions } from './lib/test-actions'
 import { IncomingPaymentState } from 'test-lib/dist/generated/graphql'
+import { Result } from 'test-lib/dist/pos-service'
 
 jest.setTimeout(20_000)
 
@@ -199,18 +200,27 @@ describe('Integration tests', (): void => {
           quoteGrant.access_token.value,
           incomingPayment
         )
+
+        const clientNonce = crypto.randomUUID()
+        const finishUri = 'https://example.com'
+
         const outgoingPaymentGrant = await grantRequestOutgoingPayment(
           senderWalletAddress,
           { receiveAmount: quote.receiveAmount },
           {
             method: 'redirect',
-            uri: 'https://example.com',
-            nonce: '456'
+            uri: finishUri,
+            nonce: clientNonce
           }
         )
         const interactRef = await consentInteractionWithInteractRef(
           outgoingPaymentGrant,
-          senderWalletAddress
+          senderWalletAddress,
+          {
+            clientNonce,
+            finishUri,
+            initialGrantUrl: senderWalletAddress.authServer
+          }
         )
         const finalizedGrant = await grantContinue(
           outgoingPaymentGrant,
@@ -705,6 +715,33 @@ describe('Integration tests', (): void => {
         expect(incomingPayment.receivedAmount.value).toBe(BigInt(value) * 2n)
         expect(incomingPayment.state).toBe(IncomingPaymentState.Processing)
       })
+    })
+  })
+
+  describe('Card-POS Payments', () => {
+    let testActions: TestActions
+
+    beforeAll(async () => {
+      testActions = createTestActions({ sendingASE: c9, receivingASE: hlb })
+    })
+
+    test('Completes payment successfully', async () => {
+      const { createPayment } = testActions.pos
+      const result = await createPayment({
+        signature: 'signature',
+        payload: 'payload',
+        amount: {
+          value: '500',
+          assetScale: 2,
+          assetCode: 'USD'
+        },
+        senderWalletAddress:
+          'https://cloud-nine-wallet-test-backend:3100/accounts/gfranklin',
+        receiverWalletAddress:
+          'https://happy-life-bank-test-backend:4100/accounts/pfry',
+        timestamp: 1758105181325
+      })
+      expect(result).toStrictEqual({ result: { code: Result.APPROVED } })
     })
   })
 })

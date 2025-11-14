@@ -19,6 +19,7 @@ import { isRemoteIncomingPaymentError } from '../payment/incoming_remote/errors'
 import { TelemetryService } from '../../telemetry/service'
 import { IAppConfig } from '../../config/app'
 import { PaymentMethodProviderService } from '../../payment-method/provider/service'
+import { IncomingPaymentInitiationReason } from '../payment/incoming/types'
 
 interface CreateReceiverArgs {
   walletAddressUrl: string
@@ -118,7 +119,8 @@ async function createLocalIncomingPayment(
     expiresAt,
     incomingAmount,
     metadata,
-    tenantId
+    tenantId,
+    initiationReason: IncomingPaymentInitiationReason.Admin
   })
 
   if (isIncomingPaymentError(incomingPaymentOrError)) {
