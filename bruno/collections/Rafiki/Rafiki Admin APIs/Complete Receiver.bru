@@ -1,0 +1,37 @@
+meta {
+  name: Complete Receiver
+  type: graphql
+  seq: 61
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CompleteReceiver($input: CompleteReceiver!) {
+    completeReceiver(input: $input) {
+      receiver{
+  			id
+      	walletAddressUrl
+      	completed
+      }
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "incomingPaymentUrl": "{{incomingPaymentId}}"
+    }
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
+}
