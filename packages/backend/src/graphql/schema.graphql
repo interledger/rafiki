@@ -364,11 +364,6 @@ type Mutation {
     input: CancelIncomingPaymentInput!
   ): CancelIncomingPaymentResponse!
 
-  "Complete the incoming payment"
-  completeIncomingPayment(
-    input: CompleteIncomingPaymentInput!
-  ): CompleteIncomingPaymentResponse!
-
   "As an operator, create a tenant."
   createTenant(input: CreateTenantInput!): TenantMutationResponse!
 
@@ -417,11 +412,6 @@ input ApproveIncomingPaymentInput {
 input CancelIncomingPaymentInput {
   "Unique identifier of the incoming payment to be canceled. Note: incoming payment must be PENDING."
   id: ID!
-}
-
-input CompleteIncomingPaymentInput {
-  "URL of the incoming payment to be completed."
-  incomingPaymentUrl: String!
 }
 
 input CreateAssetInput {
@@ -1648,11 +1638,6 @@ type ApproveIncomingPaymentResponse {
 
 type CancelIncomingPaymentResponse {
   "The incoming payment that was canceled."
-  payment: IncomingPayment
-}
-
-type CompleteIncomingPaymentResponse {
-  "The incoming payment that was completed."
   payment: IncomingPayment
 }
 
