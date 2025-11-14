@@ -555,7 +555,8 @@ describe('Receiver Service', (): void => {
             assetCode: walletAddress.asset.code,
             assetScale: walletAddress.asset.scale
           },
-          tenantId: Config.operatorTenantId
+          tenantId: Config.operatorTenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
 
         jest
