@@ -201,7 +201,9 @@ describe('Webhook Events Query', (): void => {
               id
               type
               data
-              tenantId
+              tenant {
+                id
+              }
             }
             cursor
           }

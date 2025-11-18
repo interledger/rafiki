@@ -26,11 +26,6 @@ import { SubjectService } from '../subject/service'
 import { errorToGNAPCode, errorToHTTPCode, isGrantError } from './errors'
 import { TenantService } from '../tenant/service'
 import { Tenant, isTenantWithIdp } from '../tenant/model'
-import {
-  errorToGNAPCode,
-  errorToHTTPCode,
-  isAccessError
-} from '../access/errors'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
