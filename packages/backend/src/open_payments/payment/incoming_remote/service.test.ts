@@ -603,7 +603,7 @@ describe('Remote Incoming Payment Service', (): void => {
       ).resolves.toEqual(RemoteIncomingPaymentError.NotFound)
     })
 
-    test('returns InvalidRequest error if unhandled error completing public incoming payment', async () => {
+    test('returns InvalidRequest error if unhandled error fetching incoming payment', async () => {
       const clientGetPublicIncomingPaymentSpy = jest
         .spyOn(openPaymentsClient.incomingPayment, 'getPublic')
         .mockImplementationOnce(() => {
@@ -706,7 +706,7 @@ describe('Remote Incoming Payment Service', (): void => {
         accessToken: uuid()
       } as Grant)
 
-      const clientGetIncomingPaymentSpy = jest
+      const clientCompleteIncomingPaymentSpy = jest
         .spyOn(openPaymentsClient.incomingPayment, 'complete')
         .mockImplementationOnce(() => {
           throw new OpenPaymentsClientError('unexpected error', {
@@ -717,30 +717,7 @@ describe('Remote Incoming Payment Service', (): void => {
       await expect(
         remoteIncomingPaymentService.complete(mockedIncomingPayment.id)
       ).resolves.toEqual(RemoteIncomingPaymentError.InvalidRequest)
-      expect(clientGetIncomingPaymentSpy).toHaveBeenCalledTimes(1)
-    })
-
-    test('returns error without retrying if non-auth related OpenPaymentsClientError', async () => {
-      jest.spyOn(grantService, 'getOrCreate').mockResolvedValueOnce({
-        accessToken: uuid()
-      } as Grant)
-
-      const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
-        walletAddress: walletAddress.id
-      })
-
-      const clientGetIncomingPaymentSpy = jest
-        .spyOn(openPaymentsClient.incomingPayment, 'complete')
-        .mockImplementationOnce(() => {
-          throw new OpenPaymentsClientError('unexpected error', {
-            description: 'unexpected error'
-          })
-        })
-
-      await expect(
-        remoteIncomingPaymentService.complete(mockedIncomingPayment.id)
-      ).resolves.toEqual(RemoteIncomingPaymentError.InvalidRequest)
-      expect(clientGetIncomingPaymentSpy).toHaveBeenCalledTimes(1)
+      expect(clientCompleteIncomingPaymentSpy).toHaveBeenCalledTimes(1)
     })
 
     test('returns error after retrying auth related OpenPaymentsClientError', async () => {
@@ -788,7 +765,7 @@ describe('Remote Incoming Payment Service', (): void => {
     })
 
     test.each([401, 403])(
-      'gets incoming payment after retrying %s OpenPaymentsClientError',
+      'completes incoming payment after retrying %s OpenPaymentsClientError',
       async (status: number) => {
         const mockedGrant1 = {
           id: uuid(),
@@ -812,7 +789,7 @@ describe('Remote Incoming Payment Service', (): void => {
           walletAddress: walletAddress.id
         })
 
-        const clientGetIncomingPaymentSpy = jest
+        const clientCompleteIncomingPaymentSpy = jest
           .spyOn(openPaymentsClient.incomingPayment, 'complete')
           .mockImplementationOnce(() => {
             throw new OpenPaymentsClientError('Invalid token', {
@@ -825,7 +802,7 @@ describe('Remote Incoming Payment Service', (): void => {
         await expect(
           remoteIncomingPaymentService.complete(mockedIncomingPayment.id)
         ).resolves.toStrictEqual(mockedIncomingPayment)
-        expect(clientGetIncomingPaymentSpy).toHaveBeenCalledTimes(2)
+        expect(clientCompleteIncomingPaymentSpy).toHaveBeenCalledTimes(2)
         expect(grantGetOrCreateSpy).toHaveBeenCalledTimes(2)
         expect(grantDeleteSpy).toHaveBeenCalledTimes(1)
         expect(grantDeleteSpy).toHaveBeenCalledWith(mockedGrant1.id)

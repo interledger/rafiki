@@ -282,7 +282,7 @@ export async function completeIncomingPayment(
         context: { incomingPaymentId: incomingPayment.id },
         message: errorMessage
       })
-      throw new Error(errorMessage)
+      return IncomingPaymentError.UnknownWalletAddress
     }
     const openPaymentsPayment = incomingPayment.toOpenPaymentsType(
       deps.config.openPaymentsUrl,

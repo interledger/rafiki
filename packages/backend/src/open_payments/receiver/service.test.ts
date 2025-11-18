@@ -86,7 +86,7 @@ describe('Receiver Service', (): void => {
 
   describe('get', () => {
     describe('local incoming payment', () => {
-      test('resolves local incoming payment', async () => {
+      test('resolves local incoming payment tenanted or not', async () => {
         const walletAddress = await createWalletAddress(deps, {
           tenantId: Config.operatorTenantId,
           mockServerPort: Config.openPaymentsPort
@@ -104,11 +104,8 @@ describe('Receiver Service', (): void => {
 
         jest
           .spyOn(paymentMethodProviderService, 'getPaymentMethods')
-          .mockResolvedValueOnce([])
-
-        await expect(
-          receiverService.get(incomingPayment.getUrl(config.openPaymentsUrl))
-        ).resolves.toEqual({
+          .mockResolvedValue([])
+        const expected = {
           assetCode: incomingPayment.receivedAmount.assetCode,
           assetScale: incomingPayment.receivedAmount.assetScale,
           incomingPayment: {
@@ -123,7 +120,18 @@ describe('Receiver Service', (): void => {
             methods: []
           },
           isLocal: true
-        })
+        }
+        await expect(
+          receiverService.get(incomingPayment.getUrl(config.openPaymentsUrl))
+        ).resolves.toEqual(expected)
+
+        let resourceServerUrl = config.openPaymentsUrl
+        resourceServerUrl = resourceServerUrl.replace(/\/+$/, '')
+        const urlWithoutTenant = `${resourceServerUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`
+
+        await expect(receiverService.get(urlWithoutTenant)).resolves.toEqual(
+          expected
+        )
       })
 
       describe('getLocalIncomingPayment helper', () => {

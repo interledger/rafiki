@@ -324,9 +324,9 @@ describe('Incoming Payment Service', (): void => {
     })
 
     test.each`
-      isOperator | client                                        | incomingAmount | expiresAt                        | metadata
-      ${false}   | ${undefined}                                  | ${false}       | ${undefined}                     | ${undefined}
-      ${true}    | ${faker.internet.url({ appendSlash: false })} | ${true}        | ${new Date(Date.now() + 30_000)} | ${{ description: 'Test incoming payment', externalRef: '#123', items: [1, 2, 3] }}
+      isOperator | client                                        | incomingAmount | expiresAt                        | metadata                                                                           | tenantId
+      ${false}   | ${undefined}                                  | ${false}       | ${undefined}                     | ${undefined}                                                                       | ${Config.operatorTenantId}
+      ${true}    | ${faker.internet.url({ appendSlash: false })} | ${true}        | ${new Date(Date.now() + 30_000)} | ${{ description: 'Test incoming payment', externalRef: '#123', items: [1, 2, 3] }} | ${undefined}
     `('An incoming payment can be created', async (options): Promise<void> => {
       await expect(
         IncomingPaymentEvent.query(knex).where({
@@ -334,9 +334,6 @@ describe('Incoming Payment Service', (): void => {
         })
       ).resolves.toHaveLength(0)
       options.client = client
-      const tenantId = options.isOperator
-        ? Config.operatorTenantId
-        : (await createTenant(deps)).id
       const testAsset = options.isOperator
         ? asset
         : await createAsset(deps, { tenantId })
@@ -361,7 +358,8 @@ describe('Incoming Payment Service', (): void => {
         client,
         asset: testAsset,
         processAt: new Date(incomingPayment.expiresAt.getTime()),
-        metadata: options.metadata ?? null
+        metadata: options.metadata ?? null,
+        tenantId
       })
       const events = await IncomingPaymentEvent.query(knex)
         .where({
