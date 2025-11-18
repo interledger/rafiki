@@ -19,10 +19,7 @@ import { isRemoteIncomingPaymentError } from '../payment/incoming_remote/errors'
 import { TelemetryService } from '../../telemetry/service'
 import { IAppConfig } from '../../config/app'
 import { PaymentMethodProviderService } from '../../payment-method/provider/service'
-<<<<<<< HEAD
 import { IncomingPaymentInitiationReason } from '../payment/incoming/types'
-=======
->>>>>>> 9a719a02 (feat(backend): abstract away payment method generation, add ILP_ADDRESS tenantSetting (#3460))
 
 interface CreateReceiverArgs {
   walletAddressUrl: string

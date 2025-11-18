@@ -243,6 +243,5 @@ export const assetToGraphql = (asset: Asset): SchemaAsset => ({
   scale: asset.scale,
   withdrawalThreshold: asset.withdrawalThreshold,
   liquidityThreshold: asset.liquidityThreshold,
-  createdAt: new Date(+asset.createdAt).toISOString(),
-  tenantId: asset.tenantId
+  createdAt: new Date(+asset.createdAt).toISOString()
 })

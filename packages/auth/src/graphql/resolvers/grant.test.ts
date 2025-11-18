@@ -57,10 +57,6 @@ describe('Grant Resolvers', (): void => {
     )
   })
 
-  beforeEach(async (): Promise<void> => {
-    tenant = await Tenant.query().insertAndFetch(generateTenant())
-  })
-
   afterEach(async (): Promise<void> => {
     await truncateTables(deps)
   })
