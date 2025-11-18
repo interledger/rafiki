@@ -31,7 +31,6 @@ import { getTests } from '../../wallet_address/model.test'
 import { WalletAddress } from '../../wallet_address/model'
 import { withConfigOverride } from '../../../tests/helpers'
 import { poll } from '../../../shared/utils'
-import { createTenant } from '../../../tests/tenant'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { getPageTests } from '../../../shared/baseModel.test'
 
