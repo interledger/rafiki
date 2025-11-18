@@ -354,17 +354,6 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
               outgoingPaymentAccess?.limits?.debitAmount?.assetScale ??
                 outgoingPaymentAccess?.limits?.receiveAmount?.assetScale ??
                 null
-<<<<<<< HEAD
-=======
-            )
-            returnUrlObject.searchParams.append(
-              'amountType',
-              outgoingPaymentAccess?.limits?.receiveAmount
-                ? AmountType.RECEIVE
-                : outgoingPaymentAccess?.limits?.debitAmount
-                  ? AmountType.DEBIT
-                  : AmountType.UNLIMITED
->>>>>>> c5642c7f (Merge 'main')
             )
             if (outgoingPaymentAccess) {
               returnUrlObject.searchParams.append(

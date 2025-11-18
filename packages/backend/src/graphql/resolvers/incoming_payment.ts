@@ -308,7 +308,6 @@ export function paymentToGraphql(
     receivedAmount: payment.receivedAmount,
     metadata: payment.metadata,
     createdAt: new Date(+payment.createdAt).toISOString(),
-    senderWalletAddress: payment.senderWalletAddress,
-    tenantId: payment.tenantId
+    senderWalletAddress: payment.senderWalletAddress
   }
 }
