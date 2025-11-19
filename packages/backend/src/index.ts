@@ -176,14 +176,6 @@ export function initIocContainer(
     })
   })
 
-  container.singleton('tenantSettingService', async (deps) => {
-    const [logger, knex] = await Promise.all([
-      deps.use('logger'),
-      deps.use('knex')
-    ])
-    return createTenantSettingService({ logger, knex })
-  })
-
   container.singleton('ratesService', async (deps) => {
     const config = await deps.use('config')
     return createRatesService({
