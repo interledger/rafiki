@@ -176,12 +176,6 @@ async function get(
         url
       })
   } catch (err) {
-    if (err instanceof OpenPaymentsClientError) {
-      if (err.status === 404) {
-        return RemoteIncomingPaymentError.NotFound
-      }
-    }
-
     deps.logger.warn({ url, err }, 'Could not get public incoming payment')
     return RemoteIncomingPaymentError.InvalidRequest
   }
@@ -262,11 +256,6 @@ async function complete(
       authServer: publicIncomingPayment.authServer
     })
   } catch (err) {
-    if (err instanceof OpenPaymentsClientError) {
-      if (err.status === 404) {
-        return RemoteIncomingPaymentError.NotFound
-      }
-    }
     deps.logger.warn({ url, err }, 'Could not get public incoming payment')
     return RemoteIncomingPaymentError.InvalidRequest
   }
@@ -359,6 +348,9 @@ async function handleOpenPaymentsError<
       },
       errorMessage
     )
+    if (err.status === 404) {
+      return RemoteIncomingPaymentError.NotFound
+    }
   } else {
     deps.logger.error({ ...baseErrorLog, err }, errorMessage)
   }

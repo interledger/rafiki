@@ -586,23 +586,6 @@ describe('Remote Incoming Payment Service', (): void => {
         .mockResolvedValue(publicIncomingPayment)
     })
 
-    test('throws if wallet address not found', async () => {
-      jest
-        .spyOn(openPaymentsClient.incomingPayment, 'getPublic')
-        .mockImplementationOnce(() => {
-          throw new OpenPaymentsClientError(
-            'Could not find public incoming payment',
-            {
-              status: 404,
-              description: 'Could not find public incoming payment'
-            }
-          )
-        })
-      await expect(
-        remoteIncomingPaymentService.complete(walletAddress.id)
-      ).resolves.toEqual(RemoteIncomingPaymentError.NotFound)
-    })
-
     test('returns InvalidRequest error if unhandled error fetching incoming payment', async () => {
       const clientGetPublicIncomingPaymentSpy = jest
         .spyOn(openPaymentsClient.incomingPayment, 'getPublic')
@@ -808,5 +791,35 @@ describe('Remote Incoming Payment Service', (): void => {
         expect(grantDeleteSpy).toHaveBeenCalledWith(mockedGrant1.id)
       }
     )
+
+    test('returns error when OpenPaymentClientError is NotFound', async () => {
+      const mockedGrant = {
+        id: uuid(),
+        accessToken: uuid()
+      } as Grant
+
+      const grantGetOrCreateSpy = jest
+        .spyOn(grantService, 'getOrCreate')
+        .mockResolvedValueOnce(mockedGrant)
+
+      const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
+        walletAddress: walletAddress.id
+      })
+
+      const clientCompleteIncomingPaymentSpy = jest
+        .spyOn(openPaymentsClient.incomingPayment, 'complete')
+        .mockImplementationOnce(() => {
+          throw new OpenPaymentsClientError('Not found', {
+            status: 404,
+            description: 'Not found'
+          })
+        })
+
+      await expect(
+        remoteIncomingPaymentService.complete(mockedIncomingPayment.id)
+      ).resolves.toStrictEqual(RemoteIncomingPaymentError.NotFound)
+      expect(clientCompleteIncomingPaymentSpy).toHaveBeenCalledTimes(1)
+      expect(grantGetOrCreateSpy).toHaveBeenCalledTimes(1)
+    })
   })
 })
