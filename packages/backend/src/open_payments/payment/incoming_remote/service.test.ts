@@ -321,26 +321,32 @@ describe('Remote Incoming Payment Service', (): void => {
     })
 
     test('returns NotFound error if 404 error getting public incoming payment', async () => {
-      const clientGetPublicIncomingPaymentSpy = jest
-        .spyOn(openPaymentsClient.incomingPayment, 'getPublic')
+      const mockedGrant = {
+        id: uuid(),
+        accessToken: uuid()
+      } as Grant
+      const grantGetOrCreateSpy = jest
+        .spyOn(grantService, 'getOrCreate')
+        .mockResolvedValueOnce(mockedGrant)
+
+      const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
+        walletAddress: walletAddress.id
+      })
+
+      const clientGetIncomingPaymentSpy = jest
+        .spyOn(openPaymentsClient.incomingPayment, 'get')
         .mockImplementationOnce(() => {
-          throw new OpenPaymentsClientError(
-            'Could not find public incoming payment',
-            {
-              status: 404,
-              description: 'Could not find public incoming payment'
-            }
-          )
+          throw new OpenPaymentsClientError('Not found', {
+            status: 404,
+            description: 'Not found'
+          })
         })
 
-      const incomingPaymentUrl = `https://example.com/incoming-payment/${uuid()}`
-
       await expect(
-        remoteIncomingPaymentService.get(incomingPaymentUrl)
-      ).resolves.toEqual(RemoteIncomingPaymentError.NotFound)
-      expect(clientGetPublicIncomingPaymentSpy).toHaveBeenCalledWith({
-        url: incomingPaymentUrl
-      })
+        remoteIncomingPaymentService.get(mockedIncomingPayment.id)
+      ).resolves.toStrictEqual(RemoteIncomingPaymentError.NotFound)
+      expect(clientGetIncomingPaymentSpy).toHaveBeenCalledTimes(1)
+      expect(grantGetOrCreateSpy).toHaveBeenCalledTimes(1)
     })
 
     test('returns InvalidRequest error if unhandled error getting public incoming payment', async () => {
