@@ -7,6 +7,9 @@ import { v4 as uuid, v4 } from 'uuid'
 import { AxiosInstance } from 'axios'
 import { faker } from '@faker-js/faker'
 import { GET_WALLET_ADDRESS_BY_URL } from '../graphql/queries/getWalletAddress'
+import { GET_INCOMING_PAYMENT } from '../graphql/queries/getIncomingPayment'
+import { CREATE_RECEIVER } from '../graphql/mutations/createReceiver'
+import { CREATE_OUTGOING_PAYMENT_FROM_INCOMING_PAYMENT } from '../graphql/mutations/createOutgoingPaymentFromIncomingPayment'
 
 const mockLogger = {
   child: jest.fn().mockReturnThis(),
@@ -268,5 +271,203 @@ describe('get payments', (): void => {
         url: WALLET_ADDRESS_URL
       })
     })
+  })
+})
+describe('refundIncomingPayment', () => {
+  let service: PaymentService
+  // const WALLET_ADDRESS_URL = 'https://api.example.com/wallet-address'
+
+  beforeAll(() => {
+    service = createPaymentService(deps)
+  })
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  test('can refund incoming payment', async (): Promise<void> => {
+    const incomingPaymentId = uuid()
+    const walletAddress = faker.internet.url()
+    const walletAddressId = uuid()
+    const outgoingPaymentId = uuid()
+    mockApolloClient.query = jest.fn().mockImplementation((options) => {
+      if (options.query === GET_WALLET_ADDRESS_BY_URL) {
+        return {
+          data: {
+            walletAddressByUrl: {
+              id: walletAddressId
+            }
+          }
+        }
+      } else if (options.query === GET_INCOMING_PAYMENT) {
+        return {
+          data: {
+            incomingPayment: {
+              senderWalletAddress: faker.internet.url(),
+              incomingAmount: {
+                value: 100n,
+                assetCode: 'USD',
+                assetScale: 2
+              }
+            }
+          }
+        }
+      }
+    })
+
+    mockApolloClient.mutate = jest.fn().mockImplementation((options) => {
+      if (options.mutation === CREATE_RECEIVER) {
+        return {
+          data: {
+            createReceiver: {
+              receiver: {
+                id: uuid(),
+                metadata: options.variables.input.metadata,
+                incomingAmount: null
+              }
+            }
+          }
+        }
+      } else if (
+        options.mutation === CREATE_OUTGOING_PAYMENT_FROM_INCOMING_PAYMENT
+      ) {
+        return {
+          data: {
+            createOutgoingPaymentFromIncomingPayment: {
+              payment: {
+                id: outgoingPaymentId,
+                walletAddressId: walletAddressId
+              }
+            }
+          }
+        }
+      }
+    })
+
+    const outgoingPayment = await service.refundIncomingPayment(
+      incomingPaymentId,
+      walletAddress
+    )
+    expect(outgoingPayment).toMatchObject({
+      id: expect.any(String)
+    })
+  })
+
+  test('incoming payment refund fails with invalid wallet address', async (): Promise<void> => {
+    mockApolloClient.query = jest.fn().mockResolvedValue(undefined)
+
+    await expect(
+      service.refundIncomingPayment(uuid(), faker.internet.url())
+    ).rejects.toThrow('Failed to refund incoming payment')
+  })
+
+  test('incoming payment refund fails with invalid incoming payment', async (): Promise<void> => {
+    mockApolloClient.query = jest.fn().mockImplementation((options) => {
+      if (options.query === GET_WALLET_ADDRESS_BY_URL) {
+        return {
+          data: {
+            walletAddressByUrl: {
+              id: uuid()
+            }
+          }
+        }
+      } else if (options.query === GET_INCOMING_PAYMENT) {
+        return undefined
+      }
+    })
+
+    await expect(
+      service.refundIncomingPayment(uuid(), faker.internet.url())
+    ).rejects.toThrow('Failed to refund incoming payment')
+  })
+
+  test('incoming payment refund fails with invalid receiver', async (): Promise<void> => {
+    const walletAddressId = uuid()
+    mockApolloClient.query = jest.fn().mockImplementation((options) => {
+      if (options.query === GET_WALLET_ADDRESS_BY_URL) {
+        return {
+          data: {
+            walletAddressByUrl: {
+              id: walletAddressId
+            }
+          }
+        }
+      } else if (options.query === GET_INCOMING_PAYMENT) {
+        return {
+          data: {
+            incomingPayment: {
+              senderWalletAddress: faker.internet.url(),
+              incomingAmount: {
+                value: 100n,
+                assetCode: 'USD',
+                assetScale: 2
+              }
+            }
+          }
+        }
+      }
+    })
+
+    mockApolloClient.mutate = jest.fn().mockImplementation((options) => {
+      if (options.mutation === CREATE_RECEIVER) {
+        return undefined
+      }
+    })
+
+    await expect(
+      service.refundIncomingPayment(uuid(), faker.internet.url())
+    ).rejects.toThrow('Failed to refund incoming payment')
+  })
+
+  test('incoming payment refund fails with invalid outgoing payment', async (): Promise<void> => {
+    const walletAddressId = uuid()
+    mockApolloClient.query = jest.fn().mockImplementation((options) => {
+      if (options.query === GET_WALLET_ADDRESS_BY_URL) {
+        return {
+          data: {
+            walletAddressByUrl: {
+              id: walletAddressId
+            }
+          }
+        }
+      } else if (options.query === GET_INCOMING_PAYMENT) {
+        return {
+          data: {
+            incomingPayment: {
+              senderWalletAddress: faker.internet.url(),
+              incomingAmount: {
+                value: 100n,
+                assetCode: 'USD',
+                assetScale: 2
+              }
+            }
+          }
+        }
+      }
+    })
+
+    mockApolloClient.mutate = jest.fn().mockImplementation((options) => {
+      if (options.mutation === CREATE_RECEIVER) {
+        return {
+          data: {
+            createReceiver: {
+              receiver: {
+                id: uuid(),
+                metadata: options.variables.input.metadata,
+                incomingAmount: null
+              }
+            }
+          }
+        }
+      } else if (
+        options.mutation === CREATE_OUTGOING_PAYMENT_FROM_INCOMING_PAYMENT
+      ) {
+        return undefined
+      }
+    })
+
+    await expect(
+      service.refundIncomingPayment(uuid(), faker.internet.url())
+    ).rejects.toThrow('Failed to refund incoming payment')
   })
 })

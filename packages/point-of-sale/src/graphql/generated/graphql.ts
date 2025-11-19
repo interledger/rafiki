@@ -3166,6 +3166,27 @@ export type CreateIncomingPaymentVariables = Exact<{
 
 export type CreateIncomingPayment = { __typename?: 'Mutation', createIncomingPayment: { __typename?: 'IncomingPaymentResponse', payment?: { __typename?: 'IncomingPayment', id: string, url: string } | null } };
 
+export type CreateOutgoingPaymentFromIncomingPaymentVariables = Exact<{
+  input: CreateOutgoingPaymentFromIncomingPaymentInput;
+}>;
+
+
+export type CreateOutgoingPaymentFromIncomingPayment = { __typename?: 'Mutation', createOutgoingPaymentFromIncomingPayment: { __typename?: 'OutgoingPaymentResponse', payment?: { __typename?: 'OutgoingPayment', id: string, walletAddressId: string, createdAt: string } | null } };
+
+export type CreateReceiverVariables = Exact<{
+  input: CreateReceiverInput;
+}>;
+
+
+export type CreateReceiver = { __typename?: 'Mutation', createReceiver: { __typename?: 'CreateReceiverResponse', receiver?: { __typename?: 'Receiver', id: string, metadata?: any | null, incomingAmount?: { __typename?: 'Amount', value: bigint, assetCode: string, assetScale: number } | null } | null } };
+
+export type GetIncomingPaymentSenderAndAmountVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type GetIncomingPaymentSenderAndAmount = { __typename?: 'Query', incomingPayment?: { __typename?: 'IncomingPayment', id: string, senderWalletAddress?: string | null, incomingAmount?: { __typename?: 'Amount', value: bigint, assetCode: string, assetScale: number } | null } | null };
+
 export type GetWalletAddressVariables = Exact<{
   url: Scalars['String']['input'];
   first?: InputMaybe<Scalars['Int']['input']>;

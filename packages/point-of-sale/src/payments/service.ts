@@ -5,7 +5,16 @@ import { ApolloClient, NormalizedCacheObject, gql } from '@apollo/client'
 import {
   AmountInput,
   CreateIncomingPayment,
+  CreateOutgoingPaymentFromIncomingPayment,
+  CreateOutgoingPaymentFromIncomingPaymentVariables,
+  CreateReceiver,
+  CreateReceiverVariables,
+  GetIncomingPaymentSenderAndAmount,
+  GetIncomingPaymentSenderAndAmountVariables,
+  GetWalletAddress,
+  GetWalletAddressVariables,
   MutationCreateIncomingPaymentArgs,
+  OutgoingPayment,
   Query,
   QueryWalletAddressByUrlArgs,
   GetWalletAddress,
@@ -15,6 +24,9 @@ import { v4 } from 'uuid'
 import { AxiosInstance, AxiosRequestConfig } from 'axios'
 import { GET_WALLET_ADDRESS_BY_URL } from '../graphql/queries/getWalletAddress'
 import { GetPaymentsQuery } from './routes'
+import { GET_INCOMING_PAYMENT } from '../graphql/queries/getIncomingPayment'
+import { CREATE_RECEIVER } from '../graphql/mutations/createReceiver'
+import { CREATE_OUTGOING_PAYMENT_FROM_INCOMING_PAYMENT } from '../graphql/mutations/createOutgoingPaymentFromIncomingPayment'
 
 type ServiceDependencies = {
   logger: Logger
@@ -63,6 +75,10 @@ export type PaymentService = {
   ) => Promise<CreatedIncomingPayment>
   getWalletAddress: (walletAddressUrl: string) => Promise<WalletAddress>
   getWalletAddressIdByUrl: (walletAddressUrl: string) => Promise<string>
+  refundIncomingPayment: (
+    incomingPaymentId: string,
+    posWalletAddress: string
+  ) => Promise<Partial<OutgoingPayment>>
 }
 
 export function createPaymentService(
@@ -84,7 +100,11 @@ export function createPaymentService(
     getWalletAddress: (walletAddressUrl: string) =>
       getWalletAddress(deps, walletAddressUrl),
     getWalletAddressIdByUrl: (walletAddressUrl: string) =>
-      getWalletAddressIdByUrl(deps, walletAddressUrl)
+      getWalletAddressIdByUrl(deps, walletAddressUrl),
+    refundIncomingPayment: (
+      incomingPaymentId: string,
+      posWalletAddress: string
+    ) => refundIncomingPayment(deps, incomingPaymentId, posWalletAddress)
   }
 }
 
@@ -147,6 +167,111 @@ async function createIncomingPayment(
   }
 
   return incomingPayment
+}
+
+async function refundIncomingPayment(
+  deps: ServiceDependencies,
+  incomingPaymentId: string,
+  posWalletAddress: string
+): Promise<Partial<OutgoingPayment>> {
+  const client = deps.apolloClient
+
+  const getWalletAddressRes = await client.query<
+    GetWalletAddress,
+    GetWalletAddressVariables
+  >({
+    query: GET_WALLET_ADDRESS_BY_URL,
+    variables: {
+      url: posWalletAddress
+    }
+  })
+
+  const walletAddress = getWalletAddressRes?.data?.walletAddressByUrl
+  if (!walletAddress) {
+    deps.logger.error(
+      { incomingPaymentId, posWalletAddress },
+      'Failed to refund incoming payment'
+    )
+    throw new Error('Failed to refund incoming payment')
+  }
+
+  const getIncomingPaymentRes = await client.query<
+    GetIncomingPaymentSenderAndAmount,
+    GetIncomingPaymentSenderAndAmountVariables
+  >({
+    query: GET_INCOMING_PAYMENT,
+    variables: {
+      id: incomingPaymentId
+    }
+  })
+
+  const incomingPayment = getIncomingPaymentRes?.data?.incomingPayment
+  if (
+    !incomingPayment?.senderWalletAddress ||
+    !incomingPayment.incomingAmount
+  ) {
+    deps.logger.error(
+      { incomingPaymentId, posWalletAddress },
+      'Failed to refund incoming payment'
+    )
+    throw new Error('Failed to refund incoming payment')
+  }
+
+  const createReceiverRes = await client.mutate<
+    CreateReceiver,
+    CreateReceiverVariables
+  >({
+    mutation: CREATE_RECEIVER,
+    variables: {
+      input: {
+        walletAddressUrl: incomingPayment.senderWalletAddress,
+        metadata: {
+          incomingPaymentToRefund: incomingPayment.id
+        }
+      }
+    }
+  })
+
+  const receiverResponse = createReceiverRes?.data?.createReceiver
+  if (!receiverResponse?.receiver) {
+    deps.logger.error(
+      { posWalletAddress, incomingPaymentId },
+      'Failed to refund incoming payment'
+    )
+    throw new Error('Failed to refund incoming payment')
+  }
+
+  const createOutgoingPaymentRes = await client.mutate<
+    CreateOutgoingPaymentFromIncomingPayment,
+    CreateOutgoingPaymentFromIncomingPaymentVariables
+  >({
+    mutation: CREATE_OUTGOING_PAYMENT_FROM_INCOMING_PAYMENT,
+    variables: {
+      input: {
+        walletAddressId: walletAddress.id,
+        incomingPayment: receiverResponse.receiver.id,
+        debitAmount: {
+          value: incomingPayment.incomingAmount.value,
+          assetCode: incomingPayment.incomingAmount.assetCode,
+          assetScale: incomingPayment.incomingAmount.assetScale
+        }
+      }
+    }
+  })
+
+  if (
+    !createOutgoingPaymentRes?.data?.createOutgoingPaymentFromIncomingPayment
+      .payment
+  ) {
+    deps.logger.error(
+      { incomingPaymentId },
+      'Failed to refund incoming payment'
+    )
+    throw new Error('Failed to refund incoming payment')
+  }
+
+  return createOutgoingPaymentRes.data.createOutgoingPaymentFromIncomingPayment
+    .payment
 }
 
 async function getWalletAddress(

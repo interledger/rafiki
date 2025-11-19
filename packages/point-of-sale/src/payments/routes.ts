@@ -68,9 +68,23 @@ export type GetPaymentsContext = Exclude<AppContext, 'request'> & {
   request: GetPaymentsRequest
 }
 
+export interface RefundRequestBody {
+  incomingPaymentId: string
+  posWalletAddress: string
+}
+
+export type RefundRequest = Exclude<AppContext['request'], 'body'> & {
+  body: RefundRequestBody
+}
+
+export type RefundContext = Exclude<AppContext, ['request']> & {
+  request: RefundRequest
+}
+
 export interface PaymentRoutes {
   getPayments(ctx: GetPaymentsContext): Promise<void>
   payment(ctx: PaymentContext): Promise<void>
+  refundPayment(ctx: RefundContext): Promise<void>
 }
 
 export function createPaymentRoutes(deps_: ServiceDependencies): PaymentRoutes {
@@ -85,7 +99,8 @@ export function createPaymentRoutes(deps_: ServiceDependencies): PaymentRoutes {
 
   return {
     payment: (ctx: PaymentContext) => payment(deps, ctx),
-    getPayments: (ctx: GetPaymentsContext) => getPayments(deps, ctx)
+    getPayments: (ctx: GetPaymentsContext) => getPayments(deps, ctx),
+    refundPayment: (ctx: RefundContext) => refundPayment(deps, ctx)
   }
 }
 
@@ -181,6 +196,24 @@ async function payment(
     if (incomingPaymentId) {
       webhookWaitMap.delete(incomingPaymentId)
     }
+  }
+}
+
+async function refundPayment(
+  deps: ServiceDependencies,
+  ctx: RefundContext
+): Promise<void> {
+  const { incomingPaymentId, posWalletAddress } = ctx.request.body
+  try {
+    await deps.paymentService.refundIncomingPayment(
+      incomingPaymentId,
+      posWalletAddress
+    )
+    return
+  } catch (err) {
+    ctx.status = 400
+    ctx.body = (err as Error).message
+    return
   }
 }
 
