@@ -31,57 +31,29 @@ import { LinkOut } from '@interledger/docs-design-system'
 
 <div class="overflow-table wider-column">
 
-<<<<<<< HEAD
-| Variable | Helm value name | Default | Description |
+| Variable                          | Helm value name                           | Default            | Description                                                                                                                                                         |
 | --------------------------------- | ----------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ACCESS_TOKEN_DELETION_DAYS` | `config.auth.accessToken.deletionDays` | `30` | The days until expired and/or revoked access tokens are deleted. |
-| `ACCESS_TOKEN_EXPIRY_SECONDS` | `config.auth.accessToken.expirySeconds` | `600` (10 minutes) | The expiry time, in seconds, for access tokens. |
-| `ADMIN_API_SIGNATURE_VERSION` | _undefined_ | `1` | The version of the HMAC SHA-256 request-signing algorithm used by the Auth Admin API. |
-| `ADMIN_API_SIGNATURE_TTL_SECONDS` | _undefined_ | `30` | The TTL, in seconds, for which an Auth Admin API request signature is valid. |
-| `ADMIN_PORT` | `config.auth.port.admin` | `3003` | The port of your Rafiki Auth Admin API server. |
-| `AUTH_PORT` | `config.auth.port.auth` | `3006` | The port of your Open Payments authorization server. |
-| `DATABASE_CLEANUP_WORKERS` | `config.auth.workers.cleanup` | `1` | The number of workers processing expired or revoked access tokens. |
-| `ENABLE_MANUAL_MIGRATIONS` | _undefined_ | `false` | When `true`, you must run the auth Postgres database manually with the command `npm run knex – migrate:latest –envproduction` |
-| `INCOMING_PAYMENT_INTERACTION` | `config.auth.interaction.incomingPayment` | `false` | When `true`, incoming Open Payments grant requests are interactive |
-| `INTERACTION_EXPIRY_SECONDS` | _undefined_ | `600` (10 minutes) | The time, in seconds, for which a user can interact with a grant request before the request expires. |
-| `INTERACTION_PORT` | _undefined_ | `3009` | The port number of your Open Payments interaction-related APIs. |
-| `INTROSPECTION_PORT` | `config.auth.port.introspection` | `3007` | The port of your Open Payments access token introspection server. |
-| `INTERACTION_COOKIE_SAME_SITE` | `config.auth.interaction.cookieSameSite` | _undefined_ | The SameSite attribute for interaction cookies. Valid values: `lax`, `none`. |
-| `LIST_ALL_ACCESS_INTERACTION` | _undefined_ | `true` | When `true`, grant requests that include a `list-all` action will require interaction. In these requests, the client asks to list resources that it did not create. |
-| `LOG_LEVEL` | `config.auth.logLevel` | `info` | <LinkOut href="https://getpino.io/#/docs/api?id=levels">Pino log level</LinkOut> |
-| `NODE_ENV` | `config.auth.nodeEnv` | `development` | The type of node environment: `development`, `test`, or `production`. |
-| `QUOTE_INTERACTION` | `config.auth.interaction.quote` | `false` | When `true`, quote grants are interactive. |
-| `REDIS_TLS_CA_FILE_PATH` | _undefined_ | `''` | <LinkOut href="https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/">Redis TLS config</LinkOut> |
-| `REDIS_TLS_CERT_FILE_PATH` | _undefined_ | `''` | <LinkOut href="https://redis.io/docs/latest/oss_and_stack/management/security/encryption/">Redis TLS config</LinkOut> |
-| `REDIS_TLS_KEY_FILE_PATH` | _undefined_ | `''` | <LinkOut href="https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/">Redis TLS config</LinkOut> |
-| `SERVICE_API_PORT` | _undefined_ | `3011` | The port to expose the internal service API for receiving tenant information changes. |
-| `WAIT_SECONDS` | `config.auth.grant.waitSeconds` | `5` | The wait time, in seconds, included in a grant request response (`grant.continue`). |
-=======
-| Variable | Helm value name | Default | Description |
-| --------------------------------- | ----------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ACCESS_TOKEN_DELETION_DAYS` | `auth.accessToken.deletionDays` | `30` | The days until expired and/or revoked access tokens are deleted. |
-| `ACCESS_TOKEN_EXPIRY_SECONDS` | `auth.accessToken.expirySeconds` | `600` (10 minutes) | The expiry time, in seconds, for access tokens. |
-| `ADMIN_API_SIGNATURE_VERSION` | `auth.adminApi.signatureVersion` | `1` | The version of the request signing algorithm used to generate signatures. |
-| `ADMIN_API_SIGNATURE_TTL_SECONDS` | `auth.adminAPI.signatureTtlSeconds` | `30` | The TTL, in seconds, for which a request’s signature will be valid. |
-| `ADMIN_PORT` | `auth.port.admin` | `3003` | The port of your Rafiki Auth Admin API server. |
-| `AUTH_PORT` | `auth.port.auth` | `3006` | The port of your Open Payments authorization server. |
-| `DATABASE_CLEANUP_WORKERS` | `auth.workers.cleanup` | `1` | The number of workers processing expired or revoked access tokens. |
-| `ENABLE_MANUAL_MIGRATIONS` | `auth.enableManualMigrations` | `false` | When `true`, you must run the auth Postgres database manually with the command `npm run knex – migrate:latest –envproduction` |
-| `INCOMING_PAYMENT_INTERACTION` | `auth.interaction.incomingPayment` | `false` | When `true`, incoming Open Payments grant requests are interactive |
-| `INTERACTION_EXPIRY_SECONDS` | `auth.interactionExpirySeconds` | `600` (10 minutes) | The time, in seconds, for which a user can interact with a grant request before the request expires. |
-| `INTERACTION_PORT` | `auth.port.interaction` | `3009` | The port number of your Open Payments interaction-related APIs. |
-| `INTROSPECTION_PORT` | `auth.port.introspection` | `3007` | The port of your Open Payments access token introspection server. |
-| `SERVICE_API_PORT` | `auth.port.serviceAPIPort` | `3011` | The port to expose the internal service api. |
-| `LIST_ALL_ACCESS_INTERACTION` | `auth.interaction.listAll` | `true` | When `true`, grant requests that include a `list-all` action will require interaction. In these requests, the client asks to list resources that it did not create. |
-| `LOG_LEVEL` | `auth.logLevel` | `info` | <LinkOut href="https://getpino.io/#/docs/api?id=levels">Pino log level</LinkOut> |
-| `NODE_ENV` | `auth.nodeEnv` | `development` | The type of node environment: `development`, `test`, or `production`. |
-| `QUOTE_INTERACTION` | `auth.interaction.quote` | `false` | When `true`, quote grants are interactive. |
-| `REDIS_TLS_CA_FILE_PATH` | `auth.redis.tlsCaFile` | `''` | <LinkOut href="https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/">Redis TLS config</LinkOut> |
-| `REDIS_TLS_CERT_FILE_PATH` | `auth.redis.tlsCertFile` | `''` | <LinkOut href="https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/">Redis TLS config</LinkOut> |
-| `REDIS_TLS_KEY_FILE_PATH` | `auth.redis.tlsKeyFile` | `''` | <LinkOut href="https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/">Redis TLS config</LinkOut> |
-| `TRUST_PROXY` | `auth.trustProxy` | `false` | When `true`, the `X-Forwarded-Proto` header is used to determine if connections are secure. |
-| `WAIT_SECONDS` | `auth.grant.waitSeconds` | `5` | The wait time, in seconds, included in a grant request response (`grant.continue`). |
-
-> > > > > > > fd8283b8 (feat: auth service-to-service api (#3148))
+| `ACCESS_TOKEN_DELETION_DAYS`      | `config.auth.accessToken.deletionDays`    | `30`               | The days until expired and/or revoked access tokens are deleted.                                                                                                    |
+| `ACCESS_TOKEN_EXPIRY_SECONDS`     | `config.auth.accessToken.expirySeconds`   | `600` (10 minutes) | The expiry time, in seconds, for access tokens.                                                                                                                     |
+| `ADMIN_API_SIGNATURE_VERSION`     | _undefined_                               | `1`                | The version of the HMAC SHA-256 request-signing algorithm used by the Auth Admin API.                                                                               |
+| `ADMIN_API_SIGNATURE_TTL_SECONDS` | _undefined_                               | `30`               | The TTL, in seconds, for which an Auth Admin API request signature is valid.                                                                                        |
+| `ADMIN_PORT`                      | `config.auth.port.admin`                  | `3003`             | The port of your Rafiki Auth Admin API server.                                                                                                                      |
+| `AUTH_PORT`                       | `config.auth.port.auth`                   | `3006`             | The port of your Open Payments authorization server.                                                                                                                |
+| `DATABASE_CLEANUP_WORKERS`        | `config.auth.workers.cleanup`             | `1`                | The number of workers processing expired or revoked access tokens.                                                                                                  |
+| `ENABLE_MANUAL_MIGRATIONS`        | _undefined_                               | `false`            | When `true`, you must run the auth Postgres database manually with the command `npm run knex – migrate:latest –envproduction`                                       |
+| `INCOMING_PAYMENT_INTERACTION`    | `config.auth.interaction.incomingPayment` | `false`            | When `true`, incoming Open Payments grant requests are interactive                                                                                                  |
+| `INTERACTION_EXPIRY_SECONDS`      | _undefined_                               | `600` (10 minutes) | The time, in seconds, for which a user can interact with a grant request before the request expires.                                                                |
+| `INTERACTION_PORT`                | _undefined_                               | `3009`             | The port number of your Open Payments interaction-related APIs.                                                                                                     |
+| `INTROSPECTION_PORT`              | `config.auth.port.introspection`          | `3007`             | The port of your Open Payments access token introspection server.                                                                                                   |
+| `INTERACTION_COOKIE_SAME_SITE`    | `config.auth.interaction.cookieSameSite`  | _undefined_        | The SameSite attribute for interaction cookies. Valid values: `lax`, `none`.                                                                                        |
+| `LIST_ALL_ACCESS_INTERACTION`     | _undefined_                               | `true`             | When `true`, grant requests that include a `list-all` action will require interaction. In these requests, the client asks to list resources that it did not create. |
+| `LOG_LEVEL`                       | `config.auth.logLevel`                    | `info`             | <LinkOut href="https://getpino.io/#/docs/api?id=levels">Pino log level</LinkOut>                                                                                    |
+| `NODE_ENV`                        | `config.auth.nodeEnv`                     | `development`      | The type of node environment: `development`, `test`, or `production`.                                                                                               |
+| `QUOTE_INTERACTION`               | `config.auth.interaction.quote`           | `false`            | When `true`, quote grants are interactive.                                                                                                                          |
+| `REDIS_TLS_CA_FILE_PATH`          | _undefined_                               | `''`               | <LinkOut href="https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/">Redis TLS config</LinkOut>                                       |
+| `REDIS_TLS_CERT_FILE_PATH`        | _undefined_                               | `''`               | <LinkOut href="https://redis.io/docs/latest/oss_and_stack/management/security/encryption/">Redis TLS config</LinkOut>                                               |
+| `REDIS_TLS_KEY_FILE_PATH`         | _undefined_                               | `''`               | <LinkOut href="https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/">Redis TLS config</LinkOut>                                       |
+| `SERVICE_API_PORT`                | _undefined_                               | `3011`             | The port to expose the internal service API for receiving tenant information changes.                                                                               |
+| `WAIT_SECONDS`                    | `config.auth.grant.waitSeconds`           | `5`                | The wait time, in seconds, included in a grant request response (`grant.continue`).                                                                                 |
 
 </div>
