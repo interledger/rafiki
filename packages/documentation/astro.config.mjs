@@ -57,16 +57,6 @@ export default defineConfig({
           label: 'Español'
         }
       },
-      defaultLocale: 'root',
-      locales: {
-        root: {
-          label: 'English',
-          lang: 'en'
-        },
-        es: {
-          label: 'Español'
-        }
-      },
       head: [
         {
           tag: 'script',
