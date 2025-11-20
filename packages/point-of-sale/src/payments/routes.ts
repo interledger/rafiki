@@ -81,20 +81,9 @@ export type RefundContext = Exclude<AppContext, ['request']> & {
   request: RefundRequest
 }
 
-export interface GetPaymentsQuery {
-  receiverWalletAddress: string
-  sortOrder?: SortOrder
-  first?: number
-  last?: number
-  before?: string
-  after?: string
-  filter?: IncomingPaymentFilter
-}
-
 export interface PaymentRoutes {
   getPayments(ctx: GetPaymentsContext): Promise<void>
   payment(ctx: PaymentContext): Promise<void>
-  getPayments(ctx: GetPaymentsContext): Promise<void>
   refundPayment(ctx: RefundContext): Promise<void>
 }
 
