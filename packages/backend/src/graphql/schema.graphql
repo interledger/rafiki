@@ -1268,12 +1268,6 @@ input CardDetailsInput {
   initiatedAt: String!
 }
 
-input CardDetailsInput {
-  data: JSONObject!
-  requestId: String!
-  initiatedAt: String!
-}
-
 input CancelOutgoingPaymentInput {
   "Unique identifier of the outgoing payment to cancel."
   id: ID!

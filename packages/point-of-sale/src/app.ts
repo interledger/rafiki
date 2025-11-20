@@ -97,15 +97,6 @@ export class App {
       paymentRoutes.refundPayment
     )
 
-    // POST /webhook-events
-    // Handle webhook
-    // Currently only handles incoming_payment.completed webhooks
-    router.post<DefaultState, HandleWebhookContext>(
-      '/webhook',
-      webhookHttpSigMiddleware,
-      webhookHandlerRoutes.handleWebhook
-    )
-
     koa.use(cors())
     koa.use(router.routes())
 

@@ -94,8 +94,6 @@ services:
     restart: always
     networks:
       - rafiki-test
-    ports:
-      - '3104:3104'
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       INSTANCE_NAME: CLOUD-NINE

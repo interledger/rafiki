@@ -137,26 +137,6 @@ export function initIocContainer(
     }
   )
 
-  container.singleton('openApi', async () => {
-    const cardServerSpec = await createOpenAPI(
-      path.resolve(__dirname, './openapi/specs/card-server.yaml')
-    )
-
-    return {
-      cardServerSpec
-    }
-  })
-
-  container.singleton(
-    'paymentRoutes',
-    async (deps: IocContract<AppServices>) => {
-      return createPaymentRoutes({
-        logger: await deps.use('logger'),
-        paymentService: await deps.use('paymentService')
-      })
-    }
-  )
-
   return container
 }
 
