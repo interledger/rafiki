@@ -15,10 +15,7 @@ These services rely on a number of databases.
 - A Postgres database used by the `auth` service for storing auth-related resources (grants, access tokens, and interactions)
 - A Redis database used by the `auth` service to store session data
 - A Postgres database used by the `backend` service for Open Payments resources, tenant information, and other application data
-- <LinkOut href='https://github.com/tigerbeetle/tigerbeetle'>
-    TigerBeetle
-  </LinkOut>
-  , used by the `backend` service for accounting balances
+- <LinkOut href='https://github.com/tigerbeetle/tigerbeetle'>TigerBeetle</LinkOut>, used by the `backend` service for accounting balances
 - A Redis database used by the `backend` service as a cache to share STREAM connection details across processes
 
 An additional package for [token introspection](/integration/deployment/services/auth-service#token-introspection) is also included with Rafiki. This is an internal package that requires no action on your part if you’re using Rafiki’s `auth` service.
