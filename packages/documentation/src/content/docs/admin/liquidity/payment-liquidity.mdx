@@ -5,8 +5,7 @@ tableOfContents:
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components'
-import { LinkOut } from '@interledger/docs-design-system'
-import IdempotencyNote from '/src/partials/liquidity-idempotency.mdx'
+import { LinkOut } from '@interledger/docs-design-system' 
 
 Payment liquidity represents:
 
@@ -25,7 +24,9 @@ For more information about how Rafiki handles liquidity, see the [Accounting](/o
 
 ## Manage payment liquidity using the Backend Admin API
 
-<IdempotencyNote />
+:::note[Idempotency key]
+You must provide an `idempotencyKey` when calling any mutations related to liquidity. This unique key ensures duplicate or retried requests are processed only once. For more information, see the [Idempotency](/apis/graphql/admin-api-overview#idempotency) section in the GraphQL Admin APIs page.
+:::
 
 ### Withdraw incoming payment liquidity
 

@@ -7,7 +7,6 @@ tableOfContents:
 import { Tabs, TabItem } from '@astrojs/starlight/components'
 import { Badge } from '@astrojs/starlight/components'
 import { LinkOut } from '@interledger/docs-design-system'
-import TenantIdHmacNote from '/src/partials/tenant-id-hmac-note.mdx'
 
 An asset represents an item of value that can be transferred via the Interledger Protocol. Assets in Rafiki are added through the Backend Admin API or the [Rafiki Admin](/admin/admin-user-guide/#assets) application.
 
@@ -51,7 +50,9 @@ An asset represents an item of value that can be transferred via the Interledger
     ```
     For more information about this mutation's input object, see [`CreateAssetInput`](/apis/graphql/backend/#definition-CreateAssetInput).
 
-<TenantIdHmacNote />
+    :::note[Tenant ID and HMAC-signed request headers]
+    Include a `tenant-id` header and a `signature` header (HMAC SHA-256) on each Backend Admin API request. Rafiki validates the signature and derives the tenant from these headers.
+    :::
 
   </TabItem>
   <TabItem label="Response">
