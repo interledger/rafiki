@@ -209,6 +209,7 @@ async function refundPayment(
       incomingPaymentId,
       posWalletAddress
     )
+    ctx.status = 200
     return
   } catch (err) {
     ctx.status = 400
