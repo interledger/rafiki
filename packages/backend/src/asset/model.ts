@@ -1,7 +1,9 @@
 import { QueryContext } from 'objection'
 import { LiquidityAccount, OnDebitOptions } from '../accounting/service'
 import { BaseModel } from '../shared/baseModel'
-import { WebhookEvent } from '../webhook/model'
+import { WebhookEvent } from '../webhook/event/model'
+import { IAppConfig } from '../config/app'
+import { finalizeWebhookRecipients } from '../webhook/service'
 
 export class Asset extends BaseModel implements LiquidityAccount {
   public static get tableName(): string {
@@ -13,6 +15,7 @@ export class Asset extends BaseModel implements LiquidityAccount {
 
   // TigerBeetle account 2 byte ledger field representing account's asset
   public readonly ledger!: number
+  public readonly tenantId!: string
 
   public readonly withdrawalThreshold!: bigint | null
 
@@ -28,10 +31,13 @@ export class Asset extends BaseModel implements LiquidityAccount {
     }
   }
 
-  public async onDebit({ balance }: OnDebitOptions): Promise<Asset> {
+  public async onDebit(
+    { balance }: OnDebitOptions,
+    config: IAppConfig
+  ): Promise<Asset> {
     if (this.liquidityThreshold !== null) {
       if (balance <= this.liquidityThreshold) {
-        await AssetEvent.query().insert({
+        await AssetEvent.query().insertGraph({
           assetId: this.id,
           type: AssetEventType.LiquidityLow,
           data: {
@@ -43,7 +49,12 @@ export class Asset extends BaseModel implements LiquidityAccount {
             },
             liquidityThreshold: this.liquidityThreshold,
             balance
-          }
+          },
+          tenantId: this.tenantId,
+          webhooks: finalizeWebhookRecipients(
+            { tenantIds: [this.tenantId] },
+            config
+          )
         })
       }
     }

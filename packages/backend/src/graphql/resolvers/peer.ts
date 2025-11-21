@@ -12,23 +12,27 @@ import {
   errorToMessage,
   PeerError
 } from '../../payment-method/ilp/peer/errors'
-import { ApolloContext } from '../../app'
+import { TenantedApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { GraphQLError } from 'graphql'
 
-export const getPeers: QueryResolvers<ApolloContext>['peers'] = async (
+export const getPeers: QueryResolvers<TenantedApolloContext>['peers'] = async (
   parent,
   args,
   ctx
 ): Promise<ResolversTypes['PeersConnection']> => {
   const peerService = await ctx.container.use('peerService')
   const { sortOrder, ...pagination } = args
+  const tenantId = ctx.isOperator ? args.tenantId : ctx.tenant.id
   const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
-  const peers = await peerService.getPage(pagination, order)
+  const peers = await peerService.getPage(pagination, order, tenantId)
   const pageInfo = await getPageInfo({
-    getPage: (pagination: Pagination, sortOrder?: SortOrder) =>
-      peerService.getPage(pagination, sortOrder),
+    getPage: (
+      pagination: Pagination,
+      sortOrder?: SortOrder,
+      tenantId?: string
+    ) => peerService.getPage(pagination, sortOrder, tenantId),
     page: peers,
     sortOrder: order
   })
@@ -41,13 +45,16 @@ export const getPeers: QueryResolvers<ApolloContext>['peers'] = async (
   }
 }
 
-export const getPeer: QueryResolvers<ApolloContext>['peer'] = async (
+export const getPeer: QueryResolvers<TenantedApolloContext>['peer'] = async (
   parent,
   args,
   ctx
 ): Promise<ResolversTypes['Peer']> => {
   const peerService = await ctx.container.use('peerService')
-  const peer = await peerService.get(args.id)
+  const peer = await peerService.get(
+    args.id,
+    ctx.isOperator ? undefined : ctx.tenant.id
+  )
   if (!peer) {
     throw new GraphQLError(errorToMessage[PeerError.UnknownPeer], {
       extensions: {
@@ -58,24 +65,28 @@ export const getPeer: QueryResolvers<ApolloContext>['peer'] = async (
   return peerToGraphql(peer)
 }
 
-export const getPeerByAddressAndAsset: QueryResolvers<ApolloContext>['peerByAddressAndAsset'] =
+export const getPeerByAddressAndAsset: QueryResolvers<TenantedApolloContext>['peerByAddressAndAsset'] =
   async (parent, args, ctx): Promise<ResolversTypes['Peer'] | null> => {
     const peerService = await ctx.container.use('peerService')
     const peer = await peerService.getByDestinationAddress(
       args.staticIlpAddress,
+      ctx.tenant.id,
       args.assetId
     )
     return peer ? peerToGraphql(peer) : null
   }
 
-export const createPeer: MutationResolvers<ApolloContext>['createPeer'] =
+export const createPeer: MutationResolvers<TenantedApolloContext>['createPeer'] =
   async (
     parent,
     args,
     ctx
   ): Promise<ResolversTypes['CreatePeerMutationResponse']> => {
     const peerService = await ctx.container.use('peerService')
-    const peerOrError = await peerService.create(args.input)
+    const peerOrError = await peerService.create({
+      ...args.input,
+      tenantId: ctx.isOperator ? undefined : ctx.tenant.id
+    })
     if (isPeerError(peerOrError)) {
       throw new GraphQLError(errorToMessage[peerOrError], {
         extensions: {
@@ -88,14 +99,17 @@ export const createPeer: MutationResolvers<ApolloContext>['createPeer'] =
     }
   }
 
-export const updatePeer: MutationResolvers<ApolloContext>['updatePeer'] =
+export const updatePeer: MutationResolvers<TenantedApolloContext>['updatePeer'] =
   async (
     parent,
     args,
     ctx
   ): Promise<ResolversTypes['UpdatePeerMutationResponse']> => {
     const peerService = await ctx.container.use('peerService')
-    const peerOrError = await peerService.update(args.input)
+    const peerOrError = await peerService.update({
+      ...args.input,
+      tenantId: ctx.isOperator ? undefined : ctx.tenant.id
+    })
     if (isPeerError(peerOrError)) {
       throw new GraphQLError(errorToMessage[peerOrError], {
         extensions: {
@@ -108,14 +122,14 @@ export const updatePeer: MutationResolvers<ApolloContext>['updatePeer'] =
     }
   }
 
-export const deletePeer: MutationResolvers<ApolloContext>['deletePeer'] =
+export const deletePeer: MutationResolvers<TenantedApolloContext>['deletePeer'] =
   async (
     _,
     args,
     ctx
   ): Promise<ResolversTypes['DeletePeerMutationResponse']> => {
     const peerService = await ctx.container.use('peerService')
-    const peer = await peerService.delete(args.input.id)
+    const peer = await peerService.delete(args.input.id, ctx.tenant.id)
     if (!peer) {
       throw new GraphQLError(errorToMessage[PeerError.UnknownPeer], {
         extensions: {
@@ -136,5 +150,6 @@ export const peerToGraphql = (peer: Peer): SchemaPeer => ({
   staticIlpAddress: peer.staticIlpAddress,
   name: peer.name,
   liquidityThreshold: peer.liquidityThreshold,
-  createdAt: new Date(+peer.createdAt).toISOString()
+  createdAt: new Date(+peer.createdAt).toISOString(),
+  tenantId: peer.tenantId
 })

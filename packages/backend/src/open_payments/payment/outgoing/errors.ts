@@ -5,7 +5,7 @@ import {
 } from '../../../accounting/errors'
 import { GraphQLErrorCode } from '../../../graphql/errors'
 import { PaymentMethodHandlerError } from '../../../payment-method/handler/errors'
-import { QuoteError } from '../../quote/errors'
+import { QuoteErrorCode } from '../../quote/errors'
 
 export enum OutgoingPaymentError {
   UnknownWalletAddress = 'UnknownWalletAddress',
@@ -18,19 +18,21 @@ export enum OutgoingPaymentError {
   InvalidAmount = 'InvalidAmount',
   NegativeReceiveAmount = 'NegativeReceiveAmount',
   InvalidReceiver = 'InvalidReceiver',
-  InvalidInterval = 'InvalidInterval'
+  InvalidInterval = 'InvalidInterval',
+  OnlyOneGrantAmountAllowed = 'OnlyOneGrantAmountAllowed'
 }
 
 export const quoteErrorToOutgoingPaymentError: Record<
-  QuoteError,
+  QuoteErrorCode,
   OutgoingPaymentError
 > = {
-  [QuoteError.UnknownWalletAddress]: OutgoingPaymentError.UnknownWalletAddress,
-  [QuoteError.InvalidAmount]: OutgoingPaymentError.InvalidAmount,
-  [QuoteError.InvalidReceiver]: OutgoingPaymentError.InvalidReceiver,
-  [QuoteError.InactiveWalletAddress]:
+  [QuoteErrorCode.UnknownWalletAddress]:
+    OutgoingPaymentError.UnknownWalletAddress,
+  [QuoteErrorCode.InvalidAmount]: OutgoingPaymentError.InvalidAmount,
+  [QuoteErrorCode.InvalidReceiver]: OutgoingPaymentError.InvalidReceiver,
+  [QuoteErrorCode.InactiveWalletAddress]:
     OutgoingPaymentError.InactiveWalletAddress,
-  [QuoteError.NonPositiveReceiveAmount]:
+  [QuoteErrorCode.NonPositiveReceiveAmount]:
     OutgoingPaymentError.NegativeReceiveAmount
 }
 
@@ -51,7 +53,8 @@ export const errorToHTTPCode: {
   [OutgoingPaymentError.InvalidAmount]: 400,
   [OutgoingPaymentError.NegativeReceiveAmount]: 400,
   [OutgoingPaymentError.InvalidReceiver]: 400,
-  [OutgoingPaymentError.InvalidInterval]: 500
+  [OutgoingPaymentError.InvalidInterval]: 500,
+  [OutgoingPaymentError.OnlyOneGrantAmountAllowed]: 500
 }
 
 export const errorToCode: {
@@ -67,7 +70,9 @@ export const errorToCode: {
   [OutgoingPaymentError.InvalidAmount]: GraphQLErrorCode.BadUserInput,
   [OutgoingPaymentError.NegativeReceiveAmount]: GraphQLErrorCode.BadUserInput,
   [OutgoingPaymentError.InvalidReceiver]: GraphQLErrorCode.BadUserInput,
-  [OutgoingPaymentError.InvalidInterval]: GraphQLErrorCode.InternalServerError
+  [OutgoingPaymentError.InvalidInterval]: GraphQLErrorCode.InternalServerError,
+  [OutgoingPaymentError.OnlyOneGrantAmountAllowed]:
+    GraphQLErrorCode.BadUserInput
 }
 
 export const errorToMessage: {
@@ -83,7 +88,9 @@ export const errorToMessage: {
   [OutgoingPaymentError.InvalidAmount]: 'invalid amount',
   [OutgoingPaymentError.NegativeReceiveAmount]: 'negative receive amount',
   [OutgoingPaymentError.InvalidReceiver]: 'invalid receiver',
-  [OutgoingPaymentError.InvalidInterval]: 'invalid interval'
+  [OutgoingPaymentError.InvalidInterval]: 'invalid interval',
+  [OutgoingPaymentError.OnlyOneGrantAmountAllowed]:
+    'only one of receiveAmount or debitAmount allowed'
 }
 
 export const FundingError = { ...OutgoingPaymentError, ...TransferError }

@@ -53,7 +53,13 @@ import { ApolloArmor } from '@escape.tech/graphql-armor'
 import { Redis } from 'ioredis'
 import { LoggingPlugin } from './graphql/plugin'
 import { gnapServerErrorMiddleware } from './shared/gnapErrors'
-import { verifyApiSignature } from './shared/utils'
+import {
+  authenticatedTenantMiddleware,
+  unauthenticatedTenantMiddleware
+} from './signature/tenant'
+import { TenantService } from './tenant/service'
+import { TenantRoutes } from './tenant/routes'
+import { Tenant } from './tenant/model'
 
 export interface AppContextData extends DefaultContext {
   logger: Logger
@@ -89,6 +95,18 @@ export interface DatabaseCleanupRule {
   defaultExpirationOffsetDays: number
 }
 
+export interface TenantedAppContext extends AppContext {
+  tenantApiSignatureResult: {
+    tenant: Tenant
+    isOperator: boolean
+  }
+}
+
+export interface TenantedApolloContext extends ApolloContext {
+  tenant: Tenant
+  isOperator: boolean
+}
+
 export interface AppServices {
   logger: Promise<Logger>
   knex: Promise<Knex>
@@ -102,6 +120,8 @@ export interface AppServices {
   grantRoutes: Promise<GrantRoutes>
   interactionRoutes: Promise<InteractionRoutes>
   redis: Promise<Redis>
+  tenantService: Promise<TenantService>
+  tenantRoutes: Promise<TenantRoutes>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -111,6 +131,7 @@ export class App {
   private interactionServer!: Server
   private introspectionServer!: Server
   private adminServer!: Server
+  private serviceAPIServer!: Server
   private logger!: Logger
   private config!: IAppConfig
   private databaseCleanupRules!: {
@@ -215,20 +236,23 @@ export class App {
       }
     )
 
-    if (this.config.adminApiSecret) {
-      koa.use(async (ctx, next: Koa.Next): Promise<void> => {
-        if (!(await verifyApiSignature(ctx, this.config))) {
-          ctx.throw(401, 'Unauthorized')
-        }
-
-        return next()
-      })
-    }
+    // For tests, we still need to get the tenant in the middleware, but
+    // we don't need to verify the signature nor prevent replay attacks
+    koa.use(
+      this.config.env !== 'test'
+        ? authenticatedTenantMiddleware
+        : unauthenticatedTenantMiddleware
+    )
 
     koa.use(
       koaMiddleware(apolloServer, {
-        context: async (): Promise<ApolloContext> => {
+        context: async ({
+          ctx
+        }: {
+          ctx: TenantedAppContext
+        }): Promise<TenantedApolloContext> => {
           return {
+            ...ctx.tenantApiSignatureResult,
             container: this.container,
             logger: await this.container.use('logger')
           }
@@ -265,7 +289,7 @@ export class App {
     /* Back-channel GNAP Routes */
     // Grant Initiation
     router.post<DefaultState, CreateContext>(
-      '/',
+      '/:tenantId',
       createValidatorMiddleware<CreateContext>(openApi.authServerSpec, {
         path: '/',
         method: HttpMethod.POST
@@ -454,6 +478,50 @@ export class App {
     this.interactionServer = koa.listen(port)
   }
 
+  public async startServiceAPIServer(port: number | string): Promise<void> {
+    const koa = await this.createKoaServer()
+
+    const router = new Router<DefaultState, AppContext>()
+    router.use(bodyParser())
+
+    const errorHandler = async (ctx: Koa.Context, next: Koa.Next) => {
+      try {
+        await next()
+      } catch (err) {
+        const logger = await ctx.container.use('logger')
+        logger.info(
+          {
+            method: ctx.method,
+            route: ctx.path,
+            headers: ctx.headers,
+            params: ctx.params,
+            requestBody: ctx.request.body,
+            err
+          },
+          'Service API Error'
+        )
+      }
+    }
+
+    koa.use(errorHandler)
+
+    router.get('/healthz', (ctx: AppContext): void => {
+      ctx.status = 200
+    })
+
+    const tenantRoutes = await this.container.use('tenantRoutes')
+
+    router.post('/tenant', tenantRoutes.create)
+    router.patch('/tenant/:id', tenantRoutes.update)
+    router.delete('/tenant/:id', tenantRoutes.delete)
+
+    koa.use(cors())
+    koa.use(router.middleware())
+    koa.use(router.routes())
+
+    this.serviceAPIServer = koa.listen(port)
+  }
+
   private async createKoaServer(): Promise<Koa<Koa.DefaultState, AppContext>> {
     const koa = new Koa<DefaultState, AppContext>({
       proxy: this.config.trustProxy
@@ -499,6 +567,9 @@ export class App {
     if (this.introspectionServer) {
       await this.stopServer(this.introspectionServer)
     }
+    if (this.serviceAPIServer) {
+      await this.stopServer(this.serviceAPIServer)
+    }
   }
 
   private async stopServer(server: Server): Promise<void> {
@@ -527,6 +598,10 @@ export class App {
 
   public getIntrospectionPort(): number {
     return this.getPort(this.introspectionServer)
+  }
+
+  public getServiceAPIPort(): number {
+    return this.getPort(this.serviceAPIServer)
   }
 
   private getPort(server: Server): number {

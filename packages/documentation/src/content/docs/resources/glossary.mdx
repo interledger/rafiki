@@ -4,8 +4,6 @@ title: Glossary
 
 import { LinkOut } from '@interledger/docs-design-system'
 
-import { CodeBlock } from '@interledger/docs-design-system'
-
 ## Account servicing entity (ASE)
 
 An entity that provides and maintains a payment account for a payer and/or payee. An ASE is a regulated entity within the country or countries it operates. Examples include digital wallets, banks, and mobile money providers. Non-regulated entities should not use Rafiki in production environments due to the potential legal and compliance risks involved.
@@ -60,6 +58,10 @@ A unit of data that carries payment information through the Interledger network.
 
 An API standard and a set of APIs that allows clients to securely retrieve account information and initiate payments from your customers’ accounts with their consent. By adhering to this standard, Rafiki enables integration with external applications and supports the secure and uniform management of payments, quotes, and account data through the Open Payments APIs. For more information, visit the <LinkOut href="https://openpayments.dev">Open Payments documentation</LinkOut>.
 
+## Operator
+
+The account servicing entity (ASE) responsible for managing the Rafiki instance and its resources, including tenants, peering relationships, assets, and liquidity. Operators typically have administrative privileges and can perform actions that tenants cannot, such as creating and deleting tenants.
+
 ## Outgoing payment
 
 An object created by the sender’s ASE, on their resource server, that represents a payment being sent. This object contains information about the outgoing payment, such as the amount, currency, receiver’s wallet address, and payment status.
@@ -89,6 +91,10 @@ An Interledger application layer protocol for exchanging payment information bet
 ## Streaming Transport for the Real-Time Exchange of Assets and Messages (STREAM)
 
 An Interledger transport layer protocol for sending and receiving authenticated ILP packets between peers and determining the path exchange rate. See the <LinkOut href="https://interledger.org/developers/rfcs/stream-protocol/">STREAM specification</LinkOut> for more information.
+
+## Tenant
+
+An account servicing entity (ASE) that uses the shared Rafiki instance to manage its payment accounts and interact with the Interledger network. Tenants have their own isolated set of resources and are managed by an operator. Tenants have limited customization capabilities and cannot manage other tenants.
 
 ## Wallet address
 

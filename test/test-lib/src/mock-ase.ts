@@ -4,20 +4,22 @@ import {
   createAuthenticatedClient
 } from '@interledger/open-payments'
 import { AccountProvider, setupFromSeed } from 'mock-account-service-lib'
-import { createApolloClient } from './apollo-client'
+import { generateApolloClientFactory } from './apollo-client'
 import { AdminClient } from './admin-client'
 import { IntegrationServer } from './integration-server'
 import { TestConfig } from './config'
+import { PosService } from './pos-service'
 
 /** Mock Account Servicing Entity */
 export class MockASE {
-  private apolloClient: ApolloClient<NormalizedCacheObject>
+  private apolloClientFactory: () => ApolloClient<NormalizedCacheObject>
 
   public config: TestConfig
   public adminClient: AdminClient
   public accounts: AccountProvider
   public opClient!: AuthenticatedClient
   public integrationServer: IntegrationServer
+  public posService: PosService
 
   // Use .create factory because async construction
   public static async create(config: TestConfig): Promise<MockASE> {
@@ -30,23 +32,25 @@ export class MockASE {
   // Use static MockASE.create instead.
   private constructor(config: TestConfig) {
     this.config = config
-    this.apolloClient = createApolloClient({
+    this.apolloClientFactory = generateApolloClientFactory({
       graphqlUrl: config.graphqlUrl,
       signatureSecret: config.signatureSecret,
-      signatureVersion: config.signatureVersion
+      signatureVersion: config.signatureVersion,
+      operatorTenantId: config.operatorTenantId
     })
-    this.adminClient = new AdminClient(this.apolloClient)
+    this.adminClient = new AdminClient(this.apolloClientFactory())
     this.accounts = new AccountProvider()
     this.integrationServer = new IntegrationServer(
       this.config,
       this.adminClient,
       this.accounts
     )
+    this.posService = new PosService(this.config.posServiceUrl)
     this.integrationServer.start(this.config.integrationServerPort)
   }
 
   private async initAsync() {
-    await setupFromSeed(this.config, this.apolloClient, this.accounts)
+    await setupFromSeed(this.config, this.apolloClientFactory, this.accounts)
 
     this.opClient = await createAuthenticatedClient({
       privateKey: this.config.key,

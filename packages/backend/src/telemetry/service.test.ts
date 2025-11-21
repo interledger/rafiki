@@ -14,6 +14,11 @@ import { Counter, Histogram } from '@opentelemetry/api'
 import { privacy } from './privacy'
 import { mockRatesApi } from '../tests/rates'
 import { ConvertResults } from '../rates/util'
+import {
+  createTenantSettings,
+  exchangeRatesSetting
+} from '../tests/tenantSettings'
+import { CreateOptions } from '../tenants/settings/service'
 
 jest.mock('@opentelemetry/api', () => ({
   ...jest.requireActual('@opentelemetry/api'),
@@ -36,7 +41,7 @@ jest.mock('@opentelemetry/sdk-metrics', () => ({
 }))
 
 describe('Telemetry Service', () => {
-  describe('Telemtry Enabled', () => {
+  describe('Telemetry Enabled', () => {
     let deps: IocContract<AppServices>
     let appContainer: TestContainer
     let telemetryService: TelemetryService
@@ -44,7 +49,8 @@ describe('Telemetry Service', () => {
     let internalRatesService: RatesService
 
     let apiRequestCount = 0
-    const exchangeRatesUrl = 'http://example-rates.com'
+
+    const tenantId = Config.operatorTenantId
 
     const exampleRates = {
       USD: {
@@ -59,7 +65,6 @@ describe('Telemetry Service', () => {
       deps = initIocContainer({
         ...Config,
         enableTelemetry: true,
-        telemetryExchangeRatesUrl: 'http://example-rates.com',
         telemetryExchangeRatesLifetime: 100,
         openTelemetryCollectors: []
       })
@@ -69,7 +74,15 @@ describe('Telemetry Service', () => {
       aseRatesService = await deps.use('ratesService')
       internalRatesService = await deps.use('internalRatesService')
 
-      mockRatesApi(exchangeRatesUrl, (base) => {
+      const createOptions: CreateOptions = {
+        tenantId,
+        setting: [exchangeRatesSetting()]
+      }
+
+      const tenantSetting = createTenantSettings(deps, createOptions)
+      const operatorExchangeRatesUrl = (await tenantSetting).value
+
+      mockRatesApi(operatorExchangeRatesUrl, (base) => {
         apiRequestCount++
         return exampleRates[base as keyof typeof exampleRates]
       })
@@ -166,7 +179,8 @@ describe('Telemetry Service', () => {
             value: 100n,
             assetCode: 'USD',
             assetScale: 2
-          }
+          },
+          tenantId
         )
 
         expect(spyAseConvert).toHaveBeenCalled()
@@ -245,7 +259,8 @@ describe('Telemetry Service', () => {
           expect.objectContaining({
             sourceAmount: source.value,
             sourceAsset: { code: source.assetCode, scale: source.assetScale }
-          })
+          }),
+          undefined
         )
         expect(spyConvert).toHaveBeenNthCalledWith(
           2,
@@ -255,7 +270,8 @@ describe('Telemetry Service', () => {
               code: destination.assetCode,
               scale: destination.assetScale
             }
-          })
+          }),
+          undefined
         )
         // Ensure the [incrementCounter] was called with the correct calculated value. Expected 5000 due to scale = 4.
         expect(spyIncCounter).toHaveBeenCalledWith(name, 5000, {})
@@ -289,7 +305,8 @@ describe('Telemetry Service', () => {
           expect.objectContaining({
             sourceAmount: source.value,
             sourceAsset: { code: source.assetCode, scale: source.assetScale }
-          })
+          }),
+          undefined
         )
         expect(spyConvert).toHaveBeenNthCalledWith(
           2,
@@ -299,7 +316,8 @@ describe('Telemetry Service', () => {
               code: destination.assetCode,
               scale: destination.assetScale
             }
-          })
+          }),
+          undefined
         )
         expect(spyIncCounter).toHaveBeenCalledWith(name, 4400, {})
         expect(apiRequestCount).toBe(1)
@@ -382,8 +400,7 @@ describe('Telemetry Service', () => {
             value: 100n,
             assetCode: 'USD',
             assetScale: 2
-          },
-          undefined
+          }
         )
 
         expect(applyPrivacySpy).toHaveBeenCalledWith(Number(convertedAmount))
@@ -416,6 +433,7 @@ describe('Telemetry Service', () => {
             assetCode: 'USD',
             assetScale: 2
           },
+          undefined,
           undefined,
           false
         )
@@ -480,6 +498,7 @@ describe('Telemetry Service', () => {
             assetCode: 'USD',
             assetScale: 2
           },
+          undefined,
           { attribute: 'metric attribute' }
         )
 

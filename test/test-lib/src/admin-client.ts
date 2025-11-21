@@ -48,7 +48,6 @@ export class AdminClient {
                   assetScale
                   value
                 }
-                updatedAt
               }
             }
           }
@@ -286,7 +285,7 @@ export class AdminClient {
             createWalletAddress(input: $input) {
               walletAddress {
                 id
-                url
+                address
                 publicName
               }
             }

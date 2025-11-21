@@ -5,6 +5,7 @@ import {
   PaymentType
 } from '../open_payments/payment/combined/model'
 import { IncomingPayment } from '../open_payments/payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../open_payments/payment/incoming/types'
 import { OutgoingPayment } from '../open_payments/payment/outgoing/model'
 import { createIncomingPayment } from './incomingPayment'
 import { createOutgoingPayment } from './outgoingPayment'
@@ -22,11 +23,16 @@ export function toCombinedPayment(
     id: payment.id,
     walletAddressId: payment.walletAddressId,
     state: payment.state,
+    tenantId: payment.tenantId,
     metadata: payment.metadata,
     client: payment.client,
     createdAt: payment.createdAt,
     updatedAt: payment.updatedAt
   })
+}
+
+interface TestCombinedPaymentsOptions {
+  tenantId?: string
 }
 
 /**
@@ -35,25 +41,31 @@ export function toCombinedPayment(
  * @returns A CombinedPayment object that represents the created payment.
  */
 export async function createCombinedPayment(
-  deps: IocContract<AppServices>
+  deps: IocContract<AppServices>,
+  options?: TestCombinedPaymentsOptions
 ): Promise<CombinedPayment> {
-  const sendAsset = await createAsset(deps)
-  const receiveAsset = await createAsset(deps)
-  const sendWalletAddressId = (
-    await createWalletAddress(deps, { assetId: sendAsset.id })
-  ).id
+  const sendAsset = await createAsset(deps, options)
+  const receiveAsset = await createAsset(deps, options)
+  const sendWalletAddress = await createWalletAddress(deps, {
+    assetId: sendAsset.id,
+    tenantId: sendAsset.tenantId
+  })
   const receiveWalletAddress = await createWalletAddress(deps, {
-    assetId: receiveAsset.id
+    assetId: receiveAsset.id,
+    tenantId: sendAsset.tenantId
   })
 
   const type = Math.random() < 0.5 ? PaymentType.Incoming : PaymentType.Outgoing
   const payment =
     type === PaymentType.Incoming
       ? await createIncomingPayment(deps, {
-          walletAddressId: receiveWalletAddress.id
+          walletAddressId: receiveWalletAddress.id,
+          tenantId: receiveWalletAddress.tenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
       : await createOutgoingPayment(deps, {
-          walletAddressId: sendWalletAddressId,
+          tenantId: sendWalletAddress.tenantId,
+          walletAddressId: sendWalletAddress.id,
           method: 'ilp',
           receiver: `${Config.openPaymentsUrl}/${uuid()}`,
           validDestination: false

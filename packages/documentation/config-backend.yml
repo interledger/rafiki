@@ -1,0 +1,31 @@
+spectaql:
+  oneFile: true
+  targetDir: ./src/pages/apis/graphql/backend
+  logoFile: ./public/img/logo.png
+  embedLogo: true
+  faviconUrl: /favicon.svg
+  displayAllServers: true
+
+introspection:
+  removeTrailingPeriodFromDescriptions: false
+  schemaFile: '../backend/src/graphql/schema.graphql'
+  queryNameStrategy: capitalizeFirst
+  fieldExpansionDepth: 2
+
+  spectaqlDirective:
+    enable: true
+
+extensions:
+  graphqlScalarExamples: true
+
+info:
+  title: Backend Admin API
+  description: The Backend Admin API provides you with comprehensive capabilities to manage your Rafiki instance. Core functionality includes managing peering relationships, assets, wallet addresses and their public keys, as well as liquidity management through deposits and withdrawals. Another important aspect of the Backend Admin API is to manage Open Payments resources like payments and quotes.
+  x-introItems:
+    - title: Back to documentation
+      url: /overview/overview
+  x-hidePoweredBy: true
+
+servers:
+  - url: https://staging.example.com/graphql
+    description: Staging

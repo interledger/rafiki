@@ -1,9 +1,18 @@
 import assert from 'assert'
-import { gql, ApolloError } from '@apollo/client'
+import {
+  gql,
+  ApolloError,
+  NormalizedCacheObject,
+  ApolloClient
+} from '@apollo/client'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
-import { createTestApp, TestContainer } from '../../tests/app'
+import {
+  createApolloClient,
+  createTestApp,
+  TestContainer
+} from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { Asset } from '../../asset/model'
@@ -35,30 +44,50 @@ import {
 import { getPageTests } from './page.test'
 import { WalletAddressAdditionalProperty } from '../../open_payments/wallet_address/additional_property/model'
 import { GraphQLErrorCode } from '../errors'
+import { AssetService } from '../../asset/service'
+import { faker } from '@faker-js/faker'
+import { Tenant } from '../../tenants/model'
+import { createTenantSettings } from '../../tests/tenantSettings'
+import { TenantSettingKeys } from '../../tenants/settings/model'
+import { createTenant } from '../../tests/tenant'
 
 describe('Wallet Address Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
   let walletAddressService: WalletAddressService
+  let assetService: AssetService
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer({
+    deps = initIocContainer({
       ...Config,
       localCacheDuration: 0
     })
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
     walletAddressService = await deps.use('walletAddressService')
+    assetService = await deps.use('assetService')
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
     await appContainer.apolloClient.stop()
     await appContainer.shutdown()
+  })
+
+  beforeEach(async () => {
+    await createTenantSettings(deps, {
+      tenantId: Config.operatorTenantId,
+      setting: [
+        {
+          key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+          value: 'https://alice.me'
+        }
+      ]
+    })
   })
 
   describe('Create Wallet Address', (): void => {
@@ -69,7 +98,8 @@ describe('Wallet Address Resolvers', (): void => {
       asset = await createAsset(deps)
       input = {
         assetId: asset.id,
-        url: 'https://alice.me/.well-known/pay'
+        tenantId: Config.operatorTenantId,
+        address: 'https://alice.me/.well-known/pay'
       }
     })
 
@@ -92,7 +122,7 @@ describe('Wallet Address Resolvers', (): void => {
                       code
                       scale
                     }
-                    url
+                    address
                     publicName
                   }
                 }
@@ -114,7 +144,7 @@ describe('Wallet Address Resolvers', (): void => {
         expect(response.walletAddress).toEqual({
           __typename: 'WalletAddress',
           id: response.walletAddress.id,
-          url: input.url,
+          address: input.address,
           asset: {
             __typename: 'Asset',
             code: asset.code,
@@ -158,7 +188,7 @@ describe('Wallet Address Resolvers', (): void => {
                     code
                     scale
                   }
-                  url
+                  address
                   publicName
                   additionalProperties {
                     key
@@ -185,7 +215,7 @@ describe('Wallet Address Resolvers', (): void => {
       expect(response.walletAddress).toEqual({
         __typename: 'WalletAddress',
         id: response.walletAddress.id,
-        url: input.url,
+        address: input.address,
         asset: {
           __typename: 'Asset',
           code: asset.code,
@@ -306,13 +336,144 @@ describe('Wallet Address Resolvers', (): void => {
         )
       }
     })
+
+    test('bad input data when not allowed to perform cross tenant create', async (): Promise<void> => {
+      // Make request as non-operator.
+      const nonOperatorTenant = await createTenant(deps)
+      const tenantedApolloClient = await createApolloClient(
+        appContainer.container,
+        appContainer.app,
+        nonOperatorTenant.id
+      )
+
+      const badInputData = {
+        tenantId: uuid(), // some tenant other than requestor
+        assetId: input.assetId,
+        address: input.address
+      }
+      try {
+        expect.assertions(2)
+        await tenantedApolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateWalletAddress(
+                $badInputData: CreateWalletAddressInput!
+              ) {
+                createWalletAddress(input: $badInputData) {
+                  walletAddress {
+                    id
+                    asset {
+                      code
+                      scale
+                    }
+                  }
+                }
+              }
+            `,
+            variables: {
+              badInputData
+            }
+          })
+          .then((query): CreateWalletAddressMutationResponse => {
+            if (query.data) {
+              return query.data.createWalletAddress
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Assignment to the specified tenant is not permitted',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.BadUserInput
+            })
+          })
+        )
+      }
+    })
+
+    test('Operator can perform cross tenant create', async (): Promise<void> => {
+      // Setup non-tenant operator and form request for it from operator
+      const nonOperatorTenant = await createTenant(deps)
+      const asset = await createAsset(deps, {
+        assetOptions: {
+          code: 'xyz',
+          scale: 2
+        },
+        tenantId: nonOperatorTenant.id
+      })
+      await createTenantSettings(deps, {
+        tenantId: nonOperatorTenant.id,
+        setting: [
+          {
+            key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+            value: 'https://bob.me'
+          }
+        ]
+      })
+
+      const input = {
+        tenantId: nonOperatorTenant.id,
+        assetId: asset.id,
+        address: 'https://bob.me/.well-known/pay'
+      }
+      const response = await appContainer.apolloClient // operator client
+        .mutate({
+          mutation: gql`
+            mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
+              createWalletAddress(input: $input) {
+                walletAddress {
+                  id
+                  asset {
+                    code
+                    scale
+                  }
+                  address
+                }
+              }
+            }
+          `,
+          variables: {
+            input
+          }
+        })
+        .then((query): CreateWalletAddressMutationResponse => {
+          if (query.data) {
+            return query.data.createWalletAddress
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      assert.ok(response.walletAddress)
+      expect(response.walletAddress).toEqual({
+        __typename: 'WalletAddress',
+        id: response.walletAddress.id,
+        address: input.address,
+        asset: {
+          __typename: 'Asset',
+          code: asset.code,
+          scale: asset.scale
+        }
+      })
+      await expect(
+        walletAddressService.get(response.walletAddress.id)
+      ).resolves.toMatchObject({
+        id: response.walletAddress.id,
+        asset
+      })
+    })
   })
 
   describe('Update Wallet Address', (): void => {
     let walletAddress: WalletAddressModel
 
     beforeEach(async (): Promise<void> => {
-      walletAddress = await createWalletAddress(deps)
+      walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
     })
 
     test('Can update a wallet address', async (): Promise<void> => {
@@ -426,6 +587,7 @@ describe('Wallet Address Resolvers', (): void => {
       })
       test('New additional properties override previous additional properties', async (): Promise<void> => {
         const createOptions = {
+          tenantId: Config.operatorTenantId,
           additionalProperties: [
             {
               fieldKey: 'existingKey',
@@ -492,6 +654,7 @@ describe('Wallet Address Resolvers', (): void => {
       })
       test('Updating with empty additional properties deletes existing', async (): Promise<void> => {
         const createOptions = {
+          tenantId: Config.operatorTenantId,
           additionalProperties: [
             {
               fieldKey: 'existingKey',
@@ -634,6 +797,79 @@ describe('Wallet Address Resolvers', (): void => {
         )
       }
     })
+
+    test('bad input data when not allowed to perform cross tenant update', async (): Promise<void> => {
+      expect.assertions(2)
+      try {
+        const tenantOptions = {
+          apiSecret: 'test-api-secret-new',
+          publicName: 'test tenant new',
+          email: faker.internet.email(),
+          idpConsentUrl: faker.internet.url(),
+          idpSecret: 'test-idp-secret-new'
+        }
+        const newTenant = await Tenant.query(knex).insertAndFetch(tenantOptions)
+        const newAsset = await assetService.create({
+          code: 'USD',
+          scale: 2,
+          tenantId: newTenant!.id
+        })
+
+        await createTenantSettings(deps, {
+          tenantId: newTenant.id,
+          setting: [
+            {
+              key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+              value: 'https://alice.me'
+            }
+          ]
+        })
+
+        const newWalletAddress = await walletAddressService.create({
+          assetId: (newAsset as Asset).id,
+          tenantId: newTenant!.id,
+          address: 'https://alice.me/.well-known/pay-2'
+        })
+        const id = (newWalletAddress as WalletAddressModel).id
+
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
+                updateWalletAddress(input: $input) {
+                  walletAddress {
+                    id
+                    status
+                  }
+                }
+              }
+            `,
+            variables: {
+              input: {
+                id,
+                status: WalletAddressStatus.Inactive
+              }
+            }
+          })
+          .then((query): UpdateWalletAddressMutationResponse => {
+            if (query.data) {
+              return query.data.updateWalletAddress
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Unknown wallet address',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.NotFound
+            })
+          })
+        )
+      }
+    })
   })
 
   describe('Wallet Address Queries', (): void => {
@@ -657,7 +893,8 @@ describe('Wallet Address Resolvers', (): void => {
         const walletAddress = await createWalletAddress(deps, {
           publicName,
           createLiquidityAccount: true,
-          additionalProperties
+          additionalProperties,
+          tenantId: Config.operatorTenantId
         })
         const query = await appContainer.apolloClient
           .query({
@@ -670,7 +907,7 @@ describe('Wallet Address Resolvers', (): void => {
                     code
                     scale
                   }
-                  url
+                  address
                   publicName
                   additionalProperties {
                     key
@@ -701,7 +938,7 @@ describe('Wallet Address Resolvers', (): void => {
             code: walletAddress.asset.code,
             scale: walletAddress.asset.scale
           },
-          url: walletAddress.url,
+          address: walletAddress.address,
           publicName: publicName ?? null,
           additionalProperties: [
             {
@@ -729,10 +966,11 @@ describe('Wallet Address Resolvers', (): void => {
       'Can get a wallet address by its url (publicName: $publicName)',
       async ({ publicName }): Promise<void> => {
         const walletAddress = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           publicName,
           createLiquidityAccount: true
         })
-        const args = { url: walletAddress.url }
+        const args = { url: walletAddress.address }
         const query = await appContainer.apolloClient
           .query({
             query: gql`
@@ -744,7 +982,7 @@ describe('Wallet Address Resolvers', (): void => {
                     code
                     scale
                   }
-                  url
+                  address
                   publicName
                   additionalProperties {
                     key
@@ -773,7 +1011,7 @@ describe('Wallet Address Resolvers', (): void => {
             code: walletAddress.asset.code,
             scale: walletAddress.asset.scale
           },
-          url: walletAddress.url,
+          address: walletAddress.address,
           publicName: publicName ?? null,
           additionalProperties: []
         })
@@ -818,14 +1056,17 @@ describe('Wallet Address Resolvers', (): void => {
 
     getPageTests({
       getClient: () => appContainer.apolloClient,
-      createModel: () => createWalletAddress(deps),
+      createModel: () =>
+        createWalletAddress(deps, { tenantId: Config.operatorTenantId }),
       pagedQuery: 'walletAddresses'
     })
 
     test('Can get page of wallet addresses', async (): Promise<void> => {
       const walletAddresses: WalletAddressModel[] = []
       for (let i = 0; i < 2; i++) {
-        walletAddresses.push(await createWalletAddress(deps))
+        walletAddresses.push(
+          await createWalletAddress(deps, { tenantId: Config.operatorTenantId })
+        )
       }
       walletAddresses.reverse() // Calling the default getPage will result in descending order
       const query = await appContainer.apolloClient
@@ -840,7 +1081,7 @@ describe('Wallet Address Resolvers', (): void => {
                       code
                       scale
                     }
-                    url
+                    address
                     publicName
                   }
                   cursor
@@ -869,9 +1110,219 @@ describe('Wallet Address Resolvers', (): void => {
             code: walletAddress.asset.code,
             scale: walletAddress.asset.scale
           },
-          url: walletAddress.url,
+          address: walletAddress.address,
           publicName: walletAddress.publicName
         })
+      })
+    })
+
+    test('Can get page of wallet addresses with tenantId param', async (): Promise<void> => {
+      const walletAddresses: WalletAddressModel[] = []
+      for (let i = 0; i < 2; i++) {
+        walletAddresses.push(
+          await createWalletAddress(deps, { tenantId: Config.operatorTenantId })
+        )
+      }
+      walletAddresses.reverse() // Calling the default getPage will result in descending order
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            query WalletAddresses($tenantId: String) {
+              walletAddresses(tenantId: $tenantId) {
+                edges {
+                  node {
+                    id
+                    asset {
+                      code
+                      scale
+                    }
+                    address
+                    publicName
+                  }
+                  cursor
+                }
+              }
+            }
+          `,
+          variables: {
+            tenantId: Config.operatorTenantId
+          }
+        })
+        .then((query): WalletAddressesConnection => {
+          if (query.data) {
+            return query.data.walletAddresses
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(query.edges).toHaveLength(2)
+      query.edges.forEach((edge, idx) => {
+        const walletAddress = walletAddresses[idx]
+        expect(edge.cursor).toEqual(walletAddress.id)
+        expect(edge.node).toEqual({
+          __typename: 'WalletAddress',
+          id: walletAddress.id,
+          asset: {
+            __typename: 'Asset',
+            code: walletAddress.asset.code,
+            scale: walletAddress.asset.scale
+          },
+          address: walletAddress.address,
+          publicName: walletAddress.publicName
+        })
+      })
+    })
+
+    describe('pagination tenant boundaries', (): void => {
+      let operatorWalletAddress: WalletAddressModel
+      let tenantWalletAddress: WalletAddressModel
+      let secondTenantWalletAddress: WalletAddressModel
+      let tenantedApolloClient: ApolloClient<NormalizedCacheObject>
+
+      const pageQuery = gql`
+        query WalletAddresses($tenantId: String) {
+          walletAddresses(tenantId: $tenantId) {
+            edges {
+              node {
+                id
+              }
+            }
+          }
+        }
+      `
+
+      beforeEach(async (): Promise<void> => {
+        operatorWalletAddress = await createWalletAddress(deps)
+        const tenant = await createTenant(deps)
+        tenantedApolloClient = await createApolloClient(
+          appContainer.container,
+          appContainer.app,
+          tenant.id
+        )
+        tenantWalletAddress = await createWalletAddress(deps, {
+          tenantId: tenant.id
+        })
+        secondTenantWalletAddress = await createWalletAddress(deps, {
+          tenantId: tenant.id
+        })
+      })
+
+      test('Operator can get all wallet addresses across all tenants', async (): Promise<void> => {
+        const query = await appContainer.apolloClient
+          .query({
+            query: pageQuery
+          })
+          .then((query): WalletAddressesConnection => {
+            if (query.data) {
+              return query.data.walletAddresses
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(query.edges).toHaveLength(3)
+        expect(query.edges).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              node: expect.objectContaining({ id: operatorWalletAddress.id })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({ id: tenantWalletAddress.id })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: secondTenantWalletAddress.id
+              })
+            })
+          ])
+        )
+      })
+
+      test('Tenant cannot get all wallet addresses across all tenants', async (): Promise<void> => {
+        const query = await tenantedApolloClient
+          .query({
+            query: pageQuery
+          })
+          .then((query): WalletAddressesConnection => {
+            if (query.data) {
+              return query.data.walletAddresses
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(query.edges).toHaveLength(2)
+        expect(query.edges).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              node: expect.objectContaining({ id: tenantWalletAddress.id })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: secondTenantWalletAddress.id
+              })
+            })
+          ])
+        )
+      })
+
+      test('Operator can filter wallet addresses across all tenants', async (): Promise<void> => {
+        const query = await appContainer.apolloClient
+          .query({
+            query: pageQuery,
+            variables: { tenantId: tenantWalletAddress.tenantId }
+          })
+          .then((query): WalletAddressesConnection => {
+            if (query.data) {
+              return query.data.walletAddresses
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(query.edges).toHaveLength(2)
+        expect(query.edges).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              node: expect.objectContaining({ id: tenantWalletAddress.id })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: secondTenantWalletAddress.id
+              })
+            })
+          ])
+        )
+      })
+
+      test('Tenant cannot get all wallet addresses across all tenants', async (): Promise<void> => {
+        const query = await tenantedApolloClient
+          .query({
+            query: pageQuery,
+            variables: { tenantId: operatorWalletAddress.tenantId }
+          })
+          .then((query): WalletAddressesConnection => {
+            if (query.data) {
+              return query.data.walletAddresses
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(query.edges).toHaveLength(2)
+        expect(query.edges).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              node: expect.objectContaining({ id: tenantWalletAddress.id })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: secondTenantWalletAddress.id
+              })
+            })
+          ])
+        )
       })
     })
   })
@@ -889,6 +1340,7 @@ describe('Wallet Address Resolvers', (): void => {
         const withdrawalAmount = BigInt(10)
         for (let i = 0; i < 3; i++) {
           const walletAddress = await createWalletAddress(deps, {
+            tenantId: Config.operatorTenantId,
             createLiquidityAccount: true
           })
           if (i) {

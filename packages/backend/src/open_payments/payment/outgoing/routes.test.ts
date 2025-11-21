@@ -41,6 +41,7 @@ describe('Outgoing Payment Routes', (): void => {
   let outgoingPaymentService: OutgoingPaymentService
   let walletAddress: WalletAddress
   let baseUrl: string
+  let tenantId: string
 
   const receivingWalletAddress = `https://wallet.example/${uuid()}`
 
@@ -51,6 +52,7 @@ describe('Outgoing Payment Routes', (): void => {
   }): Promise<OutgoingPayment> => {
     return await createOutgoingPayment(deps, {
       ...options,
+      tenantId: Config.operatorTenantId,
       walletAddressId: walletAddress.id,
       method: 'ilp',
       receiver: `${receivingWalletAddress}/incoming-payments/${uuid()}`,
@@ -77,12 +79,16 @@ describe('Outgoing Payment Routes', (): void => {
 
   beforeEach(async (): Promise<void> => {
     const asset = await createAsset(deps)
-    walletAddress = await createWalletAddress(deps, { assetId: asset.id })
+    tenantId = Config.operatorTenantId
+    walletAddress = await createWalletAddress(deps, {
+      tenantId,
+      assetId: asset.id
+    })
     baseUrl = config.openPaymentsUrl
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -114,8 +120,8 @@ describe('Outgoing Payment Routes', (): void => {
       get: (ctx) => outgoingPaymentRoutes.get(ctx),
       getBody: (outgoingPayment) => {
         return {
-          id: `${baseUrl}/outgoing-payments/${outgoingPayment.id}`,
-          walletAddress: walletAddress.url,
+          id: `${baseUrl}/${tenantId}/outgoing-payments/${outgoingPayment.id}`,
+          walletAddress: walletAddress.address,
           receiver: outgoingPayment.receiver,
           quoteId: outgoingPayment.quote.getUrl(config.openPaymentsUrl),
           debitAmount: serializeAmount(outgoingPayment.debitAmount),
@@ -123,8 +129,7 @@ describe('Outgoing Payment Routes', (): void => {
           receiveAmount: serializeAmount(outgoingPayment.receiveAmount),
           metadata: outgoingPayment.metadata,
           failed,
-          createdAt: outgoingPayment.createdAt.toISOString(),
-          updatedAt: outgoingPayment.updatedAt.toISOString()
+          createdAt: outgoingPayment.createdAt.toISOString()
         }
       },
       list: (ctx) => outgoingPaymentRoutes.list(ctx),
@@ -134,7 +139,7 @@ describe('Outgoing Payment Routes', (): void => {
 
   type SetupContextOptions = UnionOmit<
     CreateOutgoingPaymentOptions,
-    'walletAddressId'
+    'walletAddressId' | 'tenantId'
   >
 
   describe('create', (): void => {
@@ -148,6 +153,9 @@ describe('Outgoing Payment Routes', (): void => {
           method: 'POST',
           url: `/outgoing-payments`,
           body: options
+        },
+        params: {
+          tenantId
         },
         walletAddress,
         client: options.client,
@@ -182,6 +190,7 @@ describe('Outgoing Payment Routes', (): void => {
             CreateOutgoingPaymentBaseOptions,
             'walletAddressId'
           > = {
+            tenantId,
             client,
             grant,
             metadata
@@ -189,7 +198,7 @@ describe('Outgoing Payment Routes', (): void => {
           if (createFrom === CreateFrom.Quote) {
             options = {
               ...options,
-              quoteId: `${baseUrl}/quotes/${payment.quote.id}`
+              quoteId: `${baseUrl}/${payment.quote.tenantId}/quotes/${payment.quote.id}`
             } as CreateFromQuote
           } else {
             assert(createFrom === CreateFrom.IncomingPayment)
@@ -212,6 +221,7 @@ describe('Outgoing Payment Routes', (): void => {
           ).resolves.toBeUndefined()
 
           let expectedCreateOptions: CreateOutgoingPaymentBaseOptions = {
+            tenantId,
             walletAddressId: walletAddress.id,
             metadata,
             client,
@@ -240,8 +250,8 @@ describe('Outgoing Payment Routes', (): void => {
             .split('/')
             .pop()
           expect(ctx.response.body).toMatchObject({
-            id: `${baseUrl}/outgoing-payments/${outgoingPaymentId}`,
-            walletAddress: walletAddress.url,
+            id: `${baseUrl}/${tenantId}/outgoing-payments/${outgoingPaymentId}`,
+            walletAddress: walletAddress.address,
             receiver: payment.receiver,
             quoteId:
               'quoteId' in options ? options.quoteId : expect.any(String),
@@ -270,8 +280,7 @@ describe('Outgoing Payment Routes', (): void => {
               assetScale: payment.quote.receiveAmount.assetScale
             },
             failed: false,
-            createdAt: expect.any(String),
-            updatedAt: expect.any(String)
+            createdAt: expect.any(String)
           })
         })
       }
@@ -281,8 +290,9 @@ describe('Outgoing Payment Routes', (): void => {
       'returns error on %s',
       async (error): Promise<void> => {
         const quoteId = uuid()
+        const tenantId = Config.operatorTenantId
         const ctx = setup({
-          quoteId: `${baseUrl}/quotes/${quoteId}`
+          quoteId: `${baseUrl}/${tenantId}/quotes/${quoteId}`
         })
         const createSpy = jest
           .spyOn(outgoingPaymentService, 'create')
@@ -300,7 +310,8 @@ describe('Outgoing Payment Routes', (): void => {
 
         expect(createSpy).toHaveBeenCalledWith({
           walletAddressId: walletAddress.id,
-          quoteId
+          quoteId,
+          tenantId
         })
       }
     )

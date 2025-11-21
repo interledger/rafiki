@@ -5,20 +5,22 @@
   "scripts": {
     "start": "astro dev",
     "build:docs": "astro build",
+    "build:docs:graphql": "spectaql config-auth.yml && spectaql config-backend.yml",
     "preview": "astro preview",
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/markdown-remark": "^6.3.1",
-    "@astrojs/starlight": "^0.33.0",
-    "@interledger/docs-design-system": "^0.6.2",
-    "astro": "5.6.1",
-    "astro-graphql-plugin": "^0.4.2",
-    "graphql": "16.10.0",
-    "mermaid": "^11.6.0",
+    "@astrojs/markdown-remark": "^6.3.2",
+    "@astrojs/starlight": "^0.34.4",
+    "@interledger/docs-design-system": "^0.8.0",
+    "astro": "5.11.0",
+    "mermaid": "^11.8.1",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-mathjax": "^7.1.0",
     "remark-math": "^6.0.0",
-    "starlight-links-validator": "^0.15.1"
+    "spectaql": "^3.0.4",
+    "starlight-fullview-mode": "^0.2.3",
+    "starlight-links-validator": "^0.17.0",
+    "starlight-versions": "^0.5.5"
   }
 }

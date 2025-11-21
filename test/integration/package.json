@@ -14,10 +14,12 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@interledger/open-payments": "6.13.2",
+    "@interledger/open-payments": "7.0.0",
     "@types/node": "^20.14.15",
     "hostile": "^1.4.0",
     "mock-account-service-lib": "workspace:*",
+    "yaml": "^2.7.0",
+    "uuid": "^9.0.1",
     "test-lib": "workspace:*"
   }
 }

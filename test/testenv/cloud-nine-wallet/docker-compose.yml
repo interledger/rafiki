@@ -30,7 +30,9 @@ services:
       KEY_ID: keyid-97a3a431-8ee1-48fc-ac85-70e2f5eba8e5
       PRIVATE_KEY_FILE: /workspace/private-key.pem
       AUTH_SERVER_INTROSPECTION_URL: http://cloud-nine-wallet-test-auth:3107
+      CARD_SERVICE_URL: http://cloud-nine-wallet-test-card-service:3104
       AUTH_SERVER_GRANT_URL: http://cloud-nine-wallet-test-auth:3106
+      AUTH_SERVICE_API_URL: 'http://cloud-nine-wallet-auth:3111/'
       ILP_ADDRESS: test.cloud-nine-wallet-test
       ILP_CONNECTOR_URL: http://cloud-nine-wallet-test-backend:3102
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
@@ -38,7 +40,12 @@ services:
       EXCHANGE_RATES_URL: http://host.docker.internal:8888/rates
       REDIS_URL: redis://shared-redis:6379/0
       USE_TIGERBEETLE: false
-      API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      OPERATOR_TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
+      ADMIN_API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      ADMIN_API_SIGNATURE_VERSION: 1
+      CARD_WEBHOOK_SERVICE_URL: http://cloud-nine-wallet-test-card-service:3104/webhook
+      SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964= # webhook signature
+      SIGNATURE_VERSION: 1
     volumes:
       - ../private-key.pem:/workspace/private-key.pem
     depends_on:
@@ -58,6 +65,7 @@ services:
       - '3106:3106'
       - '3107:3107'
       - '3109:3109'
+      - '3111:3111'
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       AUTH_SERVER_URL: http://cloud-nine-wallet-test-auth:3106
@@ -67,10 +75,34 @@ services:
       INTERACTION_PORT: 3109
       AUTH_PORT: 3106
       ADMIN_PORT: 3103
+      SERVICE_API_PORT: 3111
       REDIS_URL: redis://shared-redis:6379/1
       IDENTITY_SERVER_URL: http://localhost:3030/mock-idp/
       IDENTITY_SERVER_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
       COOKIE_KEY: 42397d1f371dd4b8b7d0308a689a57c882effd4ea909d792302542af47e2cd37
+      OPERATOR_TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
+      ADMIN_API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
     depends_on:
       - shared-database
       - shared-redis
+  cloud-nine-wallet-test-card-service:
+    hostname: cloud-nine-wallet-test-card-service
+    image: rafiki-card-service
+    build:
+      context: ../../..
+      dockerfile: ./packages/card-service/Dockerfile.prod
+    restart: always
+    networks:
+      - rafiki-test
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      INSTANCE_NAME: CLOUD-NINE
+      TRUST_PROXY: ${TRUST_PROXY}
+      LOG_LEVEL: debug
+      CARD_SERVICE_PORT: 3104
+      GRAPHQL_URL: http://cloud-nine-wallet-test-backend:3101/graphql
+      TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
+      TENANT_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      TENANT_SIGNATURE_VERSION: 1
+    depends_on:
+      - shared-database

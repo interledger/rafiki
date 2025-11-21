@@ -3,10 +3,10 @@ name: Node Build
 on:
   workflow_dispatch:
   schedule:
-    - cron:  '0 21 * * *'
+    - cron: "0 21 * * *"
   pull_request:
     branches:
-      - '**'
+      - "**"
   push:
     branches:
       - main
@@ -17,9 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-    - uses: actions/checkout@v4
-    - uses: ./.github/workflows/rafiki/env-setup
-    - run: pnpm checks
+      - uses: actions/checkout@v4
+      - uses: ./.github/workflows/rafiki/env-setup
+      - run: pnpm checks
 
   backend:
     runs-on: ubuntu-latest
@@ -27,6 +27,9 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter backend build:deps
       - run: NODE_OPTIONS="--max-old-space-size=4096" pnpm --filter backend test:ci
@@ -53,6 +56,9 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter auth build:deps
       - run: pnpm --filter auth test
@@ -77,6 +83,32 @@ jobs:
       - name: Validate Open API specs
         run: |
           npx @stoplight/spectral-cli lint ./packages/token-introspection/src/openapi/specs/*.yaml
+
+  card-service:
+    runs-on: ubuntu-latest
+    needs: prerequisite
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/workflows/rafiki/env-setup
+      - run: pnpm --filter card-service test:ci
+      - run: pnpm --filter card-service build
+      - name: AsyncAPI extension
+        run: |
+          echo "{\"extends\":[\"spectral:oas\",\"spectral:asyncapi\"]}" >> .spectral.json
+      - name: Validate Open API specs
+        run: |
+          npx @stoplight/spectral-cli lint ./packages/card-service/src/openapi/specs/*.yaml
+
+  point-of-sale:
+    runs-on: ubuntu-latest
+    needs: prerequisite
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/workflows/rafiki/env-setup
+      - run: pnpm --filter point-of-sale build
+      - run: pnpm --filter point-of-sale test:ci
 
   mock-account-servicing-entity:
     runs-on: ubuntu-latest
@@ -109,7 +141,7 @@ jobs:
       - name: fail if GraphQL was generated
         if: steps.verify-changed-files.outputs.files_changed == 'true'
         run: exit 1
-  
+
   codeql-analyze:
     runs-on: ubuntu-latest
     needs: prerequisite
@@ -121,20 +153,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'javascript' ]
+        language: ["javascript"]
         config:
-          - './.github/codeql/source.yml'
-          - './.github/codeql/tests.yml'
+          - "./.github/codeql/source.yml"
+          - "./.github/codeql/tests.yml"
     steps:
-     - uses: actions/checkout@v4
-     - uses: ./.github/workflows/rafiki/env-setup
-     - name: Initialize CodeQL
-       uses: github/codeql-action/init@v3
-       with:
-         languages: ${{ matrix.language }}
-         config-file: ${{ matrix.config }}
-     - name: Perform CodeQL Analysis
-       uses: github/codeql-action/analyze@v3
+      - uses: actions/checkout@v4
+      - uses: ./.github/workflows/rafiki/env-setup
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          config-file: ${{ matrix.config }}
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
 
   integration-test:
     runs-on: ubuntu-22.04
@@ -143,6 +175,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
 
       - name: Setup environment
         uses: ./.github/workflows/rafiki/env-setup
@@ -151,8 +186,10 @@ jobs:
         run: |
           echo "127.0.0.1 cloud-nine-wallet-test-backend" | sudo tee -a /etc/hosts
           echo "127.0.0.1 cloud-nine-wallet-test-auth" | sudo tee -a /etc/hosts
+          echo "127.0.0.1 cloud-nine-wallet-test-card-service" | sudo tee -a /etc/hosts
           echo "127.0.0.1 happy-life-bank-test-backend" | sudo tee -a /etc/hosts
           echo "127.0.0.1 happy-life-bank-test-auth" | sudo tee -a /etc/hosts
+          echo "127.0.0.1 happy-life-bank-test-point-of-sale" | sudo tee -a /etc/hosts
       - name: Build dependencies
         run: pnpm --filter integration build:deps
 
@@ -166,6 +203,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
 
       - name: Setup environment
         uses: ./.github/workflows/rafiki/env-setup
@@ -176,9 +216,11 @@ jobs:
       - name: Setup hosts
         run: |
           echo "127.0.0.1 cloud-nine-wallet-test-backend" | sudo tee -a /etc/hosts
+          echo "127.0.0.1 cloud-nine-wallet-test-card-service" | sudo tee -a /etc/hosts
           echo "127.0.0.1 cloud-nine-wallet-test-auth" | sudo tee -a /etc/hosts
           echo "127.0.0.1 happy-life-bank-test-backend" | sudo tee -a /etc/hosts
           echo "127.0.0.1 happy-life-bank-test-auth" | sudo tee -a /etc/hosts
+          echo "127.0.0.1 happy-life-bank-test-point-of-sale" | sudo tee -a /etc/hosts
 
       - name: Build dependencies
         run: pnpm --filter performance build:deps
@@ -206,11 +248,25 @@ jobs:
           pnpm --filter performance run-tests:testenv -k -q --vus 4 --duration 1m | tee performance.log
 
       - name: Post/Update Performance Test Results as PR Comment
-        if: always()
+        if: ${{ github.event_name == 'pull_request' }}
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const pr = context.payload.pull_request;
+            if (!pr) {
+              console.log("No PR detected, skipping comment.");
+              return;
+            }
+
+            const sourceOwner = pr.head.repo.owner.login;
+            const targetOwner = pr.base.repo.owner.login;
+
+            if (sourceOwner !== targetOwner) {
+              console.log("PR is from a fork, skipping automatic comment for security reasons.");
+              return;
+            }
+
             const fs = require('fs');
             const summaryPath = './test/performance/k6-test-summary.txt';
             const logPath = './performance.log';
@@ -236,9 +292,8 @@ jobs:
             const maxLogSize = 60000;
             const truncatedLogs = logContent.length > maxLogSize ? `...(truncated)...\n${logContent.slice(-maxLogSize)}` : logContent;
 
-
             const commentBody = `
-            ### 🚀 Performance Test Results  
+            ### 🚀 Performance Test Results
 
             ${summaryContent}
 
@@ -287,8 +342,20 @@ jobs:
   node-build:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [auth, backend, frontend, token-introspection, mock-account-servicing-entity, graphql, codeql-analyze, integration-test]
-    steps: 
+    needs:
+      [
+        auth,
+        backend,
+        frontend,
+        token-introspection,
+        card-service,
+        point-of-sale,
+        mock-account-servicing-entity,
+        graphql,
+        codeql-analyze,
+        integration-test
+      ]
+    steps:
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm build
@@ -320,7 +387,10 @@ jobs:
             PUSH_DOCKER_IMAGE=true
             NEW_VERSION="nightly"
           elif [ "${{ github.event_name == 'workflow_dispatch' }}" = true ]; then
-            NEW_VERSION="manual"
+            NEW_VERSION="$GITHUB_REF_NAME"
+            if [[ "${{ github.ref_name }}" != "main" ]]; then
+              PUSH_DOCKER_IMAGE="true"
+            fi
           elif [ "${{ startsWith(github.ref_name, 'release/v')}}" = true ]; then
             PUSH_DOCKER_IMAGE=true
             SHOULD_PUSH_TAG=true
@@ -382,11 +452,17 @@ jobs:
           - auth
           - backend
           - frontend
+          - card-service
+          - point-of-sale
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           push: false
           platforms: ${{ matrix.platform.arch }}
@@ -398,7 +474,7 @@ jobs:
         with:
           path: /tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
           key: ${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}
-  
+
   docker-grype:
     name: Docker Grype Scan
     needs: [version-generator, docker-build]
@@ -415,6 +491,8 @@ jobs:
           - auth
           - backend
           - frontend
+          - card-service
+          - point-of-sale
     steps:
       - uses: actions/checkout@v4
       - name: Fetch docker image from cache
@@ -451,6 +529,8 @@ jobs:
           - auth
           - backend
           - frontend
+          - card-service
+          - point-of-sale
     steps:
       - uses: actions/checkout@v4
       - name: Fetch docker image from cache
@@ -466,10 +546,10 @@ jobs:
         run: |
           docker images
           /tmp/trivy image --db-repository ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db --java-db-repository ghcr.io/aquasecurity/trivy-java-db,public.ecr.aws/aquasecurity/trivy-java-db --ignore-unfixed --format table --vuln-type os,library --exit-code 1 --severity HIGH --input /tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
-  
+
   push:
     name: Push to registry
-    needs: [version-generator, docker-grype, docker-trivy, version-generator, node-build]
+    needs: [version-generator, docker-grype, docker-trivy, node-build]
     runs-on: ubuntu-latest
     if: needs.version-generator.outputs.dockerPush == 'true'
     strategy:
@@ -483,32 +563,18 @@ jobs:
           - auth
           - backend
           - frontend
+          - card-service
+          - point-of-sale
     steps:
-      - name: Fetch docker image from cache
-        uses: actions/cache/restore@v4
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/image-push
         with:
-          path: /tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
-          key: ${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}
-          fail-on-cache-miss: true
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Load image into Docker
-        run: |
-          docker load --input /tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
-      - name: List docker images
-        run: docker images
-      - name: Push to registry
-        run: |
-          docker push ghcr.io/${{ github.repository_owner }}/rafiki-${{ matrix.package }}-${{ matrix.platform.name }}:${{ needs.version-generator.outputs.version }}
-  
+          app_name: rafiki
+          package: ${{ matrix.package }}
+          platform_name: ${{ matrix.platform.name }}
+          version: ${{ needs.version-generator.outputs.version }}
+          gh_token: ${{ secrets.GITHUB_TOKEN }}
+
   push-manifest:
     name: Push multi-arch manifest list
     needs: [version-generator, push]
@@ -520,22 +586,18 @@ jobs:
           - auth
           - backend
           - frontend
+          - card-service
+          - point-of-sale
     steps:
-      - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Create manifest list  
-        run: |
-          docker manifest create ghcr.io/${{ github.repository_owner }}/rafiki-${{ matrix.package }}:${{ needs.version-generator.outputs.version }} \
-          --amend ghcr.io/${{ github.repository_owner }}/rafiki-${{ matrix.package }}-amd64:${{ needs.version-generator.outputs.version }} \
-          --amend ghcr.io/${{ github.repository_owner }}/rafiki-${{ matrix.package }}-arm64:${{ needs.version-generator.outputs.version }}
+      - uses: actions/checkout@v4
       - name: Push manifest list
-        run: |
-          docker manifest push ghcr.io/${{ github.repository_owner }}/rafiki-${{ matrix.package }}:${{ needs.version-generator.outputs.version }}
-  
+        uses: ./.github/actions/manifest-push
+        with:
+          app_name: rafiki
+          package: ${{ matrix.package }}
+          gh_token: ${{ secrets.GITHUB_TOKEN }}
+          version: ${{ needs.version-generator.outputs.version }}
+
   generate-release:
     runs-on: ubuntu-latest
     needs: [push-manifest, version-generator]
@@ -551,12 +613,12 @@ jobs:
           tag: ${{ needs.version-generator.outputs.version }}
           includeRefIssues: false
       - name: Create Release
-        uses: ncipollo/release-action@v1.15.0
+        uses: ncipollo/release-action@v1.16.0
         with:
           allowUpdates: true
           draft: false
           makeLatest: true
-          prerelease: endsWith(needs.version-generator.outputs.version, '-alpha') 
+          prerelease: endsWith(needs.version-generator.outputs.version, '-alpha')
           name: ${{ needs.version-generator.outputs.version }}
           body: ${{ steps.changelog.outputs.changes }}
           tag: ${{ needs.version-generator.outputs.version }}

@@ -3,49 +3,687 @@ title: Helm & Kubernetes
 ---
 
 import { LinkOut } from '@interledger/docs-design-system'
+import BackEnv from '/src/partials/backend-variables-helm.mdx'
+import AuthEnv from '/src/partials/auth-variables-helm.mdx'
+import FrontEnv from '/src/partials/frontend-variables-helm.mdx'
 
-### Running Rafiki in production
+This guide explains how to deploy Rafiki using Helm charts on a Kubernetes cluster. Helm is a package manager for Kubernetes that allows you to define, install, and upgrade complex Kubernetes applications through Helm charts.
 
-To run Rafiki in your production environment you must have the following software and tools installed:
+Rafiki uses the following key infrastructure components:
 
-#### Dependencies:
+- **PostgreSQL**: Used for storing application data, grants, and Open Payments resources
+- **Redis**: Used for caching and session management
+- **TigerBeetle** (recommended): High-performance accounting database for financial transaction processing and ledger management
 
-- <LinkOut href='https://kubernetes.io/releases/download/'>Kubernetes</LinkOut>
-- <LinkOut href='https://kubernetes.io/docs/tasks/tools/#kubectl'>
-    kubectl
-  </LinkOut>
-- <LinkOut href='https://helm.sh/docs/intro/install/'>helm</LinkOut>
+## Prerequisites
 
-Rafiki requires an instance of Postgres and Redis instance running with it.
+:::caution[Recommended software version]
+We recommend using the latest vendor supported version for each of the software dependencies listed in this section.
+:::
 
-An example Helm Chart including Rafiki, Postgres, and Redis can be found <LinkOut href= 'https://github.com/interledger/rafiki/tree/main/infrastructure/helm/rafiki/'>here</LinkOut>.
+Before you begin, ensure you have the following:
 
-Run the following command to install the example Helm Chart above:
+- <LinkOut href='https://kubernetes.io/'>Kubernetes</LinkOut> cluster deployed
+- <LinkOut href='https://kubernetes.io/docs/tasks/tools/'>kubectl</LinkOut> installed
+  and configured to access your cluster
+- <LinkOut href='https://helm.sh/docs/intro/install/'>Helm</LinkOut> installed
 
-```sh
-helm install rafiki PATH_TO_RAFIKI_REPO/infrastructure/helm/rafiki
+## Install Rafiki using Helm
+
+### Add the Interledger Helm repository
+
+Add the official Interledger Helm repository which contains the Rafiki charts:
+
+```bash
+helm repo add interledger https://interledger.github.io/charts/interledger
+helm repo update
 ```
 
-#### TigerBeetle
+### Verify available charts
 
-For Rafiki's accounting database, you may opt to run TigerBeetle in place of Postgres. Though you must run one Postgres instance that's used for the `auth` services and Open Payments resources.
+You can list the available Rafiki charts:
 
-To change the version of TigerBeetle you must change the respective tag in the <LinkOut href='https://github.com/interledger/rafiki/blob/main/infrastructure/helm/tigerbeetle/values.yaml'>values.yaml</LinkOut> file for TigerBeetle.
+```bash
+helm search repo interledger/rafiki
+```
 
-#### Port forwarding
+This will show you the available chart versions for the different Rafiki components:
 
-In the current alpha version of Rafiki, no ports are exposed by default. You can port-forward the frontend (Admin UI) port by running the following:
+- `interledger/rafiki-auth`
+- `interledger/rafiki-backend`
+- `interledger/rafiki-frontend`
 
-```sh
-// get list of pod names
+### Create values files
+
+Create separate values files for each Rafiki service to customize your deployment. You can start with minimal configurations and add more settings as needed.
+
+#### Basic auth service configuration
+
+Create `auth-values.yaml`:
+
+```yaml
+# Minimal auth service configuration
+nodeEnv: production
+logLevel: info
+
+# Database configuration (update with your credentials)
+databaseUrl:
+  secretKeyRef:
+    name: rafiki-secrets
+    key: DATABASE_URL
+
+# Redis configuration
+redisUrl:
+  secretKeyRef:
+    name: rafiki-secrets
+    key: REDIS_URL
+
+# Identity server configuration
+identityServer:
+  domain: 'https://your-domain.com/idp'
+  serverSecret:
+    secretKeyRef:
+      name: rafiki-secrets
+      key: IDENTITY_SERVER_SECRET
+
+# Cookie signing key
+cookieKey:
+  secretKeyRef:
+    name: rafiki-secrets
+    key: COOKIE_KEY
+
+# Service configuration
+service:
+  - name: service
+    type: ClusterIP
+    ports:
+      - port: 3006
+        targetPort: 3006
+        protocol: TCP
+        name: auth
+      - port: 3003
+        targetPort: 3003
+        protocol: TCP
+        name: admin
+      - port: 3007
+        targetPort: 3007
+        protocol: TCP
+        name: introspection
+      - port: 3009
+        targetPort: 3009
+        protocol: TCP
+        name: interaction
+```
+
+#### Basic backend service configuration
+
+Create `backend-values.yaml`:
+
+```yaml
+# Minimal backend service configuration
+nodeEnv: production
+logLevel: info
+instanceName: 'your-rafiki-instance'
+
+# Database configuration
+databaseUrl:
+  secretKeyRef:
+    name: rafiki-secrets
+    key: DATABASE_URL
+
+# Redis configuration
+redisUrl:
+  secretKeyRef:
+    name: rafiki-secrets
+    key: REDIS_URL
+
+# Auth service URLs
+auth:
+  grantUrl: http://rafiki-auth-service.default:3006
+  introspectionUrl: http://rafiki-auth-service.default:3007
+
+# ILP configuration
+ilp:
+  host: 'https://your-domain.com'
+  address: test.your-instance
+  connector: 'http://rafiki-backend-service.default:3002'
+  streamSecret:
+    secretKeyRef:
+      name: rafiki-secrets
+      key: STREAM_SECRET
+
+# Webhook configuration
+webhook:
+  url: https://your-wallet.com/webhooks/rafiki
+
+# Key configuration
+key:
+  id: your-unique-key-id
+  pvk: '' # Will auto-generate if empty
+
+# Webhook signature secret
+webhookSignatureSecret:
+  secretKeyRef:
+    name: rafiki-secrets
+    key: SIGNATURE_SECRET
+
+# Service configuration
+service:
+  - name: service
+    type: ClusterIP
+    ports:
+      - port: 3000
+        targetPort: 3000
+        protocol: TCP
+        name: open-payments
+      - port: 3001
+        targetPort: 3001
+        protocol: TCP
+        name: admin
+      - port: 3002
+        targetPort: 3002
+        protocol: TCP
+        name: connector
+```
+
+#### Basic frontend service configuration
+
+Create `frontend-values.yaml`:
+
+```yaml
+# Minimal frontend service configuration
+nodeEnv: production
+logLevel: info
+
+# Service URLs
+serviceUrls:
+  GRAPHQL_URL: http://rafiki-backend-service.default:3001/graphql
+  OPEN_PAYMENTS_URL: https://your-domain.com/
+
+# Port configuration
+port: 3010
+
+# Service configuration
+service:
+  - name: service
+    type: ClusterIP
+    ports:
+      - port: 3010
+        targetPort: 3010
+        protocol: TCP
+        name: http
+
+# Kratos configuration (if using authentication)
+kratos:
+  enabled: false
+```
+
+### Create Kubernetes secrets
+
+Before installing the services, create the required secrets:
+
+```bash
+kubectl create secret generic rafiki-secrets \
+  --from-literal=DATABASE_URL="postgresql://username:password@rafiki-postgresql:5432/rafiki" \
+  --from-literal=REDIS_URL="redis://rafiki-redis:6379" \
+  --from-literal=IDENTITY_SERVER_SECRET="your-identity-server-secret" \
+  --from-literal=COOKIE_KEY="your-cookie-signing-key" \
+  --from-literal=STREAM_SECRET="your-stream-secret" \
+  --from-literal=SIGNATURE_SECRET="your-webhook-signature-secret"
+```
+
+### Install the services
+
+Install each Rafiki service using the appropriate values file:
+
+```bash
+# Install auth service
+helm install rafiki-auth interledger/rafiki-auth -f auth-values.yaml
+
+# Install backend service
+helm install rafiki-backend interledger/rafiki-backend -f backend-values.yaml
+
+# Install frontend service
+helm install rafiki-frontend interledger/rafiki-frontend -f frontend-values.yaml
+```
+
+If you want to install to a specific namespace:
+
+```bash
+kubectl create namespace rafiki
+
+helm install rafiki-auth interledger/rafiki-auth -f auth-values.yaml -n rafiki
+helm install rafiki-backend interledger/rafiki-backend -f backend-values.yaml -n rafiki
+helm install rafiki-frontend interledger/rafiki-frontend -f frontend-values.yaml -n rafiki
+```
+
+### Verify the deployment
+
+Check the status of your deployments:
+
+```bash
+# Check Helm releases
+helm list
+
+# Check running pods
 kubectl get pods
 
-// port forward
-kubectl port-forward rafiki-rafiki-frontend-YOUR-SEQUENCE 3010:3010
+# Check deployed services
+kubectl get services
+
+# Check logs for any issues
+kubectl logs -l app.kubernetes.io/name=rafiki-auth
+kubectl logs -l app.kubernetes.io/name=rafiki-backend
+kubectl logs -l app.kubernetes.io/name=rafiki-frontend
 ```
 
-Now, the Admin UI can be found on localhost:3010.
+## Configure environment variables
 
-:::caution
-You must update the environment variable values in the <LinkOut href='https://github.com/interledger/rafiki/blob/main/infrastructure/helm/rafiki/values.yaml'>values.yaml</LinkOut> file before you deploy to a production environment
+Each Rafiki service can be configured via environment variables through Helm values. Below are the complete environment variable configurations for each service:
+
+<details>
+<summary>Auth service</summary>
+
+The Rafiki `auth` service is responsible for handling Open Payments authorization and grant management. It implements the Open Payments authorization server specification and manages access tokens, grants, and interactions. The auth service connects to a PostgreSQL database to store grant-related data and uses Redis for session management.
+
+**Ports exposed:**
+
+- `3003` (admin) - Auth Admin API for managing grants and access tokens
+- `3006` (auth) - Open Payments authorization server endpoint
+- `3007` (introspection) - Access token introspection endpoint
+- `3009` (interaction) - User interaction endpoint for grant flows
+
+:::caution[Running Rafiki behind a proxy]
+If you plan to run your Rafiki instance behind a proxy, you must set the `trustProxy` variable to `true`
 :::
+
+<AuthEnv />
+</details>
+
+<details>
+<summary>Backend service</summary>
+
+The Rafiki `backend` service handles the core Open Payments functionality and business logic. It exposes the Open Payments resource server APIs for wallet addresses, incoming payments, outgoing payments, and quotes. The backend also includes an ILP connector for sending and receiving Interledger packets. It connects to PostgreSQL for storing Open Payments resources, Redis for caching, and optionally TigerBeetle for high-performance accounting.
+
+**Ports exposed:**
+
+- `3000` (openPayments) - Open Payments resource server API
+- `3001` (admin) - Backend Admin API and GraphQL endpoint
+- `3002` (connector) - ILP connector for sending and receiving packets
+- `3005` (autoPeering) - Auto-peering service (when enabled)
+
+:::note[TigerBeetle vs PostgreSQL for accounting]
+TigerBeetle is strongly recommended for production deployments due to its high-performance accounting capabilities. If you prefer to use PostgreSQL as the accounting database, set `useTigerbeetle` to `false`.
+:::
+
+<BackEnv />
+</details>
+
+<details>
+<summary>Frontend service</summary>
+
+The Rafiki `frontend` service provides an administrative web interface for managing your Rafiki instance. It offers a user-friendly dashboard for monitoring and managing wallet addresses, payments, peers, and other Open Payments resources. The frontend communicates with the Backend Admin API to perform administrative operations.
+
+**Ports exposed:**
+
+- `3010` (http) - Rafiki Admin web interface
+
+:::note[Authentication]
+The frontend can optionally integrate with Ory Kratos for user authentication. When authentication is disabled (`kratos.enabled: false`), the admin interface is accessible without login credentials.
+:::
+
+<FrontEnv />
+</details>
+
+## Configure ingress
+
+To expose Rafiki services outside the cluster, you'll need to configure ingress. Here's an example using NGINX Ingress Controller:
+
+### Install NGINX Ingress Controller
+
+If you don't already have an ingress controller installed:
+
+```bash
+# Add the ingress-nginx repository
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+
+# Install the ingress controller
+helm install nginx-ingress ingress-nginx/ingress-nginx \
+  --set controller.publishService.enabled=true
+```
+
+### Configure ingress in your values files
+
+Add ingress configuration to your service values files:
+
+```yaml
+# In backend-values.yaml
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: rafiki-backend.your-domain.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service:
+            name: rafiki-backend-service
+            port: 3000
+  tls:
+    - secretName: rafiki-backend-tls
+      hosts:
+        - rafiki-backend.your-domain.com
+
+# In auth-values.yaml
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: rafiki-auth.your-domain.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service:
+            name: rafiki-auth-service
+            port: 3006
+  tls:
+    - secretName: rafiki-auth-tls
+      hosts:
+        - rafiki-auth.your-domain.com
+```
+
+### Configure DNS
+
+Create DNS records pointing to your ingress controller's external IP:
+
+- `rafiki-backend.your-domain.com`
+- `rafiki-auth.your-domain.com`
+- `rafiki-frontend.your-domain.com`
+
+## Configure dependencies
+
+### PostgreSQL
+
+You can use an external PostgreSQL instance or deploy one using Helm:
+
+```bash
+# Add Bitnami repository
+helm repo add bitnami https://charts.bitnami.com/bitnami
+
+# Install PostgreSQL
+helm install rafiki-postgresql bitnami/postgresql \
+  --set auth.postgresPassword=your-secure-password \
+  --set auth.database=rafiki \
+  --set primary.persistence.size=20Gi
+```
+
+### Redis
+
+Deploy Redis for caching and session management:
+
+```bash
+# Install Redis
+helm install rafiki-redis bitnami/redis \
+  --set auth.enabled=false \
+  --set master.persistence.size=8Gi
+```
+
+### TigerBeetle (recommended)
+
+For high-performance accounting, deploy TigerBeetle:
+
+```bash
+# Add TigerBeetle repository
+helm repo add tigerbeetle https://tigerbeetle.github.io/helm-charts
+
+# Install TigerBeetle
+helm install rafiki-tigerbeetle tigerbeetle/tigerbeetle \
+  --set replicaCount=3 \
+  --set persistence.size=20Gi
+```
+
+## Upgrade Rafiki
+
+To upgrade your Rafiki services to newer versions:
+
+```bash
+# Update the Helm repository
+helm repo update
+
+# Upgrade each service
+helm upgrade rafiki-auth interledger/rafiki-auth -f auth-values.yaml
+helm upgrade rafiki-backend interledger/rafiki-backend -f backend-values.yaml
+helm upgrade rafiki-frontend interledger/rafiki-frontend -f frontend-values.yaml
+```
+
+## Uninstall Rafiki
+
+To uninstall Rafiki services:
+
+```bash
+helm uninstall rafiki-auth
+helm uninstall rafiki-backend
+helm uninstall rafiki-frontend
+
+# Optionally uninstall dependencies
+helm uninstall rafiki-postgresql
+helm uninstall rafiki-redis
+helm uninstall rafiki-tigerbeetle
+```
+
+:::caution[Persistent data]
+Uninstalling will not delete Persistent Volume Claims (PVCs) by default. To delete all data:
+
+```bash
+kubectl delete pvc -l app.kubernetes.io/instance=rafiki-postgresql
+kubectl delete pvc -l app.kubernetes.io/instance=rafiki-redis
+kubectl delete pvc -l app.kubernetes.io/instance=rafiki-tigerbeetle
+```
+
+:::
+
+## Troubleshooting
+
+### Check service health
+
+Verify that all services are running correctly:
+
+```bash
+# Check pod status
+kubectl get pods -l app.kubernetes.io/name=rafiki-auth
+kubectl get pods -l app.kubernetes.io/name=rafiki-backend
+kubectl get pods -l app.kubernetes.io/name=rafiki-frontend
+
+# Check service endpoints
+kubectl get endpoints
+
+# Check for events
+kubectl get events --sort-by=.metadata.creationTimestamp
+```
+
+### Common issues and solutions
+
+#### Database connection errors
+
+1. **Verify database connectivity:**
+
+   ```bash
+   kubectl logs -l app.kubernetes.io/name=rafiki-backend | grep -i database
+   ```
+
+2. **Check PostgreSQL status:**
+
+   ```bash
+   kubectl get pods -l app.kubernetes.io/name=postgresql
+   kubectl logs -l app.kubernetes.io/name=postgresql
+   ```
+
+3. **Test database connection:**
+   ```bash
+   kubectl run -it --rm debug --image=postgres:14 -- psql postgresql://username:password@rafiki-postgresql:5432/rafiki
+   ```
+
+#### Redis connection issues
+
+1. **Check Redis status:**
+
+   ```bash
+   kubectl get pods -l app.kubernetes.io/name=redis
+   kubectl logs -l app.kubernetes.io/name=redis
+   ```
+
+2. **Test Redis connectivity:**
+   ```bash
+   kubectl run -it --rm debug --image=redis:7 -- redis-cli -h rafiki-redis ping
+   ```
+
+#### Service discovery problems
+
+1. **Verify service names and ports:**
+
+   ```bash
+   kubectl get services
+   kubectl describe service rafiki-backend-service
+   ```
+
+2. **Check DNS resolution:**
+   ```bash
+   kubectl run -it --rm debug --image=busybox -- nslookup rafiki-backend-service
+   ```
+
+#### Authentication and authorization issues
+
+1. **Check auth service logs:**
+
+   ```bash
+   kubectl logs -l app.kubernetes.io/name=rafiki-auth
+   ```
+
+2. **Verify secrets are properly mounted:**
+
+   ```bash
+   kubectl describe pod -l app.kubernetes.io/name=rafiki-auth
+   ```
+
+3. **Test auth endpoints:**
+   ```bash
+   kubectl port-forward svc/rafiki-auth-service 3007:3007
+   curl http://localhost:3007/healthz
+   ```
+
+#### Ingress and networking issues
+
+1. **Check ingress controller status:**
+
+   ```bash
+   kubectl get pods -n ingress-nginx
+   kubectl logs -n ingress-nginx -l app.kubernetes.io/component=controller
+   ```
+
+2. **Verify ingress resources:**
+
+   ```bash
+   kubectl get ingress
+   kubectl describe ingress rafiki-backend-ingress
+   ```
+
+3. **Check TLS certificates:**
+   ```bash
+   kubectl get secrets
+   kubectl describe secret rafiki-backend-tls
+   ```
+
+### Resource and performance issues
+
+1. **Check resource usage:**
+
+   ```bash
+   kubectl top pods
+   kubectl top nodes
+   ```
+
+2. **Monitor pod metrics:**
+
+   ```bash
+   kubectl describe pod -l app.kubernetes.io/name=rafiki-backend
+   ```
+
+3. **Scale services if needed:**
+   ```bash
+   # Update replicaCount in values.yaml and upgrade
+   helm upgrade rafiki-backend interledger/rafiki-backend -f backend-values.yaml
+   ```
+
+## Production considerations
+
+### Security
+
+- **Use strong passwords**: Replace all default passwords with cryptographically secure values
+- **Enable TLS**: Configure HTTPS for all external communications
+- **Network policies**: Implement Kubernetes network policies to restrict pod-to-pod communication
+- **RBAC**: Use Kubernetes Role-Based Access Control to limit cluster access
+- **Secrets management**: Consider using external secret management solutions like HashiCorp Vault
+- **Image security**: Use specific image tags and scan images for vulnerabilities
+- **Pod security**: Configure pod security standards and security contexts
+
+### High availability
+
+- **Multi-replica deployments**: Run multiple replicas of critical services
+- **Pod disruption budgets**: Configure disruption budgets to maintain availability during updates
+- **Resource limits**: Set appropriate CPU and memory limits
+- **Health checks**: Configure proper readiness and liveness probes
+- **Load balancing**: Use multiple ingress controller replicas
+
+### Monitoring and observability
+
+- **Prometheus**: Deploy Prometheus for metrics collection
+- **Grafana**: Set up Grafana dashboards for visualization
+- **Logging**: Implement centralized logging with ELK stack or similar
+- **Alerting**: Configure alerting rules for critical issues
+- **Distributed tracing**: Consider implementing distributed tracing for request flow analysis
+
+### Backup and disaster recovery
+
+#### Database backups
+
+**PostgreSQL backup:**
+
+```bash
+# Create a backup job
+kubectl create job --from=cronjob/postgres-backup manual-backup-$(date +%Y%m%d-%H%M%S)
+
+# Manual backup
+kubectl exec -it rafiki-postgresql-0 -- pg_dump -U postgres rafiki > backup.sql
+```
+
+**TigerBeetle backup:**
+
+```bash
+# Create volume snapshots
+kubectl create -f - <<EOF
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshot
+metadata:
+  name: tigerbeetle-snapshot-$(date +%Y%m%d-%H%M%S)
+spec:
+  source:
+    persistentVolumeClaimName: tigerbeetle-data-0
+  volumeSnapshotClassName: your-snapshot-class
+EOF
+```
+
+### Performance optimization
+
+- **Resource allocation**: Right-size CPU and memory requests/limits based on actual usage
+- **Connection pooling**: Configure appropriate database connection pool sizes
+- **Caching**: Optimize Redis configuration for your workload
+- **TigerBeetle tuning**: Configure TigerBeetle cluster size based on expected transaction volume
+
+### Upgrade strategies
+
+- **Rolling updates**: Use rolling update strategies to maintain availability
+- **Blue-green deployments**: Consider blue-green deployments for zero-downtime upgrades
+- **Database migrations**: Plan for database schema migrations
+- **Backup before upgrade**: Always backup data before major upgrades
+- **Testing**: Test upgrades in staging environments first

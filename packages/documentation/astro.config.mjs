@@ -3,10 +3,11 @@ import starlight from '@astrojs/starlight'
 
 import remarkMath from 'remark-math'
 import rehypeMathjax from 'rehype-mathjax'
-import GraphQL from 'astro-graphql-plugin'
 import starlightLinksValidator from 'starlight-links-validator'
+import starlightFullViewMode from 'starlight-fullview-mode'
 import { rehypeHeadingIds } from '@astrojs/markdown-remark'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
+import starlightVersions from 'starlight-versions'
 
 // https://astro.build/config
 export default defineConfig({
@@ -43,7 +44,18 @@ export default defineConfig({
       },
       components: {
         Header: './src/components/Header.astro',
-        PageSidebar: './src/components/PageSidebar.astro'
+        PageSidebar: './src/components/PageSidebar.astro',
+        Footer: './src/components/Footer.astro'
+      },
+      defaultLocale: 'root',
+      locales: {
+        root: {
+          label: 'English',
+          lang: 'en'
+        },
+        es: {
+          label: 'Español'
+        }
       },
       head: [
         {
@@ -76,41 +88,75 @@ export default defineConfig({
       sidebar: [
         {
           label: 'Overview',
+          translations: {
+            es: 'Introducción'
+          },
           items: [
             {
               label: 'Introducing Rafiki',
+              translations: {
+                es: 'Sobre Rafiki'
+              },
               link: '/overview/overview'
             },
             {
               label: 'Concepts',
+              translations: {
+                es: 'Conceptos'
+              },
               collapsed: true,
               items: [
                 {
                   label: 'Account servicing entity',
+                  translations: {
+                    es: 'Servicio de Cuentas de Entidad (ASE)'
+                  },
                   link: '/overview/concepts/account-servicing-entity'
                 },
                 {
+                  label: 'Multi-tenancy',
+                  link: '/overview/concepts/multi-tenancy'
+                },
+                {
                   label: 'Accounting',
+                  translations: {
+                    es: 'Transacciones en Rafiki'
+                  },
                   link: '/overview/concepts/accounting'
                 },
                 {
                   label: 'Clearing and settlement',
+                  translations: {
+                    es: 'Compensación y liquidación'
+                  },
                   link: '/overview/concepts/clearing-settlement'
                 },
                 {
                   label: 'Interledger',
+                  translations: {
+                    es: 'Interledger'
+                  },
                   link: '/overview/concepts/interledger'
                 },
                 {
                   label: 'Open Payments',
+                  translations: {
+                    es: 'Pagos Abiertos'
+                  },
                   link: '/overview/concepts/open-payments'
                 },
                 {
                   label: 'Payment pointers and wallet addresses',
+                  translations: {
+                    es: 'Apuntadores de pago y direcciones de billeteras'
+                  },
                   link: '/overview/concepts/payment-pointers'
                 },
                 {
                   label: 'Telemetry',
+                  translations: {
+                    es: 'Telemetría'
+                  },
                   link: '/overview/concepts/telemetry'
                 }
               ]
@@ -142,6 +188,10 @@ export default defineConfig({
                 {
                   label: 'Overview and checklist',
                   link: '/integration/requirements/overview'
+                },
+                {
+                  label: 'Tenants',
+                  link: '/integration/requirements/tenants'
                 },
                 {
                   label: 'Assets',
@@ -267,16 +317,20 @@ export default defineConfig({
             },
             {
               label: 'Backend Admin API',
-              collapsed: true,
-              autogenerate: {
-                directory: 'apis/graphql/backend'
+              link: '/apis/graphql/backend',
+              attrs: {
+                target: '_blank',
+                rel: 'noopener noreferrer',
+                'data-icon': 'external'
               }
             },
             {
               label: 'Auth Admin API',
-              collapsed: true,
-              autogenerate: {
-                directory: 'apis/graphql/auth'
+              link: '/apis/graphql/auth',
+              attrs: {
+                target: '_blank',
+                rel: 'noopener noreferrer',
+                'data-icon': 'external'
               }
             }
           ]
@@ -313,20 +367,25 @@ export default defineConfig({
         }
       ],
       plugins: [
+        starlightVersions({
+          current: {
+            label: 'v2-beta'
+          },
+          versions: [{ slug: 'v1-beta' }]
+        }),
         starlightLinksValidator({
-          errorOnLocalLinks: false
-        })
+          exclude: [
+            '**/apis/graphql/auth',
+            '**/apis/graphql/backend',
+            '**/apis/graphql/auth/*',
+            '**/apis/graphql/backend/*'
+          ],
+          errorOnLocalLinks: false,
+          errorOnFallbackPages: false,
+          errorOnInvalidHashes: false
+        }),
+        starlightFullViewMode()
       ]
-    }),
-    GraphQL({
-      schema: '../backend/src/graphql/schema.graphql',
-      output: './src/content/docs/apis/graphql/backend/',
-      linkPrefix: '/apis/graphql/backend/'
-    }),
-    GraphQL({
-      schema: '../auth/src/graphql/schema.graphql',
-      output: './src/content/docs/apis/graphql/auth/',
-      linkPrefix: '/apis/graphql/auth/'
     })
   ],
   server: {

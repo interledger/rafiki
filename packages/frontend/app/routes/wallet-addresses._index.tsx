@@ -20,7 +20,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     throw json(null, { status: 400, statusText: 'Invalid pagination.' })
   }
 
-  const walletAddresses = await listWalletAddresses({
+  const walletAddresses = await listWalletAddresses(request, {
     ...pagination.data
   })
 
@@ -63,18 +63,18 @@ export default function WalletAddressesPage() {
           <Table.Head columns={['Wallet address', 'Public name', 'Status']} />
           <Table.Body>
             {walletAddresses.edges.length ? (
-              walletAddresses.edges.map((pp) => (
+              walletAddresses.edges.map((wa) => (
                 <Table.Row
-                  key={pp.node.id}
+                  key={wa.node.id}
                   className='cursor-pointer'
-                  onClick={() => navigate(`/wallet-addresses/${pp.node.id}`)}
+                  onClick={() => navigate(`/wallet-addresses/${wa.node.id}`)}
                 >
-                  <Table.Cell>{pp.node.url}</Table.Cell>
+                  <Table.Cell>{wa.node.address}</Table.Cell>
                   <Table.Cell>
                     <div className='flex flex-col'>
-                      {pp.node.publicName ? (
+                      {wa.node.publicName ? (
                         <span className='font-medium'>
-                          {pp.node.publicName}
+                          {wa.node.publicName}
                         </span>
                       ) : (
                         <span className='text-tealish/80'>No public name</span>
@@ -83,9 +83,9 @@ export default function WalletAddressesPage() {
                   </Table.Cell>
                   <Table.Cell>
                     <Badge
-                      color={badgeColorByWalletAddressStatus[pp.node.status]}
+                      color={badgeColorByWalletAddressStatus[wa.node.status]}
                     >
-                      {pp.node.status}
+                      {wa.node.status}
                     </Badge>
                   </Table.Cell>
                 </Table.Row>

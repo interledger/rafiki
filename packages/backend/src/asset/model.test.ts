@@ -1,7 +1,7 @@
 import { Knex } from 'knex'
 
 import { AssetService } from './service'
-import { Config } from '../config/app'
+import { Config, IAppConfig } from '../config/app'
 import { createTestApp, TestContainer } from '../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
@@ -25,7 +25,7 @@ describe('Models', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -35,9 +35,12 @@ describe('Models', (): void => {
   describe('Asset Model', (): void => {
     describe('onDebit', (): void => {
       let asset: Asset
+      let config: IAppConfig
       beforeEach(async (): Promise<void> => {
+        config = await deps.use('config')
         const options = {
           ...randomAsset(),
+          tenantId: Config.operatorTenantId,
           liquidityThreshold: BigInt(100)
         }
         const assetOrError = await assetService.create(options)
@@ -53,13 +56,13 @@ describe('Models', (): void => {
       `(
         'creates webhook event if balance=$balance <= liquidityThreshold',
         async ({ balance }): Promise<void> => {
-          await asset.onDebit({ balance })
+          await asset.onDebit({ balance }, config)
           const event = (
-            await AssetEvent.query(knex).where(
-              'type',
-              AssetEventType.LiquidityLow
-            )
+            await AssetEvent.query(knex)
+              .where('type', AssetEventType.LiquidityLow)
+              .withGraphFetched('webhooks')
           )[0]
+          expect(event.webhooks).toHaveLength(1)
           expect(event).toMatchObject({
             type: AssetEventType.LiquidityLow,
             data: {
@@ -71,12 +74,21 @@ describe('Models', (): void => {
               },
               liquidityThreshold: asset.liquidityThreshold?.toString(),
               balance: balance.toString()
-            }
+            },
+            webhooks: expect.arrayContaining([
+              expect.objectContaining({
+                id: expect.any(String),
+                eventId: event.id,
+                recipientTenantId: Config.operatorTenantId,
+                processAt: expect.any(Date),
+                attempts: 0
+              })
+            ])
           })
         }
       )
       test('does not create webhook event if balance > liquidityThreshold', async (): Promise<void> => {
-        await asset.onDebit({ balance: BigInt(110) })
+        await asset.onDebit({ balance: BigInt(110) }, config)
         await expect(
           AssetEvent.query(knex).where('type', AssetEventType.LiquidityLow)
         ).resolves.toEqual([])

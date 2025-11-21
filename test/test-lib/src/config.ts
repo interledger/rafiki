@@ -13,6 +13,9 @@ export type TestConfig = Config & {
   keyId: string
   signatureSecret: string
   signatureVersion: string
+  operatorTenantId: string
+  cardServiceUrl?: string
+  posServiceUrl?: string
 }
 
 type EnvConfig = {
@@ -26,7 +29,14 @@ type EnvConfig = {
   IDP_SECRET: string
   SIGNATURE_SECRET: string
   SIGNATURE_VERSION: string
+  OPERATOR_TENANT_ID: string
+  IS_TENANT: string
+  AUTH_IDP_SERVICE_DOMAIN: string
+  INTERACTION_RETURN_URL: string
+  CARD_SERVICE_URL?: string
+  POS_SERVICE_URL?: string
 }
+
 const REQUIRED_KEYS: (keyof EnvConfig)[] = [
   'OPEN_PAYMENTS_URL',
   'AUTH_SERVER_DOMAIN',
@@ -35,7 +45,10 @@ const REQUIRED_KEYS: (keyof EnvConfig)[] = [
   'WALLET_ADDRESS_URL',
   'GRAPHQL_URL',
   'KEY_ID',
-  'IDP_SECRET'
+  'IDP_SECRET',
+  'SIGNATURE_SECRET',
+  'SIGNATURE_VERSION',
+  'OPERATOR_TENANT_ID'
 ]
 
 const loadEnv = (filePath: string): EnvConfig => {
@@ -75,7 +88,13 @@ const createConfig = (name: string): TestConfig => {
     keyId: env.KEY_ID,
     idpSecret: env.IDP_SECRET,
     signatureSecret: env.SIGNATURE_SECRET,
-    signatureVersion: env.SIGNATURE_VERSION
+    signatureVersion: env.SIGNATURE_VERSION,
+    operatorTenantId: env.OPERATOR_TENANT_ID,
+    isTenant: env.IS_TENANT === 'true',
+    authIdpServiceDomain: env.AUTH_IDP_SERVICE_DOMAIN,
+    interactionReturnUrl: env.INTERACTION_RETURN_URL,
+    cardServiceUrl: env.CARD_SERVICE_URL,
+    posServiceUrl: env.POS_SERVICE_URL
   }
 }
 

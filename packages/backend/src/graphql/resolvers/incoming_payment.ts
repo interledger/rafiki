@@ -3,27 +3,31 @@ import {
   WalletAddressResolvers,
   MutationResolvers,
   IncomingPayment as SchemaIncomingPayment,
-  QueryResolvers
+  QueryResolvers,
+  IncomingPaymentFilter
 } from '../generated/graphql'
 import { IncomingPayment } from '../../open_payments/payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/types'
 import {
   isIncomingPaymentError,
   errorToCode,
   errorToMessage
 } from '../../open_payments/payment/incoming/errors'
-import { ApolloContext } from '../../app'
+import { ForTenantIdContext, TenantedApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { GraphQLError } from 'graphql'
 import { GraphQLErrorCode } from '../errors'
+import { IAppConfig } from '../../config/app'
 
-export const getIncomingPayment: QueryResolvers<ApolloContext>['incomingPayment'] =
+export const getIncomingPayment: QueryResolvers<TenantedApolloContext>['incomingPayment'] =
   async (parent, args, ctx): Promise<ResolversTypes['IncomingPayment']> => {
     const incomingPaymentService = await ctx.container.use(
       'incomingPaymentService'
     )
     const payment = await incomingPaymentService.get({
-      id: args.id
+      id: args.id,
+      tenantId: ctx.isOperator ? undefined : ctx.tenant.id
     })
     if (!payment) {
       throw new GraphQLError('payment does not exist', {
@@ -32,10 +36,55 @@ export const getIncomingPayment: QueryResolvers<ApolloContext>['incomingPayment'
         }
       })
     }
-    return paymentToGraphql(payment)
+    const config = await ctx.container.use('config')
+    return paymentToGraphql(payment, config)
   }
 
-export const getWalletAddressIncomingPayments: WalletAddressResolvers<ApolloContext>['incomingPayments'] =
+export const getIncomingPayments: QueryResolvers<TenantedApolloContext>['incomingPayments'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['IncomingPaymentConnection']> => {
+    const incomingPaymentService = await ctx.container.use(
+      'incomingPaymentService'
+    )
+    const { tenantId, filter, sortOrder, ...pagination } = args
+    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+    const getPageFn = (
+      pagination_: Pagination,
+      sortOrder_?: SortOrder,
+      filter_?: IncomingPaymentFilter
+    ) =>
+      incomingPaymentService.getPage({
+        tenantId: ctx.isOperator ? tenantId : ctx.tenant.id,
+        pagination: pagination_,
+        filter: filter_,
+        sortOrder: sortOrder_
+      })
+    const incomingPayments = await getPageFn(pagination, order, filter)
+    const pageInfo = await getPageInfo({
+      getPage: (
+        pagination_: Pagination,
+        sortOrder_?: SortOrder,
+        filter_?: IncomingPaymentFilter
+      ) => getPageFn(pagination_, sortOrder_, filter_),
+      page: incomingPayments,
+      sortOrder: order
+    })
+
+    const config = await ctx.container.use('config')
+
+    return {
+      pageInfo,
+      edges: incomingPayments.map((incomingPayment: IncomingPayment) => ({
+        cursor: incomingPayment.id,
+        node: paymentToGraphql(incomingPayment, config)
+      }))
+    }
+  }
+
+export const getWalletAddressIncomingPayments: WalletAddressResolvers<TenantedApolloContext>['incomingPayments'] =
   async (
     parent,
     args,
@@ -51,35 +100,40 @@ export const getWalletAddressIncomingPayments: WalletAddressResolvers<ApolloCont
     const incomingPaymentService = await ctx.container.use(
       'incomingPaymentService'
     )
-    const { sortOrder, ...pagination } = args
+    const { sortOrder, filter, ...pagination } = args
     const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
-    const incomingPayments = await incomingPaymentService.getWalletAddressPage({
+    const incomingPayments = await incomingPaymentService.getPage({
       walletAddressId: parent.id,
       pagination,
-      sortOrder: order
+      sortOrder: order,
+      tenantId: ctx.isOperator ? undefined : ctx.tenant.id,
+      filter
     })
     const pageInfo = await getPageInfo({
       getPage: (pagination: Pagination, sortOrder?: SortOrder) =>
-        incomingPaymentService.getWalletAddressPage({
+        incomingPaymentService.getPage({
           walletAddressId: parent.id as string,
           pagination,
-          sortOrder
+          sortOrder,
+          tenantId: ctx.tenant.id,
+          filter
         }),
       page: incomingPayments,
       sortOrder: order
     })
 
+    const config = await ctx.container.use('config')
     return {
       pageInfo,
       edges: incomingPayments.map((incomingPayment: IncomingPayment) => {
         return {
           cursor: incomingPayment.id,
-          node: paymentToGraphql(incomingPayment)
+          node: paymentToGraphql(incomingPayment, config)
         }
       })
     }
   }
-export const createIncomingPayment: MutationResolvers<ApolloContext>['createIncomingPayment'] =
+export const createIncomingPayment: MutationResolvers<ForTenantIdContext>['createIncomingPayment'] =
   async (
     parent,
     args,
@@ -88,14 +142,34 @@ export const createIncomingPayment: MutationResolvers<ApolloContext>['createInco
     const incomingPaymentService = await ctx.container.use(
       'incomingPaymentService'
     )
+
+    const tenantId = ctx.forTenantId
+    if (!tenantId) {
+      throw new Error('Missing tenant id to create incoming payment')
+    }
+
+    if (!ctx.isOperator && args.input.isCardPayment) {
+      ctx.logger.warn(
+        { input: args.input, tenant: ctx.tenant },
+        'non-operator cannot create card payment'
+      )
+    }
+
     const incomingPaymentOrError = await incomingPaymentService.create({
       walletAddressId: args.input.walletAddressId,
       expiresAt: !args.input.expiresAt
         ? undefined
         : new Date(args.input.expiresAt),
       incomingAmount: args.input.incomingAmount,
-      metadata: args.input.metadata
+      metadata: args.input.metadata,
+      tenantId,
+      initiationReason:
+        ctx.isOperator && args.input.isCardPayment
+          ? IncomingPaymentInitiationReason.Card
+          : IncomingPaymentInitiationReason.Admin,
+      senderWalletAddress: args.input.senderWalletAddress
     })
+    const config = await ctx.container.use('config')
     if (isIncomingPaymentError(incomingPaymentOrError)) {
       throw new GraphQLError(errorToMessage[incomingPaymentOrError], {
         extensions: {
@@ -104,11 +178,11 @@ export const createIncomingPayment: MutationResolvers<ApolloContext>['createInco
       })
     } else
       return {
-        payment: paymentToGraphql(incomingPaymentOrError)
+        payment: paymentToGraphql(incomingPaymentOrError, config)
       }
   }
 
-export const updateIncomingPayment: MutationResolvers<ApolloContext>['updateIncomingPayment'] =
+export const updateIncomingPayment: MutationResolvers<TenantedApolloContext>['updateIncomingPayment'] =
   async (
     parent,
     args,
@@ -117,9 +191,11 @@ export const updateIncomingPayment: MutationResolvers<ApolloContext>['updateInco
     const incomingPaymentService = await ctx.container.use(
       'incomingPaymentService'
     )
-    const incomingPaymentOrError = await incomingPaymentService.update(
-      args.input
-    )
+    const incomingPaymentOrError = await incomingPaymentService.update({
+      ...args.input,
+      tenantId: ctx.tenant.id
+    })
+    const config = await ctx.container.use('config')
     if (isIncomingPaymentError(incomingPaymentOrError)) {
       throw new GraphQLError(errorToMessage[incomingPaymentOrError], {
         extensions: {
@@ -128,11 +204,11 @@ export const updateIncomingPayment: MutationResolvers<ApolloContext>['updateInco
       })
     } else
       return {
-        payment: paymentToGraphql(incomingPaymentOrError)
+        payment: paymentToGraphql(incomingPaymentOrError, config)
       }
   }
 
-export const approveIncomingPayment: MutationResolvers<ApolloContext>['approveIncomingPayment'] =
+export const approveIncomingPayment: MutationResolvers<TenantedApolloContext>['approveIncomingPayment'] =
   async (
     parent,
     args,
@@ -143,7 +219,8 @@ export const approveIncomingPayment: MutationResolvers<ApolloContext>['approveIn
     )
 
     const incomingPaymentOrError = await incomingPaymentService.approve(
-      args.input.id
+      args.input.id,
+      ctx.tenant.id
     )
 
     if (isIncomingPaymentError(incomingPaymentOrError)) {
@@ -154,12 +231,13 @@ export const approveIncomingPayment: MutationResolvers<ApolloContext>['approveIn
       })
     }
 
+    const config = await ctx.container.use('config')
     return {
-      payment: paymentToGraphql(incomingPaymentOrError)
+      payment: paymentToGraphql(incomingPaymentOrError, config)
     }
   }
 
-export const cancelIncomingPayment: MutationResolvers<ApolloContext>['cancelIncomingPayment'] =
+export const cancelIncomingPayment: MutationResolvers<TenantedApolloContext>['cancelIncomingPayment'] =
   async (
     parent,
     args,
@@ -170,7 +248,8 @@ export const cancelIncomingPayment: MutationResolvers<ApolloContext>['cancelInco
     )
 
     const incomingPaymentOrError = await incomingPaymentService.cancel(
-      args.input.id
+      args.input.id,
+      ctx.tenant.id
     )
 
     if (isIncomingPaymentError(incomingPaymentOrError)) {
@@ -181,16 +260,19 @@ export const cancelIncomingPayment: MutationResolvers<ApolloContext>['cancelInco
       })
     }
 
+    const config = await ctx.container.use('config')
     return {
-      payment: paymentToGraphql(incomingPaymentOrError)
+      payment: paymentToGraphql(incomingPaymentOrError, config)
     }
   }
 
 export function paymentToGraphql(
-  payment: IncomingPayment
+  payment: IncomingPayment,
+  config: IAppConfig
 ): SchemaIncomingPayment {
   return {
     id: payment.id,
+    url: payment.getUrl(config.openPaymentsUrl),
     walletAddressId: payment.walletAddressId,
     client: payment.client,
     state: payment.state,
@@ -198,6 +280,8 @@ export function paymentToGraphql(
     incomingAmount: payment.incomingAmount,
     receivedAmount: payment.receivedAmount,
     metadata: payment.metadata,
-    createdAt: new Date(+payment.createdAt).toISOString()
+    createdAt: new Date(+payment.createdAt).toISOString(),
+    senderWalletAddress: payment.senderWalletAddress,
+    tenantId: payment.tenantId
   }
 }

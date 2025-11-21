@@ -58,11 +58,7 @@ script:pre-request {
   const randomInt = Math.floor(Math.random() * (1001));
   
   const initialRequest = bru.getEnvVar("initialWalletAddressRequest");
-  
-  const postRequest = {
-    method: 'post',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
+  const postRequestBody = {
       query: initialRequest.body.query,
       variables: {
         "input": {
@@ -71,7 +67,17 @@ script:pre-request {
           "publicName": "Simon"
       }
       }
-    })
+    }
+  
+  const signature = scripts.generateBackendApiSignature(postRequestBody)
+  const postRequest = {
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json',
+      'tenant-id': bru.getEnvVar('senderTenantId'),
+      'signature': signature
+    },
+    body: JSON.stringify(postRequestBody)
   };
   
   const response = await fetch(`${initialRequest.url}`, postRequest);

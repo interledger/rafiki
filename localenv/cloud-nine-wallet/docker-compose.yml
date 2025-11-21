@@ -1,5 +1,35 @@
 name: c9
 services:
+  cloud-nine-wallet-card-service:
+    hostname: cloud-nine-wallet-card-service
+    image: rafiki-card-service
+    build:
+      context: ../..
+      dockerfile: ./packages/card-service/Dockerfile.dev
+    restart: always
+    networks:
+      - rafiki
+    ports:
+      - '9234:9229'
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      INSTANCE_NAME: CLOUD-NINE
+      TRUST_PROXY: ${TRUST_PROXY}
+      LOG_LEVEL: debug
+      CARD_SERVICE_PORT: 3007
+      GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
+      TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
+      TENANT_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      TENANT_SIGNATURE_VERSION: 1
+    depends_on:
+      - shared-database
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:3007/healthz"]
+      start_period: 60s
+      start_interval: 5s
+      interval: 30s
+      retries: 1
+      timeout: 3s
   cloud-nine-mock-ase:
     hostname: cloud-nine-wallet
     image: rafiki-mock-ase
@@ -25,6 +55,8 @@ services:
       IDP_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
       DISPLAY_NAME: Cloud Nine Wallet
       DISPLAY_ICON: wallet-icon.svg
+      OPERATOR_TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
+      FRONTEND_PORT: 3010
     volumes:
       - ../cloud-nine-wallet/seed.yml:/workspace/seed.yml
       - ../cloud-nine-wallet/private-key.pem:/workspace/private-key.pem
@@ -65,10 +97,11 @@ services:
       TIGERBEETLE_REPLICA_ADDRESSES: ${TIGERBEETLE_REPLICA_ADDRESSES-''}
       AUTH_SERVER_GRANT_URL: ${CLOUD_NINE_AUTH_SERVER_DOMAIN:-http://cloud-nine-wallet-auth:3006}
       AUTH_SERVER_INTROSPECTION_URL: http://cloud-nine-wallet-auth:3007
+      AUTH_SERVICE_API_URL: 'http://cloud-nine-wallet-auth:3011'
       ILP_ADDRESS: ${ILP_ADDRESS:-test.cloud-nine-wallet}
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
-      API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
-      OPEN_PAYMENTS_URL: ${CLOUD_NINE_OPEN_PAYMENTS_URL:-http://cloud-nine-wallet-backend}
+      ADMIN_API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      OPEN_PAYMENTS_URL: ${CLOUD_NINE_OPEN_PAYMENTS_URL:-https://cloud-nine-wallet-backend}
       WEBHOOK_URL: http://cloud-nine-wallet/webhooks
       EXCHANGE_RATES_URL: http://cloud-nine-wallet/rates
       REDIS_URL: redis://shared-redis:6379/0
@@ -76,6 +109,9 @@ services:
       ILP_CONNECTOR_URL: ${CLOUD_NINE_CONNECTOR_URL:-http://cloud-nine-wallet-backend:3002}
       ENABLE_TELEMETRY: true
       KEY_ID: 7097F83B-CB84-469E-96C6-2141C72E22C0
+      OPERATOR_TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
+      CARD_SERVICE_URL: 'http://cloud-nine-wallet-card-service:3007'
+      CARD_WEBHOOK_SERVICE_URL: 'http://cloud-nine-wallet-card-service:3007/webhook'
     depends_on:
       - shared-database
       - shared-redis
@@ -105,6 +141,7 @@ services:
       - '3006:3006'
       - "9230:9229"
       - '3009:3009'
+      - '3011:3011'
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       TRUST_PROXY: ${TRUST_PROXY}
@@ -114,7 +151,9 @@ services:
       IDENTITY_SERVER_URL: http://localhost:3030/mock-idp/
       IDENTITY_SERVER_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
       COOKIE_KEY: 42397d1f371dd4b8b7d0308a689a57c882effd4ea909d792302542af47e2cd37
-      ADMIN_API_SECRET: rPoZpe9tVyBNCigm05QDco7WLcYa0xMao7lO5KG1XG4=
+      ADMIN_API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      OPERATOR_TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
+      SERVICE_API_PORT: 3011
     depends_on:
       - shared-database
       - shared-redis
@@ -159,9 +198,8 @@ services:
       GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
       OPEN_PAYMENTS_URL: https://cloud-nine-wallet-backend/
       ENABLE_INSECURE_MESSAGE_COOKIE: true
-      AUTH_ENABLED: false      
+      AUTH_ENABLED: false
       SIGNATURE_VERSION: 1
-      SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
     depends_on:
       - cloud-nine-backend
 
