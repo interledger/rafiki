@@ -691,6 +691,7 @@ describe('OutgoingPaymentService', (): void => {
 
       test('should not create spent amounts record when cancelling payment without grant', async (): Promise<void> => {
         const payment = await createOutgoingPayment(deps, {
+          tenantId,
           walletAddressId,
           client,
           receiver,
@@ -704,6 +705,7 @@ describe('OutgoingPaymentService', (): void => {
         })
 
         const cancelResult = await outgoingPaymentService.cancel({
+          tenantId,
           id: payment.id
         })
 
@@ -740,6 +742,7 @@ describe('OutgoingPaymentService', (): void => {
 
         // Create first payment
         const firstPayment = await createOutgoingPayment(deps, {
+          tenantId,
           walletAddressId,
           client,
           receiver,
@@ -758,6 +761,7 @@ describe('OutgoingPaymentService', (): void => {
         // Create second payment
         const secondPaymentAmount = BigInt(200)
         const secondPayment = await createOutgoingPayment(deps, {
+          tenantId,
           walletAddressId,
           client,
           receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
@@ -792,6 +796,7 @@ describe('OutgoingPaymentService', (): void => {
 
         // Cancel the second payment
         const cancelResult = await outgoingPaymentService.cancel({
+          tenantId,
           id: secondPayment.id,
           reason: 'Testing interval cancellation'
         })
@@ -1687,6 +1692,7 @@ describe('OutgoingPaymentService', (): void => {
         const newPaymentAmount = BigInt(200)
 
         await createOutgoingPayment(deps, {
+          tenantId,
           walletAddressId,
           client,
           receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
@@ -1700,6 +1706,7 @@ describe('OutgoingPaymentService', (): void => {
           method: 'ilp'
         })
         await createOutgoingPayment(deps, {
+          tenantId,
           walletAddressId,
           client,
           receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
@@ -1720,6 +1727,7 @@ describe('OutgoingPaymentService', (): void => {
           .delete()
 
         const quote = await createQuote(deps, {
+          tenantId,
           walletAddressId,
           receiver,
           debitAmount: {
@@ -1730,6 +1738,7 @@ describe('OutgoingPaymentService', (): void => {
           method: 'ilp'
         })
         const payment = await outgoingPaymentService.create({
+          tenantId,
           walletAddressId,
           client,
           quoteId: quote.id,
@@ -1779,6 +1788,7 @@ describe('OutgoingPaymentService', (): void => {
 
         // legacy payment in interval
         await createOutgoingPayment(deps, {
+          tenantId,
           walletAddressId,
           client,
           receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
@@ -1792,6 +1802,7 @@ describe('OutgoingPaymentService', (): void => {
           method: 'ilp'
         })
         const legacyPaymentBeforeInterval = await createOutgoingPayment(deps, {
+          tenantId,
           walletAddressId,
           client,
           receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
@@ -1818,6 +1829,7 @@ describe('OutgoingPaymentService', (): void => {
           .delete()
 
         const quote = await createQuote(deps, {
+          tenantId,
           walletAddressId,
           receiver,
           debitAmount: {
@@ -1828,6 +1840,7 @@ describe('OutgoingPaymentService', (): void => {
           method: 'ilp'
         })
         const payment = await outgoingPaymentService.create({
+          tenantId,
           walletAddressId,
           client,
           quoteId: quote.id,
@@ -1880,6 +1893,7 @@ describe('OutgoingPaymentService', (): void => {
 
         // successful payment
         await createOutgoingPayment(deps, {
+          tenantId,
           walletAddressId,
           client,
           receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
@@ -1894,6 +1908,7 @@ describe('OutgoingPaymentService', (): void => {
         })
 
         const failedPayment = await createOutgoingPayment(deps, {
+          tenantId,
           walletAddressId,
           client,
           receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
@@ -1921,6 +1936,7 @@ describe('OutgoingPaymentService', (): void => {
           .delete()
 
         const quote = await createQuote(deps, {
+          tenantId,
           walletAddressId,
           receiver,
           debitAmount: {
@@ -1932,6 +1948,7 @@ describe('OutgoingPaymentService', (): void => {
         })
 
         const payment = await outgoingPaymentService.create({
+          tenantId,
           walletAddressId,
           client,
           quoteId: quote.id,
@@ -1965,6 +1982,7 @@ describe('OutgoingPaymentService', (): void => {
         }
 
         const failedPayment = await createOutgoingPayment(deps, {
+          tenantId,
           walletAddressId,
           client,
           receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
@@ -1992,6 +2010,7 @@ describe('OutgoingPaymentService', (): void => {
           .delete()
 
         const quote = await createQuote(deps, {
+          tenantId,
           walletAddressId,
           receiver,
           debitAmount: {
@@ -2003,6 +2022,7 @@ describe('OutgoingPaymentService', (): void => {
         })
 
         const payment = await outgoingPaymentService.create({
+          tenantId,
           walletAddressId,
           client,
           quoteId: quote.id,
