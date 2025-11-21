@@ -13,3 +13,11 @@ get {
 params:query {
   receiverWalletAddress: https://happy-life-bank-backend/accounts/pfry
 }
+
+script:post-response {
+  const body = res.getBody();
+  
+  if (body?.result) {
+    bru.setEnvVar("refundIncomingPaymentId", body.result[0].id);
+  }
+}
