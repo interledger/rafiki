@@ -591,6 +591,37 @@ describe('Receiver Service', (): void => {
           isLocal: true
         })
       })
+
+      test('returns error when incoming payment has no wallet address', async () => {
+        const walletAddress = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
+          mockServerPort: Config.openPaymentsPort
+        })
+        const incomingPayment = await createIncomingPayment(deps, {
+          walletAddressId: walletAddress.id,
+          incomingAmount: {
+            value: BigInt(5),
+            assetCode: walletAddress.asset.code,
+            assetScale: walletAddress.asset.scale
+          },
+          tenantId: Config.operatorTenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
+        })
+
+        jest
+          .spyOn(paymentMethodProviderService, 'getPaymentMethods')
+          .mockResolvedValueOnce([])
+
+        delete incomingPayment.walletAddress
+        jest
+          .spyOn(incomingPaymentService, 'complete')
+          .mockResolvedValueOnce(incomingPayment)
+        await expect(
+          receiverService.complete(
+            incomingPayment.getUrl(config.openPaymentsUrl)
+          )
+        ).resolves.toEqual(IncomingPaymentError.UnknownWalletAddress)
+      })
     })
   })
 })
