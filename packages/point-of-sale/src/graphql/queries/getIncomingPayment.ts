@@ -4,6 +4,7 @@ export const GET_INCOMING_PAYMENT = gql`
   query GetIncomingPaymentSenderAndAmount($id: String!) {
     incomingPayment(id: $id) {
       id
+      url
       senderWalletAddress
       incomingAmount {
         value

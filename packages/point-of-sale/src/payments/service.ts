@@ -224,7 +224,7 @@ async function refundIncomingPayment(
       input: {
         walletAddressUrl: incomingPayment.senderWalletAddress,
         metadata: {
-          incomingPaymentToRefund: incomingPayment.id
+          incomingPaymentToRefund: incomingPayment.url
         }
       }
     }

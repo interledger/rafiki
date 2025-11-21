@@ -3185,7 +3185,7 @@ export type GetIncomingPaymentSenderAndAmountVariables = Exact<{
 }>;
 
 
-export type GetIncomingPaymentSenderAndAmount = { __typename?: 'Query', incomingPayment?: { __typename?: 'IncomingPayment', id: string, senderWalletAddress?: string | null, incomingAmount?: { __typename?: 'Amount', value: bigint, assetCode: string, assetScale: number } | null } | null };
+export type GetIncomingPaymentSenderAndAmount = { __typename?: 'Query', incomingPayment?: { __typename?: 'IncomingPayment', id: string, url: string, senderWalletAddress?: string | null, incomingAmount?: { __typename?: 'Amount', value: bigint, assetCode: string, assetScale: number } | null } | null };
 
 export type GetWalletAddressVariables = Exact<{
   url: Scalars['String']['input'];
