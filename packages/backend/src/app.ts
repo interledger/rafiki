@@ -122,11 +122,14 @@ export type AppRequest<ParamsT extends string = string> = Omit<
   params: Record<ParamsT, string>
 }
 
-export interface WalletAddressUrlContext extends AppContext {
-  walletAddressUrl: string
+export interface IntrospectionContext extends AppContext {
   grant?: Grant
   client?: string
   accessAction?: AccessAction
+}
+
+export interface WalletAddressUrlContext extends IntrospectionContext {
+  walletAddressUrl: string
 }
 
 export interface WalletAddressContext extends WalletAddressUrlContext {
@@ -631,6 +634,19 @@ export class App {
       httpsigMiddleware,
       getWalletAddressForSubresource,
       outgoingPaymentRoutes.get
+    )
+
+    // GET /outgoing-payment-grant
+    // Get grant spent amounts (scoped to interval, if any) from grant
+    // with outgoing payment create access
+    router.get(
+      '/outgoing-payment-grant',
+      createTokenIntrospectionMiddleware<IntrospectionContext>({
+        // Expects token used for outgoing payment payment creation
+        requestType: AccessType.OutgoingPayment,
+        requestAction: RequestAction.Create
+      }),
+      outgoingPaymentRoutes.getGrantSpentAmounts
     )
 
     // GET /quotes/{id}

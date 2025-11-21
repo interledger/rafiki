@@ -7,6 +7,7 @@ import { Limits, parseLimits } from '../payment/outgoing/limits'
 import {
   HttpSigContext,
   HttpSigWithAuthenticatedStatusContext,
+  IntrospectionContext,
   WalletAddressUrlContext
 } from '../../app'
 import {
@@ -64,7 +65,9 @@ function toOpenPaymentsAccess(
   } as AccessItem
 }
 
-export function createTokenIntrospectionMiddleware({
+export function createTokenIntrospectionMiddleware<
+  T extends IntrospectionContext = WalletAddressUrlContext
+>({
   requestType,
   requestAction,
   canSkipAuthValidation = false
@@ -73,10 +76,12 @@ export function createTokenIntrospectionMiddleware({
   requestAction: RequestAction
   canSkipAuthValidation?: boolean
 }) {
-  return async (
-    ctx: WalletAddressUrlContext,
-    next: () => Promise<void>
-  ): Promise<void> => {
+  return async (ctx: T, next: () => Promise<void>): Promise<void> => {
+    const walletAddressUrl =
+      'walletAddressUrl' in ctx
+        ? (ctx as WalletAddressUrlContext).walletAddressUrl
+        : undefined
+    console.log('token introspection middleware start', { walletAddressUrl })
     const config = await ctx.container.use('config')
     try {
       if (canSkipAuthValidation && !ctx.request.headers.authorization) {
@@ -100,11 +105,7 @@ export function createTokenIntrospectionMiddleware({
         tokenInfo = await tokenIntrospectionClient.introspect({
           access_token: token,
           access: [
-            toOpenPaymentsAccess(
-              requestType,
-              requestAction,
-              ctx.walletAddressUrl
-            )
+            toOpenPaymentsAccess(requestType, requestAction, walletAddressUrl)
           ]
         })
       } catch (err) {

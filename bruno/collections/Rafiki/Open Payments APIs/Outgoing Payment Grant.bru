@@ -1,0 +1,33 @@
+meta {
+  name: Outgoing Payment Grant
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{senderOpenPaymentsHost}}/outgoing-payment-grant
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: GNAP {{accessToken}}
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addHostHeader();
+  
+  await scripts.addSignatureHeaders();
+}
+
+tests {
+  test("Status code is 201", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
+
+docs {
+  Uses GNAP access token to determine the grant.
+}

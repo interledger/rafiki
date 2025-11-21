@@ -51,6 +51,11 @@ import { v4 as uuid } from 'uuid'
 
 const DEFAULT_GRANT_LOCK_TIMEOUT_MS = 5000
 
+export interface GrantSpentAmounts {
+  spentDebitAmount: Amount
+  spentReceiveAmount: Amount
+}
+
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
   getPage(options?: GetPageOptions): Promise<OutgoingPayment[]>
@@ -64,6 +69,10 @@ export interface OutgoingPaymentService
     options: FundOutgoingPaymentOptions
   ): Promise<OutgoingPayment | FundingError>
   processNext(): Promise<string | undefined>
+  getGrantSpentAmounts(options: {
+    grantId: string
+    limits?: Limits
+  }): Promise<GrantSpentAmounts>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -94,7 +103,8 @@ export async function createOutgoingPaymentService(
     cancel: (options) => cancelOutgoingPayment(deps, options),
     fund: (options) => fundPayment(deps, options),
     processNext: () => worker.processPendingPayment(deps),
-    getWalletAddressPage: (options) => getWalletAddressPage(deps, options)
+    getWalletAddressPage: (options) => getWalletAddressPage(deps, options),
+    getGrantSpentAmounts: (options) => getGrantSpentAmounts(deps, options)
   }
 }
 
@@ -1133,6 +1143,95 @@ export async function updateGrantSpentAmounts(
     createdAt: new Date(),
     paymentState: OutgoingPaymentState.Completed
   })
+}
+
+/**
+ * Gets the spent amounts for a grant.
+ * The spent amounts are scoped to current interval, if any, else they are
+ * for the total lifetime of the grant.
+ */
+async function getGrantSpentAmounts(
+  deps: ServiceDependencies,
+  options: { grantId: string; limits?: Limits }
+): Promise<GrantSpentAmounts> {
+  const { grantId, limits } = options
+
+  // Get the latest spent amounts record for the grant
+  const latestGrantSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+    deps.knex
+  )
+    .where('grantId', grantId)
+    .orderBy('createdAt', 'desc')
+    .first()
+
+  // If no records exist, return zero amounts
+  if (!latestGrantSpentAmounts) {
+    return {
+      // TODO: better default (what asset code/scale?). Or spentDebitAmount: null?
+      // Or value: 0n with no assetCode/scale? or spentDebitAmount of null (that seems less clear
+      // - there is a spent amount. its just 0)?
+      spentDebitAmount: {
+        value: 0n,
+        assetCode: 'USD',
+        assetScale: 2
+      },
+      spentReceiveAmount: {
+        value: 0n,
+        assetCode: 'USD',
+        assetScale: 2
+      }
+    }
+  }
+
+  // If there's an interval, get the current interval and find the latest record for it
+  if (limits?.interval) {
+    const now = new Date()
+    const currentInterval = getInterval(limits.interval, now)
+
+    if (currentInterval && currentInterval.start && currentInterval.end) {
+      // Find the latest record for the current interval
+      const currentIntervalSpentAmounts =
+        await OutgoingPaymentGrantSpentAmounts.query(deps.knex)
+          .where('grantId', grantId)
+          // TODO: fix types
+          .where('intervalStart', currentInterval.start.toJSDate())
+          .where('intervalEnd', currentInterval.end.toJSDate())
+          .orderBy('createdAt', 'desc')
+          .first()
+
+      if (currentIntervalSpentAmounts) {
+        return {
+          spentDebitAmount: {
+            value:
+              currentIntervalSpentAmounts.intervalDebitAmountValue ?? BigInt(0),
+            assetCode: currentIntervalSpentAmounts.debitAmountCode,
+            assetScale: currentIntervalSpentAmounts.debitAmountScale
+          },
+          spentReceiveAmount: {
+            value:
+              currentIntervalSpentAmounts.intervalReceiveAmountValue ??
+              BigInt(0),
+            assetCode: currentIntervalSpentAmounts.receiveAmountCode,
+            assetScale: currentIntervalSpentAmounts.receiveAmountScale
+          }
+        }
+      }
+    }
+  }
+
+  // No interval or no interval record found - return total grant amounts
+  return {
+    spentDebitAmount: {
+      value: latestGrantSpentAmounts.grantTotalDebitAmountValue,
+      assetCode: latestGrantSpentAmounts.debitAmountCode,
+      assetScale: latestGrantSpentAmounts.debitAmountScale
+    },
+    spentReceiveAmount: {
+      value: latestGrantSpentAmounts.grantTotalReceiveAmountValue,
+      assetCode: latestGrantSpentAmounts.receiveAmountCode,
+      assetScale: latestGrantSpentAmounts.receiveAmountScale
+    }
+  }
 }
 
 /**
