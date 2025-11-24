@@ -1,167 +1,167 @@
 /* Splash page styling */
 .card-link {
-  text-decoration: none;
+	text-decoration: none;
 }
 
 /* Header link styling */
 .sl-markdown-content :is(h1, h2, h3, h4, h5, h6) > a {
-  color: inherit;
-  text-decoration: none;
-  transition: color 0.2s ease-in-out;
+	color: inherit;
+	text-decoration: none;
+	transition: color 0.2s ease-in-out;
 }
 
 .sl-markdown-content :is(h1, h2, h3, h4, h5, h6) > a:hover {
-  color: var(--sl-color-accent-high);
+	color: var(--sl-color-accent-high);
 }
 
 /* API table styling */
 .content details ~ table tbody tr td:first-of-type strong,
 .content details ~ table tbody tr td:nth-of-type(2) a {
-  line-break: anywhere;
+	line-break: anywhere;
 }
 
 .content details ~ table tbody tr td:nth-of-type(3):not(:empty) {
-  width: 50%;
+	width: 50%;
 }
 
 /* Accounting table styles */
 .accounting-table,
 .accounting-table table {
-  box-shadow: none;
+	box-shadow: none;
 }
 
 .accounting-table.accounting-table {
-  border-spacing: var(--space-s) 0;
-  border-collapse: separate;
+	border-spacing: var(--space-s) 0;
+	border-collapse: separate;
 }
 
 .accounting-table table {
-  border-collapse: collapse;
-  padding-top: var(--space-xs);
-  margin-top: -2px;
+	border-collapse: collapse;
+	padding-top: var(--space-xs);
+	margin-top: -2px;
 }
 
 .accounting-table.accounting-table .header-row th {
-  text-align: center;
-  border-bottom: 2px solid var(--sl-color-text-accent);
-  padding-bottom: var(--space-2xs);
+	text-align: center;
+	border-bottom: 2px solid var(--sl-color-text-accent);
+	padding-bottom: var(--space-2xs);
 }
 
 .accounting-table.accounting-table .header-row:not(:first-of-type) th {
-  padding-top: var(--space-s);
+	padding-top: var(--space-s);
 }
 
 .accounting-table table tr th {
-  padding-top: var(--space-2xs);
+	padding-top: var(--space-2xs);
 }
 
 .accounting-table table tr th:first-of-type,
 .accounting-table table tr td:first-of-type {
-  border-right: 2px solid var(--sl-color-text-accent);
+	border-right: 2px solid var(--sl-color-text-accent);
 }
 
 .accounting-table.accounting-table tr th,
 .accounting-table.accounting-table tr td {
-  text-align: center;
+	text-align: center;
 }
 
 /* Overflowing table styles */
 .overflow-table {
-  container-type: inline-size;
-  max-height: 500px;
-  overflow: auto;
-  background:
-    linear-gradient(to right, var(--sl-color-bg) 30%, rgba(255, 255, 255, 0)),
-    linear-gradient(to right, rgba(255, 255, 255, 0), var(--sl-color-bg) 70%) 0
-      100%,
-    radial-gradient(
-      farthest-side at 0% 50%,
-      rgba(0, 0, 0, 0.2),
-      rgba(0, 0, 0, 0)
-    ),
-    radial-gradient(
-        farthest-side at 100% 50%,
-        rgba(0, 0, 0, 0.2),
-        rgba(0, 0, 0, 0)
-      )
-      0 100%;
-  background-repeat: no-repeat;
-  background-color: var(--sl-color-bg);
-  background-size:
-    40px 100%,
-    40px 100%,
-    14px 100%,
-    14px 100%;
-  background-position:
-    0 0,
-    100%,
-    0 0,
-    100%;
-  background-attachment: local, local, scroll, scroll;
-  box-shadow: var(--sl-shadow-sm);
-  border-radius: var(--border-radius);
+	container-type: inline-size;
+	max-height: 500px;
+	overflow: auto;
+	background:
+		linear-gradient(to right, var(--sl-color-bg) 30%, rgba(255, 255, 255, 0)),
+		linear-gradient(to right, rgba(255, 255, 255, 0), var(--sl-color-bg) 70%) 0
+		100%,
+		radial-gradient(
+			farthest-side at 0% 50%,
+			rgba(0, 0, 0, 0.2),
+			rgba(0, 0, 0, 0)
+		),
+		radial-gradient(
+			farthest-side at 100% 50%,
+			rgba(0, 0, 0, 0.2),
+			rgba(0, 0, 0, 0)
+		)
+		0 100%;
+	background-repeat: no-repeat;
+	background-color: var(--sl-color-bg);
+	background-size:
+		40px 100%,
+		40px 100%,
+		14px 100%,
+		14px 100%;
+	background-position:
+		0 0,
+		100%,
+		0 0,
+		100%;
+	background-attachment: local, local, scroll, scroll;
+	box-shadow: var(--sl-shadow-sm);
+	border-radius: var(--border-radius);
 }
 
 .overflow-table thead th {
-  position: sticky;
-  background-color: var(--sl-color-gray-7, var(--sl-color-gray-6));
-  top: 0;
+	position: sticky;
+	background-color: var(--sl-color-gray-7, var(--sl-color-gray-6));
+	top: 0;
 }
 
 @container (max-width: 48rem) {
-  .wide-column table {
-    min-width: 60rem;
-  }
+	.wide-column table {
+		min-width: 60rem;
+	}
 
-  .wider-column table {
-    min-width: 80rem;
-  }
+	.wider-column table {
+		min-width: 80rem;
+	}
 }
 
 @media screen and (min-width: 80rem) {
-  .overflow-table {
-    max-width: 100%;
-  }
+	.overflow-table {
+		max-width: 100%;
+	}
 }
 
 .overflow-table table code {
-  font-size: 95%;
-  overflow-wrap: break-word;
-  word-break: normal;
+	font-size: 95%;
+	overflow-wrap: break-word;
+	word-break: normal;
 }
 
 .overflow-table td,
 .overflow-table th {
-  max-width: 300px;
-  min-width: fit-content;
+	max-width: 300px;
+	min-width: fit-content;
 }
 
 .overflow-table tbody {
-  font-size: smaller;
+	font-size: smaller;
 }
 
 .overflow-table table tbody tr:nth-child(2n):not(:where(.not-content *)) {
-  background-color: initial;
+	background-color: initial;
 }
 
 .overflow-table tbody tr:not(:last-of-type) td {
-  border-block-end: 1px solid var(--sl-color-gray-6);
+	border-block-end: 1px solid var(--sl-color-gray-6);
 }
 
 .main-frame .lg\:sl-flex .main-pane main {
-  display: flex;
-  flex-direction: column;
-  min-height: calc(100vh - var(--sl-nav-height));
+	display: flex;
+	flex-direction: column;
+	min-height: calc(100vh - var(--sl-nav-height));
 }
 
 .main-frame .lg\:sl-flex .main-pane main .content-panel:last-of-type,
 .main-frame
-  .lg\:sl-flex
-  .main-pane
-  main
-  .content-panel:last-of-type
-  .sl-container {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
+	.lg\:sl-flex
+	.main-pane
+	main
+	.content-panel:last-of-type
+	.sl-container {
+	flex-grow: 1;
+	display: flex;
+	flex-direction: column;
 }

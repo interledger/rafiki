@@ -11,13 +11,13 @@ This website is built with [Starlight](https://starlight.astro.build/), a docume
 - Make sure all the dependencies for the website are installed. Because this is a monorepo, you should run the following command in the root of the project folder:
 
 ```sh
-$ pnpm i
+pnpm i
 ```
 
 - Run the dev server from the `/packages/documentation` folder:
 
 ```sh
-$ pnpm start
+pnpm start
 ```
 
 This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
@@ -25,10 +25,22 @@ This command starts a local development server and opens up a browser window. Mo
 - Build the site, again, this must be run from the `/packages/documentation` folder:
 
 ```sh
-$ pnpm build:docs
+pnpm build:docs
 ```
 
 This command generates static content into the build directory and can be served using any static contents hosting service.
+
+- Format code and fix linting issues:
+
+```sh
+pnpm format
+```
+
+- Check formatting and linting:
+
+```sh
+pnpm lint
+```
 
 ## Editing Content
 
@@ -112,3 +124,18 @@ import Base from '../layouts/Base.astro';
 ```
 
 Refer to the Astro documentation on [pages](https://docs.astro.build/en/core-concepts/astro-pages/) for more detailed guidance.
+
+## Code Formatting
+
+This project uses [Biome](https://biomejs.dev/), [Prettier](https://prettier.io/), and [ESLint](https://eslint.org/) for code quality. Biome handles most JS/TS/JSON linting + formatting and also enforces import order. Prettier handles markdown/MDX, and ESLint covers Astro/TypeScript-specific rules.
+
+1. **Fix issues**: Run `pnpm format` to execute Biome (`biome format --write .`), format markdown via Prettier, and run ESLint with `--fix`. This is the quickest way to resolve most style issues.
+2. **Check before pushing**: Run `pnpm lint` to run Biome, Prettier (in `--check` mode), and ESLint without auto-fixes. CI executes the same command, so make sure it passes locally.
+
+Biome tips:
+
+- Configuration lives in `biome.json`. Adjust rules there if the defaults block development.
+- Scope Biome runs to a directory when iterating, e.g. `pnpm biome check src/components/Header.astro`.
+- Biome respects `.gitignore`, so add new generated folders there if they should be skipped.
+
+ESLint is configured to work with TypeScript and Astro files. The configuration extends recommended rules from ESLint, TypeScript ESLint, and Astro ESLint plugins.
