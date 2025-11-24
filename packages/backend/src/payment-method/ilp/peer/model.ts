@@ -79,7 +79,10 @@ export class Peer
             balance
           },
           tenantId: this.tenantId,
-          webhooks: finalizeWebhookRecipients([this.tenantId], config)
+          webhooks: finalizeWebhookRecipients(
+            { tenantIds: [this.tenantId] },
+            config
+          )
         })
       }
     }

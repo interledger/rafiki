@@ -51,7 +51,10 @@ export class Asset extends BaseModel implements LiquidityAccount {
             balance
           },
           tenantId: this.tenantId,
-          webhooks: finalizeWebhookRecipients([this.tenantId], config)
+          webhooks: finalizeWebhookRecipients(
+            { tenantIds: [this.tenantId] },
+            config
+          )
         })
       }
     }

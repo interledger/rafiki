@@ -64,6 +64,25 @@ export const createReceiver: MutationResolvers<TenantedApolloContext>['createRec
     }
   }
 
+export const completeReceiver: MutationResolvers<ApolloContext>['completeReceiver'] =
+  async (_, args, ctx): Promise<ResolversTypes['CompleteReceiverResponse']> => {
+    const receiverService = await ctx.container.use('receiverService')
+
+    const receiverOrError = await receiverService.complete(
+      args.input.incomingPaymentUrl
+    )
+
+    if (isReceiverError(receiverOrError)) {
+      throw new GraphQLError(receiverErrorToMessage(receiverOrError), {
+        extensions: {
+          code: receiverErrorToCode(receiverOrError)
+        }
+      })
+    }
+
+    return { receiver: receiverToGraphql(receiverOrError) }
+  }
+
 export function receiverToGraphql(receiver: Receiver): SchemaReceiver {
   if (!receiver.incomingPayment) {
     throw new Error('Missing incoming payment for receiver')

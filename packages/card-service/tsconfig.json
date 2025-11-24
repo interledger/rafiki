@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.build.json",
+  "compilerOptions": {
+    "lib": ["ESNext"],
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*"],
+  "ts-node": {
+    "swc": true
+  }
+}

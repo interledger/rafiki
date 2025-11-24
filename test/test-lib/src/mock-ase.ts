@@ -8,6 +8,7 @@ import { generateApolloClientFactory } from './apollo-client'
 import { AdminClient } from './admin-client'
 import { IntegrationServer } from './integration-server'
 import { TestConfig } from './config'
+import { PosService } from './pos-service'
 
 /** Mock Account Servicing Entity */
 export class MockASE {
@@ -18,6 +19,7 @@ export class MockASE {
   public accounts: AccountProvider
   public opClient!: AuthenticatedClient
   public integrationServer: IntegrationServer
+  public posService: PosService
 
   // Use .create factory because async construction
   public static async create(config: TestConfig): Promise<MockASE> {
@@ -43,6 +45,7 @@ export class MockASE {
       this.adminClient,
       this.accounts
     )
+    this.posService = new PosService(this.config.posServiceUrl)
     this.integrationServer.start(this.config.integrationServerPort)
   }
 

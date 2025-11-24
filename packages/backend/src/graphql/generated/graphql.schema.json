@@ -1060,6 +1060,18 @@
         "fields": null,
         "inputFields": [
           {
+            "name": "cardPaymentFailureReason",
+            "description": "If card flow, optional machine-readable failure reason",
+            "type": {
+              "kind": "ENUM",
+              "name": "CardPaymentFailureReason",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "id",
             "description": "Unique identifier of the outgoing payment to cancel.",
             "type": {
@@ -1089,6 +1101,142 @@
           }
         ],
         "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "CardDetailsInput",
+        "description": null,
+        "isOneOf": false,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "data",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "JSONObject",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "initiatedAt",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "requestId",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "ENUM",
+        "name": "CardPaymentFailureReason",
+        "description": null,
+        "isOneOf": null,
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": [
+          {
+            "name": "invalid_request",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "invalid_signature",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "CompleteReceiverInput",
+        "description": null,
+        "isOneOf": false,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "incomingPaymentUrl",
+            "description": "URL of the incoming payment to be completed.",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "CompleteReceiverResponse",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "receiver",
+            "description": "The receiver object returned in the response.",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "Receiver",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
         "enumValues": null,
         "possibleTypes": null
       },
@@ -1320,11 +1468,35 @@
             "deprecationReason": null
           },
           {
+            "name": "isCardPayment",
+            "description": "Whether or not the incoming payment is being created for a card payment.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "metadata",
             "description": "Additional metadata associated with the incoming payment.",
             "type": {
               "kind": "SCALAR",
               "name": "JSONObject",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "senderWalletAddress",
+            "description": "The sender's wallet address URL. Applicable only to card payments.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
               "ofType": null
             },
             "defaultValue": null,
@@ -1547,6 +1719,18 @@
         "isOneOf": false,
         "fields": null,
         "inputFields": [
+          {
+            "name": "cardDetails",
+            "description": "Used for the card service to provide the card expiry and signature",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "CardDetailsInput",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
           {
             "name": "debitAmount",
             "description": "Amount to send (fixed send).",
@@ -3349,21 +3533,37 @@
         "inputFields": [
           {
             "name": "in",
-            "description": "Array of strings to filter by.",
+            "description": "Array of strings to include.",
             "type": {
-              "kind": "NON_NULL",
+              "kind": "LIST",
               "name": null,
               "ofType": {
-                "kind": "LIST",
+                "kind": "NON_NULL",
                 "name": null,
                 "ofType": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "String",
-                    "ofType": null
-                  }
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "notIn",
+            "description": "Array of strings to exclude.",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 }
               }
             },
@@ -3709,6 +3909,18 @@
             "deprecationReason": null
           },
           {
+            "name": "senderWalletAddress",
+            "description": "The sender's wallet address URL. Applicable only to card payments.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "state",
             "description": "State of the incoming payment.",
             "args": [],
@@ -3732,6 +3944,22 @@
               "kind": "SCALAR",
               "name": "String",
               "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "url",
+            "description": "The URL of the incoming payment.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -3862,6 +4090,30 @@
         ],
         "inputFields": null,
         "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "IncomingPaymentFilter",
+        "description": null,
+        "isOneOf": false,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "initiatedBy",
+            "description": "Filter for incoming payments based on the initiation reason.",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "FilterString",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "interfaces": null,
         "enumValues": null,
         "possibleTypes": null
       },
@@ -4466,6 +4718,39 @@
               "ofType": {
                 "kind": "OBJECT",
                 "name": "OutgoingPaymentResponse",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "completeReceiver",
+            "description": "Complete an internal or external Open Payments incoming payment. The receiver has a wallet address on either this or another Open Payments resource server.",
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "CompleteReceiverInput",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "CompleteReceiverResponse",
                 "ofType": null
               }
             },
@@ -6962,6 +7247,107 @@
               "kind": "OBJECT",
               "name": "IncomingPayment",
               "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "incomingPayments",
+            "description": "Fetch a paginated list of incoming payments.",
+            "args": [
+              {
+                "name": "after",
+                "description": "Forward pagination: Cursor (incoming payment ID) to start retrieving incoming payments after this point.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "before",
+                "description": "Backward pagination: Cursor (outgoing payment ID) to start retrieving incoming payments before this point.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "filter",
+                "description": "Filter incoming payments based on specific criteria such as initiation reason.",
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "IncomingPaymentFilter",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "first",
+                "description": "Forward pagination: Limit the result to the first **n** incoming payments after the `after` cursor.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "last",
+                "description": "Backward pagination: Limit the result to the last **n** incoming payments before the `before` cursor.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "sortOrder",
+                "description": "Specify the sort order of incoming payments based on their creation date, either ascending or descending.",
+                "type": {
+                  "kind": "ENUM",
+                  "name": "SortOrder",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "tenantId",
+                "description": "Unique identifier of the tenant associated with the incoming payment. Optional, if not provided, the tenantId will be obtained from the signature.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "IncomingPaymentConnection",
+                "ofType": null
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -9549,6 +9935,18 @@
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "filter",
+                "description": "Filter incoming payments based on specific criteria such as initiation reason.",
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "IncomingPaymentFilter",
                   "ofType": null
                 },
                 "defaultValue": null,
