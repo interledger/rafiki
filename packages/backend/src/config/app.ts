@@ -195,7 +195,7 @@ export const Config = {
   walletAddressRedirectHtmlPage: process.env.WALLET_ADDRESS_REDIRECT_HTML_PAGE,
   localCacheDuration: envInt('LOCAL_CACHE_DURATION_MS', 15_000),
   operatorTenantId: envString('OPERATOR_TENANT_ID'),
-  enableIlpTiming: envBool('ENABLE_ILP_TIMING', true),
+  enableIlpTiming: envBool('ENABLE_ILP_TIMING_TELEMETRY', true),
   dbSchema: undefined as string | undefined,
   sendTenantWebhooksToOperator: envBool(
     'SEND_TENANT_WEBHOOKS_TO_OPERATOR',

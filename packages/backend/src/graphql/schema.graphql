@@ -760,7 +760,7 @@ type Peer implements Model {
   "The date and time when the peer was created."
   createdAt: String!
   "Routes for the peer."
-  routes: [String!]
+  routes: [String!]!
   "Unique identifier of the tenant associated with the peer."
   tenantId: ID!
 }
