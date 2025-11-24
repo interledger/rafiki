@@ -342,6 +342,8 @@ export type CreatePeerInput = {
   maxPacketAmount?: InputMaybe<Scalars['UInt64']['input']>;
   /** Internal name of the peer. */
   name?: InputMaybe<Scalars['String']['input']>;
+  /** Routes for the peer. */
+  routes?: InputMaybe<Array<Scalars['String']['input']>>;
   /** ILP address of the peer. */
   staticIlpAddress: Scalars['String']['input'];
 };
@@ -1214,6 +1216,8 @@ export type Peer = Model & {
   maxPacketAmount?: Maybe<Scalars['UInt64']['output']>;
   /** Public name for the peer. */
   name?: Maybe<Scalars['String']['output']>;
+  /** Routes for the peer. */
+  routes: Array<Scalars['String']['output']>;
   /** ILP address of the peer. */
   staticIlpAddress: Scalars['String']['output'];
   /** Unique identifier of the tenant associated with the peer. */
@@ -1665,6 +1669,8 @@ export type UpdatePeerInput = {
   maxPacketAmount?: InputMaybe<Scalars['UInt64']['input']>;
   /** New public name for the peer. */
   name?: InputMaybe<Scalars['String']['input']>;
+  /** New routes for the peer. */
+  routes?: InputMaybe<Array<Scalars['String']['input']>>;
   /** New ILP address for the peer. */
   staticIlpAddress?: InputMaybe<Scalars['String']['input']>;
 };
@@ -2607,6 +2613,7 @@ export type PeerResolvers<ContextType = any, ParentType extends ResolversParentT
   liquidityThreshold?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   maxPacketAmount?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  routes?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
   staticIlpAddress?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   tenantId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
