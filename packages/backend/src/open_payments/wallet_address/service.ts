@@ -31,8 +31,8 @@ import { poll } from '../../shared/utils'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
 import { AssetService } from '../../asset/service'
 import { CacheDataStore } from '../../middleware/cache/data-stores'
-import { TenantSettingKeys } from '../../tenants/settings/model'
 import { TenantSettingService } from '../../tenants/settings/service'
+import { TenantService } from '../../tenants/service'
 
 interface Options {
   publicName?: string
@@ -90,6 +90,7 @@ interface ServiceDependencies extends BaseService {
   webhookService: WebhookService
   assetService: AssetService
   walletAddressCache: CacheDataStore<WalletAddress>
+  tenantService: TenantService
   tenantSettingService: TenantSettingService
 }
 
@@ -101,6 +102,7 @@ export async function createWalletAddressService({
   webhookService,
   assetService,
   walletAddressCache,
+  tenantService,
   tenantSettingService
 }: ServiceDependencies): Promise<WalletAddressService> {
   const log = logger.child({
@@ -114,6 +116,7 @@ export async function createWalletAddressService({
     webhookService,
     assetService,
     walletAddressCache,
+    tenantService,
     tenantSettingService
   }
   return {
@@ -174,20 +177,10 @@ async function createWalletAddressUrl(
   deps: ServiceDependencies,
   options: CreateOptions
 ): Promise<string | WalletAddressError> {
-  let tenantWalletAddressUrl = new URL(deps.config.openPaymentsUrl)
+  const tenant = await deps.tenantService.get(options.tenantId)
 
-  const found = await deps.tenantSettingService.get({
-    tenantId: options.tenantId,
-    key: TenantSettingKeys.WALLET_ADDRESS_URL.name
-  })
-
-  if (!found || found.length === 0) {
-    if (!options.isOperator) {
-      return WalletAddressError.WalletAddressSettingNotFound
-    }
-  } else {
-    tenantWalletAddressUrl = new URL(found[0].value)
-  }
+  if (!tenant) return WalletAddressError.UnknownTenant
+  const tenantWalletAddressUrl = new URL(tenant.walletAddressPrefix)
 
   let tenantBaseUrl = tenantWalletAddressUrl.toString()
   if (!tenantWalletAddressUrl.pathname.endsWith('/')) {
@@ -383,8 +376,8 @@ async function getOrPollByUrl(
   if (existingWalletAddress) return existingWalletAddress
 
   const webhookRecipients = (
-    await deps.tenantSettingService.getSettingsByPrefix(url)
-  ).map((tenantSetting) => tenantSetting.tenantId)
+    await deps.tenantService.getTenantsByPrefix(url)
+  ).map((tenant) => tenant.id)
 
   if (!webhookRecipients.length) {
     webhookRecipients.push(deps.config.operatorTenantId)
