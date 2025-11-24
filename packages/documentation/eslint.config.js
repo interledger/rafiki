@@ -7,14 +7,7 @@ import globals from 'globals'
 
 export default [
   {
-    ignores: [
-      'node_modules',
-      'dist',
-      'build',
-      '.astro',
-      '**/*.d.ts',
-      '**/*.html'
-    ]
+    ignores: ['node_modules', 'dist', 'build', '.astro', '**/*.d.ts', '**/*.html']
   },
   {
     files: ['**/*.d.ts'],
