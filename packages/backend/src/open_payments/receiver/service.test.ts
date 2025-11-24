@@ -32,6 +32,7 @@ import { RemoteIncomingPaymentError } from '../payment/incoming_remote/errors'
 import assert from 'assert'
 import { Receiver } from './model'
 import { IncomingPayment } from '../payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../payment/incoming/types'
 import { PaymentMethodProviderService } from '../../payment-method/provider/service'
 
 describe('Receiver Service', (): void => {
@@ -97,7 +98,8 @@ describe('Receiver Service', (): void => {
             assetCode: walletAddress.asset.code,
             assetScale: walletAddress.asset.scale
           },
-          tenantId: Config.operatorTenantId
+          tenantId: Config.operatorTenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
 
         jest
@@ -171,7 +173,8 @@ describe('Receiver Service', (): void => {
           const walletAddress = await createWalletAddress(deps)
           const incomingPayment = await createIncomingPayment(deps, {
             walletAddressId: walletAddress.id,
-            tenantId: walletAddress.tenantId
+            tenantId: walletAddress.tenantId,
+            initiationReason: IncomingPaymentInitiationReason.Admin
           })
 
           jest
@@ -383,7 +386,8 @@ describe('Receiver Service', (): void => {
             incomingAmount,
             expiresAt,
             metadata,
-            tenantId: Config.operatorTenantId
+            tenantId: Config.operatorTenantId,
+            initiationReason: IncomingPaymentInitiationReason.Admin
           })
           expect(remoteIncomingPaymentCreateSpy).not.toHaveBeenCalled()
         }
