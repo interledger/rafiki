@@ -3,6 +3,7 @@ title: Two-phase transfers
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components'
+import IdempotencyNote from '/src/partials/liquidity-idempotency.mdx'
 
 Rafiki allows for two-phase transfers, which moves funds in two stages.
 
@@ -24,7 +25,7 @@ If the timeout interval passes before the transaction posts or is voided, the tr
 ## Manage two-phase transfers using the Backend Admin API
 
 :::note[Idempotency key]
-You must provide an `idempotencyKey` when calling any mutations related to liquidity. This unique key ensures duplicate or retried requests are processed only once. For more information, see the [Idempotency](/apis/graphql/admin-api-overview#idempotency) section in the GraphQL Admin APIs page.
+<IdempotencyNote />
 :::
 
 ### Post and commit a successful transfer
