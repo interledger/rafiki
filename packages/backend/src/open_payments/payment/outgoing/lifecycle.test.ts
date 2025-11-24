@@ -188,13 +188,15 @@ describe('Lifecycle', (): void => {
       // Create sender wallet address
       asset = await createAsset(deps, { assetOptions: assetDetails, tenantId })
       const senderWalletAddress = await createWalletAddress(deps, {
-        assetId: asset.id
+        assetId: asset.id,
+        tenantId
       })
       walletAddressId = senderWalletAddress.id
 
       // Create receiver wallet address and incoming payment
       const receiverWalletAddress = await createWalletAddress(deps, {
-        assetId: asset.id
+        assetId: asset.id,
+        tenantId
       })
       receiverWalletAddressId = receiverWalletAddress.id
 
