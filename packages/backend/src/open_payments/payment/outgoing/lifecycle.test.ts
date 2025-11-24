@@ -28,6 +28,7 @@ import { PaymentMethodHandlerError } from '../../../payment-method/handler/error
 import { getInterval } from './limits'
 import { TransferError } from '../../../accounting/errors'
 import { withConfigOverride } from '../../../tests/helpers'
+import { IncomingPaymentInitiationReason } from '../incoming/types'
 
 describe('Lifecycle', (): void => {
   let deps: IocContract<AppServices>
@@ -42,7 +43,7 @@ describe('Lifecycle', (): void => {
   let incomingPayment: IncomingPayment
   let asset: Asset
   let config: IAppConfig
-
+  const tenantId = Config.operatorTenantId
   const assetDetails = {
     scale: 2,
     code: 'USD'
@@ -65,6 +66,7 @@ describe('Lifecycle', (): void => {
       .ignore()
 
     const quote = await createQuote(deps, {
+      tenantId,
       walletAddressId,
       receiver,
       debitAmount: {
@@ -77,6 +79,7 @@ describe('Lifecycle', (): void => {
     })
 
     const payment = await outgoingPaymentService.create({
+      tenantId,
       walletAddressId,
       quoteId: quote.id,
       grant
@@ -84,6 +87,7 @@ describe('Lifecycle', (): void => {
     assert.ok(!isOutgoingPaymentError(payment))
 
     const fundResult = await outgoingPaymentService.fund({
+      tenantId,
       id: payment.id,
       amount: payment.debitAmount.value,
       transferId: uuid()
@@ -116,6 +120,8 @@ describe('Lifecycle', (): void => {
         const transfer = await accountingService.createTransfer({
           sourceAccount: payment,
           destinationAccount: await createIncomingPayment(deps, {
+            tenantId,
+            initiationReason: IncomingPaymentInitiationReason.OpenPayments,
             walletAddressId: receiverWalletAddressId
           }),
           sourceAmount: amount,
@@ -139,6 +145,8 @@ describe('Lifecycle', (): void => {
           await accountingService.createTransfer({
             sourceAccount: payment,
             destinationAccount: await createIncomingPayment(deps, {
+              tenantId,
+              initiationReason: IncomingPaymentInitiationReason.OpenPayments,
               walletAddressId: receiverWalletAddressId
             }),
             sourceAmount: partial.debit,
@@ -178,7 +186,7 @@ describe('Lifecycle', (): void => {
 
     beforeEach(async (): Promise<void> => {
       // Create sender wallet address
-      asset = await createAsset(deps, assetDetails)
+      asset = await createAsset(deps, { assetOptions: assetDetails, tenantId })
       const senderWalletAddress = await createWalletAddress(deps, {
         assetId: asset.id
       })
@@ -191,6 +199,8 @@ describe('Lifecycle', (): void => {
       receiverWalletAddressId = receiverWalletAddress.id
 
       incomingPayment = await createIncomingPayment(deps, {
+        tenantId,
+        initiationReason: IncomingPaymentInitiationReason.OpenPayments,
         walletAddressId: receiverWalletAddressId
       })
       const config = await deps.use('config')
@@ -199,7 +209,7 @@ describe('Lifecycle', (): void => {
 
     afterEach(async (): Promise<void> => {
       jest.restoreAllMocks()
-      await truncateTables(knex)
+      await truncateTables(deps)
     })
 
     afterAll(async (): Promise<void> => {
