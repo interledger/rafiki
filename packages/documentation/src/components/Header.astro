@@ -1,11 +1,11 @@
 ---
-import { getRelativeLocaleUrl } from "astro:i18n";
-import LanguageSelect from "@astrojs/starlight/components/LanguageSelect.astro";
-import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
-import ThemeSelect from "@astrojs/starlight/components/ThemeSelect.astro";
-import VersionSearch from "starlight-versions/components/VersionSearch.astro";
-import VersionSelect from "starlight-versions/components/VersionSelect.astro";
-import RafikiLogo from "../components/RafikiLogo.astro";
+import { getRelativeLocaleUrl } from 'astro:i18n'
+import LanguageSelect from '@astrojs/starlight/components/LanguageSelect.astro'
+import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro'
+import ThemeSelect from '@astrojs/starlight/components/ThemeSelect.astro'
+import VersionSearch from 'starlight-versions/components/VersionSearch.astro'
+import VersionSelect from 'starlight-versions/components/VersionSelect.astro'
+import RafikiLogo from '../components/RafikiLogo.astro'
 ---
 <div class="header sl-flex">
   <a href={getRelativeLocaleUrl(Astro.currentLocale ?? 'en', '/')} class="site-logo">
