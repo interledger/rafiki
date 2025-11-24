@@ -27,7 +27,7 @@ services:
     depends_on: 
       - shared-database
     healthcheck: 
-      test: ["CMD", "wget", "--spider", "http://localhost:4008/healthz"] 
+      test: ["CMD", "curl", "-sf", "http://localhost:4008/healthz"] 
       start_period: 60s 
       start_interval: 5s 
       interval: 30s 
@@ -117,7 +117,7 @@ services:
     depends_on:
       - cloud-nine-backend
     healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:3001/healthz"]
+      test: ["CMD", "curl", "-sf", "http://localhost:3001/healthz"]
       start_period: 60s
       start_interval: 5s
       interval: 30s

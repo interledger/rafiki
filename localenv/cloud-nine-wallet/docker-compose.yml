@@ -24,7 +24,7 @@ services:
     depends_on:
       - shared-database
     healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:3007/healthz"]
+      test: ["CMD", "curl", "-sf", "http://localhost:3007/healthz"]
       start_period: 60s
       start_interval: 5s
       interval: 30s
@@ -116,7 +116,7 @@ services:
       - shared-database
       - shared-redis
     healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:3001/healthz"]
+      test: ["CMD", "curl", "-sf", "http://localhost:3001/healthz"]
       start_period: 60s
       start_interval: 5s
       interval: 30s

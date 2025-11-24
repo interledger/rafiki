@@ -50,7 +50,7 @@ services:
     depends_on:
       - cloud-nine-wallet-test-backend
     healthcheck:
-      test: ["CMD", "wget", "http://localhost:4100/healthz"]
+      test: ["CMD", "curl", "-f", "http://localhost:4100/healthz"]
       interval: 5s
       retries: 10
       timeout: 3s
