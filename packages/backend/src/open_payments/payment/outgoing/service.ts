@@ -1241,9 +1241,6 @@ async function getGrantSpentAmounts(
   // If no records exist, return zero amounts
   if (!latestGrantSpentAmounts) {
     return {
-      // TODO: better default (what asset code/scale?). Or spentDebitAmount: null?
-      // Or value: 0n with no assetCode/scale? or spentDebitAmount of null (that seems less clear
-      // - there is a spent amount. its just 0)?
       spentDebitAmount: null,
       spentReceiveAmount: null
     }
@@ -1259,7 +1256,6 @@ async function getGrantSpentAmounts(
       const currentIntervalSpentAmounts =
         await OutgoingPaymentGrantSpentAmounts.query(deps.knex)
           .where('grantId', grantId)
-          // TODO: fix types
           .where('intervalStart', currentInterval.start.toJSDate())
           .where('intervalEnd', currentInterval.end.toJSDate())
           .orderBy('createdAt', 'desc')
