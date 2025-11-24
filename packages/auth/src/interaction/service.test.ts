@@ -17,6 +17,8 @@ import { Access } from '../access/model'
 import { Interaction, InteractionState } from './model'
 import { InteractionService } from './service'
 import { generateNonce, generateToken } from '../shared/utils'
+import { Tenant } from '../tenant/model'
+import { generateTenant } from '../tests/tenant'
 
 const CLIENT = faker.internet.url({ appendSlash: false })
 const BASE_GRANT_ACCESS = {
@@ -30,6 +32,7 @@ describe('Interaction Service', (): void => {
   let interactionService: InteractionService
   let interaction: Interaction
   let grant: Grant
+  let tenant: Tenant
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
@@ -39,6 +42,7 @@ describe('Interaction Service', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
+    tenant = await Tenant.query().insert(generateTenant())
     grant = await Grant.query().insert({
       state: GrantState.Processing,
       startMethod: [StartMethod.Redirect],
@@ -47,7 +51,8 @@ describe('Interaction Service', (): void => {
       finishMethod: FinishMethod.Redirect,
       finishUri: 'https://example.com',
       clientNonce: generateNonce(),
-      client: CLIENT
+      client: CLIENT,
+      tenantId: tenant.id
     })
 
     interaction = await Interaction.query().insert({
@@ -66,7 +71,7 @@ describe('Interaction Service', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -75,7 +80,9 @@ describe('Interaction Service', (): void => {
 
   describe('create', (): void => {
     test('can create an interaction', async (): Promise<void> => {
-      const grant = await Grant.query().insert(generateBaseGrant())
+      const grant = await Grant.query().insert(
+        generateBaseGrant({ tenantId: tenant.id })
+      )
 
       const interaction = await interactionService.create(grant.id)
 

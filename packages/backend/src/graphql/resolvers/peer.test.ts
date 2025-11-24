@@ -1,10 +1,19 @@
 import { faker } from '@faker-js/faker'
-import { ApolloError, gql } from '@apollo/client'
+import {
+  ApolloClient,
+  ApolloError,
+  gql,
+  NormalizedCacheObject
+} from '@apollo/client'
 import assert from 'assert'
 import { v4 as uuid } from 'uuid'
 
 import { getPageTests } from './page.test'
-import { createTestApp, TestContainer } from '../../tests/app'
+import {
+  createApolloClient,
+  createTestApp,
+  TestContainer
+} from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { Asset } from '../../asset/model'
@@ -30,6 +39,7 @@ import {
 } from '../generated/graphql'
 import { AccountingService } from '../../accounting/service'
 import { GraphQLErrorCode } from '../errors'
+import { createTenant } from '../../tests/tenant'
 
 describe('Peer Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -68,7 +78,7 @@ describe('Peer Resolvers', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -140,7 +150,9 @@ describe('Peer Resolvers', (): void => {
         liquidityThreshold: peer.liquidityThreshold?.toString()
       })
       delete peer.http.incoming
-      await expect(peerService.get(response.peer.id)).resolves.toMatchObject({
+      await expect(
+        peerService.get(response.peer.id, Config.operatorTenantId)
+      ).resolves.toMatchObject({
         asset,
         http: peer.http,
         maxPacketAmount: peer.maxPacketAmount,
@@ -550,6 +562,146 @@ describe('Peer Resolvers', (): void => {
         })
       })
     })
+
+    describe('tenant boundaries', (): void => {
+      let operatorPeer: PeerModel
+      let tenantPeer: PeerModel
+      let secondTenantPeer: PeerModel
+      let tenantedApolloClient: ApolloClient<NormalizedCacheObject>
+
+      const pageQuery = gql`
+        query Peers($tenantId: ID) {
+          peers(tenantId: $tenantId) {
+            edges {
+              node {
+                id
+              }
+            }
+          }
+        }
+      `
+
+      beforeEach(async (): Promise<void> => {
+        operatorPeer = await createPeer(deps)
+        const tenant = await createTenant(deps)
+        tenantedApolloClient = await createApolloClient(
+          appContainer.container,
+          appContainer.app,
+          tenant.id
+        )
+        tenantPeer = await createPeer(deps, { tenantId: tenant.id })
+        secondTenantPeer = await createPeer(deps, { tenantId: tenant.id })
+      })
+
+      test('Operator can get peers across all tenants', async (): Promise<void> => {
+        const query = await appContainer.apolloClient
+          .query({
+            query: pageQuery
+          })
+          .then((query): PeersConnection => {
+            if (query.data) {
+              return query.data.peers
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(query.edges).toHaveLength(3)
+        expect(query.edges).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              node: expect.objectContaining({ id: operatorPeer.id })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({ id: tenantPeer.id })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({ id: secondTenantPeer.id })
+            })
+          ])
+        )
+      })
+
+      test('Tenant cannot get peers across all tenants', async (): Promise<void> => {
+        const query = await tenantedApolloClient
+          .query({
+            query: pageQuery
+          })
+          .then((query): PeersConnection => {
+            if (query.data) {
+              return query.data.peers
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(query.edges).toHaveLength(2)
+        expect(query.edges).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              node: expect.objectContaining({ id: tenantPeer.id })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({ id: secondTenantPeer.id })
+            })
+          ])
+        )
+      })
+
+      test('Operator can filter peers across all tenants', async (): Promise<void> => {
+        const query = await appContainer.apolloClient
+          .query({
+            query: pageQuery,
+            variables: { tenantId: tenantPeer.tenantId }
+          })
+          .then((query): PeersConnection => {
+            if (query.data) {
+              return query.data.peers
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(query.edges).toHaveLength(2)
+        expect(query.edges).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              node: expect.objectContaining({ id: tenantPeer.id })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({ id: secondTenantPeer.id })
+            })
+          ])
+        )
+      })
+
+      test('Tenant cannot filter peers across all tenants', async (): Promise<void> => {
+        const query = await tenantedApolloClient
+          .query({
+            query: pageQuery,
+            variables: { tenantId: tenantPeer.tenantId }
+          })
+          .then((query): PeersConnection => {
+            if (query.data) {
+              return query.data.peers
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(query.edges).toHaveLength(2)
+        expect(query.edges).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              node: expect.objectContaining({ id: tenantPeer.id })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({ id: secondTenantPeer.id })
+            })
+          ])
+        )
+      })
+    })
   })
 
   describe('Update Peer', (): void => {
@@ -624,7 +776,9 @@ describe('Peer Resolvers', (): void => {
         name: updateOptions.name,
         liquidityThreshold: '200'
       })
-      await expect(peerService.get(peer.id)).resolves.toMatchObject({
+      await expect(
+        peerService.get(peer.id, peer.tenantId)
+      ).resolves.toMatchObject({
         asset: peer.asset,
         http: {
           outgoing: updateOptions.http.outgoing
@@ -771,7 +925,9 @@ describe('Peer Resolvers', (): void => {
         })
 
       expect(response.success).toBe(true)
-      await expect(peerService.get(peer.id)).resolves.toBeUndefined()
+      await expect(
+        peerService.get(peer.id, peer.tenantId)
+      ).resolves.toBeUndefined()
     })
 
     test('Returns error for unknown peer', async (): Promise<void> => {

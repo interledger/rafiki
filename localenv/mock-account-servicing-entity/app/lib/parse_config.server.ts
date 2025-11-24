@@ -15,6 +15,10 @@ if (!process.env.IDP_SECRET) {
   throw new Error('Environment variable IDP_SECRET is required')
 }
 
+if (!process.env.OPERATOR_TENANT_ID) {
+  throw new Error('Environment variable OPERATOR_TENANT_ID is required')
+}
+
 export const CONFIG: Config = {
   seed: parse(
     readFileSync(
@@ -26,5 +30,11 @@ export const CONFIG: Config = {
   testnetAutoPeerUrl: process.env.TESTNET_AUTOPEER_URL ?? '',
   authServerDomain: process.env.AUTH_SERVER_DOMAIN || 'http://localhost:3006',
   graphqlUrl: process.env.GRAPHQL_URL,
-  idpSecret: process.env.IDP_SECRET
+  idpSecret: process.env.IDP_SECRET,
+  operatorTenantId: process.env.OPERATOR_TENANT_ID,
+  isTenant: process.env.IS_TENANT === 'true',
+  authIdpServiceDomain:
+    process.env.AUTH_IDP_SERVICE_DOMAIN || 'http://localhost:3009',
+  interactionReturnUrl:
+    process.env.INTERACTION_RETURN_URL || 'http://localhost:3030'
 }

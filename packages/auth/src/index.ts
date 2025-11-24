@@ -14,13 +14,13 @@ import { createAccessTokenRoutes } from './accessToken/routes'
 import { createGrantRoutes } from './grant/routes'
 import { createInteractionRoutes } from './interaction/routes'
 import { createOpenAPI } from '@interledger/openapi'
-import {
-  createUnauthenticatedClient as createOpenPaymentsClient,
-  getAuthServerOpenAPI
-} from '@interledger/open-payments'
+import { createUnauthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
 import { createInteractionService } from './interaction/service'
 import { getTokenIntrospectionOpenAPI } from 'token-introspection'
 import { Redis } from 'ioredis'
+import { createSubjectService } from './subject/service'
+import { createTenantService } from './tenant/service'
+import { createTenantRoutes } from './tenant/routes'
 
 const container = initIocContainer(Config)
 const app = new App(container)
@@ -60,6 +60,7 @@ export function initIocContainer(
         directory: './',
         tableName: 'auth_knex_migrations'
       },
+      searchPath: config.dbSchema,
       log: {
         warn(message) {
           logger.warn(message)
@@ -81,6 +82,9 @@ export function initIocContainer(
       'text',
       BigInt
     )
+    if (config.dbSchema) {
+      await db.raw(`CREATE SCHEMA IF NOT EXISTS "${config.dbSchema}"`)
+    }
     return db
   })
 
@@ -96,6 +100,16 @@ export function initIocContainer(
     'accessService',
     async (deps: IocContract<AppServices>) => {
       return createAccessService({
+        logger: await deps.use('logger'),
+        knex: await deps.use('knex')
+      })
+    }
+  )
+
+  container.singleton(
+    'subjectService',
+    async (deps: IocContract<AppServices>) => {
+      return createSubjectService({
         logger: await deps.use('logger'),
         knex: await deps.use('knex')
       })
@@ -120,6 +134,7 @@ export function initIocContainer(
         logger: await deps.use('logger'),
         accessService: await deps.use('accessService'),
         accessTokenService: await deps.use('accessTokenService'),
+        subjectService: await deps.use('subjectService'),
         knex: await deps.use('knex')
       })
     }
@@ -137,13 +152,26 @@ export function initIocContainer(
     }
   )
 
+  container.singleton(
+    'tenantService',
+    async (deps: IocContract<AppServices>) => {
+      return createTenantService({
+        logger: await deps.use('logger'),
+        knex: await deps.use('knex'),
+        config: await deps.use('config')
+      })
+    }
+  )
+
   container.singleton('grantRoutes', async (deps: IocContract<AppServices>) => {
     return createGrantRoutes({
       grantService: await deps.use('grantService'),
       clientService: await deps.use('clientService'),
       accessTokenService: await deps.use('accessTokenService'),
       accessService: await deps.use('accessService'),
+      subjectService: await deps.use('subjectService'),
       interactionService: await deps.use('interactionService'),
+      tenantService: await deps.use('tenantService'),
       logger: await deps.use('logger'),
       config: await deps.use('config')
     })
@@ -154,16 +182,33 @@ export function initIocContainer(
     async (deps: IocContract<AppServices>) => {
       return createInteractionRoutes({
         accessService: await deps.use('accessService'),
+        subjectService: await deps.use('subjectService'),
         interactionService: await deps.use('interactionService'),
         grantService: await deps.use('grantService'),
+        tenantService: await deps.use('tenantService'),
         logger: await deps.use('logger'),
         config: await deps.use('config')
       })
     }
   )
 
+  container.singleton(
+    'tenantRoutes',
+    async (deps: IocContract<AppServices>) => {
+      return createTenantRoutes({
+        tenantService: await deps.use('tenantService'),
+        logger: await deps.use('logger')
+      })
+    }
+  )
+
   container.singleton('openApi', async () => {
-    const authServerSpec = await getAuthServerOpenAPI()
+    const authServerSpec = await createOpenAPI(
+      path.resolve(
+        __dirname,
+        '../../../open-payments-specifications/openapi/auth-server.yaml'
+      )
+    )
     const idpSpec = await createOpenAPI(
       path.resolve(__dirname, './openapi/specs/id-provider.yaml')
     )
@@ -189,6 +234,7 @@ export function initIocContainer(
       })
     }
   )
+
   container.singleton(
     'accessTokenRoutes',
     async (deps: IocContract<AppServices>) => {
@@ -221,6 +267,8 @@ export const gracefulShutdown = async (
   await app.shutdown()
   const knex = await container.use('knex')
   await knex.destroy()
+  const redis = await container.use('redis')
+  redis.disconnect()
 }
 
 export const start = async (
@@ -291,6 +339,10 @@ export const start = async (
 
   Model.knex(knex)
 
+  // Update Operator Tenant from config
+  const tenantService = await container.use('tenantService')
+  await tenantService.updateOperatorApiSecretFromConfig()
+
   await app.boot()
 
   await app.startAdminServer(config.adminPort)
@@ -304,6 +356,9 @@ export const start = async (
 
   await app.startIntrospectionServer(config.introspectionPort)
   logger.info(`Introspection server listening on ${app.getIntrospectionPort()}`)
+
+  await app.startServiceAPIServer(config.serviceAPIPort)
+  logger.info(`Service API server listening on ${app.getServiceAPIPort()}`)
 }
 
 // If this script is run directly, start the server

@@ -1,9 +1,18 @@
-import { ApolloError, gql } from '@apollo/client'
+import {
+  ApolloClient,
+  ApolloError,
+  gql,
+  NormalizedCacheObject
+} from '@apollo/client'
 import assert from 'assert'
 import { v4 as uuid } from 'uuid'
 
 import { getPageTests } from './page.test'
-import { createTestApp, TestContainer } from '../../tests/app'
+import {
+  createApolloClient,
+  createTestApp,
+  TestContainer
+} from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
@@ -32,6 +41,7 @@ import { isFeeError } from '../../fee/errors'
 import { createFee } from '../../tests/fee'
 import { createAsset } from '../../tests/asset'
 import { GraphQLErrorCode } from '../errors'
+import { createTenant } from '../../tests/tenant'
 
 describe('Asset Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -49,7 +59,7 @@ describe('Asset Resolvers', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -132,7 +142,7 @@ describe('Asset Resolvers', (): void => {
     test('Returns error for duplicate asset', async (): Promise<void> => {
       const input = randomAsset()
 
-      await assetService.create(input)
+      await assetService.create({ ...input, tenantId: Config.operatorTenantId })
 
       expect.assertions(2)
       try {
@@ -212,12 +222,62 @@ describe('Asset Resolvers', (): void => {
         )
       }
     })
+
+    test('bad input data when not allowed to perform cross tenant create', async (): Promise<void> => {
+      const otherTenant = await createTenant(deps)
+      const badInputData = {
+        ...randomAsset(),
+        tenantId: uuid()
+      }
+
+      const tenantedApolloClient = await createApolloClient(
+        appContainer.container,
+        appContainer.app,
+        otherTenant.id
+      )
+      try {
+        expect.assertions(2)
+        await tenantedApolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateAsset($input: CreateAssetInput!) {
+                createAsset(input: $input) {
+                  asset {
+                    id
+                  }
+                }
+              }
+            `,
+            variables: {
+              input: badInputData
+            }
+          })
+          .then((query): AssetMutationResponse => {
+            if (query.data) {
+              return query.data.createAsset
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Assignment to the specified tenant is not permitted',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.BadUserInput
+            })
+          })
+        )
+      }
+    })
   })
 
   describe('Asset Queries', (): void => {
     test('Can get an asset', async (): Promise<void> => {
       const asset = await assetService.create({
         ...randomAsset(),
+        tenantId: Config.operatorTenantId,
         withdrawalThreshold: BigInt(10),
         liquidityThreshold: BigInt(100)
       })
@@ -283,6 +343,7 @@ describe('Asset Resolvers', (): void => {
     test('Can get an asset by code and scale', async (): Promise<void> => {
       const asset = await assetService.create({
         ...randomAsset(),
+        tenantId: Config.operatorTenantId,
         withdrawalThreshold: BigInt(10),
         liquidityThreshold: BigInt(100)
       })
@@ -349,7 +410,10 @@ describe('Asset Resolvers', (): void => {
       { fixed: BigInt(100), basisPoints: 1000, type: FeeType.Sending },
       { fixed: BigInt(100), basisPoints: 1000, type: FeeType.Receiving }
     ])('Can get an asset with fee of %p', async (fee): Promise<void> => {
-      const asset = await assetService.create(randomAsset())
+      const asset = await assetService.create({
+        ...randomAsset(),
+        tenantId: Config.operatorTenantId
+      })
       assert.ok(!isAssetError(asset))
 
       let expectedFee = null
@@ -469,6 +533,7 @@ describe('Asset Resolvers', (): void => {
       createModel: () =>
         assetService.create({
           ...randomAsset(),
+          tenantId: Config.operatorTenantId,
           withdrawalThreshold: BigInt(10),
           liquidityThreshold: BigInt(100)
         }) as Promise<AssetModel>,
@@ -480,6 +545,7 @@ describe('Asset Resolvers', (): void => {
       for (let i = 0; i < 2; i++) {
         const asset = await assetService.create({
           ...randomAsset(),
+          tenantId: Config.operatorTenantId,
           withdrawalThreshold: BigInt(10),
           liquidityThreshold: BigInt(100)
         })
@@ -600,6 +666,163 @@ describe('Asset Resolvers', (): void => {
         })
       })
     })
+
+    describe('tenant boundaries', (): void => {
+      let operatorAsset: AssetModel
+      let tenantAsset: AssetModel
+      let secondTenantAsset: AssetModel
+      let tenantedApolloClient: ApolloClient<NormalizedCacheObject>
+
+      const pageQuery = gql`
+        query Assets($tenantId: String) {
+          assets(tenantId: $tenantId) {
+            edges {
+              node {
+                id
+              }
+            }
+          }
+        }
+      `
+      beforeEach(async (): Promise<void> => {
+        operatorAsset = await createAsset(deps)
+
+        const tenant = await createTenant(deps)
+        tenantedApolloClient = await createApolloClient(
+          appContainer.container,
+          appContainer.app,
+          tenant.id
+        )
+        tenantAsset = await createAsset(deps, { tenantId: tenant.id })
+        secondTenantAsset = await createAsset(deps, { tenantId: tenant.id })
+      })
+      test('operator can get assets across all tenants', async (): Promise<void> => {
+        const query = await appContainer.apolloClient
+          .query({
+            query: pageQuery
+          })
+          .then((query): AssetsConnection => {
+            if (query.data) {
+              return query.data.assets
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+        expect(query.edges).toHaveLength(3)
+        expect(query.edges).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: operatorAsset.id
+              })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: tenantAsset.id
+              })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: secondTenantAsset.id
+              })
+            })
+          ])
+        )
+      })
+
+      test('tenant cannot get assets across all tenants', async (): Promise<void> => {
+        const query = await tenantedApolloClient
+          .query({
+            query: pageQuery
+          })
+          .then((query): AssetsConnection => {
+            if (query.data) {
+              return query.data.assets
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+        expect(query.edges).toHaveLength(2)
+        expect(query.edges).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: tenantAsset.id
+              })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: secondTenantAsset.id
+              })
+            })
+          ])
+        )
+      })
+
+      test('operator can specify filter assets across all tenants', async (): Promise<void> => {
+        const query = await appContainer.apolloClient
+          .query({
+            query: pageQuery,
+            variables: {
+              tenantId: tenantAsset.tenantId
+            }
+          })
+          .then((query): AssetsConnection => {
+            if (query.data) {
+              return query.data.assets
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+        expect(query.edges).toHaveLength(2)
+        expect(query.edges).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: tenantAsset.id
+              })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: secondTenantAsset.id
+              })
+            })
+          ])
+        )
+      })
+
+      test('tenant cannot filter assets across all tenants', async (): Promise<void> => {
+        const query = await tenantedApolloClient
+          .query({
+            query: pageQuery,
+            variables: {
+              tenantId: Config.operatorTenantId
+            }
+          })
+          .then((query): AssetsConnection => {
+            if (query.data) {
+              return query.data.assets
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+        expect(query.edges).toHaveLength(2)
+        expect(query.edges).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: tenantAsset.id
+              })
+            }),
+            expect.objectContaining({
+              node: expect.objectContaining({
+                id: secondTenantAsset.id
+              })
+            })
+          ])
+        )
+      })
+    })
   })
 
   describe('updateAsset', (): void => {
@@ -620,6 +843,7 @@ describe('Asset Resolvers', (): void => {
         beforeEach(async (): Promise<void> => {
           asset = (await assetService.create({
             ...randomAsset(),
+            tenantId: Config.operatorTenantId,
             withdrawalThreshold,
             liquidityThreshold
           })) as AssetModel

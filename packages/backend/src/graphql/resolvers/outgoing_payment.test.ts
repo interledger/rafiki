@@ -1,10 +1,19 @@
-import { ApolloError, gql } from '@apollo/client'
+import {
+  ApolloClient,
+  ApolloError,
+  gql,
+  NormalizedCacheObject
+} from '@apollo/client'
 import { PaymentError } from '@interledger/pay'
 import { v4 as uuid } from 'uuid'
 import * as Pay from '@interledger/pay'
 
 import { getPageTests } from './page.test'
-import { createTestApp, TestContainer } from '../../tests/app'
+import {
+  createApolloClient,
+  createTestApp,
+  TestContainer
+} from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
@@ -37,6 +46,8 @@ import {
 } from '../generated/graphql'
 import { faker } from '@faker-js/faker'
 import { GraphQLErrorCode } from '../errors'
+import { createTenant } from '../../tests/tenant'
+import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/types'
 
 describe('OutgoingPayment Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -60,7 +71,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   afterEach(async (): Promise<void> => {
     jest.restoreAllMocks()
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -70,6 +81,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   const createPayment = async (
     options: {
+      tenantId: string
       walletAddressId: string
       metadata?: Record<string, unknown>
     },
@@ -96,11 +108,14 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   describe('Query.outgoingPayment', (): void => {
     let payment: OutgoingPaymentModel
+    let tenantId: string
     let walletAddressId: string
 
     beforeEach(async (): Promise<void> => {
+      tenantId = Config.operatorTenantId
       walletAddressId = (
         await createWalletAddress(deps, {
+          tenantId,
           assetId: asset.id
         })
       ).id
@@ -110,6 +125,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       getClient: () => appContainer.apolloClient,
       createModel: () =>
         createPayment({
+          tenantId,
           walletAddressId
         }),
       pagedQuery: 'outgoingPayments'
@@ -121,8 +137,11 @@ describe('OutgoingPayment Resolvers', (): void => {
       let secondOutgoingPayment: OutgoingPaymentModel
 
       const pageQuery = gql`
-        query OutgoingPayments($filter: OutgoingPaymentFilter) {
-          outgoingPayments(filter: $filter) {
+        query OutgoingPayments(
+          $filter: OutgoingPaymentFilter
+          $tenantId: String
+        ) {
+          outgoingPayments(filter: $filter, tenantId: $tenantId) {
             edges {
               node {
                 id
@@ -137,13 +156,16 @@ describe('OutgoingPayment Resolvers', (): void => {
 
       beforeEach(async (): Promise<void> => {
         const firstReceiverWalletAddress = await createWalletAddress(deps, {
+          tenantId,
           assetId: asset.id
         })
         const secondWalletAddress = await createWalletAddress(deps, {
+          tenantId,
           assetId: asset.id
         })
 
         const secondReceiverWalletAddress = await createWalletAddress(deps, {
+          tenantId,
           assetId: asset.id
         })
 
@@ -158,10 +180,13 @@ describe('OutgoingPayment Resolvers', (): void => {
         }
 
         const incomingPayment = await createIncomingPayment(deps, {
-          walletAddressId: firstReceiverWalletAddress.id
+          walletAddressId: firstReceiverWalletAddress.id,
+          tenantId: Config.operatorTenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
         receiver = incomingPayment.getUrl(config.openPaymentsUrl)
         firstOutgoingPayment = await createOutgoingPayment(deps, {
+          tenantId,
           walletAddressId,
           receiver,
           method: 'ilp',
@@ -169,12 +194,15 @@ describe('OutgoingPayment Resolvers', (): void => {
         })
 
         const secondIncomingPayment = await createIncomingPayment(deps, {
-          walletAddressId: secondReceiverWalletAddress.id
+          walletAddressId: secondReceiverWalletAddress.id,
+          tenantId: Config.operatorTenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
         const secondReceiver = secondIncomingPayment.getUrl(
           config.openPaymentsUrl
         )
         secondOutgoingPayment = await createOutgoingPayment(deps, {
+          tenantId,
           walletAddressId: secondWalletAddress.id,
           receiver: secondReceiver,
           method: 'ilp',
@@ -323,6 +351,174 @@ describe('OutgoingPayment Resolvers', (): void => {
           })
         )
       })
+
+      describe('tenant boundaries', (): void => {
+        let tenantPayment: OutgoingPaymentModel
+        let secondTenantPayment: OutgoingPaymentModel
+        let tenantedApolloClient: ApolloClient<NormalizedCacheObject>
+
+        beforeEach(async (): Promise<void> => {
+          const tenant = await createTenant(deps)
+          tenantedApolloClient = await createApolloClient(
+            appContainer.container,
+            appContainer.app,
+            tenant.id
+          )
+          const tenantWalletAddress = await createWalletAddress(deps, {
+            tenantId: tenant.id
+          })
+
+          tenantPayment = await createOutgoingPayment(deps, {
+            walletAddressId: tenantWalletAddress.id,
+            tenantId: tenant.id,
+            method: 'ilp',
+            receiver,
+            validDestination: false
+          })
+
+          secondTenantPayment = await createOutgoingPayment(deps, {
+            walletAddressId: tenantWalletAddress.id,
+            tenantId: tenant.id,
+            method: 'ilp',
+            receiver,
+            validDestination: false
+          })
+        })
+
+        test('operator can get outgoing payments across all tenants', async (): Promise<void> => {
+          const query = await appContainer.apolloClient
+            .query({
+              query: pageQuery
+            })
+            .then((query): OutgoingPaymentConnection => {
+              if (query.data) {
+                return query.data.outgoingPayments
+              } else {
+                throw new Error()
+              }
+            })
+
+          expect(query.edges).toHaveLength(4)
+          expect(query.edges).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                node: expect.objectContaining({
+                  id: firstOutgoingPayment.id
+                })
+              }),
+              expect.objectContaining({
+                node: expect.objectContaining({
+                  id: secondOutgoingPayment.id
+                })
+              }),
+              expect.objectContaining({
+                node: expect.objectContaining({
+                  id: tenantPayment.id
+                })
+              }),
+              expect.objectContaining({
+                node: expect.objectContaining({
+                  id: secondTenantPayment.id
+                })
+              })
+            ])
+          )
+        })
+
+        test('tenant canot get outgoing payments across all tenants', async (): Promise<void> => {
+          const query = await tenantedApolloClient
+            .query({
+              query: pageQuery
+            })
+            .then((query): OutgoingPaymentConnection => {
+              if (query.data) {
+                return query.data.outgoingPayments
+              } else {
+                throw new Error()
+              }
+            })
+
+          expect(query.edges).toHaveLength(2)
+          expect(query.edges).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                node: expect.objectContaining({
+                  id: tenantPayment.id
+                })
+              }),
+              expect.objectContaining({
+                node: expect.objectContaining({
+                  id: secondTenantPayment.id
+                })
+              })
+            ])
+          )
+        })
+
+        test('operator can filter outgoing payments across all tenants', async (): Promise<void> => {
+          const query = await appContainer.apolloClient
+            .query({
+              query: pageQuery,
+              variables: {
+                tenantId: tenantPayment.tenantId
+              }
+            })
+            .then((query): OutgoingPaymentConnection => {
+              if (query.data) {
+                return query.data.outgoingPayments
+              } else {
+                throw new Error()
+              }
+            })
+
+          expect(query.edges).toHaveLength(2)
+          expect(query.edges).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                node: expect.objectContaining({
+                  id: tenantPayment.id
+                })
+              }),
+              expect.objectContaining({
+                node: expect.objectContaining({
+                  id: secondTenantPayment.id
+                })
+              })
+            ])
+          )
+        })
+
+        test('tenant cannot filter outgoing payments across all tenants', async (): Promise<void> => {
+          const query = await tenantedApolloClient
+            .query({
+              query: pageQuery,
+              variables: { tenantId: firstOutgoingPayment.tenantId }
+            })
+            .then((query): OutgoingPaymentConnection => {
+              if (query.data) {
+                return query.data.outgoingPayments
+              } else {
+                throw new Error()
+              }
+            })
+
+          expect(query.edges).toHaveLength(2)
+          expect(query.edges).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                node: expect.objectContaining({
+                  id: tenantPayment.id
+                })
+              }),
+              expect.objectContaining({
+                node: expect.objectContaining({
+                  id: secondTenantPayment.id
+                })
+              })
+            ])
+          )
+        })
+      })
     })
 
     describe('grantId', (): void => {
@@ -330,10 +526,14 @@ describe('OutgoingPayment Resolvers', (): void => {
         const grantId = uuid()
 
         const { id: walletAddressId } = await createWalletAddress(deps, {
+          tenantId,
           assetId: asset.id
         })
 
-        const payment = await createPayment({ walletAddressId }, grantId)
+        const payment = await createPayment(
+          { tenantId, walletAddressId },
+          grantId
+        )
 
         const query = await appContainer.apolloClient
           .query({
@@ -369,9 +569,10 @@ describe('OutgoingPayment Resolvers', (): void => {
 
       beforeEach(async (): Promise<void> => {
         const { id: walletAddressId } = await createWalletAddress(deps, {
+          tenantId,
           assetId: asset.id
         })
-        payment = await createPayment({ walletAddressId, metadata })
+        payment = await createPayment({ tenantId, walletAddressId, metadata })
       })
 
       // Query with each payment state with and without an error
@@ -550,16 +751,26 @@ describe('OutgoingPayment Resolvers', (): void => {
   })
 
   describe('Mutation.createOutgoingPayment', (): void => {
+    let tenantId: string
     const metadata = {
       description: 'rent',
       externalRef: '202201'
     }
 
+    beforeEach(async (): Promise<void> => {
+      tenantId = Config.operatorTenantId
+    })
+
     test('success (metadata)', async (): Promise<void> => {
       const { id: walletAddressId } = await createWalletAddress(deps, {
+        tenantId,
         assetId: asset.id
       })
-      const payment = await createPayment({ walletAddressId, metadata })
+      const payment = await createPayment({
+        tenantId,
+        walletAddressId,
+        metadata
+      })
 
       const createSpy = jest
         .spyOn(outgoingPaymentService, 'create')
@@ -590,7 +801,7 @@ describe('OutgoingPayment Resolvers', (): void => {
           (query): OutgoingPaymentResponse => query.data?.createOutgoingPayment
         )
 
-      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
       expect(query.payment?.id).toBe(payment.id)
       expect(query.payment?.state).toBe(SchemaPaymentState.Funding)
     })
@@ -638,7 +849,7 @@ describe('OutgoingPayment Resolvers', (): void => {
           })
         )
       }
-      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
     })
 
     test('internal server error', async (): Promise<void> => {
@@ -684,18 +895,27 @@ describe('OutgoingPayment Resolvers', (): void => {
           })
         )
       }
-      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
     })
   })
 
   describe('Mutation.createOutgoingPaymentFromIncomingPayment', (): void => {
+    let tenantId: string
     const mockIncomingPaymentUrl = `https://${faker.internet.domainName()}/incoming-payments/${uuid()}`
+
+    beforeEach(async (): Promise<void> => {
+      tenantId = Config.operatorTenantId
+    })
 
     test('create', async (): Promise<void> => {
       const walletAddress = await createWalletAddress(deps, {
+        tenantId,
         assetId: asset.id
       })
-      const payment = await createPayment({ walletAddressId: walletAddress.id })
+      const payment = await createPayment({
+        tenantId,
+        walletAddressId: walletAddress.id
+      })
 
       const createSpy = jest
         .spyOn(outgoingPaymentService, 'create')
@@ -711,9 +931,9 @@ describe('OutgoingPayment Resolvers', (): void => {
         }
       }
 
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
+      const mutation = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
             mutation CreateOutgoingPaymentFromIncomingPayment(
               $input: CreateOutgoingPaymentFromIncomingPaymentInput!
             ) {
@@ -728,13 +948,69 @@ describe('OutgoingPayment Resolvers', (): void => {
           variables: { input }
         })
         .then(
-          (query): OutgoingPaymentResponse =>
-            query.data?.createOutgoingPaymentFromIncomingPayment
+          (response) => response.data?.createOutgoingPaymentFromIncomingPayment
         )
 
-      expect(createSpy).toHaveBeenCalledWith(input)
-      expect(query.payment?.id).toBe(payment.id)
-      expect(query.payment?.state).toBe(SchemaPaymentState.Funding)
+      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
+      expect(mutation.payment?.id).toBe(payment.id)
+      expect(mutation.payment?.state).toBe(SchemaPaymentState.Funding)
+    })
+
+    test('create', async (): Promise<void> => {
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId,
+        assetId: asset.id
+      })
+      const payment = await createPayment({
+        tenantId,
+        walletAddressId: walletAddress.id
+      })
+
+      const createSpy = jest
+        .spyOn(outgoingPaymentService, 'create')
+        .mockResolvedValueOnce(payment)
+
+      const input = {
+        walletAddressId: payment.walletAddressId,
+        incomingPayment: mockIncomingPaymentUrl,
+        debitAmount: {
+          value: BigInt(56),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
+        cardDetails: {
+          data: {
+            signature: 'test-signature',
+            payload: 'payload'
+          },
+          requestId: crypto.randomUUID(),
+          initiatedAt: new Date().toISOString()
+        }
+      }
+
+      const mutation = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation CreateOutgoingPaymentFromIncomingPayment(
+              $input: CreateOutgoingPaymentFromIncomingPaymentInput!
+            ) {
+              createOutgoingPaymentFromIncomingPayment(input: $input) {
+                payment {
+                  id
+                  state
+                }
+              }
+            }
+          `,
+          variables: { input }
+        })
+        .then(
+          (response) => response.data?.createOutgoingPaymentFromIncomingPayment
+        )
+
+      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
+      expect(mutation.payment?.id).toBe(payment.id)
+      expect(mutation.payment?.state).toBe(SchemaPaymentState.Funding)
     })
 
     test('unknown wallet address', async (): Promise<void> => {
@@ -785,7 +1061,7 @@ describe('OutgoingPayment Resolvers', (): void => {
           })
         )
       }
-      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
     })
 
     test('unknown error', async (): Promise<void> => {
@@ -836,18 +1112,23 @@ describe('OutgoingPayment Resolvers', (): void => {
           })
         )
       }
-      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
     })
   })
 
   describe('Mutation.cancelOutgoingPayment', (): void => {
     let payment: OutgoingPaymentModel
     beforeEach(async () => {
+      const tenantId = Config.operatorTenantId
       const walletAddress = await createWalletAddress(deps, {
+        tenantId,
         assetId: asset.id
       })
 
-      payment = await createPayment({ walletAddressId: walletAddress.id })
+      payment = await createPayment({
+        tenantId,
+        walletAddressId: walletAddress.id
+      })
     })
 
     const reasons: (string | undefined)[] = [undefined, 'Not enough balance']
@@ -890,7 +1171,10 @@ describe('OutgoingPayment Resolvers', (): void => {
               query.data?.cancelOutgoingPayment
           )
 
-        expect(cancelSpy).toHaveBeenCalledWith(input)
+        expect(cancelSpy).toHaveBeenCalledWith({
+          ...input,
+          tenantId: payment.quote.tenantId
+        })
         expect(mutationResponse.payment).toEqual({
           __typename: 'OutgoingPayment',
           id: input.id,
@@ -949,17 +1233,23 @@ describe('OutgoingPayment Resolvers', (): void => {
             })
           )
         }
-        expect(cancelSpy).toHaveBeenCalledWith(input)
+        expect(cancelSpy).toHaveBeenCalledWith({
+          ...input,
+          tenantId: payment.quote.tenantId
+        })
       }
     )
   })
 
   describe('Wallet address outgoingPayments', (): void => {
     let walletAddressId: string
+    let tenantId: string
 
     beforeEach(async (): Promise<void> => {
+      tenantId = Config.operatorTenantId
       walletAddressId = (
         await createWalletAddress(deps, {
+          tenantId,
           assetId: asset.id
         })
       ).id
@@ -969,6 +1259,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       getClient: () => appContainer.apolloClient,
       createModel: () =>
         createPayment({
+          tenantId,
           walletAddressId
         }),
       pagedQuery: 'outgoingPayments',

@@ -2,9 +2,9 @@ import { v4 } from 'uuid'
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 import createLogger, { LevelWithSilent, LoggerOptions } from 'pino'
 import { generateJwk } from '@interledger/http-signature-utils'
-import { createRequesters } from './requesters'
-import { Config, Account, Peering } from './types'
-import { Asset, FeeType } from './generated/graphql'
+import { createRequesters, createTenant } from './requesters'
+import { Config } from './types'
+import { Asset, FeeType, Tenant } from './generated/graphql'
 import { AccountProvider } from './account-provider'
 
 interface SetupFromSeedOptions {
@@ -14,10 +14,13 @@ interface SetupFromSeedOptions {
 
 export async function setupFromSeed(
   config: Config,
-  apolloClient: ApolloClient<NormalizedCacheObject>,
+  generateApolloClient: (options?: {
+    tenantId: string
+    apiSecret: string
+  }) => ApolloClient<NormalizedCacheObject>,
   mockAccounts: AccountProvider,
   options: SetupFromSeedOptions = {}
-): Promise<void> {
+): Promise<{ tenantId: string; apiSecret: string } | undefined> {
   const { logLevel = 'info', pinoPretty = false } = options
 
   const loggerOptions: LoggerOptions<never> = {
@@ -28,7 +31,32 @@ export async function setupFromSeed(
     loggerOptions.transport = { target: 'pino-pretty' }
   }
 
+  const apolloClient = generateApolloClient()
+
   const logger = createLogger(loggerOptions)
+
+  let createdTenant: Tenant | undefined
+  let requesterApolloClient: ApolloClient<NormalizedCacheObject> = apolloClient
+  if (config.isTenant) {
+    const seedTenant = config.seed.tenants[0]
+    createdTenant = (
+      await createTenant(
+        apolloClient,
+        seedTenant.publicName,
+        seedTenant.apiSecret,
+        seedTenant.idpConsentUrl,
+        seedTenant.idpSecret,
+        seedTenant.walletAddressPrefix,
+        seedTenant.webhookUrl,
+        seedTenant.id
+      )
+    ).tenant
+    requesterApolloClient = generateApolloClient({
+      tenantId: createdTenant.id,
+      apiSecret: createdTenant.apiSecret
+    })
+  }
+
   const {
     createAsset,
     depositAssetLiquidity,
@@ -41,7 +69,7 @@ export async function setupFromSeed(
     getAssetByCodeAndScale,
     getWalletAddressByURL,
     getPeerByAddressAndAsset
-  } = createRequesters(apolloClient, logger)
+  } = createRequesters(requesterApolloClient, logger)
 
   const assets: Record<string, Asset> = {}
   for (const { code, scale, liquidity, liquidityThreshold } of config.seed
@@ -49,12 +77,11 @@ export async function setupFromSeed(
     let asset = await getAssetByCodeAndScale(code, scale)
     if (!asset) {
       asset = (await createAsset(code, scale, liquidityThreshold)).asset || null
+      if (!asset) {
+        throw new Error(`Could not create asset: ${code}  ${scale}`)
+      }
+      await depositAssetLiquidity(asset.id, liquidity, v4())
     }
-    if (!asset) {
-      throw new Error('asset not defined')
-    }
-
-    await depositAssetLiquidity(asset.id, liquidity, v4())
 
     assets[code] = asset
     logger.debug({ asset, liquidity })
@@ -66,38 +93,43 @@ export async function setupFromSeed(
     }
   }
 
+  logger.debug('Finished seeding assets')
+
   const peeringAsset = config.seed.peeringAsset
 
-  const peerResponses = await Promise.all(
-    config.seed.peers.map(async (peer: Peering) => {
-      let peerResponse = await getPeerByAddressAndAsset(
-        peer.peerIlpAddress,
-        assets[peeringAsset].id
-      )
-      if (!peerResponse) {
-        peerResponse = await createPeer(
-          peer.peerIlpAddress,
-          peer.peerUrl,
-          assets[peeringAsset].id,
-          assets[peeringAsset].code,
-          peer.name,
-          peer.liquidityThreshold
-        ).then((response) => response.peer || null)
-      }
-      if (!peerResponse) {
-        throw new Error('peer response not defined')
-      }
-      const transferUid = v4()
-      await depositPeerLiquidity(
-        peerResponse.id,
-        peer.initialLiquidity,
-        transferUid
-      )
-      return [peerResponse, peer.initialLiquidity]
-    })
-  )
+  const host = config.isTenant
+    ? config.seed.tenants[0].walletAddressPrefix
+    : config.publicHost
 
-  logger.debug(peerResponses)
+  for (const peer of config.seed.peers) {
+    const existingPeer = await getPeerByAddressAndAsset(
+      peer.peerIlpAddress,
+      assets[peeringAsset].id
+    )
+
+    if (existingPeer && existingPeer.staticIlpAddress === peer.peerIlpAddress) {
+      continue
+    }
+
+    const newPeer = await createPeer(
+      peer.peerIlpAddress,
+      peer.peerUrl,
+      assets[peeringAsset].id,
+      peer.name,
+      peer.liquidityThreshold,
+      peer.tokens.incoming,
+      peer.tokens.outgoing
+    ).then((response) => response.peer || null)
+
+    if (!newPeer) {
+      throw new Error('Could not create peer')
+    }
+
+    const transferUid = v4()
+    await depositPeerLiquidity(newPeer.id, peer.initialLiquidity, transferUid)
+  }
+
+  logger.debug('Finished seeding peers')
 
   if (config.testnetAutoPeerUrl) {
     logger.debug('autopeering url: ', config.testnetAutoPeerUrl)
@@ -114,45 +146,42 @@ export async function setupFromSeed(
   // Clear the accounts before seeding.
   await mockAccounts.clearAccounts()
 
-  const accountResponses = await Promise.all(
-    config.seed.accounts.map(async (account: Account) => {
-      const accountAsset = assets[account.assetCode]
-      await mockAccounts.create(
-        account.id,
-        account.path,
-        account.name,
-        accountAsset.code,
-        accountAsset.scale,
-        accountAsset.id
+  for (const account of config.seed.accounts) {
+    const accountAsset = assets[account.assetCode]
+
+    if (!accountAsset) {
+      throw new Error(
+        `Trying to create an account with a non-existing asset: ${account.assetCode}`
       )
-      if (account.initialBalance) {
-        await mockAccounts.credit(
-          account.id,
-          BigInt(account.initialBalance),
-          false
-        )
-      }
+    }
 
-      if (account.skipWalletAddressCreation) {
-        return
-      }
-
-      logger.debug('hostname: ', config.publicHost)
-
-      const url = `${config.publicHost}/${account.path}`
-      let walletAddress = await getWalletAddressByURL(url)
-      if (!walletAddress) {
-        walletAddress = await createWalletAddress(
-          account.name,
-          url,
-          accountAsset.id
-        )
-      }
-
-      await mockAccounts.setWalletAddress(
+    await mockAccounts.create(
+      account.id,
+      account.path,
+      account.name,
+      accountAsset.code,
+      accountAsset.scale,
+      accountAsset.id
+    )
+    if (account.initialBalance) {
+      await mockAccounts.credit(
         account.id,
-        walletAddress.id,
-        walletAddress.url
+        BigInt(account.initialBalance),
+        false
+      )
+    }
+
+    if (account.skipWalletAddressCreation) {
+      continue
+    }
+
+    const url = `${host}/${account.path}`
+    let walletAddress = await getWalletAddressByURL(url)
+    if (!walletAddress) {
+      walletAddress = await createWalletAddress(
+        account.name,
+        url,
+        accountAsset.id
       )
 
       await createWalletAddressKey({
@@ -162,15 +191,25 @@ export async function setupFromSeed(
           privateKey: config.key
         }) as unknown as string
       })
+    }
 
-      return walletAddress
-    })
-  )
-  logger.debug('seed complete')
-  logger.debug(accountResponses)
-  const hostname = new URL(config.publicHost).hostname
+    await mockAccounts.setWalletAddress(
+      account.id,
+      walletAddress.id,
+      walletAddress.address
+    )
+  }
+
+  logger.debug('Finished seeding accounts/wallet addresses')
+  logger.debug('Seed complete')
+
+  const hostname = new URL(host).hostname
   const envVarStrings = config.seed.accounts.map((account) => {
-    return `${account.brunoEnvVar}: ${config.publicHost}/${account.path} hostname: ${hostname}`
+    return `${account.brunoEnvVar}: ${host}/${account.path} hostname: ${hostname}`
   })
   logger.debug(envVarStrings)
+
+  return createdTenant
+    ? { tenantId: createdTenant.id, apiSecret: createdTenant.apiSecret }
+    : undefined
 }

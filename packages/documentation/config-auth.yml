@@ -1,0 +1,31 @@
+spectaql:
+  oneFile: true
+  targetDir: ./src/pages/apis/graphql/auth
+  logoFile: ./public/img/logo.png
+  embedLogo: true
+  faviconUrl: /favicon.svg
+  displayAllServers: true
+
+introspection:
+  removeTrailingPeriodFromDescriptions: false
+  schemaFile: '../auth/src/graphql/schema.graphql'
+  queryNameStrategy: capitalizeFirst
+  fieldExpansionDepth: 2
+
+  spectaqlDirective:
+    enable: true
+
+extensions:
+  graphqlScalarExamples: true
+
+info:
+  title: Auth Admin API
+  description: The Auth Admin API allows you to get information about a grant, such as its status, state, related payment details, and the wallet address of the grantee’s account. The API also allows you to revoke grants.
+  x-introItems:
+    - title: Back to documentation
+      url: /overview/overview
+  x-hidePoweredBy: true
+
+servers:
+  - url: https://staging.example.com/graphql
+    description: Staging

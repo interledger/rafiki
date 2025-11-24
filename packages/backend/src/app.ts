@@ -70,7 +70,8 @@ import { applyMiddleware } from 'graphql-middleware'
 import { Redis } from 'ioredis'
 import {
   idempotencyGraphQLMiddleware,
-  lockGraphQLMutationMiddleware
+  lockGraphQLMutationMiddleware,
+  setForTenantIdGraphQLMutationMiddleware
 } from './graphql/middleware'
 import { createRedisDataStore } from './middleware/cache/data-stores/redis'
 import { createRedisLock } from './middleware/lock/redis'
@@ -85,7 +86,6 @@ import { IlpPaymentService } from './payment-method/ilp/service'
 import { TelemetryService } from './telemetry/service'
 import { ApolloArmor } from '@escape.tech/graphql-armor'
 import { openPaymentsServerErrorMiddleware } from './open_payments/route-errors'
-import { verifyApiSignature } from './shared/utils'
 import { WalletAddress } from './open_payments/wallet_address/model'
 import {
   getWalletAddressUrlFromIncomingPayment,
@@ -102,6 +102,17 @@ import { LoggingPlugin } from './graphql/plugin'
 import { LocalPaymentService } from './payment-method/local/service'
 import { GrantService } from './open_payments/grant/service'
 import { AuthServerService } from './open_payments/authServer/service'
+import { Tenant } from './tenants/model'
+import {
+  getTenantFromApiSignature,
+  TenantApiSignatureResult
+} from './shared/utils'
+import { TenantService } from './tenants/service'
+import { AuthServiceClient } from './auth-service-client/client'
+import { TenantSettingService } from './tenants/settings/service'
+import { StreamCredentialsService } from './payment-method/ilp/stream-credentials/service'
+import { PaymentMethodProviderService } from './payment-method/provider/service'
+
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -218,6 +229,15 @@ type ContextType<T> = T extends (
 
 const WALLET_ADDRESS_PATH = '/:walletAddressPath+'
 
+export interface TenantedApolloContext extends ApolloContext {
+  tenant: Tenant
+  isOperator: boolean
+}
+
+export interface ForTenantIdContext extends TenantedApolloContext {
+  forTenantId?: string
+}
+
 export interface AppServices {
   logger: Promise<Logger>
   telemetry: Promise<TelemetryService>
@@ -260,6 +280,11 @@ export interface AppServices {
   paymentMethodHandlerService: Promise<PaymentMethodHandlerService>
   ilpPaymentService: Promise<IlpPaymentService>
   localPaymentService: Promise<LocalPaymentService>
+  tenantService: Promise<TenantService>
+  authServiceClient: AuthServiceClient
+  tenantSettingService: Promise<TenantSettingService>
+  streamCredentialsService: Promise<StreamCredentialsService>
+  paymentMethodProviderService: Promise<PaymentMethodProviderService>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -328,7 +353,8 @@ export class App {
       ),
       idempotencyGraphQLMiddleware(
         createRedisDataStore(redis, this.config.graphQLIdempotencyKeyTtlMs)
-      )
+      ),
+      setForTenantIdGraphQLMutationMiddleware()
     )
 
     // Setup Armor
@@ -389,19 +415,58 @@ export class App {
       }
     )
 
-    if (this.config.adminApiSecret) {
-      koa.use(async (ctx, next: Koa.Next): Promise<void> => {
-        if (!(await verifyApiSignature(ctx, this.config))) {
+    let tenantApiSignatureResult: TenantApiSignatureResult
+    const tenantSignatureMiddleware = async (
+      ctx: AppContext,
+      next: Koa.Next
+    ): Promise<void> => {
+      const result = await getTenantFromApiSignature(ctx, this.config)
+      if (!result) {
+        ctx.throw(401, 'Unauthorized')
+      } else {
+        tenantApiSignatureResult = {
+          tenant: result.tenant,
+          isOperator: result.isOperator ? true : false
+        }
+      }
+      return next()
+    }
+
+    const testTenantSignatureMiddleware = async (
+      ctx: AppContext,
+      next: Koa.Next
+    ): Promise<void> => {
+      if (ctx.headers['tenant-id']) {
+        const tenantService = await ctx.container.use('tenantService')
+        const tenant = await tenantService.get(
+          ctx.headers['tenant-id'] as string
+        )
+
+        if (tenant) {
+          tenantApiSignatureResult = {
+            tenant,
+            isOperator: tenant.apiSecret === this.config.adminApiSecret
+          }
+        } else {
           ctx.throw(401, 'Unauthorized')
         }
-        return next()
-      })
+      }
+      return next()
     }
+
+    // For tests, we still need to get the tenant in the middleware, but
+    // we don't need to verify the signature nor prevent replay attacks
+    koa.use(
+      this.config.env !== 'test'
+        ? tenantSignatureMiddleware
+        : testTenantSignatureMiddleware
+    )
 
     koa.use(
       koaMiddleware(this.apolloServer, {
-        context: async (): Promise<ApolloContext> => {
+        context: async (): Promise<TenantedApolloContext> => {
           return {
+            ...tenantApiSignatureResult,
             container: this.container,
             logger: await this.container.use('logger')
           }
@@ -444,7 +509,7 @@ export class App {
     // POST /incoming-payments
     // Create incoming payment
     router.post<DefaultState, SignedCollectionContext<IncomingCreateBody>>(
-      '/incoming-payments',
+      '/:tenantId/incoming-payments',
       createValidatorMiddleware<
         ContextType<SignedCollectionContext<IncomingCreateBody>>
       >(
@@ -471,7 +536,7 @@ export class App {
       DefaultState,
       SignedCollectionContext<never, GetCollectionQuery>
     >(
-      '/incoming-payments',
+      '/:tenantId/incoming-payments',
       createValidatorMiddleware<
         ContextType<SignedCollectionContext<never, GetCollectionQuery>>
       >(
@@ -495,7 +560,7 @@ export class App {
     // POST /outgoing-payment
     // Create outgoing payment
     router.post<DefaultState, SignedCollectionContext<OutgoingCreateBody>>(
-      '/outgoing-payments',
+      '/:tenantId/outgoing-payments',
       createValidatorMiddleware<
         ContextType<SignedCollectionContext<OutgoingCreateBody>>
       >(
@@ -522,7 +587,7 @@ export class App {
       DefaultState,
       SignedCollectionContext<never, GetCollectionQuery>
     >(
-      '/outgoing-payments',
+      '/:tenantId/outgoing-payments',
       createValidatorMiddleware<
         ContextType<SignedCollectionContext<never, GetCollectionQuery>>
       >(
@@ -546,7 +611,7 @@ export class App {
     // POST /quotes
     // Create quote
     router.post<DefaultState, SignedCollectionContext<QuoteCreateBody>>(
-      '/quotes',
+      '/:tenantId/quotes',
       createValidatorMiddleware<
         ContextType<SignedCollectionContext<QuoteCreateBody>>
       >(
@@ -570,7 +635,7 @@ export class App {
     // GET /incoming-payments/{id}
     // Read incoming payment
     router.get<DefaultState, SubresourceContextWithAuthenticatedStatus>(
-      '/incoming-payments/:id',
+      '/:tenantId/incoming-payments/:id',
       createValidatorMiddleware<
         ContextType<SubresourceContextWithAuthenticatedStatus>
       >(
@@ -595,7 +660,7 @@ export class App {
     // POST /incoming-payments/{id}/complete
     // Complete incoming payment
     router.post<DefaultState, SignedSubresourceContext>(
-      '/incoming-payments/:id/complete',
+      '/:tenantId/incoming-payments/:id/complete',
       createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
         resourceServerSpec,
         {
@@ -617,7 +682,7 @@ export class App {
     // GET /outgoing-payments/{id}
     // Read outgoing payment
     router.get<DefaultState, SignedSubresourceContext>(
-      '/outgoing-payments/:id',
+      '/:tenantId/outgoing-payments/:id',
       createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
         resourceServerSpec,
         {
@@ -652,7 +717,7 @@ export class App {
     // GET /quotes/{id}
     // Read quote
     router.get<DefaultState, SignedSubresourceContext>(
-      '/quotes/:id',
+      '/:tenantId/quotes/:id',
       createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
         resourceServerSpec,
         {

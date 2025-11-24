@@ -1,7 +1,6 @@
 import { Model, QueryContext } from 'objection'
 
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
-import { IlpStreamCredentials } from '../../../payment-method/ilp/stream-credentials/service'
 import {
   WalletAddress,
   WalletAddressSubresource
@@ -9,12 +8,13 @@ import {
 import { Asset } from '../../../asset/model'
 import { LiquidityAccount, OnCreditOptions } from '../../../accounting/service'
 import { ConnectorAccount } from '../../../payment-method/ilp/connector/core/rafiki'
-import { WebhookEvent } from '../../../webhook/model'
+import { WebhookEvent } from '../../../webhook/event/model'
 import {
   IncomingPayment as OpenPaymentsIncomingPayment,
   IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethod
 } from '@interledger/open-payments'
-import base64url from 'base64url'
+import { OpenPaymentsPaymentMethod } from '../../../payment-method/provider/service'
+import { IncomingPaymentInitiationReason } from './types'
 
 export enum IncomingPaymentEventType {
   IncomingPaymentCreated = 'incoming_payment.created',
@@ -40,7 +40,6 @@ export interface IncomingPaymentResponse {
   walletAddressId: string
   client?: string
   createdAt: string
-  updatedAt: string
   expiresAt: string
   incomingAmount?: AmountJSON
   receivedAmount: AmountJSON
@@ -104,12 +103,15 @@ export class IncomingPayment
   public processAt!: Date | null
   public approvedAt?: Date | null
   public cancelledAt?: Date | null
+  public initiatedBy!: IncomingPaymentInitiationReason
 
   public readonly assetId!: string
   public asset!: Asset
 
   private incomingAmountValue?: bigint | null
   private receivedAmountValue?: bigint
+  public readonly tenantId!: string
+  public readonly senderWalletAddress?: string | null
 
   public get completed(): boolean {
     return this.state === IncomingPaymentState.Completed
@@ -144,7 +146,7 @@ export class IncomingPayment
 
   public getUrl(resourceServerUrl: string): string {
     resourceServerUrl = resourceServerUrl.replace(/\/+$/, '')
-    return `${resourceServerUrl}${IncomingPayment.urlPath}/${this.id}`
+    return `${resourceServerUrl}/${this.tenantId}${IncomingPayment.urlPath}/${this.id}`
   }
 
   public async onCredit({
@@ -196,8 +198,7 @@ export class IncomingPayment
         assetCode: this.asset.code,
         assetScale: this.asset.scale
       },
-      completed: this.completed,
-      updatedAt: new Date(+this.updatedAt).toISOString()
+      completed: this.completed
     }
 
     if (this.incomingAmount) {
@@ -225,7 +226,7 @@ export class IncomingPayment
   ): OpenPaymentsIncomingPayment {
     return {
       id: this.getUrl(resourceServerUrl),
-      walletAddress: walletAddress.url,
+      walletAddress: walletAddress.address,
       incomingAmount: this.incomingAmount
         ? serializeAmount(this.incomingAmount)
         : undefined,
@@ -233,7 +234,6 @@ export class IncomingPayment
       completed: this.completed,
       metadata: this.metadata ?? undefined,
       createdAt: this.createdAt.toISOString(),
-      updatedAt: this.updatedAt.toISOString(),
       expiresAt: this.expiresAt.toISOString()
     }
   }
@@ -241,19 +241,11 @@ export class IncomingPayment
   public toOpenPaymentsTypeWithMethods(
     resourceServerUrl: string,
     walletAddress: WalletAddress,
-    ilpStreamCredentials?: IlpStreamCredentials
+    paymentMethods: OpenPaymentsPaymentMethod[]
   ): OpenPaymentsIncomingPaymentWithPaymentMethod {
     return {
       ...this.toOpenPaymentsType(resourceServerUrl, walletAddress),
-      methods: !ilpStreamCredentials
-        ? []
-        : [
-            {
-              type: 'ilp',
-              ilpAddress: ilpStreamCredentials.ilpAddress,
-              sharedSecret: base64url(ilpStreamCredentials.sharedSecret)
-            }
-          ]
+      methods: paymentMethods
     }
   }
 

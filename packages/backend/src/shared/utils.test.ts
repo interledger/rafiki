@@ -1,13 +1,26 @@
+import crypto from 'crypto'
 import { IocContract } from '@adonisjs/fold'
 import { Redis } from 'ioredis'
-import { isValidHttpUrl, poll, requestWithTimeout, sleep } from './utils'
+import { faker } from '@faker-js/faker'
+import { v4 } from 'uuid'
+import assert from 'assert'
+import {
+  isValidHttpUrl,
+  poll,
+  requestWithTimeout,
+  sleep,
+  getTenantFromApiSignature,
+  ensureTrailingSlash
+} from './utils'
 import { AppServices, AppContext } from '../app'
 import { TestContainer, createTestApp } from '../tests/app'
 import { initIocContainer } from '..'
 import { verifyApiSignature } from './utils'
 import { generateApiSignature } from '../tests/apiSignature'
-import { Config } from '../config/app'
+import { Config, IAppConfig } from '../config/app'
 import { createContext } from '../tests/context'
+import { Tenant } from '../tenants/model'
+import { truncateTables } from '../tests/tableManager'
 
 describe('utils', (): void => {
   describe('isValidHttpUrl', (): void => {
@@ -261,5 +274,186 @@ describe('utils', (): void => {
       })
       expect(verified).toBe(false)
     })
+  })
+
+  describe('tenant/operator admin api signatures', (): void => {
+    let deps: IocContract<AppServices>
+    let appContainer: TestContainer
+    let tenant: Tenant
+    let operator: Tenant
+    let config: IAppConfig
+    let redis: Redis
+
+    const operatorApiSecret = crypto.randomBytes(8).toString('base64')
+
+    beforeAll(async (): Promise<void> => {
+      deps = initIocContainer({
+        ...Config,
+        adminApiSecret: operatorApiSecret
+      })
+      appContainer = await createTestApp(deps)
+      config = await deps.use('config')
+      redis = await deps.use('redis')
+    })
+
+    beforeEach(async (): Promise<void> => {
+      tenant = await Tenant.query(appContainer.knex).insertAndFetch({
+        email: faker.internet.email(),
+        publicName: faker.company.name(),
+        apiSecret: crypto.randomBytes(8).toString('base64'),
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret'
+      })
+
+      operator = await Tenant.query(appContainer.knex).insertAndFetch({
+        email: faker.internet.email(),
+        publicName: faker.company.name(),
+        apiSecret: operatorApiSecret,
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret'
+      })
+    })
+
+    afterEach(async (): Promise<void> => {
+      await redis.flushall()
+      await truncateTables(deps)
+    })
+
+    afterAll(async (): Promise<void> => {
+      await appContainer.shutdown()
+    })
+
+    test.each`
+      isOperator | description
+      ${false}   | ${'tenanted non-operator'}
+      ${true}    | ${'tenanted operator'}
+    `(
+      'returns if $description request has valid signature',
+      async ({ isOperator }): Promise<void> => {
+        const requestBody = { test: 'value' }
+
+        const signature = isOperator
+          ? generateApiSignature(
+              operator.apiSecret,
+              Config.adminApiSignatureVersion,
+              requestBody
+            )
+          : generateApiSignature(
+              tenant.apiSecret,
+              Config.adminApiSignatureVersion,
+              requestBody
+            )
+
+        const ctx = createContext<AppContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              signature,
+              'tenant-id': isOperator ? operator.id : tenant.id
+            },
+            url: '/graphql'
+          },
+          {},
+          appContainer.container
+        )
+        ctx.request.body = requestBody
+
+        const result = await getTenantFromApiSignature(ctx, config)
+        assert.ok(result)
+        expect(result.tenant).toEqual(isOperator ? operator : tenant)
+
+        if (isOperator) {
+          expect(result.isOperator).toEqual(true)
+        } else {
+          expect(result.isOperator).toEqual(false)
+        }
+      }
+    )
+
+    test("returns undefined when signature isn't signed with tenant secret", async (): Promise<void> => {
+      const requestBody = { test: 'value' }
+      const signature = generateApiSignature(
+        'wrongsecret',
+        Config.adminApiSignatureVersion,
+        requestBody
+      )
+      const ctx = createContext<AppContext>(
+        {
+          headers: {
+            Accept: 'application/json',
+            signature,
+            'tenant-id': tenant.id
+          },
+          url: '/graphql'
+        },
+        {},
+        appContainer.container
+      )
+      ctx.request.body = requestBody
+
+      const result = await getTenantFromApiSignature(ctx, config)
+      expect(result).toBeUndefined
+    })
+
+    test('returns undefined if tenant id is not included', async (): Promise<void> => {
+      const requestBody = { test: 'value' }
+      const signature = generateApiSignature(
+        tenant.apiSecret,
+        Config.adminApiSignatureVersion,
+        requestBody
+      )
+      const ctx = createContext<AppContext>(
+        {
+          headers: {
+            Accept: 'application/json',
+            signature
+          },
+          url: '/graphql'
+        },
+        {},
+        appContainer.container
+      )
+
+      ctx.request.body = requestBody
+
+      const result = await getTenantFromApiSignature(ctx, config)
+      expect(result).toBeUndefined()
+    })
+
+    test('returns undefined if tenant does not exist', async (): Promise<void> => {
+      const requestBody = { test: 'value' }
+      const signature = generateApiSignature(
+        tenant.apiSecret,
+        Config.adminApiSignatureVersion,
+        requestBody
+      )
+      const ctx = createContext<AppContext>(
+        {
+          headers: {
+            Accept: 'application/json',
+            signature,
+            'tenant-id': v4()
+          },
+          url: '/graphql'
+        },
+        {},
+        appContainer.container
+      )
+
+      ctx.request.body = requestBody
+
+      const tenantService = await deps.use('tenantService')
+      const getSpy = jest.spyOn(tenantService, 'get')
+      const result = await getTenantFromApiSignature(ctx, config)
+      expect(result).toBeUndefined()
+      expect(getSpy).toHaveBeenCalled()
+    })
+  })
+
+  test('test ensuring trailing slash', async (): Promise<void> => {
+    const path = '/utils'
+
+    expect(ensureTrailingSlash(path)).toBe(`${path}/`)
+    expect(ensureTrailingSlash(`${path}/`)).toBe(`${path}/`)
   })
 })

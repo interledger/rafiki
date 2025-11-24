@@ -115,9 +115,8 @@ export const Config = {
     5
   ),
 
-  exchangeRatesUrl: process.env.EXCHANGE_RATES_URL, // optional
   exchangeRatesLifetime: +(process.env.EXCHANGE_RATES_LIFETIME || 15_000),
-
+  operatorExchangeRatesUrl: process.env.EXCHANGE_RATES_URL, // optional
   slippage: envFloat('SLIPPAGE', 0.01),
   quoteLifespan: envInt('QUOTE_LIFESPAN', 5 * 60_000), // milliseconds
 
@@ -126,6 +125,7 @@ export const Config = {
 
   authServerGrantUrl: envString('AUTH_SERVER_GRANT_URL'),
   authServerIntrospectionUrl: envString('AUTH_SERVER_INTROSPECTION_URL'),
+  authServiceApiUrl: envString('AUTH_SERVICE_API_URL'),
 
   outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 1),
   outgoingPaymentWorkerIdle: envInt('OUTGOING_PAYMENT_WORKER_IDLE', 10), // milliseconds
@@ -159,8 +159,8 @@ export const Config = {
   signatureSecret: process.env.SIGNATURE_SECRET, // optional
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
 
-  adminApiSecret: process.env.API_SECRET, // optional
-  adminApiSignatureVersion: envInt('API_SIGNATURE_VERSION', 1),
+  adminApiSecret: envString('ADMIN_API_SECRET'),
+  adminApiSignatureVersion: envInt('ADMIN_API_SIGNATURE_VERSION', 1),
   adminApiSignatureTtlSeconds: envInt('ADMIN_API_SIGNATURE_TTL_SECONDS', 30),
 
   keyId: envString('KEY_ID'),
@@ -170,6 +170,10 @@ export const Config = {
   graphQLIdempotencyKeyTtlMs: envInt(
     'GRAPHQL_IDEMPOTENCY_KEY_TTL_MS',
     86400000
+  ),
+  walletAddressNotFoundPollingEnabled: envBool(
+    'WALLET_ADDRESS_NOT_FOUND_POLLING_ENABLED',
+    false
   ),
   walletAddressLookupTimeoutMs: envInt(
     'WALLET_ADDRESS_LOOKUP_TIMEOUT_MS',
@@ -193,7 +197,29 @@ export const Config = {
     5
   ),
   walletAddressRedirectHtmlPage: process.env.WALLET_ADDRESS_REDIRECT_HTML_PAGE,
-  localCacheDuration: envInt('LOCAL_CACHE_DURATION_MS', 15_000)
+  localCacheDuration: envInt('LOCAL_CACHE_DURATION_MS', 15_000),
+  operatorTenantId: envString('OPERATOR_TENANT_ID'),
+  dbSchema: undefined as string | undefined,
+  sendTenantWebhooksToOperator: envBool(
+    'SEND_TENANT_WEBHOOKS_TO_OPERATOR',
+    false
+  ),
+  cardServiceUrl: optional(envString, 'CARD_SERVICE_URL'),
+  posServiceUrl: optional(envString, 'POS_SERVICE_URL'),
+  posWebhookServiceUrl: optional(envString, 'POS_WEBHOOK_SERVICE_URL'),
+  cardWebhookUrl: optional(envString, 'CARD_WEBHOOK_SERVICE_URL')
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function optional<T extends (...args: any[]) => ReturnType<T>>(
+  envGetter: T,
+  envVar: string
+): ReturnType<T> | undefined {
+  try {
+    return envGetter(envVar)
+  } catch (err) {
+    return undefined
+  }
 }
 
 function parseRedisTlsConfig(

@@ -18,12 +18,12 @@ import {
   OutgoingPaymentState,
   OutgoingPaymentEventType
 } from './model'
+import { OutgoingPaymentInitiationReason } from './model'
 import { Grant } from '../../auth/middleware'
 import {
   AccountingService,
   LiquidityAccountType
 } from '../../../accounting/service'
-import { PeerService } from '../../../payment-method/ilp/peer/service'
 import { ReceiverService } from '../../receiver/service'
 import { GetOptions, ListOptions } from '../../wallet_address/model'
 import {
@@ -48,6 +48,7 @@ import { Span, trace } from '@opentelemetry/api'
 import { FeeService } from '../../../fee/service'
 import { OutgoingPaymentGrantSpentAmounts } from './model'
 import { v4 as uuid } from 'uuid'
+import { OutgoingPaymentCardDetails } from './card/model'
 
 const DEFAULT_GRANT_LOCK_TIMEOUT_MS = 5000
 
@@ -80,7 +81,6 @@ export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
   receiverService: ReceiverService
-  peerService: PeerService
   paymentMethodHandlerService: PaymentMethodHandlerService
   walletAddressService: WalletAddressService
   quoteService: QuoteService
@@ -118,15 +118,20 @@ interface GetPageOptions {
   pagination?: Pagination
   filter?: OutgoingPaymentFilter
   sortOrder?: SortOrder
+  tenantId?: string
 }
 
 async function getOutgoingPaymentsPage(
   deps: ServiceDependencies,
   options?: GetPageOptions
 ): Promise<OutgoingPayment[]> {
-  const { filter, pagination, sortOrder } = options ?? {}
+  const { filter, pagination, sortOrder, tenantId } = options ?? {}
 
   const query = OutgoingPayment.query(deps.knex).withGraphFetched('quote')
+
+  if (tenantId) {
+    query.where('tenantId', tenantId)
+  }
 
   if (filter?.receiver?.in && filter.receiver.in.length) {
     query
@@ -170,11 +175,17 @@ async function getOutgoingPayment(
   options: GetOptions
 ): Promise<OutgoingPayment | undefined> {
   const outgoingPayment = await OutgoingPayment.query(deps.knex)
+    .modify((query) => {
+      if (options.tenantId) {
+        query.where({ tenantId: options.tenantId })
+      }
+    })
     .get(options)
     .withGraphFetched('quote')
   if (outgoingPayment) {
     outgoingPayment.walletAddress = await deps.walletAddressService.get(
-      outgoingPayment.walletAddressId
+      outgoingPayment.walletAddressId,
+      outgoingPayment.tenantId
     )
     outgoingPayment.quote.walletAddress = await deps.walletAddressService.get(
       outgoingPayment.quote.walletAddressId
@@ -188,6 +199,7 @@ async function getOutgoingPayment(
 }
 
 export interface BaseOptions {
+  tenantId: string
   walletAddressId: string
   client?: string
   grant?: Grant
@@ -200,32 +212,54 @@ export interface CreateFromQuote extends BaseOptions {
 }
 export interface CreateFromIncomingPayment extends BaseOptions {
   incomingPayment: string
-  debitAmount: Amount
+  debitAmount?: Amount
+}
+
+export interface CreateFromCardPayment extends CreateFromIncomingPayment {
+  cardDetails: {
+    requestId: string
+    data: Record<string, unknown>
+    initiatedAt: Date
+  }
 }
 
 export type CancelOutgoingPaymentOptions = {
   id: string
+  tenantId: string
   reason?: string
+  cardPaymentFailureReason?: 'invalid_signature' | 'invalid_request'
 }
 
 export type CreateOutgoingPaymentOptions =
   | CreateFromQuote
   | CreateFromIncomingPayment
+  | CreateFromCardPayment
+
+export function isCreateFromCardPayment(
+  options: CreateOutgoingPaymentOptions
+): options is CreateFromCardPayment {
+  return 'cardDetails' in options && 'requestId' in options.cardDetails
+}
 
 export function isCreateFromIncomingPayment(
   options: CreateOutgoingPaymentOptions
 ): options is CreateFromIncomingPayment {
-  return 'incomingPayment' in options && 'debitAmount' in options
+  return 'incomingPayment' in options
 }
 
 async function cancelOutgoingPayment(
   deps: ServiceDependencies,
   options: CancelOutgoingPaymentOptions
 ): Promise<OutgoingPayment | OutgoingPaymentError> {
-  const { id } = options
+  const { id, tenantId } = options
 
   return deps.knex.transaction(async (trx) => {
-    let payment = await OutgoingPayment.query(trx).findById(id).forUpdate()
+    let payment = await OutgoingPayment.query(trx)
+      .findOne({
+        id,
+        tenantId
+      })
+      .forUpdate()
 
     if (!payment) return OutgoingPaymentError.UnknownPayment
     if (payment.state !== OutgoingPaymentState.Funding) {
@@ -238,10 +272,13 @@ async function cancelOutgoingPayment(
         state: OutgoingPaymentState.Cancelled,
         metadata: {
           ...payment.metadata,
-          ...(options.reason ? { cancellationReason: options.reason } : {})
+          ...(options.reason ? { cancellationReason: options.reason } : {}),
+          ...(options.cardPaymentFailureReason
+            ? { cardPaymentFailureReason: options.cardPaymentFailureReason }
+            : {})
         }
       })
-      .withGraphFetched('quote')
+      .withGraphFetched('[quote, cardDetails]')
     const asset = await deps.assetService.get(payment.quote.assetId)
     if (asset) payment.quote.asset = asset
 
@@ -250,6 +287,15 @@ async function cancelOutgoingPayment(
     )
     if (payment.grantId) {
       await revertGrantSpentAmounts({ ...deps, knex: trx }, payment)
+    }
+
+    if (payment.initiatedBy === OutgoingPaymentInitiationReason.Card) {
+      await sendWebhookEvent(
+        deps,
+        payment,
+        OutgoingPaymentEventType.PaymentCancelled,
+        trx
+      )
     }
 
     return addSentAmount(deps, payment)
@@ -272,7 +318,7 @@ async function createOutgoingPayment(
           description: 'Time to create an outgoing payment'
         }
       )
-      const { walletAddressId } = options
+      const { walletAddressId, tenantId } = options
       let quoteId: string
 
       if (isCreateFromIncomingPayment(options)) {
@@ -283,17 +329,17 @@ async function createOutgoingPayment(
             description: 'Time to create a quote in outgoing payment'
           }
         )
-        const { debitAmount, incomingPayment } = options
         const quoteOrError = await deps.quoteService.create({
-          receiver: incomingPayment,
-          debitAmount,
+          tenantId,
+          receiver: options.incomingPayment,
+          debitAmount: options.debitAmount,
           method: 'ilp',
           walletAddressId
         })
         stopTimerQuote()
 
         if (isQuoteError(quoteOrError)) {
-          return quoteErrorToOutgoingPaymentError[quoteOrError]
+          return quoteErrorToOutgoingPaymentError[quoteOrError.type]
         }
         quoteId = quoteOrError.id
       } else {
@@ -309,8 +355,10 @@ async function createOutgoingPayment(
             description: 'Time to get wallet address in outgoing payment'
           }
         )
-        const walletAddress =
-          await deps.walletAddressService.get(walletAddressId)
+        const walletAddress = await deps.walletAddressService.get(
+          walletAddressId,
+          tenantId
+        )
         stopTimerWA()
         if (!walletAddress) {
           throw OutgoingPaymentError.UnknownWalletAddress
@@ -342,17 +390,6 @@ async function createOutgoingPayment(
         if (!receiver || !receiver.isActive()) {
           throw OutgoingPaymentError.InvalidQuote
         }
-        const stopTimerPeer = deps.telemetry.startTimer(
-          'outgoing_payment_service_getpeer_time_ms',
-          {
-            callName: 'PeerService:getByDestinationAddress',
-            description: 'Time to retrieve peer in outgoing payment'
-          }
-        )
-        const peer = await deps.peerService.getByDestinationAddress(
-          receiver.ilpAddress
-        )
-        stopTimerPeer()
 
         const payment = await OutgoingPayment.transaction(async (trx) => {
           let existingGrant: OutgoingPaymentGrant | undefined
@@ -376,15 +413,40 @@ async function createOutgoingPayment(
             }
           )
 
+          let initiatedBy: OutgoingPaymentInitiationReason
+          if (isCreateFromCardPayment(options)) {
+            initiatedBy = OutgoingPaymentInitiationReason.Card
+          } else if (options.grant) {
+            initiatedBy = OutgoingPaymentInitiationReason.OpenPayments
+          } else {
+            initiatedBy = OutgoingPaymentInitiationReason.Admin
+          }
+
           const payment = await OutgoingPayment.query(trx).insertAndFetch({
             id: quoteId,
+            tenantId,
             walletAddressId: walletAddressId,
             client: options.client,
             metadata: options.metadata,
             state: OutgoingPaymentState.Funding,
             grantId,
-            createdAt: new Date()
+            createdAt: new Date(),
+            initiatedBy
           })
+
+          if (isCreateFromCardPayment(options)) {
+            const { data, requestId, initiatedAt } = options.cardDetails
+
+            payment.cardDetails = await OutgoingPaymentCardDetails.query(
+              trx
+            ).insertAndFetch({
+              outgoingPaymentId: payment.id,
+              requestId,
+              data,
+              initiatedAt
+            })
+          }
+
           payment.walletAddress = walletAddress
           payment.quote = quote
           if (asset) payment.quote.asset = asset
@@ -425,16 +487,6 @@ async function createOutgoingPayment(
               throw OutgoingPaymentError.InsufficientGrant
             }
           }
-
-          const stopTimerPeerUpdate = deps.telemetry.startTimer(
-            'outgoing_payment_service_patchpeer_time_ms',
-            {
-              callName: 'OutgoingPaymentModel:patch',
-              description: 'Time to patch peer in outgoing payment'
-            }
-          )
-          if (peer) await payment.$query(trx).patch({ peerId: peer.id })
-          stopTimerPeerUpdate()
 
           const stopTimerWebhook = deps.telemetry.startTimer(
             'outgoing_payment_service_webhook_event_time_ms',
@@ -528,6 +580,9 @@ function validateAmountAssets(
   payment: OutgoingPayment,
   limits: Limits
 ): boolean {
+  if (limits.debitAmount && limits.receiveAmount) {
+    throw OutgoingPaymentError.OnlyOneGrantAmountAllowed
+  }
   if (
     limits.debitAmount &&
     (limits.debitAmount.assetCode !== payment.asset.code ||
@@ -837,19 +892,23 @@ function exceedsGrantLimits(
 
 export interface FundOutgoingPaymentOptions {
   id: string
+  tenantId: string
   amount: bigint
   transferId: string
 }
 
 async function fundPayment(
   deps: ServiceDependencies,
-  { id, amount, transferId }: FundOutgoingPaymentOptions
+  { id, tenantId, amount, transferId }: FundOutgoingPaymentOptions
 ): Promise<OutgoingPayment | FundingError> {
   return await deps.knex.transaction(async (trx) => {
     const payment = await OutgoingPayment.query(trx)
-      .findById(id)
+      .findOne({
+        id,
+        tenantId
+      })
       .forUpdate()
-      .withGraphFetched('quote')
+      .withGraphFetched('[quote, cardDetails]')
     if (!payment) return FundingError.UnknownPayment
 
     const asset = await deps.assetService.get(payment.quote.assetId)
@@ -887,6 +946,15 @@ async function fundPayment(
       return error
     }
     await payment.$query(trx).patch({ state: OutgoingPaymentState.Sending })
+
+    if (payment.initiatedBy === OutgoingPaymentInitiationReason.Card) {
+      await sendWebhookEvent(
+        deps,
+        payment,
+        OutgoingPaymentEventType.PaymentFunded,
+        trx
+      )
+    }
     return await addSentAmount(deps, payment)
   })
 }
@@ -896,11 +964,17 @@ async function getWalletAddressPage(
   options: ListOptions
 ): Promise<OutgoingPayment[]> {
   const page = await OutgoingPayment.query(deps.knex)
+    .modify((query) => {
+      if (options.tenantId) {
+        query.where({ tenantId: options.tenantId })
+      }
+    })
     .list(options)
     .withGraphFetched('quote')
   for (const payment of page) {
     payment.walletAddress = await deps.walletAddressService.get(
-      payment.walletAddressId
+      payment.walletAddressId,
+      payment.tenantId
     )
     payment.quote.walletAddress = await deps.walletAddressService.get(
       payment.quote.walletAddressId

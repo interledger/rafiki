@@ -74,6 +74,28 @@ webhooks:
       responses:
         '200':
           description: Data was received successfully
+  outgoingPaymentFunded:
+    post:
+      requestBody:
+        description: Notifies the card service that an outgoing payment has been funded by the ASE.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/outgoingPaymentEvent'
+      responses:
+        '200':
+          description: Data was received successfully
+  outgoingPaymentCancelled:
+    post:
+      requestBody:
+        description: Notifies the card service that an outgoing payment has been cancelled by the ASE.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/outgoingPaymentEvent'
+      responses:
+        '200':
+          description: Data was received successfully
   walletAddressNotFound:
     post:
       requestBody:
@@ -142,7 +164,6 @@ components:
             - id
             - walletAddressId
             - createdAt
-            - updatedAt
             - expiresAt
             - receivedAmount
             - completed
@@ -168,9 +189,6 @@ components:
             createdAt:
               type: string
               format: date-time
-            updatedAt:
-              type: string
-              format: date-time
             expiresAt:
               type: string
               format: date-time
@@ -190,13 +208,14 @@ components:
             - outgoing_payment.created
             - outgoing_payment.completed
             - outgoing_payment.failed
+            - outgoing_payment.funded
+            - outgoing_payment.cancelled
         data:
           type: object
           required:
             - id
             - walletAddressId
             - createdAt
-            - updatedAt
             - expiresAt
             - debitAmount
             - receiveAmount
@@ -234,9 +253,6 @@ components:
             createdAt:
               type: string
               format: date-time
-            updatedAt:
-              type: string
-              format: date-time
             expiresAt:
               type: string
               format: date-time
@@ -247,12 +263,19 @@ components:
             balance:
               type: string
               format: uint64
-            peerId:
-              type: string
-              format: uuid
             grantId:
               type: string
               format: uuid
+            cardDetails:
+              type: object
+              properties:
+                data:
+                  type: object
+                requestId:
+                  type: string
+                initiatedAt:
+                  type: string
+                  format: date-time
       additionalProperties: false
     walletAddressNotFound:
       required:

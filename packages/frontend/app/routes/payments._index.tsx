@@ -52,7 +52,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const { type, walletAddressId, ...pagination } = result.data
 
-  const payments = await listPayments({
+  const payments = await listPayments(request, {
     ...pagination,
     ...(type || walletAddressId
       ? {

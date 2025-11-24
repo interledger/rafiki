@@ -5,8 +5,9 @@ tableOfContents:
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components'
-import { CodeBlock, LinkOut } from '@interledger/docs-design-system'
+import { LinkOut } from '@interledger/docs-design-system'
 import { Badge } from '@astrojs/starlight/components'
+import TenantIdHmacNote from '/src/partials/tenant-id-hmac-note.mdx'
 
 To join the Interledger network and be able to send and receive payments, you must add one or more peers to your Rafiki instance. Peering establishes the connections needed for your Rafiki instance to interact with another account servicing entity (ASE). The purpose of this guide is to help you set up and manage peers.
 
@@ -17,6 +18,15 @@ Refer to the [Rafiki Admin user guide](/admin/admin-user-guide#peers) for detail
 :::tip
 Whether you are using the Backend Admin API or the Rafiki Admin application, the underlying configurations and requirements remain the same. Choose the interface that best suits your individual workflow.
 :::
+
+**Permissions**
+
+- Operators can create peers for any tenant
+- Operators can view any peer
+- Operators can edit and delete peers that belong to any tenant
+- Tenants can only view their own peers
+- Tenants can only edit and delete their own peers
+- Tenants cannot create peers
 
 ## Perform prerequisites
 
@@ -40,11 +50,11 @@ Your <LinkOut href="https://interledger.org/developers/rfcs/ilp-addresses/">ILP 
 
 ### Communicate a connection endpoint
 
-The connection endpoint will be a url that the other peer will send packets to.
+The connection endpoint will be a URL that the other peer will send packets to.
 
 ### Exchange auth tokens for the connection endpoint
 
-Incoming `authtokens` allow you to authenticate that packets sent from your peer originated from your peer's Interledger connector and were not tampered en route. The outgoing `authtoken` allows your peer to authenticate that received packets originated from your Interledger connector and were not tampered with en route. The use of auth tokens is not required when [autopeering with the Test Network](/integration/playground/autopeering).
+Incoming `authtokens` allow you to authenticate that packets sent from your peer originated from your peer's Interledger connector and were not tampered en route. The outgoing `authtoken` allows your peer to authenticate that received packets originated from your Interledger connector and were not tampered with en route. The use of auth tokens is not required when [autopeering with the Interledger test network](/integration/playground/autopeering).
 
 ### Agree on a settlement mechanism
 
@@ -54,9 +64,9 @@ The settlement mechanism you both agree to use is what facilitates the transfer 
 
 ### Deposit an initial liquidity for your peer
 
-While you may deposit an `initiaLiquidity` for your peer, you can deposit liquidity later using the `depositPeerLiquidity` mutation.
+While you may deposit an `initialLiquidity` for your peer, you can deposit liquidity later using the `depositPeerLiquidity` mutation.
 
-### Define a maxPacketAmout value
+### Define a maxPacketAmount value
 
 The `maxPacketAmount` specifies the maximum packet size you are willing to accept from the peer. Your peer's `maxPacketAmount` value does not need to match, as this value is independently set by each ASE. If omitted, payments will not be broken into smaller packets.
 
@@ -86,6 +96,7 @@ As mentioned in the prerequisites, you must add an asset to your Rafiki instance
           }
           staticIlpAddress
           name
+          tenantId
         }
       }
     }
@@ -106,7 +117,10 @@ As mentioned in the prerequisites, you must add an asset to your Rafiki instance
       }
     }
     ```
-    For more information about this mutation's input object, see [`CreatePeerInput`](/apis/graphql/backend/inputobjects/#createpeerinput).
+    For more information about this mutation's input object, see [`CreatePeerInput`](/apis/graphql/backend/#definition-CreatePeerInput).
+
+<TenantIdHmacNote />
+
   </TabItem>
   <TabItem label="Response">
     ```json
@@ -123,12 +137,18 @@ As mentioned in the prerequisites, you must add an asset to your Rafiki instance
               "scale": 2
             },
             "staticIlpAddress": "g.othergreatwallet",
-            "name": "The Other Great Wallet"
+            "name": "The Other Great Wallet",
+            "tenantId": "123e4567-e89b-12d3-a456-426614174000"
           }
         }
       }
     }
     ```
+
+:::note[Tenant ID in the peer response]
+The `peer` object in the response will include the `tenantId` of the tenant to which the peer belongs. This `tenantId` is used to identify the tenant when processing requests related to the peer.
+:::
+
   </TabItem>
 </Tabs>
 
@@ -158,6 +178,7 @@ In this example we will update the peer we just created. Rather than change any 
           }
           maxPacketAmount
           liquidityThreshold
+          tenantId
         }
       }
     }
@@ -174,7 +195,10 @@ In this example we will update the peer we just created. Rather than change any 
       }
     }
     ```
-    For more information about this mutation's input object, see [`UpdatePeerInput`](/apis/graphql/backend/inputobjects/#updatepeerinput).
+    For more information about this mutation's input object, see [`UpdatePeerInput`](/apis/graphql/backend/#definition-UpdatePeerInput).
+
+<TenantIdHmacNote />
+
   </TabItem>
   <TabItem label="Response">
     ```json
@@ -194,12 +218,18 @@ In this example we will update the peer we just created. Rather than change any 
               }
             },
             "maxPacketAmount": 1000,
-            "liquidityThreshold": 100
+            "liquidityThreshold": 100,
+            "tenantId": "123e4567-e89b-12d3-a456-426614174000"
           }
         }
       }
     }
     ```
+
+:::note[Tenant ID in the peer response]
+The `peer` object in the response will include the `tenantId` of the tenant to which the peer belongs. This `tenantId` is used to identify the tenant when processing requests related to the peer.
+:::
+
   </TabItem>
 </Tabs>
 
@@ -233,7 +263,7 @@ Deleting a peer is permanent and cannot be reversed. If you delete a peer in err
       }
     }
     ```
-    For more information about this mutation's input object, see [`DeletePeerInput`](/apis/graphql/backend/inputobjects/#deletepeerinput).
+    For more information about this mutation's input object, see [`DeletePeerInput`](/apis/graphql/backend/#definition-DeletePeerInput).
   </TabItem>
   <TabItem label="Response">
     ```json

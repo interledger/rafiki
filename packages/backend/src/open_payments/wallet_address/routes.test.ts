@@ -13,6 +13,7 @@ import assert from 'assert'
 import { OpenPaymentsServerRouteError } from '../route-errors'
 import { WalletAddressService } from './service'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
+import { withConfigOverride } from '../../tests/helpers'
 
 describe('Wallet Address Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -34,7 +35,7 @@ describe('Wallet Address Routes', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -47,7 +48,7 @@ describe('Wallet Address Routes', (): void => {
         headers: { Accept: 'application/json' }
       })
       jest
-        .spyOn(walletAddressService, 'getOrPollByUrl')
+        .spyOn(walletAddressService, 'getByUrl')
         .mockResolvedValueOnce(undefined)
 
       expect.assertions(2)
@@ -62,6 +63,7 @@ describe('Wallet Address Routes', (): void => {
 
     test('throws 404 error for inactive wallet address', async (): Promise<void> => {
       const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
         publicName: faker.person.firstName()
       })
 
@@ -70,12 +72,9 @@ describe('Wallet Address Routes', (): void => {
       const ctx = createContext<WalletAddressUrlContext>({
         headers: { Accept: 'application/json' }
       })
-      ctx.walletAddressUrl = walletAddress.url
+      ctx.walletAddressUrl = walletAddress.address
 
-      const getOrPollByUrlSpy = jest.spyOn(
-        walletAddressService,
-        'getOrPollByUrl'
-      )
+      const getByUrlSpy = jest.spyOn(walletAddressService, 'getByUrl')
 
       expect.assertions(3)
       try {
@@ -84,7 +83,7 @@ describe('Wallet Address Routes', (): void => {
         assert(err instanceof OpenPaymentsServerRouteError)
         expect(err.status).toBe(404)
         expect(err.message).toBe('Could not get wallet address')
-        await expect(getOrPollByUrlSpy.mock.results[0].value).resolves.toEqual(
+        await expect(getByUrlSpy.mock.results[0].value).resolves.toEqual(
           walletAddress
         )
       }
@@ -102,6 +101,7 @@ describe('Wallet Address Routes', (): void => {
       addPropNotVisibleInOpenPayments.fieldValue = 'it-is-not'
       addPropNotVisibleInOpenPayments.visibleInOpenPayments = false
       const walletAddress = await createWalletAddress(deps, {
+        tenantId: config.operatorTenantId,
         publicName: faker.person.firstName(),
         additionalProperties: [addProp, addPropNotVisibleInOpenPayments]
       })
@@ -110,16 +110,18 @@ describe('Wallet Address Routes', (): void => {
         headers: { Accept: 'application/json' },
         url: '/'
       })
-      ctx.walletAddressUrl = walletAddress.url
+      ctx.walletAddressUrl = walletAddress.address
       await expect(walletAddressRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
-        id: walletAddress.url,
+        id: walletAddress.address,
         publicName: walletAddress.publicName,
         assetCode: walletAddress.asset.code,
         assetScale: walletAddress.asset.scale,
-        authServer: config.authServerGrantUrl,
-        resourceServer: config.openPaymentsUrl,
+        // Ensure the tenant id is returned for auth and resource server:
+        authServer: `${config.authServerGrantUrl}/${config.operatorTenantId}`,
+        resourceServer: `${config.openPaymentsUrl}/${config.operatorTenantId}`,
+        cardService: `${config.cardServiceUrl}/`,
         additionalProperties: {
           [addProp.fieldKey]: addProp.fieldValue
         }
@@ -143,25 +145,75 @@ describe('Wallet Address Routes', (): void => {
       }
     })
 
+    test(
+      'polls wallet address if config enabled',
+      withConfigOverride(
+        () => Config,
+        { walletAddressNotFoundPollingEnabled: true },
+        async (): Promise<void> => {
+          const walletAddress = await createWalletAddress(deps, {
+            tenantId: config.operatorTenantId,
+            publicName: faker.person.firstName()
+          })
+
+          const getOrPollByUrlSpy = jest
+            .spyOn(walletAddressService, 'getOrPollByUrl')
+            .mockResolvedValueOnce(walletAddress)
+          const getByUrlSpy = jest.spyOn(walletAddressService, 'getByUrl')
+
+          const ctx = createContext<WalletAddressUrlContext>({
+            headers: { Accept: 'application/json' },
+            url: '/'
+          })
+          ctx.walletAddressUrl = walletAddress.address
+          await expect(walletAddressRoutes.get(ctx)).resolves.toBeUndefined()
+          expect(ctx.response).toSatisfyApiSpec()
+          expect(getOrPollByUrlSpy).toHaveBeenCalledTimes(1)
+          expect(getByUrlSpy).not.toHaveBeenCalled()
+          expect(ctx.body).toEqual({
+            id: walletAddress.address,
+            publicName: walletAddress.publicName,
+            assetCode: walletAddress.asset.code,
+            assetScale: walletAddress.asset.scale,
+            // Ensure the tenant id is returned for auth and resource server:
+            authServer: `${config.authServerGrantUrl}/${walletAddress.tenantId}`,
+            resourceServer: `${config.openPaymentsUrl}/${walletAddress.tenantId}`,
+            cardService: `${config.cardServiceUrl}/`
+          })
+        }
+      )
+    )
+
     test('returns wallet address', async (): Promise<void> => {
       const walletAddress = await createWalletAddress(deps, {
+        tenantId: config.operatorTenantId,
         publicName: faker.person.firstName()
       })
+
+      const getOrPollByUrlSpy = jest.spyOn(
+        walletAddressService,
+        'getOrPollByUrl'
+      )
+      const getByUrlSpy = jest.spyOn(walletAddressService, 'getByUrl')
 
       const ctx = createContext<WalletAddressUrlContext>({
         headers: { Accept: 'application/json' },
         url: '/'
       })
-      ctx.walletAddressUrl = walletAddress.url
+      ctx.walletAddressUrl = walletAddress.address
       await expect(walletAddressRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
+      expect(getOrPollByUrlSpy).not.toHaveBeenCalled()
+      expect(getByUrlSpy).toHaveBeenCalledTimes(1)
       expect(ctx.body).toEqual({
-        id: walletAddress.url,
+        id: walletAddress.address,
         publicName: walletAddress.publicName,
         assetCode: walletAddress.asset.code,
         assetScale: walletAddress.asset.scale,
-        authServer: config.authServerGrantUrl,
-        resourceServer: config.openPaymentsUrl
+        // Ensure the tenant id is returned for auth and resource server:
+        authServer: `${config.authServerGrantUrl}/${walletAddress.tenantId}`,
+        resourceServer: `${config.openPaymentsUrl}/${walletAddress.tenantId}`,
+        cardService: `${config.cardServiceUrl}/`
       })
     })
   })

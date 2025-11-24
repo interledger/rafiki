@@ -20,39 +20,18 @@ export interface TestContainer {
   adminPort: number
   app: App
   knex: Knex
-  apolloClient: ApolloClient<NormalizedCacheObject>
   connectionUrl: string
   shutdown: () => Promise<void>
   container: IocContract<AppServices>
 }
 
-export const createTestApp = async (
-  container: IocContract<AppServices>
-): Promise<TestContainer> => {
+export const createApolloClient = async (
+  container: IocContract<AppServices>,
+  app: App,
+  tenantId?: string
+): Promise<ApolloClient<NormalizedCacheObject>> => {
+  const logger = await container.use('logger')
   const config = await container.use('config')
-  config.authPort = 0
-  config.introspectionPort = 0
-  config.adminPort = 0
-  config.interactionPort = 0
-
-  const logger = createLogger({
-    transport: {
-      target: 'pino-pretty',
-      options: {
-        translateTime: true,
-        ignore: 'pid,hostname'
-      }
-    },
-    level: process.env.LOG_LEVEL || 'silent',
-    name: 'test-logger'
-  })
-
-  container.bind('logger', async () => logger)
-
-  const app = new App(container)
-  await start(container, app)
-
-  const knex = await container.use('knex')
 
   const httpLink = createHttpLink({
     uri: `http://localhost:${app.getAdminPort()}/graphql`,
@@ -75,12 +54,14 @@ export const createTestApp = async (
   const authLink = setContext((_, { headers }) => {
     return {
       headers: {
-        ...headers
+        ...headers,
+        'tenant-id': tenantId || config.operatorTenantId
       }
     }
   })
   const link = ApolloLink.from([errorLink, authLink, httpLink])
-  const client = new ApolloClient({
+
+  return new ApolloClient({
     cache: new InMemoryCache({}),
     link: link,
     defaultOptions: {
@@ -95,13 +76,42 @@ export const createTestApp = async (
       }
     }
   })
+}
+
+export const createTestApp = async (
+  container: IocContract<AppServices>
+): Promise<TestContainer> => {
+  const config = await container.use('config')
+  config.authPort = 0
+  config.introspectionPort = 0
+  config.adminPort = 0
+  config.interactionPort = 0
+  config.serviceAPIPort = 0
+
+  const logger = createLogger({
+    transport: {
+      target: 'pino-pretty',
+      options: {
+        translateTime: true,
+        ignore: 'pid,hostname'
+      }
+    },
+    level: process.env.LOG_LEVEL || 'silent',
+    name: 'test-logger'
+  })
+
+  container.bind('logger', async () => logger)
+
+  const app = new App(container)
+  await start(container, app)
+
+  const knex = await container.use('knex')
 
   return {
     app,
     port: app.getAuthPort(),
     adminPort: app.getAdminPort(),
     knex,
-    apolloClient: client,
     connectionUrl: config.databaseUrl,
     shutdown: async () => {
       await gracefulShutdown(container, app)

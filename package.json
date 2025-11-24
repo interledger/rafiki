@@ -20,6 +20,7 @@
     "build": "tsc --build",
     "localenv:compose:psql": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/merged/docker-compose.yml",
     "localenv:compose": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/merged/docker-compose.yml -f ./localenv/tigerbeetle/docker-compose.yml --env-file ./localenv/tigerbeetle/.env.tigerbeetle",
+    "localenv:compose:multitenancy": "docker compose -f ./localenv/cloud-ten-wallet/docker-compose.yml -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/merged/docker-compose.yml -f ./localenv/tigerbeetle/docker-compose.yml --env-file ./localenv/tigerbeetle/.env.tigerbeetle",
     "localenv:compose:psql:telemetry": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/merged/docker-compose.yml -f ./localenv/telemetry/docker-compose.yml",
     "localenv:compose:telemetry": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/merged/docker-compose.yml -f ./localenv/tigerbeetle/docker-compose.yml -f ./localenv/telemetry/docker-compose.yml --env-file ./localenv/tigerbeetle/.env.tigerbeetle",
     "localenv:compose:adminauth": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/merged/docker-compose.yml -f ./localenv/admin-auth/docker-compose.yml",
@@ -66,13 +67,15 @@
       "katex": ">=0.16.21",
       "jose": ">=4.15.5",
       "undici@>=5.0.0": "^5.28.5",
-      "undici@>=6.0.0": "^6.21.1",
+      "undici@>=6.0.0": "^6.21.2",
       "tar@<6.2.1": ">=6.2.1",
       "braces@<3.0.3": ">=3.0.3",
       "dset@<3.1.4": ">=3.1.4",
       "path-to-regexp@>=0.1.7": "^0.1.12",
       "path-to-regexp@>=6.3.0": "^6.3.0",
-      "next": "^15.2.3"
+      "next": "^15.2.3",
+      "form-data": "^4.0.4",
+      "sha.js": ">=2.4.12"
     }
   }
 }

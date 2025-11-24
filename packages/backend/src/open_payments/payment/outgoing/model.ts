@@ -10,12 +10,17 @@ import {
 } from '../../wallet_address/model'
 import { Quote } from '../../quote/model'
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
-import { WebhookEvent } from '../../../webhook/model'
+import { WebhookEvent } from '../../../webhook/event/model'
 import {
   OutgoingPayment as OpenPaymentsOutgoingPayment,
   OutgoingPaymentWithSpentAmounts
 } from '@interledger/open-payments'
 import { BaseModel } from '../../../shared/baseModel'
+import { Tenant } from '../../../tenants/model'
+import {
+  OutgoingPaymentCardDetails,
+  outgoingPaymentCardDetailsRelation
+} from './card/model'
 
 export class OutgoingPaymentGrant extends DbErrors(Model) {
   public static get modelPaths(): string[] {
@@ -170,6 +175,10 @@ export class OutgoingPayment
 
   public metadata?: Record<string, unknown>
 
+  public cardDetails?: OutgoingPaymentCardDetails
+
+  public initiatedBy!: OutgoingPaymentInitiationReason
+
   public quote!: Quote
 
   public get assetId(): string {
@@ -178,7 +187,7 @@ export class OutgoingPayment
 
   public getUrl(resourceServerUrl: string): string {
     resourceServerUrl = resourceServerUrl.replace(/\/+$/, '')
-    return `${resourceServerUrl}${OutgoingPayment.urlPath}/${this.id}`
+    return `${resourceServerUrl}/${this.tenantId}${OutgoingPayment.urlPath}/${this.id}`
   }
 
   public get asset(): Asset {
@@ -192,8 +201,7 @@ export class OutgoingPayment
     ].includes(this.state)
   }
 
-  // Outgoing peer
-  public peerId?: string
+  public tenantId!: string
 
   static get relationMappings() {
     return {
@@ -204,6 +212,22 @@ export class OutgoingPayment
         join: {
           from: 'outgoingPayments.id',
           to: 'quotes.id'
+        }
+      },
+      tenant: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: Tenant,
+        join: {
+          from: 'outgoingPayments.tenantId',
+          to: 'tenants.id'
+        }
+      },
+      cardDetails: {
+        relation: Model.HasOneRelation,
+        modelClass: OutgoingPaymentCardDetails,
+        join: {
+          from: 'outgoingPayments.id',
+          to: outgoingPaymentCardDetailsRelation
         }
       }
     }
@@ -245,7 +269,6 @@ export class OutgoingPayment
       },
       stateAttempts: this.stateAttempts,
       createdAt: new Date(+this.createdAt).toISOString(),
-      updatedAt: new Date(+this.updatedAt).toISOString(),
       balance: balance.toString()
     }
     if (this.metadata) {
@@ -254,12 +277,16 @@ export class OutgoingPayment
     if (this.error) {
       data.error = this.error
     }
-    if (this.peerId) {
-      data.peerId = this.peerId
-    }
 
     if (this.grantId) {
       data.grantId = this.grantId
+    }
+    if (this.cardDetails) {
+      data.cardDetails = {
+        requestId: this.cardDetails.requestId,
+        data: this.cardDetails.data,
+        initiatedAt: this.cardDetails.initiatedAt
+      }
     }
     return data
   }
@@ -270,7 +297,7 @@ export class OutgoingPayment
   ): OpenPaymentsOutgoingPayment {
     return {
       id: this.getUrl(resourceServerUrl),
-      walletAddress: walletAddress.url,
+      walletAddress: walletAddress.address,
       quoteId: this.quote?.getUrl(resourceServerUrl) ?? undefined,
       receiveAmount: serializeAmount(this.receiveAmount),
       debitAmount: serializeAmount(this.debitAmount),
@@ -278,8 +305,7 @@ export class OutgoingPayment
       receiver: this.receiver,
       failed: this.failed,
       metadata: this.metadata ?? undefined,
-      createdAt: this.createdAt.toISOString(),
-      updatedAt: this.updatedAt.toISOString()
+      createdAt: this.createdAt.toISOString()
     }
   }
 
@@ -322,13 +348,30 @@ export enum OutgoingPaymentWithdrawType {
   PaymentCompleted = 'outgoing_payment.completed'
 }
 
+// Events that reflect status changes but do not directly drive deposit/withdraw flows
+export enum OutgoingPaymentStatusType {
+  PaymentFunded = 'outgoing_payment.funded',
+  PaymentCancelled = 'outgoing_payment.cancelled'
+}
+
+export const enum OutgoingPaymentInitiationReason {
+  // The outgoing payment was initiated by a card payment.
+  Card = 'CARD',
+  // The outgoing payment was initiated through Open Payments.
+  OpenPayments = 'OPEN_PAYMENTS',
+  // The outgoing payment was initiated by the Admin API.
+  Admin = 'ADMIN'
+}
+
 export const OutgoingPaymentEventType = {
   ...OutgoingPaymentDepositType,
-  ...OutgoingPaymentWithdrawType
+  ...OutgoingPaymentWithdrawType,
+  ...OutgoingPaymentStatusType
 }
 export type OutgoingPaymentEventType =
   | OutgoingPaymentDepositType
   | OutgoingPaymentWithdrawType
+  | OutgoingPaymentStatusType
 
 export interface OutgoingPaymentResponse {
   id: string
@@ -340,7 +383,6 @@ export interface OutgoingPaymentResponse {
   receiveAmount: AmountJSON
   metadata?: Record<string, unknown>
   failed: boolean
-  updatedAt: string
   sentAmount: AmountJSON
 }
 
@@ -349,8 +391,11 @@ export type PaymentData = Omit<OutgoingPaymentResponse, 'failed'> & {
   state: OutgoingPaymentState
   stateAttempts: number
   balance: string
-  peerId?: string
   grantId?: string
+  cardDetails?: Pick<
+    OutgoingPaymentCardDetails,
+    'requestId' | 'data' | 'initiatedAt'
+  >
 }
 
 export const isOutgoingPaymentEventType = (

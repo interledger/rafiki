@@ -8,13 +8,12 @@ import { createClient as createIntrospectionClient } from 'token-introspection'
 import net from 'net'
 import dns from 'dns'
 
-import {
-  createAuthenticatedClient as createOpenPaymentsClient,
-  getResourceServerOpenAPI,
-  getWalletAddressServerOpenAPI
-} from '@interledger/open-payments'
+import { createAuthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
+import { createOpenAPI } from '@interledger/openapi'
+import path from 'path'
 import { StreamServer } from '@interledger/stream-receiver'
 import axios from 'axios'
+
 import { createAccountingService as createPsqlAccountingService } from './accounting/psql/service'
 import { createAccountingService as createTigerbeetleAccountingService } from './accounting/tigerbeetle/service'
 import { App, AppServices } from './app'
@@ -61,6 +60,10 @@ import {
 } from './telemetry/service'
 import { createWebhookService } from './webhook/service'
 import { createInMemoryDataStore } from './middleware/cache/data-stores/in-memory'
+import { createTenantService } from './tenants/service'
+import { AuthServiceClient } from './auth-service-client/client'
+import { createTenantSettingService } from './tenants/settings/service'
+import { createPaymentMethodProviderService } from './payment-method/provider/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -93,6 +96,7 @@ export function initIocContainer(
         directory: './',
         tableName: 'knex_migrations'
       },
+      searchPath: config.dbSchema,
       log: {
         warn(message) {
           logger.warn(message)
@@ -114,6 +118,9 @@ export function initIocContainer(
       'text',
       BigInt
     )
+    if (config.dbSchema) {
+      await db.raw(`CREATE SCHEMA IF NOT EXISTS "${config.dbSchema}"`)
+    }
     return db
   })
   container.singleton('redis', async (deps): Promise<Redis> => {
@@ -131,20 +138,61 @@ export function initIocContainer(
     })
   })
 
+  container.singleton('tenantCache', async () => {
+    return createInMemoryDataStore(config.localCacheDuration)
+  })
+
+  container.singleton('authServiceClient', () => {
+    return new AuthServiceClient(config.authServiceApiUrl)
+  })
+
+  container.singleton('tenantService', async (deps) => {
+    return createTenantService({
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex'),
+      tenantCache: await deps.use('tenantCache'),
+      authServiceClient: deps.use('authServiceClient'),
+      tenantSettingService: await deps.use('tenantSettingService'),
+      config: await deps.use('config')
+    })
+  })
+
+  container.singleton('tenantSettingService', async (deps) => {
+    const [logger, knex] = await Promise.all([
+      deps.use('logger'),
+      deps.use('knex')
+    ])
+    return createTenantSettingService({ logger, knex })
+  })
+
+  container.singleton('paymentMethodProviderService', async (deps) => {
+    return createPaymentMethodProviderService({
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex'),
+      config: await deps.use('config'),
+      streamCredentialsService: await deps.use('streamCredentialsService'),
+      tenantSettingsService: await deps.use('tenantSettingService')
+    })
+  })
+
   container.singleton('ratesService', async (deps) => {
     const config = await deps.use('config')
     return createRatesService({
       logger: await deps.use('logger'),
-      exchangeRatesUrl: config.exchangeRatesUrl,
-      exchangeRatesLifetime: config.exchangeRatesLifetime
+      operatorTenantId: config.operatorTenantId,
+      operatorExchangeRatesUrl: config.operatorExchangeRatesUrl,
+      exchangeRatesLifetime: config.exchangeRatesLifetime,
+      tenantSettingService: await deps.use('tenantSettingService')
     })
   })
 
   container.singleton('internalRatesService', async (deps) => {
     return createRatesService({
       logger: await deps.use('logger'),
-      exchangeRatesUrl: config.telemetryExchangeRatesUrl,
-      exchangeRatesLifetime: config.telemetryExchangeRatesLifetime
+      operatorTenantId: config.operatorTenantId,
+      operatorExchangeRatesUrl: config.telemetryExchangeRatesUrl,
+      exchangeRatesLifetime: config.telemetryExchangeRatesLifetime,
+      tenantSettingService: await deps.use('tenantSettingService')
     })
   })
 
@@ -168,8 +216,18 @@ export function initIocContainer(
   })
 
   container.singleton('openApi', async () => {
-    const resourceServerSpec = await getResourceServerOpenAPI()
-    const walletAddressServerSpec = await getWalletAddressServerOpenAPI()
+    const resourceServerSpec = await createOpenAPI(
+      path.resolve(
+        __dirname,
+        '../../../open-payments-specifications/openapi/resource-server.yaml'
+      )
+    )
+    const walletAddressServerSpec = await createOpenAPI(
+      path.resolve(
+        __dirname,
+        '../../../open-payments-specifications/openapi/wallet-address-server.yaml'
+      )
+    )
 
     return {
       resourceServerSpec,
@@ -212,10 +270,13 @@ export function initIocContainer(
   container.singleton('assetService', async (deps) => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
+    const config = await deps.use('config')
     return await createAssetService({
+      config: config,
       logger: logger,
       knex: knex,
       accountingService: await deps.use('accountingService'),
+      tenantSettingService: await deps.use('tenantSettingService'),
       assetCache: await deps.use('assetCache')
     })
   })
@@ -238,6 +299,7 @@ export function initIocContainer(
       })
       const tigerBeetle = await deps.use('tigerBeetle')!
       return createTigerbeetleAccountingService({
+        config,
         logger,
         knex,
         tigerBeetle,
@@ -250,7 +312,8 @@ export function initIocContainer(
       logger,
       knex,
       withdrawalThrottleDelay: config.withdrawalThrottleDelay,
-      telemetry
+      telemetry,
+      config
     })
   })
   container.singleton('peerService', async (deps) => {
@@ -278,6 +341,7 @@ export function initIocContainer(
   })
   container.singleton('webhookService', async (deps) => {
     return createWebhookService({
+      tenantSettingService: await deps.use('tenantSettingService'),
       config: await deps.use('config'),
       knex: await deps.use('knex'),
       logger: await deps.use('logger')
@@ -295,7 +359,8 @@ export function initIocContainer(
       accountingService: await deps.use('accountingService'),
       webhookService: await deps.use('webhookService'),
       assetService: await deps.use('assetService'),
-      walletAddressCache: await deps.use('walletAddressCache')
+      walletAddressCache: await deps.use('walletAddressCache'),
+      tenantSettingService: await deps.use('tenantSettingService')
     })
   })
   container.singleton('spspRoutes', async (deps) => {
@@ -331,7 +396,9 @@ export function initIocContainer(
       config: await deps.use('config'),
       logger: await deps.use('logger'),
       incomingPaymentService: await deps.use('incomingPaymentService'),
-      streamCredentialsService: await deps.use('streamCredentialsService')
+      paymentMethodProviderService: await deps.use(
+        'paymentMethodProviderService'
+      )
     })
   })
   container.singleton('walletAddressRoutes', async (deps) => {
@@ -349,24 +416,24 @@ export function initIocContainer(
     })
   })
   container.singleton('streamCredentialsService', async (deps) => {
-    const config = await deps.use('config')
     return await createStreamCredentialsService({
       logger: await deps.use('logger'),
-      openPaymentsUrl: config.openPaymentsUrl,
-      streamServer: await deps.use('streamServer')
+      config: await deps.use('config')
     })
   })
   container.singleton('receiverService', async (deps) => {
     return await createReceiverService({
       logger: await deps.use('logger'),
       config: await deps.use('config'),
-      streamCredentialsService: await deps.use('streamCredentialsService'),
       incomingPaymentService: await deps.use('incomingPaymentService'),
       walletAddressService: await deps.use('walletAddressService'),
       remoteIncomingPaymentService: await deps.use(
         'remoteIncomingPaymentService'
       ),
-      telemetry: await deps.use('telemetry')
+      telemetry: await deps.use('telemetry'),
+      paymentMethodProviderService: await deps.use(
+        'paymentMethodProviderService'
+      )
     })
   })
 
@@ -381,15 +448,16 @@ export function initIocContainer(
     const config = await deps.use('config')
     return await createConnectorService({
       logger: await deps.use('logger'),
+      config: await deps.use('config'),
       redis: await deps.use('redis'),
       accountingService: await deps.use('accountingService'),
       walletAddressService: await deps.use('walletAddressService'),
       incomingPaymentService: await deps.use('incomingPaymentService'),
       peerService: await deps.use('peerService'),
       ratesService: await deps.use('ratesService'),
-      streamServer: await deps.use('streamServer'),
       ilpAddress: config.ilpAddress,
-      telemetry: await deps.use('telemetry')
+      telemetry: await deps.use('telemetry'),
+      tenantSettingService: await deps.use('tenantSettingService')
     })
   })
 
@@ -511,7 +579,6 @@ export function initIocContainer(
       paymentMethodHandlerService: await deps.use(
         'paymentMethodHandlerService'
       ),
-      peerService: await deps.use('peerService'),
       walletAddressService: await deps.use('walletAddressService'),
       quoteService: await deps.use('quoteService'),
       assetService: await deps.use('assetService'),
@@ -653,6 +720,11 @@ export const start = async (
   }
 
   Model.knex(knex)
+
+  // Update Operator Tenant from config
+  const tenantService = await container.use('tenantService')
+  const error = await tenantService.updateOperatorApiSecretFromConfig()
+  if (error) throw error
 
   await app.boot()
   await app.startAdminServer(config.adminPort)

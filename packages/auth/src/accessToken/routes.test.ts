@@ -1,6 +1,5 @@
 import { faker } from '@faker-js/faker'
 import nock from 'nock'
-import { Knex } from 'knex'
 import { v4 } from 'uuid'
 import jestOpenAPI from 'jest-openapi'
 
@@ -24,11 +23,14 @@ import {
 import { GrantService } from '../grant/service'
 import { AccessTokenService } from './service'
 import { GNAPErrorCode } from '../shared/gnapErrors'
+import { TransactionOrKnex } from 'objection'
+import { generateTenant } from '../tests/tenant'
+import { Tenant } from '../tenant/model'
 
 describe('Access Token Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let trx: Knex.Transaction
+  let trx: TransactionOrKnex
   let accessTokenRoutes: AccessTokenRoutes
   let accessTokenService: AccessTokenService
   let grantService: GrantService
@@ -40,12 +42,13 @@ describe('Access Token Routes', (): void => {
     grantService = await deps.use('grantService')
     accessTokenService = await deps.use('accessTokenService')
     const openApi = await deps.use('openApi')
+    trx = appContainer.knex
     jestOpenAPI(openApi.authServerSpec)
   })
 
   afterEach(async (): Promise<void> => {
     jest.useRealTimers()
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -96,7 +99,11 @@ describe('Access Token Routes', (): void => {
     const method = 'POST'
 
     beforeEach(async (): Promise<void> => {
-      grant = await Grant.query(trx).insertAndFetch(BASE_GRANT)
+      const tenant = await Tenant.query().insertAndFetch(generateTenant())
+      grant = await Grant.query(trx).insertAndFetch({
+        ...BASE_GRANT,
+        tenantId: tenant.id
+      })
       access = await Access.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_ACCESS
@@ -370,7 +377,11 @@ describe('Access Token Routes', (): void => {
     let token: AccessToken
 
     beforeEach(async (): Promise<void> => {
-      grant = await Grant.query(trx).insertAndFetch(BASE_GRANT)
+      const tenant = await Tenant.query().insertAndFetch(generateTenant())
+      grant = await Grant.query(trx).insertAndFetch({
+        ...BASE_GRANT,
+        tenantId: tenant.id
+      })
       token = await AccessToken.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_TOKEN
@@ -409,7 +420,11 @@ describe('Access Token Routes', (): void => {
     let token: AccessToken
 
     beforeEach(async (): Promise<void> => {
-      grant = await Grant.query(trx).insertAndFetch(BASE_GRANT)
+      const tenant = await Tenant.query(trx).insertAndFetch(generateTenant())
+      grant = await Grant.query(trx).insertAndFetch({
+        ...BASE_GRANT,
+        tenantId: tenant.id
+      })
       access = await Access.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_ACCESS

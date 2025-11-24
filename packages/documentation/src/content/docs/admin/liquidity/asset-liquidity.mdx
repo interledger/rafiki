@@ -5,10 +5,10 @@ tableOfContents:
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components'
-import { CodeBlock, LinkOut } from '@interledger/docs-design-system'
+import { LinkOut } from '@interledger/docs-design-system'
 import IdempotencyNote from '/src/partials/liquidity-idempotency.mdx'
 
-Asset liquidity is the amount of value, denominated in a given asset, that Rafiki has available to handle cross-currency (foreign exchange) transactions between you and your peer. Whenever an outgoing payment/incoming payment is in a different asset than the peering relationship, the liquidity of asset accounts change depending on the FX direction.
+Asset liquidity is the amount of value, denominated in a given asset, that Rafiki has available to handle cross-currency (foreign exchange) transactions between you and your peer. Asset liquidity is managed separately for each tenant. Whenever an outgoing payment/incoming payment is in a different asset than the peering relationship, the liquidity of asset accounts change depending on the FX direction.
 
 You should deposit and withdraw liquidity as necessary, based on your risk tolerance. Rafiki fails any transaction that would cause an asset's liquidity to fall below zero.
 
@@ -16,7 +16,7 @@ For more information about how Rafiki handles liquidity, see the [Accounting](/o
 
 ## Manage asset liquidity using Rafiki Admin
 
-You can deposit and withdraw asset liquidity through the Rafiki Admin application's [Assets](/admin/admin-user-guide/#edit-asset) screen.
+You can deposit and withdraw asset liquidity through the Rafiki Admin application's [Assets](/admin/admin-user-guide/#edit-asset) screen. Operators can manage asset liquidity for any tenant, while tenants can only manage the liquidity of their own assets.
 
 ## Manage asset liquidity using the Backend Admin API
 

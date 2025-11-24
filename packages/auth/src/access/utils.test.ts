@@ -1,6 +1,5 @@
 import { v4 } from 'uuid'
 import { IocContract } from '@adonisjs/fold'
-import { Knex } from 'knex'
 import { faker } from '@faker-js/faker'
 import {
   AccessItem,
@@ -17,14 +16,18 @@ import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
 import { generateToken, generateNonce } from '../shared/utils'
 import { compareRequestAndGrantAccessItems } from './utils'
+import { TransactionOrKnex } from 'objection'
+import { Tenant } from '../tenant/model'
+import { generateTenant } from '../tests/tenant'
 
 describe('Access utilities', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let trx: Knex.Transaction
+  let trx: TransactionOrKnex
   let identifier: string
   let grant: Grant
   let grantAccessItem: Access
+  let tenant: Tenant
 
   const receiver: string =
     'https://wallet.com/alice/incoming-payments/12341234-1234-1234-1234-123412341234'
@@ -32,10 +35,12 @@ describe('Access utilities', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
+    trx = appContainer.knex
   })
 
   beforeEach(async (): Promise<void> => {
     identifier = `https://example.com/${v4()}`
+    tenant = await Tenant.query(trx).insertAndFetch(generateTenant())
     grant = await Grant.query(trx).insertAndFetch({
       state: GrantState.Processing,
       startMethod: [StartMethod.Redirect],
@@ -44,7 +49,8 @@ describe('Access utilities', (): void => {
       finishMethod: FinishMethod.Redirect,
       finishUri: 'https://example.com/finish',
       clientNonce: generateNonce(),
-      client: faker.internet.url({ appendSlash: false })
+      client: faker.internet.url({ appendSlash: false }),
+      tenantId: tenant.id
     })
 
     grantAccessItem = await Access.query(trx).insertAndFetch({
@@ -64,7 +70,7 @@ describe('Access utilities', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -241,7 +247,8 @@ describe('Access utilities', (): void => {
       finishMethod: FinishMethod.Redirect,
       finishUri: 'https://example.com/finish',
       clientNonce: generateNonce(),
-      client: faker.internet.url({ appendSlash: false })
+      client: faker.internet.url({ appendSlash: false }),
+      tenantId: tenant.id
     })
 
     const grantAccessItem = await Access.query(trx).insertAndFetch({

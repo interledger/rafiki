@@ -24,7 +24,8 @@ import {
   getIncomingPayment,
   updateIncomingPayment,
   approveIncomingPayment,
-  cancelIncomingPayment
+  cancelIncomingPayment,
+  getIncomingPayments
 } from './incoming_payment'
 import { getQuote, createQuote, getWalletAddressQuotes } from './quote'
 import {
@@ -77,6 +78,15 @@ import { GraphQLJSONObject } from 'graphql-scalars'
 import { getCombinedPayments } from './combined_payments'
 import { createOrUpdatePeerByUrl } from './auto-peering'
 import { getAccountingTransfers } from './accounting_transfer'
+import {
+  whoami,
+  createTenant,
+  updateTenant,
+  deleteTenant,
+  getTenant,
+  getTenants
+} from './tenant'
+import { createTenantSettings, getTenantSettings } from './tenant_settings'
 
 export const resolvers: Resolvers = {
   UInt8: GraphQLUInt8,
@@ -92,6 +102,7 @@ export const resolvers: Resolvers = {
     liquidity: getPeerLiquidity
   },
   Query: {
+    whoami,
     walletAddress: getWalletAddress,
     walletAddressByUrl: getWalletAddressByUrl,
     walletAddresses: getWalletAddresses,
@@ -101,6 +112,7 @@ export const resolvers: Resolvers = {
     outgoingPayment: getOutgoingPayment,
     outgoingPayments: getOutgoingPayments,
     incomingPayment: getIncomingPayment,
+    incomingPayments: getIncomingPayments,
     peer: getPeer,
     peerByAddressAndAsset: getPeerByAddressAndAsset,
     peers: getPeers,
@@ -108,7 +120,9 @@ export const resolvers: Resolvers = {
     webhookEvents: getWebhookEvents,
     payments: getCombinedPayments,
     accountingTransfers: getAccountingTransfers,
-    receiver: getReceiver
+    receiver: getReceiver,
+    tenant: getTenant,
+    tenants: getTenants
   },
   WalletAddress: {
     liquidity: getWalletAddressLiquidity,
@@ -117,6 +131,9 @@ export const resolvers: Resolvers = {
     quotes: getWalletAddressQuotes,
     walletAddressKeys: getWalletAddressKeys,
     additionalProperties: getWalletAddressAdditionalProperties
+  },
+  Tenant: {
+    settings: getTenantSettings
   },
   IncomingPayment: {
     liquidity: getIncomingPaymentLiquidity
@@ -161,6 +178,10 @@ export const resolvers: Resolvers = {
     createIncomingPaymentWithdrawal,
     createOutgoingPaymentWithdrawal,
     setFee,
-    updateIncomingPayment
+    updateIncomingPayment,
+    createTenant,
+    updateTenant,
+    deleteTenant,
+    createTenantSettings
   }
 }

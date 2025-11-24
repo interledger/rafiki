@@ -5,9 +5,9 @@ tableOfContents:
 ---
 
 import { Badge, Tabs, TabItem, Steps } from '@astrojs/starlight/components'
-import { Mermaid, CodeBlock, LinkOut } from '@interledger/docs-design-system'
+import { Mermaid, LinkOut } from '@interledger/docs-design-system'
 
-The main communication channel between you and your Rafiki instance is composed of the Backend Admin API and a set of webhook events.
+The main communication channel between you and your Rafiki instance consists of the Backend Admin API and webhook events sent by the `backend` service. By default, events are sent only to the tenant's configured webhook URL. The operator can choose to receive webhook events for all tenants by setting the `SEND_TENANT_WEBHOOKS_TO_OPERATOR` environment variable to `true` on the `backend` service.
 
 Most events require you to interact with Rafiki to provide wallet address information or manage (deposit or withdraw) liquidity. This page describes how you should handle each webhook event.
 
@@ -19,13 +19,15 @@ Rafiki doesn't hold _user_ account balances. Instead, Rafiki keeps track of the 
 
 For Rafiki to notify you about webhook events, you must expose a webhook endpoint that listens for the events dispatched by Rafiki. These events notify your system of time-sensitive status updates, warnings, and errors so that you can react accordingly.
 
+The webhook URL is configured on a per-tenant basis. The operator can configure a tenant-specific webhook URL using the Backend Admin API. If a tenant-specific webhook URL is not configured, Rafiki will use the default `WEBHOOK_URL` environment variable.
+
 When an event occurs, the [`backend`](/integration/deployment/services/backend-service) service makes a <Badge text="POST" variant="success" size="medium"/> request to your configured webhook endpoint. The `backend` service expects a `200` status in return.
 
 <div class="overflow-table">
 
-| Variable      | Type      | Description                                                         |
-| ------------- | --------- | ------------------------------------------------------------------- |
-| `WEBHOOK_URL` | `backend` | The endpoint to where requests are made when a webhook event occurs |
+| Variable      | Type      | Description                                                                                                                                            |
+| ------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `WEBHOOK_URL` | `backend` | The default endpoint to where requests are made when a webhook event occurs. This URL is only used if a tenant-specific webhook URL is not configured. |
 
 </div>
 
@@ -44,7 +46,7 @@ Each webhook event is sent as a JSON payload with the following structure in the
 </div>
 
 :::tip[Duplicate events]
-The `id` in the webhook event payload is unique. Your system can use the ID to determine whether the event has was previously received, preventing duplicate event processing.
+The `id` in the webhook event payload is unique. Your system can use the ID to determine whether the event was previously received, preventing duplicate event processing.
 :::
 
 <details>
@@ -145,13 +147,9 @@ Each webhook request includes a `Rafiki-Signature` header with a timestamp, vers
 
 The `Rafiki-Signature` header in each webhook request has the following format:
 
-<CodeBlock title="Rafiki-Signature header">
-
-```
+```bash title="Rafiki-Signature header"
 Rafiki-Signature: t=<timestamp>, v<version>=<signature_digest>
 ```
-
-</CodeBlock>
 
 - `t=<timestamp>`: The UNIX timestamp (in seconds) when the signature was generated.
 - `v<version>=<digest>`: The versioned HMAC SHA-256 signature digest. The default version is `v1`.
@@ -178,9 +176,7 @@ Finally, compare the signature in the header to the expected signature you gener
 
 Below is an example in JavaScript to verify Rafiki's webhook signature:
 
-<CodeBlock title="Verify webhook signature example">
-
-```js
+```js title="Verify webhook signature example"
 function verifyWebhookSignature(request: Request): boolean {
   const signatureParts = request.headers['Rafiki-Signature'].split(', ')
   const timestamp = signatureParts[0].split('=')[1]
@@ -197,8 +193,6 @@ function verifyWebhookSignature(request: Request): boolean {
   return digest === signatureDigest
 }
 ```
-
-</CodeBlock>
 
 ## Event handling
 
@@ -415,7 +409,7 @@ for \$12 is complete. \$11.50 was sent. You choose to keep \$0.50 as a service f
 
 </details>
 
-The `outgoing.payment_completed` event indicates that as much as possible has been sent to the recipient against their incoming payment.
+The `outgoing_payment.completed` event indicates that as much as possible has been sent to the recipient against their incoming payment.
 
 If there is excess liquidity in Rafiki due to differences between the sent and received amounts, withdraw the excess from the outgoing payment. What you choose to do with the excess is a business decision. One option is to return the excess to the sender. Another option is to retain the excess as a service fee. Lastly, remove the hold on your sender's account and debit their account on your ledger.
 

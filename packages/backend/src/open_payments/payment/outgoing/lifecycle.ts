@@ -13,6 +13,7 @@ import {
 import { Receiver } from '../../receiver/model'
 import { TransactionOrKnex } from 'objection'
 import { ValueType } from '@opentelemetry/api'
+import { finalizeWebhookRecipients } from '../../../webhook/service'
 
 // "payment" is locked by the "deps.knex" transaction.
 export async function handleSending(
@@ -135,6 +136,7 @@ export async function handleSending(
       'transaction_fee_amounts',
       payment.sentAmount,
       payment.receiveAmount,
+      payment.tenantId,
       {
         description: 'Amount sent through the network as fees',
         valueType: ValueType.DOUBLE
@@ -201,9 +203,17 @@ async function handleCompleted(
   const stopTimer = deps.telemetry.startTimer('handle_completed_ms', {
     callName: 'OutgoingPaymentLifecycle:handleCompleted'
   })
-  await payment.$query(deps.knex).patch({
+  const updatedPayment = await payment.$query(deps.knex).patchAndFetch({
     state: OutgoingPaymentState.Completed
   })
+
+  deps.telemetry.recordHistogram(
+    'outgoing_payment_lifecycle_completed_ms',
+    updatedPayment.updatedAt.getTime() - payment.createdAt.getTime(),
+    {
+      callName: 'OutgoingPaymentLifecycle:handleCompleted'
+    }
+  )
 
   await sendWebhookEvent(
     deps,
@@ -223,15 +233,16 @@ export async function sendWebhookEvent(
     callName: 'OutgoingPaymentLifecycle:sendWebhookEvent'
   })
   // TigerBeetle accounts are only created as the OutgoingPayment is funded.
-  // So default the amountSent and balance to 0 for outgoing payments still in the funding state
-  const amountSent =
-    payment.state === OutgoingPaymentState.Funding
-      ? BigInt(0)
-      : await deps.accountingService.getTotalSent(payment.id)
-  const balance =
-    payment.state === OutgoingPaymentState.Funding
-      ? BigInt(0)
-      : await deps.accountingService.getBalance(payment.id)
+  // So default the amountSent and balance to 0 for outgoing payments still in the funding or cancelled states
+  const isZeroAmountSent =
+    payment.state === OutgoingPaymentState.Funding ||
+    payment.state === OutgoingPaymentState.Cancelled
+  const amountSent = isZeroAmountSent
+    ? BigInt(0)
+    : await deps.accountingService.getTotalSent(payment.id)
+  const balance = isZeroAmountSent
+    ? BigInt(0)
+    : await deps.accountingService.getBalance(payment.id)
 
   if (amountSent === undefined || balance === undefined) {
     stopTimer()
@@ -246,11 +257,26 @@ export async function sendWebhookEvent(
       }
     : undefined
 
-  await OutgoingPaymentEvent.query(trx || deps.knex).insert({
+  await OutgoingPaymentEvent.query(trx || deps.knex).insertGraph({
     outgoingPaymentId: payment.id,
     type,
     data: payment.toData({ amountSent, balance }),
-    withdrawal
+    withdrawal,
+    tenantId: payment.tenantId,
+    webhooks: finalizeWebhookRecipients(
+      (() => {
+        const notifyCardOnly =
+          type === OutgoingPaymentEventType.PaymentFunded ||
+          type === OutgoingPaymentEventType.PaymentCancelled
+        return {
+          tenantIds: [payment.tenantId],
+          sendToCardService: notifyCardOnly,
+          omitTenantRecipients: notifyCardOnly
+        }
+      })(),
+      deps.config,
+      deps.logger
+    )
   })
   stopTimer()
 }

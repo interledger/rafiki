@@ -18,6 +18,7 @@ import { getPageInfo, parsePaginationQueryParameters } from './pagination'
 import { AssetService } from '../asset/service'
 import { PeerService } from '../payment-method/ilp/peer/service'
 import { createPeer } from '../tests/peer'
+import { IncomingPaymentInitiationReason } from '../open_payments/payment/incoming/types'
 
 describe('Pagination', (): void => {
   let deps: IocContract<AppServices>
@@ -35,7 +36,7 @@ describe('Pagination', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -47,6 +48,7 @@ describe('Pagination', (): void => {
     beforeEach(async (): Promise<void> => {
       const asset = await createAsset(deps)
       walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
         assetId: asset.id
       })
     })
@@ -65,14 +67,15 @@ describe('Pagination', (): void => {
             first,
             last,
             cursor,
-            'wallet-address': walletAddress.url
+            'wallet-address': walletAddress.address
           })
-        ).toEqual({ ...result, walletAddress: walletAddress.url })
+        ).toEqual({ ...result, walletAddress: walletAddress.address })
       }
     )
   })
   describe('getPageInfo', (): void => {
     describe('wallet address resources', (): void => {
+      let tenantId: string
       let defaultWalletAddress: WalletAddress
       let secondaryWalletAddress: WalletAddress
       let debitAmount: Amount
@@ -82,11 +85,14 @@ describe('Pagination', (): void => {
         outgoingPaymentService = await deps.use('outgoingPaymentService')
         quoteService = await deps.use('quoteService')
 
+        tenantId = Config.operatorTenantId
         const asset = await createAsset(deps)
         defaultWalletAddress = await createWalletAddress(deps, {
+          tenantId,
           assetId: asset.id
         })
         secondaryWalletAddress = await createWalletAddress(deps, {
+          tenantId,
           assetId: asset.id
         })
         debitAmount = {
@@ -118,7 +124,9 @@ describe('Pagination', (): void => {
             const paymentIds: string[] = []
             for (let i = 0; i < num; i++) {
               const payment = await createIncomingPayment(deps, {
-                walletAddressId: defaultWalletAddress.id
+                walletAddressId: defaultWalletAddress.id,
+                tenantId: Config.operatorTenantId,
+                initiationReason: IncomingPaymentInitiationReason.Admin
               })
               paymentIds.push(payment.id)
             }
@@ -138,7 +146,7 @@ describe('Pagination', (): void => {
                   pagination
                 }),
               page,
-              walletAddress: defaultWalletAddress.url
+              walletAddress: defaultWalletAddress.address
             })
             expect(pageInfo).toEqual({
               startCursor: paymentIds[start],
@@ -171,8 +179,9 @@ describe('Pagination', (): void => {
             const paymentIds: string[] = []
             for (let i = 0; i < num; i++) {
               const payment = await createOutgoingPayment(deps, {
+                tenantId,
                 walletAddressId: defaultWalletAddress.id,
-                receiver: secondaryWalletAddress.url,
+                receiver: secondaryWalletAddress.address,
                 method: 'ilp',
                 debitAmount,
                 validDestination: false
@@ -195,7 +204,7 @@ describe('Pagination', (): void => {
                   pagination
                 }),
               page,
-              walletAddress: defaultWalletAddress.url
+              walletAddress: defaultWalletAddress.address
             })
             expect(pageInfo).toEqual({
               startCursor: paymentIds[start],
@@ -228,8 +237,9 @@ describe('Pagination', (): void => {
             const quoteIds: string[] = []
             for (let i = 0; i < num; i++) {
               const quote = await createQuote(deps, {
+                tenantId,
                 walletAddressId: defaultWalletAddress.id,
-                receiver: secondaryWalletAddress.url,
+                receiver: secondaryWalletAddress.address,
                 debitAmount,
                 validDestination: false,
                 method: 'ilp'
@@ -252,7 +262,7 @@ describe('Pagination', (): void => {
                   pagination
                 }),
               page,
-              walletAddress: defaultWalletAddress.url
+              walletAddress: defaultWalletAddress.address
             })
             expect(pageInfo).toEqual({
               startCursor: quoteIds[start],
@@ -300,9 +310,16 @@ describe('Pagination', (): void => {
               if (pagination.last) pagination.before = assetIds[cursor]
               else pagination.after = assetIds[cursor]
             }
-            const page = await assetService.getPage(pagination)
+            const page = await assetService.getPage({
+              pagination,
+              tenantId: config.operatorTenantId
+            })
             const pageInfo = await getPageInfo({
-              getPage: (pagination) => assetService.getPage(pagination),
+              getPage: (pagination) =>
+                assetService.getPage({
+                  pagination,
+                  tenantId: config.operatorTenantId
+                }),
               page
             })
             expect(pageInfo).toEqual({
