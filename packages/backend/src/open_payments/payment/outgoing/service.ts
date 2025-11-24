@@ -53,8 +53,8 @@ import { OutgoingPaymentCardDetails } from './card/model'
 const DEFAULT_GRANT_LOCK_TIMEOUT_MS = 5000
 
 export interface GrantSpentAmounts {
-  spentDebitAmount: Amount
-  spentReceiveAmount: Amount
+  spentDebitAmount: Amount | null
+  spentReceiveAmount: Amount | null
 }
 
 export interface OutgoingPaymentService
@@ -1244,16 +1244,8 @@ async function getGrantSpentAmounts(
       // TODO: better default (what asset code/scale?). Or spentDebitAmount: null?
       // Or value: 0n with no assetCode/scale? or spentDebitAmount of null (that seems less clear
       // - there is a spent amount. its just 0)?
-      spentDebitAmount: {
-        value: 0n,
-        assetCode: 'USD',
-        assetScale: 2
-      },
-      spentReceiveAmount: {
-        value: 0n,
-        assetCode: 'USD',
-        assetScale: 2
-      }
+      spentDebitAmount: null,
+      spentReceiveAmount: null
     }
   }
 
