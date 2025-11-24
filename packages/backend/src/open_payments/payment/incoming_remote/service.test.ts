@@ -17,9 +17,13 @@ import {
   mockPublicIncomingPayment
 } from '@interledger/open-payments'
 import { GrantService } from '../../grant/service'
-import { RemoteIncomingPaymentError } from './errors'
+import {
+  isRemoteIncomingPaymentError,
+  RemoteIncomingPaymentError
+} from './errors'
 import { Grant } from '../../grant/model'
 import { GrantError } from '../../grant/errors'
+import assert from 'assert'
 
 describe('Remote Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -317,26 +321,32 @@ describe('Remote Incoming Payment Service', (): void => {
     })
 
     test('returns NotFound error if 404 error getting public incoming payment', async () => {
-      const clientGetPublicIncomingPaymentSpy = jest
-        .spyOn(openPaymentsClient.incomingPayment, 'getPublic')
+      const mockedGrant = {
+        id: uuid(),
+        accessToken: uuid()
+      } as Grant
+      const grantGetOrCreateSpy = jest
+        .spyOn(grantService, 'getOrCreate')
+        .mockResolvedValueOnce(mockedGrant)
+
+      const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
+        walletAddress: walletAddress.id
+      })
+
+      const clientGetIncomingPaymentSpy = jest
+        .spyOn(openPaymentsClient.incomingPayment, 'get')
         .mockImplementationOnce(() => {
-          throw new OpenPaymentsClientError(
-            'Could not find public incoming payment',
-            {
-              status: 404,
-              description: 'Could not find public incoming payment'
-            }
-          )
+          throw new OpenPaymentsClientError('Not found', {
+            status: 404,
+            description: 'Not found'
+          })
         })
 
-      const incomingPaymentUrl = `https://example.com/incoming-payment/${uuid()}`
-
       await expect(
-        remoteIncomingPaymentService.get(incomingPaymentUrl)
-      ).resolves.toEqual(RemoteIncomingPaymentError.NotFound)
-      expect(clientGetPublicIncomingPaymentSpy).toHaveBeenCalledWith({
-        url: incomingPaymentUrl
-      })
+        remoteIncomingPaymentService.get(mockedIncomingPayment.id)
+      ).resolves.toStrictEqual(RemoteIncomingPaymentError.NotFound)
+      expect(clientGetIncomingPaymentSpy).toHaveBeenCalledTimes(1)
+      expect(grantGetOrCreateSpy).toHaveBeenCalledTimes(1)
     })
 
     test('returns InvalidRequest error if unhandled error getting public incoming payment', async () => {
@@ -564,5 +574,258 @@ describe('Remote Incoming Payment Service', (): void => {
         expect(grantDeleteSpy).toHaveBeenCalledWith(mockedGrant1.id)
       }
     )
+  })
+
+  describe('complete', (): void => {
+    const publicIncomingPayment = mockPublicIncomingPayment({
+      authServer: 'https://auth.example.com/'
+    })
+
+    const walletAddress = mockWalletAddress({
+      id: 'https://example.com/mocked',
+      resourceServer: 'https://example.com/'
+    })
+
+    beforeEach(() => {
+      jest
+        .spyOn(openPaymentsClient.incomingPayment, 'getPublic')
+        .mockResolvedValue(publicIncomingPayment)
+    })
+
+    test('returns InvalidRequest error if unhandled error fetching incoming payment', async () => {
+      const clientGetPublicIncomingPaymentSpy = jest
+        .spyOn(openPaymentsClient.incomingPayment, 'getPublic')
+        .mockImplementationOnce(() => {
+          throw new Error('No public incoming payment')
+        })
+
+      const incomingPaymentUrl = `https://example.com/incoming-payment/${uuid()}`
+
+      await expect(
+        remoteIncomingPaymentService.complete(incomingPaymentUrl)
+      ).resolves.toEqual(RemoteIncomingPaymentError.InvalidRequest)
+      expect(clientGetPublicIncomingPaymentSpy).toHaveBeenCalledWith({
+        url: incomingPaymentUrl
+      })
+    })
+
+    test('completes incoming payment', async (): Promise<void> => {
+      const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
+        walletAddress: walletAddress.id,
+        completed: true
+      })
+
+      const clientGetIncomingPaymentSpy = jest
+        .spyOn(openPaymentsClient.incomingPayment, 'complete')
+        .mockResolvedValueOnce(mockedIncomingPayment)
+
+      const accessToken = uuid()
+      const grantGetOrCreateSpy = jest
+        .spyOn(grantService, 'getOrCreate')
+        .mockResolvedValueOnce({
+          accessToken
+        } as Grant)
+
+      const incomingPayment = await remoteIncomingPaymentService.complete(
+        mockedIncomingPayment.id
+      )
+
+      assert.ok(!isRemoteIncomingPaymentError(incomingPayment))
+      expect(incomingPayment).toStrictEqual(mockedIncomingPayment)
+      expect(grantGetOrCreateSpy).toHaveBeenCalledWith({
+        authServer: publicIncomingPayment.authServer,
+        accessType: AccessType.IncomingPayment,
+        accessActions: [AccessAction.ReadAll, AccessAction.Complete]
+      })
+      expect(clientGetIncomingPaymentSpy).toHaveBeenCalledWith({
+        url: mockedIncomingPayment.id,
+        accessToken
+      })
+      expect(clientGetIncomingPaymentSpy).toHaveBeenCalledTimes(1)
+      expect(incomingPayment.completed).toBe(true)
+    })
+
+    test('returns error if invalid grant', async () => {
+      const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
+        walletAddress: walletAddress.id
+      })
+
+      jest
+        .spyOn(grantService, 'getOrCreate')
+        .mockResolvedValueOnce(GrantError.InvalidGrantRequest)
+
+      const clientGetIncomingPaymentSpy = jest.spyOn(
+        openPaymentsClient.incomingPayment,
+        'complete'
+      )
+
+      await expect(
+        remoteIncomingPaymentService.complete(mockedIncomingPayment.id)
+      ).resolves.toEqual(RemoteIncomingPaymentError.InvalidGrant)
+      expect(clientGetIncomingPaymentSpy).not.toHaveBeenCalled()
+    })
+
+    test('returns error without retrying if not OpenPaymentsClientError', async () => {
+      const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
+        walletAddress: walletAddress.id
+      })
+
+      jest.spyOn(grantService, 'getOrCreate').mockResolvedValueOnce({
+        accessToken: uuid()
+      } as Grant)
+
+      const clientGetIncomingPaymentSpy = jest
+        .spyOn(openPaymentsClient.incomingPayment, 'complete')
+        .mockImplementationOnce(() => {
+          throw new Error('unexpected')
+        })
+
+      await expect(
+        remoteIncomingPaymentService.complete(mockedIncomingPayment.id)
+      ).resolves.toEqual(RemoteIncomingPaymentError.InvalidRequest)
+      expect(clientGetIncomingPaymentSpy).toHaveBeenCalledTimes(1)
+    })
+
+    test('returns error without retrying if non-auth related OpenPaymentsClientError', async () => {
+      const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
+        walletAddress: walletAddress.id
+      })
+
+      jest.spyOn(grantService, 'getOrCreate').mockResolvedValueOnce({
+        accessToken: uuid()
+      } as Grant)
+
+      const clientCompleteIncomingPaymentSpy = jest
+        .spyOn(openPaymentsClient.incomingPayment, 'complete')
+        .mockImplementationOnce(() => {
+          throw new OpenPaymentsClientError('unexpected error', {
+            description: 'unexpected error'
+          })
+        })
+
+      await expect(
+        remoteIncomingPaymentService.complete(mockedIncomingPayment.id)
+      ).resolves.toEqual(RemoteIncomingPaymentError.InvalidRequest)
+      expect(clientCompleteIncomingPaymentSpy).toHaveBeenCalledTimes(1)
+    })
+
+    test('returns error after retrying auth related OpenPaymentsClientError', async () => {
+      const mockedGrant1 = {
+        id: uuid(),
+        accessToken: uuid()
+      } as Grant
+      const mockedGrant2 = {
+        id: uuid(),
+        accessToken: uuid()
+      } as Grant
+
+      const grantGetOrCreateSpy = jest
+        .spyOn(grantService, 'getOrCreate')
+        .mockResolvedValueOnce(mockedGrant1)
+        .mockResolvedValueOnce(mockedGrant2)
+
+      const grantDeleteSpy = jest
+        .spyOn(grantService, 'delete')
+        .mockResolvedValueOnce(mockedGrant1)
+
+      const failedOpenPaymentsClientRequest = () => {
+        throw new OpenPaymentsClientError('Invalid token', {
+          status: 401,
+          description: 'Invalid token'
+        })
+      }
+
+      const clientCompleteIncomingPaymentSpy = jest
+        .spyOn(openPaymentsClient.incomingPayment, 'complete')
+        .mockImplementationOnce(failedOpenPaymentsClientRequest)
+        .mockImplementationOnce(failedOpenPaymentsClientRequest)
+
+      const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
+        walletAddress: walletAddress.id
+      })
+
+      await expect(
+        remoteIncomingPaymentService.complete(mockedIncomingPayment.id)
+      ).resolves.toEqual(RemoteIncomingPaymentError.InvalidRequest)
+      expect(clientCompleteIncomingPaymentSpy).toHaveBeenCalledTimes(2)
+      expect(grantGetOrCreateSpy).toHaveBeenCalledTimes(2)
+      expect(grantDeleteSpy).toHaveBeenCalledTimes(1)
+      expect(grantDeleteSpy).toHaveBeenCalledWith(mockedGrant1.id)
+    })
+
+    test.each([401, 403])(
+      'completes incoming payment after retrying %s OpenPaymentsClientError',
+      async (status: number) => {
+        const mockedGrant1 = {
+          id: uuid(),
+          accessToken: uuid()
+        } as Grant
+        const mockedGrant2 = {
+          id: uuid(),
+          accessToken: uuid()
+        } as Grant
+
+        const grantGetOrCreateSpy = jest
+          .spyOn(grantService, 'getOrCreate')
+          .mockResolvedValueOnce(mockedGrant1)
+          .mockResolvedValueOnce(mockedGrant2)
+
+        const grantDeleteSpy = jest
+          .spyOn(grantService, 'delete')
+          .mockResolvedValueOnce(mockedGrant1)
+
+        const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
+          walletAddress: walletAddress.id
+        })
+
+        const clientCompleteIncomingPaymentSpy = jest
+          .spyOn(openPaymentsClient.incomingPayment, 'complete')
+          .mockImplementationOnce(() => {
+            throw new OpenPaymentsClientError('Invalid token', {
+              status,
+              description: 'Invalid token'
+            })
+          })
+          .mockResolvedValueOnce(mockedIncomingPayment)
+
+        await expect(
+          remoteIncomingPaymentService.complete(mockedIncomingPayment.id)
+        ).resolves.toStrictEqual(mockedIncomingPayment)
+        expect(clientCompleteIncomingPaymentSpy).toHaveBeenCalledTimes(2)
+        expect(grantGetOrCreateSpy).toHaveBeenCalledTimes(2)
+        expect(grantDeleteSpy).toHaveBeenCalledTimes(1)
+        expect(grantDeleteSpy).toHaveBeenCalledWith(mockedGrant1.id)
+      }
+    )
+
+    test('returns error when OpenPaymentClientError is NotFound', async () => {
+      const mockedGrant = {
+        id: uuid(),
+        accessToken: uuid()
+      } as Grant
+
+      const grantGetOrCreateSpy = jest
+        .spyOn(grantService, 'getOrCreate')
+        .mockResolvedValueOnce(mockedGrant)
+
+      const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
+        walletAddress: walletAddress.id
+      })
+
+      const clientCompleteIncomingPaymentSpy = jest
+        .spyOn(openPaymentsClient.incomingPayment, 'complete')
+        .mockImplementationOnce(() => {
+          throw new OpenPaymentsClientError('Not found', {
+            status: 404,
+            description: 'Not found'
+          })
+        })
+
+      await expect(
+        remoteIncomingPaymentService.complete(mockedIncomingPayment.id)
+      ).resolves.toStrictEqual(RemoteIncomingPaymentError.NotFound)
+      expect(clientCompleteIncomingPaymentSpy).toHaveBeenCalledTimes(1)
+      expect(grantGetOrCreateSpy).toHaveBeenCalledTimes(1)
+    })
   })
 })
