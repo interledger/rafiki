@@ -1169,7 +1169,7 @@ export type Peer = Model & {
   /** Public name for the peer. */
   name?: Maybe<Scalars['String']['output']>;
   /** Routes for the peer. */
-  routes?: Maybe<Array<Scalars['String']['output']>>;
+  routes: Array<Scalars['String']['output']>;
   /** ILP address of the peer. */
   staticIlpAddress: Scalars['String']['output'];
   /** Unique identifier of the tenant associated with the peer. */
@@ -2534,7 +2534,7 @@ export type PeerResolvers<ContextType = any, ParentType extends ResolversParentT
   liquidityThreshold?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   maxPacketAmount?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  routes?: Resolver<Maybe<Array<ResolversTypes['String']>>, ParentType, ContextType>;
+  routes?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
   staticIlpAddress?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   tenantId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
