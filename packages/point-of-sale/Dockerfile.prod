@@ -43,7 +43,7 @@ RUN pnpm --filter point-of-sale build
 FROM node:20-alpine3.21 AS runner
 
 # Since this is from a fresh image, we need to first create the Rafiki user
-RUN adduser --disabled-password --gecos "" rafiki
+RUN adduser -D rafiki
 WORKDIR /home/rafiki
 
 COPY --from=prod-deps /home/rafiki/node_modules ./node_modules
