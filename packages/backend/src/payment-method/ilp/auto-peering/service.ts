@@ -299,6 +299,7 @@ async function updatePeer(
   const peer = await deps.peerService.getByDestinationAddress(
     args.staticIlpAddress,
     args.tenantId,
+    undefined,
     args.assetId
   )
 

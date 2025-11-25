@@ -71,6 +71,7 @@ export const getPeerByAddressAndAsset: QueryResolvers<TenantedApolloContext>['pe
     const peer = await peerService.getByDestinationAddress(
       args.staticIlpAddress,
       ctx.tenant.id,
+      undefined,
       args.assetId
     )
     return peer ? peerToGraphql(peer) : null
@@ -84,8 +85,11 @@ export const createPeer: MutationResolvers<TenantedApolloContext>['createPeer'] 
   ): Promise<ResolversTypes['CreatePeerMutationResponse']> => {
     const peerService = await ctx.container.use('peerService')
     const peerOrError = await peerService.create({
-      ...args.input,
-      tenantId: ctx.isOperator ? undefined : ctx.tenant.id
+      ...({
+        ...args.input,
+        routes: args.input,
+        tenantId: ctx.isOperator ? undefined : ctx.tenant.id
+      }.routes || [])
     })
     if (isPeerError(peerOrError)) {
       throw new GraphQLError(errorToMessage[peerOrError], {
@@ -107,8 +111,11 @@ export const updatePeer: MutationResolvers<TenantedApolloContext>['updatePeer'] 
   ): Promise<ResolversTypes['UpdatePeerMutationResponse']> => {
     const peerService = await ctx.container.use('peerService')
     const peerOrError = await peerService.update({
-      ...args.input,
-      tenantId: ctx.isOperator ? undefined : ctx.tenant.id
+      ...{
+        ...args.input,
+        routes: args.input,
+        tenantId: ctx.isOperator ? undefined : ctx.tenant.id
+      }.routes
     })
     if (isPeerError(peerOrError)) {
       throw new GraphQLError(errorToMessage[peerOrError], {
@@ -148,6 +155,7 @@ export const peerToGraphql = (peer: Peer): SchemaPeer => ({
   http: peer.http,
   asset: assetToGraphql(peer.asset),
   staticIlpAddress: peer.staticIlpAddress,
+  routes: peer.routes || [],
   name: peer.name,
   liquidityThreshold: peer.liquidityThreshold,
   createdAt: new Date(+peer.createdAt).toISOString(),

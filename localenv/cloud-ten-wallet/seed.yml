@@ -22,9 +22,11 @@ peers:
     peerIlpAddress: test.happy-life-bank
     liquidityThreshold: 1000000
     tokens:
-      incoming: 
-        - test-USD-happy-life-bank-cloud-ten-wallet
-      outgoing: test-USD-cloud-ten-wallet-happy-life-bank
+      incoming:
+        - happy-to-cloud-ten
+      outgoing: cloud-ten-to-happy
+    routes: 
+      - "test.happy-life-bank"
 accounts:
   - name: 'Frace Granklin'
     path: accounts/fgranklin
