@@ -57,6 +57,7 @@ export function compareRequestAndGrantAccessItems(
 
   if (
     grantAccessIdentifier &&
+    requestAccessIdentifier &&
     requestAccessIdentifier !== grantAccessIdentifier
   ) {
     return false
