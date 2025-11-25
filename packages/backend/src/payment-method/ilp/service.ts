@@ -347,7 +347,7 @@ async function pay(
     }
   )
   try {
-    const receipt = await Pay.pay({ plugin, destination, quote })
+    const receipt = await Pay.pay({ plugin, destination, quote, appData: options.appData })
 
     if (receipt.error) {
       throw receipt.error

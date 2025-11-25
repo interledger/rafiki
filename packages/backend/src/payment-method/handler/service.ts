@@ -28,6 +28,8 @@ export interface PayOptions {
   outgoingPayment: OutgoingPayment
   finalDebitAmount: bigint
   finalReceiveAmount: bigint
+  // Optional application data to include as a STREAM data frame on first packet
+  appData?: string
 }
 
 export interface PaymentMethodService {

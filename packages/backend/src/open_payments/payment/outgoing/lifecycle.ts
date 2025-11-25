@@ -106,6 +106,7 @@ export async function handleSending(
       finalReceiveAmount: maxReceiveAmount
     })
   } else {
+    //TODO add appData on payOptions here
     await deps.paymentMethodHandlerService.pay('ILP', {
       receiver,
       outgoingPayment: payment,
