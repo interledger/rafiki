@@ -306,6 +306,7 @@ export class App {
    */
   public async boot(): Promise<void> {
     this.config = await this.container.use('config')
+    this.logger = await this.container.use('logger')
 
     // Workers are in the way during tests.
     if (this.config.env !== 'test') {
