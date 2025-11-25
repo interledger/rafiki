@@ -436,7 +436,7 @@ jobs:
           fi
 
   docker-build:
-    runs-on: ${{ matrix.platform.name == 'arm64' && 'ubuntu-24.04-arm64' || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.platform.name == 'arm64' && 'ubuntu-22.04-arm' || 'ubuntu-latest' }}
     needs: version-generator
     timeout-minutes: 10
     env:
