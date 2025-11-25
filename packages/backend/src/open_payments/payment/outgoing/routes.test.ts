@@ -20,7 +20,7 @@ import {
 import { errorToHTTPCode, errorToMessage, OutgoingPaymentError } from './errors'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { OutgoingPaymentRoutes, CreateBody, GrantContext } from './routes'
-import { serializeAmount } from '../../amount'
+import { Amount, serializeAmount } from '../../amount'
 import { Grant } from '../../auth/middleware'
 import { WalletAddress } from '../../wallet_address/model'
 import {
@@ -317,7 +317,10 @@ describe('Outgoing Payment Routes', (): void => {
     )
   })
   describe('getGrantSpentAmounts', (): void => {
-    const createContext = (grantId?: string, limits?: any): GrantContext => {
+    const createContext = (
+      grantId?: string,
+      limits?: { debitAmount: Amount; receiveAmount: Amount }
+    ): GrantContext => {
       return {
         grant: {
           id: grantId,

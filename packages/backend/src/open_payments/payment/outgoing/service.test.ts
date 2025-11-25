@@ -2883,7 +2883,6 @@ describe('OutgoingPaymentService', (): void => {
   describe('getGrantSpentAmounts', (): void => {
     let grant: Grant
     let debitAmountOptions: Amount
-    let receiveAmountOptions: Amount
 
     beforeEach(async (): Promise<void> => {
       grant = {
@@ -2893,11 +2892,6 @@ describe('OutgoingPaymentService', (): void => {
         value: BigInt(1000),
         assetCode: asset.code,
         assetScale: asset.scale
-      }
-      receiveAmountOptions = {
-        value: BigInt(500),
-        assetCode: destinationAsset.code,
-        assetScale: destinationAsset.scale
       }
     })
 
