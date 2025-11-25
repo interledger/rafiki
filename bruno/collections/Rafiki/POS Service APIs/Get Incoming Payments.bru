@@ -1,7 +1,7 @@
 meta {
   name: Get Incoming Payments
   type: http
-  seq: 4
+  seq: 2
 }
 
 get {
@@ -12,4 +12,12 @@ get {
 
 params:query {
   receiverWalletAddress: https://happy-life-bank-backend/accounts/pfry
+}
+
+script:post-response {
+  const body = res.getBody();
+  
+  if (body?.result) {
+    bru.setEnvVar("refundIncomingPaymentId", body.result[0].id);
+  }
 }

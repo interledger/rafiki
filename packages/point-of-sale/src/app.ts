@@ -9,7 +9,8 @@ import cors from '@koa/cors'
 import {
   GetPaymentsContext,
   PaymentContext,
-  PaymentRoutes
+  PaymentRoutes,
+  RefundContext
 } from './payments/routes'
 import {
   HandleWebhookContext,
@@ -87,6 +88,13 @@ export class App {
       '/webhook',
       webhookHttpSigMiddleware,
       webhookHandlerRoutes.handleWebhook
+    )
+
+    // POST /refund
+    // Refund a payment
+    router.post<DefaultState, RefundContext>(
+      '/refund',
+      paymentRoutes.refundPayment
     )
 
     koa.use(cors())

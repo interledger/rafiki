@@ -1,0 +1,23 @@
+meta {
+  name: Refund Incoming Payment
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:4008/refund
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "incomingPaymentId": "{{refundIncomingPaymentId}}",
+    "posWalletAddress": "https://happy-life-bank-backend/accounts/pfry"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -8,7 +8,8 @@ import {
   GetPaymentsContext,
   GetPaymentsQuery,
   PaymentContext,
-  PaymentRoutes
+  PaymentRoutes,
+  RefundContext
 } from './routes'
 import { PaymentService } from './service'
 import { CardServiceClient, Result } from '../card-service-client/client'
@@ -376,6 +377,32 @@ describe('Payment Routes', () => {
       })
     })
   })
+
+  describe('refund payment', () => {
+    test('returns 200 when refunding incoming payment', async (): Promise<void> => {
+      const ctx = createRefundContext()
+      jest
+        .spyOn(paymentService, 'refundIncomingPayment')
+        .mockResolvedValueOnce({
+          id: v4()
+        })
+
+      await paymentRoutes.refundPayment(ctx)
+      expect(ctx.status).toEqual(200)
+    })
+
+    test('returns 400 if incoming payment refund fails', async (): Promise<void> => {
+      const ctx = createRefundContext()
+      const refundError = new Error('Failed to refund incoming payment')
+      jest
+        .spyOn(paymentService, 'refundIncomingPayment')
+        .mockRejectedValueOnce(refundError)
+
+      await paymentRoutes.refundPayment(ctx)
+      expect(ctx.status).toEqual(400)
+      expect(ctx.body).toEqual(refundError.message)
+    })
+  })
 })
 
 function createPaymentContext(bodyOverrides?: Record<string, unknown>) {
@@ -414,5 +441,17 @@ function createGetPaymentsContext(
     method: 'GET',
     url: `/payments`,
     query
+  })
+}
+
+function createRefundContext() {
+  return createContext<RefundContext>({
+    headers: { Accept: 'application/json' },
+    method: 'POST',
+    url: '/refund',
+    body: {
+      incomingPaymentId: v4(),
+      posWalletAddress: faker.internet.url()
+    }
   })
 }
