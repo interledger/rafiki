@@ -19,7 +19,7 @@ import {
 } from './service'
 import { errorToHTTPCode, errorToMessage, OutgoingPaymentError } from './errors'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
-import { OutgoingPaymentRoutes, CreateBody } from './routes'
+import { OutgoingPaymentRoutes, CreateBody, GrantContext } from './routes'
 import { serializeAmount } from '../../amount'
 import { Grant } from '../../auth/middleware'
 import { WalletAddress } from '../../wallet_address/model'
@@ -315,5 +315,109 @@ describe('Outgoing Payment Routes', (): void => {
         })
       }
     )
+  })
+  describe('getGrantSpentAmounts', (): void => {
+    const createContext = (grantId?: string, limits?: any): GrantContext => {
+      return {
+        grant: {
+          id: grantId,
+          limits
+        },
+        body: undefined
+      } as GrantContext
+    }
+
+    test('returns spent amounts when grant has debit and receive amounts', async (): Promise<void> => {
+      const grantId = uuid()
+      const limits = {
+        debitAmount: {
+          value: BigInt(1000),
+          assetCode: walletAddress.asset.code,
+          assetScale: walletAddress.asset.scale
+        },
+        receiveAmount: {
+          value: BigInt(900),
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      }
+      const ctx = createContext(grantId, limits)
+
+      const mockSpentAmounts = {
+        spentDebitAmount: {
+          value: BigInt(500),
+          assetCode: walletAddress.asset.code,
+          assetScale: walletAddress.asset.scale
+        },
+        spentReceiveAmount: {
+          value: BigInt(450),
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      }
+
+      const getGrantSpentAmountsSpy = jest
+        .spyOn(outgoingPaymentService, 'getGrantSpentAmounts')
+        .mockResolvedValueOnce(mockSpentAmounts)
+
+      await outgoingPaymentRoutes.getGrantSpentAmounts(ctx)
+
+      expect(getGrantSpentAmountsSpy).toHaveBeenCalledWith({
+        grantId,
+        limits
+      })
+      expect(ctx.body).toEqual({
+        spentDebitAmount: {
+          value: '500',
+          assetCode: walletAddress.asset.code,
+          assetScale: walletAddress.asset.scale
+        },
+        spentReceiveAmount: {
+          value: '450',
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      })
+    })
+
+    test('returns null for spent amounts when no amounts have been spent', async (): Promise<void> => {
+      const grantId = uuid()
+      const ctx = createContext(grantId)
+
+      const mockSpentAmounts = {
+        spentDebitAmount: null,
+        spentReceiveAmount: null
+      }
+
+      const getGrantSpentAmountsSpy = jest
+        .spyOn(outgoingPaymentService, 'getGrantSpentAmounts')
+        .mockResolvedValueOnce(mockSpentAmounts)
+
+      await outgoingPaymentRoutes.getGrantSpentAmounts(ctx)
+
+      expect(getGrantSpentAmountsSpy).toHaveBeenCalledWith({
+        grantId,
+        limits: undefined
+      })
+      expect(ctx.body).toEqual({
+        spentDebitAmount: null,
+        spentReceiveAmount: null
+      })
+    })
+
+    test('throws 403 error with correct message when grant id is missing', async (): Promise<void> => {
+      const ctx = createContext()
+
+      expect.assertions(2)
+
+      try {
+        await outgoingPaymentRoutes.getGrantSpentAmounts(ctx)
+      } catch (err) {
+        expect(err).toBeInstanceOf(OpenPaymentsServerRouteError)
+        expect((err as OpenPaymentsServerRouteError).message).toBe(
+          'Could not find grant'
+        )
+      }
+    })
   })
 })

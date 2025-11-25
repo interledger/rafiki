@@ -98,8 +98,12 @@ async function getOutgoingPaymentGrantSpentAmounts(
   })
 
   ctx.body = {
-    spentDebitAmount: serializeAmount(spentAmounts.spentDebitAmount),
-    spentReceiveAmount: serializeAmount(spentAmounts.spentReceiveAmount)
+    spentDebitAmount: spentAmounts.spentDebitAmount
+      ? serializeAmount(spentAmounts.spentDebitAmount)
+      : null,
+    spentReceiveAmount: spentAmounts.spentReceiveAmount
+      ? serializeAmount(spentAmounts.spentReceiveAmount)
+      : null
   }
 }
 
