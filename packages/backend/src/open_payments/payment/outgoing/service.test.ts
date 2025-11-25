@@ -2879,4 +2879,340 @@ describe('OutgoingPaymentService', (): void => {
       })
     })
   })
+
+  describe('getGrantSpentAmounts', (): void => {
+    let grant: Grant
+    let debitAmountOptions: Amount
+    let receiveAmountOptions: Amount
+
+    beforeEach(async (): Promise<void> => {
+      grant = {
+        id: uuid()
+      }
+      debitAmountOptions = {
+        value: BigInt(1000),
+        assetCode: asset.code,
+        assetScale: asset.scale
+      }
+      receiveAmountOptions = {
+        value: BigInt(500),
+        assetCode: destinationAsset.code,
+        assetScale: destinationAsset.scale
+      }
+    })
+
+    describe('without interval', (): void => {
+      test('handles non-existent grant', async (): Promise<void> => {
+        const nonExistentGrantId = uuid()
+
+        const result = await outgoingPaymentService.getGrantSpentAmounts({
+          grantId: nonExistentGrantId
+        })
+
+        expect(result).toEqual({
+          spentDebitAmount: null,
+          spentReceiveAmount: null
+        })
+      })
+
+      test('returns null amounts when no spent amounts records exist', async (): Promise<void> => {
+        const result = await outgoingPaymentService.getGrantSpentAmounts({
+          grantId: grant.id
+        })
+
+        expect(result).toEqual({
+          spentDebitAmount: null,
+          spentReceiveAmount: null
+        })
+      })
+
+      test('returns total grant amounts from latest record', async (): Promise<void> => {
+        grant.limits = {
+          debitAmount: debitAmountOptions
+        }
+        await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: BigInt(100),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        const payment2 = await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: BigInt(150),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        const result = await outgoingPaymentService.getGrantSpentAmounts({
+          grantId: grant.id,
+          limits: grant.limits
+        })
+
+        const latestSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ outgoingPaymentId: payment2.id })
+          .first()
+
+        assert(latestSpentAmounts)
+        expect(result).toEqual({
+          spentDebitAmount: {
+            value: latestSpentAmounts.grantTotalDebitAmountValue,
+            assetCode: latestSpentAmounts.debitAmountCode,
+            assetScale: latestSpentAmounts.debitAmountScale
+          },
+          spentReceiveAmount: {
+            value: latestSpentAmounts.grantTotalReceiveAmountValue,
+            assetCode: latestSpentAmounts.receiveAmountCode,
+            assetScale: latestSpentAmounts.receiveAmountScale
+          }
+        })
+      })
+    })
+
+    describe('with interval', (): void => {
+      let interval: string
+      let intervalStart: Date
+
+      beforeEach((): void => {
+        intervalStart = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000) // 5 days ago
+        interval = `R0/${intervalStart.toISOString()}/P1M`
+      })
+
+      test('returns null amounts when no records exist for current interval', async (): Promise<void> => {
+        grant.limits = {
+          debitAmount: debitAmountOptions
+        }
+        await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: BigInt(100),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        const latestSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ grantId: grant.id })
+          .first()
+
+        assert(latestSpentAmounts)
+
+        const result = await outgoingPaymentService.getGrantSpentAmounts({
+          grantId: grant.id,
+          limits: {
+            debitAmount: debitAmountOptions,
+            interval
+          }
+        })
+
+        expect(result).toEqual({
+          spentDebitAmount: null,
+          spentReceiveAmount: null
+        })
+      })
+
+      test('returns interval amounts from current interval', async (): Promise<void> => {
+        grant.limits = {
+          debitAmount: debitAmountOptions,
+          interval
+        }
+        const payment = await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: BigInt(100),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        const result = await outgoingPaymentService.getGrantSpentAmounts({
+          grantId: grant.id,
+          limits: grant.limits
+        })
+
+        const spentAmounts = await OutgoingPaymentGrantSpentAmounts.query(knex)
+          .where({ outgoingPaymentId: payment.id })
+          .first()
+
+        assert(spentAmounts)
+        expect(result).toEqual({
+          spentDebitAmount: {
+            value: spentAmounts.intervalDebitAmountValue ?? BigInt(0),
+            assetCode: spentAmounts.debitAmountCode,
+            assetScale: spentAmounts.debitAmountScale
+          },
+          spentReceiveAmount: {
+            value: spentAmounts.intervalReceiveAmountValue ?? BigInt(0),
+            assetCode: spentAmounts.receiveAmountCode,
+            assetScale: spentAmounts.receiveAmountScale
+          }
+        })
+      })
+
+      test('returns latest interval amounts when multiple payments in current interval', async (): Promise<void> => {
+        grant.limits = {
+          debitAmount: debitAmountOptions,
+          interval
+        }
+        await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: BigInt(100),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: BigInt(150),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        const result = await outgoingPaymentService.getGrantSpentAmounts({
+          grantId: grant.id,
+          limits: grant.limits
+        })
+
+        const latestSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ grantId: grant.id })
+          .first()
+        assert(latestSpentAmounts)
+
+        expect(result).toEqual({
+          spentDebitAmount: {
+            value: latestSpentAmounts.intervalDebitAmountValue ?? BigInt(0),
+            assetCode: latestSpentAmounts.debitAmountCode,
+            assetScale: latestSpentAmounts.debitAmountScale
+          },
+          spentReceiveAmount: {
+            value: latestSpentAmounts.intervalReceiveAmountValue ?? BigInt(0),
+            assetCode: latestSpentAmounts.receiveAmountCode,
+            assetScale: latestSpentAmounts.receiveAmountScale
+          }
+        })
+      })
+
+      test('returns null when payments exist but outside current interval', async (): Promise<void> => {
+        jest.useFakeTimers()
+
+        try {
+          const startDate = new Date('2024-01-15T00:00:00Z')
+          jest.setSystemTime(startDate)
+
+          // monthly repeating interval
+          const monthlyInterval = `R/${startDate.toISOString()}/P1M`
+          grant.limits = {
+            debitAmount: debitAmountOptions,
+            interval: monthlyInterval
+          }
+
+          // payment in the first interval
+          await createOutgoingPayment(deps, {
+            tenantId,
+            walletAddressId,
+            client,
+            receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+            debitAmount: {
+              value: BigInt(100),
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            grant,
+            validDestination: false,
+            method: 'ilp'
+          })
+
+          const latestSpentAmounts =
+            await OutgoingPaymentGrantSpentAmounts.query(knex)
+              .where({ grantId: grant.id })
+              .first()
+          assert(latestSpentAmounts)
+
+          // advance time by 35 days to move into the next interval
+          jest.advanceTimersByTime(35 * 24 * 60 * 60 * 1000)
+
+          // should find no records for current interval
+          const result = await outgoingPaymentService.getGrantSpentAmounts({
+            grantId: grant.id,
+            limits: {
+              debitAmount: debitAmountOptions,
+              interval: monthlyInterval
+            }
+          })
+
+          expect(result).toEqual({
+            spentDebitAmount: null,
+            spentReceiveAmount: null
+          })
+        } finally {
+          jest.useRealTimers()
+        }
+      })
+
+      test('returns null when interval is invalid', async (): Promise<void> => {
+        const result = await outgoingPaymentService.getGrantSpentAmounts({
+          grantId: grant.id,
+          limits: {
+            debitAmount: debitAmountOptions,
+            interval: 'invalid-interval'
+          }
+        })
+
+        expect(result).toEqual({
+          spentDebitAmount: null,
+          spentReceiveAmount: null
+        })
+      })
+    })
+  })
 })

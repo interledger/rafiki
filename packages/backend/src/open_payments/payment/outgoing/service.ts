@@ -1246,13 +1246,12 @@ async function getGrantSpentAmounts(
     }
   }
 
-  // If there's an interval, get the current interval and find the latest record for it
+  // If an interval is specified, try to get the latest record for it
   if (limits?.interval) {
     const now = new Date()
     const currentInterval = getInterval(limits.interval, now)
 
-    if (currentInterval && currentInterval.start && currentInterval.end) {
-      // Find the latest record for the current interval
+    if (currentInterval?.start && currentInterval?.end) {
       const currentIntervalSpentAmounts =
         await OutgoingPaymentGrantSpentAmounts.query(deps.knex)
           .where('grantId', grantId)
@@ -1278,6 +1277,18 @@ async function getGrantSpentAmounts(
           }
         }
       }
+
+      // has interval but no record found
+      return {
+        spentDebitAmount: null,
+        spentReceiveAmount: null
+      }
+    }
+
+    // invalid or incomplete
+    return {
+      spentDebitAmount: null,
+      spentReceiveAmount: null
     }
   }
 
