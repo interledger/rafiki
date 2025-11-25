@@ -81,7 +81,6 @@ export function createTokenIntrospectionMiddleware<
       'walletAddressUrl' in ctx
         ? (ctx as WalletAddressUrlContext).walletAddressUrl
         : undefined
-    console.log('token introspection middleware start', { walletAddressUrl })
     const config = await ctx.container.use('config')
     try {
       if (canSkipAuthValidation && !ctx.request.headers.authorization) {

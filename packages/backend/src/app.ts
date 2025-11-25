@@ -705,7 +705,7 @@ export class App {
     // Get grant spent amounts (scoped to interval, if any) from grant
     // with outgoing payment create access
     router.get(
-      '/outgoing-payment-grant',
+      '/:tenantId/outgoing-payment-grant',
       createTokenIntrospectionMiddleware<IntrospectionContext>({
         // Expects token used for outgoing payment payment creation
         requestType: AccessType.OutgoingPayment,
