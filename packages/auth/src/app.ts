@@ -268,8 +268,16 @@ export class App {
 
     const router = new Router<DefaultState, AppContext>()
     router.use(bodyParser())
-    router.get('/healthz', (ctx: AppContext): void => {
-      ctx.status = 200
+    router.get('/healthz', async (ctx: AppContext): Promise<void> => {
+      const redis = await this.container.use('redis')
+      const knex = await this.container.use('knex')
+      try {
+        await redis.ping()
+        await knex.raw('SELECT 1')
+        ctx.status = 200
+      } catch (e) {
+        ctx.status = 500
+      }
     })
     router.use(gnapServerErrorMiddleware)
 
@@ -413,8 +421,16 @@ export class App {
 
     const router = new Router<DefaultState, AppContext>()
     router.use(bodyParser())
-    router.get('/healthz', (ctx: AppContext): void => {
-      ctx.status = 200
+    router.get('/healthz', async (ctx: AppContext): Promise<void> => {
+      const redis = await this.container.use('redis')
+      const knex = await this.container.use('knex')
+      try {
+        await redis.ping()
+        await knex.raw('SELECT 1')
+        ctx.status = 200
+      } catch (e) {
+        ctx.status = 500
+      }
     })
 
     const accessTokenRoutes = await this.container.use('accessTokenRoutes')
@@ -505,8 +521,16 @@ export class App {
 
     koa.use(errorHandler)
 
-    router.get('/healthz', (ctx: AppContext): void => {
-      ctx.status = 200
+    router.get('/healthz', async (ctx: AppContext): Promise<void> => {
+      const redis = await this.container.use('redis')
+      const knex = await this.container.use('knex')
+      try {
+        await redis.ping()
+        await knex.raw('SELECT 1')
+        ctx.status = 200
+      } catch (e) {
+        ctx.status = 500
+      }
     })
 
     const tenantRoutes = await this.container.use('tenantRoutes')
