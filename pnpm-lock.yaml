@@ -267,8 +267,8 @@ importers:
         specifier: 2.15.0
         version: 2.15.0
       '@types/koa-bodyparser':
-        specifier: ^4.3.12
-        version: 4.3.12
+        specifier: ^4.3.13
+        version: 4.3.13
       '@types/koa-session':
         specifier: ^6.4.5
         version: 6.4.5
@@ -490,8 +490,8 @@ importers:
         specifier: 2.15.0
         version: 2.15.0
       '@types/koa-bodyparser':
-        specifier: ^4.3.12
-        version: 4.3.12
+        specifier: ^4.3.13
+        version: 4.3.13
       '@types/koa__cors':
         specifier: ^5.0.0
         version: 5.0.0
@@ -593,8 +593,8 @@ importers:
         specifier: 2.15.0
         version: 2.15.0
       '@types/koa-bodyparser':
-        specifier: ^4.3.12
-        version: 4.3.12
+        specifier: ^4.3.13
+        version: 4.3.13
       '@types/koa__cors':
         specifier: ^5.0.0
         version: 5.0.0
@@ -866,8 +866,8 @@ importers:
         specifier: 2.15.0
         version: 2.15.0
       '@types/koa-bodyparser':
-        specifier: ^4.3.12
-        version: 4.3.12
+        specifier: ^4.3.13
+        version: 4.3.13
       '@types/koa__cors':
         specifier: ^5.0.0
         version: 5.0.0
@@ -1000,8 +1000,8 @@ importers:
         specifier: 2.15.0
         version: 2.15.0
       '@types/koa-bodyparser':
-        specifier: ^4.3.12
-        version: 4.3.12
+        specifier: ^4.3.13
+        version: 4.3.13
       '@types/node':
         specifier: ^20.14.15
         version: 20.14.15
@@ -8959,8 +8959,8 @@ packages:
     resolution: {integrity: sha512-GJhpTepz2udxGexqos8wgaBx4I/zWIDPh/KOGEwAqtuGDkOUJu5eFvwmdBX4AmB8Odsr+9pHCQqiAqDL/yKMKw==}
     dev: true
 
-  /@types/koa-bodyparser@4.3.12:
-    resolution: {integrity: sha512-hKMmRMVP889gPIdLZmmtou/BijaU1tHPyMNmcK7FAHAdATnRcGQQy78EqTTxLH1D4FTsrxIzklAQCso9oGoebQ==}
+  /@types/koa-bodyparser@4.3.13:
+    resolution: {integrity: sha512-yW9afsDnV1ymnhMBfAlzsKZ45sYnvIlTRS+eF5MUZOQ8ePIIj3ajwi+9b4a0vdyYvh6uJKYibU8R1zrUIpCmCA==}
     dependencies:
       '@types/koa': 2.15.0
     dev: true
