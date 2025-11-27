@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  axios@>=0.8.1 <0.28.0: '>=0.28.0'
+  axios@>=0.8.1 <0.28.0: '>=1.13.2'
   json5@<1.0.2: '>=1.0.2'
   katex: '>=0.16.21'
   jose: '>=4.15.5'
@@ -104,7 +104,7 @@ importers:
         version: 9.0.8
       axios:
         specifier: ^1.12.0
-        version: 1.12.0(debug@4.3.2)
+        version: 1.12.0
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -198,7 +198,7 @@ importers:
         version: 8.12.0
       axios:
         specifier: ^1.12.0
-        version: 1.12.0(debug@4.3.2)
+        version: 1.12.0
       dotenv:
         specifier: ^16.4.7
         version: 16.4.7
@@ -394,7 +394,7 @@ importers:
         version: 8.12.0
       axios:
         specifier: ^1.12.0
-        version: 1.12.0(debug@4.3.2)
+        version: 1.12.0
       base64url:
         specifier: ^3.0.1
         version: 3.0.1
@@ -687,7 +687,7 @@ importers:
         version: 2.16.4(typescript@5.9.3)
       axios:
         specifier: ^1.12.0
-        version: 1.12.0(debug@4.3.2)
+        version: 1.12.0
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -821,7 +821,7 @@ importers:
         version: 12.0.2
       axios:
         specifier: 1.12.0
-        version: 1.12.0(debug@4.3.2)
+        version: 1.12.0
       dotenv:
         specifier: ^16.4.7
         version: 16.4.7
@@ -909,7 +909,7 @@ importers:
         version: 2.0.2
       axios:
         specifier: ^1.12.0
-        version: 1.12.0(debug@4.3.2)
+        version: 1.12.0
       pino:
         specifier: ^8.19.0
         version: 8.19.0
@@ -7155,7 +7155,7 @@ packages:
   /@ory/client@1.9.0:
     resolution: {integrity: sha512-O4a1ijgJtMNIA+ZmWUmCodxX13ID72hOaCB0b9FQGQBzuFgF2x/Yq5D43nrMYZaDtvDvja8J1XIXhUkjz1TDOw==}
     dependencies:
-      axios: 1.12.0(debug@4.3.2)
+      axios: 1.12.0
     transitivePeerDependencies:
       - debug
     dev: false
@@ -10536,7 +10536,7 @@ packages:
     engines: {node: '>=4'}
     dev: true
 
-  /axios@1.12.0(debug@4.3.2):
+  /axios@1.12.0:
     resolution: {integrity: sha512-oXTDccv8PcfjZmPGlWsPSwtOJCZ/b6W5jAMCNcfwJbCzDckwG0jrYJFaWH1yvivfCXjVzV/SPDEhMB3Q+DSurg==}
     dependencies:
       follow-redirects: 1.15.9(debug@4.3.2)
@@ -10544,6 +10544,17 @@ packages:
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
       - debug
+    dev: false
+
+  /axios@1.13.2(debug@4.3.2):
+    resolution: {integrity: sha512-VPk9ebNqPcy5lRGuSlKx752IlDatOjT9paPlm8A7yOuW2Fbvp4X3JznJtT4f0GzGLLiWE9W8onz51SqLYwzGaA==}
+    dependencies:
+      follow-redirects: 1.15.9(debug@4.3.2)
+      form-data: 4.0.5
+      proxy-from-env: 1.1.0
+    transitivePeerDependencies:
+      - debug
+    dev: true
 
   /axios@1.8.2:
     resolution: {integrity: sha512-ls4GYBm5aig9vWx8AWDSGLpnpDQRtWAfrjU+EuytuODrFBkqesN2RkOQCBzrA1RQNHw1SmRMSDDDSwzNAYQ6Rg==}
@@ -14179,7 +14190,6 @@ packages:
       es-set-tostringtag: 2.1.0
       hasown: 2.0.2
       mime-types: 2.1.35
-    dev: false
 
   /format@0.2.2:
     resolution: {integrity: sha512-wzsgA6WOq+09wrU1tsJ09udeR/YZRaeArL9e1wPbFg3GG2yDnC2ldKpxs4xunpFF9DgqCqOIra3bc1HWrJ37Ww==}
@@ -17182,7 +17192,7 @@ packages:
     engines: {node: '>=8.3.0'}
     hasBin: true
     dependencies:
-      axios: 1.12.0(debug@4.3.2)
+      axios: 1.13.2(debug@4.3.2)
       debug: 4.3.2
       openurl: 1.1.1
       yargs: 17.1.1
@@ -19384,7 +19394,7 @@ packages:
     dependencies:
       '@types/request': 2.48.8
       '@types/superagent': 4.1.15
-      axios: 1.12.0(debug@4.3.2)
+      axios: 1.13.2(debug@4.3.2)
       combos: 0.2.0
       fs-extra: 9.1.0
       js-yaml: 4.1.0
