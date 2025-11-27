@@ -1,12 +1,11 @@
-import { defineConfig } from 'astro/config'
-import starlight from '@astrojs/starlight'
-
-import remarkMath from 'remark-math'
-import rehypeMathjax from 'rehype-mathjax'
-import starlightLinksValidator from 'starlight-links-validator'
-import starlightFullViewMode from 'starlight-fullview-mode'
 import { rehypeHeadingIds } from '@astrojs/markdown-remark'
+import starlight from '@astrojs/starlight'
+import { defineConfig } from 'astro/config'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
+import rehypeMathjax from 'rehype-mathjax'
+import remarkMath from 'remark-math'
+import starlightFullViewMode from 'starlight-fullview-mode'
+import starlightLinksValidator from 'starlight-links-validator'
 import starlightVersions from 'starlight-versions'
 
 // https://astro.build/config
