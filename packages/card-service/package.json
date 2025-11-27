@@ -21,7 +21,7 @@
     "json-canonicalize": "^1.0.6",
     "koa": "^2.15.4",
     "koa-bodyparser": "^4.4.1",
-    "pino": "^8.19.0",
+    "pino": "^8.21.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
