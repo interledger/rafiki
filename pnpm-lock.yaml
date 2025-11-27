@@ -273,8 +273,8 @@ importers:
         specifier: ^6.4.5
         version: 6.4.5
       '@types/koa__cors':
-        specifier: ^5.0.0
-        version: 5.0.0
+        specifier: ^5.0.1
+        version: 5.0.1
       '@types/koa__router':
         specifier: ^12.0.4
         version: 12.0.4
@@ -493,8 +493,8 @@ importers:
         specifier: ^4.3.12
         version: 4.3.12
       '@types/koa__cors':
-        specifier: ^5.0.0
-        version: 5.0.0
+        specifier: ^5.0.1
+        version: 5.0.1
       '@types/koa__router':
         specifier: ^12.0.4
         version: 12.0.4
@@ -596,8 +596,8 @@ importers:
         specifier: ^4.3.12
         version: 4.3.12
       '@types/koa__cors':
-        specifier: ^5.0.0
-        version: 5.0.0
+        specifier: ^5.0.1
+        version: 5.0.1
       '@types/koa__router':
         specifier: ^12.0.4
         version: 12.0.4
@@ -869,8 +869,8 @@ importers:
         specifier: ^4.3.12
         version: 4.3.12
       '@types/koa__cors':
-        specifier: ^5.0.0
-        version: 5.0.0
+        specifier: ^5.0.1
+        version: 5.0.1
       '@types/koa__router':
         specifier: ^12.0.4
         version: 12.0.4
@@ -8991,8 +8991,8 @@ packages:
       '@types/node': 20.14.15
     dev: true
 
-  /@types/koa__cors@5.0.0:
-    resolution: {integrity: sha512-LCk/n25Obq5qlernGOK/2LUwa/2YJb2lxHUkkvYFDOpLXlVI6tKcdfCHRBQnOY4LwH6el5WOLs6PD/a8Uzau6g==}
+  /@types/koa__cors@5.0.1:
+    resolution: {integrity: sha512-xZckuh3B6ycSBAIYnBImG1VDHyBNZsltGAuGb4THuZllccdLgD5DUs4RA7TAUjB58THg00SSZ1e//duQef7WRw==}
     dependencies:
       '@types/koa': 2.15.0
     dev: true
