@@ -25,7 +25,7 @@
     "@types/koa": "2.15.0",
     "@types/koa-bodyparser": "^4.3.12",
     "@types/koa__cors": "^5.0.0",
-    "@types/koa__router": "^12.0.4",
+    "@types/koa__router": "^12.0.5",
     "@types/lodash": "^4.17.15",
     "@types/luxon": "^3.4.2",
     "@types/rosie": "^0.0.45",

@@ -276,8 +276,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       '@types/koa__router':
-        specifier: ^12.0.4
-        version: 12.0.4
+        specifier: ^12.0.5
+        version: 12.0.5
       '@types/uuid':
         specifier: ^9.0.8
         version: 9.0.8
@@ -496,8 +496,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       '@types/koa__router':
-        specifier: ^12.0.4
-        version: 12.0.4
+        specifier: ^12.0.5
+        version: 12.0.5
       '@types/lodash':
         specifier: ^4.17.15
         version: 4.17.15
@@ -599,8 +599,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       '@types/koa__router':
-        specifier: ^12.0.4
-        version: 12.0.4
+        specifier: ^12.0.5
+        version: 12.0.5
       '@types/node':
         specifier: ^20.14.15
         version: 20.14.15
@@ -872,8 +872,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       '@types/koa__router':
-        specifier: ^12.0.4
-        version: 12.0.4
+        specifier: ^12.0.5
+        version: 12.0.5
       '@types/tmp':
         specifier: ^0.2.6
         version: 0.2.6
@@ -8997,8 +8997,8 @@ packages:
       '@types/koa': 2.15.0
     dev: true
 
-  /@types/koa__router@12.0.4:
-    resolution: {integrity: sha512-Y7YBbSmfXZpa/m5UGGzb7XadJIRBRnwNY9cdAojZGp65Cpe5MAP3mOZE7e3bImt8dfKS4UFcR16SLH8L/z7PBw==}
+  /@types/koa__router@12.0.5:
+    resolution: {integrity: sha512-1HeLxuDn4n5it1yZYCSyOYXo++73zT0ffoviXnPxbwbxLbvDFEvWD9ZzpRiIpK4oKR0pi+K+Mk/ZjyROjW3HSw==}
     dependencies:
       '@types/koa': 2.15.0
     dev: true
