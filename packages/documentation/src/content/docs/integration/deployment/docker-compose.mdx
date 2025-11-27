@@ -34,12 +34,9 @@ Deploy a general purpose VM with the following minimum specifications:
 
 Install the following software on the VM:
 
-- <LinkOut href='https://docs.docker.com/engine/install/'>
-    Docker Engine
-  </LinkOut>
-- <LinkOut href='https://docs.docker.com/compose/install/#scenario-two-install-the-compose-plugin'>
-    Docker Compose
-  </LinkOut>
+{/* prettier-ignore */}
+- <LinkOut href='https://docs.docker.com/engine/install/'>Docker Engine</LinkOut>
+- <LinkOut href='https://docs.docker.com/compose/install/#scenario-two-install-the-compose-plugin'>Docker Compose</LinkOut>
 
 ### Install Nginx and Certbot
 
@@ -312,7 +309,10 @@ redis:
 
 The Kratos service is an identity and user management solution used by Rafiki's `frontend` service for handling authentication and user management tasks.
 
+:::danger[Disabling authentication]
+
 <KratosWarn />
+:::
 
 ```sh
 kratos:
