@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "packages/documentation/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "packages/documentation/**"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/documentation
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: packages/documentation/package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run lint (Prettier + ESLint)
+        run: npm run lint
+
