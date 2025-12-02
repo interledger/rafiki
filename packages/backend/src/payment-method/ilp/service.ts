@@ -340,7 +340,12 @@ async function pay(
   const destination = resolveIlpDestination(receiver)
 
   try {
-    const receipt = await Pay.pay({ plugin, destination, quote })
+    const receipt = await Pay.pay({
+      plugin,
+      destination,
+      quote,
+      appData: Buffer.from('hello kyc')
+    })
 
     if (receipt.error) {
       throw receipt.error

@@ -6,6 +6,7 @@ import { AuthState } from './auth'
 export interface StreamState {
   streamDestination?: string
   streamServer?: StreamServer
+  hasAdditionalData?: boolean
 }
 
 export function createStreamAddressMiddleware(): ILPMiddleware {
@@ -34,8 +35,33 @@ export function createStreamAddressMiddleware(): ILPMiddleware {
         ctx.request.prepare.destination
       ) || undefined
 
-    stopTimer()
-    await next()
+    // Decode frames to check for additional data
+    try {
+      if (ctx.state.streamServer && ctx.state.streamDestination) {
+        const replyOrMoney = ctx.state.streamServer.createReply(
+          ctx.request.prepare
+        )
+        const frames = (replyOrMoney as any).dataFrames as
+          | Array<{ streamId: number; offset: string; data: Buffer }>
+          | undefined
+        const payload = frames?.length
+          ? frames.find((f) => f.streamId === 1)?.data ?? frames[0].data
+          : undefined
+        
+        if (payload && payload.length > 0) {
+          ctx.services.logger.info(
+            { payload: payload.toString('utf8') },
+            'STREAM additional data received'
+          )
+        }
+
+        ctx.state.hasAdditionalData = !!payload?.length
+        //TODO Here we should store STREAM data payload i.e. db call in webhook events table
+      }
+    } finally {
+      stopTimer()
+      await next()
+    }
   }
 }
 

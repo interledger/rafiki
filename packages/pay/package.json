@@ -1,0 +1,45 @@
+{
+  "name": "@interledger/pay",
+  "description": "Send payments over Interledger",
+  "version": "0.4.0-alpha.9",
+  "author": "Interledger Team <info@interledger.org>",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts",
+    "!dist/test/**/*"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "jest",
+    "cover": "jest --coverage",
+    "codecov": "curl -s https://codecov.io/bash | bash -s - -s coverage -F pay"
+  },
+  "dependencies": {
+    "abort-controller": "^3.0.0",
+    "ilp-logger": "^1.4.5-alpha.2",
+    "ilp-packet": "^3.1.4-alpha.2",
+    "ilp-protocol-stream": "^2.7.2-alpha.2",
+    "oer-utils": "^5.1.3-alpha.2",
+    "long": "^4.0.0",
+    "node-fetch": "^2.6.6"
+  },
+  "devDependencies": {
+    "axios": "1.4.0",
+    "@interledger/stream-receiver": "0.3.3-alpha.3",
+    "@types/long": "4.0.2",
+    "@types/node-fetch": "2.6.4",
+    "get-port": "5.1.1",
+    "ilp-connector": "23.0.2",
+    "ilp-plugin-http": "1.6.1",
+    "nock": "13.3.1",
+    "reduct": "3.3.1",
+    "testcontainers": "9.8.0"
+  }
+}

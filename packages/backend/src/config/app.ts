@@ -202,8 +202,7 @@ export const Config = {
   sendTenantWebhooksToOperator: envBool(
     'SEND_TENANT_WEBHOOKS_TO_OPERATOR',
     false
-  )
-  ,
+  ),
   // TODO Maybe rename?
   enableKycAseDecision: envBool('ENABLE_KYC_ASE_DECISION', false),
   kycAseDecisionUrl: process.env.KYC_ASE_DECISION_URL,
