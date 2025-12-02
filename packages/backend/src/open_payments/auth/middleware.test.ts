@@ -263,6 +263,7 @@ describe('Auth Middleware', (): void => {
   })
 
   test.only('Accepts ctx without walletAddressUrl', async (): Promise<void> => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { walletAddressUrl, ...ctxWithoutWalletAddressUrl } = ctx
     const middleware = createTokenIntrospectionMiddleware<IntrospectionContext>(
       {
