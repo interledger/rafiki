@@ -20,6 +20,7 @@ import {
   AppServices,
   HttpSigContext,
   HttpSigWithAuthenticatedStatusContext,
+  IntrospectionContext,
   WalletAddressUrlContext
 } from '../../app'
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -259,6 +260,44 @@ describe('Auth Middleware', (): void => {
       `GNAP as_uri=${Config.authServerGrantUrl}`
     )
     expect(next).not.toHaveBeenCalled()
+  })
+
+  test.only('Accepts ctx without walletAddressUrl', async (): Promise<void> => {
+    const { walletAddressUrl, ...ctxWithoutWalletAddressUrl } = ctx
+    const middleware = createTokenIntrospectionMiddleware<IntrospectionContext>(
+      {
+        requestType: type,
+        requestAction: action
+      }
+    )
+
+    const introspectSpy = jest
+      .spyOn(tokenIntrospectionClient, 'introspect')
+      .mockResolvedValueOnce({
+        active: true,
+        grant: uuid(),
+        client: faker.internet.url({ appendSlash: false }),
+        access: [
+          {
+            type: type,
+            actions: [action],
+            identifier: ctx.walletAddressUrl
+          }
+        ]
+      })
+
+    await middleware(ctxWithoutWalletAddressUrl, next)
+
+    expect(introspectSpy).toHaveBeenCalledWith({
+      access_token: token,
+      access: [
+        {
+          type: type,
+          actions: [action]
+        }
+      ]
+    })
+    expect(next).toHaveBeenCalled()
   })
 
   test('rejects with 403 for inactive token', async (): Promise<void> => {
