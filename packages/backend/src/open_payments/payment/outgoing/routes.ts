@@ -88,10 +88,6 @@ async function getOutgoingPaymentGrantSpentAmounts(
   deps: ServiceDependencies,
   ctx: GrantContext
 ): Promise<void> {
-  if (!ctx.grant.id) {
-    throw new OpenPaymentsServerRouteError(403, 'Could not find grant')
-  }
-
   const spentAmounts = await deps.outgoingPaymentService.getGrantSpentAmounts({
     grantId: ctx.grant.id,
     limits: ctx.grant.limits
