@@ -1230,38 +1230,40 @@ async function getGrantSpentAmounts(
 ): Promise<GrantSpentAmounts> {
   const { grantId, limits } = options
 
-  // Get the latest spent amounts record for the grant
-  const latestGrantSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
-    deps.knex
-  )
-    .where('grantId', grantId)
-    .orderBy('createdAt', 'desc')
-    .first()
-
-  // If no records exist, return zero amounts
-  if (!latestGrantSpentAmounts) {
-    return {
-      spentDebitAmount: null,
-      spentReceiveAmount: null
-    }
-  }
-
   // If an interval is specified, try to get the latest record for it
   if (limits?.interval) {
     const now = new Date()
-    const currentInterval = getInterval(limits.interval, now)
+    let currentInterval
 
-    if (currentInterval?.start && currentInterval?.end) {
-      const currentIntervalSpentAmounts =
-        await OutgoingPaymentGrantSpentAmounts.query(deps.knex)
-          .where('grantId', grantId)
-          .where('intervalStart', currentInterval.start.toJSDate())
-          .where('intervalEnd', currentInterval.end.toJSDate())
-          .orderBy('createdAt', 'desc')
-          .first()
-
-      if (currentIntervalSpentAmounts) {
+    try {
+      currentInterval = getInterval(limits.interval, now)
+      if (!currentInterval?.start || !currentInterval?.end) {
         return {
+          spentDebitAmount: null,
+          spentReceiveAmount: null
+        }
+      }
+    } catch (err) {
+      deps.logger.warn(
+        { err, grantId, limits },
+        'Could not parse interval when trying to get grant spent amounts'
+      )
+      return {
+        spentDebitAmount: null,
+        spentReceiveAmount: null
+      }
+    }
+
+    const currentIntervalSpentAmounts =
+      await OutgoingPaymentGrantSpentAmounts.query(deps.knex)
+        .where('grantId', grantId)
+        .where('intervalStart', currentInterval.start.toJSDate())
+        .where('intervalEnd', currentInterval.end.toJSDate())
+        .orderBy('createdAt', 'desc')
+        .first()
+
+    return currentIntervalSpentAmounts
+      ? {
           spentDebitAmount: {
             value:
               currentIntervalSpentAmounts.intervalDebitAmountValue ?? BigInt(0),
@@ -1276,35 +1278,37 @@ async function getGrantSpentAmounts(
             assetScale: currentIntervalSpentAmounts.receiveAmountScale
           }
         }
-      }
+      : {
+          spentDebitAmount: null,
+          spentReceiveAmount: null
+        }
+  }
 
-      // has interval but no record found
-      return {
+  // No interval - get the latest overall spent amounts record for the grant
+  const latestGrantSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+    deps.knex
+  )
+    .where('grantId', grantId)
+    .orderBy('createdAt', 'desc')
+    .first()
+
+  return latestGrantSpentAmounts
+    ? {
+        spentDebitAmount: {
+          value: latestGrantSpentAmounts.grantTotalDebitAmountValue,
+          assetCode: latestGrantSpentAmounts.debitAmountCode,
+          assetScale: latestGrantSpentAmounts.debitAmountScale
+        },
+        spentReceiveAmount: {
+          value: latestGrantSpentAmounts.grantTotalReceiveAmountValue,
+          assetCode: latestGrantSpentAmounts.receiveAmountCode,
+          assetScale: latestGrantSpentAmounts.receiveAmountScale
+        }
+      }
+    : {
         spentDebitAmount: null,
         spentReceiveAmount: null
       }
-    }
-
-    // invalid or incomplete
-    return {
-      spentDebitAmount: null,
-      spentReceiveAmount: null
-    }
-  }
-
-  // No interval or no interval record found - return total grant amounts
-  return {
-    spentDebitAmount: {
-      value: latestGrantSpentAmounts.grantTotalDebitAmountValue,
-      assetCode: latestGrantSpentAmounts.debitAmountCode,
-      assetScale: latestGrantSpentAmounts.debitAmountScale
-    },
-    spentReceiveAmount: {
-      value: latestGrantSpentAmounts.grantTotalReceiveAmountValue,
-      assetCode: latestGrantSpentAmounts.receiveAmountCode,
-      assetScale: latestGrantSpentAmounts.receiveAmountScale
-    }
-  }
 }
 
 /**
