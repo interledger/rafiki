@@ -220,6 +220,32 @@ export class App {
 
     koa.use(bodyParser())
 
+    const redis = await this.container.use('redis')
+    koa.use(
+      async (
+        ctx: {
+          path: string
+          status: number
+        },
+        next: Koa.Next
+      ): Promise<void> => {
+        if (ctx.path === '/healthz') {
+          const knex = await this.container.use('knex')
+          try {
+            await redis.ping()
+            await knex.raw('SELECT 1')
+            ctx.status = 200
+          } catch (err) {
+            ctx.status = 500
+          }
+        } else if (ctx.path !== '/graphql') {
+          ctx.status = 404
+        } else {
+          return next()
+        }
+      }
+    )
+
     koa.use(
       async (
         ctx: {
