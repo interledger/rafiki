@@ -130,8 +130,8 @@ importers:
         specifier: ^2.7.0
         version: 2.7.0
       zod:
-        specifier: ^3.22.4
-        version: 3.23.4
+        specifier: ^4.1.13
+        version: 4.1.13
     devDependencies:
       '@remix-run/dev':
         specifier: ^2.16.4
@@ -722,8 +722,8 @@ importers:
         specifier: ^2.7.0
         version: 2.7.0
       zod:
-        specifier: ^3.22.4
-        version: 3.22.4
+        specifier: ^4.1.13
+        version: 4.1.13
     devDependencies:
       '@remix-run/dev':
         specifier: ^2.16.4
@@ -18825,6 +18825,7 @@ packages:
   /next@15.5.6(@babel/core@7.26.0)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-zTxsnI3LQo3c9HSdSf91O1jMNsEzIXDShXd4wVdg9y5shwLqBXi4ZtUUJyB86KGVSJLZx0PFONvO54aheGX8QQ==}
     engines: {node: ^18.18.0 || ^19.8.0 || >= 20.0.0}
+    deprecated: This version has a security vulnerability. Please upgrade to a patched version. See https://nextjs.org/blog/CVE-2025-66478 for more details.
     hasBin: true
     peerDependencies:
       '@opentelemetry/api': ^1.1.0
@@ -24627,16 +24628,12 @@ packages:
       zod: 3.25.76
     dev: false
 
-  /zod@3.22.4:
-    resolution: {integrity: sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==}
-    dev: false
-
-  /zod@3.23.4:
-    resolution: {integrity: sha512-/AtWOKbBgjzEYYQRNfoGKHObgfAZag6qUJX1VbHo2PRBgS+wfWagEY2mizjfyAPcGesrJOcx/wcl0L9WnVrHFw==}
-    dev: false
-
   /zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
+    dev: false
+
+  /zod@4.1.13:
+    resolution: {integrity: sha512-AvvthqfqrAhNH9dnfmrfKzX5upOdjUVJYFqNSlkmGf64gRaTzlPwz99IHYnVs28qYAybvAlBV+H7pn0saFY4Ig==}
     dev: false
 
   /zwitch@2.0.4:
