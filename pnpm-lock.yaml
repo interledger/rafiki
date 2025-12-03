@@ -29,7 +29,7 @@ importers:
         version: 29.6.3
       '@swc/jest':
         specifier: ^0.2.37
-        version: 0.2.37(@swc/core@1.15.2)
+        version: 0.2.37(@swc/core@1.15.3)
       '@types/jest':
         specifier: ^29.5.14
         version: 29.5.14
@@ -240,7 +240,7 @@ importers:
         version: link:../token-introspection
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@swc/core@1.15.2)(@types/node@20.14.15)(typescript@5.9.3)
+        version: 2.0.0(@swc/core@1.15.3)(@types/node@24.10.1)(typescript@5.9.3)
       uuid:
         specifier: ^9.0.1
         version: 9.0.1
@@ -253,7 +253,7 @@ importers:
         version: 8.4.1
       '@graphql-codegen/cli':
         specifier: 5.0.4
-        version: 5.0.4(@babel/core@7.28.5)(@types/node@20.14.15)(graphql@16.11.0)
+        version: 5.0.4(@babel/core@7.28.5)(@types/node@24.10.1)(graphql@16.11.0)
       '@graphql-codegen/introspection':
         specifier: 4.0.3
         version: 4.0.3(graphql@16.11.0)
@@ -292,7 +292,7 @@ importers:
         version: 14.0.0-beta.19
       node-mocks-http:
         specifier: ^1.16.2
-        version: 1.16.2(@types/node@20.14.15)
+        version: 1.16.2(@types/node@24.10.1)
       openapi-types:
         specifier: ^12.1.3
         version: 12.1.3
@@ -473,7 +473,7 @@ importers:
     devDependencies:
       '@graphql-codegen/cli':
         specifier: 5.0.4
-        version: 5.0.4(@babel/core@7.28.5)(@types/node@20.14.15)(graphql@16.11.0)
+        version: 5.0.4(@babel/core@7.28.5)(@types/node@24.10.1)(graphql@16.11.0)
       '@graphql-codegen/introspection':
         specifier: 4.0.3
         version: 4.0.3(graphql@16.11.0)
@@ -530,7 +530,7 @@ importers:
         version: 14.0.0-beta.19
       node-mocks-http:
         specifier: ^1.16.2
-        version: 1.16.2(@types/node@20.14.15)
+        version: 1.16.2(@types/node@24.10.1)
       openapi-types:
         specifier: ^12.1.3
         version: 12.1.3
@@ -548,7 +548,7 @@ importers:
         version: 0.2.3
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@swc/core@1.15.2)(@types/node@20.14.15)(typescript@5.9.3)
+        version: 2.0.0(@swc/core@1.15.3)(@types/node@24.10.1)(typescript@5.9.3)
 
   packages/card-service:
     dependencies:
@@ -621,7 +621,7 @@ importers:
         version: 10.16.0
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@swc/core@1.15.2)(@types/node@20.14.15)(typescript@5.9.3)
+        version: 2.0.0(@swc/core@1.15.3)(@types/node@20.14.15)(typescript@5.9.3)
 
   packages/documentation:
     dependencies:
@@ -632,8 +632,8 @@ importers:
         specifier: ^0.36.2
         version: 0.36.2(astro@5.16.0)
       '@interledger/docs-design-system':
-        specifier: ^0.10.1
-        version: 0.10.1
+        specifier: ^0.10.3
+        version: 0.10.3
       astro:
         specifier: 5.16.0
         version: 5.16.0(typescript@5.9.3)
@@ -842,14 +842,14 @@ importers:
         version: 8.19.0
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@swc/core@1.15.2)(@types/node@20.14.15)(typescript@5.9.3)
+        version: 2.0.0(@swc/core@1.15.3)(@types/node@24.10.1)(typescript@5.9.3)
       uuid:
         specifier: ^9.0.1
         version: 9.0.1
     devDependencies:
       '@graphql-codegen/cli':
         specifier: 5.0.4
-        version: 5.0.4(@babel/core@7.28.5)(@types/node@20.14.15)(graphql@16.11.0)
+        version: 5.0.4(@babel/core@7.28.5)(@types/node@24.10.1)(graphql@16.11.0)
       '@graphql-codegen/introspection':
         specifier: 4.0.3
         version: 4.0.3(graphql@16.11.0)
@@ -894,7 +894,7 @@ importers:
         version: 14.0.0-beta.19
       node-mocks-http:
         specifier: ^1.16.2
-        version: 1.16.2(@types/node@20.14.15)
+        version: 1.16.2(@types/node@24.10.1)
       testcontainers:
         specifier: ^10.16.0
         version: 10.16.0
@@ -977,7 +977,7 @@ importers:
         version: 1.0.6
       webpack:
         specifier: ^5.97.1
-        version: 5.97.1(@swc/core@1.15.2)(webpack-cli@6.0.1)
+        version: 5.97.1(@swc/core@1.15.3)(webpack-cli@6.0.1)
       webpack-cli:
         specifier: ^6.0.1
         version: 6.0.1(webpack@5.97.1)
@@ -4793,7 +4793,7 @@ packages:
       tslib: 2.6.2
     dev: true
 
-  /@graphql-codegen/cli@5.0.4(@babel/core@7.28.5)(@types/node@20.14.15)(graphql@16.11.0):
+  /@graphql-codegen/cli@5.0.4(@babel/core@7.28.5)(@types/node@24.10.1)(graphql@16.11.0):
     resolution: {integrity: sha512-vPO1mCtrttFVy8mPR+jMAvsYTv8E/7payIPaneeGE15mQjyvQXXsHoAg06Qpf6tykOdCwKVLWre0Mf6g0KBwUg==}
     engines: {node: '>=16'}
     hasBin: true
@@ -4813,12 +4813,12 @@ packages:
       '@graphql-tools/apollo-engine-loader': 8.0.0(graphql@16.11.0)
       '@graphql-tools/code-file-loader': 8.0.1(@babel/core@7.28.5)(graphql@16.11.0)
       '@graphql-tools/git-loader': 8.0.1(@babel/core@7.28.5)(graphql@16.11.0)
-      '@graphql-tools/github-loader': 8.0.0(@babel/core@7.28.5)(@types/node@20.14.15)(graphql@16.11.0)
+      '@graphql-tools/github-loader': 8.0.0(@babel/core@7.28.5)(@types/node@24.10.1)(graphql@16.11.0)
       '@graphql-tools/graphql-file-loader': 8.0.12(graphql@16.11.0)
       '@graphql-tools/json-file-loader': 8.0.11(graphql@16.11.0)
       '@graphql-tools/load': 8.0.12(graphql@16.11.0)
-      '@graphql-tools/prisma-loader': 8.0.1(@types/node@20.14.15)(graphql@16.11.0)
-      '@graphql-tools/url-loader': 8.0.24(@types/node@20.14.15)(graphql@16.11.0)
+      '@graphql-tools/prisma-loader': 8.0.1(@types/node@24.10.1)(graphql@16.11.0)
+      '@graphql-tools/url-loader': 8.0.24(@types/node@24.10.1)(graphql@16.11.0)
       '@graphql-tools/utils': 10.7.2(graphql@16.11.0)
       '@whatwg-node/fetch': 0.10.3
       chalk: 4.1.2
@@ -4826,7 +4826,7 @@ packages:
       debounce: 1.2.1
       detect-indent: 6.1.0
       graphql: 16.11.0
-      graphql-config: 5.1.3(@types/node@20.14.15)(graphql@16.11.0)
+      graphql-config: 5.1.3(@types/node@24.10.1)(graphql@16.11.0)
       inquirer: 8.2.4
       is-glob: 4.0.3
       jiti: 1.21.6
@@ -5210,7 +5210,7 @@ packages:
       - utf-8-validate
     dev: true
 
-  /@graphql-tools/executor-http@1.2.5(@types/node@20.14.15)(graphql@16.11.0):
+  /@graphql-tools/executor-http@1.2.5(@types/node@24.10.1)(graphql@16.11.0):
     resolution: {integrity: sha512-pG5YXsF2EhKS4JMhwFwI+0S5RGhPuJ3j3Dg1vWItzeBFiTzr2+VO8yyyahHIncLx7OzSYP/6pBDFp76FC55e+g==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
@@ -5224,7 +5224,7 @@ packages:
       '@whatwg-node/fetch': 0.10.3
       extract-files: 11.0.0
       graphql: 16.11.0
-      meros: 1.2.1(@types/node@20.14.15)
+      meros: 1.2.1(@types/node@24.10.1)
       tslib: 2.8.1
       value-or-promise: 1.0.12
     transitivePeerDependencies:
@@ -5281,14 +5281,14 @@ packages:
       - supports-color
     dev: true
 
-  /@graphql-tools/github-loader@8.0.0(@babel/core@7.28.5)(@types/node@20.14.15)(graphql@16.11.0):
+  /@graphql-tools/github-loader@8.0.0(@babel/core@7.28.5)(@types/node@24.10.1)(graphql@16.11.0):
     resolution: {integrity: sha512-VuroArWKcG4yaOWzV0r19ElVIV6iH6UKDQn1MXemND0xu5TzrFme0kf3U9o0YwNo0kUYEk9CyFM0BYg4he17FA==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
     dependencies:
       '@ardatan/sync-fetch': 0.0.1
-      '@graphql-tools/executor-http': 1.2.5(@types/node@20.14.15)(graphql@16.11.0)
+      '@graphql-tools/executor-http': 1.2.5(@types/node@24.10.1)(graphql@16.11.0)
       '@graphql-tools/graphql-tag-pluck': 8.0.1(@babel/core@7.28.5)(graphql@16.11.0)
       '@graphql-tools/utils': 10.7.2(graphql@16.11.0)
       '@whatwg-node/fetch': 0.9.8
@@ -5441,13 +5441,13 @@ packages:
       tslib: 2.8.1
     dev: true
 
-  /@graphql-tools/prisma-loader@8.0.1(@types/node@20.14.15)(graphql@16.11.0):
+  /@graphql-tools/prisma-loader@8.0.1(@types/node@24.10.1)(graphql@16.11.0):
     resolution: {integrity: sha512-bl6e5sAYe35Z6fEbgKXNrqRhXlCJYeWKBkarohgYA338/SD9eEhXtg3Cedj7fut3WyRLoQFpHzfiwxKs7XrgXg==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
     dependencies:
-      '@graphql-tools/url-loader': 8.0.24(@types/node@20.14.15)(graphql@16.11.0)
+      '@graphql-tools/url-loader': 8.0.24(@types/node@24.10.1)(graphql@16.11.0)
       '@graphql-tools/utils': 10.7.2(graphql@16.11.0)
       '@types/js-yaml': 4.0.9
       '@types/json-stable-stringify': 1.0.34
@@ -5537,14 +5537,14 @@ packages:
       value-or-promise: 1.0.12
     dev: false
 
-  /@graphql-tools/url-loader@8.0.24(@types/node@20.14.15)(graphql@16.11.0):
+  /@graphql-tools/url-loader@8.0.24(@types/node@24.10.1)(graphql@16.11.0):
     resolution: {integrity: sha512-f+Yt6sswiEPrcWsInMbmf+3HNENV2IZK1z3IiGMHuyqb+QsMbJLxzDPHnxMtF2QGJOiRjBQy2sF2en7DPG+jSw==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
     dependencies:
       '@graphql-tools/executor-graphql-ws': 1.3.7(graphql@16.11.0)
-      '@graphql-tools/executor-http': 1.2.5(@types/node@20.14.15)(graphql@16.11.0)
+      '@graphql-tools/executor-http': 1.2.5(@types/node@24.10.1)(graphql@16.11.0)
       '@graphql-tools/executor-legacy-ws': 1.1.10(graphql@16.11.0)
       '@graphql-tools/utils': 10.7.2(graphql@16.11.0)
       '@graphql-tools/wrap': 10.0.28(graphql@16.11.0)
@@ -5970,8 +5970,8 @@ packages:
     dev: false
     optional: true
 
-  /@interledger/docs-design-system@0.10.1:
-    resolution: {integrity: sha512-/nlTob1j+vsKycp9Q39ThZOyztBxNtWEKI0l3jaA+Px8hVzrizRa7ZtaaR4ZuYgoPRWGJPgXTi5tWdG+eiPybw==}
+  /@interledger/docs-design-system@0.10.3:
+    resolution: {integrity: sha512-kQdpHUDqS3RWYrYuL6dunOG0h0alNZBNqh2n+J09LCiDxwz9/7aVvF8fCdo2gaTI8w+lcE9/CRnuEF7h26PLUA==}
     dependencies:
       mermaid: 11.12.1
     transitivePeerDependencies:
@@ -8328,88 +8328,88 @@ packages:
       '@sinonjs/commons': 2.0.0
     dev: true
 
-  /@swc/core-darwin-arm64@1.15.2:
-    resolution: {integrity: sha512-Ghyz4RJv4zyXzrUC1B2MLQBbppIB5c4jMZJybX2ebdEQAvryEKp3gq1kBksCNsatKGmEgXul88SETU19sMWcrw==}
+  /@swc/core-darwin-arm64@1.15.3:
+    resolution: {integrity: sha512-AXfeQn0CvcQ4cndlIshETx6jrAM45oeUrK8YeEY6oUZU/qzz0Id0CyvlEywxkWVC81Ajpd8TQQ1fW5yx6zQWkQ==}
     engines: {node: '>=10'}
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
     optional: true
 
-  /@swc/core-darwin-x64@1.15.2:
-    resolution: {integrity: sha512-7n/PGJOcL2QoptzL42L5xFFfXY5rFxLHnuz1foU+4ruUTG8x2IebGhtwVTpaDN8ShEv2UZObBlT1rrXTba15Zw==}
+  /@swc/core-darwin-x64@1.15.3:
+    resolution: {integrity: sha512-p68OeCz1ui+MZYG4wmfJGvcsAcFYb6Sl25H9TxWl+GkBgmNimIiRdnypK9nBGlqMZAcxngNPtnG3kEMNnvoJ2A==}
     engines: {node: '>=10'}
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
     optional: true
 
-  /@swc/core-linux-arm-gnueabihf@1.15.2:
-    resolution: {integrity: sha512-ZUQVCfRJ9wimuxkStRSlLwqX4TEDmv6/J+E6FicGkQ6ssLMWoKDy0cAo93HiWt/TWEee5vFhFaSQYzCuBEGO6A==}
+  /@swc/core-linux-arm-gnueabihf@1.15.3:
+    resolution: {integrity: sha512-Nuj5iF4JteFgwrai97mUX+xUOl+rQRHqTvnvHMATL/l9xE6/TJfPBpd3hk/PVpClMXG3Uvk1MxUFOEzM1JrMYg==}
     engines: {node: '>=10'}
     cpu: [arm]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /@swc/core-linux-arm64-gnu@1.15.2:
-    resolution: {integrity: sha512-GZh3pYBmfnpQ+JIg+TqLuz+pM+Mjsk5VOzi8nwKn/m+GvQBsxD5ectRtxuWUxMGNG8h0lMy4SnHRqdK3/iJl7A==}
+  /@swc/core-linux-arm64-gnu@1.15.3:
+    resolution: {integrity: sha512-2Nc/s8jE6mW2EjXWxO/lyQuLKShcmTrym2LRf5Ayp3ICEMX6HwFqB1EzDhwoMa2DcUgmnZIalesq2lG3krrUNw==}
     engines: {node: '>=10'}
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /@swc/core-linux-arm64-musl@1.15.2:
-    resolution: {integrity: sha512-5av6VYZZeneiYIodwzGMlnyVakpuYZryGzFIbgu1XP8wVylZxduEzup4eP8atiMDFmIm+s4wn8GySJmYqeJC0A==}
+  /@swc/core-linux-arm64-musl@1.15.3:
+    resolution: {integrity: sha512-j4SJniZ/qaZ5g8op+p1G9K1z22s/EYGg1UXIb3+Cg4nsxEpF5uSIGEE4mHUfA70L0BR9wKT2QF/zv3vkhfpX4g==}
     engines: {node: '>=10'}
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /@swc/core-linux-x64-gnu@1.15.2:
-    resolution: {integrity: sha512-1nO/UfdCLuT/uE/7oB3EZgTeZDCIa6nL72cFEpdegnqpJVNDI6Qb8U4g/4lfVPkmHq2lvxQ0L+n+JdgaZLhrRA==}
+  /@swc/core-linux-x64-gnu@1.15.3:
+    resolution: {integrity: sha512-aKttAZnz8YB1VJwPQZtyU8Uk0BfMP63iDMkvjhJzRZVgySmqt/apWSdnoIcZlUoGheBrcqbMC17GGUmur7OT5A==}
     engines: {node: '>=10'}
     cpu: [x64]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /@swc/core-linux-x64-musl@1.15.2:
-    resolution: {integrity: sha512-Ksfrb0Tx310kr+TLiUOvB/I80lyZ3lSOp6cM18zmNRT/92NB4mW8oX2Jo7K4eVEI2JWyaQUAFubDSha2Q+439A==}
+  /@swc/core-linux-x64-musl@1.15.3:
+    resolution: {integrity: sha512-oe8FctPu1gnUsdtGJRO2rvOUIkkIIaHqsO9xxN0bTR7dFTlPTGi2Fhk1tnvXeyAvCPxLIcwD8phzKg6wLv9yug==}
     engines: {node: '>=10'}
     cpu: [x64]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /@swc/core-win32-arm64-msvc@1.15.2:
-    resolution: {integrity: sha512-IzUb5RlMUY0r1A9IuJrQ7Tbts1wWb73/zXVXT8VhewbHGoNlBKE0qUhKMED6Tv4wDF+pmbtUJmKXDthytAvLmg==}
+  /@swc/core-win32-arm64-msvc@1.15.3:
+    resolution: {integrity: sha512-L9AjzP2ZQ/Xh58e0lTRMLvEDrcJpR7GwZqAtIeNLcTK7JVE+QineSyHp0kLkO1rttCHyCy0U74kDTj0dRz6raA==}
     engines: {node: '>=10'}
     cpu: [arm64]
     os: [win32]
     requiresBuild: true
     optional: true
 
-  /@swc/core-win32-ia32-msvc@1.15.2:
-    resolution: {integrity: sha512-kCATEzuY2LP9AlbU2uScjcVhgnCAkRdu62vbce17Ro5kxEHxYWcugkveyBRS3AqZGtwAKYbMAuNloer9LS/hpw==}
+  /@swc/core-win32-ia32-msvc@1.15.3:
+    resolution: {integrity: sha512-B8UtogMzErUPDWUoKONSVBdsgKYd58rRyv2sHJWKOIMCHfZ22FVXICR4O/VwIYtlnZ7ahERcjayBHDlBZpR0aw==}
     engines: {node: '>=10'}
     cpu: [ia32]
     os: [win32]
     requiresBuild: true
     optional: true
 
-  /@swc/core-win32-x64-msvc@1.15.2:
-    resolution: {integrity: sha512-iJaHeYCF4jTn7OEKSa3KRiuVFIVYts8jYjNmCdyz1u5g8HRyTDISD76r8+ljEOgm36oviRQvcXaw6LFp1m0yyA==}
+  /@swc/core-win32-x64-msvc@1.15.3:
+    resolution: {integrity: sha512-SpZKMR9QBTecHeqpzJdYEfgw30Oo8b/Xl6rjSzBt1g0ZsXyy60KLXrp6IagQyfTYqNYE/caDvwtF2FPn7pomog==}
     engines: {node: '>=10'}
     cpu: [x64]
     os: [win32]
     requiresBuild: true
     optional: true
 
-  /@swc/core@1.15.2:
-    resolution: {integrity: sha512-OQm+yJdXxvSjqGeaWhP6Ia264ogifwAO7Q12uTDVYj/Ks4jBTI4JknlcjDRAXtRhqbWsfbZyK/5RtuIPyptk3w==}
+  /@swc/core@1.15.3:
+    resolution: {integrity: sha512-Qd8eBPkUFL4eAONgGjycZXj1jFCBW8Fd+xF0PzdTlBCWQIV1xnUT7B93wUANtW3KGjl3TRcOyxwSx/u/jyKw/Q==}
     engines: {node: '>=10'}
     requiresBuild: true
     peerDependencies:
@@ -8421,16 +8421,16 @@ packages:
       '@swc/counter': 0.1.3
       '@swc/types': 0.1.25
     optionalDependencies:
-      '@swc/core-darwin-arm64': 1.15.2
-      '@swc/core-darwin-x64': 1.15.2
-      '@swc/core-linux-arm-gnueabihf': 1.15.2
-      '@swc/core-linux-arm64-gnu': 1.15.2
-      '@swc/core-linux-arm64-musl': 1.15.2
-      '@swc/core-linux-x64-gnu': 1.15.2
-      '@swc/core-linux-x64-musl': 1.15.2
-      '@swc/core-win32-arm64-msvc': 1.15.2
-      '@swc/core-win32-ia32-msvc': 1.15.2
-      '@swc/core-win32-x64-msvc': 1.15.2
+      '@swc/core-darwin-arm64': 1.15.3
+      '@swc/core-darwin-x64': 1.15.3
+      '@swc/core-linux-arm-gnueabihf': 1.15.3
+      '@swc/core-linux-arm64-gnu': 1.15.3
+      '@swc/core-linux-arm64-musl': 1.15.3
+      '@swc/core-linux-x64-gnu': 1.15.3
+      '@swc/core-linux-x64-musl': 1.15.3
+      '@swc/core-win32-arm64-msvc': 1.15.3
+      '@swc/core-win32-ia32-msvc': 1.15.3
+      '@swc/core-win32-x64-msvc': 1.15.3
 
   /@swc/counter@0.1.3:
     resolution: {integrity: sha512-e2BR4lsJkkRlKZ/qCHPw9ZaSxc0MVUd7gtbtaB7aMvHeJVYe8sOB8DBZkP2DtISHGSku9sCK6T6cnY0CtXrOCQ==}
@@ -8447,14 +8447,14 @@ packages:
       tslib: 2.8.1
     dev: false
 
-  /@swc/jest@0.2.37(@swc/core@1.15.2):
+  /@swc/jest@0.2.37(@swc/core@1.15.3):
     resolution: {integrity: sha512-CR2BHhmXKGxTiFr21DYPRHQunLkX3mNIFGFkxBGji6r9uyIR5zftTOVYj1e0sFNMV2H7mf/+vpaglqaryBtqfQ==}
     engines: {npm: '>= 7.0.0'}
     peerDependencies:
       '@swc/core': '*'
     dependencies:
       '@jest/create-cache-key-function': 29.7.0
-      '@swc/core': 1.15.2
+      '@swc/core': 1.15.3
       '@swc/counter': 0.1.3
       jsonc-parser: 3.2.0
     dev: true
@@ -9090,6 +9090,11 @@ packages:
     resolution: {integrity: sha512-Fz1xDMCF/B00/tYSVMlmK7hVeLh7jE5f3B7X1/hmV0MJBwE27KlS7EvD/Yp+z1lm8mVhwV5w+n8jOZG8AfTlKw==}
     dependencies:
       undici-types: 5.26.5
+
+  /@types/node@24.10.1:
+    resolution: {integrity: sha512-GNWcUTRBgIRJD5zj+Tq0fKOJ5XZajIiBroOF0yvj2bSU1WvNdYS/dn9UxwsujGW4JX06dnHyjV2y9rRaybH0iQ==}
+    dependencies:
+      undici-types: 7.16.0
 
   /@types/node@8.10.66:
     resolution: {integrity: sha512-tktOkFUA4kXx2hhhrB8bIFb5TbwzS4uOhKEmwiD+NoiL0qtP2OQ9mFldbgD4dV1djrlBYP6eBuQZiWjuHUpqFw==}
@@ -9787,7 +9792,7 @@ packages:
       webpack: ^5.82.0
       webpack-cli: 6.x.x
     dependencies:
-      webpack: 5.97.1(@swc/core@1.15.2)(webpack-cli@6.0.1)
+      webpack: 5.97.1(@swc/core@1.15.3)(webpack-cli@6.0.1)
       webpack-cli: 6.0.1(webpack@5.97.1)
     dev: true
 
@@ -9798,7 +9803,7 @@ packages:
       webpack: ^5.82.0
       webpack-cli: 6.x.x
     dependencies:
-      webpack: 5.97.1(@swc/core@1.15.2)(webpack-cli@6.0.1)
+      webpack: 5.97.1(@swc/core@1.15.3)(webpack-cli@6.0.1)
       webpack-cli: 6.0.1(webpack@5.97.1)
     dev: true
 
@@ -9813,7 +9818,7 @@ packages:
       webpack-dev-server:
         optional: true
     dependencies:
-      webpack: 5.97.1(@swc/core@1.15.2)(webpack-cli@6.0.1)
+      webpack: 5.97.1(@swc/core@1.15.3)(webpack-cli@6.0.1)
       webpack-cli: 6.0.1(webpack@5.97.1)
     dev: true
 
@@ -10591,7 +10596,7 @@ packages:
       '@babel/core': 7.26.9
       find-cache-dir: 4.0.0
       schema-utils: 4.3.0
-      webpack: 5.97.1(@swc/core@1.15.2)(webpack-cli@6.0.1)
+      webpack: 5.97.1(@swc/core@1.15.3)(webpack-cli@6.0.1)
     dev: true
 
   /babel-plugin-istanbul@6.1.1:
@@ -11133,8 +11138,8 @@ packages:
     resolution: {integrity: sha512-Ec/2yV2nNPwb4DnTANEV99ZWwm3ZWfdlfkQbWSDDt+PsXEVYwlhPH8tdMaPunYTKKmz7AnHi2oNEi1GcmKCD8g==}
     dev: true
 
-  /caniuse-lite@1.0.30001756:
-    resolution: {integrity: sha512-4HnCNKbMLkLdhJz3TToeVWHSnfJvPaq6vu/eRP0Ahub/07n484XHhBF5AJoSGHdVrS8tKFauUQz8Bp9P7LVx7A==}
+  /caniuse-lite@1.0.30001759:
+    resolution: {integrity: sha512-Pzfx9fOKoKvevQf8oCXoyNRQ5QyxJj+3O0Rqx2V5oxT61KGx8+n6hV/IUyJeifUci2clnmmKVpvtiqRzgiWjSw==}
     dev: false
 
   /capital-case@1.0.4:
@@ -14585,7 +14590,7 @@ packages:
     resolution: {integrity: sha512-EtKwoO6kxCL9WO5xipiHTZlSzBm7WLT627TqC/uVRd0HKmq8NXyebnNYxDoBi7wt8eTWrUrKXCOVaFq9x1kgag==}
     dev: true
 
-  /graphql-config@5.1.3(@types/node@20.14.15)(graphql@16.11.0):
+  /graphql-config@5.1.3(@types/node@24.10.1)(graphql@16.11.0):
     resolution: {integrity: sha512-RBhejsPjrNSuwtckRlilWzLVt2j8itl74W9Gke1KejDTz7oaA5kVd6wRn9zK9TS5mcmIYGxf7zN7a1ORMdxp1Q==}
     engines: {node: '>= 16.0.0'}
     peerDependencies:
@@ -14599,7 +14604,7 @@ packages:
       '@graphql-tools/json-file-loader': 8.0.11(graphql@16.11.0)
       '@graphql-tools/load': 8.0.12(graphql@16.11.0)
       '@graphql-tools/merge': 9.0.17(graphql@16.11.0)
-      '@graphql-tools/url-loader': 8.0.24(@types/node@20.14.15)(graphql@16.11.0)
+      '@graphql-tools/url-loader': 8.0.24(@types/node@24.10.1)(graphql@16.11.0)
       '@graphql-tools/utils': 10.7.2(graphql@16.11.0)
       cosmiconfig: 8.1.3
       graphql: 16.11.0
@@ -17872,7 +17877,7 @@ packages:
       - supports-color
     dev: false
 
-  /meros@1.2.1(@types/node@20.14.15):
+  /meros@1.2.1(@types/node@24.10.1):
     resolution: {integrity: sha512-R2f/jxYqCAGI19KhAvaxSOxALBMkaXWH2a7rOyqQw+ZmizX5bKkEYWLzdhC+U82ZVVPVp6MCXe3EkVligh+12g==}
     engines: {node: '>=13'}
     peerDependencies:
@@ -17881,7 +17886,7 @@ packages:
       '@types/node':
         optional: true
     dependencies:
-      '@types/node': 20.14.15
+      '@types/node': 24.10.1
     dev: true
 
   /methods@1.1.2:
@@ -18845,7 +18850,7 @@ packages:
     dependencies:
       '@next/env': 15.5.6
       '@swc/helpers': 0.5.15
-      caniuse-lite: 1.0.30001756
+      caniuse-lite: 1.0.30001759
       postcss: 8.4.31
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
@@ -18969,6 +18974,31 @@ packages:
         optional: true
     dependencies:
       '@types/node': 20.14.15
+      accepts: 1.3.8
+      content-disposition: 0.5.4
+      depd: 1.1.2
+      fresh: 0.5.2
+      merge-descriptors: 1.0.3
+      methods: 1.1.2
+      mime: 1.6.0
+      parseurl: 1.3.3
+      range-parser: 1.2.1
+      type-is: 1.6.18
+    dev: true
+
+  /node-mocks-http@1.16.2(@types/node@24.10.1):
+    resolution: {integrity: sha512-2Sh6YItRp1oqewZNlck3LaFp5vbyW2u51HX2p1VLxQ9U/bG90XV8JY9O7Nk+HDd6OOn/oV3nA5Tx5k4Rki0qlg==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      '@types/express': ^4.17.21 || ^5.0.0
+      '@types/node': '*'
+    peerDependenciesMeta:
+      '@types/express':
+        optional: true
+      '@types/node':
+        optional: true
+    dependencies:
+      '@types/node': 24.10.1
       accepts: 1.3.8
       content-disposition: 0.5.4
       depd: 1.1.2
@@ -22588,7 +22618,7 @@ packages:
       supports-hyperlinks: 4.3.0
     dev: false
 
-  /terser-webpack-plugin@5.3.11(@swc/core@1.15.2)(webpack@5.97.1):
+  /terser-webpack-plugin@5.3.11(@swc/core@1.15.3)(webpack@5.97.1):
     resolution: {integrity: sha512-RVCsMfuD0+cTt3EwX8hSl2Ks56EbFHWmhluwcqoPKtBnfjiT6olaq7PRIRfhyU8nnC2MrnDrBLfrD/RGE+cVXQ==}
     engines: {node: '>= 10.13.0'}
     peerDependencies:
@@ -22605,12 +22635,12 @@ packages:
         optional: true
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
-      '@swc/core': 1.15.2
+      '@swc/core': 1.15.3
       jest-worker: 27.5.1
       schema-utils: 4.3.0
       serialize-javascript: 6.0.2
       terser: 5.37.0
-      webpack: 5.97.1(@swc/core@1.15.2)(webpack-cli@6.0.1)
+      webpack: 5.97.1(@swc/core@1.15.3)(webpack-cli@6.0.1)
     dev: true
 
   /terser@5.37.0:
@@ -22876,7 +22906,7 @@ packages:
   /ts-log@2.2.5:
     resolution: {integrity: sha512-PGcnJoTBnVGy6yYNFxWVNkdcAuAMstvutN9MgDJIV6L0oG8fB+ZNNy1T+wJzah8RPGor1mZuPQkVfXNDpy9eHA==}
 
-  /ts-node-dev@2.0.0(@swc/core@1.15.2)(@types/node@20.14.15)(typescript@5.9.3):
+  /ts-node-dev@2.0.0(@swc/core@1.15.3)(@types/node@20.14.15)(typescript@5.9.3):
     resolution: {integrity: sha512-ywMrhCfH6M75yftYvrvNarLEY+SUXtUvU8/0Z6llrHQVBx12GiFk5sStF8UdfE/yfzk9IAq7O5EEbTQsxlBI8w==}
     engines: {node: '>=0.8.0'}
     hasBin: true
@@ -22895,7 +22925,35 @@ packages:
       rimraf: 2.7.1
       source-map-support: 0.5.21
       tree-kill: 1.2.2
-      ts-node: 10.9.2(@swc/core@1.15.2)(@types/node@20.14.15)(typescript@5.9.3)
+      ts-node: 10.9.2(@swc/core@1.15.3)(@types/node@20.14.15)(typescript@5.9.3)
+      tsconfig: 7.0.0
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - '@swc/core'
+      - '@swc/wasm'
+      - '@types/node'
+    dev: true
+
+  /ts-node-dev@2.0.0(@swc/core@1.15.3)(@types/node@24.10.1)(typescript@5.9.3):
+    resolution: {integrity: sha512-ywMrhCfH6M75yftYvrvNarLEY+SUXtUvU8/0Z6llrHQVBx12GiFk5sStF8UdfE/yfzk9IAq7O5EEbTQsxlBI8w==}
+    engines: {node: '>=0.8.0'}
+    hasBin: true
+    peerDependencies:
+      node-notifier: '*'
+      typescript: '*'
+    peerDependenciesMeta:
+      node-notifier:
+        optional: true
+    dependencies:
+      chokidar: 3.6.0
+      dynamic-dedupe: 0.3.0
+      minimist: 1.2.8
+      mkdirp: 1.0.4
+      resolve: 1.22.8
+      rimraf: 2.7.1
+      source-map-support: 0.5.21
+      tree-kill: 1.2.2
+      ts-node: 10.9.2(@swc/core@1.15.3)(@types/node@24.10.1)(typescript@5.9.3)
       tsconfig: 7.0.0
       typescript: 5.9.3
     transitivePeerDependencies:
@@ -22903,7 +22961,7 @@ packages:
       - '@swc/wasm'
       - '@types/node'
 
-  /ts-node@10.9.2(@swc/core@1.15.2)(@types/node@20.14.15)(typescript@5.9.3):
+  /ts-node@10.9.2(@swc/core@1.15.3)(@types/node@20.14.15)(typescript@5.9.3):
     resolution: {integrity: sha512-f0FFpIdcHgn8zcPSbf1dRevwt047YMnaiJM3u2w2RewrB+fob/zePZcrOyQoLMMO7aBIddLcQIEK5dYjkLnGrQ==}
     hasBin: true
     peerDependencies:
@@ -22918,12 +22976,44 @@ packages:
         optional: true
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
-      '@swc/core': 1.15.2
+      '@swc/core': 1.15.3
       '@tsconfig/node10': 1.0.11
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
       '@types/node': 20.14.15
+      acorn: 8.14.0
+      acorn-walk: 8.3.2
+      arg: 4.1.3
+      create-require: 1.1.1
+      diff: 4.0.2
+      make-error: 1.3.6
+      typescript: 5.9.3
+      v8-compile-cache-lib: 3.0.1
+      yn: 3.1.1
+    dev: true
+
+  /ts-node@10.9.2(@swc/core@1.15.3)(@types/node@24.10.1)(typescript@5.9.3):
+    resolution: {integrity: sha512-f0FFpIdcHgn8zcPSbf1dRevwt047YMnaiJM3u2w2RewrB+fob/zePZcrOyQoLMMO7aBIddLcQIEK5dYjkLnGrQ==}
+    hasBin: true
+    peerDependencies:
+      '@swc/core': '>=1.2.50'
+      '@swc/wasm': '>=1.2.50'
+      '@types/node': '*'
+      typescript: '>=2.7'
+    peerDependenciesMeta:
+      '@swc/core':
+        optional: true
+      '@swc/wasm':
+        optional: true
+    dependencies:
+      '@cspotcode/source-map-support': 0.8.1
+      '@swc/core': 1.15.3
+      '@tsconfig/node10': 1.0.11
+      '@tsconfig/node12': 1.0.11
+      '@tsconfig/node14': 1.0.3
+      '@tsconfig/node16': 1.0.4
+      '@types/node': 24.10.1
       acorn: 8.14.0
       acorn-walk: 8.3.2
       arg: 4.1.3
@@ -23234,6 +23324,9 @@ packages:
 
   /undici-types@5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
+
+  /undici-types@7.16.0:
+    resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
 
   /undici@5.28.5:
     resolution: {integrity: sha512-zICwjrDrcrUE0pyyJc1I2QzBkLM8FINsgOrt6WjA+BgajVq9Nxu2PbFFXUrAggLfDXlZGZBVZYw7WNV5KiBiBA==}
@@ -24172,7 +24265,7 @@ packages:
       import-local: 3.1.0
       interpret: 3.1.1
       rechoir: 0.8.0
-      webpack: 5.97.1(@swc/core@1.15.2)(webpack-cli@6.0.1)
+      webpack: 5.97.1(@swc/core@1.15.3)(webpack-cli@6.0.1)
       webpack-merge: 6.0.1
     dev: true
 
@@ -24190,7 +24283,7 @@ packages:
     engines: {node: '>=10.13.0'}
     dev: true
 
-  /webpack@5.97.1(@swc/core@1.15.2)(webpack-cli@6.0.1):
+  /webpack@5.97.1(@swc/core@1.15.3)(webpack-cli@6.0.1):
     resolution: {integrity: sha512-EksG6gFY3L1eFMROS/7Wzgrii5mBAFe4rIr3r2BTfo7bcc+DWwFZ4OJ/miOuHJO/A85HwyI4eQ0F6IKXesO7Fg==}
     engines: {node: '>=10.13.0'}
     hasBin: true
@@ -24220,7 +24313,7 @@ packages:
       neo-async: 2.6.2
       schema-utils: 3.3.0
       tapable: 2.2.1
-      terser-webpack-plugin: 5.3.11(@swc/core@1.15.2)(webpack@5.97.1)
+      terser-webpack-plugin: 5.3.11(@swc/core@1.15.3)(webpack@5.97.1)
       watchpack: 2.4.2
       webpack-cli: 6.0.1(webpack@5.97.1)
       webpack-sources: 3.2.3
