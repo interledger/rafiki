@@ -5905,6 +5905,18 @@
             "deprecationReason": null
           },
           {
+            "name": "dataToTransmit",
+            "description": "Data to be transmitted to receiver.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "debitAmount",
             "description": "Amount to send (fixed send).",
             "args": [],

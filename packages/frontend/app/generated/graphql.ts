@@ -1064,6 +1064,8 @@ export type OutgoingPayment = BasePayment & Model & {
   client?: Maybe<Scalars['String']['output']>;
   /** The date and time that the outgoing payment was created. */
   createdAt: Scalars['String']['output'];
+  /** Data to be transmitted to receiver. */
+  dataToTransmit?: Maybe<Scalars['String']['output']>;
   /** Amount to send (fixed send). */
   debitAmount: Amount;
   /** Any error encountered during the payment process. */
@@ -2540,6 +2542,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
 export type OutgoingPaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['OutgoingPayment'] = ResolversParentTypes['OutgoingPayment']> = {
   client?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  dataToTransmit?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   debitAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   error?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   grantId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
