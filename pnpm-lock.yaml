@@ -64,8 +64,8 @@ importers:
         specifier: ^5.4.3
         version: 5.4.3
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^13.0.0
+        version: 13.0.0
     dependenciesMeta:
       tigerbeetle-node:
         built: true
@@ -124,8 +124,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^13.0.0
+        version: 13.0.0
       yaml:
         specifier: ^2.7.0
         version: 2.7.0
@@ -242,8 +242,8 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0(@swc/core@1.15.2)(@types/node@20.14.15)(typescript@5.9.3)
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^13.0.0
+        version: 13.0.0
     devDependencies:
       '@apollo/client':
         specifier: ^3.11.8
@@ -468,8 +468,8 @@ importers:
         specifier: workspace:*
         version: link:../token-introspection
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^13.0.0
+        version: 13.0.0
     devDependencies:
       '@graphql-codegen/cli':
         specifier: 5.0.4
@@ -586,8 +586,8 @@ importers:
         specifier: ^8.19.0
         version: 8.19.0
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^13.0.0
+        version: 13.0.0
     devDependencies:
       '@types/koa':
         specifier: 2.15.0
@@ -716,8 +716,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^13.0.0
+        version: 13.0.0
       yaml:
         specifier: ^2.7.0
         version: 2.7.0
@@ -789,8 +789,8 @@ importers:
         specifier: ^11.0.0
         version: 11.0.0
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^13.0.0
+        version: 13.0.0
     devDependencies:
       '@types/node':
         specifier: ^18.7.12
@@ -844,8 +844,8 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0(@swc/core@1.15.2)(@types/node@20.14.15)(typescript@5.9.3)
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^13.0.0
+        version: 13.0.0
     devDependencies:
       '@graphql-codegen/cli':
         specifier: 5.0.4
@@ -942,8 +942,8 @@ importers:
         specifier: workspace:*
         version: link:../test-lib
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^13.0.0
+        version: 13.0.0
       yaml:
         specifier: ^2.7.0
         version: 2.7.0
@@ -18825,6 +18825,7 @@ packages:
   /next@15.5.6(@babel/core@7.26.0)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-zTxsnI3LQo3c9HSdSf91O1jMNsEzIXDShXd4wVdg9y5shwLqBXi4ZtUUJyB86KGVSJLZx0PFONvO54aheGX8QQ==}
     engines: {node: ^18.18.0 || ^19.8.0 || >= 20.0.0}
+    deprecated: This version has a security vulnerability. Please upgrade to a patched version. See https://nextjs.org/blog/CVE-2025-66478 for more details.
     hasBin: true
     peerDependencies:
       '@opentelemetry/api': ^1.1.0
@@ -23611,6 +23612,10 @@ packages:
     resolution: {integrity: sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==}
     hasBin: true
     dev: false
+
+  /uuid@13.0.0:
+    resolution: {integrity: sha512-XQegIaBTVUjSHliKqcnFqYypAd4S+WCYt5NIeRs6w/UAry7z8Y9j5ZwRRL4kzq9U3sD6v+85er9FvkEaBpji2w==}
+    hasBin: true
 
   /uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
