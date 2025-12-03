@@ -262,7 +262,10 @@ describe('Auth Middleware', (): void => {
     expect(next).not.toHaveBeenCalled()
   })
 
-  test.only('Accepts ctx without walletAddressUrl', async (): Promise<void> => {
+  test('Accepts ctx without walletAddressUrl', async (): Promise<void> => {
+    const type = AccessType.OutgoingPayment
+    const action = 'create'
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { walletAddressUrl, ...ctxWithoutWalletAddressUrl } = ctx
     const middleware = createTokenIntrospectionMiddleware<IntrospectionContext>(
@@ -272,15 +275,17 @@ describe('Auth Middleware', (): void => {
       }
     )
 
+    const grantId = uuid()
+
     const introspectSpy = jest
       .spyOn(tokenIntrospectionClient, 'introspect')
       .mockResolvedValueOnce({
         active: true,
-        grant: uuid(),
+        grant: grantId,
         client: faker.internet.url({ appendSlash: false }),
         access: [
           {
-            type: type,
+            type,
             actions: [action],
             identifier: ctx.walletAddressUrl
           }
@@ -298,6 +303,7 @@ describe('Auth Middleware', (): void => {
         }
       ]
     })
+    expect(ctxWithoutWalletAddressUrl).toMatchObject({ grant: { id: grantId } })
     expect(next).toHaveBeenCalled()
   })
 

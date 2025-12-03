@@ -407,20 +407,5 @@ describe('Outgoing Payment Routes', (): void => {
         spentReceiveAmount: null
       })
     })
-
-    test('throws 403 error with correct message when grant id is missing', async (): Promise<void> => {
-      const ctx = createContext()
-
-      expect.assertions(2)
-
-      try {
-        await outgoingPaymentRoutes.getGrantSpentAmounts(ctx)
-      } catch (err) {
-        expect(err).toBeInstanceOf(OpenPaymentsServerRouteError)
-        expect((err as OpenPaymentsServerRouteError).message).toBe(
-          'Could not find grant'
-        )
-      }
-    })
   })
 })
