@@ -2990,47 +2990,6 @@ describe('OutgoingPaymentService', (): void => {
         interval = `R0/${intervalStart.toISOString()}/P1M`
       })
 
-      test('returns null amounts when no records exist for current interval', async (): Promise<void> => {
-        grant.limits = {
-          debitAmount: debitAmountOptions
-        }
-        await createOutgoingPayment(deps, {
-          tenantId,
-          walletAddressId,
-          client,
-          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
-          debitAmount: {
-            value: BigInt(100),
-            assetCode: asset.code,
-            assetScale: asset.scale
-          },
-          grant,
-          validDestination: false,
-          method: 'ilp'
-        })
-
-        const latestSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
-          knex
-        )
-          .where({ grantId: grant.id })
-          .first()
-
-        assert(latestSpentAmounts)
-
-        const result = await outgoingPaymentService.getGrantSpentAmounts({
-          grantId: grant.id,
-          limits: {
-            debitAmount: debitAmountOptions,
-            interval
-          }
-        })
-
-        expect(result).toEqual({
-          spentDebitAmount: null,
-          spentReceiveAmount: null
-        })
-      })
-
       test('returns interval amounts from current interval', async (): Promise<void> => {
         grant.limits = {
           debitAmount: debitAmountOptions,
@@ -3151,7 +3110,7 @@ describe('OutgoingPaymentService', (): void => {
           }
 
           // payment in the first interval
-          await createOutgoingPayment(deps, {
+          const payment = await createOutgoingPayment(deps, {
             tenantId,
             walletAddressId,
             client,
@@ -3185,8 +3144,16 @@ describe('OutgoingPaymentService', (): void => {
           })
 
           expect(result).toEqual({
-            spentDebitAmount: null,
-            spentReceiveAmount: null
+            spentDebitAmount: {
+              value: 0n,
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            spentReceiveAmount: {
+              value: 0n,
+              assetCode: payment.receiveAmount.assetCode,
+              assetScale: payment.receiveAmount.assetScale
+            }
           })
         } finally {
           jest.useRealTimers()

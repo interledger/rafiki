@@ -1230,61 +1230,6 @@ async function getGrantSpentAmounts(
 ): Promise<GrantSpentAmounts> {
   const { grantId, limits } = options
 
-  // If an interval is specified, try to get the latest record for it
-  if (limits?.interval) {
-    const now = new Date()
-    let currentInterval
-
-    try {
-      currentInterval = getInterval(limits.interval, now)
-      if (!currentInterval?.start || !currentInterval?.end) {
-        return {
-          spentDebitAmount: null,
-          spentReceiveAmount: null
-        }
-      }
-    } catch (err) {
-      deps.logger.warn(
-        { err, grantId, limits },
-        'Could not parse interval when trying to get grant spent amounts'
-      )
-      return {
-        spentDebitAmount: null,
-        spentReceiveAmount: null
-      }
-    }
-
-    const currentIntervalSpentAmounts =
-      await OutgoingPaymentGrantSpentAmounts.query(deps.knex)
-        .where('grantId', grantId)
-        .where('intervalStart', currentInterval.start.toJSDate())
-        .where('intervalEnd', currentInterval.end.toJSDate())
-        .orderBy('createdAt', 'desc')
-        .first()
-
-    return currentIntervalSpentAmounts
-      ? {
-          spentDebitAmount: {
-            value:
-              currentIntervalSpentAmounts.intervalDebitAmountValue ?? BigInt(0),
-            assetCode: currentIntervalSpentAmounts.debitAmountCode,
-            assetScale: currentIntervalSpentAmounts.debitAmountScale
-          },
-          spentReceiveAmount: {
-            value:
-              currentIntervalSpentAmounts.intervalReceiveAmountValue ??
-              BigInt(0),
-            assetCode: currentIntervalSpentAmounts.receiveAmountCode,
-            assetScale: currentIntervalSpentAmounts.receiveAmountScale
-          }
-        }
-      : {
-          spentDebitAmount: null,
-          spentReceiveAmount: null
-        }
-  }
-
-  // No interval - get the latest overall spent amounts record for the grant
   const latestGrantSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
     deps.knex
   )
@@ -1292,23 +1237,88 @@ async function getGrantSpentAmounts(
     .orderBy('createdAt', 'desc')
     .first()
 
-  return latestGrantSpentAmounts
-    ? {
-        spentDebitAmount: {
-          value: latestGrantSpentAmounts.grantTotalDebitAmountValue,
-          assetCode: latestGrantSpentAmounts.debitAmountCode,
-          assetScale: latestGrantSpentAmounts.debitAmountScale
-        },
-        spentReceiveAmount: {
-          value: latestGrantSpentAmounts.grantTotalReceiveAmountValue,
-          assetCode: latestGrantSpentAmounts.receiveAmountCode,
-          assetScale: latestGrantSpentAmounts.receiveAmountScale
-        }
+  if (!latestGrantSpentAmounts) {
+    return {
+      spentDebitAmount: null,
+      spentReceiveAmount: null
+    }
+  }
+
+  if (!limits?.interval) {
+    return {
+      spentDebitAmount: {
+        value: latestGrantSpentAmounts.grantTotalDebitAmountValue,
+        assetCode: latestGrantSpentAmounts.debitAmountCode,
+        assetScale: latestGrantSpentAmounts.debitAmountScale
+      },
+      spentReceiveAmount: {
+        value: latestGrantSpentAmounts.grantTotalReceiveAmountValue,
+        assetCode: latestGrantSpentAmounts.receiveAmountCode,
+        assetScale: latestGrantSpentAmounts.receiveAmountScale
       }
-    : {
+    }
+  }
+
+  // Interval is specified - determine the current interval
+  const now = new Date()
+  let currentInterval
+
+  try {
+    currentInterval = getInterval(limits.interval, now)
+    if (!currentInterval?.start || !currentInterval?.end) {
+      return {
         spentDebitAmount: null,
         spentReceiveAmount: null
       }
+    }
+  } catch (err) {
+    deps.logger.warn(
+      { err, grantId, limits },
+      'Could not parse interval when trying to get grant spent amounts'
+    )
+    return {
+      spentDebitAmount: null,
+      spentReceiveAmount: null
+    }
+  }
+
+  // Check if the latest record is from the current interval
+  const recordIntervalStart = latestGrantSpentAmounts.intervalStart
+  const recordIntervalEnd = latestGrantSpentAmounts.intervalEnd
+
+  if (
+    recordIntervalStart &&
+    recordIntervalEnd &&
+    recordIntervalStart.getTime() ===
+      currentInterval.start.toJSDate().getTime() &&
+    recordIntervalEnd.getTime() === currentInterval.end.toJSDate().getTime()
+  ) {
+    return {
+      spentDebitAmount: {
+        value: latestGrantSpentAmounts.intervalDebitAmountValue ?? BigInt(0),
+        assetCode: latestGrantSpentAmounts.debitAmountCode,
+        assetScale: latestGrantSpentAmounts.debitAmountScale
+      },
+      spentReceiveAmount: {
+        value: latestGrantSpentAmounts.intervalReceiveAmountValue ?? BigInt(0),
+        assetCode: latestGrantSpentAmounts.receiveAmountCode,
+        assetScale: latestGrantSpentAmounts.receiveAmountScale
+      }
+    }
+  }
+
+  return {
+    spentDebitAmount: {
+      value: BigInt(0),
+      assetCode: latestGrantSpentAmounts.debitAmountCode,
+      assetScale: latestGrantSpentAmounts.debitAmountScale
+    },
+    spentReceiveAmount: {
+      value: BigInt(0),
+      assetCode: latestGrantSpentAmounts.receiveAmountCode,
+      assetScale: latestGrantSpentAmounts.receiveAmountScale
+    }
+  }
 }
 
 /**
