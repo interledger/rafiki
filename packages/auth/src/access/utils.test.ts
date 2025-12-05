@@ -296,6 +296,27 @@ describe('Access utilities', (): void => {
     ).toBe(false)
   })
 
+  test('access comparison does not fail if no request identifier', async (): Promise<void> => {
+    const grantAccessItemSuperAction = await Access.query(trx).insertAndFetch({
+      grantId: grant.id,
+      type: AccessType.IncomingPayment,
+      actions: [AccessAction.ReadAll],
+      identifier
+    })
+
+    const requestAccessItem: AccessItem = {
+      type: 'incoming-payment',
+      actions: [AccessAction.ReadAll]
+    }
+
+    expect(
+      compareRequestAndGrantAccessItems(
+        requestAccessItem,
+        toOpenPaymentsAccess(grantAccessItemSuperAction)
+      )
+    ).toBe(true)
+  })
+
   test('access comparison fails if type mismatch', async (): Promise<void> => {
     const grantAccessItemSuperAction = await Access.query(trx).insertAndFetch({
       grantId: grant.id,
