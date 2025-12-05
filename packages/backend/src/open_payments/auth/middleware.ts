@@ -55,19 +55,17 @@ function contextToRequestLike(ctx: HttpSigContext): RequestLike {
 
 function toOpenPaymentsAccess(
   type: AccessType,
-  action: RequestAction,
+  action?: RequestAction,
   identifier?: string
 ): AccessItem {
   return {
     type: type,
-    actions: [action],
+    actions: action ? [action] : [],
     identifier
   } as AccessItem
 }
 
-export function createTokenIntrospectionMiddleware<
-  T extends IntrospectionContext = WalletAddressUrlContext
->({
+export function createTokenIntrospectionMiddleware({
   requestType,
   requestAction,
   canSkipAuthValidation = false
@@ -76,11 +74,10 @@ export function createTokenIntrospectionMiddleware<
   requestAction: RequestAction
   canSkipAuthValidation?: boolean
 }) {
-  return async (ctx: T, next: () => Promise<void>): Promise<void> => {
-    const walletAddressUrl =
-      'walletAddressUrl' in ctx
-        ? (ctx as WalletAddressUrlContext).walletAddressUrl
-        : undefined
+  return async (
+    ctx: WalletAddressUrlContext,
+    next: () => Promise<void>
+  ): Promise<void> => {
     const config = await ctx.container.use('config')
     try {
       if (canSkipAuthValidation && !ctx.request.headers.authorization) {
@@ -88,42 +85,11 @@ export function createTokenIntrospectionMiddleware<
         return
       }
 
-      const authSplit = ctx.request.headers.authorization?.split(' ')
-      if (authSplit?.length !== 2 || authSplit[0] !== 'GNAP') {
-        throw new OpenPaymentsServerRouteError(
-          401,
-          'Missing or invalid authorization header value'
-        )
-      }
-      const token = authSplit[1]
-      const tokenIntrospectionClient = await ctx.container.use(
-        'tokenIntrospectionClient'
-      )
-      let tokenInfo: TokenInfo
-      try {
-        tokenInfo = await tokenIntrospectionClient.introspect({
-          access_token: token,
-          access: [
-            toOpenPaymentsAccess(requestType, requestAction, walletAddressUrl)
-          ]
-        })
-      } catch (err) {
-        throw new OpenPaymentsServerRouteError(401, 'Invalid Token')
-      }
-      if (!isActiveTokenInfo(tokenInfo)) {
-        throw new OpenPaymentsServerRouteError(403, 'Inactive Token')
-      }
-
-      if (tokenInfo.access.length === 0) {
-        throw new OpenPaymentsServerRouteError(403, 'Insufficient Grant')
-      }
-
-      if (tokenInfo.access.length !== 1) {
-        throw new OpenPaymentsServerRouteError(
-          500,
-          'Unexpected number of access items'
-        )
-      }
+      const tokenInfo = await introspect(ctx, {
+        type: requestType,
+        action: requestAction,
+        identifier: ctx.walletAddressUrl
+      })
 
       const access = tokenInfo.access[0]
 
@@ -164,6 +130,86 @@ export function createTokenIntrospectionMiddleware<
 
     await next()
   }
+}
+
+export function createOutgoingPayemntGrantTokenIntrospectionMiddleware() {
+  return async (
+    ctx: IntrospectionContext,
+    next: () => Promise<void>
+  ): Promise<void> => {
+    const config = await ctx.container.use('config')
+
+    try {
+      const tokenInfo = await introspect(ctx, {
+        type: AccessType.OutgoingPayment
+      })
+
+      const access = tokenInfo.access[0]
+
+      ctx.grant = {
+        id: tokenInfo.grant,
+        limits:
+          'limits' in access && access.limits
+            ? parseLimits(access.limits)
+            : undefined
+      }
+    } catch (err) {
+      if (err instanceof OpenPaymentsServerRouteError) {
+        ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
+      }
+      throw err
+    }
+
+    await next()
+  }
+}
+
+async function introspect(
+  ctx: IntrospectionContext,
+  accessItem: { type: AccessType; action?: RequestAction; identifier?: string }
+) {
+  const authSplit = ctx.request.headers.authorization?.split(' ')
+  if (authSplit?.length !== 2 || authSplit[0] !== 'GNAP') {
+    throw new OpenPaymentsServerRouteError(
+      401,
+      'Missing or invalid authorization header value'
+    )
+  }
+  const token = authSplit[1]
+  const tokenIntrospectionClient = await ctx.container.use(
+    'tokenIntrospectionClient'
+  )
+  let tokenInfo: TokenInfo
+  try {
+    tokenInfo = await tokenIntrospectionClient.introspect({
+      access_token: token,
+      access: [
+        toOpenPaymentsAccess(
+          accessItem.type,
+          accessItem.action,
+          accessItem.identifier
+        )
+      ]
+    })
+  } catch (err) {
+    throw new OpenPaymentsServerRouteError(401, 'Invalid Token')
+  }
+  if (!isActiveTokenInfo(tokenInfo)) {
+    throw new OpenPaymentsServerRouteError(403, 'Inactive Token')
+  }
+
+  if (tokenInfo.access.length === 0) {
+    throw new OpenPaymentsServerRouteError(403, 'Insufficient Grant')
+  }
+
+  if (tokenInfo.access.length !== 1) {
+    throw new OpenPaymentsServerRouteError(
+      500,
+      'Unexpected number of access items'
+    )
+  }
+
+  return tokenInfo
 }
 
 export const authenticatedStatusMiddleware = async (

@@ -30,7 +30,8 @@ import {
   httpsigMiddleware,
   Grant,
   RequestAction,
-  authenticatedStatusMiddleware
+  authenticatedStatusMiddleware,
+  createOutgoingPayemntGrantTokenIntrospectionMiddleware
 } from './open_payments/auth/middleware'
 import { RatesService } from './rates/service'
 import { createSpspMiddleware } from './payment-method/ilp/spsp/middleware'
@@ -706,11 +707,8 @@ export class App {
     // with outgoing payment create access
     router.get(
       '/:tenantId/outgoing-payment-grant',
-      createTokenIntrospectionMiddleware<IntrospectionContext>({
-        // Expects token used for outgoing payment payment creation
-        requestType: AccessType.OutgoingPayment,
-        requestAction: RequestAction.Create
-      }),
+      // Expects token used for outgoing payment payment creation
+      createOutgoingPayemntGrantTokenIntrospectionMiddleware(),
       outgoingPaymentRoutes.getGrantSpentAmounts
     )
 
