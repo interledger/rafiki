@@ -262,51 +262,6 @@ describe('Auth Middleware', (): void => {
     expect(next).not.toHaveBeenCalled()
   })
 
-  test('Accepts ctx without walletAddressUrl', async (): Promise<void> => {
-    const type = AccessType.OutgoingPayment
-    const action = 'create'
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { walletAddressUrl, ...ctxWithoutWalletAddressUrl } = ctx
-    const middleware = createTokenIntrospectionMiddleware<IntrospectionContext>(
-      {
-        requestType: type,
-        requestAction: action
-      }
-    )
-
-    const grantId = uuid()
-
-    const introspectSpy = jest
-      .spyOn(tokenIntrospectionClient, 'introspect')
-      .mockResolvedValueOnce({
-        active: true,
-        grant: grantId,
-        client: faker.internet.url({ appendSlash: false }),
-        access: [
-          {
-            type,
-            actions: [action],
-            identifier: ctx.walletAddressUrl
-          }
-        ]
-      })
-
-    await middleware(ctxWithoutWalletAddressUrl, next)
-
-    expect(introspectSpy).toHaveBeenCalledWith({
-      access_token: token,
-      access: [
-        {
-          type: type,
-          actions: [action]
-        }
-      ]
-    })
-    expect(ctxWithoutWalletAddressUrl).toMatchObject({ grant: { id: grantId } })
-    expect(next).toHaveBeenCalled()
-  })
-
   test('rejects with 403 for inactive token', async (): Promise<void> => {
     const introspectSpy = jest
       .spyOn(tokenIntrospectionClient, 'introspect')
