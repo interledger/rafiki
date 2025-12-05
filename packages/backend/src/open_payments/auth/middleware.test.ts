@@ -20,7 +20,6 @@ import {
   AppServices,
   HttpSigContext,
   HttpSigWithAuthenticatedStatusContext,
-  IntrospectionContext,
   WalletAddressUrlContext
 } from '../../app'
 import { createTestApp, TestContainer } from '../../tests/app'
