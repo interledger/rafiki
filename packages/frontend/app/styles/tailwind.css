@@ -7,6 +7,10 @@ a.default-link {
   text-decoration: revert;
 }
 
-div.forward {
+div.forward-1 {
   z-index: 1;
+}
+
+div.forward-2 {
+  z-index: 2;
 }
