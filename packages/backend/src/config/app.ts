@@ -208,7 +208,9 @@ export const Config = {
   cardServiceUrl: optional(envString, 'CARD_SERVICE_URL'),
   posServiceUrl: optional(envString, 'POS_SERVICE_URL'),
   posWebhookServiceUrl: optional(envString, 'POS_WEBHOOK_SERVICE_URL'),
-  cardWebhookUrl: optional(envString, 'CARD_WEBHOOK_SERVICE_URL')
+  cardWebhookUrl: optional(envString, 'CARD_WEBHOOK_SERVICE_URL'),
+  dbEncryptionSecret: optional(envString, 'DB_ENCRYPTION_SECRET'),
+  dbEncryptionIv: optional(envString, 'DB_ENCRYPTION_IV')
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

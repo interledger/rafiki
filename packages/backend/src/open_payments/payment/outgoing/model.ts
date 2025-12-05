@@ -1,5 +1,6 @@
 import { Model, ModelOptions, QueryContext } from 'objection'
 import { DbErrors } from 'objection-db-errors'
+import { createDecipheriv } from 'node:crypto'
 
 import { LiquidityAccount } from '../../../accounting/service'
 import { Asset } from '../../../asset/model'
@@ -132,6 +133,24 @@ export class OutgoingPayment
   }
 
   public tenantId!: string
+
+  public dataToTransmit?: string
+  public getDataToTransmit(key?: string, iv?: string): string | null {
+    if (!this.dataToTransmit) return null
+    if (!key || !iv) return this.dataToTransmit
+    const { tag, cipherText } = JSON.parse(this.dataToTransmit)
+
+    const decipher = createDecipheriv(
+      'aes-256-gcm',
+      Uint8Array.from(Buffer.from(key, 'base64')),
+      iv
+    )
+    decipher.setAuthTag(Uint8Array.from(Buffer.from(tag, 'base64')))
+    let dataToTransmit = decipher.update(cipherText, 'base64', 'utf8')
+    dataToTransmit += decipher.final('utf8')
+
+    return dataToTransmit
+  }
 
   static get relationMappings() {
     return {

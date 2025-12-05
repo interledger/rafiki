@@ -748,6 +748,47 @@ describe('OutgoingPayment Resolvers', (): void => {
         )
       }
     })
+
+    test('dataToTransmit', async (): Promise<void> => {
+      const walletAddress = await createWalletAddress(deps, {
+        assetId: asset.id,
+        tenantId: asset.tenantId
+      })
+      payment = await createPayment({
+        walletAddressId: walletAddress.id,
+        tenantId: walletAddress.tenantId
+      })
+      const dataToTransmit = JSON.stringify({ data: faker.internet.email() })
+      await outgoingPaymentService.fund({
+        id: payment.id,
+        tenantId: payment.tenantId,
+        amount: payment.debitAmount.value,
+        transferId: uuid(),
+        dataToTransmit
+      })
+
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            query OutgoingPayment($paymentId: String!) {
+              outgoingPayment(id: $paymentId) {
+                id
+                dataToTransmit
+              }
+            }
+          `,
+          variables: {
+            paymentId: payment.id
+          }
+        })
+        .then((query): OutgoingPayment => query.data?.outgoingPayment)
+
+      expect(query).toEqual({
+        id: payment.id,
+        dataToTransmit,
+        __typename: 'OutgoingPayment'
+      })
+    })
   })
 
   describe('Mutation.createOutgoingPayment', (): void => {
