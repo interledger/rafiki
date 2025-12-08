@@ -132,7 +132,7 @@ export function createTokenIntrospectionMiddleware({
   }
 }
 
-export function createOutgoingPayemntGrantTokenIntrospectionMiddleware() {
+export function createOutgoingPaymentGrantTokenIntrospectionMiddleware() {
   return async (
     ctx: IntrospectionContext,
     next: () => Promise<void>
