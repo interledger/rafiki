@@ -2297,12 +2297,12 @@ describe('OutgoingPaymentService', (): void => {
             tenantId,
             amount: quoteAmount,
             transferId: uuid(),
-            dataToTransmit: encryptedData
+            senderData: encryptedData
           })
 
           assert.ok(!isTransferError(fundedPayment))
           assert.ok(!isOutgoingPaymentError(fundedPayment))
-          expect(JSON.parse(fundedPayment.dataToTransmit as string)).toEqual(
+          expect(JSON.parse(fundedPayment.senderData as string)).toEqual(
             expect.objectContaining({
               cipherText: expect.any(String),
               tag: expect.objectContaining({
@@ -2312,7 +2312,7 @@ describe('OutgoingPaymentService', (): void => {
             })
           )
           expect(
-            fundedPayment.getDataToTransmit(config.dbEncryptionSecret)
+            fundedPayment.getSenderData(config.dbEncryptionSecret)
           ).toEqual(encryptedData)
         }
       )
@@ -2332,12 +2332,12 @@ describe('OutgoingPaymentService', (): void => {
             tenantId,
             amount: quoteAmount,
             transferId: uuid(),
-            dataToTransmit: encryptedData
+            senderData: encryptedData
           })
 
           assert.ok(!isTransferError(fundedPayment))
           assert.ok(!isOutgoingPaymentError(fundedPayment))
-          expect(fundedPayment.dataToTransmit).toEqual(encryptedData)
+          expect(fundedPayment.senderData).toEqual(encryptedData)
         }
       )
     )

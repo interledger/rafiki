@@ -605,7 +605,7 @@ input DepositOutgoingPaymentLiquidityInput {
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String!
   "Data to be encrypted and sent to the receiver."
-  dataToTransmit: String
+  senderData: String
 }
 
 input CreateIncomingPaymentWithdrawalInput {

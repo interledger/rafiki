@@ -134,11 +134,11 @@ export class OutgoingPayment
 
   public tenantId!: string
 
-  public dataToTransmit?: string
-  public getDataToTransmit(key?: string): string | null {
-    if (!this.dataToTransmit) return null
-    if (!key) return this.dataToTransmit
-    const { tag, cipherText, iv } = JSON.parse(this.dataToTransmit)
+  public senderData?: string
+  public getSenderData(key?: string): string | null {
+    if (!this.senderData) return null
+    if (!key) return this.senderData
+    const { tag, cipherText, iv } = JSON.parse(this.senderData)
 
     const decipher = createDecipheriv(
       'aes-256-gcm',
@@ -146,10 +146,10 @@ export class OutgoingPayment
       iv
     )
     decipher.setAuthTag(Uint8Array.from(Buffer.from(tag, 'base64')))
-    let dataToTransmit = decipher.update(cipherText, 'base64', 'utf8')
-    dataToTransmit += decipher.final('utf8')
+    let decryptedSenderData = decipher.update(cipherText, 'base64', 'utf8')
+    decryptedSenderData += decipher.final('utf8')
 
-    return dataToTransmit
+    return decryptedSenderData
   }
 
   static get relationMappings() {
