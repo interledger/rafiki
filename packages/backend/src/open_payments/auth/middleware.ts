@@ -141,7 +141,8 @@ export function createOutgoingPayemntGrantTokenIntrospectionMiddleware() {
 
     try {
       const tokenInfo = await introspect(ctx, {
-        type: AccessType.OutgoingPayment
+        type: AccessType.OutgoingPayment,
+        action: AccessAction.Create as RequestAction
       })
 
       const access = tokenInfo.access[0]
