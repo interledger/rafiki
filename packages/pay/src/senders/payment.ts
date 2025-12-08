@@ -5,7 +5,6 @@ import {
   FrameType,
   StreamMoneyFrame,
   StreamReceiptFrame,
-  StreamDataFrame,
 } from 'ilp-protocol-stream/dist/src/packet'
 import { MaxPacketAmountController } from '../controllers/max-packet'
 import { ExchangeRateController } from '../controllers/exchange-rate'
@@ -20,6 +19,7 @@ import { EstablishmentController } from '../controllers/establishment'
 import { SequenceController } from '../controllers/sequence'
 import { decodeReceipt, Receipt as StreamReceipt } from 'ilp-protocol-stream'
 import { StreamSender } from '.'
+import { AppDataController } from '../controllers/app-data'
 
 /** Completion criteria of the payment */
 export enum PaymentType {
@@ -67,12 +67,8 @@ export class PaymentSender extends StreamSender<PaymentProgress> {
 
   protected readonly controllers: StreamController[]
 
-  /** Count of fulfillable payment requests sent by this sender (excludes asset/rate probes) */
-  private requestCount = 0
-
   private readonly rateCalculator: ExchangeRateController
   private readonly maxPacketController: MaxPacketAmountController
-  private readonly appData?: Buffer
 
   constructor({ plugin, destination, quote, progressHandler, appData }: PaymentSenderOptions) {
     super(plugin, destination)
@@ -80,9 +76,6 @@ export class PaymentSender extends StreamSender<PaymentProgress> {
 
     this.quote = quote
     this.progressHandler = progressHandler
-    if (appData) {
-      this.appData = Buffer.isBuffer(appData) ? appData : Buffer.from(appData)
-    }
 
     this.maxPacketController = new MaxPacketAmountController(this.quote.maxPacketAmount)
     this.rateCalculator = new ExchangeRateController(
@@ -90,10 +83,16 @@ export class PaymentSender extends StreamSender<PaymentProgress> {
       quote.highEstimatedExchangeRate
     )
 
+    const appDataController =
+      appData
+        ? new AppDataController(appData, PaymentSender.DEFAULT_STREAM_ID)
+        : undefined
+
     this.controllers = [
       new SequenceController(requestCounter),
       new EstablishmentController(destination),
       new ExpiryController(),
+      ...(appDataController ? [appDataController] : []),
       new FailureController(),
       new TimeoutController(),
       this.maxPacketController,
@@ -172,16 +171,6 @@ export class PaymentSender extends StreamSender<PaymentProgress> {
     this.appliedRoundingCorrection = applyCorrection
 
     this.progressHandler?.(this.getProgress())
-
-    // Inject a single StreamData frame on the first payment packet if appData is provided.
-    // Use the local request count of the sender instead of the global STREAM sequence number,
-    // since the shared sequence may have already been incremented by rate probes.
-    if (this.appData && this.requestCount === 0) {
-      // Offset is 0 for a one-shot payload
-      request.addFrames(new StreamDataFrame(PaymentSender.DEFAULT_STREAM_ID, 0, this.appData))
-    }
-
-    this.requestCount++
 
     request
       .setSourceAmount(sourceAmount)
