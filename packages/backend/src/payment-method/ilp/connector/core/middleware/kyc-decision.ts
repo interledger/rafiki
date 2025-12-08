@@ -23,7 +23,7 @@ export function createKycDecisionMiddleware(): ILPMiddleware {
     }
 
     const incomingPaymentId = ctx.state.streamDestination
-    // TODO Maybe we should have a more `unique` key?
+    // TODO Maybe we should have a more `unique` key? Think of packet/stream id!!!
     const cacheKey = `kyc_decision:${incomingPaymentId}`
 
     // Bounded polling: wait for decision up to (packet expiry - safetyMs) or maxWaitMs
@@ -65,8 +65,8 @@ export function createKycDecisionMiddleware(): ILPMiddleware {
       return
     }
 
-    throw new Errors.RelativeApplicationError(
-      IlpErrorCode.R99_APPLICATION_ERROR,
+    throw new Errors.FinalApplicationError(
+      'Data failed verification',
       Buffer.from(decision, 'utf8')
     )
   }
