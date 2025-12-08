@@ -1266,6 +1266,10 @@ async function getGrantSpentAmounts(
   try {
     currentInterval = getInterval(limits.interval, now)
     if (!currentInterval?.start || !currentInterval?.end) {
+      deps.logger.warn(
+        { 'limits.interval': limits.interval },
+        'Provided interval does not contain start or end'
+      )
       return {
         spentDebitAmount: null,
         spentReceiveAmount: null
@@ -1283,27 +1287,37 @@ async function getGrantSpentAmounts(
   }
 
   // Check if the latest record is from the current interval
-  const recordIntervalStart = latestGrantSpentAmounts.intervalStart
-  const recordIntervalEnd = latestGrantSpentAmounts.intervalEnd
-
   if (
-    recordIntervalStart &&
-    recordIntervalEnd &&
-    recordIntervalStart.getTime() ===
-      currentInterval.start.toJSDate().getTime() &&
-    recordIntervalEnd.getTime() === currentInterval.end.toJSDate().getTime()
+    latestGrantSpentAmounts.intervalStart &&
+    latestGrantSpentAmounts.intervalEnd
   ) {
-    return {
-      spentDebitAmount: {
-        value: latestGrantSpentAmounts.intervalDebitAmountValue ?? BigInt(0),
-        assetCode: latestGrantSpentAmounts.debitAmountCode,
-        assetScale: latestGrantSpentAmounts.debitAmountScale
-      },
-      spentReceiveAmount: {
-        value: latestGrantSpentAmounts.intervalReceiveAmountValue ?? BigInt(0),
-        assetCode: latestGrantSpentAmounts.receiveAmountCode,
-        assetScale: latestGrantSpentAmounts.receiveAmountScale
+    const recordInterval = Interval.fromDateTimes(
+      DateTime.fromJSDate(latestGrantSpentAmounts.intervalStart),
+      DateTime.fromJSDate(latestGrantSpentAmounts.intervalEnd)
+    )
+
+    if (recordInterval.equals(currentInterval)) {
+      return {
+        spentDebitAmount: {
+          value: latestGrantSpentAmounts.intervalDebitAmountValue ?? BigInt(0),
+          assetCode: latestGrantSpentAmounts.debitAmountCode,
+          assetScale: latestGrantSpentAmounts.debitAmountScale
+        },
+        spentReceiveAmount: {
+          value:
+            latestGrantSpentAmounts.intervalReceiveAmountValue ?? BigInt(0),
+          assetCode: latestGrantSpentAmounts.receiveAmountCode,
+          assetScale: latestGrantSpentAmounts.receiveAmountScale
+        }
       }
+    } else {
+      deps.logger.warn(
+        {
+          intervalStart: latestGrantSpentAmounts.intervalStart,
+          intervalEnd: latestGrantSpentAmounts.intervalEnd
+        },
+        'Grant spent amount interval does not contain start or end'
+      )
     }
   }
 
