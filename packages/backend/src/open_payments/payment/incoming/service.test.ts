@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto'
+import { createDecipheriv, randomBytes } from 'node:crypto'
 import assert from 'assert'
 import { faker } from '@faker-js/faker'
 import { Knex } from 'knex'
@@ -31,7 +31,7 @@ import { Amount } from '../../amount'
 import { getTests } from '../../wallet_address/model.test'
 import { WalletAddress } from '../../wallet_address/model'
 import { withConfigOverride } from '../../../tests/helpers'
-import { encryptDbData, poll } from '../../../shared/utils'
+import { poll } from '../../../shared/utils'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { getPageTests } from '../../../shared/baseModel.test'
 
@@ -1123,7 +1123,6 @@ describe('Incoming Payment Service', (): void => {
     let incomingPayment: IncomingPayment
 
     const dbEncryptionOverride: Partial<IAppConfig> = {
-      dbEncryptionIv: randomBytes(32).toString('base64'),
       dbEncryptionSecret: randomBytes(32).toString('base64')
     }
 
@@ -1145,13 +1144,13 @@ describe('Incoming Payment Service', (): void => {
         () => config,
         dbEncryptionOverride,
         async (): Promise<void> => {
-          const transmittedData = JSON.stringify({
+          const senderData = JSON.stringify({
             data: faker.internet.email()
           })
           const processedPayment =
             await incomingPaymentService.processPartialPayment(
               incomingPayment.id,
-              transmittedData
+              senderData
             )
           assert.ok(!isIncomingPaymentError(processedPayment))
 
@@ -1163,14 +1162,29 @@ describe('Incoming Payment Service', (): void => {
             .withGraphFetched('webhooks')
             .first()
           assert.ok(webhookEvent)
+          assert.ok(webhookEvent.data.senderData)
 
-          expect(webhookEvent.data.transmittedData).toEqual(
-            encryptDbData(
-              transmittedData,
-              dbEncryptionOverride.dbEncryptionSecret as string,
-              dbEncryptionOverride.dbEncryptionIv as string
-            )
+          const webhookSenderData = JSON.parse(
+            webhookEvent.data.senderData as string
           )
+          const decipher = createDecipheriv(
+            'aes-256-gcm',
+            Uint8Array.from(
+              Buffer.from(config.dbEncryptionSecret as string, 'base64')
+            ),
+            webhookSenderData.iv
+          )
+          decipher.setAuthTag(
+            Uint8Array.from(Buffer.from(webhookSenderData.tag, 'base64'))
+          )
+          let decrypted = decipher.update(
+            webhookSenderData.cipherText,
+            'base64',
+            'utf8'
+          )
+          decrypted += decipher.final('utf8')
+
+          expect(decrypted).toEqual(senderData)
           expect(webhookEvent.webhooks).toHaveLength(1)
         }
       )
@@ -1185,14 +1199,14 @@ describe('Incoming Payment Service', (): void => {
           dbEncryptionSecret: undefined
         },
         async (): Promise<void> => {
-          const transmittedData = JSON.stringify({
+          const senderData = JSON.stringify({
             data: faker.internet.email()
           })
 
           const processedPayment =
             await incomingPaymentService.processPartialPayment(
               incomingPayment.id,
-              transmittedData
+              senderData
             )
           assert.ok(!isIncomingPaymentError(processedPayment))
 
@@ -1205,42 +1219,7 @@ describe('Incoming Payment Service', (): void => {
             .first()
           assert.ok(webhookEvent)
 
-          expect(webhookEvent.data.transmittedData).toEqual(transmittedData)
-          expect(webhookEvent.webhooks).toHaveLength(1)
-        }
-      )
-    )
-
-    test(
-      'does not encrypt transmitted data without configured encryption iv',
-      withConfigOverride(
-        () => config,
-        {
-          ...dbEncryptionOverride,
-          dbEncryptionIv: undefined
-        },
-        async (): Promise<void> => {
-          const transmittedData = JSON.stringify({
-            data: faker.internet.email()
-          })
-
-          const processedPayment =
-            await incomingPaymentService.processPartialPayment(
-              incomingPayment.id,
-              transmittedData
-            )
-          assert.ok(!isIncomingPaymentError(processedPayment))
-
-          const webhookEvent = await IncomingPaymentEvent.query(knex)
-            .where({
-              incomingPaymentId: processedPayment.id,
-              type: IncomingPaymentEventType.IncomingPaymentPartialPaymentReceived
-            })
-            .withGraphFetched('webhooks')
-            .first()
-          assert.ok(webhookEvent)
-
-          expect(webhookEvent.data.transmittedData).toEqual(transmittedData)
+          expect(webhookEvent.data.senderData).toEqual(senderData)
           expect(webhookEvent.webhooks).toHaveLength(1)
         }
       )
