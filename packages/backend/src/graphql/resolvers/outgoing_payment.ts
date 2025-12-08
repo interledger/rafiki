@@ -17,7 +17,6 @@ import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { GraphQLError } from 'graphql'
 import { GraphQLErrorCode } from '../errors'
-import { IAppConfig } from '../../config/app'
 
 export const getOutgoingPayment: QueryResolvers<TenantedApolloContext>['outgoingPayment'] =
   async (parent, args, ctx): Promise<ResolversTypes['OutgoingPayment']> => {
@@ -35,8 +34,7 @@ export const getOutgoingPayment: QueryResolvers<TenantedApolloContext>['outgoing
         }
       })
     }
-    const config = await ctx.container.use('config')
-    return paymentToGraphql(payment, config)
+    return paymentToGraphql(payment)
   }
 
 export const getOutgoingPayments: QueryResolvers<TenantedApolloContext>['outgoingPayments'] =
@@ -66,12 +64,11 @@ export const getOutgoingPayments: QueryResolvers<TenantedApolloContext>['outgoin
       sortOrder: order
     })
 
-    const config = await ctx.container.use('config')
     return {
       pageInfo,
       edges: outgoingPayments.map((outgoingPayment: OutgoingPayment) => ({
         cursor: outgoingPayment.id,
-        node: paymentToGraphql(outgoingPayment, config)
+        node: paymentToGraphql(outgoingPayment)
       }))
     }
   }
@@ -109,9 +106,8 @@ export const cancelOutgoingPayment: MutationResolvers<TenantedApolloContext>['ca
         }
       })
     } else {
-      const config = await ctx.container.use('config')
       return {
-        payment: paymentToGraphql(outgoingPaymentOrError, config)
+        payment: paymentToGraphql(outgoingPaymentOrError)
       }
     }
   }
@@ -147,9 +143,8 @@ export const createOutgoingPayment: MutationResolvers<TenantedApolloContext>['cr
         }
       })
     } else {
-      const config = await ctx.container.use('config')
       return {
-        payment: paymentToGraphql(outgoingPaymentOrError, config)
+        payment: paymentToGraphql(outgoingPaymentOrError)
       }
     }
   }
@@ -185,9 +180,8 @@ export const createOutgoingPaymentFromIncomingPayment: MutationResolvers<Tenante
         }
       })
     } else {
-      const config = await ctx.container.use('config')
       return {
-        payment: paymentToGraphql(outgoingPaymentOrError, config)
+        payment: paymentToGraphql(outgoingPaymentOrError)
       }
     }
   }
@@ -228,19 +222,17 @@ export const getWalletAddressOutgoingPayments: WalletAddressResolvers<TenantedAp
       page: outgoingPayments,
       sortOrder: order
     })
-    const config = await ctx.container.use('config')
     return {
       pageInfo,
       edges: outgoingPayments.map((payment: OutgoingPayment) => ({
         cursor: payment.id,
-        node: paymentToGraphql(payment, config)
+        node: paymentToGraphql(payment)
       }))
     }
   }
 
 export function paymentToGraphql(
-  payment: OutgoingPayment,
-  config: IAppConfig
+  payment: OutgoingPayment
 ): SchemaOutgoingPayment {
   return {
     id: payment.id,
@@ -257,9 +249,6 @@ export function paymentToGraphql(
     createdAt: new Date(+payment.createdAt).toISOString(),
     quote: quoteToGraphql(payment.quote),
     grantId: payment.grantId,
-    tenantId: payment.tenantId,
-    dataToTransmit: payment.getDataToTransmit(
-      config.dbEncryptionSecret
-    )
+    tenantId: payment.tenantId
   }
 }

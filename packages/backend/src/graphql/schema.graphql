@@ -1094,8 +1094,6 @@ type OutgoingPayment implements BasePayment & Model {
   grantId: String
   "Tenant ID of the outgoing payment."
   tenantId: String
-  "Data to be transmitted to receiver."
-  dataToTransmit: String
 }
 
 enum OutgoingPaymentState {
