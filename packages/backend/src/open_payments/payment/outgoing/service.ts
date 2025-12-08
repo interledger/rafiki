@@ -1310,15 +1310,15 @@ async function getGrantSpentAmounts(
           assetScale: latestGrantSpentAmounts.receiveAmountScale
         }
       }
-    } else {
-      deps.logger.warn(
-        {
-          intervalStart: latestGrantSpentAmounts.intervalStart,
-          intervalEnd: latestGrantSpentAmounts.intervalEnd
-        },
-        'Grant spent amount interval does not contain start or end'
-      )
     }
+  } else {
+    deps.logger.warn(
+      {
+        intervalStart: latestGrantSpentAmounts.intervalStart,
+        intervalEnd: latestGrantSpentAmounts.intervalEnd
+      },
+      'Grant spent amount interval does not contain start or end'
+    )
   }
 
   return {
