@@ -134,11 +134,11 @@ export class OutgoingPayment
 
   public tenantId!: string
 
-  public dataToTransmit?: string
-  public getDataToTransmit(key?: string): string | null {
-    if (!this.dataToTransmit) return null
-    if (!key) return this.dataToTransmit
-    const { tag, cipherText, iv } = JSON.parse(this.dataToTransmit)
+  public senderData?: string
+  public getSenderData(key?: string): string | null {
+    if (!this.senderData) return null
+    if (!key) return this.senderData
+    const { tag, cipherText, iv } = JSON.parse(this.senderData)
 
     const decipher = createDecipheriv(
       'aes-256-gcm',
