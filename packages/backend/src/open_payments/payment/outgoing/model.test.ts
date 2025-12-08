@@ -68,8 +68,7 @@ describe('Outgoing Payment Event Model', (): void => {
     let walletAddress: WalletAddress
     let payment: OutgoingPayment
     const dbEncryptionOverride: Partial<IAppConfig> = {
-      dbEncryptionSecret: crypto.randomBytes(32).toString('base64'),
-      dbEncryptionIv: crypto.randomBytes(32).toString('base64')
+      dbEncryptionSecret: crypto.randomBytes(32).toString('base64')
     }
     beforeAll(async (): Promise<void> => {
       outgoingPaymentService = await deps.use('outgoingPaymentService')
@@ -115,10 +114,7 @@ describe('Outgoing Payment Event Model', (): void => {
           assert.ok(!isOutgoingPaymentError(paymentWithData))
           assert.ok(!isFundingError(paymentWithData))
           expect(
-            paymentWithData.getDataToTransmit(
-              config.dbEncryptionSecret,
-              config.dbEncryptionIv
-            )
+            paymentWithData.getDataToTransmit(config.dbEncryptionSecret)
           ).toEqual(JSON.stringify(dataToTransmit))
           expect(decipherSpy).toHaveBeenCalled()
         }
@@ -147,42 +143,7 @@ describe('Outgoing Payment Event Model', (): void => {
           assert.ok(!isOutgoingPaymentError(paymentWithData))
           assert.ok(!isFundingError(paymentWithData))
           expect(
-            paymentWithData.getDataToTransmit(
-              config.dbEncryptionSecret,
-              config.dbEncryptionIv
-            )
-          ).toEqual(JSON.stringify(dataToTransmit))
-          expect(decipherSpy).not.toHaveBeenCalled()
-        }
-      )
-    )
-
-    test(
-      'returns data as-is without configured iv env variable',
-      withConfigOverride(
-        () => config,
-        {
-          ...dbEncryptionOverride,
-          dbEncryptionIv: undefined
-        },
-        async (): Promise<void> => {
-          const decipherSpy = jest.spyOn(crypto, 'createDecipheriv')
-          const dataToTransmit = { data: faker.internet.email() }
-          const paymentWithData = await outgoingPaymentService.fund({
-            id: payment.id,
-            tenantId: walletAddress.tenantId,
-            amount: payment.debitAmount.value,
-            transferId: uuid(),
-            dataToTransmit: JSON.stringify(dataToTransmit)
-          })
-
-          assert.ok(!isOutgoingPaymentError(paymentWithData))
-          assert.ok(!isFundingError(paymentWithData))
-          expect(
-            paymentWithData.getDataToTransmit(
-              config.dbEncryptionSecret,
-              config.dbEncryptionIv
-            )
+            paymentWithData.getDataToTransmit(config.dbEncryptionSecret)
           ).toEqual(JSON.stringify(dataToTransmit))
           expect(decipherSpy).not.toHaveBeenCalled()
         }

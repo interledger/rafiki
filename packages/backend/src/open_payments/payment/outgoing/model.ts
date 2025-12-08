@@ -135,10 +135,10 @@ export class OutgoingPayment
   public tenantId!: string
 
   public dataToTransmit?: string
-  public getDataToTransmit(key?: string, iv?: string): string | null {
+  public getDataToTransmit(key?: string): string | null {
     if (!this.dataToTransmit) return null
-    if (!key || !iv) return this.dataToTransmit
-    const { tag, cipherText } = JSON.parse(this.dataToTransmit)
+    if (!key) return this.dataToTransmit
+    const { tag, cipherText, iv } = JSON.parse(this.dataToTransmit)
 
     const decipher = createDecipheriv(
       'aes-256-gcm',

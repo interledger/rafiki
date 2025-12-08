@@ -768,14 +768,8 @@ async function fundPayment(
     await payment.$query(trx).patch({
       state: OutgoingPaymentState.Sending,
       dataToTransmit:
-        deps.config.dbEncryptionSecret &&
-        deps.config.dbEncryptionIv &&
-        dataToTransmit
-          ? encryptDbData(
-              dataToTransmit,
-              deps.config.dbEncryptionSecret,
-              deps.config.dbEncryptionIv
-            )
+        deps.config.dbEncryptionSecret && dataToTransmit
+          ? encryptDbData(dataToTransmit, deps.config.dbEncryptionSecret)
           : dataToTransmit
     })
 

@@ -1,7 +1,7 @@
 import { validate, version } from 'uuid'
 import { URL, type URL as URLType } from 'url'
 import { createHmac } from 'crypto'
-import { createCipheriv } from 'node:crypto'
+import { createCipheriv, randomBytes } from 'node:crypto'
 import { canonicalize } from 'json-canonicalize'
 import { IAppConfig } from '../config/app'
 import { AppContext } from '../app'
@@ -243,7 +243,8 @@ export function ensureTrailingSlash(str: string): string {
   return str
 }
 
-export function encryptDbData(data: string, key: string, iv: string): string {
+export function encryptDbData(data: string, key: string): string {
+  const iv = randomBytes(32).toString('base64')
   const cipher = createCipheriv(
     'aes-256-gcm',
     Uint8Array.from(Buffer.from(key, 'base64')),
@@ -254,5 +255,5 @@ export function encryptDbData(data: string, key: string, iv: string): string {
 
   const tag = cipher.getAuthTag()
 
-  return JSON.stringify({ cipherText, tag })
+  return JSON.stringify({ cipherText, tag, iv })
 }

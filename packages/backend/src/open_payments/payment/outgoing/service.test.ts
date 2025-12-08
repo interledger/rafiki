@@ -2288,7 +2288,6 @@ describe('OutgoingPaymentService', (): void => {
       withConfigOverride(
         () => config,
         {
-          dbEncryptionIv: randomBytes(32).toString('base64'),
           dbEncryptionSecret: randomBytes(32).toString('base64')
         },
         async (): Promise<void> => {
@@ -2313,10 +2312,7 @@ describe('OutgoingPaymentService', (): void => {
             })
           )
           expect(
-            fundedPayment.getDataToTransmit(
-              config.dbEncryptionSecret,
-              config.dbEncryptionIv
-            )
+            fundedPayment.getDataToTransmit(config.dbEncryptionSecret)
           ).toEqual(encryptedData)
         }
       )
@@ -2327,33 +2323,7 @@ describe('OutgoingPaymentService', (): void => {
       withConfigOverride(
         () => config,
         {
-          dbEncryptionSecret: undefined,
-          dbEncryptionIv: randomBytes(32).toString('base64')
-        },
-        async (): Promise<void> => {
-          const encryptedData = JSON.stringify({ data: faker.internet.email() })
-          const fundedPayment = await outgoingPaymentService.fund({
-            id: payment.id,
-            tenantId,
-            amount: quoteAmount,
-            transferId: uuid(),
-            dataToTransmit: encryptedData
-          })
-
-          assert.ok(!isTransferError(fundedPayment))
-          assert.ok(!isOutgoingPaymentError(fundedPayment))
-          expect(fundedPayment.dataToTransmit).toEqual(encryptedData)
-        }
-      )
-    )
-
-    it(
-      'inserts data as-is without configured iv',
-      withConfigOverride(
-        () => config,
-        {
-          dbEncryptionIv: undefined,
-          dbEncryptionSecret: randomBytes(32).toString('base64')
+          dbEncryptionSecret: undefined
         },
         async (): Promise<void> => {
           const encryptedData = JSON.stringify({ data: faker.internet.email() })
