@@ -167,7 +167,7 @@ export function createOutgoingPaymentGrantTokenIntrospectionMiddleware() {
 
 async function introspect(
   ctx: IntrospectionContext,
-  accessItem: { type: AccessType; action?: RequestAction; identifier?: string }
+  accessItem: { type: AccessType; action: RequestAction; identifier?: string }
 ) {
   const authSplit = ctx.request.headers.authorization?.split(' ')
   if (authSplit?.length !== 2 || authSplit[0] !== 'GNAP') {
