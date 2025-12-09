@@ -119,7 +119,7 @@ export async function handleOutgoingPaymentCreated(
         input: {
           outgoingPaymentId: payment.id,
           idempotencyKey: uuid(),
-          senderData: 'sample kyc data'
+          dataToTransmit: 'sample kyc data'
         }
       }
     })

@@ -4,7 +4,7 @@
  */
 exports.up = function (knex) {
   return knex.schema.alterTable('outgoingPayments', function (table) {
-    table.string('senderData').nullable()
+    table.string('dataToTransmit').nullable()
   })
 }
 
@@ -14,6 +14,6 @@ exports.up = function (knex) {
  */
 exports.down = function (knex) {
   return knex.schema.alterTable('outgoingPayments', function (table) {
-    table.dropColumn('senderData')
+    table.dropColumn('dataToTransmit')
   })
 }

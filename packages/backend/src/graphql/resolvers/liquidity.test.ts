@@ -3494,7 +3494,7 @@ describe('Liquidity Resolvers', (): void => {
 
         test('Can deposit account liquidity', async (): Promise<void> => {
           const depositSpy = jest.spyOn(accountingService, 'createDeposit')
-          const senderData = JSON.stringify({
+          const dataToTransmit = JSON.stringify({
             data: faker.internet.email()
           })
           const response = await appContainer.apolloClient
@@ -3512,7 +3512,7 @@ describe('Liquidity Resolvers', (): void => {
                 input: {
                   outgoingPaymentId: outgoingPayment.id,
                   idempotencyKey: uuid(),
-                  senderData
+                  dataToTransmit
                 }
               }
             })
@@ -3538,7 +3538,7 @@ describe('Liquidity Resolvers', (): void => {
             OutgoingPayment.query(knex).findById(outgoingPayment.id)
           ).resolves.toEqual(
             expect.objectContaining({
-              senderData
+              dataToTransmit
             })
           )
         })
