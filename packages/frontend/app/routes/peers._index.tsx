@@ -5,7 +5,6 @@ import { Button, Table } from '~/components/ui'
 import { listPeers } from '~/lib/api/peer.server'
 import { paginationSchema } from '~/lib/validate.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
-import { truncateUuid } from '~/shared/utils'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
@@ -106,7 +105,7 @@ export default function PeersPage() {
                           )}
                         </span>
                         <div className='text-tealish/50 text-xs'>
-                          (ID: {truncateUuid(peer.node.tenant?.id as string)})
+                          (ID: {peer.node.tenant?.id})
                         </div>
                       </div>
                     </div>
