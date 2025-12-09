@@ -707,12 +707,18 @@ export interface FundOutgoingPaymentOptions {
   tenantId: string
   amount: bigint
   transferId: string
-  senderData?: string
+  dataToTransmit?: string
 }
 
 async function fundPayment(
   deps: ServiceDependencies,
-  { id, tenantId, amount, transferId, senderData }: FundOutgoingPaymentOptions
+  {
+    id,
+    tenantId,
+    amount,
+    transferId,
+    dataToTransmit
+  }: FundOutgoingPaymentOptions
 ): Promise<OutgoingPayment | FundingError> {
   return await deps.knex.transaction(async (trx) => {
     const payment = await OutgoingPayment.query(trx)
@@ -761,10 +767,10 @@ async function fundPayment(
 
     await payment.$query(trx).patch({
       state: OutgoingPaymentState.Sending,
-      senderData:
-        deps.config.dbEncryptionSecret && senderData
-          ? encryptDbData(senderData, deps.config.dbEncryptionSecret)
-          : senderData
+      dataToTransmit:
+        deps.config.dbEncryptionSecret && dataToTransmit
+          ? encryptDbData(dataToTransmit, deps.config.dbEncryptionSecret)
+          : dataToTransmit
     })
 
     if (payment.initiatedBy === OutgoingPaymentInitiationReason.Card) {

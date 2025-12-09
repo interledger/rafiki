@@ -63,7 +63,7 @@ describe('Outgoing Payment Event Model', (): void => {
     )
   })
 
-  describe('getSenderData', (): void => {
+  describe('getDataToTransmit', (): void => {
     let outgoingPaymentService: OutgoingPaymentService
     let walletAddress: WalletAddress
     let payment: OutgoingPayment
@@ -102,20 +102,20 @@ describe('Outgoing Payment Event Model', (): void => {
         dbEncryptionOverride,
         async (): Promise<void> => {
           const decipherSpy = jest.spyOn(crypto, 'createDecipheriv')
-          const senderData = { data: faker.internet.email() }
+          const dataToTransmit = { data: faker.internet.email() }
           const paymentWithData = await outgoingPaymentService.fund({
             id: payment.id,
             tenantId: walletAddress.tenantId,
             amount: payment.debitAmount.value,
             transferId: uuid(),
-            senderData: JSON.stringify(senderData)
+            dataToTransmit: JSON.stringify(dataToTransmit)
           })
 
           assert.ok(!isOutgoingPaymentError(paymentWithData))
           assert.ok(!isFundingError(paymentWithData))
           expect(
-            paymentWithData.getSenderData(config.dbEncryptionSecret)
-          ).toEqual(JSON.stringify(senderData))
+            paymentWithData.getDataToTransmit(config.dbEncryptionSecret)
+          ).toEqual(JSON.stringify(dataToTransmit))
           expect(decipherSpy).toHaveBeenCalled()
         }
       )
@@ -131,20 +131,20 @@ describe('Outgoing Payment Event Model', (): void => {
         },
         async (): Promise<void> => {
           const decipherSpy = jest.spyOn(crypto, 'createDecipheriv')
-          const senderData = { data: faker.internet.email() }
+          const dataToTransmit = { data: faker.internet.email() }
           const paymentWithData = await outgoingPaymentService.fund({
             id: payment.id,
             tenantId: walletAddress.tenantId,
             amount: payment.debitAmount.value,
             transferId: uuid(),
-            senderData: JSON.stringify(senderData)
+            dataToTransmit: JSON.stringify(dataToTransmit)
           })
 
           assert.ok(!isOutgoingPaymentError(paymentWithData))
           assert.ok(!isFundingError(paymentWithData))
           expect(
-            paymentWithData.getSenderData(config.dbEncryptionSecret)
-          ).toEqual(JSON.stringify(senderData))
+            paymentWithData.getDataToTransmit(config.dbEncryptionSecret)
+          ).toEqual(JSON.stringify(dataToTransmit))
           expect(decipherSpy).not.toHaveBeenCalled()
         }
       )
