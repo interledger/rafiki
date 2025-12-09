@@ -12,7 +12,6 @@ import { listWebhooks } from '~/lib/api/webhook.server'
 import { webhooksSearchParams } from '~/lib/validate.server'
 import { WebhookEventType } from '~/shared/enums'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
-import { truncateUuid } from '~/shared/utils'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
@@ -145,8 +144,7 @@ export default function WebhookEventsPage() {
                             )}
                           </span>
                           <div className='text-tealish/50 text-xs'>
-                            (ID:{' '}
-                            {truncateUuid(webhook.node.tenant?.id as string)})
+                            (ID: {webhook.node.tenant?.id})
                           </div>
                         </div>
                       </span>
