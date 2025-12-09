@@ -80,7 +80,7 @@ export interface IncomingPaymentService
   ): Promise<IncomingPayment | IncomingPaymentError>
   processPartialPayment(
     id: string,
-    senderData?: string
+    dataToTransmit?: string
   ): Promise<IncomingPayment | IncomingPaymentError>
 }
 
@@ -112,8 +112,8 @@ export async function createIncomingPaymentService(
     processNext: () => processNextIncomingPayment(deps),
     update: (options) => updateIncomingPayment(deps, options),
     getPage: (options) => getPage(deps, options),
-    processPartialPayment: (id, senderData) =>
-      processPartialPayment(deps, id, senderData)
+    processPartialPayment: (id, dataToTransmit) =>
+      processPartialPayment(deps, id, dataToTransmit)
   }
 }
 
@@ -558,7 +558,7 @@ async function addReceivedAmount(
 async function processPartialPayment(
   deps: ServiceDependencies,
   id: string,
-  senderData?: string
+  dataToTransmit?: string
 ): Promise<IncomingPayment | IncomingPaymentError> {
   const { config, knex } = deps
 
@@ -572,10 +572,10 @@ async function processPartialPayment(
     type: IncomingPaymentEventType.IncomingPaymentPartialPaymentReceived,
     data: {
       ...incomingPayment.toData(0n),
-      senderData:
-        senderData && config.dbEncryptionSecret
-          ? encryptDbData(senderData, config.dbEncryptionSecret)
-          : senderData
+      dataToTransmit:
+        dataToTransmit && config.dbEncryptionSecret
+          ? encryptDbData(dataToTransmit, config.dbEncryptionSecret)
+          : dataToTransmit
     },
     tenantId: incomingPayment.tenantId,
     webhooks: finalizeWebhookRecipients(
