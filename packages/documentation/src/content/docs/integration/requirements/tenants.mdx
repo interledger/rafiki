@@ -54,6 +54,10 @@ Only operators can create, edit, and delete tenants.
 
 ## Create a tenant
 
+Use the `createTenant` mutation to register a new tenant within your Rafiki instance.
+
+This operation is restricted to operators. When a new tenant is created, Rafiki automatically assigns a default ILP address, applies standard configuration settings, and registers the tenant with the `auth` service. Operators can also provide initial custom settings during creation.
+
 After you create a tenant, securely communicate the tenant `id` and `apiSecret` to the tenant out-of-band.
 
 <Tabs>
@@ -111,6 +115,10 @@ After you create a tenant, securely communicate the tenant `id` and `apiSecret` 
 
 ## Update a tenant
 
+Use the `updateTenant` mutation to modify an existing tenant’s configuration.
+
+Tenants can update their own profile details such as the public name, contact email, or identity provider URLs. Operators can update any tenant’s information except for the `apiSecret`, which cannot be changed through this mutation.
+
 <Tabs>
   <TabItem label="Operation">
     ```graphql
@@ -165,6 +173,10 @@ After you create a tenant, securely communicate the tenant `id` and `apiSecret` 
 </Tabs>
 
 ## Delete a tenant
+
+Use the `deleteTenant` mutation to remove a tenant from Rafiki. Only operators can perform this action.
+
+Deleting a tenant marks the tenant as deleted and removes all associated tenant settings and authentication entries. After deletion, the tenant can no longer be used to create or manage resources in Rafiki.
 
 <Tabs>
   <TabItem label="Operation">
