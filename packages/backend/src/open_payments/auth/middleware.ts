@@ -55,12 +55,12 @@ function contextToRequestLike(ctx: HttpSigContext): RequestLike {
 
 function toOpenPaymentsAccess(
   type: AccessType,
-  action?: RequestAction,
+  action: RequestAction,
   identifier?: string
 ): AccessItem {
   return {
     type: type,
-    actions: action ? [action] : [],
+    actions: [action],
     identifier
   } as AccessItem
 }
