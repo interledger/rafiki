@@ -7,7 +7,6 @@ import { createAsset } from '../../../tests/asset'
 import { createWalletAddress } from '../../../tests/walletAddress'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { truncateTables } from '../../../tests/tableManager'
-import { uuid } from '../../../payment-method/ilp/connector/ilp-routing/lib/utils'
 import { Grant } from '../../auth/middleware'
 import { Knex } from 'knex'
 import { Asset } from '../../../asset/model'
@@ -29,6 +28,7 @@ import { getInterval } from './limits'
 import { TransferError } from '../../../accounting/errors'
 import { withConfigOverride } from '../../../tests/helpers'
 import { IncomingPaymentInitiationReason } from '../incoming/types'
+import { v4 as uuid } from 'uuid'
 
 describe('Lifecycle', (): void => {
   let deps: IocContract<AppServices>
