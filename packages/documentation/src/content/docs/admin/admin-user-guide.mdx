@@ -196,9 +196,9 @@ The Edit Tenant page includes the following sections:
 |                               | Email       | The tenant's email address.                                                                 |
 | Identity Provider Information | Consent URL | The URL for the tenant's identity provider consent endpoint.                                |
 |                               | Secret      | The secret for the tenant's identity provider.                                              |
-| Sensitive Information         | API Secret  | A unique identifier assigned by Rafiki when the tenant was created. This cannot be changed. |
+| Sensitive Information         | API Secret  | The tenant's API credential used to authenticate requests. Read-only for operators.         |
 
-You can modify the public name, email, consent URL, and secret for a tenant. The tenant ID and API secret are read-only.
+You can modify the public name, email, consent URL, and secret for a tenant. The tenant ID cannot be changed. The API secret is read-only for operators but can be rotated by the tenants when logged in under their own account.
 
 After editing any of the preceding fields, select **Save** to commit those changes.
 

@@ -117,7 +117,7 @@ After you create a tenant, securely communicate the tenant `id` and `apiSecret` 
 
 Use the `updateTenant` mutation to modify an existing tenant’s configuration.
 
-Tenants can update their own profile details such as the public name, contact email, or identity provider URLs. Operators can update any tenant’s information except for the `apiSecret`, which cannot be changed through this mutation.
+Tenants can update their own profile details such as the public name, contact email, or identity provider URLs. Tenants can also rotate their own `apiSecret` using this mutation. Operators can update any tenant’s information, but cannot modify a tenant's `apiSecret` on their behalf.
 
 <Tabs>
   <TabItem label="Operation">
