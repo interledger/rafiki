@@ -114,6 +114,7 @@ import { TenantSettingService } from './tenants/settings/service'
 import { StreamCredentialsService } from './payment-method/ilp/stream-credentials/service'
 import { PaymentMethodProviderService } from './payment-method/provider/service'
 
+import { RouterService } from './payment-method/ilp/connector/ilp-routing/service'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -250,6 +251,7 @@ export interface AppServices {
   assetService: Promise<AssetService>
   accountingService: Promise<AccountingService>
   peerService: Promise<PeerService>
+  routerService: Promise<RouterService>
   walletAddressService: Promise<WalletAddressService>
   spspRoutes: Promise<SPSPRoutes>
   incomingPaymentRoutes: Promise<IncomingPaymentRoutes>
@@ -407,7 +409,14 @@ export class App {
         next: Koa.Next
       ): Promise<void> => {
         if (ctx.path === '/healthz') {
-          ctx.status = 200
+          const knex = await this.container.use('knex')
+          try {
+            await redis.ping()
+            await knex.raw('SELECT 1')
+            ctx.status = 200
+          } catch (err) {
+            ctx.status = 500
+          }
         } else if (ctx.path !== '/graphql') {
           ctx.status = 404
         } else {
@@ -483,8 +492,16 @@ export class App {
 
     const router = new Router<DefaultState, AppContext>()
     router.use(bodyParser())
-    router.get('/healthz', (ctx: AppContext): void => {
-      ctx.status = 200
+    router.get('/healthz', async (ctx: AppContext): Promise<void> => {
+      const redis = await ctx.container.use('redis')
+      const knex = await ctx.container.use('knex')
+      try {
+        await redis.ping()
+        await knex.raw('SELECT 1')
+        ctx.status = 200
+      } catch (e) {
+        ctx.status = 500
+      }
     })
     router.use(openPaymentsServerErrorMiddleware)
 

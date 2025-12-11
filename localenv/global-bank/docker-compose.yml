@@ -1,0 +1,149 @@
+name: gb
+services:
+  global-bank-mock-ase:
+    hostname: global-bank
+    image: rafiki-mock-ase
+    pull_policy: never
+    restart: always
+    networks:
+      - rafiki
+    ports:
+      - '3032:80'
+    environment:
+      LOG_LEVEL: debug
+      PORT: 80
+      SEED_FILE_LOCATION: /workspace/seed.yml
+      KEY_FILE: /workspace/private-key.pem
+      OPEN_PAYMENTS_URL: ${GLOBAL_BANK_OPEN_PAYMENTS_URL:-https://global-bank-backend}
+      GRAPHQL_URL: http://global-bank-backend:3001/graphql
+      SIGNATURE_VERSION: 1
+      SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      IDP_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
+      DISPLAY_NAME: Global Bank
+      DISPLAY_ICON: bank-icon.svg
+      OPERATOR_TENANT_ID: 53f2d913-e98a-40b9-b270-372d0547f23e
+      FRONTEND_PORT: 5010
+    volumes:
+      - ../global-bank/seed.yml:/workspace/seed.yml
+      - ../global-bank/private-key.pem:/workspace/private-key.pem
+    depends_on:
+      global-bank-backend:
+        condition: service_healthy
+      shared-database:
+        condition: service_healthy
+  global-bank-backend:
+    hostname: global-bank-backend
+    image: rafiki-backend
+    pull_policy: never
+    volumes:
+      - type: bind
+        source: ../../packages/backend/src
+        target: /home/rafiki/packages/backend/src
+        read_only: true
+    restart: always
+    privileged: true
+    ports:
+      - "5000:80"
+      - "5001:3001"
+      - "5002:3002"
+      - '9233:9229'
+    networks:
+      - rafiki
+    environment:
+      NODE_ENV: development
+      INSTANCE_NAME: GLOBAL-BANK
+      LOG_LEVEL: debug
+      ADMIN_PORT: 3001
+      CONNECTOR_PORT: 3002
+      OPEN_PAYMENTS_PORT: 80
+      DATABASE_URL: postgresql://global_bank_backend:global_bank_backend@shared-database/global_bank_backend
+      USE_TIGERBEETLE: false
+      AUTH_SERVER_GRANT_URL: ${GLOBAL_BANK_AUTH_SERVER_DOMAIN:-http://global-bank-auth:3006}
+      AUTH_SERVER_INTROSPECTION_URL: http://global-bank-auth:3007
+      AUTH_ADMIN_API_URL: 'http://global-bank-auth:5003/graphql'
+      AUTH_ADMIN_API_SECRET: 'rPoZpe9tVyBNCigm05QDco7WLcYa0xMao7lO5KG1XG4='
+      AUTH_SERVICE_API_URL: 'http://global-bank-auth:5011'
+      ILP_ADDRESS: test.global-bank
+      ILP_CONNECTOR_URL: http://global-bank-backend:5002
+      STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
+      ADMIN_API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      WEBHOOK_URL: http://global-bank/webhooks
+      OPEN_PAYMENTS_URL: ${GLOBAL_BANK_OPEN_PAYMENTS_URL:-https://global-bank-backend}
+      EXCHANGE_RATES_URL: http://global-bank/rates
+      REDIS_URL: redis://shared-redis:6379/4
+      WALLET_ADDRESS_URL: ${GLOBAL_BANK_WALLET_ADDRESS_URL:-https://global-bank-backend/.well-known/pay}
+      ENABLE_TELEMETRY: true
+      ENABLE_ILP_TIMING_TELEMETRY: true
+      KEY_ID: 53f2d913-e98a-40b9-b270-372d0547f23e
+      OPERATOR_TENANT_ID: 53f2d913-e98a-40b9-b270-372d0547f23e
+    depends_on:
+      shared-database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:3001/healthz"]
+      start_period: 60s
+      start_interval: 5s
+      interval: 30s
+      retries: 1
+      timeout: 3s
+  global-bank-auth:
+    hostname: global-bank-auth
+    image: rafiki-auth
+    pull_policy: never
+    restart: always
+    volumes:
+      - type: bind
+        source: ../../packages/auth/src
+        target: /home/rafiki/packages/auth/src
+        read_only: true
+    networks:
+      - rafiki
+    ports:
+      - '5003:3003'
+      - '5006:3006'
+      - '9234:9229'
+      - '5009:3009'
+      - '5011:5011'
+    environment:
+      NODE_ENV: development
+      AUTH_DATABASE_URL: postgresql://global_bank_auth:global_bank_auth@shared-database/global_bank_auth
+      AUTH_SERVER_URL: ${GLOBAL_BANK_AUTH_SERVER_DOMAIN:-http://localhost:5006}
+      REDIS_URL: redis://shared-redis:6379/5
+      IDENTITY_SERVER_URL: http://localhost:3032/mock-idp/
+      IDENTITY_SERVER_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
+      COOKIE_KEY: 42397d1f371dd4b8b7d0308a689a57c882effd4ea909d792302542af47e2cd37
+      ADMIN_API_SECRET: rPoZpe9tVyBNCigm05QDco7WLcYa0xMao7lO5KG1XG4=
+      OPERATOR_TENANT_ID: 53f2d913-e98a-40b9-b270-372d0547f23e
+      SERVICE_API_PORT: 5011
+    depends_on:
+      shared-database:
+        condition: service_healthy
+      happy-life-auth:
+        condition: service_started
+  global-bank-admin:
+    hostname: global-bank-admin
+    image: rafiki-frontend
+    pull_policy: never
+    volumes:
+      - type: bind
+        source: ../../packages/frontend/app
+        target: /home/rafiki/packages/frontend/app
+        read_only: true
+    restart: always
+    networks:
+      - rafiki
+    ports:
+      - '5010:5010'
+    environment:
+      PORT: 5010
+      LOG_LEVEL: debug
+      NODE_ENV: development
+      GRAPHQL_URL: http://global-bank-backend:3001/graphql
+      OPEN_PAYMENTS_URL: https://global-bank-backend/
+      ENABLE_INSECURE_MESSAGE_COOKIE: true
+      AUTH_ENABLED: false
+      SIGNATURE_VERSION: 1
+      SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+    depends_on:
+      - happy-life-admin
+      - global-bank-backend 

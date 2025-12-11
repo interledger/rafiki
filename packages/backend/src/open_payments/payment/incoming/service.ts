@@ -72,7 +72,7 @@ export interface IncomingPaymentService
   ): Promise<IncomingPayment | IncomingPaymentError>
   complete(
     id: string,
-    tenantId: string
+    tenantId?: string
   ): Promise<IncomingPayment | IncomingPaymentError>
   processNext(): Promise<string | undefined>
   update(
@@ -502,11 +502,11 @@ async function cancelIncomingPayment(
 async function completeIncomingPayment(
   deps: ServiceDependencies,
   id: string,
-  tenantId: string
+  tenantId?: string
 ): Promise<IncomingPayment | IncomingPaymentError> {
   return deps.knex.transaction(async (trx) => {
     const payment = await IncomingPayment.query(trx)
-      .findOne({ id, tenantId })
+      .findOne({ id, ...(tenantId && { tenantId }) })
       .forUpdate()
     if (!payment) return IncomingPaymentError.UnknownPayment
 

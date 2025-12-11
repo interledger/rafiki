@@ -339,6 +339,13 @@ async function pay(
 
   const destination = resolveIlpDestination(receiver)
 
+  const stopTimerRoundTrip = deps.telemetry.startTimer(
+    'ilp_payment_round_trip_ms',
+    {
+      description: 'ILP payment round trip time from sender to receiver',
+      callName: 'Pay:pay'
+    }
+  )
   try {
     const receipt = await Pay.pay({ plugin, destination, quote })
 
@@ -370,6 +377,8 @@ async function pay(
       retryable: canRetryError(err as Error | Pay.PaymentError)
     })
   } finally {
+    stopTimerRoundTrip()
+
     try {
       await Pay.closeConnection(plugin, destination)
     } catch (error) {
