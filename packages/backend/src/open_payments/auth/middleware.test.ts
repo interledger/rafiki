@@ -10,6 +10,7 @@ import {
 
 import {
   authenticatedStatusMiddleware,
+  createOutgoingPaymentGrantTokenIntrospectionMiddleware,
   createTokenIntrospectionMiddleware,
   httpsigMiddleware
 } from './middleware'
@@ -20,16 +21,18 @@ import {
   AppServices,
   HttpSigContext,
   HttpSigWithAuthenticatedStatusContext,
+  IntrospectionContext,
   WalletAddressUrlContext
 } from '../../app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createContext } from '../../tests/context'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { setup } from '../wallet_address/model.test'
-import { parseLimits } from '../payment/outgoing/limits'
+import { Limits, parseLimits } from '../payment/outgoing/limits'
 import { AccessAction, AccessType } from '@interledger/open-payments'
 import { OpenPaymentsServerRouteError } from '../route-errors'
 import assert from 'assert'
+import { Grant } from '../grant/model'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -866,5 +869,500 @@ describe('HTTP Signature Middleware', (): void => {
         scope.done()
       })
     }
+  })
+})
+
+describe('introspect', () => {
+  let ctx: IntrospectionContext
+  let mockTokenIntrospectionClient: {
+    introspect: jest.Mock
+  }
+  let mockConfig: {
+    authServerGrantUrl: string
+  }
+
+  beforeEach(() => {
+    mockTokenIntrospectionClient = {
+      introspect: jest.fn()
+    }
+    mockConfig = {
+      authServerGrantUrl: 'https://auth.example.com'
+    }
+
+    ctx = {
+      request: {
+        headers: {
+          authorization: 'GNAP test-token-123'
+        }
+      },
+      container: {
+        use: jest.fn().mockImplementation((service: string) => {
+          if (service === 'tokenIntrospectionClient') {
+            return Promise.resolve(mockTokenIntrospectionClient)
+          }
+          if (service === 'config') {
+            return Promise.resolve(mockConfig)
+          }
+          return Promise.resolve(undefined)
+        })
+      },
+      set: jest.fn()
+    } as unknown as IntrospectionContext
+  })
+
+  describe('authorization header validation', () => {
+    it('should throw 401 if authorization header is missing', async () => {
+      ctx.request.headers.authorization = undefined
+
+      const middleware =
+        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+      const next = jest.fn()
+
+      await expect(middleware(ctx, next)).rejects.toThrow(
+        OpenPaymentsServerRouteError
+      )
+      await expect(middleware(ctx, next)).rejects.toMatchObject({
+        status: 401,
+        message: 'Missing or invalid authorization header value'
+      })
+      expect(next).not.toHaveBeenCalled()
+    })
+
+    it('should throw 401 if authorization header does not have two parts', async () => {
+      ctx.request.headers.authorization = 'GNAP'
+
+      const middleware =
+        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+      const next = jest.fn()
+
+      await expect(middleware(ctx, next)).rejects.toThrow(
+        OpenPaymentsServerRouteError
+      )
+      await expect(middleware(ctx, next)).rejects.toMatchObject({
+        status: 401,
+        message: 'Missing or invalid authorization header value'
+      })
+      expect(next).not.toHaveBeenCalled()
+    })
+
+    it('should throw 401 if authorization header does not start with GNAP', async () => {
+      ctx.request.headers.authorization = 'Bearer test-token-123'
+
+      const middleware =
+        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+      const next = jest.fn()
+
+      await expect(middleware(ctx, next)).rejects.toThrow(
+        OpenPaymentsServerRouteError
+      )
+      await expect(middleware(ctx, next)).rejects.toMatchObject({
+        status: 401,
+        message: 'Missing or invalid authorization header value'
+      })
+      expect(next).not.toHaveBeenCalled()
+    })
+
+    it('should throw 401 if authorization header has too many parts', async () => {
+      ctx.request.headers.authorization = 'GNAP token extra'
+
+      const middleware =
+        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+      const next = jest.fn()
+
+      await expect(middleware(ctx, next)).rejects.toThrow(
+        OpenPaymentsServerRouteError
+      )
+      await expect(middleware(ctx, next)).rejects.toMatchObject({
+        status: 401,
+        message: 'Missing or invalid authorization header value'
+      })
+      expect(next).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('token introspection client errors', () => {
+    it('should throw 401 if token introspection client throws', async () => {
+      mockTokenIntrospectionClient.introspect.mockRejectedValue(
+        new Error('Network error')
+      )
+
+      const middleware =
+        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+      const next = jest.fn()
+
+      await expect(middleware(ctx, next)).rejects.toThrow(
+        OpenPaymentsServerRouteError
+      )
+      await expect(middleware(ctx, next)).rejects.toMatchObject({
+        status: 401,
+        message: 'Invalid Token'
+      })
+      expect(next).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('token info validation', () => {
+    it('should throw 403 if token is inactive', async () => {
+      const inactiveTokenInfo: TokenInfo = {
+        active: false
+      }
+      mockTokenIntrospectionClient.introspect.mockResolvedValue(
+        inactiveTokenInfo
+      )
+
+      const middleware =
+        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+      const next = jest.fn()
+
+      await expect(middleware(ctx, next)).rejects.toThrow(
+        OpenPaymentsServerRouteError
+      )
+      await expect(middleware(ctx, next)).rejects.toMatchObject({
+        status: 403,
+        message: 'Inactive Token'
+      })
+      expect(next).not.toHaveBeenCalled()
+    })
+
+    it('should throw 403 if token has no access items', async () => {
+      const tokenInfoNoAccess: TokenInfo = {
+        active: true,
+        grant: 'grant-123',
+        client: 'https://client.example.com',
+        access: []
+      }
+      mockTokenIntrospectionClient.introspect.mockResolvedValue(
+        tokenInfoNoAccess
+      )
+
+      const middleware =
+        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+      const next = jest.fn()
+
+      await expect(middleware(ctx, next)).rejects.toThrow(
+        OpenPaymentsServerRouteError
+      )
+      await expect(middleware(ctx, next)).rejects.toMatchObject({
+        status: 403,
+        message: 'Insufficient Grant'
+      })
+      expect(next).not.toHaveBeenCalled()
+    })
+
+    it('should throw 500 if token has more than one access item', async () => {
+      const tokenInfoMultipleAccess: TokenInfo = {
+        active: true,
+        grant: 'grant-123',
+        client: 'https://client.example.com',
+        access: [
+          {
+            type: 'outgoing-payment',
+            actions: ['create'],
+            identifier: 'https://wallet.example.com/alice'
+          },
+          {
+            type: 'incoming-payment',
+            actions: ['read'],
+            identifier: 'https://wallet.example.com/alice'
+          }
+        ]
+      }
+      mockTokenIntrospectionClient.introspect.mockResolvedValue(
+        tokenInfoMultipleAccess
+      )
+
+      const middleware =
+        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+      const next = jest.fn()
+
+      await expect(middleware(ctx, next)).rejects.toThrow(
+        OpenPaymentsServerRouteError
+      )
+      await expect(middleware(ctx, next)).rejects.toMatchObject({
+        status: 500,
+        message: 'Unexpected number of access items'
+      })
+      expect(next).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('successful introspection', () => {
+    it('should call introspect with correct access item parameters', async () => {
+      const tokenInfo: TokenInfo = {
+        active: true,
+        grant: 'grant-123',
+        client: 'https://client.example.com',
+        access: [
+          {
+            type: 'outgoing-payment',
+            actions: ['create'],
+            identifier: 'https://wallet.example.com/alice'
+          }
+        ]
+      }
+      mockTokenIntrospectionClient.introspect.mockResolvedValue(tokenInfo)
+
+      const middleware =
+        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+      const next = jest.fn()
+
+      await middleware(ctx, next)
+
+      expect(mockTokenIntrospectionClient.introspect).toHaveBeenCalledWith({
+        access_token: 'test-token-123',
+        access: [
+          {
+            type: AccessType.OutgoingPayment,
+            actions: [AccessAction.Create],
+            identifier: undefined
+          }
+        ]
+      })
+    })
+  })
+})
+
+describe('createOutgoingPaymentGrantTokenIntrospectionMiddleware', () => {
+  let ctx: IntrospectionContext
+  let mockTokenIntrospectionClient: {
+    introspect: jest.Mock
+  }
+  let mockConfig: {
+    authServerGrantUrl: string
+  }
+
+  beforeEach(() => {
+    mockTokenIntrospectionClient = {
+      introspect: jest.fn()
+    }
+    mockConfig = {
+      authServerGrantUrl: 'https://auth.example.com'
+    }
+
+    ctx = {
+      request: {
+        headers: {
+          authorization: 'GNAP test-token-123'
+        }
+      },
+      container: {
+        use: jest.fn().mockImplementation((service: string) => {
+          if (service === 'tokenIntrospectionClient') {
+            return Promise.resolve(mockTokenIntrospectionClient)
+          }
+          if (service === 'config') {
+            return Promise.resolve(mockConfig)
+          }
+          return Promise.resolve(undefined)
+        })
+      },
+      set: jest.fn(),
+      grant: undefined as Grant | undefined
+    } as unknown as IntrospectionContext
+  })
+
+  describe('context population', () => {
+    it('should set grant on context with id and no limits when access has no limits', async () => {
+      const tokenInfo: TokenInfo = {
+        active: true,
+        grant: 'grant-123',
+        client: 'https://client.example.com',
+        access: [
+          {
+            type: 'outgoing-payment',
+            actions: ['create'],
+            identifier: 'https://wallet.example.com/alice'
+          }
+        ]
+      }
+      mockTokenIntrospectionClient.introspect.mockResolvedValue(tokenInfo)
+
+      const middleware =
+        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+      const next = jest.fn()
+
+      await middleware(ctx, next)
+
+      expect(ctx.grant).toEqual({
+        id: 'grant-123',
+        limits: undefined
+      })
+      expect(next).toHaveBeenCalled()
+    })
+
+    it('should set grant on context with id and parsed limits when access has limits', async () => {
+      const limits: Limits = {
+        receiver: 'https://receiver.example.com',
+        debitAmount: {
+          value: BigInt(1000),
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      }
+      const tokenInfo: TokenInfo = {
+        active: true,
+        grant: 'grant-456',
+        client: 'https://client.example.com',
+        access: [
+          {
+            type: 'outgoing-payment',
+            actions: ['create'],
+            identifier: 'https://wallet.example.com/alice',
+            limits
+          }
+        ]
+      }
+      mockTokenIntrospectionClient.introspect.mockResolvedValue(tokenInfo)
+
+      const middleware =
+        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+      const next = jest.fn()
+
+      await middleware(ctx, next)
+
+      expect(ctx.grant).toEqual({
+        id: 'grant-456',
+        limits
+      })
+      expect(next).toHaveBeenCalled()
+    })
+  })
+
+  describe('WWW-Authenticate header', () => {
+    it('should set WWW-Authenticate header when OpenPaymentsServerRouteError is thrown', async () => {
+      ctx.request.headers.authorization = undefined
+
+      const middleware =
+        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+      const next = jest.fn()
+
+      await expect(middleware(ctx, next)).rejects.toThrow(
+        OpenPaymentsServerRouteError
+      )
+
+      expect(ctx.set).toHaveBeenCalledWith(
+        'WWW-Authenticate',
+        'GNAP as_uri=https://auth.example.com'
+      )
+    })
+
+    it('should set WWW-Authenticate header on invalid token error', async () => {
+      mockTokenIntrospectionClient.introspect.mockRejectedValue(
+        new Error('Network error')
+      )
+
+      const middleware =
+        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+      const next = jest.fn()
+
+      await expect(middleware(ctx, next)).rejects.toThrow(
+        OpenPaymentsServerRouteError
+      )
+
+      expect(ctx.set).toHaveBeenCalledWith(
+        'WWW-Authenticate',
+        'GNAP as_uri=https://auth.example.com'
+      )
+    })
+
+    it('should set WWW-Authenticate header on inactive token error', async () => {
+      const inactiveTokenInfo: TokenInfo = {
+        active: false
+      }
+      mockTokenIntrospectionClient.introspect.mockResolvedValue(
+        inactiveTokenInfo
+      )
+
+      const middleware =
+        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+      const next = jest.fn()
+
+      await expect(middleware(ctx, next)).rejects.toThrow(
+        OpenPaymentsServerRouteError
+      )
+
+      expect(ctx.set).toHaveBeenCalledWith(
+        'WWW-Authenticate',
+        'GNAP as_uri=https://auth.example.com'
+      )
+    })
+
+    it('should set WWW-Authenticate header on insufficient grant error', async () => {
+      const tokenInfoNoAccess: TokenInfo = {
+        active: true,
+        grant: 'grant-123',
+        client: 'https://client.example.com',
+        access: []
+      }
+      mockTokenIntrospectionClient.introspect.mockResolvedValue(
+        tokenInfoNoAccess
+      )
+
+      const middleware =
+        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+      const next = jest.fn()
+
+      await expect(middleware(ctx, next)).rejects.toThrow(
+        OpenPaymentsServerRouteError
+      )
+
+      expect(ctx.set).toHaveBeenCalledWith(
+        'WWW-Authenticate',
+        'GNAP as_uri=https://auth.example.com'
+      )
+    })
+  })
+
+  describe('error propagation', () => {
+    it('should rethrow OpenPaymentsServerRouteError after setting WWW-Authenticate', async () => {
+      ctx.request.headers.authorization = 'Invalid'
+
+      const middleware =
+        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+      const next = jest.fn()
+
+      const error = await middleware(ctx, next).catch((e) => e)
+
+      expect(error).toBeInstanceOf(OpenPaymentsServerRouteError)
+      expect(error.status).toBe(401)
+    })
+  })
+
+  describe('next() invocation', () => {
+    it('should call next() on successful introspection', async () => {
+      const tokenInfo: TokenInfo = {
+        active: true,
+        grant: 'grant-123',
+        client: 'https://client.example.com',
+        access: [
+          {
+            type: 'outgoing-payment',
+            actions: ['create'],
+            identifier: 'https://wallet.example.com/alice'
+          }
+        ]
+      }
+      mockTokenIntrospectionClient.introspect.mockResolvedValue(tokenInfo)
+
+      const middleware =
+        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+      const next = jest.fn()
+
+      await middleware(ctx, next)
+
+      expect(next).toHaveBeenCalledTimes(1)
+    })
+
+    it('should not call next() when introspection fails', async () => {
+      ctx.request.headers.authorization = undefined
+
+      const middleware =
+        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+      const next = jest.fn()
+
+      await expect(middleware(ctx, next)).rejects.toThrow()
+
+      expect(next).not.toHaveBeenCalled()
+    })
   })
 })
