@@ -52,6 +52,11 @@ import { OutgoingPaymentCardDetails } from './card/model'
 
 const DEFAULT_GRANT_LOCK_TIMEOUT_MS = 5000
 
+export interface GrantSpentAmounts {
+  spentDebitAmount: Amount | null
+  spentReceiveAmount: Amount | null
+}
+
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
   getPage(options?: GetPageOptions): Promise<OutgoingPayment[]>
@@ -65,6 +70,10 @@ export interface OutgoingPaymentService
     options: FundOutgoingPaymentOptions
   ): Promise<OutgoingPayment | FundingError>
   processNext(): Promise<string | undefined>
+  getGrantSpentAmounts(options: {
+    grantId: string
+    limits?: Limits
+  }): Promise<GrantSpentAmounts>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -94,7 +103,8 @@ export async function createOutgoingPaymentService(
     cancel: (options) => cancelOutgoingPayment(deps, options),
     fund: (options) => fundPayment(deps, options),
     processNext: () => worker.processPendingPayment(deps),
-    getWalletAddressPage: (options) => getWalletAddressPage(deps, options)
+    getWalletAddressPage: (options) => getWalletAddressPage(deps, options),
+    getGrantSpentAmounts: (options) => getGrantSpentAmounts(deps, options)
   }
 }
 
@@ -1207,6 +1217,122 @@ export async function updateGrantSpentAmounts(
     createdAt: new Date(),
     paymentState: OutgoingPaymentState.Completed
   })
+}
+
+/**
+ * Gets the spent amounts for a grant.
+ * The spent amounts are scoped to current interval, if any, else they are
+ * for the total lifetime of the grant.
+ */
+async function getGrantSpentAmounts(
+  deps: ServiceDependencies,
+  options: { grantId: string; limits?: Limits }
+): Promise<GrantSpentAmounts> {
+  const { grantId, limits } = options
+
+  const latestGrantSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+    deps.knex
+  )
+    .where('grantId', grantId)
+    .orderBy('createdAt', 'desc')
+    .first()
+
+  if (!latestGrantSpentAmounts) {
+    return {
+      spentDebitAmount: null,
+      spentReceiveAmount: null
+    }
+  }
+
+  if (!limits?.interval) {
+    return {
+      spentDebitAmount: {
+        value: latestGrantSpentAmounts.grantTotalDebitAmountValue,
+        assetCode: latestGrantSpentAmounts.debitAmountCode,
+        assetScale: latestGrantSpentAmounts.debitAmountScale
+      },
+      spentReceiveAmount: {
+        value: latestGrantSpentAmounts.grantTotalReceiveAmountValue,
+        assetCode: latestGrantSpentAmounts.receiveAmountCode,
+        assetScale: latestGrantSpentAmounts.receiveAmountScale
+      }
+    }
+  }
+
+  // Interval is specified - determine the current interval
+  const now = new Date()
+  let currentInterval
+
+  try {
+    currentInterval = getInterval(limits.interval, now)
+    if (!currentInterval?.start || !currentInterval?.end) {
+      deps.logger.warn(
+        { 'limits.interval': limits.interval },
+        'Provided interval does not contain start or end'
+      )
+      return {
+        spentDebitAmount: null,
+        spentReceiveAmount: null
+      }
+    }
+  } catch (err) {
+    deps.logger.warn(
+      { err, grantId, limits },
+      'Could not parse interval when trying to get grant spent amounts'
+    )
+    return {
+      spentDebitAmount: null,
+      spentReceiveAmount: null
+    }
+  }
+
+  // Check if the latest record is from the current interval
+  if (
+    latestGrantSpentAmounts.intervalStart &&
+    latestGrantSpentAmounts.intervalEnd
+  ) {
+    const recordInterval = Interval.fromDateTimes(
+      DateTime.fromJSDate(latestGrantSpentAmounts.intervalStart),
+      DateTime.fromJSDate(latestGrantSpentAmounts.intervalEnd)
+    )
+
+    if (recordInterval.equals(currentInterval)) {
+      return {
+        spentDebitAmount: {
+          value: latestGrantSpentAmounts.intervalDebitAmountValue ?? BigInt(0),
+          assetCode: latestGrantSpentAmounts.debitAmountCode,
+          assetScale: latestGrantSpentAmounts.debitAmountScale
+        },
+        spentReceiveAmount: {
+          value:
+            latestGrantSpentAmounts.intervalReceiveAmountValue ?? BigInt(0),
+          assetCode: latestGrantSpentAmounts.receiveAmountCode,
+          assetScale: latestGrantSpentAmounts.receiveAmountScale
+        }
+      }
+    }
+  } else {
+    deps.logger.warn(
+      {
+        intervalStart: latestGrantSpentAmounts.intervalStart,
+        intervalEnd: latestGrantSpentAmounts.intervalEnd
+      },
+      'Grant spent amount interval does not contain start or end'
+    )
+  }
+
+  return {
+    spentDebitAmount: {
+      value: BigInt(0),
+      assetCode: latestGrantSpentAmounts.debitAmountCode,
+      assetScale: latestGrantSpentAmounts.debitAmountScale
+    },
+    spentReceiveAmount: {
+      value: BigInt(0),
+      assetCode: latestGrantSpentAmounts.receiveAmountCode,
+      assetScale: latestGrantSpentAmounts.receiveAmountScale
+    }
+  }
 }
 
 /**
