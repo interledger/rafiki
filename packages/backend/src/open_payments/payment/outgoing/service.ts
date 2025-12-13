@@ -619,10 +619,16 @@ export async function calculateLegacyGrantSpentAmounts(
   grantTotalReceiveAmountValue: bigint
   intervalDebitAmountValue: bigint | null
   intervalReceiveAmountValue: bigint | null
-  debitAmountCode: string | null
-  debitAmountScale: number | null
-  receiveAmountCode: string | null
-  receiveAmountScale: number | null
+  latestPayment: {
+    id: string
+    debitAmountValue: bigint
+    debitAmountCode: string
+    debitAmountScale: number
+    receiveAmountValue: bigint
+    receiveAmountCode: string
+    receiveAmountScale: number
+    state: OutgoingPaymentState
+  } | null
 }> {
   const { grantId, trx, paymentLimits, excludePaymentId } = args
 
@@ -636,6 +642,7 @@ export async function calculateLegacyGrantSpentAmounts(
   const query = OutgoingPayment.query(deps.knex)
     .where({ grantId })
     .withGraphFetched('quote')
+    .orderBy('createdAt', 'asc')
 
   if (excludePaymentId) {
     query.andWhereNot({ id: excludePaymentId })
@@ -689,17 +696,26 @@ export async function calculateLegacyGrantSpentAmounts(
     }
   }
 
-  const firstPayment = grantPayments.length > 0 ? grantPayments[0] : null
+  const latestPayment =
+    grantPayments.length > 0 ? grantPayments[grantPayments.length - 1] : null
 
   return {
     grantTotalDebitAmountValue,
     grantTotalReceiveAmountValue,
     intervalDebitAmountValue,
     intervalReceiveAmountValue,
-    debitAmountCode: firstPayment?.debitAmount.assetCode ?? null,
-    debitAmountScale: firstPayment?.debitAmount.assetScale ?? null,
-    receiveAmountCode: firstPayment?.receiveAmount.assetCode ?? null,
-    receiveAmountScale: firstPayment?.receiveAmount.assetScale ?? null
+    latestPayment: latestPayment
+      ? {
+          id: latestPayment.id,
+          debitAmountValue: latestPayment.debitAmount.value,
+          debitAmountCode: latestPayment.debitAmount.assetCode,
+          debitAmountScale: latestPayment.debitAmount.assetScale,
+          receiveAmountValue: latestPayment.receiveAmount.value,
+          receiveAmountCode: latestPayment.receiveAmount.assetCode,
+          receiveAmountScale: latestPayment.receiveAmount.assetScale,
+          state: latestPayment.state
+        }
+      : null
   }
 }
 
@@ -1370,12 +1386,7 @@ async function getGrantSpentAmounts(
     paymentLimits
   })
 
-  if (
-    !legacy.debitAmountCode ||
-    !legacy.debitAmountScale ||
-    !legacy.receiveAmountCode ||
-    !legacy.receiveAmountScale
-  ) {
+  if (!legacy.latestPayment) {
     deps.logger.warn(
       { grantId },
       'Expected to find existing payments for grant'
@@ -1383,20 +1394,41 @@ async function getGrantSpentAmounts(
     return { spentDebitAmount: null, spentReceiveAmount: null }
   }
 
+  // Insert the legacy spent amounts as a new record to migrate the data
+  await OutgoingPaymentGrantSpentAmounts.query(deps.knex).insert({
+    id: uuid(),
+    grantId,
+    outgoingPaymentId: legacy.latestPayment.id,
+    paymentDebitAmountValue: legacy.latestPayment.debitAmountValue,
+    debitAmountScale: legacy.latestPayment.debitAmountScale,
+    debitAmountCode: legacy.latestPayment.debitAmountCode,
+    intervalDebitAmountValue: legacy.intervalDebitAmountValue,
+    grantTotalDebitAmountValue: legacy.grantTotalDebitAmountValue,
+    paymentReceiveAmountValue: legacy.latestPayment.receiveAmountValue,
+    receiveAmountScale: legacy.latestPayment.receiveAmountScale,
+    receiveAmountCode: legacy.latestPayment.receiveAmountCode,
+    intervalReceiveAmountValue: legacy.intervalReceiveAmountValue,
+    grantTotalReceiveAmountValue: legacy.grantTotalReceiveAmountValue,
+    intervalStart: currentInterval?.start?.toJSDate() ?? null,
+    intervalEnd: currentInterval?.end?.toJSDate() ?? null,
+    createdAt: new Date(),
+    paymentState: legacy.latestPayment.state
+  })
+
   return {
     spentDebitAmount: {
       value: currentInterval
         ? legacy.intervalDebitAmountValue ?? BigInt(0)
         : legacy.grantTotalDebitAmountValue,
-      assetCode: legacy.debitAmountCode,
-      assetScale: legacy.debitAmountScale
+      assetCode: legacy.latestPayment.debitAmountCode,
+      assetScale: legacy.latestPayment.debitAmountScale
     },
     spentReceiveAmount: {
       value: currentInterval
         ? legacy.intervalReceiveAmountValue ?? BigInt(0)
         : legacy.grantTotalReceiveAmountValue,
-      assetCode: legacy.receiveAmountCode,
-      assetScale: legacy.receiveAmountScale
+      assetCode: legacy.latestPayment.receiveAmountCode,
+      assetScale: legacy.latestPayment.receiveAmountScale
     }
   }
 }

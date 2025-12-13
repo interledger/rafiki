@@ -2987,10 +2987,10 @@ describe('OutgoingPaymentService', (): void => {
             payment2.quote.receiveAmount.value
         )
         expect(result.spentReceiveAmount?.assetCode).toBe(
-          payment1.quote.receiveAmount.assetCode
+          payment2.quote.receiveAmount.assetCode
         )
         expect(result.spentReceiveAmount?.assetScale).toBe(
-          payment1.quote.receiveAmount.assetScale
+          payment2.quote.receiveAmount.assetScale
         )
       })
 
