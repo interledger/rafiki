@@ -639,7 +639,7 @@ export async function calculateLegacyGrantSpentAmounts(
   let intervalDebitAmountValue: bigint | null = hasInterval ? 0n : null
   let intervalReceiveAmountValue: bigint | null = hasInterval ? 0n : null
 
-  const query = OutgoingPayment.query(deps.knex)
+  const query = OutgoingPayment.query(trx)
     .where({ grantId })
     .withGraphFetched('quote')
     .orderBy('createdAt', 'asc')
