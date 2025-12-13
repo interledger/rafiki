@@ -1279,214 +1279,147 @@ async function getGrantSpentAmounts(
   options: { grantId: string; limits?: Limits }
 ): Promise<GrantSpentAmounts> {
   const { grantId, limits } = options
+  const currentInterval = parseIntervalSafely(deps, limits?.interval)
+  if (limits?.interval && !currentInterval) {
+    return { spentDebitAmount: null, spentReceiveAmount: null }
+  }
 
-  const latestGrantSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
-    deps.knex
-  )
+  const latestRecord = await OutgoingPaymentGrantSpentAmounts.query(deps.knex)
     .where('grantId', grantId)
     .orderBy('createdAt', 'desc')
     .first()
 
-  if (!latestGrantSpentAmounts) {
-    const isExistingGrant = !!(await OutgoingPaymentGrant.query(
-      deps.knex
-    ).findById(grantId))
-    // Legacy path: payments have been made against grant but there is no
-    // spent amounts record
-    if (isExistingGrant) {
-      let paymentLimits: PaymentLimits | undefined
-
-      if (limits?.interval) {
-        try {
-          const currentInterval = getInterval(limits.interval, new Date())
-          if (!currentInterval?.start || !currentInterval?.end) {
-            deps.logger.warn(
-              { 'limits.interval': limits.interval },
-              'Provided interval does not contain start or end'
-            )
-            return {
-              spentDebitAmount: null,
-              spentReceiveAmount: null
-            }
-          }
-          paymentLimits = {
-            ...limits,
-            paymentInterval: currentInterval
-          }
-        } catch (err) {
-          deps.logger.warn(
-            { err, grantId, limits },
-            'Could not parse interval when trying to get grant spent amounts'
-          )
-          return {
-            spentDebitAmount: null,
-            spentReceiveAmount: null
-          }
-        }
-      }
-
-      const legacyAmounts = await calculateLegacyGrantSpentAmounts(deps, {
-        grantId,
-        trx: deps.knex,
-        paymentLimits
-      })
-
-      // If no payments exist, return null amounts
-      if (
-        !legacyAmounts.debitAmountCode ||
-        !legacyAmounts.debitAmountScale ||
-        !legacyAmounts.receiveAmountCode ||
-        !legacyAmounts.receiveAmountScale
-      ) {
-        deps.logger.warn(
-          { grantId },
-          'Expected to find existing payments for grant'
-        )
-        return {
-          spentDebitAmount: null,
-          spentReceiveAmount: null
-        }
-      }
-
-      if (!limits?.interval) {
-        // No interval - return total amounts
-        return {
-          spentDebitAmount: {
-            value: legacyAmounts.grantTotalDebitAmountValue,
-            assetCode: legacyAmounts.debitAmountCode,
-            assetScale: legacyAmounts.debitAmountScale
-          },
-          spentReceiveAmount: {
-            value: legacyAmounts.grantTotalReceiveAmountValue,
-            assetCode: legacyAmounts.receiveAmountCode,
-            assetScale: legacyAmounts.receiveAmountScale
-          }
-        }
-      } else {
-        // Interval specified - return interval amounts
-        if (
-          !paymentLimits?.paymentInterval?.start ||
-          !paymentLimits?.paymentInterval?.end
-        ) {
-          deps.logger.warn(
-            { 'limits.interval': limits.interval },
-            'Provided interval does not contain start or end'
-          )
-          return {
-            spentDebitAmount: null,
-            spentReceiveAmount: null
-          }
-        }
-
-        return {
-          spentDebitAmount: {
-            value: legacyAmounts.intervalDebitAmountValue ?? BigInt(0),
-            assetCode: legacyAmounts.debitAmountCode,
-            assetScale: legacyAmounts.debitAmountScale
-          },
-          spentReceiveAmount: {
-            value: legacyAmounts.intervalReceiveAmountValue ?? BigInt(0),
-            assetCode: legacyAmounts.receiveAmountCode,
-            assetScale: legacyAmounts.receiveAmountScale
-          }
-        }
-      }
-    }
-
-    return {
-      spentDebitAmount: null,
-      spentReceiveAmount: null
-    }
-  }
-
-  if (!limits?.interval) {
-    return {
-      spentDebitAmount: {
-        value: latestGrantSpentAmounts.grantTotalDebitAmountValue,
-        assetCode: latestGrantSpentAmounts.debitAmountCode,
-        assetScale: latestGrantSpentAmounts.debitAmountScale
-      },
-      spentReceiveAmount: {
-        value: latestGrantSpentAmounts.grantTotalReceiveAmountValue,
-        assetCode: latestGrantSpentAmounts.receiveAmountCode,
-        assetScale: latestGrantSpentAmounts.receiveAmountScale
-      }
-    }
-  }
-
-  // Interval is specified - determine the current interval
-  const now = new Date()
-  let currentInterval
-
-  try {
-    currentInterval = getInterval(limits.interval, now)
-    if (!currentInterval?.start || !currentInterval?.end) {
-      deps.logger.warn(
-        { 'limits.interval': limits.interval },
-        'Provided interval does not contain start or end'
-      )
-      return {
-        spentDebitAmount: null,
-        spentReceiveAmount: null
-      }
-    }
-  } catch (err) {
-    deps.logger.warn(
-      { err, grantId, limits },
-      'Could not parse interval when trying to get grant spent amounts'
-    )
-    return {
-      spentDebitAmount: null,
-      spentReceiveAmount: null
-    }
-  }
-
-  // Check if the latest record is from the current interval
-  if (
-    latestGrantSpentAmounts.intervalStart &&
-    latestGrantSpentAmounts.intervalEnd
-  ) {
-    const recordInterval = Interval.fromDateTimes(
-      DateTime.fromJSDate(latestGrantSpentAmounts.intervalStart),
-      DateTime.fromJSDate(latestGrantSpentAmounts.intervalEnd)
-    )
-
-    if (recordInterval.equals(currentInterval)) {
+  if (latestRecord) {
+    // No interval requested - return totals
+    if (!currentInterval) {
       return {
         spentDebitAmount: {
-          value: latestGrantSpentAmounts.intervalDebitAmountValue ?? BigInt(0),
-          assetCode: latestGrantSpentAmounts.debitAmountCode,
-          assetScale: latestGrantSpentAmounts.debitAmountScale
+          value: latestRecord.grantTotalDebitAmountValue,
+          assetCode: latestRecord.debitAmountCode,
+          assetScale: latestRecord.debitAmountScale
         },
         spentReceiveAmount: {
-          value:
-            latestGrantSpentAmounts.intervalReceiveAmountValue ?? BigInt(0),
-          assetCode: latestGrantSpentAmounts.receiveAmountCode,
-          assetScale: latestGrantSpentAmounts.receiveAmountScale
+          value: latestRecord.grantTotalReceiveAmountValue,
+          assetCode: latestRecord.receiveAmountCode,
+          assetScale: latestRecord.receiveAmountScale
         }
       }
     }
-  } else {
-    deps.logger.warn(
-      {
-        intervalStart: latestGrantSpentAmounts.intervalStart,
-        intervalEnd: latestGrantSpentAmounts.intervalEnd
+
+    // Check if record matches current interval
+    if (latestRecord.intervalStart && latestRecord.intervalEnd) {
+      const recordInterval = Interval.fromDateTimes(
+        DateTime.fromJSDate(latestRecord.intervalStart),
+        DateTime.fromJSDate(latestRecord.intervalEnd)
+      )
+      if (recordInterval.equals(currentInterval)) {
+        return {
+          spentDebitAmount: {
+            value: latestRecord.intervalDebitAmountValue ?? BigInt(0),
+            assetCode: latestRecord.debitAmountCode,
+            assetScale: latestRecord.debitAmountScale
+          },
+          spentReceiveAmount: {
+            value: latestRecord.intervalReceiveAmountValue ?? BigInt(0),
+            assetCode: latestRecord.receiveAmountCode,
+            assetScale: latestRecord.receiveAmountScale
+          }
+        }
+      }
+    } else {
+      deps.logger.warn(
+        {
+          intervalStart: latestRecord.intervalStart,
+          intervalEnd: latestRecord.intervalEnd
+        },
+        'Grant spent amount interval missing start or end'
+      )
+    }
+
+    // New interval - return zeros
+    return {
+      spentDebitAmount: {
+        value: BigInt(0),
+        assetCode: latestRecord.debitAmountCode,
+        assetScale: latestRecord.debitAmountScale
       },
-      'Grant spent amount interval does not contain start or end'
+      spentReceiveAmount: {
+        value: BigInt(0),
+        assetCode: latestRecord.receiveAmountCode,
+        assetScale: latestRecord.receiveAmountScale
+      }
+    }
+  }
+
+  // No spent amounts record - check for legacy grant
+  const isExistingGrant = !!(await OutgoingPaymentGrant.query(
+    deps.knex
+  ).findById(grantId))
+  if (!isExistingGrant) {
+    return { spentDebitAmount: null, spentReceiveAmount: null }
+  }
+
+  // Legacy path
+  const paymentLimits = currentInterval
+    ? { ...limits, paymentInterval: currentInterval }
+    : undefined
+
+  const legacy = await calculateLegacyGrantSpentAmounts(deps, {
+    grantId,
+    trx: deps.knex,
+    paymentLimits
+  })
+
+  if (
+    !legacy.debitAmountCode ||
+    !legacy.debitAmountScale ||
+    !legacy.receiveAmountCode ||
+    !legacy.receiveAmountScale
+  ) {
+    deps.logger.warn(
+      { grantId },
+      'Expected to find existing payments for grant'
     )
+    return { spentDebitAmount: null, spentReceiveAmount: null }
   }
 
   return {
     spentDebitAmount: {
-      value: BigInt(0),
-      assetCode: latestGrantSpentAmounts.debitAmountCode,
-      assetScale: latestGrantSpentAmounts.debitAmountScale
+      value: currentInterval
+        ? legacy.intervalDebitAmountValue ?? BigInt(0)
+        : legacy.grantTotalDebitAmountValue,
+      assetCode: legacy.debitAmountCode,
+      assetScale: legacy.debitAmountScale
     },
     spentReceiveAmount: {
-      value: BigInt(0),
-      assetCode: latestGrantSpentAmounts.receiveAmountCode,
-      assetScale: latestGrantSpentAmounts.receiveAmountScale
+      value: currentInterval
+        ? legacy.intervalReceiveAmountValue ?? BigInt(0)
+        : legacy.grantTotalReceiveAmountValue,
+      assetCode: legacy.receiveAmountCode,
+      assetScale: legacy.receiveAmountScale
     }
+  }
+}
+
+function parseIntervalSafely(
+  deps: ServiceDependencies,
+  intervalStr?: string
+): Interval | null {
+  if (!intervalStr) return null
+
+  try {
+    const interval = getInterval(intervalStr, new Date())
+    if (!interval?.start || !interval?.end) {
+      deps.logger.warn(
+        { interval: intervalStr },
+        'Interval missing start or end'
+      )
+      return null
+    }
+    return interval
+  } catch (err) {
+    deps.logger.warn({ err, interval: intervalStr }, 'Could not parse interval')
+    return null
   }
 }
 
