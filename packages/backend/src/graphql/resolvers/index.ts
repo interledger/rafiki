@@ -24,7 +24,8 @@ import {
   getIncomingPayment,
   updateIncomingPayment,
   approveIncomingPayment,
-  cancelIncomingPayment
+  cancelIncomingPayment,
+  getIncomingPayments
 } from './incoming_payment'
 import { getQuote, createQuote, getWalletAddressQuotes } from './quote'
 import {
@@ -70,7 +71,7 @@ import {
   revokeWalletAddressKey
 } from './walletAddressKey'
 import { getWalletAddressAdditionalProperties } from './walletAddressAdditionalProperties'
-import { createReceiver, getReceiver } from './receiver'
+import { completeReceiver, createReceiver, getReceiver } from './receiver'
 import { getWebhookEvents } from './webhooks'
 import { setFee } from './fee'
 import { GraphQLJSONObject } from 'graphql-scalars'
@@ -111,6 +112,7 @@ export const resolvers: Resolvers = {
     outgoingPayment: getOutgoingPayment,
     outgoingPayments: getOutgoingPayments,
     incomingPayment: getIncomingPayment,
+    incomingPayments: getIncomingPayments,
     peer: getPeer,
     peerByAddressAndAsset: getPeerByAddressAndAsset,
     peers: getPeers,
@@ -159,6 +161,7 @@ export const resolvers: Resolvers = {
     approveIncomingPayment,
     cancelIncomingPayment,
     createReceiver,
+    completeReceiver,
     createPeer: createPeer,
     createOrUpdatePeerByUrl: createOrUpdatePeerByUrl,
     updatePeer: updatePeer,

@@ -10,7 +10,10 @@ import {
   mockIncomingPaymentWithPaymentMethods,
   mockWalletAddress
 } from '@interledger/open-payments'
-import { CreateReceiverResponse } from '../generated/graphql'
+import {
+  CompleteReceiverResponse,
+  CreateReceiverResponse
+} from '../generated/graphql'
 import { ReceiverService } from '../../open_payments/receiver/service'
 import { Receiver } from '../../open_payments/receiver/model'
 import {
@@ -250,6 +253,135 @@ describe('Receiver Resolver', (): void => {
         ...input,
         tenantId: Config.operatorTenantId
       })
+    })
+  })
+
+  describe('Mutation.completeReceiver', () => {
+    const incomingPaymentUrl = `${walletAddress.id}/incoming-payments/${uuid()}`
+    const receiver = new Receiver(
+      mockIncomingPaymentWithPaymentMethods({
+        id: incomingPaymentUrl,
+        walletAddress: walletAddress.id,
+        incomingAmount: amount ? serializeAmount(amount) : undefined,
+        completed: true
+      }),
+      false
+    )
+    test('completes receiver', async () => {
+      const completeSpy = jest
+        .spyOn(receiverService, 'complete')
+        .mockResolvedValueOnce(receiver)
+
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            mutation CompleteReceiver($input: CompleteReceiverInput!) {
+              completeReceiver(input: $input) {
+                receiver {
+                  id
+                  walletAddressUrl
+                  completed
+                }
+              }
+            }
+          `,
+          variables: {
+            input: {
+              incomingPaymentUrl
+            }
+          }
+        })
+        .then(
+          (result): CompleteReceiverResponse => result.data?.completeReceiver
+        )
+      expect(completeSpy).toHaveBeenCalledWith(incomingPaymentUrl)
+      expect(query).toEqual({
+        __typename: 'CompleteReceiverResponse',
+        receiver: {
+          __typename: 'Receiver',
+          id: receiver.incomingPayment.id,
+          walletAddressUrl: receiver.incomingPayment?.walletAddress,
+          completed: true
+        }
+      })
+    })
+
+    test('returns error if error returned when completing receiver', async () => {
+      const completeSpy = jest
+        .spyOn(receiverService, 'complete')
+        .mockResolvedValueOnce(ReceiverError.UnknownPayment)
+
+      try {
+        await appContainer.apolloClient.query({
+          query: gql`
+            mutation CompleteReceiver($input: CompleteReceiverInput!) {
+              completeReceiver(input: $input) {
+                receiver {
+                  id
+                  walletAddressUrl
+                  completed
+                }
+              }
+            }
+          `,
+          variables: {
+            input: {
+              incomingPaymentUrl
+            }
+          }
+        })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage(ReceiverError.UnknownPayment),
+            extensions: expect.objectContaining({
+              code: errorToCode(ReceiverError.UnknownPayment)
+            })
+          })
+        )
+      }
+      expect(completeSpy).toHaveBeenCalledWith(incomingPaymentUrl)
+    })
+
+    test('returns error if error thrown when completing receiver', async () => {
+      const completeSpy = jest
+        .spyOn(receiverService, 'complete')
+        .mockImplementationOnce((_) => {
+          throw new Error('Cannot complete receiver')
+        })
+
+      try {
+        await appContainer.apolloClient.query({
+          query: gql`
+            mutation CompleteReceiver($input: CompleteReceiverInput!) {
+              completeReceiver(input: $input) {
+                receiver {
+                  id
+                  walletAddressUrl
+                  completed
+                }
+              }
+            }
+          `,
+          variables: {
+            input: {
+              incomingPaymentUrl
+            }
+          }
+        })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Cannot complete receiver',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.InternalServerError
+            })
+          })
+        )
+      }
+      expect(completeSpy).toHaveBeenCalledWith(incomingPaymentUrl)
     })
   })
 

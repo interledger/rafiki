@@ -1,0 +1,174 @@
+openapi: 3.0.3
+info:
+  title: Card Service API
+  version: 1.0.0
+  description: Card Service API specs
+  contact:
+    email: tech@interledger.org
+tags:
+  - name: payment
+    description: Operations related to payments
+paths:
+  /payment:
+    post:
+      summary: Accept a payment request from POS
+      operationId: createPayment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - requestId
+                - signature
+                - payload
+                - amount
+                - timestamp
+                - incomingPaymentUrl
+                - senderWalletAddress
+              properties:
+                requestId:
+                  type: string
+                  format: uuid
+                signature:
+                  type: string
+                payload:
+                  type: string
+                amount:
+                  type: object
+                  properties:
+                    value:
+                      type: string
+                    assetCode:
+                      type: string
+                    assetScale:
+                      type: number
+                senderWalletAddress:
+                  type: string
+                  format: uri
+                incomingPaymentUrl:
+                  type: string
+                  format: uri
+                timestamp:
+                  type: number
+
+      responses:
+        '201':
+          description: Payment request accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - requestId
+                  - result
+                properties:
+                  requestId:
+                    type: string
+                    format: uuid
+                  result:
+                    type: object
+                    required:
+                      - code
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - approved
+                          - invalid_signature
+                      description:
+                        type: string
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                properties:
+                  error:
+                    type: object
+                    required:
+                      - code
+                      - description
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - invalid_request
+                      description:
+                        type: string
+        '500':
+          description: Internal server error
+      description: 'POS service calls this endpoint to initiate a payment request.'
+      tags:
+        - payment
+  /webhook:
+    post:
+      summary: Handle payment event result from backend
+      operationId: handlePaymentEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - type
+                - data
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                type:
+                  type: string
+                  enum:
+                    - outgoing_payment.funded
+                    - outgoing_payment.cancelled
+                data:
+                  type: object
+                  required:
+                    - id
+                    - cardDetails
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    cardDetails:
+                      type: object
+                      required:
+                        - requestId
+                      properties:
+                        requestId:
+                          type: string
+                          format: uuid
+                        initiatedAt:
+                          type: string
+                          format: date-time
+                        data:
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: true
+                    metadata:
+                      type: object
+                      properties:
+                        cardPaymentFailureReason:
+                          type: string
+                          enum:
+                            - invalid_signature
+                            - invalid_request
+                      additionalProperties: true
+                  additionalProperties: true
+      responses:
+        '200':
+          description: Payment event accepted
+        '400':
+          description: Malformed request body
+        '404':
+          description: Request not found
+      description: 'Rafiki backend calls this endpoint to send the payment result.'
+      tags:
+        - payment

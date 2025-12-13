@@ -13,6 +13,8 @@ type Query {
     filter: GrantFilter
     "Specify the sort order of grants based on their creation date, either ascending or descending."
     sortOrder: SortOrder
+    "Filter grants by a specific tenant. This can only be performed by the operator."
+    tenantId: ID
   ): GrantsConnection!
 
   "Fetch a specific grant by its ID."
@@ -96,12 +98,16 @@ type Grant implements Model {
   client: String!
   "Details of the access provided by the grant."
   access: [Access!]!
+  "Details of the subject provided by the grant."
+  subject: Subject
   "Current state of the grant."
   state: GrantState!
   "Specific outcome of a finalized grant, indicating whether the grant was issued, revoked, or rejected."
   finalizationReason: GrantFinalization
   "The date and time when the grant was created."
   createdAt: String!
+  "Unique identifier of the tenant associated with the grant."
+  tenantId: ID!
 }
 
 type Access implements Model {
@@ -116,6 +122,21 @@ type Access implements Model {
   "Limits for an outgoing payment associated with this access."
   limits: LimitData
   "The date and time when the access was created."
+  createdAt: String!
+}
+
+type Subject {
+  sub_ids: [SubjectItem!]!
+}
+
+type SubjectItem implements Model {
+  "Unique identifier of the subject object."
+  id: ID!
+  "Wallet address of the subject's account."
+  subId: String!
+  "Format of the subject identifier"
+  subIdFormat: String!
+  "The date and time when the subject was created."
   createdAt: String!
 }
 

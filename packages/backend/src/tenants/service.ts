@@ -114,6 +114,7 @@ async function createTenant(
 
     await deps.authServiceClient.tenant.create({
       id: tenant.id,
+      apiSecret,
       idpSecret,
       idpConsentUrl
     })
@@ -196,8 +197,9 @@ async function updateTenant(
       .whereNull('deletedAt')
       .throwIfNotFound()
 
-    if (idpConsentUrl || idpSecret) {
+    if (idpConsentUrl || idpSecret || apiSecret) {
       await deps.authServiceClient.tenant.update(id, {
+        apiSecret,
         idpConsentUrl,
         idpSecret
       })

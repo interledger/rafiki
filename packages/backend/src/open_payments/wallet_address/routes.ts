@@ -39,9 +39,9 @@ export async function getWalletAddress(
     throw new OpenPaymentsServerRouteError(404, 'Could not get wallet address')
   }
 
-  const walletAddress = await deps.walletAddressService.getOrPollByUrl(
-    ctx.walletAddressUrl
-  )
+  const walletAddress = deps.config.walletAddressNotFoundPollingEnabled
+    ? await deps.walletAddressService.getOrPollByUrl(ctx.walletAddressUrl)
+    : await deps.walletAddressService.getByUrl(ctx.walletAddressUrl)
 
   if (!walletAddress?.isActive) {
     throw new OpenPaymentsServerRouteError(
@@ -62,7 +62,10 @@ export async function getWalletAddress(
 
   ctx.body = walletAddress.toOpenPaymentsType({
     authServer: `${ensureTrailingSlash(deps.config.authServerGrantUrl)}${walletAddress.tenantId}`,
-    resourceServer: `${ensureTrailingSlash(deps.config.openPaymentsUrl)}${walletAddress.tenantId}`
+    resourceServer: `${ensureTrailingSlash(deps.config.openPaymentsUrl)}${walletAddress.tenantId}`,
+    ...(deps.config.cardServiceUrl && {
+      cardService: `${ensureTrailingSlash(deps.config.cardServiceUrl)}`
+    })
   })
 }
 

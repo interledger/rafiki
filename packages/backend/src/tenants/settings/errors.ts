@@ -3,7 +3,8 @@ import { GraphQLErrorCode } from '../../graphql/errors'
 export enum TenantSettingError {
   TenantNotFound = 'TenantNotFound',
   UnknownError = 'UnknownError',
-  InvalidSetting = 'InvalidSettingError'
+  InvalidSetting = 'InvalidSettingError',
+  DuplicateWalletAddressUrl = 'DuplicateWalletAddressUrl'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -15,7 +16,8 @@ export const errorToCode: {
 } = {
   [TenantSettingError.InvalidSetting]: GraphQLErrorCode.BadUserInput,
   [TenantSettingError.TenantNotFound]: GraphQLErrorCode.NotFound,
-  [TenantSettingError.UnknownError]: GraphQLErrorCode.InternalServerError
+  [TenantSettingError.UnknownError]: GraphQLErrorCode.InternalServerError,
+  [TenantSettingError.DuplicateWalletAddressUrl]: GraphQLErrorCode.BadUserInput
 }
 
 export const errorToMessage: {
@@ -24,5 +26,7 @@ export const errorToMessage: {
   [TenantSettingError.TenantNotFound]: 'Tenant not found',
   [TenantSettingError.UnknownError]: 'Unknown error',
   [TenantSettingError.InvalidSetting]:
-    'Invalid value for one or more tenant settings'
+    'Invalid value for one or more tenant settings',
+  [TenantSettingError.DuplicateWalletAddressUrl]:
+    'Wallet Address Url already exists'
 }

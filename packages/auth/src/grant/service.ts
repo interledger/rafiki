@@ -19,13 +19,20 @@ import { FilterString } from '../shared/filters'
 import { AccessTokenService } from '../accessToken/service'
 import { canSkipInteraction } from './utils'
 import { IAppConfig } from '../config/app'
+import { SubjectRequest } from '../subject/types'
+import { SubjectService } from '../subject/service'
+import { isAccessError } from '../access/errors'
+import { errorToMessage, GrantError, accessErrorToGrantError } from './errors'
 
 interface GrantFilter {
   identifier?: FilterString
 }
 
 export interface GrantService {
-  getByIdWithAccess(grantId: string): Promise<Grant | undefined>
+  getByIdWithAccessAndSubject(
+    grantId: string,
+    tenantId?: string
+  ): Promise<Grant | undefined>
   create(
     grantRequest: GrantRequest,
     tenantId: string,
@@ -43,7 +50,8 @@ export interface GrantService {
   getPage(
     pagination?: Pagination,
     filter?: GrantFilter,
-    sortOrder?: SortOrder
+    sortOrder?: SortOrder,
+    tenantId?: string
   ): Promise<Grant[]>
   updateLastContinuedAt(id: string): Promise<Grant>
   lock(grantId: string, trx: Transaction, timeoutMs?: number): Promise<void>
@@ -53,12 +61,13 @@ interface ServiceDependencies extends BaseService {
   config: IAppConfig
   accessService: AccessService
   accessTokenService: AccessTokenService
+  subjectService: SubjectService
   knex: TransactionOrKnex
 }
 
 // datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-2
 export interface GrantRequest {
-  access_token: {
+  access_token?: {
     access: AccessRequest[]
   }
   client: string
@@ -69,6 +78,9 @@ export interface GrantRequest {
       uri: string
       nonce: string
     }
+  }
+  subject?: {
+    sub_ids: SubjectRequest[]
   }
 }
 
@@ -107,6 +119,7 @@ export async function createGrantService({
   logger,
   accessService,
   accessTokenService,
+  subjectService,
   knex
 }: ServiceDependencies): Promise<GrantService> {
   const log = logger.child({
@@ -117,10 +130,12 @@ export async function createGrantService({
     logger: log,
     accessService,
     accessTokenService,
+    subjectService,
     knex
   }
   return {
-    getByIdWithAccess: (grantId: string) => getByIdWithAccess(grantId),
+    getByIdWithAccessAndSubject: (grantId: string, tenantId?: string) =>
+      getByIdWithAccessAndSubject(grantId, tenantId),
     create: (grantRequest: GrantRequest, tenantId: string, trx?: Transaction) =>
       create(deps, grantRequest, tenantId, trx),
     markPending: (grantId: string, trx?: Transaction) =>
@@ -134,16 +149,28 @@ export async function createGrantService({
     ) => getByContinue(continueId, continueToken, opts),
     revokeGrant: (grantId: string, tenantId?: string) =>
       revokeGrant(deps, grantId, tenantId),
-    getPage: (pagination?, filter?, sortOrder?) =>
-      getGrantsPage(deps, pagination, filter, sortOrder),
+    getPage: (pagination?, filter?, sortOrder?, tenantId?) =>
+      getGrantsPage(deps, pagination, filter, sortOrder, tenantId),
     updateLastContinuedAt: (id) => updateLastContinuedAt(id),
     lock: (grantId: string, trx: Transaction, timeoutMs?: number) =>
       lock(deps, grantId, trx, timeoutMs)
   }
 }
 
-async function getByIdWithAccess(grantId: string): Promise<Grant | undefined> {
-  return Grant.query().findById(grantId).withGraphJoined('access')
+async function getByIdWithAccessAndSubject(
+  grantId: string,
+  tenantId?: string
+): Promise<Grant | undefined> {
+  const query = Grant.query()
+    .findById(grantId)
+    .withGraphJoined('access')
+    .withGraphJoined('subjects')
+
+  if (tenantId) {
+    query.where('tenantId', tenantId)
+  }
+
+  return query
 }
 
 async function approve(grantId: string): Promise<Grant> {
@@ -233,13 +260,8 @@ async function create(
   tenantId: string,
   trx?: Transaction
 ): Promise<Grant> {
-  const { accessService, knex } = deps
-
-  const {
-    access_token: { access },
-    interact,
-    client
-  } = grantRequest
+  const { accessService, subjectService, knex } = deps
+  const { access_token, interact, client, subject } = grantRequest
 
   const grantTrx = trx || (await Grant.startTransaction(knex))
   try {
@@ -260,7 +282,12 @@ async function create(
     const grant = await Grant.query(grantTrx).insert(grantData)
 
     // Associate provided accesses with grant
-    await accessService.createAccess(grant.id, access, grantTrx)
+    if (access_token?.access)
+      await accessService.createAccess(grant.id, access_token.access, grantTrx)
+
+    if (subject?.sub_ids) {
+      await subjectService.createSubject(grant.id, subject.sub_ids, grantTrx)
+    }
 
     if (!trx) {
       await grantTrx.commit()
@@ -270,6 +297,10 @@ async function create(
   } catch (err) {
     if (!trx) {
       await grantTrx.rollback()
+    }
+    if (isAccessError(err)) {
+      const grantErr = accessErrorToGrantError[err]
+      throw new GrantError(grantErr, errorToMessage[grantErr])
     }
 
     throw err
@@ -307,7 +338,8 @@ async function getGrantsPage(
   deps: ServiceDependencies,
   pagination?: Pagination,
   filter?: GrantFilter,
-  sortOrder?: SortOrder
+  sortOrder?: SortOrder,
+  tenantId?: string
 ): Promise<Grant[]> {
   const query = Grant.query(deps.knex).withGraphJoined('access')
   const { identifier, state, finalizationReason } = filter ?? {}
@@ -332,6 +364,10 @@ async function getGrantsPage(
     query
       .whereNull('finalizationReason')
       .orWhereNotIn('finalizationReason', finalizationReason.notIn)
+  }
+
+  if (tenantId) {
+    query.where('tenantId', tenantId)
   }
 
   return query.getPage(pagination, sortOrder)

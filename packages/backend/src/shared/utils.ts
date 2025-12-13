@@ -241,11 +241,3 @@ export function ensureTrailingSlash(str: string): string {
   if (!str.endsWith('/')) return `${str}/`
   return str
 }
-
-/**
- * @param url remove the tenant id from the {url}
- */
-export function urlWithoutTenantId(url: string): string {
-  if (url.length > 36 && validateId(url.slice(-36))) return url.slice(0, -37)
-  return url
-}

@@ -20,6 +20,7 @@ interface ConsentScreenContext {
   returnUrl: string
   accesses: Array<Access> | null
   outgoingPaymentAccess: Access | null
+  subjectId: string | null
   price: GrantAmount | null
   costToUser: GrantAmount | null
   errors: Array<Error>
@@ -47,19 +48,23 @@ export function loader() {
 function ConsentScreenBody({
   _thirdPartyUri,
   thirdPartyName,
+  accesses,
   price,
   costToUser,
   interactId,
   nonce,
-  returnUrl
+  returnUrl,
+  subjectId
 }: {
   _thirdPartyUri: string
   thirdPartyName: string
+  accesses: Access[] | null
   price: GrantAmount | null
   costToUser: GrantAmount | null
   interactId: string
   nonce: string
   returnUrl: string
+  subjectId: string | null
 }) {
   const chooseConsent = (accept: boolean) => {
     const href = new URL(returnUrl)
@@ -72,19 +77,31 @@ function ConsentScreenBody({
   return (
     <>
       <div className='bg-white rounded-md p-8 px-16'>
-        <div className='col-12'>
-          {price && (
-            <p>
-              {thirdPartyName} wants to send {price.currencyDisplayCode}{' '}
-              {price.amount.toFixed(2)} to its account.
-            </p>
-          )}
+        <div className='row mt-2'>
+          <div className='col-12'>
+            {subjectId && (
+              <p>
+                {thirdPartyName} is asking you to confirm ownership of{' '}
+                {subjectId}.
+              </p>
+            )}
+          </div>
+        </div>
+        <div className='row mt-2'>
+          <div className='col-12'>
+            {price && (
+              <p>
+                {thirdPartyName} wants to send {price.currencyDisplayCode}{' '}
+                {price.amount.toFixed(2)} to its account.
+              </p>
+            )}
+          </div>
         </div>
         <div className='row mt-2'>
           <div className='col-12'>
             {costToUser && (
               <p>
-                This will cost you {costToUser.currencyDisplayCode}{' '}
+                You will be charged {costToUser.currencyDisplayCode}{' '}
                 {costToUser.amount.toFixed(2)}
               </p>
             )}
@@ -92,11 +109,14 @@ function ConsentScreenBody({
         </div>
         <div className='row mt-2'>
           <div className='col-12'>
-            {!price && !costToUser && (
+            {accesses?.length &&
+            accesses.length > 0 &&
+            !price &&
+            !costToUser ? (
               <p>
                 {thirdPartyName} is requesting grant for an unlimited amount
               </p>
-            )}
+            ) : undefined}
           </div>
         </div>
         <div className='row mt-2'>
@@ -238,6 +258,7 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
     //TODO returnUrl: 'http://localhost:3030/mock-idp/consent?interactid=demo-interact-id&nonce=demo-interact-nonce',
     accesses: null,
     outgoingPaymentAccess: null,
+    subjectId: null,
     price: null,
     costToUser: null,
     errors: new Array<Error>()
@@ -292,21 +313,21 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
               ...ctx,
               errors: response.errors.map((e) => new Error(e))
             })
-          } else if (!response.payload) {
+          } else if (!response.payload.access && !response.payload.subject) {
             setCtx({
               ...ctx,
-              errors: [new Error('no accesses in grant')]
+              errors: [new Error('no accesses or subjects in grant')]
             })
           } else {
             const outgoingPaymentAccess =
-              response.payload.find(
+              response.payload.access.find(
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (p: Record<string, any>) => p.type === 'outgoing-payment'
               ) || null
             const returnUrlObject = new URL(ctx.returnUrl)
             returnUrlObject.searchParams.append(
               'grantId',
-              outgoingPaymentAccess.grantId
+              response.payload.grantId
             )
             returnUrlObject.searchParams.append(
               'thirdPartyName',
@@ -334,17 +355,25 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
                 outgoingPaymentAccess?.limits?.receiveAmount?.assetScale ??
                 null
             )
-            returnUrlObject.searchParams.append(
-              'amountType',
-              outgoingPaymentAccess?.limits?.receiveAmount
-                ? AmountType.RECEIVE
-                : outgoingPaymentAccess?.limits?.debitAmount
-                  ? AmountType.DEBIT
-                  : AmountType.UNLIMITED
-            )
+            if (outgoingPaymentAccess) {
+              returnUrlObject.searchParams.append(
+                'amountType',
+                outgoingPaymentAccess.limits?.receiveAmount
+                  ? AmountType.RECEIVE
+                  : outgoingPaymentAccess.limits?.debitAmount
+                    ? AmountType.DEBIT
+                    : AmountType.UNLIMITED
+              )
+            }
+
+            const subjectId = response.payload.subject?.sub_ids[0]?.id ?? null
+            if (subjectId) {
+              returnUrlObject.searchParams.append('subjectId', subjectId)
+            }
             setCtx({
               ...ctx,
-              accesses: response.payload,
+              accesses: response.payload.access,
+              subjectId,
               outgoingPaymentAccess: outgoingPaymentAccess,
               thirdPartyName: ctx.thirdPartyName,
               thirdPartyUri: ctx.thirdPartyUri,
@@ -433,11 +462,13 @@ export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
               <ConsentScreenBody
                 _thirdPartyUri={ctx.thirdPartyUri}
                 thirdPartyName={ctx.thirdPartyName}
+                accesses={ctx.accesses}
                 price={ctx.price}
                 costToUser={ctx.costToUser}
                 interactId={ctx.interactId}
                 nonce={ctx.nonce}
                 returnUrl={ctx.returnUrl}
+                subjectId={ctx.subjectId}
               />
             )}
           </>

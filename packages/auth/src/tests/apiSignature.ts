@@ -5,9 +5,10 @@ export function generateApiSignature(
   secret: string,
   version: number,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  body: any
+  body: any,
+  timestampOverride?: number
 ): string {
-  const timestamp = Date.now()
+  const timestamp = timestampOverride ?? Date.now()
   const payload = `${timestamp}.${canonicalize(body)}`
   const hmac = createHmac('sha256', secret)
   hmac.update(payload)

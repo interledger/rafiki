@@ -62,6 +62,7 @@ export async function setupFromSeed(
     depositAssetLiquidity,
     setFee,
     createPeer,
+    updatePeer,
     depositPeerLiquidity,
     createAutoPeer,
     createWalletAddress,
@@ -102,12 +103,30 @@ export async function setupFromSeed(
     : config.publicHost
 
   for (const peer of config.seed.peers) {
+    let peerStaticIlpAddress
+    // If peer needs to be unreachable, we need to use the staticIlpAddress without the `unreachable` segment in order to get the correct existing peer if any
+    const isUnreachablePeer = peer.peerIlpAddress.includes('unreachable.')
+    if (isUnreachablePeer) {
+      peerStaticIlpAddress = peer.peerIlpAddress.replace('unreachable.', '')
+    } else {
+      peerStaticIlpAddress = peer.peerIlpAddress
+    }
+
     const existingPeer = await getPeerByAddressAndAsset(
-      peer.peerIlpAddress,
+      peerStaticIlpAddress,
       assets[peeringAsset].id
     )
 
-    if (existingPeer && existingPeer.staticIlpAddress === peer.peerIlpAddress) {
+    if (
+      existingPeer &&
+      existingPeer.staticIlpAddress === peerStaticIlpAddress
+    ) {
+      // Needed for refreshing routes and staticIlpAddress when changed in seed (when going back and forth from multihop mode)
+      await updatePeer({
+        id: existingPeer.id,
+        staticIlpAddress: peer.peerIlpAddress,
+        routes: peer.routes || []
+      })
       continue
     }
 
@@ -116,9 +135,11 @@ export async function setupFromSeed(
       peer.peerUrl,
       assets[peeringAsset].id,
       peer.name,
+      peer.routes || [],
       peer.liquidityThreshold,
       peer.tokens.incoming,
-      peer.tokens.outgoing
+      peer.tokens.outgoing,
+      peer.maxPacketAmount
     ).then((response) => response.peer || null)
 
     if (!newPeer) {

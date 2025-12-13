@@ -1,5 +1,38 @@
 name: hl
 services:
+  happy-life-bank-point-of-sale: 
+    hostname: happy-life-bank-point-of-sale
+    image: rafiki-point-of-sale 
+    build: 
+      context: ../.. 
+      dockerfile: ./packages/point-of-sale/Dockerfile.dev 
+    restart: always 
+    networks: 
+      - rafiki 
+    ports: 
+      - '4008:4008' 
+      - '9233:9229'
+    environment: 
+      NODE_ENV: ${NODE_ENV:-development} 
+      INSTANCE_NAME: HAPPY-LIFE 
+      TRUST_PROXY: ${TRUST_PROXY} 
+      LOG_LEVEL: debug 
+      PORT: 4008 
+      TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
+      TENANT_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
+      WEBHOOK_SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      WEBHOOK_SIGNATURE_VERSION: 1
+      USE_HTTP: true
+    depends_on: 
+      - shared-database
+    healthcheck: 
+      test: ["CMD", "wget", "--spider", "http://localhost:4008/healthz"] 
+      start_period: 60s 
+      start_interval: 5s 
+      interval: 30s 
+      retries: 1 
+      timeout: 3s 
   happy-life-mock-ase:
     hostname: happy-life-bank
     image: rafiki-mock-ase
@@ -63,21 +96,25 @@ services:
       USE_TIGERBEETLE: false
       AUTH_SERVER_GRANT_URL: ${HAPPY_LIFE_BANK_AUTH_SERVER_DOMAIN:-http://happy-life-bank-auth:3006}
       AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-auth:3007
-      AUTH_ADMIN_API_URL: 'http://happy-life-bank-auth:4003/graphql'
-      AUTH_ADMIN_API_SECRET: 'rPoZpe9tVyBNCigm05QDco7WLcYa0xMao7lO5KG1XG4='
       AUTH_SERVICE_API_URL: 'http://happy-life-bank-auth:4011'
       ILP_ADDRESS: test.happy-life-bank
       ILP_CONNECTOR_URL: http://happy-life-bank-backend:4002
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
-      API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964= # webhook signature
+      SIGNATURE_VERSION: 1
+      ADMIN_API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       WEBHOOK_URL: http://happy-life-bank/webhooks
       EXCHANGE_RATES_URL: http://happy-life-bank/rates
       OPEN_PAYMENTS_URL: ${HAPPY_LIFE_BANK_OPEN_PAYMENTS_URL:-https://happy-life-bank-backend}
       REDIS_URL: redis://shared-redis:6379/2
       WALLET_ADDRESS_URL: ${HAPPY_LIFE_BANK_WALLET_ADDRESS_URL:-https://happy-life-bank-backend/.well-known/pay}
       ENABLE_TELEMETRY: true
+      ENABLE_ILP_TIMING_TELEMETRY: true
       KEY_ID: 53f2d913-e98a-40b9-b270-372d0547f23d
       OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
+      CARD_SERVICE_URL: 'http://happy-life-bank-card-service:4007'
+      POS_WEBHOOK_SERVICE_URL: 'http://happy-life-bank-point-of-sale:4008/webhook'
+      WALLET_ADDRESS_NOT_FOUND_POLLING_ENABLED: true
     depends_on:
       - cloud-nine-backend
     healthcheck:
@@ -113,7 +150,7 @@ services:
       IDENTITY_SERVER_URL: http://localhost:3031/mock-idp/
       IDENTITY_SERVER_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
       COOKIE_KEY: 42397d1f371dd4b8b7d0308a689a57c882effd4ea909d792302542af47e2cd37
-      ADMIN_API_SECRET: rPoZpe9tVyBNCigm05QDco7WLcYa0xMao7lO5KG1XG4=
+      ADMIN_API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
       SERVICE_API_PORT: 4011
     depends_on:

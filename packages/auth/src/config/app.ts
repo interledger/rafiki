@@ -57,7 +57,7 @@ export const Config = {
   identityServerUrl: envString('IDENTITY_SERVER_URL'),
   identityServerSecret: envString('IDENTITY_SERVER_SECRET'),
   authServerUrl: envString('AUTH_SERVER_URL'),
-  adminApiSecret: process.env.ADMIN_API_SECRET, // optional
+  adminApiSecret: envString('ADMIN_API_SECRET'),
   adminApiSignatureVersion: envInt('ADMIN_API_SIGNATURE_VERSION', 1),
   adminApiSignatureTtlSeconds: envInt('ADMIN_API_SIGNATURE_TTL_SECONDS', 30),
   waitTimeSeconds: envInt('WAIT_SECONDS', 5),
@@ -80,7 +80,8 @@ export const Config = {
     process.env.REDIS_TLS_KEY_FILE_PATH,
     process.env.REDIS_TLS_CERT_FILE_PATH
   ),
-  operatorTenantId: envString('OPERATOR_TENANT_ID')
+  operatorTenantId: envString('OPERATOR_TENANT_ID'),
+  dbSchema: undefined as string | undefined
 }
 
 function parseRedisTlsConfig(

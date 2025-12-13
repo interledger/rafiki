@@ -55,6 +55,8 @@ export class Peer
 
   public name?: string
 
+  public routes?: string[]
+
   public readonly tenantId!: string
 
   public async onDebit(
@@ -77,7 +79,10 @@ export class Peer
             balance
           },
           tenantId: this.tenantId,
-          webhooks: finalizeWebhookRecipients([this.tenantId], config)
+          webhooks: finalizeWebhookRecipients(
+            { tenantIds: [this.tenantId] },
+            config
+          )
         })
       }
     }

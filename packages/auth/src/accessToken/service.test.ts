@@ -1,5 +1,4 @@
 import nock from 'nock'
-import { Knex } from 'knex'
 import { v4 } from 'uuid'
 import assert from 'assert'
 
@@ -20,24 +19,26 @@ import {
   AccessItem
 } from '@interledger/open-payments'
 import { generateBaseGrant } from '../tests/grant'
+import { TransactionOrKnex } from 'objection'
 import { Tenant } from '../tenant/model'
 import { generateTenant } from '../tests/tenant'
 
 describe('Access Token Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let trx: Knex.Transaction
+  let trx: TransactionOrKnex
   let accessTokenService: AccessTokenService
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     accessTokenService = await deps.use('accessTokenService')
+    trx = appContainer.knex
   })
 
   afterEach(async (): Promise<void> => {
     jest.useRealTimers()
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -175,7 +176,7 @@ describe('Access Token Service', (): void => {
         accessTokenService.introspect(accessToken.value, [
           outgoingPaymentAccess
         ])
-      ).resolves.toEqual({ grant, access: [grant.access[0]] })
+      ).resolves.toEqual({ grant, access: [grant.access?.[0]] })
     })
 
     test('Can introspect active token with partial access actions', async (): Promise<void> => {
@@ -185,7 +186,7 @@ describe('Access Token Service', (): void => {
       }
       await expect(
         accessTokenService.introspect(accessToken.value, [access])
-      ).resolves.toEqual({ grant, access: [grant.access[0]] })
+      ).resolves.toEqual({ grant, access: [grant.access?.[0]] })
     })
 
     test('Introspection only returns requested access', async (): Promise<void> => {

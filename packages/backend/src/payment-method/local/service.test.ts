@@ -20,6 +20,7 @@ import {
   IncomingPayment,
   IncomingPaymentState
 } from '../../open_payments/payment/incoming/model'
+import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/types'
 import { IncomingPaymentService } from '../../open_payments/payment/incoming/service'
 import { errorToMessage, TransferError } from '../../accounting/errors'
 import { PaymentMethodHandlerError } from '../handler/errors'
@@ -284,7 +285,8 @@ describe('LocalPaymentService', (): void => {
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD'], {
           incomingAmount,
-          tenantId: Config.operatorTenantId
+          tenantId: Config.operatorTenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
       }
 

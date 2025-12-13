@@ -1,0 +1,61 @@
+FROM node:20-alpine3.21 AS base
+
+WORKDIR /home/rafiki
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
+RUN corepack enable
+RUN corepack prepare pnpm@8.7.4 --activate
+
+COPY pnpm-lock.yaml ./
+
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm fetch \
+    | grep -v "cross-device link not permitted\|Falling back to copying packages from store"
+
+FROM base AS prod-deps
+
+COPY package.json pnpm-workspace.yaml .npmrc ./
+COPY packages/card-service/package.json ./packages/card-service/package.json
+RUN pnpm clean
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install \
+    --recursive \
+    --prefer-offline \
+    --frozen-lockfile \
+    --prod \
+    | grep -v "cross-device link not permitted\|Falling back to copying packages from store"
+
+FROM base AS builder   
+
+COPY package.json pnpm-workspace.yaml .npmrc tsconfig.json tsconfig.build.json ./
+COPY packages/card-service ./packages/card-service
+
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install \
+    --recursive \
+    --offline \
+    --frozen-lockfile
+RUN pnpm --filter card-service build
+
+FROM node:20-alpine3.21 AS runner
+
+# Since this is from a fresh image, we need to first create the Rafiki user
+RUN adduser -D rafiki
+WORKDIR /home/rafiki
+
+COPY --from=prod-deps /home/rafiki/node_modules ./node_modules
+COPY --from=prod-deps /home/rafiki/packages/card-service/node_modules ./packages/card-service/node_modules
+COPY --from=prod-deps /home/rafiki/packages/card-service/package.json ./packages/card-service/package.json
+
+COPY --from=builder /home/rafiki/packages/card-service/dist ./packages/card-service/dist
+
+USER root
+
+# For additional paranoia, we make it so that the Rafiki user has no write access to the packages
+RUN chown -R :rafiki /home/rafiki/packages
+RUN chmod -R 750 /home/rafiki/packages
+
+USER rafiki
+CMD ["node", "/home/rafiki/packages/card-service/dist/index.js"]

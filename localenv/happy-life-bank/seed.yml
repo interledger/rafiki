@@ -1,38 +1,55 @@
 assets:
   - code: USD
     scale: 2
-    liquidity: 10000000000
-    liquidityThreshold: 100000000
+    liquidity: 2000000000000
+    liquidityThreshold: 10000000
   - code: EUR
     scale: 2
-    liquidity: 10000000000
-    liquidityThreshold: 1000000
+    liquidity: 100000000
+    liquidityThreshold: 10000000
   - code: MXN
     scale: 2
-    liquidity: 10000000000
+    liquidity: 100000000
     liquidityThreshold: 10000000
   - code: JPY
     scale: 0
-    liquidity: 1000000000
-    liquidityThreshold: 1000000
+    liquidity: 1000000
+    liquidityThreshold: 100000
 peeringAsset: 'USD'
 peers:
-  - initialLiquidity: '1000000000000'
+  - initialLiquidity: '100000000000000'
     peerUrl: http://cloud-nine-wallet-backend:3002
     peerIlpAddress: test.cloud-nine-wallet
     liquidityThreshold: 1000000
+    maxPacketAmount: 10000
     tokens:
-      incoming: 
-        - test-USD-cloud-nine-wallet-happy-life-bank
-      outgoing: test-USD-happy-life-bank-cloud-nine-wallet
-  - initialLiquidity: '1000000000000'
+      incoming:
+        - cloud-nine-to-happy
+      outgoing: happy-to-cloud-nine
+    routes:
+      - "test.cloud-nine-wallet"
+  - initialLiquidity: '100000000000000'
     peerUrl: http://cloud-nine-wallet-backend:3002
     peerIlpAddress: test.cloud-nine-wallet.bc293b79-8609-47bd-b914-6438b470aff8
     liquidityThreshold: 1000000
+    maxPacketAmount: 10000
     tokens:
-      incoming: 
-        - test-USD-cloud-ten-wallet-happy-life-bank
-      outgoing: test-USD-happy-life-bank-cloud-ten-wallet
+      incoming:
+        - cloud-ten-to-happy
+      outgoing: happy-to-cloud-ten
+    routes:
+      - "test.cloud-nine-wallet.bc293b79-8609-47bd-b914-6438b470aff8"
+  # Address and routes for this peer MUST remain unchanged when NOT in multihop mode so that cloud-nine/cloud-ten packets aren't routed through global-bank
+  - initialLiquidity: '100000000000000'
+    peerUrl: http://global-bank-backend:3002
+    peerIlpAddress: test.unreachable.global-bank
+    liquidityThreshold: 1000000
+    tokens:
+      incoming:
+        - global-to-happy
+      outgoing: happy-to-global
+    routes: 
+      - "test.unreachable.global-bank"
 accounts:
   - name: 'Philip Fry'
     path: accounts/pfry

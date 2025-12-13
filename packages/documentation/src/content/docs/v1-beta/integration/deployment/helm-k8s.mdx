@@ -1,0 +1,395 @@
+---
+title: Helm & Kubernetes
+slug: v1-beta/integration/deployment/helm-k8s
+---
+
+import { LinkOut } from '@interledger/docs-design-system'
+
+This guide explains how to deploy Rafiki using Helm charts on a Kubernetes cluster. Helm is a package manager for Kubernetes that allows you to define, install, and upgrade complex Kubernetes applications through Helm charts.
+
+Rafiki uses the following key components:
+
+- **Tigerbeetle**: High-performance accounting database used for financial transaction processing and ledger management
+- **PostgreSQL**: Used for storing application data and metadata
+- **Redis**: Used for caching and messaging between components
+
+## Prerequisites
+
+:::caution[Recommended software version]
+We recommended using the latest vendor supported version for each of the software dependencies listed in this section.
+:::
+
+Before you begin, ensure you have the following:
+
+- <LinkOut href='https://kubernetes.io/'>Kubernetes</LinkOut> cluster deployed
+- <LinkOut href='https://kubernetes.io/docs/tasks/tools/'>kubectl</LinkOut>
+  installed and configured
+- <LinkOut href='https://helm.sh/docs/intro/install/'>Helm</LinkOut> installed
+
+## Install Rafiki using Helm
+
+#### Add the Interledger Helm repository
+
+Add the official Interledger Helm repository which contains the Rafiki charts:
+
+```bash
+helm repo add interledger https://interledger.github.io/charts
+helm repo update
+```
+
+#### Create yaml file
+
+Create a `values.yaml` file to customize your Rafiki deployment.
+
+:::note
+A template file is in progress and will be included in this section when published.
+:::
+
+#### Install Rafiki
+
+Install Rafiki using the following command:
+
+```bash
+helm install rafiki interledger/rafiki -f values.yaml
+```
+
+This will deploy all Rafiki components to your Kubernetes cluster with the configurations specified in your `values.yaml` file.
+
+If you want to install to a specific namespace:
+
+```bash
+kubectl create namespace rafiki
+helm install rafiki interledger/rafiki -f values.yaml -n rafiki
+```
+
+#### Verify the deployment
+
+Check the status of your deployment with the following commands:
+
+```bash
+# Check all resources deployed by Helm
+helm status rafiki
+
+# Check the running pods
+kubectl get pods
+
+# Check the deployed services
+kubectl get services
+```
+
+## Configure ingress with NGINX Ingress Controller
+
+:::note
+This example demonstrates ingress using NGINX. The exact steps and commands will differ depending on the product you use for ingress in your Kubernetes environment.
+:::
+
+To expose Rafiki services outside the cluster using NGINX Ingress Controller:
+
+#### Install NGINX Ingress Controller
+
+If you don't already have NGINX Ingress Controller installed, you can install it using Helm:
+
+```bash
+# Add the ingress-nginx repository
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+
+# Install the ingress-nginx controller
+helm install nginx-ingress ingress-nginx/ingress-nginx \
+  --set controller.publishService.enabled=true
+```
+
+Wait for the Load Balancer to be provisioned:
+
+```bash
+kubectl get services -w nginx-ingress-ingress-nginx-controller
+```
+
+#### Configure DNS
+
+Once the Load Balancer has an external IP or hostname assigned, create DNS records:
+
+- `auth.example.com` pointing to the Load Balancer IP/hostname
+- `backend.example.com` pointing to the Load Balancer IP/hostname
+
+:::note
+The example domain and subdomain values are for demonstration purposes only. You must use the actual domain names that you set up with your DNS host.
+:::
+
+#### Apply the configuration
+
+Apply your updated configuration:
+
+```bash
+helm upgrade rafiki interledger/rafiki -f values.yaml
+```
+
+#### Verify ingress configuration
+
+Check if your ingress resources were created correctly:
+
+```bash
+kubectl get ingress
+```
+
+You should find entries for the auth server and backend API ingress resources.
+
+## Port forwarding
+
+If you don't want to use ingress to access Rafiki services, you can use port forwarding to directly access the services:
+
+| Service     | Port-Forward Command                                     |
+| ----------- | -------------------------------------------------------- |
+| Auth Server | `kubectl port-forward svc/rafiki-auth-server 3000:3000`  |
+| Backend API | `kubectl port-forward svc/rafiki-backend-api 3001:3001`  |
+| Admin UI    | `kubectl port-forward svc/rafiki-backend-api 3001:3001`  |
+| PostgreSQL  | `kubectl port-forward svc/rafiki-postgresql 5432:5432`   |
+| Redis       | `kubectl port-forward svc/rafiki-redis-master 6379:6379` |
+
+## Upgrade Rafiki
+
+To upgrade your Rafiki deployment to a newer version:
+
+```bash
+# Update the Helm repository
+helm repo update
+
+# Upgrade Rafiki
+helm upgrade rafiki interledger/rafiki -f values.yaml
+```
+
+## Uninstall Rafiki
+
+To uninstall Rafiki from your cluster:
+
+```bash
+helm uninstall rafiki
+```
+
+Note that this won't delete <LinkOut href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/">Persistent Volume Claims (PVC)</LinkOut> created by the PostgreSQL and Redis deployments. If you want to delete them as well:
+
+```bash
+kubectl delete pvc -l app.kubernetes.io/instance=rafiki
+```
+
+## Troubleshooting
+
+### Check pod logs
+
+If a component isn't working correctly, you can check its logs:
+
+```bash
+# List all pods
+kubectl get pods
+
+# Check logs for a specific pod
+kubectl logs pod/rafiki-auth-server-0
+```
+
+### Check resources and logs
+
+```bash
+# List pods and their status
+kubectl get pods
+
+# Check logs for a specific pod
+kubectl logs pod/rafiki-auth-server-0
+
+# Get details about a pod
+kubectl describe pod/rafiki-auth-server-0
+
+# Check services and their endpoints
+kubectl get services
+
+# Check Persistent Volume Claims
+kubectl get pvc
+
+# Check ingress resources
+kubectl get ingress
+```
+
+## Common issues
+
+#### Database connection errors
+
+1. Check if PostgreSQL pods are running:
+   ```
+   kubectl get pods -l app.kubernetes.io/name=postgresql
+   ```
+2. Check PostgreSQL logs:
+   ```
+   kubectl logs pod/rafiki-postgresql-0
+   ```
+3. Verify that the database passwords match those in your `values.yaml`
+
+#### Tigerbeetle initialization failures
+
+1. Check Tigerbeetle logs:
+   ```
+   kubectl logs pod/tigerbeetle-0
+   ```
+2. Ensure that the PVC for Tigerbeetle has been created correctly
+   ```
+   kubectl get pvc -l app.kubernetes.io/name=tigerbeetle
+   ```
+3. Verify that the cluster ID is consistent across all components
+
+#### Ingress issues
+
+1. Verify NGINX Ingress Controller is running:
+   ```
+   kubectl get pods -n ingress-nginx
+   ```
+2. Check if your DNS records are correctly pointing to the ingress controller's external IP
+3. Check the ingress resource:
+   ```
+   kubectl get ingress
+   ```
+4. Check ingress controller logs:
+   ```
+   kubectl logs -n ingress-nginx deploy/nginx-ingress-ingress-nginx-controller
+   ```
+5. Verify that TLS secrets exist if HTTPS is enabled:
+   ```
+   kubectl get secrets
+   ```
+
+#### TLS certificate problems
+
+1. If using cert-manager, check if certificates are properly issued:
+   ```
+   kubectl get certificates
+   ```
+2. Check certificate status:
+   ```
+   kubectl describe certificate [certificate-name]
+   ```
+3. Check cert-manager logs:
+   ```
+   kubectl logs -n cert-manager deploy/cert-manager
+   ```
+
+#### Service unavailable
+
+1. Check if services are running:
+   ```
+   kubectl get services
+   ```
+2. Verify pod health:
+   ```
+   kubectl describe pod [pod-name]
+   ```
+3. Check for resource constraints:
+   ```
+   kubectl top pods
+   ```
+
+#### Connectivity between components
+
+1. Ensure all required services are running:
+   ```
+   kubectl get services
+   ```
+2. Verify service endpoints:
+   ```
+   kubectl get endpoints
+   ```
+3. Test connectivity between pods using temporary debugging pods:
+   ```
+   kubectl run -it --rm debug --image=busybox -- sh
+   # Inside the pod
+   wget -q -O- http://rafiki-auth-server:3000/health
+   ```
+
+## Security considerations
+
+When deploying Rafiki in production, consider the following security practices:
+
+- **Use secure passwords**: Replace all default passwords with strong, unique passwords
+- **Enable TLS**: Use HTTPS for all external communications
+- **Implement network policies**: Use Kubernetes network policies to restrict traffic between pods
+- **Use RBAC**: Use Kubernetes Role-Based Access Control to limit access to your cluster
+- **Use secrets management**: Consider using a secrets management solution
+- **Perform regular updates**: Keep your Rafiki deployment updated
+
+## Backup and recovery
+
+### Database backup
+
+#### PostgreSQL backup
+
+To create a backup of your PostgreSQL database:
+
+```bash
+# Forward PostgreSQL port to local machine
+kubectl port-forward svc/rafiki-postgresql 5432:5432
+
+# Use pg_dump to create a backup
+pg_dump -h localhost -U rafiki -d rafiki > rafiki_pg_backup.sql
+```
+
+#### Tigerbeetle backup
+
+Tigerbeetle is designed to be fault-tolerant with its replication mechanism. However, to create a backup of Tigerbeetle data, you can use the following approach:
+
+```bash
+# Create a snapshot of the Tigerbeetle PVC
+kubectl get pvc tigerbeetle-data-tigerbeetle-0 -o yaml > tigerbeetle-pvc.yaml
+
+# Create a volume snapshot
+cat <<EOF | kubectl apply -f -
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshot
+metadata:
+  name: tigerbeetle-snapshot
+spec:
+  volumeSnapshotClassName: csi-hostpath-snapclass
+  source:
+    persistentVolumeClaimName: tigerbeetle-data-tigerbeetle-0
+EOF
+```
+
+:::note
+The above example assumes you have a <LinkOut href="https://kubernetes.io/docs/concepts/storage/volumes/#csi">Container Storage Interface (CSI)</LinkOut> driver capable of volume snapshots. Adjust the `volumeSnapshotClassName` according to your cluster setup.
+:::
+
+### Database recovery
+
+#### PostgreSQL recovery
+
+To restore from a PostgreSQL backup:
+
+```bash
+# Forward PostgreSQL port to local machine
+kubectl port-forward svc/rafiki-postgresql 5432:5432
+
+# Use psql to restore from backup
+psql -h localhost -U rafiki -d rafiki < rafiki_pg_backup.sql
+```
+
+#### Tigerbeetle recovery
+
+To restore Tigerbeetle from a snapshot:
+
+```bash wrap
+# Create a new PVC from the snapshot
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tigerbeetle-data-restored
+spec:
+  dataSource:
+    name: tigerbeetle-snapshot
+    kind: VolumeSnapshot
+    apiGroup: snapshot.storage.k8s.io
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+EOF
+
+# Update the Tigerbeetle StatefulSet to use the restored PVC
+kubectl patch statefulset tigerbeetle -p '{"spec":{"template":{"spec":{"volumes":[{"name":"data","persistentVolumeClaim":{"claimName":"tigerbeetle-data-restored"}}]}}}}'
+```

@@ -12,8 +12,7 @@ import {
   UpdateContext,
   DeleteContext,
   TenantRoutes,
-  createTenantRoutes,
-  GetContext
+  createTenantRoutes
 } from './routes'
 import { TenantService } from './service'
 import { Tenant } from './model'
@@ -37,65 +36,18 @@ describe('Tenant Routes', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
   })
 
-  describe('get', (): void => {
-    test('Gets a tenant', async (): Promise<void> => {
-      const tenant = await Tenant.query().insert({
-        id: v4(),
-        idpConsentUrl: 'https://example.com/consent',
-        idpSecret: 'secret123'
-      })
-
-      const ctx = createContext<GetContext>(
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-          }
-        },
-        {
-          id: tenant.id
-        }
-      )
-
-      await expect(tenantRoutes.get(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(200)
-      expect(ctx.body).toEqual({
-        id: tenant.id,
-        idpConsentUrl: tenant.idpConsentUrl,
-        idpSecret: tenant.idpSecret
-      })
-    })
-
-    test('Returns 404 when getting non-existent tenant', async (): Promise<void> => {
-      const ctx = createContext<GetContext>(
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-          }
-        },
-        {
-          id: v4()
-        }
-      )
-
-      await expect(tenantRoutes.get(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(404)
-      expect(ctx.body).toBeUndefined()
-    })
-  })
-
   describe('create', (): void => {
     test('Creates a tenant', async (): Promise<void> => {
       const tenantData = {
         id: v4(),
+        apiSecret: v4(),
         idpConsentUrl: 'https://example.com/consent',
         idpSecret: 'secret123'
       }
@@ -117,6 +69,7 @@ describe('Tenant Routes', (): void => {
 
       const tenant = await Tenant.query().findById(tenantData.id)
       expect(tenant).toBeDefined()
+      expect(tenant?.apiSecret).toBe(tenantData.apiSecret)
       expect(tenant?.idpConsentUrl).toBe(tenantData.idpConsentUrl)
       expect(tenant?.idpSecret).toBe(tenantData.idpSecret)
     })
@@ -126,11 +79,13 @@ describe('Tenant Routes', (): void => {
     test('Updates a tenant', async (): Promise<void> => {
       const tenant = await Tenant.query().insert({
         id: v4(),
+        apiSecret: v4(),
         idpConsentUrl: 'https://example.com/consent',
         idpSecret: 'secret123'
       })
 
       const updateData = {
+        apiSecret: v4(),
         idpConsentUrl: 'https://example.com/new-consent',
         idpSecret: 'newSecret123'
       }
@@ -153,6 +108,7 @@ describe('Tenant Routes', (): void => {
       expect(ctx.body).toBe(undefined)
 
       const updatedTenant = await Tenant.query().findById(tenant.id)
+      expect(updatedTenant?.apiSecret).toBe(updateData.apiSecret)
       expect(updatedTenant?.idpConsentUrl).toBe(updateData.idpConsentUrl)
       expect(updatedTenant?.idpSecret).toBe(updateData.idpSecret)
     })
@@ -182,6 +138,7 @@ describe('Tenant Routes', (): void => {
     test('Deletes a tenant', async (): Promise<void> => {
       const tenant = await Tenant.query().insert({
         id: v4(),
+        apiSecret: v4(),
         idpConsentUrl: 'https://example.com/consent',
         idpSecret: 'secret123'
       })

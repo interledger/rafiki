@@ -46,7 +46,7 @@ describe('Grant Service', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -159,6 +159,7 @@ describe('Grant Service', (): void => {
           type: AccessType.IncomingPayment
         })
       })
+
       test.each`
         type                          | expectedState          | interact
         ${AccessType.IncomingPayment} | ${GrantState.Approved} | ${undefined}
@@ -199,6 +200,28 @@ describe('Grant Service', (): void => {
           })
         }
       )
+
+      it('create a grant with subject in pending state', async () => {
+        const grantRequest: GrantRequest = {
+          ...BASE_GRANT_REQUEST,
+          subject: {
+            sub_ids: [
+              {
+                id: faker.internet.url(),
+                format: 'uri'
+              }
+            ]
+          }
+        }
+
+        const grant = await grantService.create(grantRequest, tenant.id)
+
+        expect(grant).toMatchObject({
+          state: GrantState.Pending,
+          continueId: expect.any(String),
+          continueToken: expect.any(String)
+        })
+      })
     })
 
     describe('pending', (): void => {
@@ -311,11 +334,54 @@ describe('Grant Service', (): void => {
       })
     })
 
-    describe('getByIdWithAccess', (): void => {
+    describe('getByIdWithAccessAndSubject', (): void => {
       test('Can fetch a grant by id with access', async () => {
-        const fetchedGrant = await grantService.getByIdWithAccess(grant.id)
+        const grantRequest: GrantRequest = {
+          ...BASE_GRANT_REQUEST,
+          subject: {
+            sub_ids: [
+              {
+                id: faker.internet.url(),
+                format: 'uri'
+              }
+            ]
+          },
+          access_token: {
+            access: [
+              {
+                ...BASE_GRANT_ACCESS,
+                type: AccessType.IncomingPayment
+              }
+            ]
+          }
+        }
+
+        const grant = await grantService.create(grantRequest, tenant.id)
+        expect(grant?.id).toBeDefined()
+
+        const fetchedGrant = await grantService.getByIdWithAccessAndSubject(
+          grant.id
+        )
+        expect(fetchedGrant?.id).toEqual(grant.id)
+        expect(fetchedGrant?.subjects?.length).toBeGreaterThan(0)
+        expect(fetchedGrant?.access?.length).toBeGreaterThan(0)
+      })
+
+      test('Can filter by tenantId', async () => {
+        const fetchedGrant = await grantService.getByIdWithAccessAndSubject(
+          grant.id,
+          grant.tenantId
+        )
         expect(fetchedGrant?.id).toEqual(grant.id)
         expect(fetchedGrant?.access?.length).toBeGreaterThan(0)
+      })
+
+      test('Returns undefined if incorrect tenantId', async () => {
+        const fetchedGrant = await grantService.getByIdWithAccessAndSubject(
+          grant.id,
+          v4()
+        )
+        expect(fetchedGrant).toBeUndefined()
       })
     })
 
@@ -423,18 +489,33 @@ describe('Grant Service', (): void => {
     const walletAddress = 'example.com/test'
 
     beforeEach(async () => {
+      const secondTenant = await Tenant.query().insertAndFetch(generateTenant())
       const grantDetails = [
         {
           identifier: walletAddress,
           state: GrantState.Finalized,
-          finalizationReason: GrantFinalization.Revoked
+          finalizationReason: GrantFinalization.Revoked,
+          tenantId: tenant.id
         },
-        { identifier: walletAddress, state: GrantState.Pending },
-        { identifier: 'example.com/test3', state: GrantState.Pending }
+        {
+          identifier: walletAddress,
+          state: GrantState.Pending,
+          tenantId: tenant.id
+        },
+        {
+          identifier: 'example.com/test3',
+          state: GrantState.Pending,
+          tenantId: secondTenant.id
+        }
       ]
 
-      for (const { identifier, state, finalizationReason } of grantDetails) {
-        const grant = await createGrant(deps, tenant.id, { identifier })
+      for (const {
+        identifier,
+        state,
+        finalizationReason,
+        tenantId
+      } of grantDetails) {
+        const grant = await createGrant(deps, tenantId, { identifier })
         const updatedGrant = await grant
           .$query()
           .patchAndFetch({ state, finalizationReason })
@@ -541,6 +622,18 @@ describe('Grant Service', (): void => {
           expect(fetchedGrants.length).toBe(2)
         })
       })
+    })
+
+    test('Can filter by tenantId', async (): Promise<void> => {
+      const page = await grantService.getPage(
+        undefined,
+        undefined,
+        undefined,
+        tenant.id
+      )
+
+      expect(page.length).toBe(2)
+      expect(page.every((result) => result.tenantId === tenant.id)).toBeTruthy()
     })
   })
 })

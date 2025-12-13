@@ -1,0 +1,143 @@
+---
+title: Identity provider (IdP)
+slug: v1-beta/integration/requirements/open-payments/idp
+---
+
+import { Badge, Steps } from '@astrojs/starlight/components'
+import { LinkOut } from '@interledger/docs-design-system'
+
+An identity provider (IdP) is a system or service that stores and manages user identity information, authentication, and consent. Examples of IdPs include OpenID Connect and Okta.
+
+Open Payments requires any authorization server that issues interactive grants be integrated with an IdP. Interactive grants are used to gather consent. More information about interactive grants is available [below](#interactive-grants).
+
+Responsibilities of your IdP include:
+
+- Providing an interface to gather end-user consent for a particular action
+- Sending the interaction choice (approve or deny) to the authorization server
+- Sending a request to the authorization server to finish the interaction
+- Redirecting the user after the interaction is complete
+
+:::note
+We provide Ory Kratos, a cloud-based user management system, for the identity and user management of your Rafiki Admin users. Kratos is for internal use only and **cannot** be used as your IdP for Open Payments.
+:::
+
+## Interactive grants
+
+In Open Payments, grants indicate a resource owner, such as an account holder, has given a piece of software, such as a mobile app, permission (consent) to act on their behalf.
+
+Rafiki's implementation of an Open Payments authorization server requires that consent is collected via an interactive grant before an <LinkOut href="https://openpayments.dev/concepts/resources/#outgoing-payment">outgoing payment</LinkOut> request is issued. A grant is interactive when explicit interaction by a resource owner (for example, the software's end user) is required to approve or deny the grant. Tapping an _Approve_ button to authorize a payment is an example of an explicit interaction.
+
+Interactive grants can be optional for incoming payments and quotes; however, they're enabled by default in Rafiki (the `LIST_ALL_ACCESS_INTERACTION` environment variable is `true`). When a grant request includes a `list-all` action for incoming payments and quotes, the request requires interaction. The `list-all` action is used when the client asks to list resources that it did not create.
+
+If `LIST_ALL_ACCESS_INTERACTION` is `false`, you can still force interactive grants for quotes and/or incoming payments by setting the respective variables to `true`.
+
+- `QUOTE_INTERACTION`
+- `INCOMING_PAYMENT_INTERACTION`
+
+See the <LinkOut href="https://openpayments.dev/identity/grants/">Open Payments documentation</LinkOut> for more information on grant negotiation and authorization.
+
+## Authorization servers
+
+Authorization servers grant permission to clients to access the Open Payments Resource APIs. This enables clients to create incoming payments, quotes, and outgoing payments against an account holder's account.
+
+Rafiki's [auth service](/v1-beta/integration/deployment/services/auth-service) provides you with a reference implementation of an Open Payments authorization server. You can use the service as an alternative to developing your own in-house service.
+
+Rafiki's authorization server also extends an [API](#interaction-endpoints) that provides interaction endpoints for your IdP.
+
+### Environment variables
+
+The following variables must be configured for the `auth` service.
+
+<div class="overflow-table wide-column">
+
+| Variable                       | Helm value name                    | Default | Description                                                                                                                                                                                                                                                                                                          |
+| ------------------------------ | ---------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `IDENTITY_SERVER_URL`          | `auth.identityServer.domain`       | N/A     | The URL of your IdP's server, used by the authorization server to inform an Open Payments client of where to redirect the end-user to start interactions.                                                                                                                                                            |
+| `IDENTITY_SERVER_SECRET`       | `auth.identityServer.secret`       | N/A     | A shared secret between the authorization server and the IdP server; the authorization server uses the secret to secure its IdP-related endpoints.<br />When the IdP server sends requests to the authorization server, the IdP server must provide the secret via an [`x-idp-secret`](#x-idp-secret-header) header. |
+| `INCOMING_PAYMENT_INTERACTION` | `auth.interaction.incomingPayment` | `false` | Indicates whether incoming payments grant requests are interactive.                                                                                                                                                                                                                                                  |
+| `INTERACTION_EXPIRY_SECONDS`   | `auth.interactionExpirySeconds`    | `600`   | The time in seconds for which a user can interact with a grant request                                                                                                                                                                                                                                               |
+| `INTERACTION_PORT`             | `auth.port.interaction`            | `3009`  | The port number for the [interaction endpoints](#interaction-endpoints)                                                                                                                                                                                                                                              |
+| `LIST_ALL_ACCESS_INTERACTION`  | N/A                                | `true`  | Specifies whether grant requests including a `list-all` action should require interaction. In these requests, the client asks to list resources that they themselves did not create.                                                                                                                                 |
+| `QUOTE_INTERACTION`            | `auth.interaction.quote`           | `false` | When `true`, quote grants are interactive.                                                                                                                                                                                                                                                                           |
+
+</div>
+
+## Interaction endpoints
+
+The authorization server provided by Rafiki's `auth` service extends an API for an IdP server to use after a pending grant request is created.
+
+Each interaction with an endpoint is identified by an `id` and a `nonce`. Both are provided as query parameters when the authorization server redirects to the IdP server.
+
+The endpoints are tied to the auth server URL. For example, if your auth server URL is `https://auth.wallet.example.com`, then calling the `/interact/{id}/{nonce}` endpoint to start a user interaction session would look as follows:
+
+```
+https://auth.wallet.example.com/interact/{id}/{nonce}
+```
+
+### Interaction endpoints
+
+The endpoints are called in the sequence listed below.
+
+<div class="overflow-table">
+
+| Method                                                | Endpoint                        | Purpose                                                           | Called by            | Publicly exposed |
+| ----------------------------------------------------- | ------------------------------- | ----------------------------------------------------------------- | -------------------- | ---------------- |
+| <Badge text="GET" variant="note" size="medium" />     | `/interact/{id}/{nonce}`        | [Start user interaction session](#start-user-interaction-session) | Open Payments client | Yes              |
+| <Badge text="GET" variant="note" size="medium" />     | `/grant/{id}/{nonce}`           | [Look up grant information](#look-up-grant-information)           | Identity provider    | No               |
+| <Badge text="POST" variant="success" size="medium" /> | `/grant/{id}/{nonce}/{choice}`  | [Accept or reject grant](#accept-or-reject-grant)                 | Identity provider    | No               |
+| <Badge text="GET" variant="note" size="medium" />     | `/interact/{id}/{nonce}/finish` | [Finish user interaction](#finish-interaction)                    | Identity provider    | Yes              |
+| <Badge text="POST" variant="success" size="medium" /> | `/interact/{id}/{nonce}`        | [Continue grant](#continue-grant)                                 | Open Payments client | Yes              |
+
+</div>
+
+We also provide an <LinkOut href="https://github.com/interledger/rafiki/blob/main/packages/auth/src/openapi/specs/id-provider.yaml">OpenAPI specification</LinkOut> that describes the endpoints. Note that the _Continue grant_ endpoint is not included in the spec because it's part of the <LinkOut href="https://openpayments.dev/apis/auth-server/operations/post-continue/">Open Payments Auth Server API</LinkOut>.
+
+#### Start user interaction session
+
+Called by the client to establish an interactive session with the authorization server. The authorization server automatically redirects the request, via the URL defined in the `IDENTITY_SERVER_URL` variable, to your IdP consent screen.
+
+#### Look up grant information
+
+Called by the IdP server to retrieve a list of access rights, requested by the client, from the authorization server. The request is secured with an [`x-idp-secret`](#x-idp-secret-header) header. The access rights are presented to the client's end-user on the consent screen. The authorization server's response is served on your configured `INTERACTION_PORT`.
+
+#### Accept or reject grant
+
+The IdP server communicates the choice made by the end-user on the consent screen (accept/reject) to the authorization server. The request is secured with an [`x-idp-secret`](#x-idp-secret-header) header. The authorization server responds to the IdP server, acknowledging that it received the request.
+
+#### Finish interaction
+
+Called by the IdP server to end the interaction. If a `finish` URI was provided in the original grant initialization request, the authorization server redirects the user to that URI.
+
+The `result` query parameter in the response indicates the success or failure of the grant authorization. The following are examples of the possible response types.
+
+<div class="overflow-table wider-column">
+
+| Response | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Example                                                                                                                          |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| Rejected | The end-user rejected the interaction                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | `?result=grant_rejected`                                                                                                         |
+| Invalid  | The grant was not in a state where it could be accepted or rejected (for example, the grant was already approved)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `?result=grant_invalid`                                                                                                          |
+| Success  | The grant was successful with the following returned in the response:<br /><ul><li>A hash representing the SHA-256 hash of values provided by the client in the <LinkOut href="https://openpayments.dev/apis/auth-server/operations/post-request/">grant initialization request</LinkOut> (`interact.finish.nonce`), and the values in the response returned from the authorization server (`interact.finish`).</li><li>The `interact_ref` that identifies the interaction on the authorization server alongside the hash</li><li>The URI of the grant initialization request (for example, `https://www.auth-server.com`)</li></ul> | `hash=p28jsq0Y2KK3WS__a42tavNC64ldGTBroywsWxT4md_jZQ1R\HZT8BOWYHcLmObM7XHPAdJzTZMtKBsaraJ64A &interact_ref=4IFWWIKYBC2PQ6U56NL1` |
+
+</div>
+
+When successful, the SHA-256 hash of the interaction is sent in the response to the client, along with an `interact_ref` that identifies the interaction on the authorization server and the URI of the grant initialization request. The client must verify the hash before the client requests the grant to continue.
+
+#### Continue grant
+
+The client requests a grant from the authorization server for an accepted interaction. The authorization server responds with an <LinkOut href="https://openpayments.dev/apis/auth-server/operations/post-continue/">access token</LinkOut>.
+
+## X-idp-secret header
+
+The `x-idp-secret` header is specific to Rafiki's authorization server and is used for requests to the following endpoints:
+
+- `GET /grant/:id/:nonce`
+- `POST /grant/:id/:nonce/accept`
+- `POST /grant/:id/:nonce/reject`
+
+The header's purpose is to secure communications between the IdP and the authorization server. Its value should be a shared secret known to both entities. When the IdP server sends requests to the authorization server, the IdP must provide the secret via this header.
+
+:::note
+If you're running your own authorization server rather than using the server provided by Rafiki, you can add security in any way you see fit. You aren't required to use the `x-idp-secret` header.
+:::
+
+To set up the header, set the `IDENTITY_SERVER_SECRET` variable to a value that is also used to configure your IdP server's requests to the authorization server.

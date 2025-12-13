@@ -9,13 +9,13 @@ exports.up = function (knex) {
       table.foreign('tenantId').references('id').inTable('tenants')
     })
     .then(() => {
-      knex.raw(
+      return knex.raw(
         `UPDATE "incomingPayments" SET "tenantId" = (SELECT id from "tenants" LIMIT 1)`
       )
     })
     .then(() => {
-      knex.schema.alterTable('incomingPayments', function (table) {
-        table.uuid('tenantId').notNullable()
+      return knex.schema.alterTable('incomingPayments', function (table) {
+        table.uuid('tenantId').notNullable().alter()
       })
     })
 }
