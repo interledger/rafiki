@@ -601,6 +601,108 @@ export interface PaymentLimits extends Limits {
   paymentInterval?: Interval
 }
 
+/**
+ * Legacy path: calculates spent amounts from historical payments.
+ * Used when a grant exists with outgoing payments made against it, but there are no
+ * spent amounts records yet (e.g., during migration/deployment).
+ */
+export async function calculateLegacyGrantSpentAmounts(
+  deps: ServiceDependencies,
+  args: {
+    grantId: string
+    trx: TransactionOrKnex
+    paymentLimits?: PaymentLimits
+    excludePaymentId?: string
+  }
+): Promise<{
+  grantTotalDebitAmountValue: bigint
+  grantTotalReceiveAmountValue: bigint
+  intervalDebitAmountValue: bigint | null
+  intervalReceiveAmountValue: bigint | null
+  debitAmountCode: string | null
+  debitAmountScale: number | null
+  receiveAmountCode: string | null
+  receiveAmountScale: number | null
+}> {
+  const { grantId, trx, paymentLimits, excludePaymentId } = args
+
+  const hasInterval = !!paymentLimits?.paymentInterval
+
+  let grantTotalDebitAmountValue = 0n
+  let grantTotalReceiveAmountValue = 0n
+  let intervalDebitAmountValue: bigint | null = hasInterval ? 0n : null
+  let intervalReceiveAmountValue: bigint | null = hasInterval ? 0n : null
+
+  const query = OutgoingPayment.query(deps.knex)
+    .where({ grantId })
+    .withGraphFetched('quote')
+
+  if (excludePaymentId) {
+    query.andWhereNot({ id: excludePaymentId })
+  }
+
+  const grantPayments = await query
+
+  for (const grantPayment of grantPayments) {
+    const asset = await deps.assetService.get(grantPayment.quote.assetId)
+    if (asset) grantPayment.quote.asset = asset
+
+    const addToInterval =
+      paymentLimits?.paymentInterval &&
+      paymentLimits.paymentInterval.contains(
+        DateTime.fromJSDate(grantPayment.createdAt)
+      )
+
+    if (grantPayment.failed) {
+      const totalSent = validateSentAmount(
+        deps,
+        grantPayment,
+        await deps.accountingService.getTotalSent(grantPayment.id)
+      )
+
+      if (totalSent === BigInt(0)) {
+        continue
+      }
+
+      grantTotalDebitAmountValue += totalSent
+      // Estimate delivered amount of failed payment
+      const estimatedReceived =
+        (grantPayment.receiveAmount.value * totalSent) /
+        grantPayment.debitAmount.value
+      grantTotalReceiveAmountValue += estimatedReceived
+
+      if (addToInterval) {
+        intervalDebitAmountValue = (intervalDebitAmountValue ?? 0n) + totalSent
+        intervalReceiveAmountValue =
+          (intervalReceiveAmountValue ?? 0n) + estimatedReceived
+      }
+    } else {
+      grantTotalDebitAmountValue += grantPayment.debitAmount.value
+      grantTotalReceiveAmountValue += grantPayment.receiveAmount.value
+
+      if (addToInterval) {
+        intervalDebitAmountValue =
+          (intervalDebitAmountValue ?? 0n) + grantPayment.debitAmount.value
+        intervalReceiveAmountValue =
+          (intervalReceiveAmountValue ?? 0n) + grantPayment.receiveAmount.value
+      }
+    }
+  }
+
+  const firstPayment = grantPayments.length > 0 ? grantPayments[0] : null
+
+  return {
+    grantTotalDebitAmountValue,
+    grantTotalReceiveAmountValue,
+    intervalDebitAmountValue,
+    intervalReceiveAmountValue,
+    debitAmountCode: firstPayment?.debitAmount.assetCode ?? null,
+    debitAmountScale: firstPayment?.debitAmount.assetScale ?? null,
+    receiveAmountCode: firstPayment?.receiveAmount.assetCode ?? null,
+    receiveAmountScale: firstPayment?.receiveAmount.assetScale ?? null
+  }
+}
+
 async function validateGrantAndAddSpentAmountsToPayment(
   deps: ServiceDependencies,
   args: {
@@ -721,73 +823,21 @@ async function validateGrantAndAddSpentAmountsToPayment(
 
   if (isExistingGrant && !latestSpentAmounts) {
     // Legacy path: calculate spent amounts from historical payments
-    if (hasInterval) {
-      outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue = 0n
-      outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue = 0n
-    }
+    const legacyAmounts = await calculateLegacyGrantSpentAmounts(deps, {
+      grantId: grant.id,
+      trx,
+      paymentLimits,
+      excludePaymentId: payment.id
+    })
 
-    const grantPayments = await OutgoingPayment.query(trx)
-      .where({
-        grantId: grant.id
-      })
-      .andWhereNot({
-        id: payment.id
-      })
-      .withGraphFetched('quote')
-
-    for (const grantPayment of grantPayments) {
-      const asset = await deps.assetService.get(grantPayment.quote.assetId)
-      if (asset) grantPayment.quote.asset = asset
-
-      const addToInterval =
-        paymentLimits.paymentInterval &&
-        paymentLimits.paymentInterval.contains(
-          DateTime.fromJSDate(grantPayment.createdAt)
-        )
-
-      if (grantPayment.failed) {
-        const totalSent = validateSentAmount(
-          deps,
-          payment,
-          await deps.accountingService.getTotalSent(grantPayment.id)
-        )
-
-        if (totalSent === BigInt(0)) {
-          continue
-        }
-
-        outgoingPaymentGrantSpentAmounts.grantTotalDebitAmountValue += totalSent
-        // Estimate delivered amount of failed payment
-        const estimatedReceived =
-          (grantPayment.receiveAmount.value * totalSent) /
-          grantPayment.debitAmount.value
-        outgoingPaymentGrantSpentAmounts.grantTotalReceiveAmountValue +=
-          estimatedReceived
-
-        if (addToInterval) {
-          outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue =
-            (outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue ?? 0n) +
-            totalSent
-          outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue =
-            (outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue ??
-              0n) + estimatedReceived
-        }
-      } else {
-        outgoingPaymentGrantSpentAmounts.grantTotalDebitAmountValue +=
-          grantPayment.debitAmount.value
-        outgoingPaymentGrantSpentAmounts.grantTotalReceiveAmountValue +=
-          grantPayment.receiveAmount.value
-
-        if (addToInterval) {
-          outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue =
-            (outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue ?? 0n) +
-            grantPayment.debitAmount.value
-          outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue =
-            (outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue ??
-              0n) + grantPayment.receiveAmount.value
-        }
-      }
-    }
+    outgoingPaymentGrantSpentAmounts.grantTotalDebitAmountValue =
+      legacyAmounts.grantTotalDebitAmountValue
+    outgoingPaymentGrantSpentAmounts.grantTotalReceiveAmountValue =
+      legacyAmounts.grantTotalReceiveAmountValue
+    outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue =
+      legacyAmounts.intervalDebitAmountValue
+    outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue =
+      legacyAmounts.intervalReceiveAmountValue
   } else {
     // detect if we need to restart interval sum at 0 or continue from last
     const isInIntervalAndFirstPayment = hasInterval
@@ -1238,6 +1288,111 @@ async function getGrantSpentAmounts(
     .first()
 
   if (!latestGrantSpentAmounts) {
+    const isExistingGrant = !!(await OutgoingPaymentGrant.query(
+      deps.knex
+    ).findById(grantId))
+    // Legacy path: payments have been made against grant but there is no
+    // spent amounts record
+    if (isExistingGrant) {
+      let paymentLimits: PaymentLimits | undefined
+
+      if (limits?.interval) {
+        try {
+          const currentInterval = getInterval(limits.interval, new Date())
+          if (!currentInterval?.start || !currentInterval?.end) {
+            deps.logger.warn(
+              { 'limits.interval': limits.interval },
+              'Provided interval does not contain start or end'
+            )
+            return {
+              spentDebitAmount: null,
+              spentReceiveAmount: null
+            }
+          }
+          paymentLimits = {
+            ...limits,
+            paymentInterval: currentInterval
+          }
+        } catch (err) {
+          deps.logger.warn(
+            { err, grantId, limits },
+            'Could not parse interval when trying to get grant spent amounts'
+          )
+          return {
+            spentDebitAmount: null,
+            spentReceiveAmount: null
+          }
+        }
+      }
+
+      const legacyAmounts = await calculateLegacyGrantSpentAmounts(deps, {
+        grantId,
+        trx: deps.knex,
+        paymentLimits
+      })
+
+      // If no payments exist, return null amounts
+      if (
+        !legacyAmounts.debitAmountCode ||
+        !legacyAmounts.debitAmountScale ||
+        !legacyAmounts.receiveAmountCode ||
+        !legacyAmounts.receiveAmountScale
+      ) {
+        deps.logger.warn(
+          { grantId },
+          'Expected to find existing payments for grant'
+        )
+        return {
+          spentDebitAmount: null,
+          spentReceiveAmount: null
+        }
+      }
+
+      if (!limits?.interval) {
+        // No interval - return total amounts
+        return {
+          spentDebitAmount: {
+            value: legacyAmounts.grantTotalDebitAmountValue,
+            assetCode: legacyAmounts.debitAmountCode,
+            assetScale: legacyAmounts.debitAmountScale
+          },
+          spentReceiveAmount: {
+            value: legacyAmounts.grantTotalReceiveAmountValue,
+            assetCode: legacyAmounts.receiveAmountCode,
+            assetScale: legacyAmounts.receiveAmountScale
+          }
+        }
+      } else {
+        // Interval specified - return interval amounts
+        if (
+          !paymentLimits?.paymentInterval?.start ||
+          !paymentLimits?.paymentInterval?.end
+        ) {
+          deps.logger.warn(
+            { 'limits.interval': limits.interval },
+            'Provided interval does not contain start or end'
+          )
+          return {
+            spentDebitAmount: null,
+            spentReceiveAmount: null
+          }
+        }
+
+        return {
+          spentDebitAmount: {
+            value: legacyAmounts.intervalDebitAmountValue ?? BigInt(0),
+            assetCode: legacyAmounts.debitAmountCode,
+            assetScale: legacyAmounts.debitAmountScale
+          },
+          spentReceiveAmount: {
+            value: legacyAmounts.intervalReceiveAmountValue ?? BigInt(0),
+            assetCode: legacyAmounts.receiveAmountCode,
+            assetScale: legacyAmounts.receiveAmountScale
+          }
+        }
+      }
+    }
+
     return {
       spentDebitAmount: null,
       spentReceiveAmount: null

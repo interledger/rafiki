@@ -2920,6 +2920,80 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
+      test('uses legacy path and calculates amounts correctly when grant exists but no spent amounts records', async (): Promise<void> => {
+        grant.limits = {
+          debitAmount: debitAmountOptions
+        }
+        await OutgoingPaymentGrant.query(knex).insert({ id: grant.id })
+
+        const payment1 = await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: BigInt(100),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        const payment2 = await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: BigInt(150),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        assert.ok(!isOutgoingPaymentError(payment1))
+        assert.ok(!isOutgoingPaymentError(payment2))
+
+        // Remove spent amounts records to simulate a grant that existed before
+        // tracking spent amounts via OutgoingPaymentGrantSpentAmounts
+        await OutgoingPaymentGrantSpentAmounts.query(knex)
+          .where('grantId', grant.id)
+          .delete()
+        const spentAmountsBefore = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where('grantId', grant.id)
+          .first()
+        expect(spentAmountsBefore).toBeUndefined()
+
+        const result = await outgoingPaymentService.getGrantSpentAmounts({
+          grantId: grant.id,
+          limits: grant.limits
+        })
+
+        // should calculate from historical payments: 100 + 150 = 250 debit
+        expect(result.spentDebitAmount).not.toBeNull()
+        expect(result.spentReceiveAmount).not.toBeNull()
+        expect(result.spentDebitAmount?.value).toBe(BigInt(250))
+        expect(result.spentDebitAmount?.assetCode).toBe(asset.code)
+        expect(result.spentDebitAmount?.assetScale).toBe(asset.scale)
+        expect(result.spentReceiveAmount?.value).toBe(
+          payment1.quote.receiveAmount.value +
+            payment2.quote.receiveAmount.value
+        )
+        expect(result.spentReceiveAmount?.assetCode).toBe(
+          payment1.quote.receiveAmount.assetCode
+        )
+        expect(result.spentReceiveAmount?.assetScale).toBe(
+          payment1.quote.receiveAmount.assetScale
+        )
+      })
+
       test('returns total grant amounts from latest record', async (): Promise<void> => {
         grant.limits = {
           debitAmount: debitAmountOptions
