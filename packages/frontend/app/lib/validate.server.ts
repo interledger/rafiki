@@ -134,7 +134,8 @@ export const updateWalletAddressSchema = z
 export const updateTenantGeneralSchema = z
   .object({
     publicName: z.string().optional(),
-    email: z.string().email().or(z.literal(''))
+    email: z.string().email().or(z.literal('')),
+    walletAddressPrefix: z.string().url().or(z.literal(''))
   })
   .merge(uuidSchema)
 
@@ -159,7 +160,7 @@ export const tenantSettingsSchema = z.object({
   webhookUrl: z.string().url().or(z.literal('')).optional(),
   webhookTimeout: z.coerce.number().or(z.literal('')).optional(),
   webhookMaxRetry: z.coerce.number().or(z.literal('')).optional(),
-  walletAddressUrl: z.string().or(z.literal('')).optional(),
+  walletAddressPrefix: z.string().url().or(z.literal('')),
   ilpAddress: z.string().optional()
 })
 

@@ -47,9 +47,9 @@ import { GraphQLErrorCode } from '../errors'
 import { AssetService } from '../../asset/service'
 import { faker } from '@faker-js/faker'
 import { Tenant } from '../../tenants/model'
-import { createTenantSettings } from '../../tests/tenantSettings'
-import { TenantSettingKeys } from '../../tenants/settings/model'
 import { createTenant } from '../../tests/tenant'
+import { TenantService } from '../../tenants/service'
+import { isTenantError } from '../../tenants/errors'
 
 describe('Wallet Address Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -57,6 +57,8 @@ describe('Wallet Address Resolvers', (): void => {
   let knex: Knex
   let walletAddressService: WalletAddressService
   let assetService: AssetService
+  let tenantService: TenantService
+  let prefix: string
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
@@ -67,6 +69,14 @@ describe('Wallet Address Resolvers', (): void => {
     knex = appContainer.knex
     walletAddressService = await deps.use('walletAddressService')
     assetService = await deps.use('assetService')
+    tenantService = await deps.use('tenantService')
+    const tenant = await tenantService.update({
+      id: Config.operatorTenantId,
+      walletAddressPrefix: 'https://alice.me'
+    })
+    assert.ok(!isTenantError(tenant))
+    assert.ok(tenant.walletAddressPrefix)
+    prefix = tenant.walletAddressPrefix
   })
 
   afterEach(async (): Promise<void> => {
@@ -78,17 +88,7 @@ describe('Wallet Address Resolvers', (): void => {
     await appContainer.shutdown()
   })
 
-  beforeEach(async () => {
-    await createTenantSettings(deps, {
-      tenantId: Config.operatorTenantId,
-      setting: [
-        {
-          key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
-          value: 'https://alice.me'
-        }
-      ]
-    })
-  })
+  beforeEach(async () => {})
 
   describe('Create Wallet Address', (): void => {
     let asset: Asset
@@ -99,7 +99,7 @@ describe('Wallet Address Resolvers', (): void => {
       input = {
         assetId: asset.id,
         tenantId: Config.operatorTenantId,
-        address: 'https://alice.me/.well-known/pay'
+        address: `${prefix}/.well-known/pay`
       }
     })
 
@@ -396,22 +396,15 @@ describe('Wallet Address Resolvers', (): void => {
 
     test('Operator can perform cross tenant create', async (): Promise<void> => {
       // Setup non-tenant operator and form request for it from operator
-      const nonOperatorTenant = await createTenant(deps)
+      const nonOperatorTenant = await createTenant(deps, {
+        walletAddressPrefix: 'https://bob.me'
+      })
       const asset = await createAsset(deps, {
         assetOptions: {
           code: 'xyz',
           scale: 2
         },
         tenantId: nonOperatorTenant.id
-      })
-      await createTenantSettings(deps, {
-        tenantId: nonOperatorTenant.id,
-        setting: [
-          {
-            key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
-            value: 'https://bob.me'
-          }
-        ]
       })
 
       const input = {
@@ -806,7 +799,8 @@ describe('Wallet Address Resolvers', (): void => {
           publicName: 'test tenant new',
           email: faker.internet.email(),
           idpConsentUrl: faker.internet.url(),
-          idpSecret: 'test-idp-secret-new'
+          idpSecret: 'test-idp-secret-new',
+          walletAddressPrefix: 'https://charlie.me'
         }
         const newTenant = await Tenant.query(knex).insertAndFetch(tenantOptions)
         const newAsset = await assetService.create({
@@ -815,20 +809,10 @@ describe('Wallet Address Resolvers', (): void => {
           tenantId: newTenant!.id
         })
 
-        await createTenantSettings(deps, {
-          tenantId: newTenant.id,
-          setting: [
-            {
-              key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
-              value: 'https://alice.me'
-            }
-          ]
-        })
-
         const newWalletAddress = await walletAddressService.create({
           assetId: (newAsset as Asset).id,
           tenantId: newTenant!.id,
-          address: 'https://alice.me/.well-known/pay-2'
+          address: 'https://charlie.me/.well-known/pay-2'
         })
         const id = (newWalletAddress as WalletAddressModel).id
 
