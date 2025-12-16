@@ -529,6 +529,8 @@ export type DepositEventLiquidityInput = {
 };
 
 export type DepositOutgoingPaymentLiquidityInput = {
+  /** Data to be encrypted and sent to the receiver. */
+  dataToTransmit?: InputMaybe<Scalars['String']['input']>;
   /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey: Scalars['String']['input'];
   /** Unique identifier of the outgoing payment to deposit liquidity into. */
