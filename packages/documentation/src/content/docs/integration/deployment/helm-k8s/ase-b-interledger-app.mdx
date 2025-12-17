@@ -1,0 +1,469 @@
+---
+title: Deploy ASE B using Interledger App Wallet
+description: Step-by-step guide to deploy a Rafiki instance and the Interledger App Wallet application (ASE B) on a Kubernetes cluster using the public Interledger Helm charts.
+---
+
+import { LinkOut } from '@interledger/docs-design-system'
+
+This guide shows how Account Servicing Entity B (**ASE B**) can deploy:
+
+- A **Rafiki** instance (auth, backend, frontend)
+- The **Interledger App Wallet** (container images are available from `ghcr.io/interledger`)
+
+to a **Kubernetes cluster** (on any cloud provider) using the **public Interledger Helm charts**.
+
+For the overall system design, refer to the [Peered Rafiki Instances Architecture](/integration/deployment/helm-k8s/peered-rafiki-architecture).
+
+## 1. Prerequisites
+
+- Access to a **cloud provider account** (AWS, Google Cloud, Azure) or on-premises infrastructure with permissions to create a Kubernetes cluster.
+- Permissions to create:
+  - Kubernetes clusters,
+  - Kubernetes namespaces,
+  - Load balancers / ingress resources,
+  - DNS records for your domain.
+- Local tooling:
+  - <LinkOut href='https://kubernetes.io/docs/tasks/tools/'>kubectl</LinkOut> installed
+    and configured to access your cluster
+  - <LinkOut href='https://helm.sh/docs/intro/install/'>Helm 3+</LinkOut> installed
+
+Source code and charts (for reference and customization):
+
+- Rafiki: <LinkOut href='https://github.com/interledger/rafiki'>github.com/interledger/rafiki</LinkOut>
+- Interledger App Wallet: Container images are available from `ghcr.io/interledger`
+- Helm charts: <LinkOut href='https://github.com/interledger/charts'>github.com/interledger/charts</LinkOut>
+
+## 2. Create the Kubernetes cluster for ASE B
+
+Create a Kubernetes cluster on your preferred cloud provider or on-premises. The exact commands vary by provider:
+
+**Example for Google Cloud Platform (GKE):**
+
+```bash
+gcloud container clusters create ase-b-cluster \
+  --num-nodes=3 \
+  --machine-type=e2-standard-4
+gcloud container clusters get-credentials ase-b-cluster
+```
+
+Choose a cluster name appropriate for your environment, for example:
+
+- **Cluster name**: `ase-b-cluster`
+- **Region**: Choose a region suitable for your deployment
+
+Verify cluster access:
+
+```bash
+kubectl get nodes
+```
+
+## 3. Prepare Kubernetes namespaces and Helm repository
+
+Create Kubernetes namespaces:
+
+```bash
+kubectl create namespace rafiki-ase-b
+kubectl create namespace wallet-ase-b
+```
+
+Add the Interledger Helm repository (if not already added):
+
+```bash
+helm repo add interledger-helm https://interledger.github.io/charts/interledger
+helm repo update
+```
+
+Charts used:
+
+- `interledger-helm/rafiki` for the Rafiki instance
+- `interledger-helm/ilf-wallet-backend` for the Interledger App Wallet backend
+- `interledger-helm/ilf-wallet-frontend` for the Interledger App Wallet frontend
+- `interledger-helm/ilf-wallet-admin` for the Interledger App Wallet admin (optional)
+
+## 4. Deploy infrastructure for Rafiki
+
+### 4.1 Deploy PostgreSQL, Redis, and TigerBeetle
+
+```bash
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo add tigerbeetle https://tigerbeetle.github.io/helm-charts
+helm repo update
+
+helm install rafiki-ase-b-postgres bitnami/postgresql \
+  --namespace rafiki-ase-b \
+  --set auth.username=rafiki_backend \
+  --set auth.password=CHOOSE_STRONG_PASSWORD \
+  --set auth.database=rafiki_backend
+
+helm install rafiki-ase-b-redis bitnami/redis \
+  --namespace rafiki-ase-b \
+  --set auth.enabled=false
+
+helm install rafiki-ase-b-tigerbeetle tigerbeetle/tigerbeetle \
+  --namespace rafiki-ase-b \
+  --set replicaCount=3 \
+  --set persistence.size=20Gi
+```
+
+## 5. Deploy Rafiki for ASE B
+
+Rafiki is deployed using the `rafiki` chart. You configure it via a Helm values file referencing your ingress domain names and database/Redis/TigerBeetle services.
+
+### 5.1 Choose domain names
+
+Decide on domain names and later create DNS records pointing to your ingress IP or load balancer:
+
+- **Rafiki backend**: `rafiki.ase-b.example.com`
+- **Rafiki auth**: `auth.ase-b.example.com`
+- **Rafiki admin UI**: `rafiki-admin.ase-b.example.com`
+
+### 5.2 Create Rafiki values file
+
+Create `rafiki-ase-b.values.yaml`:
+
+```yaml
+fullnameOverride: 'rafiki-ase-b'
+
+imageOverride:
+  repository: ghcr.io/interledger
+
+config:
+  frontend:
+    logLevel: info
+    nodeEnv: production
+    port: 3010
+    signatureVersion: '1'
+    serviceUrls:
+      GRAPHQL_URL: >-
+        http://rafiki-ase-b-backend-service.rafiki-ase-b:3001/graphql
+      OPEN_PAYMENTS_URL: https://rafiki.ase-b.example.com
+
+  auth:
+    shouldCreateSecrets: true
+    nodeEnv: production
+    logLevel: info
+    redisUrl:
+      value: >-
+        redis://rafiki-ase-b-redis-master.rafiki-ase-b:6379
+    databaseUrl:
+      value: >-
+        postgresql://rafiki_auth:CHOOSE_STRONG_PASSWORD@
+        rafiki-ase-b-postgres.rafiki-ase-b:5432/rafiki_auth
+    authServerUrl: 'https://auth.ase-b.example.com'
+    identityServer:
+      domain: 'https://wallet.ase-b.example.com/idp'
+      serverSecret:
+        value: 'REPLACE_ME_ASE_B_IDP_SERVER_SECRET'
+    cookieKey:
+      value: 'REPLACE_ME_ASE_B_AUTH_COOKIE_KEY'
+    tenancy:
+      tenant_id: 'ase-b-tenant'
+    admin:
+      apiSecret:
+        value: 'REPLACE_ME_ASE_B_AUTH_ADMIN_API_SECRET'
+      signatureVersion: '1'
+
+  backend:
+    shouldCreateSecrets: true
+    nodeEnv: production
+    logLevel: info
+    instanceName: 'rafiki-ase-b-instance'
+    useTigerbeetle: true
+    tigerbeetle:
+      clusterId: 0
+      replicaAddresses: >-
+        rafiki-ase-b-tigerbeetle.rafiki-ase-b:4342
+    auth:
+      grantUrl: 'https://auth.ase-b.example.com/gnap'
+      introspectionUrl: 'https://auth.ase-b.example.com/introspect'
+      serviceApiUrl: 'https://auth.ase-b.example.com/admin'
+    rates:
+      url: '' # optional currency exchange service
+    webhook:
+      url: >-
+        http://wallet-ase-b-backend-service.wallet-ase-b:8080/
+        webhooks/rafiki
+      timeout: 200
+    redisUrl:
+      value: >-
+        redis://rafiki-ase-b-redis-master.rafiki-ase-b:6379
+    databaseUrl:
+      value: >-
+        postgresql://rafiki_backend:CHOOSE_STRONG_PASSWORD@
+        rafiki-ase-b-postgres.rafiki-ase-b:5432/rafiki_backend
+    trustProxy: 'true'
+    ilp:
+      host: 'https://rafiki.ase-b.example.com'
+      address: 'test.ase-b'
+      connector: >-
+        http://rafiki-ase-b-backend-service.rafiki-ase-b:3002
+      streamSecret:
+        value: 'REPLACE_ME_ASE_B_STREAM_SECRET_BASE64'
+    slippage: 0.01
+    key:
+      id: 'rafiki-ase-b-key'
+      pvk: '' # or base64 private key
+      mount: '/mnt/keys/pvk.pem'
+    webhookSignatureSecret:
+      value: 'REPLACE_ME_ASE_B_WEBHOOK_SIGNATURE_SECRET'
+    telemetry:
+      enabled: 'false'
+      livenet: 'false'
+    autoPeering:
+      enabled: 'true'
+    tenancy:
+      tenant_id: 'ase-b-tenant'
+    admin:
+      apiSecret:
+        value: 'REPLACE_ME_ASE_B_BACKEND_ADMIN_API_SECRET'
+      signatureVersion: '1'
+
+ingress:
+  backend:
+    enabled: true
+    className: nginx
+    hosts:
+      - host: rafiki.ase-b.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+            service:
+              name: rafiki-ase-b-backend-service
+              port: 3000
+          - path: /ilp
+            pathType: Prefix
+            service:
+              name: rafiki-ase-b-backend-service
+              port: 3002
+  auth:
+    enabled: true
+    className: nginx
+    hosts:
+      - host: auth.ase-b.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+            service:
+              name: rafiki-ase-b-auth-service
+              port: 3006
+  frontend:
+    enabled: true
+    className: nginx
+    hosts:
+      - host: rafiki-admin.ase-b.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+            service:
+              name: rafiki-ase-b-frontend-service
+              port: 3010
+```
+
+:::caution
+Replace all `REPLACE_ME_...` placeholders with strong, unique secrets. For production, store these in your cloud provider's secret management service (AWS Secrets Manager, Azure Key Vault, GCP Secret Manager, etc.) and surface them via Kubernetes secrets rather than inline values.
+:::
+
+### 5.3 Install ingress controller (if needed)
+
+If your cluster does not yet have an ingress controller, install one. For example, using NGINX Ingress Controller:
+
+```bash
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+
+helm install nginx-ingress ingress-nginx/ingress-nginx \
+  --namespace ingress-nginx \
+  --create-namespace \
+  --set controller.publishService.enabled=true
+```
+
+:::note
+Different cloud providers may have their own ingress controllers (for example, AWS Application Load Balancer Controller, Azure Application Gateway Ingress Controller). Adjust the ingress configuration accordingly.
+:::
+
+### 5.4 Install Rafiki
+
+```bash
+helm install rafiki-ase-b interledger-helm/rafiki \
+  --namespace rafiki-ase-b \
+  -f rafiki-ase-b.values.yaml
+
+kubectl get pods -n rafiki-ase-b
+kubectl get svc -n rafiki-ase-b
+kubectl get ingress -n rafiki-ase-b
+```
+
+Get the external IP or hostname:
+
+```bash
+kubectl get ingress -n rafiki-ase-b
+```
+
+Configure DNS for:
+
+- `rafiki.ase-b.example.com`
+- `auth.ase-b.example.com`
+- `rafiki-admin.ase-b.example.com`
+
+pointing to your ingress controller's external IP or load balancer hostname.
+
+## 6. Deploy Interledger App Wallet for ASE B
+
+ASE B deploys the **Interledger App Wallet** using the `ilf-wallet-*` Helm charts. Container images are available from `ghcr.io/interledger`. The Interledger App Wallet integrates with Rafiki via Open Payments APIs.
+
+The Interledger App Wallet is deployed as separate charts:
+
+- `ilf-wallet-backend` – Backend service
+- `ilf-wallet-frontend` – User-facing frontend
+- `ilf-wallet-admin` – Admin interface (optional)
+
+### 6.1 Deploy PostgreSQL and Redis for Interledger App Wallet
+
+```bash
+helm install wallet-ase-b-postgres bitnami/postgresql \
+  --namespace wallet-ase-b \
+  --set auth.username=ilf_wallet \
+  --set auth.password=CHOOSE_STRONG_PASSWORD \
+  --set auth.database=ilf_wallet
+
+helm install wallet-ase-b-redis bitnami/redis \
+  --namespace wallet-ase-b \
+  --set auth.enabled=false
+```
+
+### 6.2 Backend values
+
+Create `interledger-app-wallet-ase-b-backend.values.yaml` based on the chart's `values.yaml` (adjusting for your environment). At a minimum:
+
+- Point the Interledger App Wallet backend to:
+  - Its own database and Redis instances.
+  - The Rafiki ASE B URLs for Open Payments and auth.
+  - Any webhook or currency exchange endpoints you require.
+
+Example (schematic, adapt to the actual schema in the chart's `values.yaml`):
+
+```yaml
+fullnameOverride: 'wallet-ase-b-backend'
+
+config:
+  database:
+    url: >-
+      postgres://ilf_wallet:CHOOSE_STRONG_PASSWORD@
+      wallet-ase-b-postgres.wallet-ase-b:5432/ilf_wallet
+  redis:
+    url: >-
+      redis://wallet-ase-b-redis-master.wallet-ase-b:6379
+  rafiki:
+    backendUrl: 'https://rafiki.ase-b.example.com'
+    authUrl: 'https://auth.ase-b.example.com'
+  http:
+    port: 8080
+  ingress:
+    enabled: false # frontend ingress will expose the public UI; backend may be private
+```
+
+Install the Interledger App Wallet backend:
+
+```bash
+helm install wallet-ase-b-backend interledger-helm/ilf-wallet-backend \
+  --namespace wallet-ase-b \
+  -f interledger-app-wallet-ase-b-backend.values.yaml
+```
+
+### 6.3 Frontend values
+
+Create `interledger-app-wallet-ase-b-frontend.values.yaml`:
+
+```yaml
+fullnameOverride: 'wallet-ase-b-frontend'
+
+config:
+  backend:
+    url: 'http://wallet-ase-b-backend.wallet-ase-b:8080'
+  port: 3000
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: wallet.ase-b.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service:
+            name: wallet-ase-b-frontend
+            port: 3000
+```
+
+Install the Interledger App Wallet frontend:
+
+```bash
+helm install wallet-ase-b-frontend interledger-helm/ilf-wallet-frontend \
+  --namespace wallet-ase-b \
+  -f interledger-app-wallet-ase-b-frontend.values.yaml
+```
+
+### 6.4 Admin values
+
+Create `interledger-app-wallet-ase-b-admin.values.yaml`:
+
+```yaml
+fullnameOverride: 'wallet-ase-b-admin'
+
+config:
+  backend:
+    url: 'http://wallet-ase-b-backend.wallet-ase-b:8080'
+  port: 3001
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: admin.ase-b.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service:
+            name: wallet-ase-b-admin
+            port: 3001
+```
+
+Install the Interledger App Wallet admin service:
+
+```bash
+helm install wallet-ase-b-admin interledger-helm/ilf-wallet-admin \
+  --namespace wallet-ase-b \
+  -f interledger-app-wallet-ase-b-admin.values.yaml
+```
+
+### 6.5 Verify ASE B services
+
+```bash
+kubectl get pods -n wallet-ase-b
+kubectl get svc -n wallet-ase-b
+kubectl get ingress -n wallet-ase-b
+```
+
+Get the external IP or hostname:
+
+```bash
+kubectl get ingress -n wallet-ase-b
+```
+
+Update DNS so that `wallet.ase-b.example.com` and `admin.ase-b.example.com` (if enabled) resolve to your ingress controller's external IP or load balancer hostname.
+
+## 7. Test ASE B
+
+Once DNS and TLS are configured:
+
+1. Visit `https://wallet.ase-b.example.com` and create a test user.
+2. Use Rafiki Admin at `https://rafiki-admin.ase-b.example.com` to:
+   - Create an asset (for example, USD with appropriate scale).
+   - Create a tenant (if not auto-created from configuration).
+   - Create one or more wallet addresses for the user.
+3. (Optional) Use `https://admin.ase-b.example.com` (if enabled) to inspect accounts and configuration.
+4. From the Interledger App Wallet UI, fund the account and perform a payment between two ASE B users to verify the deployment.
+
+When both ASE A and ASE B deployments are running, proceed to:
+
+- [Peer ASE A and ASE B](/integration/deployment/helm-k8s/ase-peering)

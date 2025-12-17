@@ -1,0 +1,557 @@
+---
+title: Peer ASE A and ASE B Rafiki instances
+description: Guide to peering two Rafiki instances (ASE A with Test Wallet and ASE B with Interledger App Wallet) to enable Interledger payments between them.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components'
+import { LinkOut } from '@interledger/docs-design-system'
+
+With **ASE A** (using Test Wallet) and **ASE B** (using Interledger App Wallet) deployed on their own Kubernetes clusters, this guide explains how to:
+
+- **Expose the Rafiki connector endpoints** on each side.
+- **Create assets, peers, and accounts** in both Rafiki instances.
+- **Enable Interledger payments** between the two wallets.
+
+## 1. Assumptions and endpoints
+
+This guide assumes:
+
+- ASE A deployment is complete:
+  - Rafiki Admin: `https://rafiki-admin.ase-a.example.com`
+  - Rafiki backend (Open Payments): `https://rafiki.ase-a.example.com`
+  - ILP address (example): `test.ase-a`
+- ASE B deployment is complete:
+  - Rafiki Admin: `https://rafiki-admin.ase-b.example.com`
+  - Rafiki backend (Open Payments): `https://rafiki.ase-b.example.com`
+  - ILP address (example): `test.ase-b`
+
+The Rafiki backend services expose an **ILP connector port** (default `3002`). In both `rafiki-*.values.yaml` files, this is typically configured as:
+
+```yaml
+backend:
+  ilp:
+    connector: 'http://<rafiki-backend-service>.<namespace>:3002'
+```
+
+For peering, each Rafiki must be able to reach the **other** Rafiki's connector endpoint over HTTP(S).
+
+## 2. Expose connector endpoints
+
+In many cases, you will expose the ILP connector alongside the Open Payments API via Kubernetes `Service` and `Ingress`. Ensure that:
+
+- The backend service includes port `3002` (connector).
+- The ingress route forwards ILP traffic to that port.
+
+### 2.1 Example backend service (ASE A)
+
+Your Rafiki Helm chart should already create a backend service with ports:
+
+- `3000` – Open Payments
+- `3001` – Admin / GraphQL
+- `3002` – ILP connector
+
+Confirm:
+
+```bash
+kubectl get svc rafiki-ase-a-backend-service -n rafiki-ase-a -o yaml
+```
+
+You should see a port named `connector` (or similar) on `3002`. Repeat for ASE B:
+
+```bash
+kubectl get svc rafiki-ase-b-backend-service -n rafiki-ase-b -o yaml
+```
+
+### 2.2 Example ingress paths
+
+If you expose ILP over HTTPS under `/ilp`, your ingress for the backend might look like:
+
+```yaml
+spec:
+  rules:
+    - host: rafiki.ase-a.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: rafiki-ase-a-backend-service
+                port:
+                  number: 3000
+          - path: /ilp
+            pathType: Prefix
+            backend:
+              service:
+                name: rafiki-ase-a-backend-service
+                port:
+                  number: 3002
+```
+
+Do the same for ASE B (`rafiki.ase-b.example.com`). This should result in connector URLs like:
+
+- ASE A connector: `https://rafiki.ase-a.example.com/ilp`
+- ASE B connector: `https://rafiki.ase-b.example.com/ilp`
+
+## 3. Configure assets and peers in Rafiki
+
+This section shows how to configure **matching assets** and **peer relationships** on both Rafiki instances using the [Admin GraphQL API](/apis/graphql/backend). All requests must be authenticated using the tenant's `ADMIN_API_SECRET` and include a `tenant-id` header. Refer to [Backend service authentication](/integration/deployment/services/backend-service#authentication-and-authorization) for details.
+
+### 3.1 Decide on assets and ILP addresses
+
+For a simple demo:
+
+- **Asset** (both sides): `USD`, scale `2`
+- **ILP addresses**:
+  - ASE A: `test.ase-a`
+  - ASE B: `test.ase-b`
+- **HTTP auth tokens** (shared secrets):
+  - `ase-a-to-ase-b-token`: Token ASE A uses when sending packets to ASE B (ASE B's incoming token).
+  - `ase-b-to-ase-a-token`: Token ASE B uses when sending packets to ASE A (ASE A's incoming token).
+
+:::caution
+HTTP auth tokens and ILP addresses must be **consistent and symmetric** across both peers. Mismatched tokens or ILP addresses will cause peering failures.
+:::
+
+### 3.2 ASE A – create asset
+
+First, create the USD asset on ASE A. Send the following GraphQL mutation to `https://rafiki.ase-a.example.com/graphql`:
+
+<Tabs>
+  <TabItem label="Operation">
+    ```graphql
+    mutation CreateAsset($input: CreateAssetInput!) {
+      createAsset(input: $input) {
+        code
+        success
+        message
+        asset {
+          id
+          code
+          scale
+          tenantId
+        }
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Variables">
+    ```json
+    {
+      "input": {
+        "code": "USD",
+        "scale": 2
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Response">
+    ```json
+    {
+      "data": {
+        "createAsset": {
+          "code": "200",
+          "success": true,
+          "message": "Created Asset",
+          "asset": {
+            "id": "b3dffeda-1e0e-47d4-82a3-69b1a622eeb9",
+            "code": "USD",
+            "scale": 2,
+            "tenantId": "ase-a-tenant"
+          }
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+:::note[Authentication]
+All requests to the [Backend Admin API](/apis/graphql/backend) must include a `tenant-id` header and be signed using the tenant's API secret. Refer to [Backend service authentication](/integration/deployment/services/backend-service#authentication-and-authorization) for details.
+:::
+
+Save the `asset.id` from the response. You'll need it when creating the peer.
+
+### 3.3 ASE A – create peer
+
+Create a peer representing ASE B. Use the asset ID from the previous step:
+
+<Tabs>
+  <TabItem label="Operation">
+    ```graphql
+    mutation CreatePeer($input: CreatePeerInput!) {
+      createPeer(input: $input) {
+        code
+        success
+        message
+        peer {
+          id
+          name
+          staticIlpAddress
+          asset {
+            code
+            scale
+          }
+          liquidity
+          liquidityThreshold
+        }
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Variables">
+    ```json
+    {
+      "input": {
+        "name": "ase-b-peer",
+        "staticIlpAddress": "test.ase-b",
+        "http": {
+          "incoming": {
+            "authTokens": ["ase-b-to-ase-a-token"]
+          },
+          "outgoing": {
+            "endpoint": "https://rafiki.ase-b.example.com/ilp",
+            "authToken": "ase-a-to-ase-b-token"
+          }
+        },
+        "assetId": "b3dffeda-1e0e-47d4-82a3-69b1a622eeb9",
+        "initialLiquidity": 1000000,
+        "liquidityThreshold": 100000,
+        "maxPacketAmount": 1000000
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Response">
+    ```json
+    {
+      "data": {
+        "createPeer": {
+          "code": "200",
+          "success": true,
+          "message": "Created ILP Peer",
+          "peer": {
+            "id": "480ef339-7842-4501-a905-923fc1339cef",
+            "name": "ase-b-peer",
+            "staticIlpAddress": "test.ase-b",
+            "asset": {
+              "code": "USD",
+              "scale": 2
+            },
+            "liquidity": 1000000,
+            "liquidityThreshold": 100000
+          }
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+### 3.4 ASE B – create asset
+
+Create the USD asset on ASE B. Send the following GraphQL mutation to `https://rafiki.ase-b.example.com/graphql`:
+
+<Tabs>
+  <TabItem label="Operation">
+    ```graphql
+    mutation CreateAsset($input: CreateAssetInput!) {
+      createAsset(input: $input) {
+        code
+        success
+        message
+        asset {
+          id
+          code
+          scale
+          tenantId
+        }
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Variables">
+    ```json
+    {
+      "input": {
+        "code": "USD",
+        "scale": 2
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Response">
+    ```json
+    {
+      "data": {
+        "createAsset": {
+          "code": "200",
+          "success": true,
+          "message": "Created Asset",
+          "asset": {
+            "id": "a4efffeb-2f1f-58e5-93b4-7ac2b7330fca",
+            "code": "USD",
+            "scale": 2,
+            "tenantId": "ase-b-tenant"
+          }
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+Save the `asset.id` from the response for the next step.
+
+### 3.5 ASE B – create peer
+
+Create a peer representing ASE A. Use the asset ID from the previous step and ensure the HTTP auth tokens are **symmetric** with ASE A's configuration:
+
+<Tabs>
+  <TabItem label="Operation">
+    ```graphql
+    mutation CreatePeer($input: CreatePeerInput!) {
+      createPeer(input: $input) {
+        code
+        success
+        message
+        peer {
+          id
+          name
+          staticIlpAddress
+          asset {
+            code
+            scale
+          }
+          liquidity
+          liquidityThreshold
+        }
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Variables">
+    ```json
+    {
+      "input": {
+        "name": "ase-a-peer",
+        "staticIlpAddress": "test.ase-a",
+        "http": {
+          "incoming": {
+            "authTokens": ["ase-a-to-ase-b-token"]
+          },
+          "outgoing": {
+            "endpoint": "https://rafiki.ase-a.example.com/ilp",
+            "authToken": "ase-b-to-ase-a-token"
+          }
+        },
+        "assetId": "a4efffeb-2f1f-58e5-93b4-7ac2b7330fca",
+        "initialLiquidity": 1000000,
+        "liquidityThreshold": 100000,
+        "maxPacketAmount": 1000000
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Response">
+    ```json
+    {
+      "data": {
+        "createPeer": {
+          "code": "200",
+          "success": true,
+          "message": "Created ILP Peer",
+          "peer": {
+            "id": "591fg44a-8953-5612-b016-034gd2440dfg",
+            "name": "ase-a-peer",
+            "staticIlpAddress": "test.ase-a",
+            "asset": {
+              "code": "USD",
+              "scale": 2
+            },
+            "liquidity": 1000000,
+            "liquidityThreshold": 100000
+          }
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+:::caution[Token symmetry]
+Note that:
+
+- ASE B's **incoming** token (`ase-a-to-ase-b-token`) matches ASE A's **outgoing** token.
+- ASE B's **outgoing** token (`ase-b-to-ase-a-token`) matches ASE A's **incoming** token.
+
+This symmetry is required for successful peering.
+:::
+
+## 4. Verify peer health
+
+Use GraphQL queries to verify that both peers are configured correctly and healthy.
+
+### 4.1 Query peers on ASE A
+
+Query all peers on ASE A to verify the peer was created:
+
+<Tabs>
+  <TabItem label="Operation">
+    ```graphql
+    query GetPeers {
+      peers {
+        edges {
+          cursor
+          node {
+            id
+            name
+            staticIlpAddress
+            asset {
+              code
+              scale
+            }
+            liquidity
+            liquidityThreshold
+            http {
+              outgoing {
+                endpoint
+              }
+            }
+          }
+        }
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Response">
+    ```json
+    {
+      "data": {
+        "peers": {
+          "edges": [
+            {
+              "cursor": "cursor1",
+              "node": {
+                "id": "480ef339-7842-4501-a905-923fc1339cef",
+                "name": "ase-b-peer",
+                "staticIlpAddress": "test.ase-b",
+                "asset": {
+                  "code": "USD",
+                  "scale": 2
+                },
+                "liquidity": 1000000,
+                "liquidityThreshold": 100000,
+                "http": {
+                  "outgoing": {
+                    "endpoint": "https://rafiki.ase-b.example.com/ilp"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+### 4.2 Query peers on ASE B
+
+Query all peers on ASE B to verify the peer was created:
+
+<Tabs>
+  <TabItem label="Operation">
+    ```graphql
+    query GetPeers {
+      peers {
+        edges {
+          cursor
+          node {
+            id
+            name
+            staticIlpAddress
+            asset {
+              code
+              scale
+            }
+            liquidity
+            liquidityThreshold
+            http {
+              outgoing {
+                endpoint
+              }
+            }
+          }
+        }
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Response">
+    ```json
+    {
+      "data": {
+        "peers": {
+          "edges": [
+            {
+              "cursor": "cursor1",
+              "node": {
+                "id": "591fg44a-8953-5612-b016-034gd2440dfg",
+                "name": "ase-a-peer",
+                "staticIlpAddress": "test.ase-a",
+                "asset": {
+                  "code": "USD",
+                  "scale": 2
+                },
+                "liquidity": 1000000,
+                "liquidityThreshold": 100000,
+                "http": {
+                  "outgoing": {
+                    "endpoint": "https://rafiki.ase-a.example.com/ilp"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+### 4.3 Verify peer connectivity
+
+After creating peers on both sides, verify that:
+
+- Each Rafiki instance has a USD asset with matching code and scale.
+- Each Rafiki instance has a peer pointing to the other Rafiki's ILP address.
+- The connector endpoints are reachable (check network connectivity).
+- HTTP auth tokens are symmetric between both peers.
+
+You can also check peer health using the Rafiki Admin UI at:
+
+- `https://rafiki-admin.ase-a.example.com` (ASE A)
+- `https://rafiki-admin.ase-b.example.com` (ASE B)
+
+Navigate to **Peers** and verify that peer status shows **READY** or **HEALTHY**.
+
+## 5. Interledger payments
+
+Once peering has been set up and verified, Interledger payments should be possible between users of ASE A (Test Wallet) and ASE B (Interledger App Wallet). Users can send payments between the two wallets using their wallet addresses, and the payments will flow through the peered Rafiki instances.
+
+## 6. Troubleshooting
+
+- **Peer not healthy**:
+  - Double-check connector URLs and that the ILP connector port (`3002`) is accessible via Ingress.
+  - Verify HTTP auth tokens and ILP addresses match on both sides.
+  - Check Rafiki backend logs for connection or authentication errors.
+- **Payments failing or stuck**:
+  - Ensure assets, peers, and accounts are correctly linked.
+  - Confirm sufficient liquidity / limits on both peers and accounts.
+  - Check wallet logs for any issues constructing Open Payments requests.
+- **TLS / DNS issues**:
+  - Verify DNS records point to the correct ingress IPs.
+  - Confirm TLS certificates are valid and that Rafiki is configured to trust any intermediate proxies (`trustProxy: "true"` where required).

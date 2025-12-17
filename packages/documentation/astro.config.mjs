@@ -172,8 +172,30 @@ export default defineConfig({
               link: '/integration/deployment/docker-compose'
             },
             {
-              label: 'Helm and Kubernetes',
-              link: '/integration/deployment/helm-k8s'
+              label: 'Helm & Kubernetes',
+              collapsed: true,
+              items: [
+                {
+                  label: 'Get Started',
+                  link: '/integration/deployment/helm-k8s/getting-started'
+                },
+                {
+                  label: 'Peered Rafiki Instances Example',
+                  link: '/integration/deployment/helm-k8s/peered-rafiki-architecture'
+                },
+                {
+                  label: 'Deploy ASE A',
+                  link: '/integration/deployment/helm-k8s/ase-a-test-wallet'
+                },
+                {
+                  label: 'Deploy ASE B',
+                  link: '/integration/deployment/helm-k8s/ase-b-interledger-app'
+                },
+                {
+                  label: 'Peer the ASEs',
+                  link: '/integration/deployment/helm-k8s/ase-peering'
+                }
+              ]
             }
           ]
         },

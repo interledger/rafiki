@@ -1,0 +1,468 @@
+---
+title: Deploy ASE A using Test Wallet
+description: Step-by-step guide to deploy a Rafiki instance and the Test Wallet app (ASE A) on a Kubernetes cluster using the public Interledger Helm charts.
+---
+
+import { LinkOut } from '@interledger/docs-design-system'
+
+This guide shows how Account Servicing Entity A (**ASE A**) can deploy:
+
+- A **Rafiki** instance (auth, backend, frontend)
+- The **Test Wallet** app from <LinkOut href='https://github.com/interledger/testnet'>github.com/interledger/testnet</LinkOut>
+
+to a **Kubernetes cluster** (on any cloud provider) using the **public Interledger Helm charts**.
+
+For the overall system design, refer to the [Peered Rafiki Instances Architecture](/integration/deployment/helm-k8s/peered-rafiki-architecture).
+
+## 1. Prerequisites
+
+- Access to a **cloud provider account** (AWS, Google Cloud, Azure) or on-premises infrastructure with permissions to create a Kubernetes cluster.
+- Permissions to create:
+  - Kubernetes clusters,
+  - Kubernetes namespaces,
+  - Load balancers / ingress resources,
+  - DNS records for your domain.
+- Local tooling:
+  - <LinkOut href='https://kubernetes.io/docs/tasks/tools/'>kubectl</LinkOut> installed
+    and configured to access your cluster
+  - <LinkOut href='https://helm.sh/docs/intro/install/'>Helm 3+</LinkOut> installed
+
+Source code and charts (for reference and customization):
+
+- Rafiki: <LinkOut href='https://github.com/interledger/rafiki'>github.com/interledger/rafiki</LinkOut>
+- Test Wallet: <LinkOut href='https://github.com/interledger/testnet'>github.com/interledger/testnet</LinkOut>
+- Helm charts: <LinkOut href='https://github.com/interledger/charts'>github.com/interledger/charts</LinkOut>
+
+## 2. Create the Kubernetes cluster for ASE A
+
+Create a Kubernetes cluster on your preferred cloud provider or on-premises. The exact commands vary by provider:
+
+**Example for Google Cloud Platform (GKE):**
+
+```bash
+gcloud container clusters create ase-a-cluster \
+  --num-nodes=3 \
+  --machine-type=e2-standard-4
+gcloud container clusters get-credentials ase-a-cluster
+```
+
+Choose a cluster name appropriate for your environment, for example:
+
+- **Cluster name**: `ase-a-cluster`
+- **Region**: Choose a region suitable for your deployment
+
+Verify cluster access:
+
+```bash
+kubectl get nodes
+```
+
+## 3. Prepare Kubernetes namespaces and Helm repository
+
+Create Kubernetes namespaces:
+
+```bash
+kubectl create namespace rafiki-ase-a
+kubectl create namespace wallet-ase-a
+```
+
+Add the Interledger Helm repository (if not already added):
+
+```bash
+helm repo add interledger-helm https://interledger.github.io/charts/interledger
+helm repo update
+```
+
+Charts used:
+
+- `interledger-helm/rafiki` for the Rafiki instance
+- `interledger-helm/testnet-wallet` for the Test Wallet app
+
+## 4. Deploy infrastructure for Rafiki
+
+### 4.1 Deploy PostgreSQL, Redis, and TigerBeetle
+
+```bash
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo add tigerbeetle https://tigerbeetle.github.io/helm-charts
+helm repo update
+
+helm install rafiki-ase-a-postgres bitnami/postgresql \
+  --namespace rafiki-ase-a \
+  --set auth.username=rafiki_backend \
+  --set auth.password=CHOOSE_STRONG_PASSWORD \
+  --set auth.database=rafiki_backend
+
+helm install rafiki-ase-a-redis bitnami/redis \
+  --namespace rafiki-ase-a \
+  --set auth.enabled=false
+
+helm install rafiki-ase-a-tigerbeetle tigerbeetle/tigerbeetle \
+  --namespace rafiki-ase-a \
+  --set replicaCount=3 \
+  --set persistence.size=20Gi
+```
+
+## 5. Deploy Rafiki for ASE A
+
+Rafiki is deployed using the `rafiki` chart. You configure it via a Helm values file referencing your ingress domain names and database/Redis/TigerBeetle services.
+
+### 5.1 Choose domain names
+
+Decide on domain names and later create DNS records pointing to your ingress IP or load balancer:
+
+- **Rafiki backend**: `rafiki.ase-a.example.com`
+- **Rafiki auth**: `auth.ase-a.example.com`
+- **Rafiki admin UI**: `rafiki-admin.ase-a.example.com`
+
+### 5.2 Create Rafiki values file
+
+Create `rafiki-ase-a.values.yaml`:
+
+```yaml
+fullnameOverride: 'rafiki-ase-a'
+
+imageOverride:
+  repository: ghcr.io/interledger
+
+config:
+  frontend:
+    logLevel: info
+    nodeEnv: production
+    port: 3010
+    signatureVersion: '1'
+    serviceUrls:
+      GRAPHQL_URL: >-
+        http://rafiki-ase-a-backend-service.rafiki-ase-a:3001/graphql
+      OPEN_PAYMENTS_URL: https://rafiki.ase-a.example.com
+
+  auth:
+    shouldCreateSecrets: true
+    nodeEnv: production
+    logLevel: info
+    redisUrl:
+      value: >-
+        redis://rafiki-ase-a-redis-master.rafiki-ase-a:6379
+    databaseUrl:
+      value: >-
+        postgresql://rafiki_auth:CHOOSE_STRONG_PASSWORD@
+        rafiki-ase-a-postgres.rafiki-ase-a:5432/rafiki_auth
+    authServerUrl: 'https://auth.ase-a.example.com'
+    identityServer:
+      domain: 'https://wallet.ase-a.example.com/idp'
+      serverSecret:
+        value: 'REPLACE_ME_ASE_A_IDP_SERVER_SECRET'
+    cookieKey:
+      value: 'REPLACE_ME_ASE_A_AUTH_COOKIE_KEY'
+    tenancy:
+      tenant_id: 'ase-a-tenant'
+    admin:
+      apiSecret:
+        value: 'REPLACE_ME_ASE_A_AUTH_ADMIN_API_SECRET'
+      signatureVersion: '1'
+
+  backend:
+    shouldCreateSecrets: true
+    nodeEnv: production
+    logLevel: info
+    instanceName: 'rafiki-ase-a-instance'
+    useTigerbeetle: true
+    tigerbeetle:
+      clusterId: 0
+      replicaAddresses: >-
+        rafiki-ase-a-tigerbeetle.rafiki-ase-a:4342
+    auth:
+      grantUrl: 'https://auth.ase-a.example.com/gnap'
+      introspectionUrl: 'https://auth.ase-a.example.com/introspect'
+      serviceApiUrl: 'https://auth.ase-a.example.com/admin'
+    rates:
+      url: '' # optional FX service
+    webhook:
+      url: >-
+        http://wallet-ase-a-backend-service.wallet-ase-a:4003/
+        webhooks/rafiki
+      timeout: 200
+    redisUrl:
+      value: >-
+        redis://rafiki-ase-a-redis-master.rafiki-ase-a:6379
+    databaseUrl:
+      value: >-
+        postgresql://rafiki_backend:CHOOSE_STRONG_PASSWORD@
+        rafiki-ase-a-postgres.rafiki-ase-a:5432/rafiki_backend
+    trustProxy: 'true'
+    ilp:
+      host: 'https://rafiki.ase-a.example.com'
+      address: 'test.ase-a'
+      connector: >-
+        http://rafiki-ase-a-backend-service.rafiki-ase-a:3002
+      streamSecret:
+        value: 'REPLACE_ME_ASE_A_STREAM_SECRET_BASE64'
+    slippage: 0.01
+    key:
+      id: 'rafiki-ase-a-key'
+      pvk: '' # let the chart generate, or provide base64-encoded key
+      mount: '/mnt/keys/pvk.pem'
+    webhookSignatureSecret:
+      value: 'REPLACE_ME_ASE_A_WEBHOOK_SIGNATURE_SECRET'
+    telemetry:
+      enabled: 'false'
+      livenet: 'false'
+    autoPeering:
+      enabled: 'true'
+    tenancy:
+      tenant_id: 'ase-a-tenant'
+    admin:
+      apiSecret:
+        value: 'REPLACE_ME_ASE_A_BACKEND_ADMIN_API_SECRET'
+      signatureVersion: '1'
+
+ingress:
+  backend:
+    enabled: true
+    className: nginx
+    hosts:
+      - host: rafiki.ase-a.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+            service:
+              name: rafiki-ase-a-backend-service
+              port: 3000
+          - path: /ilp
+            pathType: Prefix
+            service:
+              name: rafiki-ase-a-backend-service
+              port: 3002
+  auth:
+    enabled: true
+    className: nginx
+    hosts:
+      - host: auth.ase-a.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+            service:
+              name: rafiki-ase-a-auth-service
+              port: 3006
+  frontend:
+    enabled: true
+    className: nginx
+    hosts:
+      - host: rafiki-admin.ase-a.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+            service:
+              name: rafiki-ase-a-frontend-service
+              port: 3010
+```
+
+:::caution
+Replace all `REPLACE_ME_...` placeholders with strong, unique secrets. For production, store these in your cloud provider's secret management service (AWS Secrets Manager, Azure Key Vault, GCP Secret Manager, etc.) and surface them via Kubernetes secrets rather than inline values.
+:::
+
+### 5.3 Install ingress controller (if needed)
+
+If your cluster does not already have an ingress controller, install one. For example, using NGINX Ingress Controller:
+
+```bash
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+
+helm install nginx-ingress ingress-nginx/ingress-nginx \
+  --namespace ingress-nginx \
+  --create-namespace \
+  --set controller.publishService.enabled=true
+```
+
+:::note
+Different cloud providers may have their own ingress controllers (for example, AWS Application Load Balancer Controller, Azure Application Gateway Ingress Controller). Adjust the ingress configuration accordingly.
+:::
+
+### 5.4 Install Rafiki
+
+```bash
+helm install rafiki-ase-a interledger-helm/rafiki \
+  --namespace rafiki-ase-a \
+  -f rafiki-ase-a.values.yaml
+
+kubectl get pods -n rafiki-ase-a
+kubectl get svc -n rafiki-ase-a
+kubectl get ingress -n rafiki-ase-a
+```
+
+Get the external IP or hostname:
+
+```bash
+kubectl get ingress -n rafiki-ase-a
+```
+
+Configure DNS for:
+
+- `rafiki.ase-a.example.com`
+- `auth.ase-a.example.com`
+- `rafiki-admin.ase-a.example.com`
+
+pointing to your ingress controller's external IP or load balancer hostname.
+
+## 6. Deploy Test Wallet for ASE A
+
+ASE A deploys the **Test Wallet** app from <LinkOut href='https://github.com/interledger/testnet'>github.com/interledger/testnet</LinkOut> using the `testnet-wallet` Helm chart. The Test Wallet integrates with Rafiki via Open Payments APIs.
+
+### 6.1 Deploy PostgreSQL and Redis for Test Wallet
+
+```bash
+helm install wallet-ase-a-postgres bitnami/postgresql \
+  --namespace wallet-ase-a \
+  --set auth.username=testnet_wallet \
+  --set auth.password=CHOOSE_STRONG_PASSWORD \
+  --set auth.database=testnet_wallet
+
+helm install wallet-ase-a-redis bitnami/redis \
+  --namespace wallet-ase-a \
+  --set auth.enabled=false
+```
+
+### 6.2 Create Test Wallet values file
+
+Create `testnet-wallet-ase-a.values.yaml`:
+
+```yaml
+fullnameOverride: 'wallet-ase-a'
+
+imageOverride:
+  repository: ghcr.io/interledger
+
+config:
+  frontend:
+    logLevel: info
+    nodeEnv: production
+    port: 4003
+    urls:
+      backend: 'https://api.ase-a.example.com'
+      openPaymentsHost: 'https://rafiki.ase-a.example.com'
+      authHost: 'https://auth.ase-a.example.com'
+    cookie:
+      name: 'ase-a.cookie'
+    features:
+      useTestKycData: true
+
+  backend:
+    shouldCreateSecrets: true
+    nodeEnv: production
+    logLevel: info
+    port: 4003
+    cookie:
+      name: 'ase-a.cookie'
+      password: 'REPLACE_ME_ASE_A_WALLET_COOKIE_PASSWORD'
+      ttl: 2630000
+    hosts:
+      openPayments: 'https://rafiki.ase-a.example.com'
+      graphqlEndpoint: >-
+        http://rafiki-ase-a-backend-service.rafiki-ase-a:3001/graphql
+      authGraphqlEndpoint: >-
+        http://rafiki-ase-a-auth-service.rafiki-ase-a:3003/graphql
+      frontend: 'https://wallet.ase-a.example.com'
+      auth: 'https://auth.ase-a.example.com'
+    database:
+      url: >-
+        postgres://testnet_wallet:CHOOSE_STRONG_PASSWORD@
+        wallet-ase-a-postgres.wallet-ase-a:5432/testnet_wallet
+    redis:
+      url: >-
+        redis://wallet-ase-a-redis-master.wallet-ase-a:6379
+    identity:
+      serverSecret: 'REPLACE_ME_ASE_A_WALLET_IDP_SECRET'
+    webhook:
+      signatureSecret: 'REPLACE_ME_ASE_A_WALLET_WEBHOOK_SIGNATURE'
+    interaction:
+      cookieSameSite: 'lax'
+    email:
+      send: false
+      from: 'tech@interledger.org'
+      sendgridKey: ''
+    paymentPointer: '' # optional default wallet address
+    rafiki:
+      operatorId: 'ase-a-tenant'
+      apiSignatureVersion: '1'
+```
+
+### 6.3 Create ingress for Test Wallet
+
+Decide on Test Wallet domain names:
+
+- **Test Wallet UI**: `wallet.ase-a.example.com`
+- **Test Wallet API**: `api.ase-a.example.com`
+
+Create `testnet-wallet-ase-a.ingress.yaml`:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wallet-ase-a
+  namespace: wallet-ase-a
+  annotations:
+    kubernetes.io/ingress.class: 'nginx'
+spec:
+  rules:
+    - host: wallet.ase-a.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: wallet-ase-a-frontend-service
+                port:
+                  number: 4003
+    - host: api.ase-a.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: wallet-ase-a-backend-service
+                port:
+                  number: 4003
+```
+
+### 6.4 Install the Test Wallet chart
+
+```bash
+helm install wallet-ase-a interledger-helm/testnet-wallet \
+  --namespace wallet-ase-a \
+  -f testnet-wallet-ase-a.values.yaml
+
+kubectl apply -f testnet-wallet-ase-a.ingress.yaml
+
+kubectl get pods -n wallet-ase-a
+kubectl get svc -n wallet-ase-a
+kubectl get ingress -n wallet-ase-a
+```
+
+### 6.5 Verify ASE A services
+
+Get the external IP or hostname:
+
+```bash
+kubectl get ingress -n wallet-ase-a
+```
+
+Update DNS so that `wallet.ase-a.example.com` and `api.ase-a.example.com` resolve to your ingress controller's external IP or load balancer hostname.
+
+## 7. Test ASE A
+
+Once DNS and TLS are configured:
+
+1. Visit `https://wallet.ase-a.example.com` and create a test user.
+2. Use Rafiki Admin at `https://rafiki-admin.ase-a.example.com` to:
+   - Create an asset (for example, USD with appropriate scale).
+   - Create a tenant (if not auto-created from configuration).
+   - Create one or more wallet addresses for the user.
+3. From the Test Wallet UI, fund the account using test flows and perform a payment between two ASE A users to verify the deployment.
+
+When the deployment of ASE A is complete, proceed to deploying ASE B:
+
+- [Deploy ASE B using Interledger App Wallet](/integration/deployment/helm-k8s/ase-b-interledger-app)
