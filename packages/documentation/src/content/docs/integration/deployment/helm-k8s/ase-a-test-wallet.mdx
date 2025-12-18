@@ -103,6 +103,10 @@ helm install rafiki-ase-a-tigerbeetle tigerbeetle/tigerbeetle \
   --set persistence.size=20Gi
 ```
 
+:::caution
+Replace all `CHOOSE_STRONG_PASSWORD` placeholders with strong, unique passwords. For production, store these in your cloud provider's secret management service (AWS Secrets Manager, Azure Key Vault, GCP Secret Manager, etc.) and surface them via Kubernetes secrets rather than inline values.
+:::
+
 ## 5. Deploy Rafiki for ASE A
 
 Rafiki is deployed using the `rafiki` chart. You configure it via a Helm values file referencing your ingress domain names and database/Redis/TigerBeetle services.
@@ -258,7 +262,7 @@ ingress:
 ```
 
 :::caution
-Replace all `REPLACE_ME_...` placeholders with strong, unique secrets. For production, store these in your cloud provider's secret management service (AWS Secrets Manager, Azure Key Vault, GCP Secret Manager, etc.) and surface them via Kubernetes secrets rather than inline values.
+Replace all `REPLACE_ME_...` and `CHOOSE_STRONG_PASSWORD` placeholders with strong, unique secrets. For production, store these in your cloud provider's secret management service (AWS Secrets Manager, Azure Key Vault, GCP Secret Manager, etc.) and surface them via Kubernetes secrets rather than inline values.
 :::
 
 ### 5.3 Install ingress controller (if needed)
@@ -323,6 +327,10 @@ helm install wallet-ase-a-redis bitnami/redis \
   --set auth.enabled=false
 ```
 
+:::caution
+Replace all `CHOOSE_STRONG_PASSWORD` placeholders with strong, unique passwords. For production, store these in your cloud provider's secret management service (AWS Secrets Manager, Azure Key Vault, GCP Secret Manager, etc.) and surface them via Kubernetes secrets rather than inline values.
+:::
+
 ### 6.2 Create Test Wallet values file
 
 Create `testnet-wallet-ase-a.values.yaml`:
@@ -386,6 +394,10 @@ config:
       operatorId: 'ase-a-tenant'
       apiSignatureVersion: '1'
 ```
+
+:::caution
+Replace all `REPLACE_ME_...` and `CHOOSE_STRONG_PASSWORD` placeholders with strong, unique secrets. For production, store these in your cloud provider's secret management service (AWS Secrets Manager, Azure Key Vault, GCP Secret Manager, etc.) and surface them via Kubernetes secrets rather than inline values.
+:::
 
 ### 6.3 Create ingress for Test Wallet
 

@@ -1,6 +1,7 @@
 ---
 title: Peer ASE A and ASE B Rafiki instances
 description: Guide to peering two Rafiki instances (ASE A with Test Wallet and ASE B with Interledger App Wallet) to enable Interledger payments between them.
+next: Production requirements and checklist
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components'
@@ -555,3 +556,7 @@ Once peering has been set up and verified, Interledger payments should be possib
 - **TLS / DNS issues**:
   - Verify DNS records point to the correct ingress IPs.
   - Confirm TLS certificates are valid and that Rafiki is configured to trust any intermediate proxies (`trustProxy: "true"` where required).
+
+:::note[Next steps]
+You have completed an example deployment and peering setup. The next section, [Production requirements and checklist](/integration/requirements/overview), covers the requirements and checklist for deploying Rafiki to a production environment, including regulatory requirements, asset setup, wallet addresses, webhooks, and other integration requirements.
+:::
