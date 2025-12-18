@@ -65,5 +65,3 @@ packages/**/src/openapi/specs/resource-server.yaml
 packages/**/src/openapi/specs/wallet-address-server.yaml
 
 k6-test-summary.txt
-vale
-.vale.ini
