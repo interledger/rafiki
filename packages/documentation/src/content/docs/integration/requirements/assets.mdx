@@ -15,7 +15,7 @@ An asset represents an item of value that can be transferred via the Interledger
 
 Operators can create, view, edit, and delete both their own assets and those that belong to any tenant.
 
-Tenants can view, edit, and delete only their own assets. They cannot create assets.
+Tenants can create, view, edit, and delete their own assets only.
 
 ## Add an asset
 
@@ -83,9 +83,9 @@ The `asset` object in the response will include the `tenantId` of the tenant to 
 
 ## Update an asset
 
-Once an asset has been created, you may need to adjust its operational threshold values. You can use the `updateAsset` mutation to modify the `withdrawalThreshold` and `liquidityThreshold`.
+Once an asset has been created, you may need to adjust its operational threshold values. You can use the `updateAsset` mutation to modify the `liquidityThreshold`.
 
-These thresholds influence when Rafiki triggers low‑liquidity notifications but do not directly deposit or withdraw asset liquidity.
+This threshold determines when Rafiki triggers low‑liquidity notifications or webhooks, but does not directly deposit or withdraw asset liquidity.
 
 For information about adding or removing liquidity, see [Asset liquidity](/admin/liquidity/asset-liquidity).
 
@@ -160,17 +160,6 @@ The `asset` object in the response will include the `tenantId` of the tenant to 
 Deleting an asset removes it from active use within a Rafiki instance.
 
 You can only delete an asset if it's not associated with any peers or wallet addresses. Rafiki prevents deleting any asset that's still in use.
-
-:::danger
-Deleting an asset is permanent and cannot be reversed.
-
-You can only delete an asset if:
-
-- No peers reference the asset
-- No wallet addresses are associated with it
-
-If the asset is still in use, the backend prevents deletion and returns an error.
-:::
 
 <Tabs>
   <TabItem label="Operation">
