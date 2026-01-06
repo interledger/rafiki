@@ -14,7 +14,7 @@ export const ErrorPanel = ({ errors }: ErrorPanelProps) => {
   }
 
   return (
-    <div className='rounded-md bg-red-100 p-4 shadow-md'>
+    <div className='rounded-md bg-red-100 p-4'>
       <div className='flex'>
         <div className='flex-shrink-0'>
           <XCircle className='h-8 w-w text-vermillion' />

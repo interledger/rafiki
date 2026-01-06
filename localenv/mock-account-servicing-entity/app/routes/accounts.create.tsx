@@ -51,7 +51,7 @@ export default function CreateAccountPage() {
               <div className='col-span-1 pt-3'>
                 <h3 className='text-lg font-medium'>General Information</h3>
               </div>
-              <div className='md:col-span-2 bg-white rounded-md shadow-md'>
+              <div className='md:col-span-2 bg-white rounded-md'>
                 <div className='w-full p-4 space-y-3'>
                   <Input
                     name='name'

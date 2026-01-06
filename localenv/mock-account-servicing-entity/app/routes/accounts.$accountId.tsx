@@ -104,7 +104,7 @@ export default function EditAccount() {
                 <div className='col-span-1 pt-3'>
                   <h3 className='text-lg font-medium'>General Information</h3>
                 </div>
-                <div className='md:col-span-2 bg-white rounded-md shadow-md'>
+                <div className='md:col-span-2 bg-white rounded-md'>
                   <div className='w-full p-4 space-y-3'>
                     <input type='hidden' name='id' value={account.id} />
                     <Input
@@ -157,7 +157,7 @@ export default function EditAccount() {
               <div className='col-span-1 pt-3'>
                 <h3 className='text-lg font-medium'>Balance</h3>
               </div>
-              <div className='md:col-span-2 bg-white rounded-md shadow-md'>
+              <div className='md:col-span-2 bg-white rounded-md'>
                 <div className='w-full p-4 space-y-3'>
                   <p className='font-medium'>Available</p>
                   <p className='mt-1'>{`${(
@@ -193,7 +193,7 @@ export default function EditAccount() {
             <div className='col-span-1 pt-3'>
               <h3 className='text-lg font-medium'>Transactions</h3>
             </div>
-            <div className='md:col-span-2 bg-white rounded-md shadow-md'>
+            <div className='md:col-span-2 bg-white rounded-md'>
               <div className='w-full p-4 space-y-3'>
                 <Table>
                   <Table.Head
