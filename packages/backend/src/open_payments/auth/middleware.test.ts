@@ -1118,6 +1118,7 @@ describe('introspect', () => {
           }
         ]
       })
+      expect(next).toHaveBeenCalled()
     })
   })
 })
