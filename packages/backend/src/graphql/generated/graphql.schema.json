@@ -3134,6 +3134,18 @@
         "fields": null,
         "inputFields": [
           {
+            "name": "dataToTransmit",
+            "description": "Data to be encrypted and sent to the receiver.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "idempotencyKey",
             "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
