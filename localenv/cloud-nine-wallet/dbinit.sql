@@ -13,3 +13,11 @@ ALTER DATABASE happy_life_bank_backend OWNER TO happy_life_bank_backend;
 CREATE USER happy_life_bank_auth WITH PASSWORD 'happy_life_bank_auth';
 CREATE DATABASE happy_life_bank_auth;
 ALTER DATABASE happy_life_bank_auth OWNER TO happy_life_bank_auth;
+
+CREATE USER global_bank_backend WITH PASSWORD 'global_bank_backend';
+CREATE DATABASE global_bank_backend;
+ALTER DATABASE global_bank_backend OWNER TO global_bank_backend;
+
+CREATE USER global_bank_auth WITH PASSWORD 'global_bank_auth';
+CREATE DATABASE global_bank_auth;
+ALTER DATABASE global_bank_auth OWNER TO global_bank_auth;

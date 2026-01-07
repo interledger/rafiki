@@ -6,7 +6,10 @@ import { WalletAddress } from '../wallet_address/model'
 import { Receiver } from './model'
 import { Amount } from '../amount'
 import { RemoteIncomingPaymentService } from '../payment/incoming_remote/service'
-import { isIncomingPaymentError } from '../payment/incoming/errors'
+import {
+  IncomingPaymentError,
+  isIncomingPaymentError
+} from '../payment/incoming/errors'
 import {
   isReceiverError,
   ReceiverError,
@@ -30,6 +33,7 @@ interface CreateReceiverArgs {
 export interface ReceiverService {
   get(url: string): Promise<Receiver | undefined>
   create(args: CreateReceiverArgs): Promise<Receiver | ReceiverError>
+  complete(url: string): Promise<Receiver | ReceiverError>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -57,7 +61,8 @@ export async function createReceiverService(
 
   return {
     get: (url) => getReceiver(deps, url),
-    create: (url) => createReceiver(deps, url)
+    create: (url) => createReceiver(deps, url),
+    complete: (url) => completeIncomingPayment(deps, url)
   }
 }
 
@@ -241,4 +246,61 @@ async function getRemoteIncomingPayment(
   }
 
   return incomingPaymentOrError
+}
+
+export async function completeIncomingPayment(
+  deps: ServiceDependencies,
+  url: string
+): Promise<Receiver | ReceiverError> {
+  const receiver = await getReceiver(deps, url)
+  if (!receiver) {
+    const errorMessage = 'No incoming payment found'
+    deps.logger.error({ url }, errorMessage)
+    return IncomingPaymentError.UnknownPayment
+  }
+
+  if (receiver.isLocal) {
+    const urlParseResult = parseIncomingPaymentUrl(url)
+    if (!urlParseResult) {
+      const errorMessage = 'Incorrect format for incoming payment URL'
+      deps.logger.error({
+        context: { incomingPaymentUrl: url },
+        message: errorMessage
+      })
+      throw new Error(errorMessage)
+    }
+
+    const incomingPayment = await deps.incomingPaymentService.complete(
+      urlParseResult.id
+    )
+    if (isReceiverError(incomingPayment)) {
+      return incomingPayment
+    }
+    if (!incomingPayment.walletAddress) {
+      const errorMessage = 'Wallet address does not exist for incoming payment'
+      deps.logger.error({
+        context: { incomingPaymentId: incomingPayment.id },
+        message: errorMessage
+      })
+      return IncomingPaymentError.UnknownWalletAddress
+    }
+    const openPaymentsPayment = incomingPayment.toOpenPaymentsType(
+      deps.config.openPaymentsUrl,
+      incomingPayment.walletAddress
+    )
+    return new Receiver(
+      { ...openPaymentsPayment, methods: [] },
+      receiver.isLocal
+    )
+  }
+
+  const remoteIncomingPayment =
+    await deps.remoteIncomingPaymentService.complete(url)
+  if (isReceiverError(remoteIncomingPayment)) {
+    return remoteIncomingPayment
+  }
+  return new Receiver(
+    { ...remoteIncomingPayment, methods: [] },
+    receiver.isLocal
+  )
 }

@@ -69,7 +69,7 @@ export default defineConfig({
           attrs: {
             defer: true,
             'data-website-id': '75fba178-7dca-4874-adc9-50cf85c83528',
-            src: 'https://ilf-site-analytics.netlify.app/script.js',
+            src: 'https://uwa.interledger.org/script.js',
             'data-domains': 'rafiki.dev'
           }
         }

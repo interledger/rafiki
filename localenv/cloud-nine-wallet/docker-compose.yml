@@ -63,6 +63,8 @@ services:
     depends_on:
       cloud-nine-backend:
         condition: service_healthy
+      shared-database:
+        condition: service_healthy
   cloud-nine-backend:
     hostname: cloud-nine-wallet-backend
     image: rafiki-backend
@@ -108,13 +110,17 @@ services:
       WALLET_ADDRESS_URL: ${CLOUD_NINE_WALLET_ADDRESS_URL:-https://cloud-nine-wallet-backend/.well-known/pay}
       ILP_CONNECTOR_URL: ${CLOUD_NINE_CONNECTOR_URL:-http://cloud-nine-wallet-backend:3002}
       ENABLE_TELEMETRY: true
+      ENABLE_ILP_TIMING_TELEMETRY: true
       KEY_ID: 7097F83B-CB84-469E-96C6-2141C72E22C0
       OPERATOR_TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
       CARD_SERVICE_URL: 'http://cloud-nine-wallet-card-service:3007'
       CARD_WEBHOOK_SERVICE_URL: 'http://cloud-nine-wallet-card-service:3007/webhook'
+      DB_ENCRYPTION_SECRET: 'zO9KogehJECHReHgQr+ZWGkmgOD4AYa4ksUxALSwgM8='
     depends_on:
-      - shared-database
-      - shared-redis
+      shared-database:
+        condition: service_healthy
+      shared-redis:
+        condition: service_started
     healthcheck:
       test: ["CMD", "wget", "--spider", "http://localhost:3001/healthz"]
       start_period: 60s
@@ -155,8 +161,10 @@ services:
       OPERATOR_TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
       SERVICE_API_PORT: 3011
     depends_on:
-      - shared-database
-      - shared-redis
+      shared-database:
+        condition: service_healthy
+      shared-redis:
+        condition: service_started
   shared-database:
     image: 'postgres:15' # use latest official postgres version
     restart: unless-stopped
@@ -170,6 +178,12 @@ services:
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
   shared-redis:
     image: 'redis:7'
     restart: unless-stopped

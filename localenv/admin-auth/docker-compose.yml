@@ -27,8 +27,10 @@ services:
       args:
         PATH_TO_KRATOS_CONFIG: ./localenv/admin-auth/cloud-nine-kratos.yml
     depends_on:
-      - shared-database
-      - mailslurper
+      shared-database:
+        condition: service_healthy
+      mailslurper:
+        condition: service_started
     environment:
       DEV_MODE: true
     ports:
@@ -43,8 +45,10 @@ services:
       args:
         PATH_TO_KRATOS_CONFIG: ./localenv/admin-auth/happy-life-kratos.yml
     depends_on:
-      - shared-database
-      - mailslurper
+      shared-database:
+        condition: service_healthy
+      mailslurper:
+        condition: service_started
     environment:
       DEV_MODE: true
     ports:

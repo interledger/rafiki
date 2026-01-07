@@ -286,6 +286,9 @@ type Mutation {
   "Create an internal or external Open Payments incoming payment. The receiver has a wallet address on either this or another Open Payments resource server."
   createReceiver(input: CreateReceiverInput!): CreateReceiverResponse!
 
+  "Complete an internal or external Open Payments incoming payment. The receiver has a wallet address on either this or another Open Payments resource server."
+  completeReceiver(input: CompleteReceiverInput!): CompleteReceiverResponse!
+
   "Update an existing incoming payment."
   updateIncomingPayment(
     input: UpdateIncomingPaymentInput!
@@ -475,6 +478,8 @@ input CreatePeerInput {
   initialLiquidity: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
+  "Routes for the peer."
+  routes: [String!]
 }
 
 input CreateOrUpdatePeerByUrlInput {
@@ -509,6 +514,8 @@ input UpdatePeerInput {
   liquidityThreshold: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
+  "New routes for the peer."
+  routes: [String!]
 }
 
 input HttpInput {
@@ -597,6 +604,8 @@ input DepositOutgoingPaymentLiquidityInput {
   outgoingPaymentId: String!
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String!
+  "Data to be encrypted and sent to the receiver."
+  dataToTransmit: String
 }
 
 input CreateIncomingPaymentWithdrawalInput {
@@ -773,6 +782,8 @@ type Peer implements Model {
   liquidity: UInt64
   "The date and time when the peer was created."
   createdAt: String!
+  "Routes for the peer."
+  routes: [String!]!
   "Unique identifier of the tenant associated with the peer."
   tenantId: ID!
 }
@@ -1327,6 +1338,11 @@ input CreateReceiverInput {
   idempotencyKey: String
 }
 
+input CompleteReceiverInput {
+  "URL of the incoming payment to be completed."
+  incomingPaymentUrl: String!
+}
+
 input UpdateIncomingPaymentInput {
   "Unique identifier of the incoming payment to update."
   id: ID!
@@ -1345,6 +1361,11 @@ type IncomingPaymentResponse {
 }
 
 type CreateReceiverResponse {
+  "The receiver object returned in the response."
+  receiver: Receiver
+}
+
+type CompleteReceiverResponse {
   "The receiver object returned in the response."
   receiver: Receiver
 }

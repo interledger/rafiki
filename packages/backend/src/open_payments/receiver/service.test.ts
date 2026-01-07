@@ -86,7 +86,7 @@ describe('Receiver Service', (): void => {
 
   describe('get', () => {
     describe('local incoming payment', () => {
-      test('resolves local incoming payment', async () => {
+      test('resolves local incoming payment tenanted or not', async () => {
         const walletAddress = await createWalletAddress(deps, {
           tenantId: Config.operatorTenantId,
           mockServerPort: Config.openPaymentsPort
@@ -104,11 +104,8 @@ describe('Receiver Service', (): void => {
 
         jest
           .spyOn(paymentMethodProviderService, 'getPaymentMethods')
-          .mockResolvedValueOnce([])
-
-        await expect(
-          receiverService.get(incomingPayment.getUrl(config.openPaymentsUrl))
-        ).resolves.toEqual({
+          .mockResolvedValue([])
+        const expected = {
           assetCode: incomingPayment.receivedAmount.assetCode,
           assetScale: incomingPayment.receivedAmount.assetScale,
           incomingPayment: {
@@ -123,7 +120,18 @@ describe('Receiver Service', (): void => {
             methods: []
           },
           isLocal: true
-        })
+        }
+        await expect(
+          receiverService.get(incomingPayment.getUrl(config.openPaymentsUrl))
+        ).resolves.toEqual(expected)
+
+        let resourceServerUrl = config.openPaymentsUrl
+        resourceServerUrl = resourceServerUrl.replace(/\/+$/, '')
+        const urlWithoutTenant = `${resourceServerUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`
+
+        await expect(receiverService.get(urlWithoutTenant)).resolves.toEqual(
+          expected
+        )
       })
 
       describe('getLocalIncomingPayment helper', () => {
@@ -537,6 +545,82 @@ describe('Receiver Service', (): void => {
           })
         ).rejects.toThrow('Could not create receiver from incoming payment')
         expect(remoteIncomingPaymentServiceCreateSpy).toHaveBeenCalledTimes(1)
+      })
+    })
+  })
+
+  describe('complete', () => {
+    describe('local incoming payment', () => {
+      test('completes incoming payment', async () => {
+        const walletAddress = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
+          mockServerPort: Config.openPaymentsPort
+        })
+        const incomingPayment = await createIncomingPayment(deps, {
+          walletAddressId: walletAddress.id,
+          incomingAmount: {
+            value: BigInt(5),
+            assetCode: walletAddress.asset.code,
+            assetScale: walletAddress.asset.scale
+          },
+          tenantId: Config.operatorTenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
+        })
+
+        jest
+          .spyOn(paymentMethodProviderService, 'getPaymentMethods')
+          .mockResolvedValueOnce([])
+        await expect(
+          receiverService.complete(
+            incomingPayment.getUrl(config.openPaymentsUrl)
+          )
+        ).resolves.toEqual({
+          assetCode: incomingPayment.receivedAmount.assetCode,
+          assetScale: incomingPayment.receivedAmount.assetScale,
+          incomingPayment: {
+            id: incomingPayment.getUrl(config.openPaymentsUrl),
+            walletAddress: walletAddress.address,
+            incomingAmount: incomingPayment.incomingAmount,
+            receivedAmount: incomingPayment.receivedAmount,
+            completed: true,
+            metadata: undefined,
+            expiresAt: incomingPayment.expiresAt,
+            createdAt: incomingPayment.createdAt,
+            methods: []
+          },
+          isLocal: true
+        })
+      })
+
+      test('returns error when incoming payment has no wallet address', async () => {
+        const walletAddress = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
+          mockServerPort: Config.openPaymentsPort
+        })
+        const incomingPayment = await createIncomingPayment(deps, {
+          walletAddressId: walletAddress.id,
+          incomingAmount: {
+            value: BigInt(5),
+            assetCode: walletAddress.asset.code,
+            assetScale: walletAddress.asset.scale
+          },
+          tenantId: Config.operatorTenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
+        })
+
+        jest
+          .spyOn(paymentMethodProviderService, 'getPaymentMethods')
+          .mockResolvedValueOnce([])
+
+        delete incomingPayment.walletAddress
+        jest
+          .spyOn(incomingPaymentService, 'complete')
+          .mockResolvedValueOnce(incomingPayment)
+        await expect(
+          receiverService.complete(
+            incomingPayment.getUrl(config.openPaymentsUrl)
+          )
+        ).resolves.toEqual(IncomingPaymentError.UnknownWalletAddress)
       })
     })
   })

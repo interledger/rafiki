@@ -199,6 +199,7 @@ export const Config = {
   walletAddressRedirectHtmlPage: process.env.WALLET_ADDRESS_REDIRECT_HTML_PAGE,
   localCacheDuration: envInt('LOCAL_CACHE_DURATION_MS', 15_000),
   operatorTenantId: envString('OPERATOR_TENANT_ID'),
+  enableIlpTiming: envBool('ENABLE_ILP_TIMING_TELEMETRY', true),
   dbSchema: undefined as string | undefined,
   sendTenantWebhooksToOperator: envBool(
     'SEND_TENANT_WEBHOOKS_TO_OPERATOR',
@@ -207,7 +208,8 @@ export const Config = {
   cardServiceUrl: optional(envString, 'CARD_SERVICE_URL'),
   posServiceUrl: optional(envString, 'POS_SERVICE_URL'),
   posWebhookServiceUrl: optional(envString, 'POS_WEBHOOK_SERVICE_URL'),
-  cardWebhookUrl: optional(envString, 'CARD_WEBHOOK_SERVICE_URL')
+  cardWebhookUrl: optional(envString, 'CARD_WEBHOOK_SERVICE_URL'),
+  dbEncryptionSecret: optional(envString, 'DB_ENCRYPTION_SECRET')
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
