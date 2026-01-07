@@ -3135,7 +3135,7 @@
         "inputFields": [
           {
             "name": "dataToTransmit",
-            "description": "Data to be encrypted and sent to the receiver.",
+            "description": "Data to transmit to the recipient during payment.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
