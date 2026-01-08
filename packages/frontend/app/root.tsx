@@ -13,6 +13,7 @@ import {
 } from '@remix-run/react'
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
+import { Theme } from '@radix-ui/themes'
 import logo from '../public/logo.svg'
 import { XCircle } from './components/icons'
 import { Sidebar } from './components/Sidebar'
@@ -20,6 +21,7 @@ import { Snackbar } from './components/Snackbar'
 import { Button } from './components/ui/Button'
 import { messageStorage, type Message } from './lib/message.server'
 import tailwind from './styles/tailwind.css'
+import radixStyles from '@radix-ui/themes/styles.css'
 import { getOpenPaymentsUrl } from './shared/utils'
 import { PublicEnv, type PublicEnvironment } from './PublicEnv'
 import { isLoggedIn, checkAuthAndRedirect } from './lib/kratos_checks.server'
@@ -127,29 +129,31 @@ export default function App() {
         <Links />
       </head>
       <body className='h-full text-tealish'>
-        <div className='min-h-full'>
-          {displaySidebar && (
-            <Sidebar
-              logoutUrl={logoutUrl}
-              authEnabled={authEnabled}
-              hasApiCredentials={hasApiCredentials}
-            />
-          )}
-          <div
-            className={`pt-20 md:pt-0 flex ${displaySidebar ? 'md:pl-60' : ''} flex-1 flex-col`}
-          >
-            <main className='pb-8 px-4'>
-              <Outlet />
-            </main>
+        <Theme>
+          <div className='min-h-full'>
+            {displaySidebar && (
+              <Sidebar
+                logoutUrl={logoutUrl}
+                authEnabled={authEnabled}
+                hasApiCredentials={hasApiCredentials}
+              />
+            )}
+            <div
+              className={`pt-20 md:pt-0 flex ${displaySidebar ? 'md:pl-60' : ''} flex-1 flex-col`}
+            >
+              <main className='pb-8 px-4'>
+                <Outlet />
+              </main>
+            </div>
           </div>
-        </div>
-        <Snackbar
-          id='snackbar'
-          onClose={() => setSnackbarOpen(false)}
-          show={snackbarOpen}
-          message={message}
-          dismissAfter={2000}
-        />
+          <Snackbar
+            id='snackbar'
+            onClose={() => setSnackbarOpen(false)}
+            show={snackbarOpen}
+            message={message}
+            dismissAfter={2000}
+          />
+        </Theme>
         <ScrollRestoration />
         <PublicEnv env={publicEnv} />
         <Scripts />
@@ -233,6 +237,7 @@ export function ErrorBoundary() {
 
 export function links() {
   return [
+    { rel: 'stylesheet', href: radixStyles },
     { rel: 'stylesheet', href: tailwind },
     { rel: 'icon', href: logo }
   ]
