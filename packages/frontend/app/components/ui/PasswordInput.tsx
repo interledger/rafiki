@@ -3,7 +3,6 @@ import { forwardRef, useId, useState } from 'react'
 import { Text, TextField } from '@radix-ui/themes'
 import { Eye, EyeSlash } from '../icons'
 import { FieldError } from './FieldError'
-import { Label } from './Label'
 
 type InputProps = Omit<
   ComponentPropsWithoutRef<'input'>,
@@ -23,11 +22,18 @@ export const PasswordInput = forwardRef<HTMLInputElement, InputProps>(
 
     return (
       <div>
-        {label && (
-          <Label htmlFor={id} required={props.required ?? false}>
+        {label ? (
+          <Text
+            as='label'
+            htmlFor={id}
+            size='2'
+            weight='medium'
+            className='block'
+          >
             {label}
-          </Label>
-        )}
+            {props.required ? <Text as='span' color='red'> *</Text> : null}
+          </Text>
+        ) : null}
         <TextField.Root
           id={id}
           ref={ref}

@@ -1,7 +1,6 @@
 import { Form, useActionData, useNavigation } from '@remix-run/react'
 import { useRef, useState, useEffect } from 'react'
-import { Button, TextField } from '@radix-ui/themes'
-import { Label } from '~/components/ui'
+import { Button, Text, TextField } from '@radix-ui/themes'
 import { validate as validateUUID } from 'uuid'
 
 interface ApiCredentialsFormProps {
@@ -72,9 +71,15 @@ export const ApiCredentialsForm = ({
           ref={formRef} // Reference for the credentials form
         >
           <div>
-            <Label htmlFor='tenant-id' required>
-              Tenant ID
-            </Label>
+            <Text
+              as='label'
+              htmlFor='tenant-id'
+              size='2'
+              weight='medium'
+              className='block'
+            >
+              Tenant ID<Text as='span' color='red'> *</Text>
+            </Text>
             <TextField.Root
               id='tenant-id'
               ref={inputRef}
@@ -95,9 +100,15 @@ export const ApiCredentialsForm = ({
             </p>
           )}
           <div>
-            <Label htmlFor='api-secret' required>
-              API Secret
-            </Label>
+            <Text
+              as='label'
+              htmlFor='api-secret'
+              size='2'
+              weight='medium'
+              className='block'
+            >
+              API Secret<Text as='span' color='red'> *</Text>
+            </Text>
             <TextField.Root
               id='api-secret'
               required

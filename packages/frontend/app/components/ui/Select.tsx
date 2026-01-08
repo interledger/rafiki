@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react'
 import { Fragment, useId, useState } from 'react'
 import { Combobox, Transition } from '@headlessui/react'
-import { TextField } from '@radix-ui/themes'
+import { Text, TextField } from '@radix-ui/themes'
 import { Check, Chevron } from '../icons'
-import { Label } from './Label'
 import { FieldError } from './FieldError'
 
 export type SelectOption = {
@@ -71,9 +70,16 @@ export const Select = ({
       ) : null}
       <div className={`relative ${bringForward ? 'forward' : ''}`}>
         {label ? (
-          <Combobox.Label as={Label} htmlFor={id} required={required}>
+          <Text
+            as='label'
+            htmlFor={id}
+            size='2'
+            weight='medium'
+            className='block'
+          >
             {label}
-          </Combobox.Label>
+            {required ? <Text as='span' color='red'> *</Text> : null}
+          </Text>
         ) : null}
         <div className='relative'>
           <Combobox.Input

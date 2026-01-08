@@ -1,8 +1,8 @@
 import { Listbox, Transition } from '@headlessui/react'
 import { Fragment, useState } from 'react'
+import { Text } from '@radix-ui/themes'
 import { FieldError } from './FieldError'
 import { Check, Chevron } from '../icons'
-import { Label } from './Label'
 
 export type DropdownOption = {
   label: string
@@ -44,9 +44,12 @@ export const Dropdown = ({
         {name ? (
           <input type='hidden' name={name} value={internalValue?.value ?? ''} />
         ) : null}
-        <Listbox.Label as={Label} required={required}>
-          {label}
-        </Listbox.Label>
+        {label ? (
+          <Text as='label' size='2' weight='medium' className='block'>
+            {label}
+            {required ? <Text as='span' color='red'> *</Text> : null}
+          </Text>
+        ) : null}
         <div className='relative'>
           <Listbox.Button
             role='combobox'

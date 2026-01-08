@@ -4,7 +4,7 @@ import type { ChangeEvent } from 'react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { XIcon } from '~/components/icons'
 import { Button, Text, TextField } from '@radix-ui/themes'
-import { FieldError, Label } from '~/components/ui'
+import { FieldError } from '~/components/ui'
 
 type BasicAsset = {
   code: string
@@ -76,9 +76,15 @@ export const LiquidityDialog = ({
               </Dialog.Title>
               <div className='mt-2'>
                 <div>
-                  <Label htmlFor={amountId} required>
-                    Amount
-                  </Label>
+                  <Text
+                    as='label'
+                    htmlFor={amountId}
+                    size='2'
+                    weight='medium'
+                    className='block'
+                  >
+                    Amount<Text as='span' color='red'> *</Text>
+                  </Text>
                   <TextField.Root
                     id={amountId}
                     ref={inputRef}

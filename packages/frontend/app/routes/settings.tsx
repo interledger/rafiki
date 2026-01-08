@@ -11,8 +11,8 @@ import {
 import type { UiContainer } from '@ory/client'
 import { useLoaderData } from '@remix-run/react'
 import { PageHeader } from '~/components'
-import { Button, TextField } from '@radix-ui/themes'
-import { FieldError, Label } from '../components/ui'
+import { Button, Text, TextField } from '@radix-ui/themes'
+import { FieldError } from '../components/ui'
 import variables from '../lib/envConfig.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 
@@ -134,12 +134,18 @@ export default function Settings() {
                             />
                           ) : (
                             <div>
-                              <Label
+                              <Text
+                                as='label'
                                 htmlFor={attributes.name}
-                                required={attributes.required}
+                                size='2'
+                                weight='medium'
+                                className='block'
                               >
                                 {label}
-                              </Label>
+                                {attributes.required ? (
+                                  <Text as='span' color='red'> *</Text>
+                                ) : null}
+                              </Text>
                               <TextField.Root
                                 id={attributes.name}
                                 type={normalizeType(attributes.type)}
@@ -220,12 +226,18 @@ export default function Settings() {
                             />
                           ) : (
                             <div>
-                              <Label
+                              <Text
+                                as='label'
                                 htmlFor={attributes.name}
-                                required={attributes.required}
+                                size='2'
+                                weight='medium'
+                                className='block'
                               >
                                 {label}
-                              </Label>
+                                {attributes.required ? (
+                                  <Text as='span' color='red'> *</Text>
+                                ) : null}
+                              </Text>
                               <TextField.Root
                                 id={attributes.name}
                                 type={normalizeType(attributes.type)}
