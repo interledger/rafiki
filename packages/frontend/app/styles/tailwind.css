@@ -44,3 +44,14 @@ div.forward {
   background-color: #fff;
   padding: 24px;
 }
+
+/* Remove the inner gap between Radix text field borders and fill. */
+.rt-TextFieldRoot {
+  background-clip: padding-box;
+  border-radius: var(--text-field-border-radius);
+  overflow: hidden;
+}
+
+.rt-TextFieldInput {
+  border-radius: inherit;
+}

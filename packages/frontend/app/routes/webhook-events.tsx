@@ -85,15 +85,20 @@ export default function WebhookEventsPage() {
     <>
       <Box p='4'>
         <Flex direction='column' gap='4'>
-          <Heading size='5'>Webhook Events</Heading>
-
-          <Flex direction='column' gap='3'>
-            <Flex align='center' justify='end' gap='3' wrap='wrap'>
-              <Text size='3' color='gray'>
-                Filters
-              </Text>
+          <Flex align='start' justify='between' gap='3' wrap='wrap'>
+            <Heading size='5'>Webhook Events</Heading>
+            <Flex align='center' gap='3' wrap='wrap'>
               <PopoverFilter
-                label='Event type'
+                label={
+                  type.length
+                    ? `Events: ${type
+                        .map((value) =>
+                          value.charAt(0).toUpperCase() +
+                          value.slice(1).replace(/[_.]/g, ' ')
+                        )
+                        .join(', ')}`
+                    : 'All Events'
+                }
                 values={type.length > 0 ? type : ['all']}
                 options={[
                   {

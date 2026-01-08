@@ -1,11 +1,5 @@
 import { json, type ActionFunctionArgs, redirect } from '@remix-run/node'
-import {
-  Form,
-  Link,
-  useActionData,
-  useLoaderData,
-  useNavigation
-} from '@remix-run/react'
+import { Form, useActionData, useLoaderData, useNavigation } from '@remix-run/react'
 import { Box, Button, Card, Flex, Heading, Text, TextField } from '@radix-ui/themes'
 import { ErrorPanel, FieldError } from '~/components/ui'
 import { createTenant, whoAmI } from '~/lib/api/tenant.server'
@@ -34,7 +28,7 @@ const FormField = ({
   required
 }: FormFieldProps) => (
   <Flex direction='column' gap='2'>
-    <Text asChild size='2' weight='medium'>
+    <Text asChild size='2' weight='medium' className='tracking-wide text-gray-700'>
       <label htmlFor={name}>
         {label}
         {required ? <span className='text-vermillion'> *</span> : null}
@@ -46,6 +40,8 @@ const FormField = ({
       type={type}
       placeholder={placeholder}
       required={required}
+      size='3'
+      className='w-full'
     />
     <FieldError error={error} />
   </Flex>
@@ -127,53 +123,44 @@ export default function CreateTenantPage() {
 
   return (
     <Box p='4'>
-      <Card>
-        <Flex direction='column' gap='5'>
-          <Flex justify='between' align='center'>
-            <Heading size='5'>Create Tenant</Heading>
-            <Button asChild variant='soft' aria-label='go back to tenants page'>
-              <Link to='/tenants'>Go to tenants page</Link>
-            </Button>
-          </Flex>
+      <Flex direction='column' gap='4'>
+        <Flex justify='between' align='center'>
+          <Heading size='5'>Create Tenant</Heading>
+        </Flex>
 
-          <ErrorPanel errors={response?.errors.message} />
+        <ErrorPanel errors={response?.errors.message} />
 
+        <Card className='max-w-3xl'>
           <Form method='post' replace>
             <fieldset disabled={isSubmitting}>
               <Flex direction='column' gap='5'>
-                <div className='grid grid-cols-1 gap-6 md:grid-cols-3 border-b border-pearl pb-6'>
-                  <Box className='pt-1'>
-                    <Text size='3' weight='medium'>
-                      General Information
-                    </Text>
-                  </Box>
-                  <Card className='md:col-span-2'>
+                <Box>
+                  <Flex direction='column' gap='6'>
                     <Flex direction='column' gap='3'>
-                      <FormField
-                        name='publicName'
-                        label='Public Name'
-                        placeholder='Public name'
-                        error={response?.errors?.fieldErrors.publicName}
-                      />
-                      <FormField
-                        name='email'
-                        label='Email'
-                        placeholder='Email'
-                        type='email'
-                        error={response?.errors?.fieldErrors.email}
-                      />
+                      <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                        General Information
+                      </Text>
+                      <div className='grid gap-4 md:grid-cols-2'>
+                        <FormField
+                          name='publicName'
+                          label='Public Name'
+                          placeholder='Public name'
+                          error={response?.errors?.fieldErrors.publicName}
+                        />
+                        <FormField
+                          name='email'
+                          label='Email'
+                          placeholder='Email'
+                          type='email'
+                          error={response?.errors?.fieldErrors.email}
+                        />
+                      </div>
                     </Flex>
-                  </Card>
-                </div>
 
-                <div className='grid grid-cols-1 gap-6 md:grid-cols-3 border-b border-pearl pb-6'>
-                  <Box className='pt-1'>
-                    <Text size='3' weight='medium'>
-                      Sensitive Information
-                    </Text>
-                  </Box>
-                  <Card className='md:col-span-2'>
                     <Flex direction='column' gap='3'>
+                      <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                        Sensitive Information
+                      </Text>
                       <FormField
                         name='apiSecret'
                         label='API Secret'
@@ -183,17 +170,11 @@ export default function CreateTenantPage() {
                         required
                       />
                     </Flex>
-                  </Card>
-                </div>
 
-                <div className='grid grid-cols-1 gap-6 md:grid-cols-3 border-b border-pearl pb-6'>
-                  <Box className='pt-1'>
-                    <Text size='3' weight='medium'>
-                      Identity Provider Information
-                    </Text>
-                  </Box>
-                  <Card className='md:col-span-2'>
                     <Flex direction='column' gap='3'>
+                      <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                        Identity Provider Information
+                      </Text>
                       <FormField
                         name='idpConsentUrl'
                         label='Consent URL'
@@ -208,33 +189,55 @@ export default function CreateTenantPage() {
                         error={response?.errors?.fieldErrors.idpSecret}
                       />
                     </Flex>
-                  </Card>
-                </div>
 
-                <div className='grid grid-cols-1 gap-6 md:grid-cols-3 border-b border-pearl pb-6'>
-                  <Box className='pt-1'>
-                    <Text size='3' weight='medium'>
-                      Tenant Settings
-                    </Text>
-                  </Box>
-                  <Card className='md:col-span-2'>
                     <Flex direction='column' gap='3'>
-                      {tenantSettings.map((setting) => (
+                      <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                        Tenant Settings
+                      </Text>
+                      <FormField
+                        name='exchangeRatesUrl'
+                        label='Exchange Rates Url'
+                        placeholder='Exhange Rates Url'
+                        error={getTenantSettingError('exchangeRatesUrl')}
+                      />
+                      <FormField
+                        name='webhookUrl'
+                        label='Webhook Url'
+                        placeholder='Webhook Url'
+                        error={getTenantSettingError('webhookUrl')}
+                      />
+                      <div className='grid gap-4 md:grid-cols-2'>
                         <FormField
-                          key={setting.name}
-                          name={setting.name}
-                          label={setting.label}
-                          placeholder={setting.placeholder}
-                          type={setting.type}
-                          error={getTenantSettingError(setting.name)}
+                          name='webhookTimeout'
+                          label='Webhook Timeout'
+                          placeholder='Webhook Timeout'
+                          type='number'
+                          error={getTenantSettingError('webhookTimeout')}
                         />
-                      ))}
-                    </Flex>
-                    <Box pt='3'>
+                        <FormField
+                          name='webhookMaxRetry'
+                          label='Webhook Max Retry'
+                          placeholder='Webhook Max Retry'
+                          type='number'
+                          error={getTenantSettingError('webhookMaxRetry')}
+                        />
+                      </div>
+                      <FormField
+                        name='walletAddressUrl'
+                        label='Wallet Address Url'
+                        placeholder='Wallet Address Url'
+                        error={getTenantSettingError('walletAddressUrl')}
+                      />
+                      <FormField
+                        name='ilpAddress'
+                        label='ILP Address'
+                        placeholder='ILP Address'
+                        error={getTenantSettingError('ilpAddress')}
+                      />
                       <ErrorPanel errors={tenantSettingErrors} />
-                    </Box>
-                  </Card>
-                </div>
+                    </Flex>
+                  </Flex>
+                </Box>
 
                 <Flex justify='end'>
                   <Button type='submit'>
@@ -244,8 +247,8 @@ export default function CreateTenantPage() {
               </Flex>
             </fieldset>
           </Form>
-        </Flex>
-      </Card>
+        </Card>
+      </Flex>
     </Box>
   )
 }

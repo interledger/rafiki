@@ -130,7 +130,7 @@ export default function PaymentsPage() {
   return (
     <Box p='4'>
       <Flex direction='column' gap='4'>
-          <Flex align='center' justify='between' gap='3' wrap='wrap'>
+          <Flex align='start' justify='between' gap='3' wrap='wrap'>
             <Heading size='5'>Payments</Heading>
           <Flex align='center' gap='2' wrap='wrap'>
             <DropdownMenu.Root>
