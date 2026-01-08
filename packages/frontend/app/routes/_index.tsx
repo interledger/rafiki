@@ -41,7 +41,7 @@ export default function Index() {
 
   return (
     <div className='pt-4 flex flex-col'>
-      <div className='flex flex-col rounded-md bg-offwhite px-6 text-center min-h-[calc(100vh-7rem)] md:min-h-[calc(100vh-3rem)]'>
+      <div className='flex flex-col rounded-md px-6 text-center min-h-[calc(100vh-7rem)] md:min-h-[calc(100vh-3rem)]'>
         <div className='p-4 space-y-6 md:p-10 md:space-y-16'>
           <h1 className='text-6xl pt-10 md:text-9xl md:pt-16 text-[#F37F64]'>
             Welcome!

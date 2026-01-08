@@ -10,3 +10,31 @@ a.default-link {
 div.forward {
   z-index: 1;
 }
+
+/* Diagonal Flow Background */
+.bg-diagonal {
+  background: #fffdf9;
+  position: relative;
+}
+
+.bg-diagonal::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    #ffd6c7 0%,
+    #fff0c7 25%,
+    #c7e8f1 50%,
+    #bfece2 75%,
+    #c7b7d1 100%
+  );
+  opacity: 0.25;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Allow the body background to show through the Radix Theme wrapper. */
+.radix-themes {
+  background-color: transparent;
+}

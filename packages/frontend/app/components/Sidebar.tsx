@@ -143,8 +143,8 @@ export const Sidebar: FC<SidebarProps> = ({
           </Transition.Child>
         </Dialog>
       </Transition.Root>
-      <nav className='fixed inset-x-0 z-10 flex h-20 flex-col bg-offwhite shadow-md md:inset-y-0 md:h-auto md:w-60 md:shadow-none'>
-        <Flex className='flex min-h-0 flex-1 items-center px-4 py-8 md:flex-col md:items-start md:overflow-y-auto md:bg-gradient-primary'>
+      <nav className='fixed inset-x-0 z-10 flex h-20 flex-col md:inset-y-0 md:h-auto md:w-60'>
+        <Flex className='flex min-h-0 flex-1 items-center px-4 py-8 md:flex-col md:items-start md:overflow-y-auto'>
           {/* Logo */}
           <Flex align='center' gap='2' className='flex-shrink-0'>
             <img className='w-8' src='/logo.svg' alt='Logo' />

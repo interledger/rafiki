@@ -128,9 +128,9 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body className='h-full text-tealish'>
-        <Theme>
-          <div className='min-h-full'>
+      <body className='h-full text-tealish bg-diagonal'>
+        <Theme accentColor='orange'>
+          <div className='min-h-full relative z-10'>
             {displaySidebar && (
               <Sidebar
                 logoutUrl={logoutUrl}
