@@ -1,6 +1,6 @@
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData, useNavigate } from '@remix-run/react'
-import { Box, Button, Card, Flex, Heading, Table, Badge, Text } from '@radix-ui/themes'
+import { Box, Button, Flex, Heading, Table, Badge, Text } from '@radix-ui/themes'
 import { listWalletAddresses } from '~/lib/api/wallet-address.server'
 import { paginationSchema } from '~/lib/validate.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
@@ -56,67 +56,67 @@ export default function WalletAddressesPage() {
           </Button>
         </Flex>
 
-        <Card>
-          <Flex direction='column' gap='4'>
+        <Flex direction='column' gap='4'>
+          <Box className='overflow-hidden rounded-md border border-pearl bg-white'>
             <Table.Root>
-              <Table.Header>
-                <Table.Row>
-                  <Table.ColumnHeaderCell>Wallet address</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Public name</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
-                </Table.Row>
+              <Table.Header className='bg-pearl/40'>
+              <Table.Row>
+                <Table.ColumnHeaderCell>Wallet address</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Public name</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
+              </Table.Row>
               </Table.Header>
               <Table.Body>
-                {walletAddresses.edges.length ? (
-                  walletAddresses.edges.map((wa) => (
-                    <Table.Row
-                      key={wa.node.id}
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => navigate(`/wallet-addresses/${wa.node.id}`)}
-                    >
-                      <Table.Cell>
-                        <Text>{wa.node.address}</Text>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Text weight='medium'>
-                          {wa.node.publicName || 'No public name'}
-                        </Text>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Badge color={statusColorMap[wa.node.status] || 'gray'}>
-                          {wa.node.status}
-                        </Badge>
-                      </Table.Cell>
-                    </Table.Row>
-                  ))
-                ) : (
-                  <Table.Row>
-                    <Table.Cell colSpan={3} align='center'>
-                      <Text>No wallet addresses found.</Text>
+              {walletAddresses.edges.length ? (
+                walletAddresses.edges.map((wa) => (
+                  <Table.Row
+                    key={wa.node.id}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => navigate(`/wallet-addresses/${wa.node.id}`)}
+                  >
+                    <Table.Cell>
+                      <Text>{wa.node.address}</Text>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Text weight='medium'>
+                        {wa.node.publicName || 'No public name'}
+                      </Text>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Badge color={statusColorMap[wa.node.status] || 'gray'}>
+                        {wa.node.status}
+                      </Badge>
                     </Table.Cell>
                   </Table.Row>
-                )}
+                ))
+              ) : (
+                <Table.Row>
+                  <Table.Cell colSpan={3} align='center'>
+                    <Text>No wallet addresses found.</Text>
+                  </Table.Cell>
+                </Table.Row>
+              )}
               </Table.Body>
             </Table.Root>
+          </Box>
 
-            <Flex justify='between' pt='2'>
-              <Button
-                variant='soft'
-                disabled={!walletAddresses.pageInfo.hasPreviousPage}
-                onClick={() => navigate(previousPageUrl)}
-              >
-                Previous
-              </Button>
-              <Button
-                variant='soft'
-                disabled={!walletAddresses.pageInfo.hasNextPage}
-                onClick={() => navigate(nextPageUrl)}
-              >
-                Next
-              </Button>
-            </Flex>
+          <Flex justify='between' pt='2'>
+            <Button
+              variant='soft'
+              disabled={!walletAddresses.pageInfo.hasPreviousPage}
+              onClick={() => navigate(previousPageUrl)}
+            >
+              Previous
+            </Button>
+            <Button
+              variant='soft'
+              disabled={!walletAddresses.pageInfo.hasNextPage}
+              onClick={() => navigate(nextPageUrl)}
+            >
+              Next
+            </Button>
           </Flex>
-        </Card>
+        </Flex>
       </Flex>
     </Box>
   )

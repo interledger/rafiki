@@ -12,7 +12,7 @@ import {
   Form,
   useActionData
 } from '@remix-run/react'
-import { Box, Button, Card, Flex, Heading, Table, Badge, Text, TextField } from '@radix-ui/themes'
+import { Box, Button, Flex, Heading, Table, Badge, Text, TextField } from '@radix-ui/themes'
 import { PopoverFilter } from '~/components/Filters'
 import { ErrorPanel, FieldError } from '~/components/ui'
 import { listPayments } from '~/lib/api/payments.server'
@@ -127,179 +127,181 @@ export default function PaymentsPage() {
           <Heading size='4'>Filters</Heading>
           <ErrorPanel errors={response?.errors.message} />
 
-          <Flex direction='column' gap='2'>
-            <PopoverFilter
-              label='Payment type'
-              values={type.length > 0 ? type : ['all']}
-              options={[
-                {
-                  name: 'All',
-                  value: 'all',
-                  action: () =>
-                    updateParams({
-                      type: null,
-                      before: null,
-                      after: null,
-                      walletAddressId
-                    })
-                },
-                ...Object.values(PaymentType).map((value) => ({
-                  name: capitalize(value),
-                  value: value,
-                  action: () => setTypeFilterParams(value)
-                }))
-              ]}
-            />
+          <Flex align='center' justify='between' gap='3' wrap='wrap'>
+            <Flex align='center' gap='2' wrap='wrap'>
+              <PopoverFilter
+                label='Payment type'
+                values={type.length > 0 ? type : ['all']}
+                options={[
+                  {
+                    name: 'All',
+                    value: 'all',
+                    action: () =>
+                      updateParams({
+                        type: null,
+                        before: null,
+                        after: null,
+                        walletAddressId
+                      })
+                  },
+                  ...Object.values(PaymentType).map((value) => ({
+                    name: capitalize(value),
+                    value: value,
+                    action: () => setTypeFilterParams(value)
+                  }))
+                ]}
+              />
 
-            <Form
-              method='post'
-              onSubmit={(e) => {
-                if (!walletId) {
-                  e.preventDefault()
-                  updateParams({
-                    walletAddressId: null,
-                    type: searchParams.get('type'),
-                    before: null,
-                    after: null
-                  })
-                }
+              <Form
+                method='post'
+                onSubmit={(e) => {
+                  if (!walletId) {
+                    e.preventDefault()
+                    updateParams({
+                      walletAddressId: null,
+                      type: searchParams.get('type'),
+                      before: null,
+                      after: null
+                    })
+                  }
+                }}
+              >
+                <Flex gap='2' align='center'>
+                  <TextField.Root
+                    name='walletAddressId'
+                    placeholder='Wallet address ID'
+                    style={{ width: '400px' }}
+                    value={walletId}
+                    onChange={(e) => setWalletId(e.target.value)}
+                  />
+                  <input
+                    name='type'
+                    type='hidden'
+                    value={searchParams.get('type') ?? ''}
+                  />
+                  <Button type='submit'>
+                    <svg
+                      xmlns='http://www.w3.org/2000/svg'
+                      width='16'
+                      height='16'
+                      fill='none'
+                      viewBox='0 0 24 24'
+                      stroke='currentColor'
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        d='M21 21l-4.35-4.35M17.25 10.5a6.75 6.75 0 11-13.5 0 6.75 6.75 0 0113.5 0z'
+                      />
+                    </svg>
+                  </Button>
+                </Flex>
+                <FieldError
+                  error={response?.errors?.fieldErrors.walletAddressId}
+                />
+              </Form>
+            </Flex>
+
+            <Button
+              variant='soft'
+              onClick={() => {
+                navigate('/payments')
+                setWalletId('')
+                setSearchParams(new URLSearchParams())
               }}
             >
-              <Flex gap='2' align='center'>
-                <TextField.Root
-                  name='walletAddressId'
-                  placeholder='Wallet address ID'
-                  style={{ width: '400px' }}
-                  value={walletId}
-                  onChange={(e) => setWalletId(e.target.value)}
-                />
-                <input
-                  name='type'
-                  type='hidden'
-                  value={searchParams.get('type') ?? ''}
-                />
-                <Button type='submit'>
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    width='16'
-                    height='16'
-                    fill='none'
-                    viewBox='0 0 24 24'
-                    stroke='currentColor'
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      d='M21 21l-4.35-4.35M17.25 10.5a6.75 6.75 0 11-13.5 0 6.75 6.75 0 0113.5 0z'
-                    />
-                  </svg>
-                </Button>
-              </Flex>
-              <FieldError
-                error={response?.errors?.fieldErrors.walletAddressId}
-              />
-            </Form>
+              Reset Filters
+            </Button>
           </Flex>
-
-          <Button
-            variant='soft'
-            onClick={() => {
-              navigate('/payments')
-              setWalletId('')
-              setSearchParams(new URLSearchParams())
-            }}
-          >
-            Reset Filters
-          </Button>
         </Flex>
 
-        <Card>
-          <Flex direction='column' gap='4'>
+        <Flex direction='column' gap='4'>
+          <Box className='overflow-hidden rounded-md border border-pearl bg-white'>
             <Table.Root>
-              <Table.Header>
-                <Table.Row>
-                  <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>State</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Date</Table.ColumnHeaderCell>
-                </Table.Row>
+              <Table.Header className='bg-pearl/40'>
+              <Table.Row>
+                <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>State</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Date</Table.ColumnHeaderCell>
+              </Table.Row>
               </Table.Header>
               <Table.Body>
-                {payments.edges.length ? (
-                  payments.edges.map((payment) => (
-                    <Table.Row
-                      key={payment.node.id}
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => {
-                        const subpath = paymentSubpathByType[payment.node.type]
-                        return navigate(`/payments/${subpath}/${payment.node.id}`)
-                      }}
-                    >
-                      <Table.Cell>
-                        <Text>{payment.node.id}</Text>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Text weight='medium'>{capitalize(payment.node.type)}</Text>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Badge
-                          color={
-                            badgeColorByPaymentState[
-                              payment.node.state as CombinedPaymentState
-                            ]
-                          }
-                        >
-                          {payment.node.state}
-                        </Badge>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Text>{new Date(payment.node.createdAt).toLocaleString()}</Text>
-                      </Table.Cell>
-                    </Table.Row>
-                  ))
-                ) : (
-                  <Table.Row>
-                    <Table.Cell colSpan={4} align='center'>
-                      <Text>No payments found.</Text>
+              {payments.edges.length ? (
+                payments.edges.map((payment) => (
+                  <Table.Row
+                    key={payment.node.id}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => {
+                      const subpath = paymentSubpathByType[payment.node.type]
+                      return navigate(`/payments/${subpath}/${payment.node.id}`)
+                    }}
+                  >
+                    <Table.Cell>
+                      <Text>{payment.node.id}</Text>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Text weight='medium'>{capitalize(payment.node.type)}</Text>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Badge
+                        color={
+                          badgeColorByPaymentState[
+                            payment.node.state as CombinedPaymentState
+                          ]
+                        }
+                      >
+                        {payment.node.state}
+                      </Badge>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Text>{new Date(payment.node.createdAt).toLocaleString()}</Text>
                     </Table.Cell>
                   </Table.Row>
-                )}
+                ))
+              ) : (
+                <Table.Row>
+                  <Table.Cell colSpan={4} align='center'>
+                    <Text>No payments found.</Text>
+                  </Table.Cell>
+                </Table.Row>
+              )}
               </Table.Body>
             </Table.Root>
+          </Box>
 
-            <Flex justify='between' pt='2'>
-              <Button
-                variant='soft'
-                disabled={!payments.pageInfo.hasPreviousPage}
-                onClick={() =>
-                  updateParams({
-                    before: payments.pageInfo.startCursor ?? null,
-                    after: null,
-                    walletAddressId,
-                    type: searchParams.get('type')
-                  })
-                }
-              >
-                Previous
-              </Button>
-              <Button
-                variant='soft'
-                disabled={!payments.pageInfo.hasNextPage}
-                onClick={() =>
-                  updateParams({
-                    before: null,
-                    after: payments.pageInfo.endCursor ?? null,
-                    walletAddressId,
-                    type: searchParams.get('type')
-                  })
-                }
-              >
-                Next
-              </Button>
-            </Flex>
+          <Flex justify='between' pt='2'>
+            <Button
+              variant='soft'
+              disabled={!payments.pageInfo.hasPreviousPage}
+              onClick={() =>
+                updateParams({
+                  before: payments.pageInfo.startCursor ?? null,
+                  after: null,
+                  walletAddressId,
+                  type: searchParams.get('type')
+                })
+              }
+            >
+              Previous
+            </Button>
+            <Button
+              variant='soft'
+              disabled={!payments.pageInfo.hasNextPage}
+              onClick={() =>
+                updateParams({
+                  before: null,
+                  after: payments.pageInfo.endCursor ?? null,
+                  walletAddressId,
+                  type: searchParams.get('type')
+                })
+              }
+            >
+              Next
+            </Button>
           </Flex>
-        </Card>
+        </Flex>
       </Flex>
     </Box>
   )

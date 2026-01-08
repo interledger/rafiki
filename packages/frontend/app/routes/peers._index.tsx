@@ -1,6 +1,6 @@
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData, useNavigate } from '@remix-run/react'
-import { Box, Button, Card, Flex, Heading, Table, Text } from '@radix-ui/themes'
+import { Box, Button, Flex, Heading, Table, Text } from '@radix-ui/themes'
 import { listPeers } from '~/lib/api/peer.server'
 import { paginationSchema } from '~/lib/validate.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
@@ -50,76 +50,76 @@ export default function PeersPage() {
           </Button>
         </Flex>
 
-        <Card>
-          <Flex direction='column' gap='4'>
+        <Flex direction='column' gap='4'>
+          <Box className='overflow-hidden rounded-md border border-pearl bg-white'>
             <Table.Root>
-              <Table.Header>
-                <Table.Row>
-                  <Table.ColumnHeaderCell>Name</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>ILP Address</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Asset</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Outgoing HTTP Endpoint</Table.ColumnHeaderCell>
-                </Table.Row>
+              <Table.Header className='bg-pearl/40'>
+              <Table.Row>
+                <Table.ColumnHeaderCell>Name</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>ILP Address</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Asset</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Outgoing HTTP Endpoint</Table.ColumnHeaderCell>
+              </Table.Row>
               </Table.Header>
               <Table.Body>
-                {peers.edges.length ? (
-                  peers.edges.map((peer) => (
-                    <Table.Row
-                      key={peer.node.id}
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => navigate(`/peers/${peer.node.id}`)}
-                    >
-                      <Table.Cell>
-                        <Flex direction='column' gap='1'>
-                          <Text weight='medium'>
-                            {peer.node.name || 'No peer name'}
-                          </Text>
-                          <Text size='1' color='gray'>
-                            (ID: {peer.node.id})
-                          </Text>
-                        </Flex>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Text>{peer.node.staticIlpAddress}</Text>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Text>
-                          {peer.node.asset.code} (Scale: {peer.node.asset.scale})
+              {peers.edges.length ? (
+                peers.edges.map((peer) => (
+                  <Table.Row
+                    key={peer.node.id}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => navigate(`/peers/${peer.node.id}`)}
+                  >
+                    <Table.Cell>
+                      <Flex direction='column' gap='1'>
+                        <Text weight='medium'>
+                          {peer.node.name || 'No peer name'}
                         </Text>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Text>{peer.node.http.outgoing.endpoint}</Text>
-                      </Table.Cell>
-                    </Table.Row>
-                  ))
-                ) : (
-                  <Table.Row>
-                    <Table.Cell colSpan={4} align='center'>
-                      <Text>No peers found.</Text>
+                        <Text size='1' color='gray'>
+                          (ID: {peer.node.id})
+                        </Text>
+                      </Flex>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Text>{peer.node.staticIlpAddress}</Text>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Text>
+                        {peer.node.asset.code} (Scale: {peer.node.asset.scale})
+                      </Text>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Text>{peer.node.http.outgoing.endpoint}</Text>
                     </Table.Cell>
                   </Table.Row>
-                )}
+                ))
+              ) : (
+                <Table.Row>
+                  <Table.Cell colSpan={4} align='center'>
+                    <Text>No peers found.</Text>
+                  </Table.Cell>
+                </Table.Row>
+              )}
               </Table.Body>
             </Table.Root>
+          </Box>
 
-            <Flex justify='between' pt='2'>
-              <Button
-                variant='soft'
-                disabled={!peers.pageInfo.hasPreviousPage}
-                onClick={() => navigate(previousPageUrl)}
-              >
-                Previous
-              </Button>
-              <Button
-                variant='soft'
-                disabled={!peers.pageInfo.hasNextPage}
-                onClick={() => navigate(nextPageUrl)}
-              >
-                Next
-              </Button>
-            </Flex>
+          <Flex justify='between' pt='2'>
+            <Button
+              variant='soft'
+              disabled={!peers.pageInfo.hasPreviousPage}
+              onClick={() => navigate(previousPageUrl)}
+            >
+              Previous
+            </Button>
+            <Button
+              variant='soft'
+              disabled={!peers.pageInfo.hasNextPage}
+              onClick={() => navigate(nextPageUrl)}
+            >
+              Next
+            </Button>
           </Flex>
-        </Card>
+        </Flex>
       </Flex>
     </Box>
   )
