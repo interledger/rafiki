@@ -1,7 +1,6 @@
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData, useNavigate } from '@remix-run/react'
-import { Badge, BadgeColor, PageHeader } from '~/components'
-import { Button, Table } from '~/components/ui'
+import { Box, Button, Card, Flex, Heading, Table, Badge, Text } from '@radix-ui/themes'
 import { getTenantInfo, listTenants, whoAmI } from '~/lib/api/tenant.server'
 import { paginationSchema } from '~/lib/validate.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
@@ -59,99 +58,91 @@ export default function TenantsPage() {
   const navigate = useNavigate()
 
   return (
-    <div className='pt-4 flex flex-col space-y-8'>
-      <div className='flex flex-col rounded-md bg-offwhite px-6'>
-        <PageHeader>
-          <div className='flex-1'>
-            <h3 className='text-2xl'>Tenants</h3>
-          </div>
-          <div className='ml-auto'>
+    <Box p='4'>
+      <Card>
+        <Flex direction='column' gap='4'>
+          <Flex justify='between' align='center'>
+            <Heading size='6'>Tenants</Heading>
             {me.isOperator && (
-              <Button aria-label='add new tenant' to='/tenants/create'>
+              <Button onClick={() => navigate('/tenants/create')}>
                 Add tenant
               </Button>
             )}
-          </div>
-        </PageHeader>
-        <Table>
-          <Table.Head columns={['Public name', 'Email', 'Status']} />
-          <Table.Body>
-            {tenantEdges.length ? (
-              tenantEdges.map((tenant) => (
-                <Table.Row
-                  key={tenant.node.id}
-                  className='cursor-pointer'
-                  onClick={() => navigate(`/tenants/${tenant.node.id}`)}
-                >
-                  <Table.Cell>
-                    <div className='flex flex-col'>
-                      <div>
-                        <span className='mr-2'>
-                          {tenant.node.publicName ? (
-                            <span className='font-medium'>
-                              {tenant.node.publicName}
-                            </span>
-                          ) : (
-                            <span className='text-tealish/80'>
-                              No public name
-                            </span>
+          </Flex>
+
+          <Table.Root>
+            <Table.Header>
+              <Table.Row>
+                <Table.ColumnHeaderCell>Public name</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Email</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {tenantEdges.length ? (
+                tenantEdges.map((tenant) => (
+                  <Table.Row
+                    key={tenant.node.id}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => navigate(`/tenants/${tenant.node.id}`)}
+                  >
+                    <Table.Cell>
+                      <Flex direction='column' gap='1'>
+                        <Flex align='center' gap='2'>
+                          <Text weight='medium'>
+                            {tenant.node.publicName || 'No public name'}
+                          </Text>
+                          {me.isOperator && me.id == tenant.node.id && (
+                            <Badge color='yellow'>Operator</Badge>
                           )}
-                        </span>
-                        {me.isOperator && me.id == tenant.node.id && (
-                          <Badge color={BadgeColor.Yellow}>Operator</Badge>
-                        )}
-                      </div>
-                      <div className='text-tealish/50 text-xs'>
-                        (ID: {tenant.node.id})
-                      </div>
-                    </div>
-                  </Table.Cell>
-                  <Table.Cell>
-                    {tenant.node.email ? (
-                      <span className='font-medium'>{tenant.node.email}</span>
-                    ) : (
-                      <span className='text-tealish/80'>No email</span>
-                    )}
-                  </Table.Cell>
-                  <Table.Cell>
-                    {tenant.node.deletedAt ? (
-                      <Badge color={BadgeColor.Red}>Inactive</Badge>
-                    ) : (
-                      <Badge color={BadgeColor.Green}>Active</Badge>
-                    )}
+                        </Flex>
+                        <Text size='1' color='gray'>
+                          (ID: {tenant.node.id})
+                        </Text>
+                      </Flex>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Text weight='medium'>
+                        {tenant.node.email || 'No email'}
+                      </Text>
+                    </Table.Cell>
+                    <Table.Cell>
+                      {tenant.node.deletedAt ? (
+                        <Badge color='red'>Inactive</Badge>
+                      ) : (
+                        <Badge color='green'>Active</Badge>
+                      )}
+                    </Table.Cell>
+                  </Table.Row>
+                ))
+              ) : (
+                <Table.Row>
+                  <Table.Cell colSpan={3} align='center'>
+                    <Text>No tenants found.</Text>
                   </Table.Cell>
                 </Table.Row>
-              ))
-            ) : (
-              <Table.Row>
-                <Table.Cell colSpan={4} className='text-center'>
-                  No tenants found.
-                </Table.Cell>
-              </Table.Row>
-            )}
-          </Table.Body>
-        </Table>
-        <div className='flex items-center justify-between p-5'>
-          <Button
-            aria-label='go to previous page'
-            disabled={!tenantPageInfo.hasPreviousPage}
-            onClick={() => {
-              navigate(previousPageUrl)
-            }}
-          >
-            Previous
-          </Button>
-          <Button
-            aria-label='go to next page'
-            disabled={!tenantPageInfo.hasNextPage}
-            onClick={() => {
-              navigate(nextPageUrl)
-            }}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
-    </div>
+              )}
+            </Table.Body>
+          </Table.Root>
+
+          <Flex justify='between' pt='2'>
+            <Button
+              variant='soft'
+              disabled={!tenantPageInfo.hasPreviousPage}
+              onClick={() => navigate(previousPageUrl)}
+            >
+              Previous
+            </Button>
+            <Button
+              variant='soft'
+              disabled={!tenantPageInfo.hasNextPage}
+              onClick={() => navigate(nextPageUrl)}
+            >
+              Next
+            </Button>
+          </Flex>
+        </Flex>
+      </Card>
+    </Box>
   )
 }
