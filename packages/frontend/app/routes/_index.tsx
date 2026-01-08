@@ -47,7 +47,7 @@ export default function Index() {
         className='absolute inset-0 bg-cover bg-center'
         style={{ backgroundImage: `url(${bgUrl})` }}
       />
-      <div className='absolute inset-0 bg-white/30' />
+      <div className='absolute inset-0 bg-black/20' />
       <div className='relative flex min-h-screen items-center justify-center px-6 py-10'>
         <Card className='w-full max-w-xl border border-pearl/80 bg-white/90 shadow-xl'>
           <div className='space-y-6 text-center'>

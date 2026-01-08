@@ -76,7 +76,7 @@ export const ApiCredentialsForm = ({
               htmlFor='tenant-id'
               size='2'
               weight='medium'
-              className='block'
+              className='block tracking-wide text-gray-700 mb-1'
             >
               Tenant ID<Text as='span' color='red'> *</Text>
             </Text>
@@ -105,7 +105,7 @@ export const ApiCredentialsForm = ({
               htmlFor='api-secret'
               size='2'
               weight='medium'
-              className='block'
+              className='block tracking-wide text-gray-700 mb-1'
             >
               API Secret<Text as='span' color='red'> *</Text>
             </Text>
