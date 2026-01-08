@@ -11,8 +11,9 @@
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "lint": "eslint --max-warnings=0 --fix .",
+    "lint:docs": "pnpm -C ./packages/documentation lint",
     "format": "prettier --write . && pnpm lint",
-    "format:docs": "prettier --write ./docs/**/*.md",
+    "format:docs": "pnpm -C ./packages/documentation format",
     "checks": "pnpm check:prettier && pnpm check:lint",
     "check:lint": "eslint --max-warnings=0 .",
     "check:prettier": "prettier --check .",
