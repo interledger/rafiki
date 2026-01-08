@@ -59,90 +59,97 @@ export default function TenantsPage() {
 
   return (
     <Box p='4'>
-      <Card>
-        <Flex direction='column' gap='4'>
-          <Flex justify='between' align='center'>
+      <Flex direction='column' gap='4'>
+        <Flex justify='between' align='center'>
+          <Box>
             <Heading size='6'>Tenants</Heading>
-            {me.isOperator && (
-              <Button onClick={() => navigate('/tenants/create')}>
-                Add tenant
-              </Button>
-            )}
-          </Flex>
+            <Text size='2' color='gray'>
+              Manage your tenants and their access.
+            </Text>
+          </Box>
+          {me.isOperator && (
+            <Button onClick={() => navigate('/tenants/create')}>
+              Add tenant
+            </Button>
+          )}
+        </Flex>
 
-          <Table.Root>
-            <Table.Header>
-              <Table.Row>
-                <Table.ColumnHeaderCell>Public name</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>Email</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {tenantEdges.length ? (
-                tenantEdges.map((tenant) => (
-                  <Table.Row
-                    key={tenant.node.id}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => navigate(`/tenants/${tenant.node.id}`)}
-                  >
-                    <Table.Cell>
-                      <Flex direction='column' gap='1'>
-                        <Flex align='center' gap='2'>
-                          <Text weight='medium'>
-                            {tenant.node.publicName || 'No public name'}
+        <Card>
+          <Flex direction='column' gap='4'>
+            <Table.Root>
+              <Table.Header>
+                <Table.Row>
+                  <Table.ColumnHeaderCell>Public name</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Email</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {tenantEdges.length ? (
+                  tenantEdges.map((tenant) => (
+                    <Table.Row
+                      key={tenant.node.id}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => navigate(`/tenants/${tenant.node.id}`)}
+                    >
+                      <Table.Cell>
+                        <Flex direction='column' gap='1'>
+                          <Flex align='center' gap='2'>
+                            <Text weight='medium'>
+                              {tenant.node.publicName || 'No public name'}
+                            </Text>
+                            {me.isOperator && me.id == tenant.node.id && (
+                              <Badge color='yellow'>Operator</Badge>
+                            )}
+                          </Flex>
+                          <Text size='1' color='gray'>
+                            (ID: {tenant.node.id})
                           </Text>
-                          {me.isOperator && me.id == tenant.node.id && (
-                            <Badge color='yellow'>Operator</Badge>
-                          )}
                         </Flex>
-                        <Text size='1' color='gray'>
-                          (ID: {tenant.node.id})
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Text weight='medium'>
+                          {tenant.node.email || 'No email'}
                         </Text>
-                      </Flex>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text weight='medium'>
-                        {tenant.node.email || 'No email'}
-                      </Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      {tenant.node.deletedAt ? (
-                        <Badge color='red'>Inactive</Badge>
-                      ) : (
-                        <Badge color='green'>Active</Badge>
-                      )}
+                      </Table.Cell>
+                      <Table.Cell>
+                        {tenant.node.deletedAt ? (
+                          <Badge color='red'>Inactive</Badge>
+                        ) : (
+                          <Badge color='green'>Active</Badge>
+                        )}
+                      </Table.Cell>
+                    </Table.Row>
+                  ))
+                ) : (
+                  <Table.Row>
+                    <Table.Cell colSpan={3} align='center'>
+                      <Text>No tenants found.</Text>
                     </Table.Cell>
                   </Table.Row>
-                ))
-              ) : (
-                <Table.Row>
-                  <Table.Cell colSpan={3} align='center'>
-                    <Text>No tenants found.</Text>
-                  </Table.Cell>
-                </Table.Row>
-              )}
-            </Table.Body>
-          </Table.Root>
+                )}
+              </Table.Body>
+            </Table.Root>
 
-          <Flex justify='between' pt='2'>
-            <Button
-              variant='soft'
-              disabled={!tenantPageInfo.hasPreviousPage}
-              onClick={() => navigate(previousPageUrl)}
-            >
-              Previous
-            </Button>
-            <Button
-              variant='soft'
-              disabled={!tenantPageInfo.hasNextPage}
-              onClick={() => navigate(nextPageUrl)}
-            >
-              Next
-            </Button>
+            <Flex justify='between' pt='2'>
+              <Button
+                variant='soft'
+                disabled={!tenantPageInfo.hasPreviousPage}
+                onClick={() => navigate(previousPageUrl)}
+              >
+                Previous
+              </Button>
+              <Button
+                variant='soft'
+                disabled={!tenantPageInfo.hasNextPage}
+                onClick={() => navigate(nextPageUrl)}
+              >
+                Next
+              </Button>
+            </Flex>
           </Flex>
-        </Flex>
-      </Card>
+        </Card>
+      </Flex>
     </Box>
   )
 }

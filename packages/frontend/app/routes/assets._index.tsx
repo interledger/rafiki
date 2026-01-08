@@ -43,78 +43,80 @@ export default function AssetsPage() {
 
   return (
     <Box p='4'>
-      <Card>
-        <Flex direction='column' gap='4'>
-          <Flex justify='between' align='center'>
-            <Heading size='6'>Assets</Heading>
-            <Button onClick={() => navigate('/assets/create')}>
-              Add asset
-            </Button>
-          </Flex>
+      <Flex direction='column' gap='4'>
+        <Flex justify='between' align='center'>
+          <Heading size='6'>Assets</Heading>
+          <Button onClick={() => navigate('/assets/create')}>
+            Add asset
+          </Button>
+        </Flex>
 
-          <Table.Root>
-            <Table.Header>
-              <Table.Row>
-                <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>Code</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>Scale</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>Withdrawal threshold</Table.ColumnHeaderCell>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {assets.edges.length ? (
-                assets.edges.map((asset) => (
-                  <Table.Row
-                    key={asset.node.id}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => navigate(`/assets/${asset.node.id}`)}
-                  >
-                    <Table.Cell>
-                      <Text size='2'>{asset.node.id}</Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text weight='medium'>{asset.node.code}</Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text>{asset.node.scale}</Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      {asset.node.withdrawalThreshold ? (
-                        <Text>{asset.node.withdrawalThreshold}</Text>
-                      ) : (
-                        <Text color='gray'>No withdrawal threshold</Text>
-                      )}
+        <Card>
+          <Flex direction='column' gap='4'>
+            <Table.Root>
+              <Table.Header>
+                <Table.Row>
+                  <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Code</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Scale</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Withdrawal threshold</Table.ColumnHeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {assets.edges.length ? (
+                  assets.edges.map((asset) => (
+                    <Table.Row
+                      key={asset.node.id}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => navigate(`/assets/${asset.node.id}`)}
+                    >
+                      <Table.Cell>
+                        <Text size='2'>{asset.node.id}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Text weight='medium'>{asset.node.code}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Text>{asset.node.scale}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        {asset.node.withdrawalThreshold ? (
+                          <Text>{asset.node.withdrawalThreshold}</Text>
+                        ) : (
+                          <Text color='gray'>No withdrawal threshold</Text>
+                        )}
+                      </Table.Cell>
+                    </Table.Row>
+                  ))
+                ) : (
+                  <Table.Row>
+                    <Table.Cell colSpan={4} align='center'>
+                      <Text>No assets found.</Text>
                     </Table.Cell>
                   </Table.Row>
-                ))
-              ) : (
-                <Table.Row>
-                  <Table.Cell colSpan={4} align='center'>
-                    <Text>No assets found.</Text>
-                  </Table.Cell>
-                </Table.Row>
-              )}
-            </Table.Body>
-          </Table.Root>
+                )}
+              </Table.Body>
+            </Table.Root>
 
-          <Flex justify='between' pt='2'>
-            <Button
-              variant='soft'
-              disabled={!assets.pageInfo.hasPreviousPage}
-              onClick={() => navigate(previousPageUrl)}
-            >
-              Previous
-            </Button>
-            <Button
-              variant='soft'
-              disabled={!assets.pageInfo.hasNextPage}
-              onClick={() => navigate(nextPageUrl)}
-            >
-              Next
-            </Button>
+            <Flex justify='between' pt='2'>
+              <Button
+                variant='soft'
+                disabled={!assets.pageInfo.hasPreviousPage}
+                onClick={() => navigate(previousPageUrl)}
+              >
+                Previous
+              </Button>
+              <Button
+                variant='soft'
+                disabled={!assets.pageInfo.hasNextPage}
+                onClick={() => navigate(nextPageUrl)}
+              >
+                Next
+              </Button>
+            </Flex>
           </Flex>
-        </Flex>
-      </Card>
+        </Card>
+      </Flex>
     </Box>
   )
 }

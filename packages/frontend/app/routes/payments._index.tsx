@@ -120,185 +120,187 @@ export default function PaymentsPage() {
 
   return (
     <Box p='4'>
-      <Card>
-        <Flex direction='column' gap='4'>
-          <Heading size='6'>Payments</Heading>
+      <Flex direction='column' gap='4'>
+        <Heading size='6'>Payments</Heading>
 
-          <Flex direction='column' gap='3'>
-            <Heading size='4'>Filters</Heading>
-            <ErrorPanel errors={response?.errors.message} />
+        <Flex direction='column' gap='3'>
+          <Heading size='4'>Filters</Heading>
+          <ErrorPanel errors={response?.errors.message} />
 
-            <Flex direction='column' gap='2'>
-              <PopoverFilter
-                label='Payment type'
-                values={type.length > 0 ? type : ['all']}
-                options={[
-                  {
-                    name: 'All',
-                    value: 'all',
-                    action: () =>
-                      updateParams({
-                        type: null,
-                        before: null,
-                        after: null,
-                        walletAddressId
-                      })
-                  },
-                  ...Object.values(PaymentType).map((value) => ({
-                    name: capitalize(value),
-                    value: value,
-                    action: () => setTypeFilterParams(value)
-                  }))
-                ]}
-              />
-
-              <Form
-                method='post'
-                onSubmit={(e) => {
-                  if (!walletId) {
-                    e.preventDefault()
+          <Flex direction='column' gap='2'>
+            <PopoverFilter
+              label='Payment type'
+              values={type.length > 0 ? type : ['all']}
+              options={[
+                {
+                  name: 'All',
+                  value: 'all',
+                  action: () =>
                     updateParams({
-                      walletAddressId: null,
-                      type: searchParams.get('type'),
+                      type: null,
                       before: null,
-                      after: null
+                      after: null,
+                      walletAddressId
                     })
-                  }
-                }}
-              >
-                <Flex gap='2' align='center'>
-                  <TextField.Root
-                    name='walletAddressId'
-                    placeholder='Wallet address ID'
-                    style={{ width: '400px' }}
-                    value={walletId}
-                    onChange={(e) => setWalletId(e.target.value)}
-                  />
-                  <input
-                    name='type'
-                    type='hidden'
-                    value={searchParams.get('type') ?? ''}
-                  />
-                  <Button type='submit'>
-                    <svg
-                      xmlns='http://www.w3.org/2000/svg'
-                      width='16'
-                      height='16'
-                      fill='none'
-                      viewBox='0 0 24 24'
-                      stroke='currentColor'
-                      strokeWidth={2}
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        d='M21 21l-4.35-4.35M17.25 10.5a6.75 6.75 0 11-13.5 0 6.75 6.75 0 0113.5 0z'
-                      />
-                    </svg>
-                  </Button>
-                </Flex>
-                <FieldError
-                  error={response?.errors?.fieldErrors.walletAddressId}
-                />
-              </Form>
-            </Flex>
+                },
+                ...Object.values(PaymentType).map((value) => ({
+                  name: capitalize(value),
+                  value: value,
+                  action: () => setTypeFilterParams(value)
+                }))
+              ]}
+            />
 
-            <Button
-              variant='soft'
-              onClick={() => {
-                navigate('/payments')
-                setWalletId('')
-                setSearchParams(new URLSearchParams())
+            <Form
+              method='post'
+              onSubmit={(e) => {
+                if (!walletId) {
+                  e.preventDefault()
+                  updateParams({
+                    walletAddressId: null,
+                    type: searchParams.get('type'),
+                    before: null,
+                    after: null
+                  })
+                }
               }}
             >
-              Reset Filters
-            </Button>
+              <Flex gap='2' align='center'>
+                <TextField.Root
+                  name='walletAddressId'
+                  placeholder='Wallet address ID'
+                  style={{ width: '400px' }}
+                  value={walletId}
+                  onChange={(e) => setWalletId(e.target.value)}
+                />
+                <input
+                  name='type'
+                  type='hidden'
+                  value={searchParams.get('type') ?? ''}
+                />
+                <Button type='submit'>
+                  <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    width='16'
+                    height='16'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    stroke='currentColor'
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      d='M21 21l-4.35-4.35M17.25 10.5a6.75 6.75 0 11-13.5 0 6.75 6.75 0 0113.5 0z'
+                    />
+                  </svg>
+                </Button>
+              </Flex>
+              <FieldError
+                error={response?.errors?.fieldErrors.walletAddressId}
+              />
+            </Form>
           </Flex>
 
-          <Table.Root>
-            <Table.Header>
-              <Table.Row>
-                <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>State</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>Date</Table.ColumnHeaderCell>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {payments.edges.length ? (
-                payments.edges.map((payment) => (
-                  <Table.Row
-                    key={payment.node.id}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => {
-                      const subpath = paymentSubpathByType[payment.node.type]
-                      return navigate(`/payments/${subpath}/${payment.node.id}`)
-                    }}
-                  >
-                    <Table.Cell>
-                      <Text>{payment.node.id}</Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text weight='medium'>{capitalize(payment.node.type)}</Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Badge
-                        color={
-                          badgeColorByPaymentState[
-                            payment.node.state as CombinedPaymentState
-                          ]
-                        }
-                      >
-                        {payment.node.state}
-                      </Badge>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text>{new Date(payment.node.createdAt).toLocaleString()}</Text>
+          <Button
+            variant='soft'
+            onClick={() => {
+              navigate('/payments')
+              setWalletId('')
+              setSearchParams(new URLSearchParams())
+            }}
+          >
+            Reset Filters
+          </Button>
+        </Flex>
+
+        <Card>
+          <Flex direction='column' gap='4'>
+            <Table.Root>
+              <Table.Header>
+                <Table.Row>
+                  <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>State</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Date</Table.ColumnHeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {payments.edges.length ? (
+                  payments.edges.map((payment) => (
+                    <Table.Row
+                      key={payment.node.id}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => {
+                        const subpath = paymentSubpathByType[payment.node.type]
+                        return navigate(`/payments/${subpath}/${payment.node.id}`)
+                      }}
+                    >
+                      <Table.Cell>
+                        <Text>{payment.node.id}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Text weight='medium'>{capitalize(payment.node.type)}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge
+                          color={
+                            badgeColorByPaymentState[
+                              payment.node.state as CombinedPaymentState
+                            ]
+                          }
+                        >
+                          {payment.node.state}
+                        </Badge>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Text>{new Date(payment.node.createdAt).toLocaleString()}</Text>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))
+                ) : (
+                  <Table.Row>
+                    <Table.Cell colSpan={4} align='center'>
+                      <Text>No payments found.</Text>
                     </Table.Cell>
                   </Table.Row>
-                ))
-              ) : (
-                <Table.Row>
-                  <Table.Cell colSpan={4} align='center'>
-                    <Text>No payments found.</Text>
-                  </Table.Cell>
-                </Table.Row>
-              )}
-            </Table.Body>
-          </Table.Root>
+                )}
+              </Table.Body>
+            </Table.Root>
 
-          <Flex justify='between' pt='2'>
-            <Button
-              variant='soft'
-              disabled={!payments.pageInfo.hasPreviousPage}
-              onClick={() =>
-                updateParams({
-                  before: payments.pageInfo.startCursor ?? null,
-                  after: null,
-                  walletAddressId,
-                  type: searchParams.get('type')
-                })
-              }
-            >
-              Previous
-            </Button>
-            <Button
-              variant='soft'
-              disabled={!payments.pageInfo.hasNextPage}
-              onClick={() =>
-                updateParams({
-                  before: null,
-                  after: payments.pageInfo.endCursor ?? null,
-                  walletAddressId,
-                  type: searchParams.get('type')
-                })
-              }
-            >
-              Next
-            </Button>
+            <Flex justify='between' pt='2'>
+              <Button
+                variant='soft'
+                disabled={!payments.pageInfo.hasPreviousPage}
+                onClick={() =>
+                  updateParams({
+                    before: payments.pageInfo.startCursor ?? null,
+                    after: null,
+                    walletAddressId,
+                    type: searchParams.get('type')
+                  })
+                }
+              >
+                Previous
+              </Button>
+              <Button
+                variant='soft'
+                disabled={!payments.pageInfo.hasNextPage}
+                onClick={() =>
+                  updateParams({
+                    before: null,
+                    after: payments.pageInfo.endCursor ?? null,
+                    walletAddressId,
+                    type: searchParams.get('type')
+                  })
+                }
+              >
+                Next
+              </Button>
+            </Flex>
           </Flex>
-        </Flex>
-      </Card>
+        </Card>
+      </Flex>
     </Box>
   )
 }
