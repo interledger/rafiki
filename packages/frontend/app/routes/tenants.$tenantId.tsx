@@ -11,11 +11,12 @@ import {
   useNavigation,
   useSubmit
 } from '@remix-run/react'
-import { type FormEvent, useState, useRef } from 'react'
+import { type FormEvent, useRef, useState } from 'react'
 import type { ZodSchema } from 'zod'
 import { z } from 'zod'
-import { DangerZone, PageHeader } from '~/components'
-import { Button, ErrorPanel, Input, PasswordInput } from '~/components/ui'
+import { DangerZone } from '~/components'
+import { Box, Button, Card, Flex, Heading, Text, TextField } from '@radix-ui/themes'
+import { ErrorPanel, FieldError } from '~/components/ui'
 import {
   ConfirmationDialog,
   type ConfirmationDialogRef
@@ -32,6 +33,55 @@ import type { ZodFieldErrors } from '~/shared/types'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { getTenantInfo } from '~/lib/api/tenant.server'
 import type { UpdateTenantInput } from '~/generated/graphql'
+
+type FormFieldProps = {
+  name: string
+  label: string
+  placeholder?: string
+  type?: 'text' | 'email' | 'password' | 'number'
+  error?: string | string[]
+  required?: boolean
+  defaultValue?: string
+  value?: string
+  disabled?: boolean
+  readOnly?: boolean
+}
+
+const FormField = ({
+  name,
+  label,
+  placeholder,
+  type = 'text',
+  error,
+  required,
+  defaultValue,
+  value,
+  disabled,
+  readOnly
+}: FormFieldProps) => (
+  <Flex direction='column' gap='2'>
+    <Text asChild size='2' weight='medium' className='tracking-wide text-gray-700'>
+      <label htmlFor={name}>
+        {label}
+        {required ? <span className='text-vermillion'> *</span> : null}
+      </label>
+    </Text>
+    <TextField.Root
+      id={name}
+      name={name}
+      type={type}
+      placeholder={placeholder}
+      required={required}
+      defaultValue={defaultValue}
+      value={value}
+      disabled={disabled}
+      readOnly={readOnly}
+      size='3'
+      className='w-full'
+    />
+    <FieldError error={error} />
+  </Flex>
+)
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const cookies = request.headers.get('cookie')
@@ -74,164 +124,159 @@ export default function ViewTenantPage() {
   }
 
   return (
-    <div className='pt-4 flex flex-col space-y-4'>
-      <div className='flex flex-col rounded-md bg-offwhite px-6'>
-        <PageHeader className='!justify-end'>
-          <Button aria-label='go back to tenants page' to='/tenants'>
-            Go to tenants page
-          </Button>
-        </PageHeader>
-        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-          <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>General Information</h3>
-            <p className='text-sm'>
-              {`Created at ${new Date(tenant.createdAt).toLocaleString()}`}
-              {tenantDeleted && tenant.deletedAt && (
-                <>
-                  <br />
-                  {`Deleted at ${new Date(tenant.deletedAt).toLocaleString()}`}
-                </>
-              )}
-            </p>
-          </div>
-          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <Form method='post' replace preventScrollReset>
-              <fieldset disabled={isSubmitting}>
-                <div className='w-full p-4 space-y-3'>
-                  <Input type='hidden' name='id' value={tenant.id} />
-                  <Input
-                    label='Tenant ID'
-                    name='tenantId'
-                    value={tenant.id}
-                    disabled
-                    readOnly
-                  />
-                  <Input
-                    label='Public Name'
-                    name='publicName'
-                    disabled={tenantDeleted}
-                    defaultValue={tenant.publicName ?? undefined}
-                    error={response?.errors?.general.fieldErrors.publicName}
-                  />
-                  <Input
-                    label='Email'
-                    name='email'
-                    disabled={tenantDeleted}
-                    defaultValue={tenant.email ?? undefined}
-                    error={response?.errors?.general.fieldErrors.email}
-                  />
-                </div>
-                <div className='flex justify-end p-4'>
-                  {!tenantDeleted && (
-                    <Button
-                      aria-label='save general information'
-                      type='submit'
-                      name='intent'
-                      value='general'
-                    >
-                      {isSubmitting ? 'Saving ...' : 'Save'}
-                    </Button>
-                  )}
-                </div>
-              </fieldset>
-            </Form>
-          </div>
-        </div>
-        {/* Identity Provider Information */}
-        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-          <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>
-              Identity Provider Information
-            </h3>
-            <ErrorPanel errors={response?.errors?.idp.message} />
-          </div>
-          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <Form method='post' replace preventScrollReset>
-              <fieldset disabled={isSubmitting}>
-                <div className='w-full p-4 space-y-3'>
-                  <Input type='hidden' name='id' value={tenant.id} />
-                  <Input
-                    name='idpConsentUrl'
-                    label='Consent URL'
-                    disabled={tenantDeleted}
-                    defaultValue={tenant.idpConsentUrl ?? undefined}
-                    error={response?.errors?.idp.fieldErrors.idpConsentUrl}
-                  />
-                  <PasswordInput
-                    name='idpSecret'
-                    label='Secret'
-                    disabled={tenantDeleted}
-                    defaultValue={tenant.idpSecret ?? undefined}
-                    error={response?.errors?.idp.fieldErrors.idpSecret}
-                  />
-                </div>
-                <div className='flex justify-end p-4'>
-                  {!tenantDeleted && (
-                    <Button
-                      aria-label='save idp information'
-                      type='submit'
-                      name='intent'
-                      value='idp'
-                    >
-                      {isSubmitting ? 'Saving ...' : 'Save'}
-                    </Button>
-                  )}
-                </div>
-              </fieldset>
-            </Form>
-          </div>
-        </div>
-        {/* Identity Provider Information - END */}
-        {/* Sensitive Info */}
-        {me.isOperator && (
-          <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-            <div className='col-span-1 pt-3'>
-              <h3 className='text-lg font-medium'>Sensitive Information</h3>
-              <ErrorPanel errors={response?.errors?.sensitive.message} />
-            </div>
-            <div className='md:col-span-2 bg-white rounded-md shadow-md'>
+    <Box p='4'>
+      <Flex direction='column' gap='4'>
+        <Heading size='5'>Tenant Details</Heading>
+
+        <Card className='max-w-3xl'>
+          <Flex direction='column' gap='5'>
+            <Flex direction='column' gap='4'>
+              <Flex align='center' justify='between' gap='3' wrap='wrap'>
+                <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                  General Information
+                </Text>
+                <Text size='2' color='gray'>
+                  {`Created at ${new Date(tenant.createdAt).toLocaleString()}`}
+                  {tenantDeleted && tenant.deletedAt
+                    ? ` · Deleted at ${new Date(tenant.deletedAt).toLocaleString()}`
+                    : ''}
+                </Text>
+              </Flex>
+              <ErrorPanel errors={response?.errors?.general.message} />
               <Form method='post' replace preventScrollReset>
                 <fieldset disabled={isSubmitting}>
-                  <div className='w-full p-4 space-y-3'>
-                    <Input type='hidden' name='id' value={tenant.id} />
-                    <PasswordInput
-                      name='apiSecret'
-                      label='API Secret'
-                      value={tenant.apiSecret}
-                      required
-                      disabled={me.isOperator}
+                  <Flex direction='column' gap='4'>
+                    <input type='hidden' name='id' value={tenant.id} />
+                    <FormField
+                      label='Tenant ID'
+                      name='tenantId'
+                      value={tenant.id}
+                      disabled
+                      readOnly
                     />
-                  </div>
-                  <div className='flex justify-end p-4'>
-                    {!tenantDeleted && !me.isOperator && (
+                    <FormField
+                      label='Public Name'
+                      name='publicName'
+                      disabled={tenantDeleted}
+                      defaultValue={tenant.publicName ?? undefined}
+                      error={response?.errors?.general.fieldErrors.publicName}
+                    />
+                    <FormField
+                      label='Email'
+                      name='email'
+                      type='email'
+                      disabled={tenantDeleted}
+                      defaultValue={tenant.email ?? undefined}
+                      error={response?.errors?.general.fieldErrors.email}
+                    />
+                  </Flex>
+                  <Flex justify='end' mt='4'>
+                    {!tenantDeleted && (
                       <Button
-                        aria-label='save sensitive information'
+                        aria-label='save general information'
                         type='submit'
                         name='intent'
-                        value='sensitive'
+                        value='general'
                       >
                         {isSubmitting ? 'Saving ...' : 'Save'}
                       </Button>
                     )}
-                  </div>
+                  </Flex>
                 </fieldset>
               </Form>
-            </div>
-          </div>
-        )}
-        {/* Sensitive - END */}
-        {/* DELETE TENANT - Danger zone */}
-        {!tenantDeleted && me.isOperator && me.id !== tenant.id && (
-          <DangerZone title='Delete Tenant'>
-            <Form method='post' onSubmit={submitHandler}>
-              <Input type='hidden' name='id' value={tenant.id} />
-              <Input type='hidden' name='intent' value='delete' />
-              <Button type='submit' intent='danger' aria-label='delete tenant'>
-                Delete tenant
-              </Button>
-            </Form>
-          </DangerZone>
-        )}
+            </Flex>
+
+            <Flex direction='column' gap='4'>
+              <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                Identity Provider Information
+              </Text>
+              <ErrorPanel errors={response?.errors?.idp.message} />
+              <Form method='post' replace preventScrollReset>
+                <fieldset disabled={isSubmitting}>
+                  <Flex direction='column' gap='4'>
+                    <input type='hidden' name='id' value={tenant.id} />
+                    <FormField
+                      name='idpConsentUrl'
+                      label='Consent URL'
+                      disabled={tenantDeleted}
+                      defaultValue={tenant.idpConsentUrl ?? undefined}
+                      error={response?.errors?.idp.fieldErrors.idpConsentUrl}
+                    />
+                    <FormField
+                      name='idpSecret'
+                      label='Secret'
+                      type='password'
+                      disabled={tenantDeleted}
+                      defaultValue={tenant.idpSecret ?? undefined}
+                      error={response?.errors?.idp.fieldErrors.idpSecret}
+                    />
+                  </Flex>
+                  <Flex justify='end' mt='4'>
+                    {!tenantDeleted && (
+                      <Button
+                        aria-label='save idp information'
+                        type='submit'
+                        name='intent'
+                        value='idp'
+                      >
+                        {isSubmitting ? 'Saving ...' : 'Save'}
+                      </Button>
+                    )}
+                  </Flex>
+                </fieldset>
+              </Form>
+            </Flex>
+
+            {me.isOperator && (
+              <Flex direction='column' gap='4'>
+                <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                  Sensitive Information
+                </Text>
+                <ErrorPanel errors={response?.errors?.sensitive.message} />
+                <Form method='post' replace preventScrollReset>
+                  <fieldset disabled={isSubmitting}>
+                    <Flex direction='column' gap='4'>
+                      <input type='hidden' name='id' value={tenant.id} />
+                      <FormField
+                        name='apiSecret'
+                        label='API Secret'
+                        type='password'
+                        value={tenant.apiSecret}
+                        required
+                        disabled={me.isOperator}
+                      />
+                    </Flex>
+                    <Flex justify='end' mt='4'>
+                      {!tenantDeleted && !me.isOperator && (
+                        <Button
+                          aria-label='save sensitive information'
+                          type='submit'
+                          name='intent'
+                          value='sensitive'
+                        >
+                          {isSubmitting ? 'Saving ...' : 'Save'}
+                        </Button>
+                      )}
+                    </Flex>
+                  </fieldset>
+                </Form>
+              </Flex>
+            )}
+
+            {!tenantDeleted && me.isOperator && me.id !== tenant.id && (
+              <DangerZone title='Delete Tenant'>
+                <Form method='post' onSubmit={submitHandler}>
+                  <input type='hidden' name='id' value={tenant.id} />
+                  <input type='hidden' name='intent' value='delete' />
+                  <Button type='submit' intent='danger' aria-label='delete tenant'>
+                    Delete tenant
+                  </Button>
+                </Form>
+              </DangerZone>
+            )}
+          </Flex>
+        </Card>
+
         <ConfirmationDialog
           ref={dialogRef}
           onConfirm={onConfirm}
@@ -239,9 +284,9 @@ export default function ViewTenantPage() {
           keyword={'delete tenant'}
           confirmButtonText='Delete this tenant'
         />
-      </div>
+      </Flex>
       <Outlet />
-    </div>
+    </Box>
   )
 }
 

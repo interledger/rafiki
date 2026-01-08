@@ -11,8 +11,8 @@ import {
   useNavigation
 } from '@remix-run/react'
 import { z } from 'zod'
-import { PageHeader } from '~/components'
-import { Button, ErrorPanel, Input, Dropdown } from '~/components/ui'
+import { Box, Button, Card, Flex, Heading, Text, TextField } from '@radix-ui/themes'
+import { ErrorPanel, FieldError, Dropdown } from '~/components/ui'
 import {
   getWalletAddress,
   updateWalletAddress
@@ -22,6 +22,55 @@ import { updateWalletAddressSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import { capitalize, formatAmount } from '~/shared/utils'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
+
+type FormFieldProps = {
+  name: string
+  label: string
+  placeholder?: string
+  type?: 'text' | 'email' | 'password' | 'number'
+  error?: string | string[]
+  required?: boolean
+  defaultValue?: string
+  value?: string
+  disabled?: boolean
+  readOnly?: boolean
+}
+
+const FormField = ({
+  name,
+  label,
+  placeholder,
+  type = 'text',
+  error,
+  required,
+  defaultValue,
+  value,
+  disabled,
+  readOnly
+}: FormFieldProps) => (
+  <Flex direction='column' gap='2'>
+    <Text asChild size='2' weight='medium' className='tracking-wide text-gray-700'>
+      <label htmlFor={name}>
+        {label}
+        {required ? <span className='text-vermillion'> *</span> : null}
+      </label>
+    </Text>
+    <TextField.Root
+      id={name}
+      name={name}
+      type={type}
+      placeholder={placeholder}
+      required={required}
+      defaultValue={defaultValue}
+      value={value}
+      disabled={disabled}
+      readOnly={readOnly}
+      size='3'
+      className='w-full'
+    />
+    <FieldError error={error} />
+  </Flex>
+)
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const cookies = request.headers.get('cookie')
@@ -55,161 +104,150 @@ export default function ViewWalletAddressPage() {
   )} ${walletAddress.asset.code}`
 
   return (
-    <div className='pt-4 flex flex-col space-y-4'>
-      <div className='flex flex-col rounded-md bg-offwhite px-6'>
-        <PageHeader className='!justify-end'>
-          <Button
-            aria-label='go back to wallet addresses page'
-            to='/wallet-addresses'
-          >
-            Go to wallet addresses page
-          </Button>
-        </PageHeader>
-        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-          <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>General Information</h3>
-            <p className='text-sm'>
-              Created at {new Date(walletAddress.createdAt).toLocaleString()}
-            </p>
-            <ErrorPanel errors={response?.errors.message} />
-          </div>
-          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <Form method='post' replace preventScrollReset>
-              <fieldset disabled={isSubmitting}>
-                <div className='w-full p-4 space-y-3'>
-                  <Input type='hidden' name='id' value={walletAddress.id} />
-                  <Input
-                    label='ID'
-                    value={walletAddress.id}
-                    disabled
-                    readOnly
-                  />
-                  <Input
-                    label='URL'
-                    value={walletAddress.address}
-                    disabled
-                    readOnly
-                  />
-                  <Input
-                    name='publicName'
-                    label='Public name'
-                    defaultValue={walletAddress.publicName ?? undefined}
-                    error={response?.errors.fieldErrors.publicName}
-                  />
-                  <Dropdown
-                    options={[
-                      { label: 'Active', value: 'ACTIVE' },
-                      { label: 'Inactive', value: 'INACTIVE' }
-                    ]}
-                    name='status'
-                    placeholder='Select status...'
-                    defaultValue={{
-                      label: capitalize(walletAddress.status),
-                      value: walletAddress.status
-                    }}
-                    error={response?.errors.fieldErrors.status}
-                    label='Status'
-                    required
-                  />
-                </div>
-                <div className='flex justify-end p-4'>
-                  <Button
-                    aria-label='save wallet address information'
-                    type='submit'
-                  >
-                    {isSubmitting ? 'Saving ...' : 'Save'}
-                  </Button>
-                </div>
-              </fieldset>
-            </Form>
-          </div>
-        </div>
-        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-          <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Asset Information</h3>
-          </div>
-          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <div className='w-full p-4 gap-4 grid grid-cols-1 lg:grid-cols-3'>
-              <div>
-                <p className='font-medium'>Code</p>
-                <p className='mt-1'>{walletAddress.asset.code}</p>
-              </div>
-              <div>
-                <p className='font-medium'>Scale</p>
-                <p className='mt-1'>{walletAddress.asset.scale}</p>
-              </div>
-              <div>
-                <p className='font-medium'>Withdrawal threshold</p>
-                <p className='mt-1'>
-                  {walletAddress.asset.withdrawalThreshold ??
-                    'No withdrawal threshold'}
-                </p>
-              </div>
-            </div>
-            <div className='flex justify-end p-4'>
-              <Button
-                aria-label='go to asset page'
-                type='button'
-                to={`/assets/${walletAddress.asset.id}`}
-              >
-                View asset
-              </Button>
-            </div>
-          </div>
-        </div>
-        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-          <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Liquidity Information</h3>
-          </div>
-          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <div className='w-full p-4 flex justify-between items-center'>
-              <div>
-                <p className='font-medium'>Amount</p>
-                <p className='mt-1'>{displayLiquidityAmount}</p>
-              </div>
-              <div className='flex space-x-4'>
-                {BigInt(walletAddress.liquidity ?? '0') ? (
-                  <Button
-                    aria-label='withdraw wallet address liquidity page'
-                    preventScrollReset
-                    to={`/wallet-addresses/${walletAddress.id}/withdraw-liquidity`}
-                  >
-                    Withdraw
-                  </Button>
-                ) : (
-                  <Button
-                    disabled={true}
-                    aria-label='withdraw wallet address liquidity page'
-                  >
-                    Withdraw
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-          <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Payments</h3>
-            <p className='text-sm'>
-              View the payments involving this wallet address on the payments
-              page
-            </p>
-          </div>
-          <div className='md:col-span-2'>
-            <div className='flex justify-end p-4'>
-              <Button
-                aria-label='go to payments page'
-                to={`/payments?walletAddressId=${walletAddress.id}`}
-              >
-                Go to payments page
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+    <Box p='4'>
+      <Flex direction='column' gap='4'>
+        <Heading size='5'>Wallet Address Details</Heading>
+
+        <Card className='max-w-3xl'>
+          <Flex direction='column' gap='5'>
+            <Flex direction='column' gap='4'>
+              <Flex align='center' justify='between' gap='3' wrap='wrap'>
+                <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                  General Information
+                </Text>
+                <Text size='2' color='gray'>
+                  Created at {new Date(walletAddress.createdAt).toLocaleString()}
+                </Text>
+              </Flex>
+              <ErrorPanel errors={response?.errors.message} />
+              <Form method='post' replace preventScrollReset>
+                <fieldset disabled={isSubmitting}>
+                  <Flex direction='column' gap='4'>
+                    <input type='hidden' name='id' value={walletAddress.id} />
+                    <FormField label='ID' name='walletAddressId' value={walletAddress.id} disabled readOnly />
+                    <FormField label='URL' name='address' value={walletAddress.address} disabled readOnly />
+                    <FormField
+                      name='publicName'
+                      label='Public name'
+                      defaultValue={walletAddress.publicName ?? undefined}
+                      error={response?.errors.fieldErrors.publicName}
+                    />
+                    <Dropdown
+                      options={[
+                        { label: 'Active', value: 'ACTIVE' },
+                        { label: 'Inactive', value: 'INACTIVE' }
+                      ]}
+                      name='status'
+                      placeholder='Select status...'
+                      defaultValue={{
+                        label: capitalize(walletAddress.status),
+                        value: walletAddress.status
+                      }}
+                      error={response?.errors.fieldErrors.status}
+                      label='Status'
+                      required
+                    />
+                  </Flex>
+                  <Flex justify='end' mt='4'>
+                    <Button
+                      aria-label='save wallet address information'
+                      type='submit'
+                    >
+                      {isSubmitting ? 'Saving ...' : 'Save'}
+                    </Button>
+                  </Flex>
+                </fieldset>
+              </Form>
+            </Flex>
+
+            <Flex direction='column' gap='4'>
+              <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                Asset Information
+              </Text>
+              <Flex gap='6' wrap='wrap'>
+                <Box>
+                  <Text weight='medium'>Code</Text>
+                  <Text size='2' color='gray'>
+                    {walletAddress.asset.code}
+                  </Text>
+                </Box>
+                <Box>
+                  <Text weight='medium'>Scale</Text>
+                  <Text size='2' color='gray'>
+                    {walletAddress.asset.scale}
+                  </Text>
+                </Box>
+                <Box>
+                  <Text weight='medium'>Withdrawal threshold</Text>
+                  <Text size='2' color='gray'>
+                    {walletAddress.asset.withdrawalThreshold ?? 'No withdrawal threshold'}
+                  </Text>
+                </Box>
+              </Flex>
+              <Flex justify='end'>
+                <Button
+                  aria-label='go to asset page'
+                  type='button'
+                  to={`/assets/${walletAddress.asset.id}`}
+                >
+                  View asset
+                </Button>
+              </Flex>
+            </Flex>
+
+            <Flex direction='column' gap='4'>
+              <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                Liquidity Information
+              </Text>
+              <Flex justify='between' align='center'>
+                <Box>
+                  <Text weight='medium'>Amount</Text>
+                  <Text size='2' color='gray'>
+                    {displayLiquidityAmount}
+                  </Text>
+                </Box>
+                <Flex gap='3'>
+                  {BigInt(walletAddress.liquidity ?? '0') ? (
+                    <Button
+                      aria-label='withdraw wallet address liquidity page'
+                      preventScrollReset
+                      to={`/wallet-addresses/${walletAddress.id}/withdraw-liquidity`}
+                    >
+                      Withdraw
+                    </Button>
+                  ) : (
+                    <Button
+                      disabled={true}
+                      aria-label='withdraw wallet address liquidity page'
+                    >
+                      Withdraw
+                    </Button>
+                  )}
+                </Flex>
+              </Flex>
+            </Flex>
+
+            <Flex direction='column' gap='4'>
+              <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                Payments
+              </Text>
+              <Text size='2' color='gray'>
+                View the payments involving this wallet address on the payments page.
+              </Text>
+              <Flex justify='end'>
+                <Button
+                  aria-label='go to payments page'
+                  to={`/payments?walletAddressId=${walletAddress.id}`}
+                >
+                  Go to payments page
+                </Button>
+              </Flex>
+            </Flex>
+          </Flex>
+        </Card>
+      </Flex>
       <Outlet context={displayLiquidityAmount} />
-    </div>
+    </Box>
   )
 }
 
