@@ -2,6 +2,7 @@ import type { MetaFunction } from '@remix-run/node'
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import {
   Links,
+  Link,
   LiveReload,
   Meta,
   Outlet,
@@ -13,12 +14,11 @@ import {
 } from '@remix-run/react'
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
-import { Theme } from '@radix-ui/themes'
+import { Button, Theme } from '@radix-ui/themes'
 import logo from '../public/logo.svg'
 import { XCircle } from './components/icons'
 import { Sidebar } from './components/Sidebar'
 import { Snackbar } from './components/Snackbar'
-import { Button } from './components/ui/Button'
 import { messageStorage, type Message } from './lib/message.server'
 import tailwind from './styles/tailwind.css'
 import radixStyles from '@radix-ui/themes/styles.css'
@@ -200,8 +200,10 @@ export function ErrorBoundary() {
             {error.status}
           </h4>
           <h2 className='text-xl'>{error.statusText}</h2>
-          <Button to='/' aria-label='go to homepage'>
-            Go to homepage
+          <Button asChild>
+            <Link to='/' aria-label='go to homepage'>
+              Go to homepage
+            </Link>
           </Button>
         </div>
       </ErrorPage>
@@ -227,8 +229,10 @@ export function ErrorBoundary() {
         <div>
           <span className='font-light'>Cause:</span> <span>{errorMessage}</span>
         </div>
-        <Button to='/' aria-label='go to homepage'>
-          Go to homepage
+        <Button asChild>
+          <Link to='/' aria-label='go to homepage'>
+            Go to homepage
+          </Link>
         </Button>
       </div>
     </ErrorPage>

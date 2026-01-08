@@ -1,6 +1,7 @@
 import { Form, useActionData, useNavigation } from '@remix-run/react'
 import { useRef, useState, useEffect } from 'react'
-import { Input, Button } from '~/components/ui'
+import { Button } from '@radix-ui/themes'
+import { Input } from '~/components/ui'
 import { validate as validateUUID } from 'uuid'
 
 interface ApiCredentialsFormProps {
@@ -56,7 +57,7 @@ export const ApiCredentialsForm = ({
           <input hidden readOnly name='intent' value='clear' />
           <Button
             type='submit'
-            intent='danger'
+            color='red'
             aria-label='Clear API credentials'
             disabled={isSubmitting}
           >

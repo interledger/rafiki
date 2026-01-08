@@ -3,7 +3,8 @@ import { Form } from '@remix-run/react'
 import type { ChangeEvent } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { XIcon } from '~/components/icons'
-import { Button, Input } from '~/components/ui'
+import { Button } from '@radix-ui/themes'
+import { Input } from '~/components/ui'
 
 type BasicAsset = {
   code: string

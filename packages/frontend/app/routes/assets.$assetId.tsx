@@ -10,7 +10,8 @@ import {
   useFormAction,
   useLoaderData,
   useNavigation,
-  useSubmit
+  useSubmit,
+  Link
 } from '@remix-run/react'
 import { type ChangeEventHandler, type FormEvent, useRef, useState } from 'react'
 import { z } from 'zod'
@@ -202,21 +203,23 @@ export default function ViewAssetPage() {
                   </Text>
                 </Box>
                 <Flex gap='3'>
-                  <Button
-                    aria-label='deposit asset liquidity page'
-                    preventScrollReset
-                    type='button'
-                    to={`/assets/${asset.id}/deposit-liquidity`}
-                  >
-                    Deposit liquidity
+                  <Button asChild>
+                    <Link
+                      aria-label='deposit asset liquidity page'
+                      preventScrollReset
+                      to={`/assets/${asset.id}/deposit-liquidity`}
+                    >
+                      Deposit liquidity
+                    </Link>
                   </Button>
-                  <Button
-                    aria-label='withdraw asset liquidity page'
-                    preventScrollReset
-                    type='button'
-                    to={`/assets/${asset.id}/withdraw-liquidity`}
-                  >
-                    Withdraw liquidity
+                  <Button asChild>
+                    <Link
+                      aria-label='withdraw asset liquidity page'
+                      preventScrollReset
+                      to={`/assets/${asset.id}/withdraw-liquidity`}
+                    >
+                      Withdraw liquidity
+                    </Link>
                   </Button>
                 </Flex>
               </Flex>
@@ -235,12 +238,13 @@ export default function ViewAssetPage() {
               </Flex>
               <ErrorPanel errors={response?.errors.sendingFee.message} />
               <Flex justify='end'>
-                <Button
-                  aria-label='view asset fees page'
-                  type='button'
-                  to={`/assets/${asset.id}/fee-history`}
-                >
-                  Fee history
+                <Button asChild>
+                  <Link
+                    aria-label='view asset fees page'
+                    to={`/assets/${asset.id}/fee-history`}
+                  >
+                    Fee history
+                  </Link>
                 </Button>
               </Flex>
               <Form method='post' replace preventScrollReset>
@@ -288,7 +292,7 @@ export default function ViewAssetPage() {
               <Form method='post' onSubmit={submitHandler}>
                 <input type='hidden' name='id' value={asset.id} />
                 <input type='hidden' name='intent' value='delete' />
-                <Button type='submit' intent='danger' aria-label='delete asset'>
+                <Button type='submit' color='red' aria-label='delete asset'>
                   Delete asset
                 </Button>
               </Form>

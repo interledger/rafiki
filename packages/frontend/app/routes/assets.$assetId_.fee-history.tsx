@@ -3,7 +3,8 @@ import { paginationSchema } from '~/lib/validate.server'
 import { getAssetWithFees } from '~/lib/api/asset.server'
 import { useLoaderData, useNavigate } from '@remix-run/react'
 import { PageHeader } from '~/components'
-import { Button, Table } from '~/components/ui'
+import { Button } from '@radix-ui/themes'
+import { Table } from '~/components/ui'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {

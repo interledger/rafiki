@@ -311,7 +311,6 @@ export default function CreatePeerPage() {
                             }
                             bringForward
                             label='Tenant Id'
-                            error={response?.errors?.fieldErrors.tenantId}
                           />
                         ) : (
                           <SelectField

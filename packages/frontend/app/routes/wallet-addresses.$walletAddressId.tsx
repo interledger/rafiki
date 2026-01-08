@@ -8,7 +8,8 @@ import {
   Outlet,
   useActionData,
   useLoaderData,
-  useNavigation
+  useNavigation,
+  Link
 } from '@remix-run/react'
 import { z } from 'zod'
 import { Box, Button, Card, Flex, Heading, Text, TextField } from '@radix-ui/themes'
@@ -185,12 +186,13 @@ export default function ViewWalletAddressPage() {
                 </Box>
               </Flex>
               <Flex justify='end'>
-                <Button
-                  aria-label='go to asset page'
-                  type='button'
-                  to={`/assets/${walletAddress.asset.id}`}
-                >
-                  View asset
+                <Button asChild>
+                  <Link
+                    aria-label='go to asset page'
+                    to={`/assets/${walletAddress.asset.id}`}
+                  >
+                    View asset
+                  </Link>
                 </Button>
               </Flex>
             </Flex>
@@ -208,12 +210,14 @@ export default function ViewWalletAddressPage() {
                 </Box>
                 <Flex gap='3'>
                   {BigInt(walletAddress.liquidity ?? '0') ? (
-                    <Button
-                      aria-label='withdraw wallet address liquidity page'
-                      preventScrollReset
-                      to={`/wallet-addresses/${walletAddress.id}/withdraw-liquidity`}
-                    >
-                      Withdraw
+                    <Button asChild>
+                      <Link
+                        aria-label='withdraw wallet address liquidity page'
+                        preventScrollReset
+                        to={`/wallet-addresses/${walletAddress.id}/withdraw-liquidity`}
+                      >
+                        Withdraw
+                      </Link>
                     </Button>
                   ) : (
                     <Button
@@ -235,11 +239,13 @@ export default function ViewWalletAddressPage() {
                 View the payments involving this wallet address on the payments page.
               </Text>
               <Flex justify='end'>
-                <Button
-                  aria-label='go to payments page'
-                  to={`/payments?walletAddressId=${walletAddress.id}`}
-                >
-                  Go to payments page
+                <Button asChild>
+                  <Link
+                    aria-label='go to payments page'
+                    to={`/payments?walletAddressId=${walletAddress.id}`}
+                  >
+                    Go to payments page
+                  </Link>
                 </Button>
               </Flex>
             </Flex>

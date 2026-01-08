@@ -10,7 +10,8 @@ import {
   useFormAction,
   useLoaderData,
   useNavigation,
-  useSubmit
+  useSubmit,
+  Link
 } from '@remix-run/react'
 import { type FormEvent, type ReactNode, useRef, useState } from 'react'
 import { z } from 'zod'
@@ -336,8 +337,10 @@ export default function ViewPeerPage() {
                 </Box>
               </Flex>
               <Flex justify='end'>
-                <Button aria-label='go to asset page' type='button' to={`/assets/${peer.asset.id}`}>
-                  View asset
+                <Button asChild>
+                  <Link aria-label='go to asset page' to={`/assets/${peer.asset.id}`}>
+                    View asset
+                  </Link>
                 </Button>
               </Flex>
             </Flex>
@@ -354,21 +357,23 @@ export default function ViewPeerPage() {
                   </Text>
                 </Box>
                 <Flex gap='3'>
-                  <Button
-                    aria-label='deposit peer liquidity page'
-                    preventScrollReset
-                    type='button'
-                    to={`/peers/${peer.id}/deposit-liquidity`}
-                  >
-                    Deposit liquidity
+                  <Button asChild>
+                    <Link
+                      aria-label='deposit peer liquidity page'
+                      preventScrollReset
+                      to={`/peers/${peer.id}/deposit-liquidity`}
+                    >
+                      Deposit liquidity
+                    </Link>
                   </Button>
-                  <Button
-                    aria-label='withdraw peer liquidity page'
-                    preventScrollReset
-                    type='button'
-                    to={`/peers/${peer.id}/withdraw-liquidity`}
-                  >
-                    Withdraw liquidity
+                  <Button asChild>
+                    <Link
+                      aria-label='withdraw peer liquidity page'
+                      preventScrollReset
+                      to={`/peers/${peer.id}/withdraw-liquidity`}
+                    >
+                      Withdraw liquidity
+                    </Link>
                   </Button>
                 </Flex>
               </Flex>
@@ -378,7 +383,7 @@ export default function ViewPeerPage() {
               <Form method='post' onSubmit={submitHandler}>
                 <input type='hidden' name='id' value={peer.id} />
                 <input type='hidden' name='intent' value='delete' />
-                <Button type='submit' intent='danger' aria-label='delete peer'>
+                <Button type='submit' color='red' aria-label='delete peer'>
                   Delete peer
                 </Button>
               </Form>

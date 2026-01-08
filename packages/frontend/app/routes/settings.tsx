@@ -11,7 +11,8 @@ import {
 import type { UiContainer } from '@ory/client'
 import { useLoaderData } from '@remix-run/react'
 import { PageHeader } from '~/components'
-import { Button, Input } from '../components/ui'
+import { Button } from '@radix-ui/themes'
+import { Input } from '../components/ui'
 import variables from '../lib/envConfig.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 

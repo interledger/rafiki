@@ -3,7 +3,7 @@ import { json } from '@remix-run/node'
 import { Link, Outlet, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
 import { Badge, PageHeader } from '~/components'
-import { Button } from '~/components/ui'
+import { Button } from '@radix-ui/themes'
 import { OutgoingPaymentState } from '~/generated/graphql'
 import { getOutgoingPayment } from '~/lib/api/payments.server'
 import {
@@ -64,8 +64,10 @@ export default function ViewOutgoingPaymentPage() {
       <div className='flex flex-col rounded-md bg-offwhite px-6'>
         {/* Outgoing Payment General Info */}
         <PageHeader className='!justify-end'>
-          <Button aria-label='go back to payments page' to='/payments'>
-            Go to payments page
+          <Button asChild>
+            <Link aria-label='go back to payments page' to='/payments'>
+              Go to payments page
+            </Link>
           </Button>
         </PageHeader>
         <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
@@ -182,12 +184,14 @@ export default function ViewOutgoingPaymentPage() {
               </div>
               <div className='flex space-x-4'>
                 {BigInt(outgoingPayment.liquidity ?? '0') ? (
-                  <Button
-                    aria-label='withdraw outgoing payment liquidity page'
-                    preventScrollReset
-                    to={`/payments/outgoing/${outgoingPayment.id}/withdraw-liquidity`}
-                  >
-                    Withdraw
+                  <Button asChild>
+                    <Link
+                      aria-label='withdraw outgoing payment liquidity page'
+                      preventScrollReset
+                      to={`/payments/outgoing/${outgoingPayment.id}/withdraw-liquidity`}
+                    >
+                      Withdraw
+                    </Link>
                   </Button>
                 ) : (
                   <Button
@@ -198,12 +202,14 @@ export default function ViewOutgoingPaymentPage() {
                   </Button>
                 )}
                 {outgoingPayment.state === OutgoingPaymentState.Funding ? (
-                  <Button
-                    aria-label='deposit outgoing payment liquidity page'
-                    preventScrollReset
-                    to={`/payments/outgoing/${outgoingPayment.id}/deposit-liquidity`}
-                  >
-                    Deposit
+                  <Button asChild>
+                    <Link
+                      aria-label='deposit outgoing payment liquidity page'
+                      preventScrollReset
+                      to={`/payments/outgoing/${outgoingPayment.id}/deposit-liquidity`}
+                    >
+                      Deposit
+                    </Link>
                   </Button>
                 ) : (
                   <Button

@@ -19,10 +19,10 @@ import {
   Flex,
   Heading,
   Table,
-  Badge,
   Text,
   TextField
 } from '@radix-ui/themes'
+import { Badge } from '~/components'
 import { ErrorPanel, FieldError } from '~/components/ui'
 import { listPayments } from '~/lib/api/payments.server'
 import { paymentsSearchParams } from '~/lib/validate.server'
@@ -134,31 +134,26 @@ export default function PaymentsPage() {
             <Heading size='5'>Payments</Heading>
           <Flex align='center' gap='2' wrap='wrap'>
             <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
-                <button
-                  type='button'
-                  className='inline-flex min-w-[220px] items-center justify-between gap-2 rounded-md border border-pearl bg-white px-3 py-2 text-sm text-tealish shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F37F64]'
+              <DropdownMenu.Trigger className='inline-flex min-w-[220px] items-center justify-between gap-2 rounded-md border border-pearl bg-white px-3 py-2 text-sm text-tealish shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F37F64]'>
+                <span className='truncate'>
+                  {type.length
+                    ? `Payments: ${type.map((value) => capitalize(value)).join(', ')}`
+                    : 'All Payments'}
+                </span>
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  width='14'
+                  height='14'
+                  viewBox='0 0 20 20'
+                  fill='currentColor'
+                  aria-hidden='true'
                 >
-                  <span className='truncate'>
-                    {type.length
-                      ? `Payments: ${type.map((value) => capitalize(value)).join(', ')}`
-                      : 'All Payments'}
-                  </span>
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    width='14'
-                    height='14'
-                    viewBox='0 0 20 20'
-                    fill='currentColor'
-                    aria-hidden='true'
-                  >
-                    <path
-                      fillRule='evenodd'
-                      d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z'
-                      clipRule='evenodd'
-                    />
-                  </svg>
-                </button>
+                  <path
+                    fillRule='evenodd'
+                    d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z'
+                    clipRule='evenodd'
+                  />
+                </svg>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content
                 align='start'

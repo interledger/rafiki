@@ -1,6 +1,6 @@
 import { redirect, type LoaderFunctionArgs } from '@remix-run/node'
 import { Form } from '@remix-run/react'
-import { Button } from '../components/ui'
+import { Button } from '@radix-ui/themes'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {

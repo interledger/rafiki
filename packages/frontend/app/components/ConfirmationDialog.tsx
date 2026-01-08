@@ -7,7 +7,8 @@ import {
   useState
 } from 'react'
 import { ExclamationTriangle, XIcon } from './icons'
-import { Button, Input } from './ui'
+import { Button } from '@radix-ui/themes'
+import { Input } from './ui'
 
 export type ConfirmationDialogRef = {
   display: () => void
@@ -140,7 +141,7 @@ export const ConfirmationDialog = forwardRef<
                         <div className='mt-2'>
                           <Button
                             aria-label={confirmButtonText ?? 'Confirm'}
-                            intent='danger'
+                            color='red'
                             onClick={() => confirmHandler()}
                             className='w-full'
                             disabled={!isCorrectPrompt()}

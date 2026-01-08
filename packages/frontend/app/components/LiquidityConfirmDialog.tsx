@@ -1,7 +1,7 @@
 import { Dialog } from '@headlessui/react'
 import { Form } from '@remix-run/react'
 import { XIcon } from '~/components/icons'
-import { Button } from '~/components/ui'
+import { Button } from '@radix-ui/themes'
 
 type LiquidityConfirmDialogProps = {
   title: string

@@ -3,7 +3,7 @@ import { json } from '@remix-run/node'
 import { Link, Outlet, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
 import { Badge, PageHeader } from '~/components'
-import { Button } from '~/components/ui'
+import { Button } from '@radix-ui/themes'
 import { IncomingPaymentState } from '~/generated/graphql'
 import { getIncomingPayment } from '~/lib/api/payments.server'
 import {
@@ -58,8 +58,10 @@ export default function ViewIncomingPaymentPage() {
       <div className='flex flex-col rounded-md bg-offwhite px-6'>
         {/* Incoming Payment General Info */}
         <PageHeader className='!justify-end'>
-          <Button aria-label='go back to payments page' to='/payments'>
-            Go to payments page
+          <Button asChild>
+            <Link aria-label='go back to payments page' to='/payments'>
+              Go to payments page
+            </Link>
           </Button>
         </PageHeader>
         <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
@@ -157,12 +159,14 @@ export default function ViewIncomingPaymentPage() {
               </div>
               <div className='flex space-x-4'>
                 {canWithdrawLiquidity ? (
-                  <Button
-                    aria-label='withdraw incoming payment liquidity page'
-                    preventScrollReset
-                    to={`/payments/incoming/${incomingPayment.id}/withdraw-liquidity`}
-                  >
-                    Withdraw
+                  <Button asChild>
+                    <Link
+                      aria-label='withdraw incoming payment liquidity page'
+                      preventScrollReset
+                      to={`/payments/incoming/${incomingPayment.id}/withdraw-liquidity`}
+                    >
+                      Withdraw
+                    </Link>
                   </Button>
                 ) : (
                   <Button

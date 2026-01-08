@@ -1,5 +1,5 @@
 import { Form } from '@remix-run/react'
-import { Button } from '../components/ui'
+import { Button } from '@radix-ui/themes'
 import variables from '../lib/envConfig.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { redirectDocument, type LoaderFunctionArgs } from '@remix-run/node'
