@@ -1,5 +1,3 @@
 export * from './ErrorPanel'
 export * from './FieldError'
-export * from './PasswordInput'
-export * from './Select'
 export * from './Dropdown'

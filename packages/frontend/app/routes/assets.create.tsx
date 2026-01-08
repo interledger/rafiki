@@ -1,13 +1,13 @@
 import { json, type ActionFunctionArgs } from '@remix-run/node'
-import type { ComponentProps } from 'react'
+import { useState } from 'react'
 import {
   Form,
   useActionData,
   useLoaderData,
   useNavigation
 } from '@remix-run/react'
-import { Box, Button, Card, Flex, Heading, Text, TextField } from '@radix-ui/themes'
-import { Select, ErrorPanel, FieldError } from '~/components/ui'
+import { Box, Button, Card, Flex, Heading, Select, Text, TextField } from '@radix-ui/themes'
+import { ErrorPanel, FieldError } from '~/components/ui'
 import { createAsset } from '~/lib/api/asset.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createAssetSchema } from '~/lib/validate.server'
@@ -24,6 +24,11 @@ type FormFieldProps = {
   type?: 'text' | 'email' | 'password' | 'number'
   error?: string | string[]
   required?: boolean
+}
+
+type SelectOption = {
+  label: string
+  value: string
 }
 
 const FormField = ({
@@ -56,22 +61,59 @@ const FormField = ({
 
 type SelectFieldProps = {
   label: string
+  name: string
+  options: SelectOption[]
+  placeholder: string
   required?: boolean
   error?: string | string[]
-} & ComponentProps<typeof Select>
+  defaultValue?: SelectOption
+}
 
-const SelectField = ({ label, required, error, ...props }: SelectFieldProps) => (
-  <Flex direction='column' gap='2'>
-    <Text asChild size='2' weight='medium' className='tracking-wide text-gray-700'>
-      <span>
-        {label}
-        {required ? <span className='text-vermillion'> *</span> : null}
-      </span>
-    </Text>
-    <Select {...props} label={undefined} />
-    <FieldError error={error} />
-  </Flex>
-)
+const SelectField = ({
+  label,
+  name,
+  options,
+  placeholder,
+  required,
+  error,
+  defaultValue
+}: SelectFieldProps) => {
+  const [selectedValue, setSelectedValue] = useState(
+    defaultValue?.value ?? ''
+  )
+
+  return (
+    <Flex direction='column' gap='2'>
+      <Text asChild size='2' weight='medium' className='tracking-wide text-gray-700'>
+        <label htmlFor={`${name}-select`}>
+          {label}
+          {required ? <span className='text-vermillion'> *</span> : null}
+        </label>
+      </Text>
+      <input type='hidden' name={name} value={selectedValue} />
+      <div className='relative'>
+        <Select.Root
+          defaultValue={defaultValue?.value}
+          onValueChange={(value) => setSelectedValue(value)}
+        >
+          <Select.Trigger
+            id={`${name}-select`}
+            placeholder={placeholder}
+            className='w-full'
+          />
+          <Select.Content>
+            {options.map((option) => (
+              <Select.Item key={option.value} value={option.value}>
+                {option.label}
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Root>
+      </div>
+      <FieldError error={error} />
+    </Flex>
+  )
+}
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')

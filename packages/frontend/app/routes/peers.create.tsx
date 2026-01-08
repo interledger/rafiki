@@ -9,9 +9,8 @@ import {
   useLoaderData,
   useNavigation
 } from '@remix-run/react'
-import { Box, Button, Card, Flex, Heading, Text, TextField } from '@radix-ui/themes'
-import type { SelectOption } from '~/components/ui'
-import { ErrorPanel, FieldError, Select } from '~/components/ui'
+import { Box, Button, Card, Flex, Heading, Select, Text, TextField } from '@radix-ui/themes'
+import { ErrorPanel, FieldError } from '~/components/ui'
 import { loadAssets } from '~/lib/api/asset.server'
 import { createPeer } from '~/lib/api/peer.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
@@ -20,9 +19,14 @@ import type { ZodFieldErrors } from '~/shared/types'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import type { RedirectDialogRef } from '~/components/RedirectDialog'
 import { RedirectDialog } from '~/components/RedirectDialog'
-import type { ComponentProps, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { loadTenants, whoAmI } from '~/lib/api/tenant.server'
+
+type SelectOption = {
+  label: string
+  value: string
+}
 
 type FormFieldProps = {
   name: string
@@ -70,36 +74,73 @@ const FormField = ({
 
 type SelectFieldProps = {
   label: string
+  name: string
+  options: SelectOption[]
+  placeholder: string
   required?: boolean
   error?: string | string[]
   description?: ReactNode
-} & ComponentProps<typeof Select>
+  defaultValue?: SelectOption
+  onChange?: (value?: SelectOption) => void
+  bringForward?: boolean
+}
 
 const SelectField = ({
   label,
+  name,
+  options,
+  placeholder,
   required,
   error,
   description,
-  ...props
-}: SelectFieldProps) => (
-  <Flex direction='column' gap='1'>
-    <Text asChild size='2' weight='medium' className='tracking-wide text-gray-700'>
-      <span>
-        {label}
-        {required ? <span className='text-vermillion'> *</span> : null}
-      </span>
-    </Text>
-    {description ? (
-      <Text size='2' color='gray'>
-        {description}
+  defaultValue,
+  onChange,
+  bringForward
+}: SelectFieldProps) => {
+  const [selectedValue, setSelectedValue] = useState(
+    defaultValue?.value ?? ''
+  )
+
+  return (
+    <Flex direction='column' gap='1'>
+      <Text asChild size='2' weight='medium' className='tracking-wide text-gray-700'>
+        <label htmlFor={`${name}-select`}>
+          {label}
+          {required ? <span className='text-vermillion'> *</span> : null}
+        </label>
       </Text>
-    ) : null}
-    <div className='mt-1'>
-      <Select {...props} label={undefined} />
-    </div>
-    <FieldError error={error} />
-  </Flex>
-)
+      {description ? (
+        <Text size='2' color='gray'>
+          {description}
+        </Text>
+      ) : null}
+      <input type='hidden' name={name} value={selectedValue} />
+      <div className={`relative mt-1 ${bringForward ? 'forward' : ''}`}>
+        <Select.Root
+          defaultValue={defaultValue?.value}
+          onValueChange={(value) => {
+            setSelectedValue(value)
+            onChange?.(options.find((option) => option.value === value))
+          }}
+        >
+          <Select.Trigger
+            id={`${name}-select`}
+            placeholder={placeholder}
+            className='w-full'
+          />
+          <Select.Content>
+            {options.map((option) => (
+              <Select.Item key={option.value} value={option.value}>
+                {option.label}
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Root>
+      </div>
+      <FieldError error={error} />
+    </Flex>
+  )
+}
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const cookies = request.headers.get('cookie')

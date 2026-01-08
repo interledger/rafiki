@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { json, type ActionFunctionArgs } from '@remix-run/node'
 import {
@@ -7,9 +7,8 @@ import {
   useLoaderData,
   useNavigation
 } from '@remix-run/react'
-import type { SelectOption } from '~/components/ui'
-import { Box, Button, Card, Flex, Heading, Text, TextField } from '@radix-ui/themes'
-import { ErrorPanel, FieldError, Select } from '~/components/ui'
+import { Box, Button, Card, Flex, Heading, Select, Text, TextField } from '@radix-ui/themes'
+import { ErrorPanel, FieldError } from '~/components/ui'
 import { loadAssets } from '~/lib/api/asset.server'
 import { createWalletAddress } from '~/lib/api/wallet-address.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
@@ -25,6 +24,11 @@ import type { listTenants } from '~/lib/api/tenant.server'
 import { whoAmI, loadTenants, getTenantInfo } from '~/lib/api/tenant.server'
 
 const WALLET_ADDRESS_URL_KEY = 'WALLET_ADDRESS_URL'
+
+type SelectOption = {
+  label: string
+  value: string
+}
 
 type FormFieldProps = {
   name: string
@@ -122,34 +126,73 @@ const PlainInputField = ({
 
 type SelectFieldProps = {
   label: string
+  name: string
+  options: SelectOption[]
+  placeholder: string
   required?: boolean
   error?: string | string[]
   description?: ReactNode
-} & ComponentProps<typeof Select>
+  defaultValue?: SelectOption
+  onChange?: (value?: SelectOption) => void
+  bringForward?: boolean
+}
 
 const SelectField = ({
   label,
+  name,
+  options,
+  placeholder,
   required,
   error,
   description,
-  ...props
-}: SelectFieldProps) => (
-  <Flex direction='column' gap='2'>
-    <Text asChild size='2' weight='medium' className='tracking-wide text-gray-700'>
-      <span>
-        {label}
-        {required ? <span className='text-vermillion'> *</span> : null}
-      </span>
-    </Text>
-    {description ? (
-      <Text size='2' color='gray'>
-        {description}
+  defaultValue,
+  onChange,
+  bringForward
+}: SelectFieldProps) => {
+  const [selectedValue, setSelectedValue] = useState(
+    defaultValue?.value ?? ''
+  )
+
+  return (
+    <Flex direction='column' gap='2'>
+      <Text asChild size='2' weight='medium' className='tracking-wide text-gray-700'>
+        <label htmlFor={`${name}-select`}>
+          {label}
+          {required ? <span className='text-vermillion'> *</span> : null}
+        </label>
       </Text>
-    ) : null}
-    <Select {...props} label={undefined} />
-    <FieldError error={error} />
-  </Flex>
-)
+      {description ? (
+        <Text size='2' color='gray'>
+          {description}
+        </Text>
+      ) : null}
+      <input type='hidden' name={name} value={selectedValue} />
+      <div className={`relative ${bringForward ? 'forward' : ''}`}>
+        <Select.Root
+          defaultValue={defaultValue?.value}
+          onValueChange={(value) => {
+            setSelectedValue(value)
+            onChange?.(options.find((option) => option.value === value))
+          }}
+        >
+          <Select.Trigger
+            id={`${name}-select`}
+            placeholder={placeholder}
+            className='w-full'
+          />
+          <Select.Content>
+            {options.map((option) => (
+              <Select.Item key={option.value} value={option.value}>
+                {option.label}
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Root>
+      </div>
+      <FieldError error={error} />
+    </Flex>
+  )
+}
 
 const findWASetting = (
   tenantSettings: Awaited<ReturnType<typeof getTenantInfo>>['settings']
