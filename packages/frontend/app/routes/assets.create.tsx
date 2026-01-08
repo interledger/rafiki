@@ -1,12 +1,13 @@
 import { json, type ActionFunctionArgs } from '@remix-run/node'
+import type { ComponentProps } from 'react'
 import {
   Form,
   useActionData,
   useLoaderData,
   useNavigation
 } from '@remix-run/react'
-import { PageHeader } from '~/components'
-import { Button, Select, ErrorPanel, Input } from '~/components/ui'
+import { Box, Button, Card, Flex, Heading, Text, TextField } from '@radix-ui/themes'
+import { Select, ErrorPanel, FieldError } from '~/components/ui'
 import { createAsset } from '~/lib/api/asset.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createAssetSchema } from '~/lib/validate.server'
@@ -15,6 +16,62 @@ import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
 import { whoAmI, loadTenants } from '~/lib/api/tenant.server'
 import { getSession } from '~/lib/session.server'
+
+type FormFieldProps = {
+  name: string
+  label: string
+  placeholder?: string
+  type?: 'text' | 'email' | 'password' | 'number'
+  error?: string | string[]
+  required?: boolean
+}
+
+const FormField = ({
+  name,
+  label,
+  placeholder,
+  type = 'text',
+  error,
+  required
+}: FormFieldProps) => (
+  <Flex direction='column' gap='2'>
+    <Text asChild size='2' weight='medium' className='tracking-wide text-gray-700'>
+      <label htmlFor={name}>
+        {label}
+        {required ? <span className='text-vermillion'> *</span> : null}
+      </label>
+    </Text>
+    <TextField.Root
+      id={name}
+      name={name}
+      type={type}
+      placeholder={placeholder}
+      required={required}
+      size='3'
+      className='w-full'
+    />
+    <FieldError error={error} />
+  </Flex>
+)
+
+type SelectFieldProps = {
+  label: string
+  required?: boolean
+  error?: string | string[]
+} & ComponentProps<typeof Select>
+
+const SelectField = ({ label, required, error, ...props }: SelectFieldProps) => (
+  <Flex direction='column' gap='2'>
+    <Text asChild size='2' weight='medium' className='tracking-wide text-gray-700'>
+      <span>
+        {label}
+        {required ? <span className='text-vermillion'> *</span> : null}
+      </span>
+    </Text>
+    <Select {...props} label={undefined} />
+    <FieldError error={error} />
+  </Flex>
+)
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
@@ -38,77 +95,81 @@ export default function CreateAssetPage() {
   const isSubmitting = state === 'submitting'
 
   return (
-    <div className='pt-4 flex flex-col space-y-4'>
-      <div className='flex flex-col rounded-md bg-offwhite px-6'>
-        <PageHeader>
-          <h3 className='text-xl'>Create Asset</h3>
-          <Button aria-label='go back to assets page' to='/assets'>
-            Go to assets page
-          </Button>
-        </PageHeader>
-        {/* Create Asset form */}
-        <Form method='post' replace>
-          <div className='px-6 pt-5'>
-            <ErrorPanel errors={response?.errors.message} />
-          </div>
+    <Box p='4'>
+      <Flex direction='column' gap='4'>
+        <Heading size='5'>Create Asset</Heading>
 
-          <fieldset disabled={isSubmitting}>
-            {/* Asset General Info */}
-            <div className='grid grid-cols-1 px-0 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-              <div className='col-span-1 pt-3'>
-                <h3 className='text-lg font-medium'>General Information</h3>
-              </div>
-              <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-                <div className='w-full p-4 space-y-3'>
-                  <Input
-                    required
-                    name='code'
-                    label='Code'
-                    placeholder='Code'
-                    error={response?.errors?.fieldErrors.code}
-                  />
-                  <Input
-                    required
-                    name='scale'
-                    label='Scale'
-                    placeholder='Scale'
-                    error={response?.errors?.fieldErrors.scale}
-                  />
-                  <Input
-                    type='number'
-                    name='withdrawalThreshold'
-                    label='Withdrawal Threshold'
-                    error={response?.errors.fieldErrors.withdrawalThreshold}
-                  />
-                  {tenants && (
-                    <Select
-                      options={tenants.map((tenant) => ({
-                        label: `${tenant.node.id}${tenant.node.publicName ? ` (${tenant.node.publicName})` : ''}`,
-                        value: tenant.node.id
-                      }))}
-                      name='tenantId'
-                      placeholder='Select tenant...'
-                      label='Tenant Id'
-                      defaultValue={{
-                        label: sessionTenantId,
-                        value: sessionTenantId
-                      }}
-                      required
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className='flex justify-end py-3'>
-              <Button aria-label='create asset' type='submit'>
-                {isSubmitting ? 'Creating asset ...' : 'Create'}
-              </Button>
-            </div>
-          </fieldset>
-        </Form>
-        {/* Create Asset form - END */}
-      </div>
-    </div>
+        <ErrorPanel errors={response?.errors.message} />
+
+        <Card className='max-w-3xl'>
+          <Form method='post' replace>
+            <fieldset disabled={isSubmitting}>
+              <Flex direction='column' gap='5'>
+                <Box>
+                  <Flex direction='column' gap='5'>
+                    <Flex direction='column' gap='4'>
+                      <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                        General Information
+                      </Text>
+                      <div className='grid gap-4 md:grid-cols-2'>
+                        <FormField
+                          name='code'
+                          label='Code'
+                          placeholder='Code'
+                          error={response?.errors?.fieldErrors.code}
+                          required
+                        />
+                        <FormField
+                          name='scale'
+                          label='Scale'
+                          placeholder='Scale'
+                          error={response?.errors?.fieldErrors.scale}
+                          required
+                        />
+                      </div>
+                      <FormField
+                        type='number'
+                        name='withdrawalThreshold'
+                        label='Withdrawal Threshold'
+                        placeholder='Withdrawal Threshold'
+                        error={response?.errors.fieldErrors.withdrawalThreshold}
+                      />
+                      {tenants && (
+                        <SelectField
+                          options={tenants.map((tenant) => ({
+                            label: `${tenant.node.id}${
+                              tenant.node.publicName
+                                ? ` (${tenant.node.publicName})`
+                                : ''
+                            }`,
+                            value: tenant.node.id
+                          }))}
+                          name='tenantId'
+                          placeholder='Select tenant...'
+                          defaultValue={{
+                            label: sessionTenantId,
+                            value: sessionTenantId
+                          }}
+                          label='Tenant Id'
+                          required
+                          error={response?.errors?.fieldErrors.tenantId}
+                        />
+                      )}
+                    </Flex>
+                  </Flex>
+                </Box>
+
+                <Flex justify='end'>
+                  <Button aria-label='create asset' type='submit'>
+                    {isSubmitting ? 'Creating asset ...' : 'Create'}
+                  </Button>
+                </Flex>
+              </Flex>
+            </fieldset>
+          </Form>
+        </Card>
+      </Flex>
+    </Box>
   )
 }
 

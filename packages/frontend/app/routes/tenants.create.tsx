@@ -136,7 +136,7 @@ export default function CreateTenantPage() {
               <Flex direction='column' gap='5'>
                 <Box>
                   <Flex direction='column' gap='6'>
-                    <Flex direction='column' gap='3'>
+                    <Flex direction='column' gap='4'>
                       <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
                         General Information
                       </Text>
@@ -157,7 +157,7 @@ export default function CreateTenantPage() {
                       </div>
                     </Flex>
 
-                    <Flex direction='column' gap='3'>
+                    <Flex direction='column' gap='4'>
                       <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
                         Sensitive Information
                       </Text>
@@ -171,7 +171,7 @@ export default function CreateTenantPage() {
                       />
                     </Flex>
 
-                    <Flex direction='column' gap='3'>
+                    <Flex direction='column' gap='4'>
                       <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
                         Identity Provider Information
                       </Text>
@@ -190,7 +190,7 @@ export default function CreateTenantPage() {
                       />
                     </Flex>
 
-                    <Flex direction='column' gap='3'>
+                    <Flex direction='column' gap='4'>
                       <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
                         Tenant Settings
                       </Text>

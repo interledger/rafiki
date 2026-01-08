@@ -60,7 +60,7 @@ export default function TenantsPage() {
   return (
     <Box p='4'>
       <Flex direction='column' gap='4'>
-        <Flex justify='between' align='center'>
+        <Flex justify='between' align='start'>
           <Box>
             <Heading size='5'>Tenants</Heading>
             <Text size='2' color='gray'>
