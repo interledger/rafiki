@@ -22,12 +22,12 @@ div.forward {
   position: fixed;
   inset: 0;
   background: linear-gradient(
-    135deg,
-    #ffd6c7 0%,
-    #fff0c7 25%,
-    #c7e8f1 50%,
-    #bfece2 75%,
-    #c7b7d1 100%
+    120deg,
+    #fff6f1 0%,
+    #ffe7d2 26%,
+    #f3e7ff 52%,
+    #e8f2ff 76%,
+    #fff1e3 100%
   );
   opacity: 0.25;
   z-index: 0;
