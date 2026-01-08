@@ -84,7 +84,7 @@ export const Sidebar: FC<SidebarProps> = ({
             leaveTo='-translate-x-full'
           >
             <div className='fixed inset-0 z-20 flex'>
-              <Dialog.Panel className='relative flex w-full max-w-xs flex-1 flex-col border-r border-mercury bg-white pt-5 pb-4'>
+              <Dialog.Panel className='relative flex w-full max-w-xs flex-1 flex-col border-r border-mercury bg-[#fffef8] pt-5 pb-4'>
                 <Flex justify='between' align='center' px='4' pb='4'>
                   <img className='w-8' src='/logo.svg' alt='Logo' />
                   <IconButton
@@ -143,7 +143,7 @@ export const Sidebar: FC<SidebarProps> = ({
           </Transition.Child>
         </Dialog>
       </Transition.Root>
-      <nav className='fixed inset-x-0 z-10 flex h-20 flex-col border-r border-mercury bg-white md:inset-y-0 md:h-auto md:w-60'>
+      <nav className='fixed inset-x-0 z-10 flex h-20 flex-col border-r border-mercury bg-[#fffef8] md:inset-y-0 md:h-auto md:w-60'>
         <Flex className='flex min-h-0 flex-1 items-center px-4 py-8 md:flex-col md:items-start md:overflow-y-auto'>
           {/* Logo */}
           <Flex align='center' gap='2' className='flex-shrink-0'>
