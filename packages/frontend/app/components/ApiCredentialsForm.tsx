@@ -52,7 +52,7 @@ export const ApiCredentialsForm = ({
     <div className='space-y-4'>
       {showClearCredentials ? (
         <Form method='post' action='/api/set-credentials' className='space-y-4'>
-          <p className='text-green-600'>✓ API credentials configured</p>
+          <p className='text-green-600 mb-4'>✓ API credentials configured</p>
           <input hidden readOnly name='intent' value='clear' />
           <Button
             type='submit'

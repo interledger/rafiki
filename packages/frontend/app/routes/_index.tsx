@@ -61,7 +61,7 @@ export default function Index() {
             <Heading size='8' className='text-[#F37F64] mb-4'>
               Rafiki Admin
             </Heading>
-            <Text size='3' color='gray'>
+            <Text as='p' size='3' color='gray' className='mt-6'>
               Configure your API credentials to start managing tenants, assets,
               and wallet addresses.
             </Text>
