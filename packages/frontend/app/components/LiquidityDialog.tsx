@@ -1,10 +1,10 @@
 import { Dialog } from '@headlessui/react'
 import { Form } from '@remix-run/react'
 import type { ChangeEvent } from 'react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { XIcon } from '~/components/icons'
-import { Button } from '@radix-ui/themes'
-import { Input } from '~/components/ui'
+import { Button, Text, TextField } from '@radix-ui/themes'
+import { FieldError, Label } from '~/components/ui'
 
 type BasicAsset = {
   code: string
@@ -26,6 +26,7 @@ export const LiquidityDialog = ({
 }: LiquidityDialogProps) => {
   const [actualAmount, setActualAmount] = useState<number>(0)
   const [errorMessage, setErrorMessage] = useState<string>('')
+  const amountId = useId()
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const userInput = e.target.value
@@ -74,19 +75,31 @@ export const LiquidityDialog = ({
                 {title}
               </Dialog.Title>
               <div className='mt-2'>
-                <Input
-                  ref={inputRef}
-                  required
-                  type='number'
-                  name='displayAmount'
-                  label='Amount'
-                  onChange={handleChange}
-                  addOn={asset.code}
-                  step='any'
-                  error={errorMessage}
-                />
+                <div>
+                  <Label htmlFor={amountId} required>
+                    Amount
+                  </Label>
+                  <TextField.Root
+                    id={amountId}
+                    ref={inputRef}
+                    required
+                    type='number'
+                    name='displayAmount'
+                    onChange={handleChange}
+                    step='any'
+                    size='3'
+                    className='w-full'
+                  >
+                    <TextField.Slot side='left'>
+                      <Text size='2' color='gray' className='whitespace-nowrap'>
+                        {asset.code}
+                      </Text>
+                    </TextField.Slot>
+                  </TextField.Root>
+                  <FieldError error={errorMessage} />
+                </div>
                 <Form method='post' replace preventScrollReset>
-                  <Input
+                  <input
                     required
                     min={1}
                     type='hidden'

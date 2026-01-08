@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Fragment, useId, useState } from 'react'
 import { Combobox, Transition } from '@headlessui/react'
-import { Input } from './Input'
+import { TextField } from '@radix-ui/themes'
 import { Check, Chevron } from '../icons'
 import { Label } from './Label'
 import { FieldError } from './FieldError'
@@ -77,9 +77,11 @@ export const Select = ({
         ) : null}
         <div className='relative'>
           <Combobox.Input
-            as={Input}
+            as={TextField.Root}
             id={id}
             required={required}
+            size='3'
+            className='w-full'
             displayValue={(option: SelectOption) => option.label}
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder={placeholder}

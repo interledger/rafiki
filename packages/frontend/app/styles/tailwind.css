@@ -55,3 +55,8 @@ div.forward {
 .rt-TextFieldInput {
   border-radius: inherit;
 }
+
+.rt-TextFieldInput::placeholder {
+  color: #6b7280;
+  opacity: 0.8;
+}

@@ -7,8 +7,7 @@ import {
   useState
 } from 'react'
 import { ExclamationTriangle, XIcon } from './icons'
-import { Button } from '@radix-ui/themes'
-import { Input } from './ui'
+import { Button, TextField } from '@radix-ui/themes'
 
 export type ConfirmationDialogRef = {
   display: () => void
@@ -130,12 +129,14 @@ export const ConfirmationDialog = forwardRef<
                             <span className='font-bold'>{keyword}</span>
                             &quot; below:
                           </p>
-                          <Input
+                          <TextField.Root
                             value={confirmationPrompt}
                             ref={inputRef}
                             onChange={(e) =>
                               setConfirmationPrompt(e.currentTarget.value)
                             }
+                            size='3'
+                            className='w-full'
                           />
                         </div>
                         <div className='mt-2'>

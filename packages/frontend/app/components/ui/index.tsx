@@ -1,6 +1,5 @@
 export * from './ErrorPanel'
 export * from './FieldError'
-export * from './Input'
 export * from './Label'
 export * from './PasswordInput'
 export * from './Select'
