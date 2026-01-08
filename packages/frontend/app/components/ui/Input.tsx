@@ -33,7 +33,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             type={type ?? 'text'}
             className={cx(
-              'block w-full rounded-md border border-tealish/50 transition-colors duration-150 placeholder:font-extralight focus:border-tealish focus:outline-none focus:ring-0 disabled:bg-mercury',
+              'block w-full rounded-md border border-tealish/50 transition-colors duration-150 placeholder:font-extralight placeholder:text-gray-500 placeholder:opacity-80 focus:border-tealish focus:outline-none focus:ring-0 disabled:bg-mercury',
               addOn ? 'rounded-l-none' : ''
             )}
             {...props}

@@ -19,8 +19,8 @@ export const PopoverFilter = ({
   values
 }: PopoverFilterProps) => {
   return (
-    <Popover className='relative mt-2'>
-      <Popover.Button className='relative w-[400px] cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-pearl focus:outline-none focus:ring-2 focus:ring-[#F37F64] sm:text-sm sm:leading-6'>
+    <Popover className='relative'>
+      <Popover.Button className='inline-flex w-[400px] items-center justify-between gap-2 rounded-md border border-pearl bg-white px-3 py-2 text-sm text-tealish shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F37F64]'>
         {label}
       </Popover.Button>
       <Transition

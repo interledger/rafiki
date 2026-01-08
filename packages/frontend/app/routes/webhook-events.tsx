@@ -87,7 +87,7 @@ export default function WebhookEventsPage() {
         <Flex direction='column' gap='4'>
           <Flex align='start' justify='between' gap='3' wrap='wrap'>
             <Heading size='5'>Webhook Events</Heading>
-            <Flex align='center' gap='3' wrap='wrap'>
+            <Flex align='start' gap='3' wrap='wrap'>
               <PopoverFilter
                 label={
                   type.length
