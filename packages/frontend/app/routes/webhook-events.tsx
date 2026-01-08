@@ -85,7 +85,7 @@ export default function WebhookEventsPage() {
     <>
       <Box p='4'>
         <Flex direction='column' gap='4'>
-          <Heading size='6'>Webhook Events</Heading>
+          <Heading size='5'>Webhook Events</Heading>
 
           <Flex direction='column' gap='3'>
             <Heading size='4'>Filters</Heading>

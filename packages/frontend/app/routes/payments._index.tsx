@@ -121,7 +121,7 @@ export default function PaymentsPage() {
   return (
     <Box p='4'>
       <Flex direction='column' gap='4'>
-        <Heading size='6'>Payments</Heading>
+        <Heading size='5'>Payments</Heading>
 
         <Flex direction='column' gap='3'>
           <Heading size='4'>Filters</Heading>

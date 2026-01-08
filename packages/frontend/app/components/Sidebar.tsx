@@ -84,8 +84,8 @@ export const Sidebar: FC<SidebarProps> = ({
             leaveTo='-translate-x-full'
           >
             <div className='fixed inset-0 z-20 flex'>
-              <Dialog.Panel className='relative flex w-full max-w-xs flex-1 flex-col border-r border-mercury bg-[#fffef8] pt-5 pb-4'>
-                <Flex justify='between' align='center' px='4' pb='4'>
+              <Dialog.Panel className='relative flex w-full max-w-xs flex-1 flex-col border-r border-mercury bg-[#fffef8] pt-5 pb-6'>
+                <Flex justify='between' align='center' px='5' pb='4'>
                   <img className='w-8' src='/logo.svg' alt='Logo' />
                   <IconButton
                     variant='ghost'
@@ -95,7 +95,7 @@ export const Sidebar: FC<SidebarProps> = ({
                   </IconButton>
                 </Flex>
                 <Box className='mt-5 h-0 flex-1 overflow-y-auto'>
-                  <nav className='px-2'>
+                  <nav className='px-3'>
                     <Flex direction='column' gap='1'>
                       {navigationToShow.map(({ name, href }) => (
                         <NavLink
@@ -107,7 +107,7 @@ export const Sidebar: FC<SidebarProps> = ({
                               isActive
                                 ? 'bg-[#F37F64]/10 text-[#F37F64]'
                                 : 'text-tealish/70 hover:bg-[#F37F64]/5',
-                              'flex p-2 font-medium rounded-md'
+                              'flex px-3 py-2 font-medium rounded-md'
                             )
                           }
                         >
@@ -123,7 +123,7 @@ export const Sidebar: FC<SidebarProps> = ({
                             isActive
                               ? 'bg-[#F37F64]/10 text-[#F37F64]'
                               : 'text-tealish/70 hover:bg-[#F37F64]/5',
-                              'flex p-2 font-medium rounded-md'
+                              'flex px-3 py-2 font-medium rounded-md'
                             )
                           }
                         >
@@ -144,18 +144,18 @@ export const Sidebar: FC<SidebarProps> = ({
         </Dialog>
       </Transition.Root>
       <nav className='fixed inset-x-0 z-10 flex h-20 flex-col border-r border-mercury bg-[#fffef8] md:inset-y-0 md:h-auto md:w-60'>
-        <Flex className='flex min-h-0 flex-1 items-center px-4 py-8 md:flex-col md:items-start md:overflow-y-auto'>
+        <Flex className='flex min-h-0 flex-1 items-center px-5 py-6 md:flex-col md:items-start md:overflow-y-auto'>
           {/* Logo */}
           <Flex align='center' gap='2' className='flex-shrink-0'>
             <img className='w-8' src='/logo.svg' alt='Logo' />
-            <Heading size='7' className='hidden md:inline-block'>
+            <Heading size='6' className='hidden md:inline-block whitespace-nowrap'>
               Rafiki Admin
             </Heading>
           </Flex>
           {/* Logo - END */}
           {/* Desktop Navigation */}
           <Box className='hidden w-full mt-5 flex-1 flex-col overflow-y-auto md:block'>
-            <Flex direction='column' gap='2'>
+            <Flex direction='column' gap='1'>
               {navigationToShow.map(({ name, href }) => (
                 <NavLink
                   key={name}
@@ -165,7 +165,7 @@ export const Sidebar: FC<SidebarProps> = ({
                       isActive
                         ? 'bg-[#F37F64]/10 text-[#F37F64]'
                         : 'text-tealish/70 hover:bg-[#F37F64]/5',
-                      'flex p-2 font-medium rounded-md'
+                      'flex px-3 py-2 font-medium rounded-md'
                     )
                   }
                 >
@@ -181,7 +181,7 @@ export const Sidebar: FC<SidebarProps> = ({
                           isActive
                             ? 'bg-[#F37F64]/10 text-[#F37F64]'
                             : 'text-tealish/70 hover:bg-[#F37F64]/5',
-                      'flex p-2 font-medium rounded-md'
+                      'flex px-3 py-2 font-medium rounded-md'
                     )
                   }
                 >

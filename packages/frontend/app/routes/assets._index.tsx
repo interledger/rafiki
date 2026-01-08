@@ -45,7 +45,7 @@ export default function AssetsPage() {
     <Box p='4'>
       <Flex direction='column' gap='4'>
         <Flex justify='between' align='center'>
-          <Heading size='6'>Assets</Heading>
+          <Heading size='5'>Assets</Heading>
           <Button onClick={() => navigate('/assets/create')}>
             Add asset
           </Button>

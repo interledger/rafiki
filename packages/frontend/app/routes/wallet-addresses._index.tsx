@@ -50,7 +50,7 @@ export default function WalletAddressesPage() {
     <Box p='4'>
       <Flex direction='column' gap='4'>
         <Flex justify='between' align='center'>
-          <Heading size='6'>Wallet Addresses</Heading>
+          <Heading size='5'>Wallet Addresses</Heading>
           <Button onClick={() => navigate('/wallet-addresses/create')}>
             Create wallet address
           </Button>

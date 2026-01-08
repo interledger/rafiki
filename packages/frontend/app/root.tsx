@@ -141,7 +141,7 @@ export default function App() {
             <div
               className={`pt-20 md:pt-0 flex ${displaySidebar ? 'md:pl-60' : ''} flex-1 flex-col`}
             >
-              <main className='pb-8 px-4'>
+              <main className='pb-8 px-4 md:pt-3'>
                 <Outlet />
               </main>
             </div>

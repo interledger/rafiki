@@ -130,7 +130,7 @@ export default function CreateTenantPage() {
       <Card>
         <Flex direction='column' gap='5'>
           <Flex justify='between' align='center'>
-            <Heading size='6'>Create Tenant</Heading>
+            <Heading size='5'>Create Tenant</Heading>
             <Button asChild variant='soft' aria-label='go back to tenants page'>
               <Link to='/tenants'>Go to tenants page</Link>
             </Button>
