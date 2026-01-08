@@ -24,7 +24,7 @@
     "@babel/core": "^7.26.9",
     "@babel/preset-env": "^7.26.9",
     "@types/k6": "^0.54.2",
-    "babel-loader": "^9.2.1",
+    "babel-loader": "^10.0.0",
     "core-js": "^3.40.0",
     "json-canonicalize": "^1.0.6",
     "webpack": "^5.97.1",
