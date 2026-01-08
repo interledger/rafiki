@@ -1,10 +1,8 @@
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData, useNavigate } from '@remix-run/react'
-import { Badge, PageHeader } from '~/components'
-import { Button, Table } from '~/components/ui'
+import { Box, Button, Card, Flex, Heading, Table, Badge, Text } from '@radix-ui/themes'
 import { listWalletAddresses } from '~/lib/api/wallet-address.server'
 import { paginationSchema } from '~/lib/validate.server'
-import { badgeColorByWalletAddressStatus } from '~/shared/utils'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -38,88 +36,86 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return json({ walletAddresses, previousPageUrl, nextPageUrl })
 }
 
+const statusColorMap: Record<string, 'green' | 'red' | 'gray'> = {
+  ACTIVE: 'green',
+  INACTIVE: 'red'
+}
+
 export default function WalletAddressesPage() {
   const { walletAddresses, previousPageUrl, nextPageUrl } =
     useLoaderData<typeof loader>()
   const navigate = useNavigate()
 
   return (
-    <div className='pt-4 flex flex-col space-y-8'>
-      <div className='flex flex-col rounded-md bg-offwhite px-6'>
-        <PageHeader>
-          <div className='flex-1'>
-            <h3 className='text-2xl'>Wallet Addresses</h3>
-          </div>
-          <div className='ml-auto'>
-            <Button
-              to='/wallet-addresses/create'
-              aria-label='create a new wallet address'
-            >
+    <Box p='4'>
+      <Card>
+        <Flex direction='column' gap='4'>
+          <Flex justify='between' align='center'>
+            <Heading size='6'>Wallet Addresses</Heading>
+            <Button onClick={() => navigate('/wallet-addresses/create')}>
               Create wallet address
             </Button>
-          </div>
-        </PageHeader>
-        <Table>
-          <Table.Head columns={['Wallet address', 'Public name', 'Status']} />
-          <Table.Body>
-            {walletAddresses.edges.length ? (
-              walletAddresses.edges.map((wa) => (
-                <Table.Row
-                  key={wa.node.id}
-                  className='cursor-pointer'
-                  onClick={() => navigate(`/wallet-addresses/${wa.node.id}`)}
-                >
-                  <Table.Cell>{wa.node.address}</Table.Cell>
-                  <Table.Cell>
-                    <div className='flex flex-col'>
-                      {wa.node.publicName ? (
-                        <span className='font-medium'>
-                          {wa.node.publicName}
-                        </span>
-                      ) : (
-                        <span className='text-tealish/80'>No public name</span>
-                      )}
-                    </div>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <Badge
-                      color={badgeColorByWalletAddressStatus[wa.node.status]}
-                    >
-                      {wa.node.status}
-                    </Badge>
+          </Flex>
+
+          <Table.Root>
+            <Table.Header>
+              <Table.Row>
+                <Table.ColumnHeaderCell>Wallet address</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Public name</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {walletAddresses.edges.length ? (
+                walletAddresses.edges.map((wa) => (
+                  <Table.Row
+                    key={wa.node.id}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => navigate(`/wallet-addresses/${wa.node.id}`)}
+                  >
+                    <Table.Cell>
+                      <Text>{wa.node.address}</Text>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Text weight='medium'>
+                        {wa.node.publicName || 'No public name'}
+                      </Text>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Badge color={statusColorMap[wa.node.status] || 'gray'}>
+                        {wa.node.status}
+                      </Badge>
+                    </Table.Cell>
+                  </Table.Row>
+                ))
+              ) : (
+                <Table.Row>
+                  <Table.Cell colSpan={3} align='center'>
+                    <Text>No wallet addresses found.</Text>
                   </Table.Cell>
                 </Table.Row>
-              ))
-            ) : (
-              <Table.Row>
-                <Table.Cell colSpan={4} className='text-center'>
-                  No wallet addresses found.
-                </Table.Cell>
-              </Table.Row>
-            )}
-          </Table.Body>
-        </Table>
-        <div className='flex items-center justify-between p-5'>
-          <Button
-            aria-label='go to previous page'
-            disabled={!walletAddresses.pageInfo.hasPreviousPage}
-            onClick={() => {
-              navigate(previousPageUrl)
-            }}
-          >
-            Previous
-          </Button>
-          <Button
-            aria-label='go to next page'
-            disabled={!walletAddresses.pageInfo.hasNextPage}
-            onClick={() => {
-              navigate(nextPageUrl)
-            }}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
-    </div>
+              )}
+            </Table.Body>
+          </Table.Root>
+
+          <Flex justify='between' pt='2'>
+            <Button
+              variant='soft'
+              disabled={!walletAddresses.pageInfo.hasPreviousPage}
+              onClick={() => navigate(previousPageUrl)}
+            >
+              Previous
+            </Button>
+            <Button
+              variant='soft'
+              disabled={!walletAddresses.pageInfo.hasNextPage}
+              onClick={() => navigate(nextPageUrl)}
+            >
+              Next
+            </Button>
+          </Flex>
+        </Flex>
+      </Card>
+    </Box>
   )
 }
