@@ -127,29 +127,26 @@ export default function TenantsPage() {
                   </Table.Cell>
                 </Table.Row>
               )}
-              <Table.Row>
-                <Table.Cell colSpan={3}>
-                  <Flex justify='between' py='2'>
-                    <Button
-                      variant='soft'
-                      disabled={!tenantPageInfo.hasPreviousPage}
-                      onClick={() => navigate(previousPageUrl)}
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      variant='soft'
-                      disabled={!tenantPageInfo.hasNextPage}
-                      onClick={() => navigate(nextPageUrl)}
-                    >
-                      Next
-                    </Button>
-                  </Flex>
-                </Table.Cell>
-              </Table.Row>
             </Table.Body>
           </Table.Root>
         </Box>
+
+        <Flex justify='between' pt='2'>
+          <Button
+            variant='soft'
+            disabled={!tenantPageInfo.hasPreviousPage}
+            onClick={() => navigate(previousPageUrl)}
+          >
+            Previous
+          </Button>
+          <Button
+            variant='soft'
+            disabled={!tenantPageInfo.hasNextPage}
+            onClick={() => navigate(nextPageUrl)}
+          >
+            Next
+          </Button>
+        </Flex>
       </Flex>
     </Box>
   )

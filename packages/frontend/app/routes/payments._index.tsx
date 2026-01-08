@@ -12,8 +12,17 @@ import {
   Form,
   useActionData
 } from '@remix-run/react'
-import { Box, Button, Flex, Heading, Table, Badge, Text, TextField } from '@radix-ui/themes'
-import { PopoverFilter } from '~/components/Filters'
+import {
+  Box,
+  Button,
+  DropdownMenu,
+  Flex,
+  Heading,
+  Table,
+  Badge,
+  Text,
+  TextField
+} from '@radix-ui/themes'
 import { ErrorPanel, FieldError } from '~/components/ui'
 import { listPayments } from '~/lib/api/payments.server'
 import { paymentsSearchParams } from '~/lib/validate.server'
@@ -121,100 +130,120 @@ export default function PaymentsPage() {
   return (
     <Box p='4'>
       <Flex direction='column' gap='4'>
-        <Heading size='5'>Payments</Heading>
-
-        <Flex direction='column' gap='3'>
-          <Heading size='4'>Filters</Heading>
-          <ErrorPanel errors={response?.errors.message} />
-
           <Flex align='center' justify='between' gap='3' wrap='wrap'>
-            <Flex align='center' gap='2' wrap='wrap'>
-              <PopoverFilter
-                label='Payment type'
-                values={type.length > 0 ? type : ['all']}
-                options={[
-                  {
-                    name: 'All',
-                    value: 'all',
-                    action: () =>
-                      updateParams({
-                        type: null,
-                        before: null,
-                        after: null,
-                        walletAddressId
-                      })
-                  },
-                  ...Object.values(PaymentType).map((value) => ({
-                    name: capitalize(value),
-                    value: value,
-                    action: () => setTypeFilterParams(value)
-                  }))
-                ]}
-              />
-
-              <Form
-                method='post'
-                onSubmit={(e) => {
-                  if (!walletId) {
-                    e.preventDefault()
+            <Heading size='5'>Payments</Heading>
+          <Flex align='center' gap='2' wrap='wrap'>
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <button
+                  type='button'
+                  className='inline-flex min-w-[220px] items-center justify-between gap-2 rounded-md border border-pearl bg-white px-3 py-2 text-sm text-tealish shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F37F64]'
+                >
+                  <span className='truncate'>
+                    {type.length
+                      ? `Payments: ${type.map((value) => capitalize(value)).join(', ')}`
+                      : 'All Payments'}
+                  </span>
+                  <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    width='14'
+                    height='14'
+                    viewBox='0 0 20 20'
+                    fill='currentColor'
+                    aria-hidden='true'
+                  >
+                    <path
+                      fillRule='evenodd'
+                      d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z'
+                      clipRule='evenodd'
+                    />
+                  </svg>
+                </button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content
+                align='start'
+                style={{ backgroundColor: '#fff' }}
+                className='shadow-lg'
+              >
+                <DropdownMenu.CheckboxItem
+                  checked={type.length === 0}
+                  onCheckedChange={() =>
                     updateParams({
-                      walletAddressId: null,
-                      type: searchParams.get('type'),
+                      type: null,
                       before: null,
-                      after: null
+                      after: null,
+                      walletAddressId
                     })
                   }
-                }}
-              >
-                <Flex gap='2' align='center'>
-                  <TextField.Root
-                    name='walletAddressId'
-                    placeholder='Wallet address ID'
-                    style={{ width: '400px' }}
-                    value={walletId}
-                    onChange={(e) => setWalletId(e.target.value)}
-                  />
-                  <input
-                    name='type'
-                    type='hidden'
-                    value={searchParams.get('type') ?? ''}
-                  />
-                  <Button type='submit'>
-                    <svg
-                      xmlns='http://www.w3.org/2000/svg'
-                      width='16'
-                      height='16'
-                      fill='none'
-                      viewBox='0 0 24 24'
-                      stroke='currentColor'
-                      strokeWidth={2}
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        d='M21 21l-4.35-4.35M17.25 10.5a6.75 6.75 0 11-13.5 0 6.75 6.75 0 0113.5 0z'
-                      />
-                    </svg>
-                  </Button>
-                </Flex>
-                <FieldError
-                  error={response?.errors?.fieldErrors.walletAddressId}
-                />
-              </Form>
-            </Flex>
+                >
+                  All
+                </DropdownMenu.CheckboxItem>
+                <DropdownMenu.Separator />
+                {Object.values(PaymentType).map((value) => (
+                  <DropdownMenu.CheckboxItem
+                    key={value}
+                    checked={type.includes(value)}
+                    onCheckedChange={() => setTypeFilterParams(value)}
+                  >
+                    {capitalize(value)}
+                  </DropdownMenu.CheckboxItem>
+                ))}
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
 
-            <Button
-              variant='soft'
-              onClick={() => {
-                navigate('/payments')
-                setWalletId('')
-                setSearchParams(new URLSearchParams())
+            <Form
+              method='post'
+              onSubmit={(e) => {
+                if (!walletId) {
+                  e.preventDefault()
+                  updateParams({
+                    walletAddressId: null,
+                    type: searchParams.get('type'),
+                    before: null,
+                    after: null
+                  })
+                }
               }}
             >
-              Reset Filters
-            </Button>
+              <Flex gap='2' align='center'>
+                <TextField.Root
+                  name='walletAddressId'
+                  placeholder='Wallet address ID'
+                  style={{ width: '400px' }}
+                  value={walletId}
+                  onChange={(e) => setWalletId(e.target.value)}
+                />
+                <input
+                  name='type'
+                  type='hidden'
+                  value={searchParams.get('type') ?? ''}
+                />
+                <Button type='submit'>
+                  <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    width='16'
+                    height='16'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    stroke='currentColor'
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      d='M21 21l-4.35-4.35M17.25 10.5a6.75 6.75 0 11-13.5 0 6.75 6.75 0 0113.5 0z'
+                    />
+                  </svg>
+                </Button>
+              </Flex>
+              <FieldError
+                error={response?.errors?.fieldErrors.walletAddressId}
+              />
+            </Form>
           </Flex>
         </Flex>
+
+        <ErrorPanel errors={response?.errors.message} />
 
         <Flex direction='column' gap='4'>
           <Box className='overflow-hidden rounded-md border border-pearl bg-white'>

@@ -88,29 +88,33 @@ export default function WebhookEventsPage() {
           <Heading size='5'>Webhook Events</Heading>
 
           <Flex direction='column' gap='3'>
-            <Heading size='4'>Filters</Heading>
-            <PopoverFilter
-              label='Event type'
-              values={type.length > 0 ? type : ['all']}
-              options={[
-                {
-                  name: 'All',
-                  value: 'all',
-                  action: () => {
-                    navigate(``)
-                  }
-                },
-                ...Object.values(WebhookEventType).map((value) => ({
-                  name:
-                    value.charAt(0).toUpperCase() +
-                    value.slice(1).replace(/[_.]/g, ' '),
-                  value: value,
-                  action: () => {
-                    setTypeFilterParams(value)
-                  }
-                }))
-              ]}
-            />
+            <Flex align='center' justify='end' gap='3' wrap='wrap'>
+              <Text size='3' color='gray'>
+                Filters
+              </Text>
+              <PopoverFilter
+                label='Event type'
+                values={type.length > 0 ? type : ['all']}
+                options={[
+                  {
+                    name: 'All',
+                    value: 'all',
+                    action: () => {
+                      navigate(``)
+                    }
+                  },
+                  ...Object.values(WebhookEventType).map((value) => ({
+                    name:
+                      value.charAt(0).toUpperCase() +
+                      value.slice(1).replace(/[_.]/g, ' '),
+                    value: value,
+                    action: () => {
+                      setTypeFilterParams(value)
+                    }
+                  }))
+                ]}
+              />
+            </Flex>
           </Flex>
 
           <Flex direction='column' gap='4'>
