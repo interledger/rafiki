@@ -3,8 +3,7 @@ import { paginationSchema } from '~/lib/validate.server'
 import { getAssetWithFees } from '~/lib/api/asset.server'
 import { useLoaderData, useNavigate } from '@remix-run/react'
 import { PageHeader } from '~/components'
-import { Button } from '@radix-ui/themes'
-import { Table } from '~/components/ui'
+import { Button, Table } from '@radix-ui/themes'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
@@ -70,10 +69,16 @@ export default function AssetFeesPage() {
             </Button>
           </div>
         </PageHeader>
-        <Table>
-          <Table.Head
-            columns={['ID', 'Type', 'Fixed', 'Basis points', 'Creation date']}
-          />
+        <Table.Root>
+          <Table.Header className='bg-pearl/40'>
+            <Table.Row>
+              <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell>Fixed</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell>Basis points</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell>Creation date</Table.ColumnHeaderCell>
+            </Table.Row>
+          </Table.Header>
           <Table.Body>
             {fees?.edges.length ? (
               fees.edges.map((fee) => (
@@ -89,13 +94,13 @@ export default function AssetFeesPage() {
               ))
             ) : (
               <Table.Row>
-                <Table.Cell colSpan={5} className='text-center'>
+                <Table.Cell colSpan={5} align='center'>
                   No fees found.
                 </Table.Cell>
               </Table.Row>
             )}
           </Table.Body>
-        </Table>
+        </Table.Root>
         <div className='flex items-center justify-between p-5'>
           <Button
             aria-label='go to previous page'
