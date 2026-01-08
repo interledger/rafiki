@@ -38,3 +38,9 @@ div.forward {
 .radix-themes {
   background-color: transparent;
 }
+
+/* Ensure Radix card surfaces stay white over the page background. */
+.rt-Card {
+  background-color: #fff;
+  padding: 24px;
+}
