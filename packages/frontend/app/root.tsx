@@ -122,7 +122,7 @@ export default function App() {
   return (
     <html
       lang='en'
-      className='h-full bg-polkadot bg-cover bg-no-repeat bg-center bg-fixed'
+      className='h-full'
     >
       <head>
         <Meta />
@@ -170,7 +170,7 @@ export function ErrorBoundary() {
     return (
       <html
         lang='en'
-        className='h-full bg-polkadot bg-cover bg-no-repeat bg-center bg-fixed'
+        className='h-full'
       >
         <head>
           <Meta />
