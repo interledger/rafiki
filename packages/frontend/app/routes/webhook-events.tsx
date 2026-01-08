@@ -5,9 +5,8 @@ import {
   useNavigate,
   useSearchParams
 } from '@remix-run/react'
-import { PageHeader } from '~/components'
+import { Box, Button, Card, Flex, Heading, Table, Text } from '@radix-ui/themes'
 import { PopoverFilter } from '~/components/Filters'
-import { Button, Table } from '~/components/ui'
 import { listWebhooks } from '~/lib/api/webhook.server'
 import { webhooksSearchParams } from '~/lib/validate.server'
 import { WebhookEventType } from '~/shared/enums'
@@ -84,16 +83,13 @@ export default function WebhookEventsPage() {
 
   return (
     <>
-      <div className='pt-4 flex flex-col space-y-8'>
-        <div className='flex flex-col rounded-md bg-offwhite px-6'>
-          <PageHeader>
-            <div className='flex-1'>
-              <h3 className='text-2xl leading-10'>Webhook Events</h3>
-            </div>
-          </PageHeader>
-          <div className='p-1'>
-            <h3 className='text-lg font-bold'>Filters</h3>
-            <div className='flex items-center'>
+      <Box p='4'>
+        <Card>
+          <Flex direction='column' gap='4'>
+            <Heading size='6'>Webhook Events</Heading>
+
+            <Flex direction='column' gap='3'>
+              <Heading size='4'>Filters</Heading>
               <PopoverFilter
                 label='Event type'
                 values={type.length > 0 ? type : ['all']}
@@ -116,68 +112,84 @@ export default function WebhookEventsPage() {
                   }))
                 ]}
               />
-            </div>
-          </div>
-          <Table>
-            <Table.Head columns={['ID', 'Type', 'Date', 'Data']} />
-            <Table.Body>
-              {webhooks.edges.length ? (
-                webhooks.edges.map((webhook) => (
-                  <Table.Row key={webhook.node.id}>
-                    <Table.Cell>{webhook.node.id}</Table.Cell>
-                    <Table.Cell>{webhook.node.type}</Table.Cell>
-                    <Table.Cell>
-                      {new Date(webhook.node.createdAt).toLocaleString()}
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Button
-                        aria-label='view webhook data'
-                        state={{
-                          data: {
-                            ...webhook.node.data,
-                            tenantId: webhook.node.tenantId
-                          }
-                        }}
-                        to={`/webhook-events/data${
-                          searchParams ? `?${searchParams}` : null
-                        }`}
-                      >
-                        View data
-                      </Button>
+            </Flex>
+
+            <Table.Root>
+              <Table.Header>
+                <Table.Row>
+                  <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Date</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Data</Table.ColumnHeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {webhooks.edges.length ? (
+                  webhooks.edges.map((webhook) => (
+                    <Table.Row key={webhook.node.id}>
+                      <Table.Cell>
+                        <Text>{webhook.node.id}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Text weight='medium'>{webhook.node.type}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Text>{new Date(webhook.node.createdAt).toLocaleString()}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Button
+                          variant='soft'
+                          onClick={() => {
+                            navigate(`/webhook-events/data${
+                              searchParams ? `?${searchParams}` : ''
+                            }`, {
+                              state: {
+                                data: {
+                                  ...webhook.node.data,
+                                  tenantId: webhook.node.tenantId
+                                }
+                              }
+                            })
+                          }}
+                        >
+                          View data
+                        </Button>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))
+                ) : (
+                  <Table.Row>
+                    <Table.Cell colSpan={4} align='center'>
+                      <Text>No webhook events found.</Text>
                     </Table.Cell>
                   </Table.Row>
-                ))
-              ) : (
-                <Table.Row>
-                  <Table.Cell colSpan={4} className='text-center'>
-                    No webhook events found.
-                  </Table.Cell>
-                </Table.Row>
-              )}
-            </Table.Body>
-          </Table>
-          <div className='flex items-center justify-between p-5'>
-            <Button
-              aria-label='go to previous page'
-              disabled={!webhooks.pageInfo.hasPreviousPage}
-              onClick={() => {
-                navigate(previousPageUrl)
-              }}
-            >
-              Previous
-            </Button>
-            <Button
-              aria-label='go to next page'
-              disabled={!webhooks.pageInfo.hasNextPage}
-              onClick={() => {
-                navigate(nextPageUrl)
-              }}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      </div>
+                )}
+              </Table.Body>
+            </Table.Root>
+
+            <Flex justify='between' pt='2'>
+              <Button
+                variant='soft'
+                disabled={!webhooks.pageInfo.hasPreviousPage}
+                onClick={() => {
+                  navigate(previousPageUrl)
+                }}
+              >
+                Previous
+              </Button>
+              <Button
+                variant='soft'
+                disabled={!webhooks.pageInfo.hasNextPage}
+                onClick={() => {
+                  navigate(nextPageUrl)
+                }}
+              >
+                Next
+              </Button>
+            </Flex>
+          </Flex>
+        </Card>
+      </Box>
       <Outlet />
     </>
   )
