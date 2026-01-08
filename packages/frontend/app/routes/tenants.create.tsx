@@ -1,13 +1,13 @@
-import { useState } from 'react'
 import { json, type ActionFunctionArgs, redirect } from '@remix-run/node'
 import {
   Form,
+  Link,
   useActionData,
   useLoaderData,
   useNavigation
 } from '@remix-run/react'
-import { PageHeader } from '~/components'
-import { Button, ErrorPanel, Input, PasswordInput } from '~/components/ui'
+import { Box, Button, Card, Flex, Heading, Text, TextField } from '@radix-ui/themes'
+import { ErrorPanel, FieldError } from '~/components/ui'
 import { createTenant, whoAmI } from '~/lib/api/tenant.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createTenantSchema } from '~/lib/validate.server'
@@ -15,6 +15,41 @@ import type { ZodFieldErrors } from '~/shared/types'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
 import { TenantSettingKey } from '~/generated/graphql'
+
+type FormFieldProps = {
+  name: string
+  label: string
+  placeholder?: string
+  type?: 'text' | 'email' | 'password' | 'number'
+  error?: string | string[]
+  required?: boolean
+}
+
+const FormField = ({
+  name,
+  label,
+  placeholder,
+  type = 'text',
+  error,
+  required
+}: FormFieldProps) => (
+  <Flex direction='column' gap='2'>
+    <Text asChild size='2' weight='medium'>
+      <label htmlFor={name}>
+        {label}
+        {required ? <span className='text-vermillion'> *</span> : null}
+      </label>
+    </Text>
+    <TextField.Root
+      id={name}
+      name={name}
+      type={type}
+      placeholder={placeholder}
+      required={required}
+    />
+    <FieldError error={error} />
+  </Flex>
+)
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
@@ -30,65 +65,43 @@ export default function CreateTenantPage() {
   const { me } = useLoaderData<typeof loader>()
   if (!me || !me.isOperator) throw redirect('tenants')
 
-  const [exchangeRatesUrl, setExchangeRatesUrl] = useState<string>()
-  const [webhookUrl, setWebhookUrl] = useState<string>()
-  const [webhookTimeout, setWebhookTimeout] = useState<number>()
-  const [webhookMaxRetry, setWebhookMaxRetry] = useState<number>()
-  const [walletAddressUrl, setWalletAddressUrl] = useState<string>()
-  const [ilpAddress, setIlpAddress] = useState<string>()
-
   const tenantSettings: {
     name: string
-    value:
-      | ReturnType<typeof useState<string>>[0]
-      | ReturnType<typeof useState<number>>[0]
-    setValue:
-      | ReturnType<typeof useState<string>>[1]
-      | ReturnType<typeof useState<number>>[1]
     placeholder: string
     label: string
+    type?: 'text' | 'email' | 'password' | 'number'
   }[] = [
     {
       name: 'exchangeRatesUrl',
       placeholder: 'Exhange Rates Url',
-      label: 'Exchange Rates Url',
-      value: exchangeRatesUrl,
-      setValue: setExchangeRatesUrl
+      label: 'Exchange Rates Url'
     },
     {
       name: 'webhookUrl',
       placeholder: 'Webhook Url',
-      label: 'Webhook Url',
-      value: webhookUrl,
-      setValue: setWebhookUrl
+      label: 'Webhook Url'
     },
     {
       name: 'webhookTimeout',
       placeholder: 'Webhook Timeout',
       label: 'Webhook Timeout',
-      value: webhookTimeout,
-      setValue: setWebhookTimeout
+      type: 'number'
     },
     {
       name: 'webhookMaxRetry',
       placeholder: 'Webhook Max Retry',
       label: 'Webhook Max Retry',
-      value: webhookMaxRetry,
-      setValue: setWebhookMaxRetry
+      type: 'number'
     },
     {
       name: 'walletAddressUrl',
       placeholder: 'Wallet Address Url',
-      label: 'Wallet Address Url',
-      value: walletAddressUrl,
-      setValue: setWalletAddressUrl
+      label: 'Wallet Address Url'
     },
     {
       name: 'ilpAddress',
       placeholder: 'ILP Address',
-      label: 'ILP Address',
-      value: ilpAddress,
-      setValue: setIlpAddress
+      label: 'ILP Address'
     }
   ]
 
@@ -113,125 +126,127 @@ export default function CreateTenantPage() {
   }
 
   return (
-    <div className='pt-4 flex flex-col space-y-4'>
-      <div className='flex flex-col rounded-md bg-offwhite px-6'>
-        <PageHeader>
-          <h3 className='text-xl'>Create Tenant</h3>
-          <Button aria-label='go back to tenants page' to='/tenants'>
-            Go to tenants page
-          </Button>
-        </PageHeader>
-        {/* Create Tenant form */}
-        <Form method='post' replace>
-          <div className='px-6 pt-5'>
-            <ErrorPanel errors={response?.errors.message} />
-          </div>
+    <Box p='4'>
+      <Card>
+        <Flex direction='column' gap='5'>
+          <Flex justify='between' align='center'>
+            <Heading size='6'>Create Tenant</Heading>
+            <Button asChild variant='soft' aria-label='go back to tenants page'>
+              <Link to='/tenants'>Go to tenants page</Link>
+            </Button>
+          </Flex>
 
-          <fieldset disabled={isSubmitting}>
-            {/* Tenant General Info */}
-            <div className='grid grid-cols-1 px-0 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-              <div className='col-span-1 pt-3'>
-                <h3 className='text-lg font-medium'>General Information</h3>
-              </div>
-              <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-                <div className='w-full p-4 space-y-3'>
-                  <Input
-                    name='publicName'
-                    label='Public Name'
-                    placeholder='Public name'
-                    error={response?.errors?.fieldErrors.publicName}
-                  />
-                  <Input
-                    name='email'
-                    label='Email'
-                    placeholder='Email'
-                    error={response?.errors?.fieldErrors.email}
-                  />
-                </div>
-              </div>
-            </div>
-            {/* Tenant General Info - END */}
-            {/* Tenant Sensitive Info */}
-            <div className='grid grid-cols-1 px-0 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-              <div className='col-span-1 pt-3'>
-                <h3 className='text-lg font-medium'>Sensitive Information</h3>
-              </div>
-              <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-                <div className='w-full p-4 space-y-3'>
-                  <PasswordInput
-                    name='apiSecret'
-                    label='API Secret'
-                    placeholder='The API secret. Treat as sensitive information.'
-                    error={response?.errors?.fieldErrors.apiSecret}
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-            {/* Tenant Sensitive Info - END */}
-            {/* Tenant Identity Provider */}
-            <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-              <div className='col-span-1 pt-3'>
-                <h3 className='text-lg font-medium'>
-                  Identity Provider Information
-                </h3>
-              </div>
-              <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-                <div className='w-full p-4 space-y-3'>
-                  <Input
-                    name='idpConsentUrl'
-                    label='Consent URL'
-                    placeholder='Provide the Identity Provider Consent URL'
-                    error={response?.errors?.fieldErrors.idpConsentUrl}
-                  />
-                  <PasswordInput
-                    name='idpSecret'
-                    label='Secret'
-                    placeholder='Provide the Identity Provider Secret'
-                    error={response?.errors?.fieldErrors.idpSecret}
-                  />
-                </div>
-              </div>
-            </div>
-            {/* Tenant Identity Provider - End */}
-            {/* Tenant Settings */}
-            <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-              <div className='col-span-1 pt-3'>
-                <h3 className='text-lg font-medium'>Tenant Settings</h3>
-              </div>
-              <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-                <div className='w-full p-4 space-y-3'>
-                  {tenantSettings.map((setting) => (
-                    <div key={`div-${setting.name}`}>
-                      <Input
-                        key={setting.name}
-                        name={setting.name}
-                        label={setting.label}
-                        placeholder={setting.placeholder}
+          <ErrorPanel errors={response?.errors.message} />
+
+          <Form method='post' replace>
+            <fieldset disabled={isSubmitting}>
+              <Flex direction='column' gap='5'>
+                <div className='grid grid-cols-1 gap-6 md:grid-cols-3 border-b border-pearl pb-6'>
+                  <Box className='pt-1'>
+                    <Text size='3' weight='medium'>
+                      General Information
+                    </Text>
+                  </Box>
+                  <Card className='md:col-span-2'>
+                    <Flex direction='column' gap='3'>
+                      <FormField
+                        name='publicName'
+                        label='Public Name'
+                        placeholder='Public name'
+                        error={response?.errors?.fieldErrors.publicName}
                       />
-                      <p
-                        id={`${setting.name}-error`}
-                        className='text-red-500 text-sa'
-                      >
-                        {getTenantSettingError(setting.name)}
-                      </p>
-                    </div>
-                  ))}
+                      <FormField
+                        name='email'
+                        label='Email'
+                        placeholder='Email'
+                        type='email'
+                        error={response?.errors?.fieldErrors.email}
+                      />
+                    </Flex>
+                  </Card>
                 </div>
-                <ErrorPanel errors={tenantSettingErrors} />
-              </div>
-            </div>
-            {/* Tenant Settings - END */}
-            <div className='flex justify-end py-3'>
-              <Button aria-label='create tenant' type='submit'>
-                {isSubmitting ? 'Creating tenant ...' : 'Create'}
-              </Button>
-            </div>
-          </fieldset>
-        </Form>
-        {/* Create Tenant form - END */}
-      </div>
-    </div>
+
+                <div className='grid grid-cols-1 gap-6 md:grid-cols-3 border-b border-pearl pb-6'>
+                  <Box className='pt-1'>
+                    <Text size='3' weight='medium'>
+                      Sensitive Information
+                    </Text>
+                  </Box>
+                  <Card className='md:col-span-2'>
+                    <Flex direction='column' gap='3'>
+                      <FormField
+                        name='apiSecret'
+                        label='API Secret'
+                        placeholder='The API secret. Treat as sensitive information.'
+                        type='password'
+                        error={response?.errors?.fieldErrors.apiSecret}
+                        required
+                      />
+                    </Flex>
+                  </Card>
+                </div>
+
+                <div className='grid grid-cols-1 gap-6 md:grid-cols-3 border-b border-pearl pb-6'>
+                  <Box className='pt-1'>
+                    <Text size='3' weight='medium'>
+                      Identity Provider Information
+                    </Text>
+                  </Box>
+                  <Card className='md:col-span-2'>
+                    <Flex direction='column' gap='3'>
+                      <FormField
+                        name='idpConsentUrl'
+                        label='Consent URL'
+                        placeholder='Provide the Identity Provider Consent URL'
+                        error={response?.errors?.fieldErrors.idpConsentUrl}
+                      />
+                      <FormField
+                        name='idpSecret'
+                        label='Secret'
+                        placeholder='Provide the Identity Provider Secret'
+                        type='password'
+                        error={response?.errors?.fieldErrors.idpSecret}
+                      />
+                    </Flex>
+                  </Card>
+                </div>
+
+                <div className='grid grid-cols-1 gap-6 md:grid-cols-3 border-b border-pearl pb-6'>
+                  <Box className='pt-1'>
+                    <Text size='3' weight='medium'>
+                      Tenant Settings
+                    </Text>
+                  </Box>
+                  <Card className='md:col-span-2'>
+                    <Flex direction='column' gap='3'>
+                      {tenantSettings.map((setting) => (
+                        <FormField
+                          key={setting.name}
+                          name={setting.name}
+                          label={setting.label}
+                          placeholder={setting.placeholder}
+                          type={setting.type}
+                          error={getTenantSettingError(setting.name)}
+                        />
+                      ))}
+                    </Flex>
+                    <Box pt='3'>
+                      <ErrorPanel errors={tenantSettingErrors} />
+                    </Box>
+                  </Card>
+                </div>
+
+                <Flex justify='end'>
+                  <Button type='submit'>
+                    {isSubmitting ? 'Creating tenant ...' : 'Create'}
+                  </Button>
+                </Flex>
+              </Flex>
+            </fieldset>
+          </Form>
+        </Flex>
+      </Card>
+    </Box>
   )
 }
 
