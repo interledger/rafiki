@@ -133,6 +133,10 @@ export const listPayments = async (
               type
               state
               createdAt
+              tenant {
+                id
+                publicName
+              }
             }
           }
           pageInfo {
