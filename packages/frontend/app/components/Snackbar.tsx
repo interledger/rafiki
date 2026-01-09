@@ -60,18 +60,29 @@ export const Snackbar: FC<SnackbarProps> = ({
           leaveFrom='opacity-100 scale-100'
           leaveTo='opacity-0 scale-95'
         >
-          <div className='relative mx-4 flex w-full transform items-center justify-between space-x-3 overflow-hidden rounded-xl bg-white py-3 px-4 text-left align-middle shadow-lg transition-all sm:max-w-[22rem]'>
+          <div className={cx(
+            'relative mx-4 flex w-full transform items-center justify-between space-x-3 overflow-hidden rounded-xl py-3 px-4 text-left align-middle shadow-lg transition-all sm:max-w-[22rem]',
+            message.type === 'success' ? 'bg-green-500' : 'bg-white'
+          )}>
             <div className='flex items-center space-x-2'>
               {message.type === 'success' && (
-                <CheckCircleSolid className='w-4 h-4 text-green-400 flex-shrink-0' />
+                <CheckCircleSolid className='w-4 h-4 text-white flex-shrink-0' />
               )}
               {message.type === 'error' && (
                 <XCircleSolid className='w-4 h-4 text-red-400 flex-shrink-0' />
               )}
-              <p className='text text-tealish'>{message.content}</p>
+              <p className={cx(
+                'text',
+                message.type === 'success' ? 'text-white' : 'text-tealish'
+              )}>{message.content}</p>
             </div>
             <button
-              className='-mr-2 text-gray-500 hover:text-gray-900'
+              className={cx(
+                '-mr-2',
+                message.type === 'success' 
+                  ? 'text-white hover:text-gray-200' 
+                  : 'text-gray-500 hover:text-gray-900'
+              )}
               onClick={() => onClose()}
             >
               <XIcon className='w-5 h-5' />

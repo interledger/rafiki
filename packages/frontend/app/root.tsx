@@ -2,24 +2,27 @@ import type { MetaFunction } from '@remix-run/node'
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import {
   Links,
+  Link,
   LiveReload,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
   useLoaderData,
+  useLocation,
   useRouteError,
   isRouteErrorResponse
 } from '@remix-run/react'
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
+import { Button, Theme } from '@radix-ui/themes'
 import logo from '../public/logo.svg'
 import { XCircle } from './components/icons'
 import { Sidebar } from './components/Sidebar'
 import { Snackbar } from './components/Snackbar'
-import { Button } from './components/ui/Button'
 import { messageStorage, type Message } from './lib/message.server'
 import tailwind from './styles/tailwind.css'
+import radixStyles from '@radix-ui/themes/styles.css'
 import { getOpenPaymentsUrl } from './shared/utils'
 import { PublicEnv, type PublicEnvironment } from './PublicEnv'
 import { isLoggedIn, checkAuthAndRedirect } from './lib/kratos_checks.server'
@@ -108,6 +111,8 @@ export default function App() {
     authEnabled,
     hasApiCredentials
   } = useLoaderData<typeof loader>()
+  const location = useLocation()
+  const isIndex = location.pathname === '/'
   const [snackbarOpen, setSnackbarOpen] = useState(false)
 
   useEffect(() => {
@@ -120,36 +125,42 @@ export default function App() {
   return (
     <html
       lang='en'
-      className='h-full bg-polkadot bg-cover bg-no-repeat bg-center bg-fixed'
+      className='h-full'
     >
       <head>
         <Meta />
         <Links />
       </head>
-      <body className='h-full text-tealish'>
-        <div className='min-h-full'>
-          {displaySidebar && (
-            <Sidebar
-              logoutUrl={logoutUrl}
-              authEnabled={authEnabled}
-              hasApiCredentials={hasApiCredentials}
-            />
-          )}
-          <div
-            className={`pt-20 md:pt-0 flex ${displaySidebar ? 'md:pl-60' : ''} flex-1 flex-col`}
-          >
-            <main className='pb-8 px-4'>
+      <body className='h-full text-tealish bg-diagonal'>
+        <Theme accentColor='orange'>
+          <div className='min-h-full relative z-10'>
+            {displaySidebar && (
+              <Sidebar
+                logoutUrl={logoutUrl}
+                authEnabled={authEnabled}
+                hasApiCredentials={hasApiCredentials}
+              />
+            )}
+            <div
+              className={`pt-20 md:pt-0 flex ${displaySidebar ? 'md:pl-60' : ''} flex-1 flex-col`}
+            >
+            <main
+              className={
+                isIndex ? 'flex-1' : 'flex-1 pb-8 px-4 md:pt-3'
+              }
+            >
               <Outlet />
             </main>
+            </div>
           </div>
-        </div>
-        <Snackbar
-          id='snackbar'
-          onClose={() => setSnackbarOpen(false)}
-          show={snackbarOpen}
-          message={message}
-          dismissAfter={2000}
-        />
+          <Snackbar
+            id='snackbar'
+            onClose={() => setSnackbarOpen(false)}
+            show={snackbarOpen}
+            message={message}
+            dismissAfter={2000}
+          />
+        </Theme>
         <ScrollRestoration />
         <PublicEnv env={publicEnv} />
         <Scripts />
@@ -166,7 +177,7 @@ export function ErrorBoundary() {
     return (
       <html
         lang='en'
-        className='h-full bg-polkadot bg-cover bg-no-repeat bg-center bg-fixed'
+        className='h-full'
       >
         <head>
           <Meta />
@@ -196,8 +207,10 @@ export function ErrorBoundary() {
             {error.status}
           </h4>
           <h2 className='text-xl'>{error.statusText}</h2>
-          <Button to='/' aria-label='go to homepage'>
-            Go to homepage
+          <Button asChild>
+            <Link to='/' aria-label='go to homepage'>
+              Go to homepage
+            </Link>
           </Button>
         </div>
       </ErrorPage>
@@ -223,8 +236,10 @@ export function ErrorBoundary() {
         <div>
           <span className='font-light'>Cause:</span> <span>{errorMessage}</span>
         </div>
-        <Button to='/' aria-label='go to homepage'>
-          Go to homepage
+        <Button asChild>
+          <Link to='/' aria-label='go to homepage'>
+            Go to homepage
+          </Link>
         </Button>
       </div>
     </ErrorPage>
@@ -233,6 +248,7 @@ export function ErrorBoundary() {
 
 export function links() {
   return [
+    { rel: 'stylesheet', href: radixStyles },
     { rel: 'stylesheet', href: tailwind },
     { rel: 'icon', href: logo }
   ]

@@ -1,5 +1,5 @@
 import { Form } from '@remix-run/react'
-import { Button } from '../components/ui'
+import { Button } from '@radix-ui/themes'
 import variables from '../lib/envConfig.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { redirectDocument, type LoaderFunctionArgs } from '@remix-run/node'
@@ -20,7 +20,7 @@ export default function Auth() {
             Welcome!
           </h1>
           <div className='space-y-8'>
-            <p className='text-4xl md:text-7xl'>Rafiki Admin</p>
+            <p className='text-4xl md:text-7xl mb-4'>Rafiki Admin</p>
             <p>This is Rafiki&apos;s administrative user interface.</p>
           </div>
           <p>

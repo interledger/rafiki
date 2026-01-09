@@ -10,3 +10,62 @@ a.default-link {
 div.forward {
   z-index: 1;
 }
+
+/* Diagonal Flow Background */
+.bg-diagonal {
+  background: #fffdf9;
+  position: relative;
+}
+
+.bg-diagonal::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    #fff6f1 0%,
+    #ffe7d2 26%,
+    #f3e7ff 52%,
+    #e8f2ff 76%,
+    #fff1e3 100%
+  );
+  opacity: 0.25;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Allow the body background to show through the Radix Theme wrapper. */
+.radix-themes {
+  background-color: transparent;
+}
+
+/* Ensure Radix card surfaces stay white over the page background. */
+.rt-Card {
+  background-color: #fff;
+  padding: 24px;
+}
+
+/* Remove the inner gap between Radix text field borders and fill. */
+.rt-TextFieldRoot {
+  background-clip: padding-box;
+  border-radius: var(--text-field-border-radius);
+  overflow: hidden;
+}
+
+.rt-TextFieldInput {
+  border-radius: inherit;
+  padding-left: 0;
+  padding-right: 6px;
+  font-size: 14px;
+}
+
+.rt-TextFieldInput::placeholder {
+  color: #6b7280;
+  opacity: 0.8;
+  font-size: 14px;
+}
+
+/* Ensure Radix Select dropdown content has white background. */
+.rt-SelectContent {
+  background-color: #fff !important;
+}

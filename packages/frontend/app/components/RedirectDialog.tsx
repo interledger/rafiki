@@ -1,6 +1,6 @@
 import { Dialog, Transition } from '@headlessui/react'
 import { useNavigate } from '@remix-run/react'
-import { Button } from './ui'
+import { Button } from '@radix-ui/themes'
 import { Fragment } from 'react/jsx-runtime'
 import { forwardRef, useImperativeHandle, useState } from 'react'
 

@@ -2,8 +2,7 @@ import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { paginationSchema } from '~/lib/validate.server'
 import { getAssetWithFees } from '~/lib/api/asset.server'
 import { useLoaderData, useNavigate } from '@remix-run/react'
-import { PageHeader } from '~/components'
-import { Button, Table } from '~/components/ui'
+import { Box, Button, Flex, Heading, Table, Text } from '@radix-ui/themes'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
@@ -52,70 +51,88 @@ export default function AssetFeesPage() {
   const navigate = useNavigate()
 
   return (
-    <div className='pt-4 flex flex-col space-y-8'>
-      <div className='flex flex-col rounded-md bg-offwhite px-6'>
-        <PageHeader>
-          <div className='flex-1'>
-            <h3 className='text-2xl'>Asset Fees</h3>
-          </div>
-          <div className='ml-auto'>
+    <Box p='4'>
+      <Flex direction='column' gap='4'>
+        <Flex justify='between' align='start'>
+          <Heading size='5'>Asset Fees</Heading>
+          <Button
+            aria-label='back to asset overview'
+            onClick={() => {
+              navigate(`/assets/${assetId}`)
+            }}
+          >
+            Back to asset
+          </Button>
+        </Flex>
+
+        <Flex direction='column' gap='4'>
+          <Box className='overflow-hidden rounded-md border border-pearl bg-white'>
+            <Table.Root>
+              <Table.Header className='bg-pearl/40'>
+                <Table.Row>
+                  <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Fixed</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Basis points</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Creation date</Table.ColumnHeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {fees?.edges.length ? (
+                  fees.edges.map((fee) => (
+                    <Table.Row key={fee.node.id}>
+                      <Table.Cell>
+                        <Text size='2'>{fee.node.id}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Text>{fee.node.type}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Text>{fee.node.fixed}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Text>{fee.node.basisPoints}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Text>{new Date(fee.node.createdAt).toLocaleString()}</Text>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))
+                ) : (
+                  <Table.Row>
+                    <Table.Cell colSpan={5} align='center'>
+                      <Text>No fees found.</Text>
+                    </Table.Cell>
+                  </Table.Row>
+                )}
+              </Table.Body>
+            </Table.Root>
+          </Box>
+
+          <Flex justify='between' pt='2'>
             <Button
-              aria-label='back to asset overview'
+              variant='soft'
+              aria-label='go to previous page'
+              disabled={!fees?.pageInfo.hasPreviousPage}
               onClick={() => {
-                navigate(`/assets/${assetId}`)
+                navigate(previousPageUrl)
               }}
             >
-              Back to asset
+              Previous
             </Button>
-          </div>
-        </PageHeader>
-        <Table>
-          <Table.Head
-            columns={['ID', 'Type', 'Fixed', 'Basis points', 'Creation date']}
-          />
-          <Table.Body>
-            {fees?.edges.length ? (
-              fees.edges.map((fee) => (
-                <Table.Row key={fee.node.id}>
-                  <Table.Cell>{fee.node.id}</Table.Cell>
-                  <Table.Cell>{fee.node.type}</Table.Cell>
-                  <Table.Cell>{fee.node.fixed}</Table.Cell>
-                  <Table.Cell>{fee.node.basisPoints}</Table.Cell>
-                  <Table.Cell>
-                    {new Date(fee.node.createdAt).toLocaleString()}
-                  </Table.Cell>
-                </Table.Row>
-              ))
-            ) : (
-              <Table.Row>
-                <Table.Cell colSpan={5} className='text-center'>
-                  No fees found.
-                </Table.Cell>
-              </Table.Row>
-            )}
-          </Table.Body>
-        </Table>
-        <div className='flex items-center justify-between p-5'>
-          <Button
-            aria-label='go to previous page'
-            disabled={!fees?.pageInfo.hasPreviousPage}
-            onClick={() => {
-              navigate(previousPageUrl)
-            }}
-          >
-            Previous
-          </Button>
-          <Button
-            aria-label='go to next page'
-            disabled={!fees?.pageInfo.hasNextPage}
-            onClick={() => {
-              navigate(nextPageUrl)
-            }}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
-    </div>
+            <Button
+              variant='soft'
+              aria-label='go to next page'
+              disabled={!fees?.pageInfo.hasNextPage}
+              onClick={() => {
+                navigate(nextPageUrl)
+              }}
+            >
+              Next
+            </Button>
+          </Flex>
+        </Flex>
+      </Flex>
+    </Box>
   )
 }
