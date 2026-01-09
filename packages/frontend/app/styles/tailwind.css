@@ -64,3 +64,8 @@ div.forward {
   opacity: 0.8;
   font-size: 14px;
 }
+
+/* Ensure Radix Select dropdown content has white background. */
+.rt-SelectContent {
+  background-color: #fff !important;
+}

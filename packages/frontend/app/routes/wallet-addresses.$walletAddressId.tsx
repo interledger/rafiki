@@ -155,36 +155,40 @@ export default function ViewWalletAddressPage() {
                       disabled
                       readOnly
                     />
-                    <FormField
-                      name='publicName'
-                      label='Public name'
-                      defaultValue={walletAddress.publicName ?? undefined}
-                      error={response?.errors.fieldErrors.publicName}
-                    />
-                    <Flex direction='column' gap='2'>
-                      <Text
-                        asChild
-                        size='2'
-                        weight='medium'
-                        className='tracking-wide text-gray-700'
-                      >
-                        <label htmlFor='status'>
-                          Status
-                          <span className='text-vermillion'> *</span>
-                        </label>
-                      </Text>
-                      <Select.Root
-                        name='status'
-                        defaultValue={walletAddress.status}
-                        required
-                      >
-                        <Select.Trigger placeholder='Select status...' />
-                        <Select.Content>
-                          <Select.Item value='ACTIVE'>Active</Select.Item>
-                          <Select.Item value='INACTIVE'>Inactive</Select.Item>
-                        </Select.Content>
-                      </Select.Root>
-                      {renderFieldError(response?.errors.fieldErrors.status)}
+                    <Flex gap='4' className='w-full'>
+                      <Flex direction='column' gap='2' className='flex-1'>
+                        <FormField
+                          name='publicName'
+                          label='Public name'
+                          defaultValue={walletAddress.publicName ?? undefined}
+                          error={response?.errors.fieldErrors.publicName}
+                        />
+                      </Flex>
+                      <Flex direction='column' gap='2' className='flex-1'>
+                        <Text
+                          asChild
+                          size='2'
+                          weight='medium'
+                          className='tracking-wide text-gray-700'
+                        >
+                          <label htmlFor='status'>
+                            Status
+                            <span className='text-vermillion'> *</span>
+                          </label>
+                        </Text>
+                        <Select.Root
+                          name='status'
+                          defaultValue={walletAddress.status}
+                          required
+                        >
+                          <Select.Trigger placeholder='Select status...' />
+                          <Select.Content className='bg-white'>
+                            <Select.Item value='ACTIVE'>Active</Select.Item>
+                            <Select.Item value='INACTIVE'>Inactive</Select.Item>
+                          </Select.Content>
+                        </Select.Root>
+                        {renderFieldError(response?.errors.fieldErrors.status)}
+                      </Flex>
                     </Flex>
                   </Flex>
                   <Flex justify='end' mt='4'>
@@ -203,8 +207,8 @@ export default function ViewWalletAddressPage() {
               <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
                 Asset Information
               </Text>
-              <Flex gap='6' wrap='wrap'>
-                <Flex direction='column' gap='1'>
+              <Flex gap='6' className='w-full'>
+                <Flex direction='column' gap='1' className='flex-1'>
                   <Text size='2' weight='medium' className='text-gray-700'>
                     Code
                   </Text>
@@ -212,7 +216,7 @@ export default function ViewWalletAddressPage() {
                     {walletAddress.asset.code}
                   </Text>
                 </Flex>
-                <Flex direction='column' gap='1'>
+                <Flex direction='column' gap='1' className='flex-1'>
                   <Text size='2' weight='medium' className='text-gray-700'>
                     Scale
                   </Text>
@@ -220,7 +224,7 @@ export default function ViewWalletAddressPage() {
                     {walletAddress.asset.scale}
                   </Text>
                 </Flex>
-                <Flex direction='column' gap='1'>
+                <Flex direction='column' gap='1' className='flex-1'>
                   <Text size='2' weight='medium' className='text-gray-700'>
                     Withdrawal threshold
                   </Text>
