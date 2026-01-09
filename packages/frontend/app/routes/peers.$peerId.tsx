@@ -28,7 +28,7 @@ import {
   Text,
   TextField
 } from '@radix-ui/themes'
-import { ErrorPanel } from '~/components/ui'
+import { renderErrorPanel, renderFieldError } from '~/lib/form-errors'
 import { deletePeer, getPeer, updatePeer } from '~/lib/api/peer.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import {
@@ -39,7 +39,6 @@ import {
 import type { ZodFieldErrors } from '~/shared/types'
 import { formatAmount } from '~/shared/utils'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
-import { renderFieldError } from '~/lib/form-errors'
 
 type FormFieldProps = {
   name: string
@@ -166,7 +165,7 @@ export default function ViewPeerPage() {
                   Created at {new Date(peer.createdAt).toLocaleString()}
                 </Text>
               </Flex>
-              <ErrorPanel errors={response?.errors.general.message} />
+              {renderErrorPanel(response?.errors.general.message)}
               <Form method='post' replace preventScrollReset>
                 <fieldset disabled={currentPageAction}>
                   <Flex direction='column' gap='4'>
@@ -262,7 +261,7 @@ export default function ViewPeerPage() {
               <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
                 HTTP Information
               </Text>
-              <ErrorPanel errors={response?.errors.http.message} />
+              {renderErrorPanel(response?.errors.http.message)}
               <Form method='post' replace preventScrollReset>
                 <fieldset disabled={currentPageAction}>
                   <Flex direction='column' gap='4'>

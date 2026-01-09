@@ -7,8 +7,7 @@ import {
   useNavigation
 } from '@remix-run/react'
 import { Box, Button, Card, Flex, Heading, Select, Text, TextField } from '@radix-ui/themes'
-import { ErrorPanel } from '~/components/ui'
-import { renderFieldError } from '~/lib/form-errors'
+import { renderErrorPanel, renderFieldError } from '~/lib/form-errors'
 import { createAsset } from '~/lib/api/asset.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createAssetSchema } from '~/lib/validate.server'
@@ -142,7 +141,7 @@ export default function CreateAssetPage() {
       <Flex direction='column' gap='4'>
         <Heading size='5'>Create Asset</Heading>
 
-        <ErrorPanel errors={response?.errors.message} />
+        {renderErrorPanel(response?.errors.message)}
 
         <Card className='max-w-3xl'>
           <Form method='post' replace>

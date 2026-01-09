@@ -23,7 +23,7 @@ import {
   TextField
 } from '@radix-ui/themes'
 import { Badge } from '~/components'
-import { ErrorPanel } from '~/components/ui'
+import { renderErrorPanel, renderFieldError } from '~/lib/form-errors'
 import { listPayments } from '~/lib/api/payments.server'
 import { paymentsSearchParams } from '~/lib/validate.server'
 import { PaymentType } from '~/generated/graphql'
@@ -35,7 +35,6 @@ import {
 } from '~/shared/utils'
 import { checkAuthAndRedirect } from '~/lib/kratos_checks.server'
 import type { ZodFieldErrors } from '~/shared/types'
-import { renderFieldError } from '~/lib/form-errors'
 
 interface PaymentSearchParams {
   type: string | null
@@ -239,7 +238,7 @@ export default function PaymentsPage() {
           </Flex>
         </Flex>
 
-        <ErrorPanel errors={response?.errors.message} />
+        {renderErrorPanel(response?.errors.message)}
 
         <Flex direction='column' gap='4'>
           <Box className='overflow-hidden rounded-md border border-pearl bg-white'>

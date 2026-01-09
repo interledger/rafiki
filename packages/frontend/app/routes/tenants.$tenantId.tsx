@@ -15,7 +15,7 @@ import { type FormEvent, useRef, useState } from 'react'
 import type { ZodSchema } from 'zod'
 import { z } from 'zod'
 import { Box, Button, Card, Flex, Heading, Text, TextField } from '@radix-ui/themes'
-import { ErrorPanel } from '~/components/ui'
+import { renderErrorPanel, renderFieldError } from '~/lib/form-errors'
 import {
   ConfirmationDialog,
   type ConfirmationDialogRef
@@ -32,7 +32,6 @@ import type { ZodFieldErrors } from '~/shared/types'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { getTenantInfo } from '~/lib/api/tenant.server'
 import type { UpdateTenantInput } from '~/generated/graphql'
-import { renderFieldError } from '~/lib/form-errors'
 
 type FormFieldProps = {
   name: string
@@ -142,7 +141,7 @@ export default function ViewTenantPage() {
                     : ''}
                 </Text>
               </Flex>
-              <ErrorPanel errors={response?.errors?.general.message} />
+              {renderErrorPanel(response?.errors?.general.message)}
               <Form method='post' replace preventScrollReset>
                 <fieldset disabled={isSubmitting}>
                   <Flex direction='column' gap='4'>
@@ -196,7 +195,7 @@ export default function ViewTenantPage() {
               <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
                 Identity Provider Information
               </Text>
-              <ErrorPanel errors={response?.errors?.idp.message} />
+              {renderErrorPanel(response?.errors?.idp.message)}
               <Form method='post' replace preventScrollReset>
                 <fieldset disabled={isSubmitting}>
                   <Flex direction='column' gap='4'>
@@ -238,7 +237,7 @@ export default function ViewTenantPage() {
                 <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
                   Sensitive Information
                 </Text>
-                <ErrorPanel errors={response?.errors?.sensitive.message} />
+                {renderErrorPanel(response?.errors?.sensitive.message)}
                 <Form method='post' replace preventScrollReset>
                   <fieldset disabled={isSubmitting}>
                     <Flex direction='column' gap='4'>

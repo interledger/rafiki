@@ -1,7 +1,7 @@
 import { json, type ActionFunctionArgs, redirect } from '@remix-run/node'
 import { Form, useActionData, useLoaderData, useNavigation } from '@remix-run/react'
 import { Box, Button, Card, Flex, Heading, Text, TextField } from '@radix-ui/themes'
-import { ErrorPanel } from '~/components/ui'
+import { renderErrorPanel, renderFieldError } from '~/lib/form-errors'
 import { createTenant, whoAmI } from '~/lib/api/tenant.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createTenantSchema } from '~/lib/validate.server'
@@ -9,7 +9,6 @@ import type { ZodFieldErrors } from '~/shared/types'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
 import { TenantSettingKey } from '~/generated/graphql'
-import { renderFieldError } from '~/lib/form-errors'
 
 type FormFieldProps = {
   name: string
@@ -129,7 +128,7 @@ export default function CreateTenantPage() {
           <Heading size='5'>Create Tenant</Heading>
         </Flex>
 
-        <ErrorPanel errors={response?.errors.message} />
+        {renderErrorPanel(response?.errors.message)}
 
         <Card className='max-w-3xl'>
           <Form method='post' replace>
@@ -235,7 +234,7 @@ export default function CreateTenantPage() {
                         placeholder='ILP Address'
                         error={getTenantSettingError('ilpAddress')}
                       />
-                      <ErrorPanel errors={tenantSettingErrors} />
+                      {renderErrorPanel(tenantSettingErrors)}
                     </Flex>
                   </Flex>
                 </Box>

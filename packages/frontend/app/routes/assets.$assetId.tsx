@@ -16,7 +16,7 @@ import {
 import { type ChangeEventHandler, type FormEvent, useRef, useState } from 'react'
 import { z } from 'zod'
 import { Box, Button, Card, Flex, Heading, Text, TextField } from '@radix-ui/themes'
-import { ErrorPanel } from '~/components/ui'
+import { renderErrorPanel, renderFieldError } from '~/lib/form-errors'
 import {
   ConfirmationDialog,
   type ConfirmationDialogRef
@@ -37,7 +37,6 @@ import {
 import type { ZodFieldErrors } from '~/shared/types'
 import { formatAmount } from '~/shared/utils'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
-import { renderFieldError } from '~/lib/form-errors'
 
 type FormFieldProps = {
   name: string
@@ -155,7 +154,7 @@ export default function ViewAssetPage() {
                   Created at {new Date(asset.createdAt).toLocaleString()}
                 </Text>
               </Flex>
-              <ErrorPanel errors={response?.errors.general.message} />
+              {renderErrorPanel(response?.errors.general.message)}
               <Form method='post' replace preventScrollReset>
                 <fieldset disabled={currentPageAction}>
                   <Flex direction='column' gap='4'>
@@ -244,7 +243,7 @@ export default function ViewAssetPage() {
                   </Text>
                 ) : null}
               </Flex>
-              <ErrorPanel errors={response?.errors.sendingFee.message} />
+              {renderErrorPanel(response?.errors.sendingFee.message)}
               <Flex justify='end'>
                 <Button asChild>
                   <Link

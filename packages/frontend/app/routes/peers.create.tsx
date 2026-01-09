@@ -10,7 +10,7 @@ import {
   useNavigation
 } from '@remix-run/react'
 import { Box, Button, Card, Flex, Heading, Select, Text, TextField } from '@radix-ui/themes'
-import { ErrorPanel } from '~/components/ui'
+import { renderErrorPanel, renderFieldError } from '~/lib/form-errors'
 import { loadAssets } from '~/lib/api/asset.server'
 import { createPeer } from '~/lib/api/peer.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
@@ -22,7 +22,6 @@ import { RedirectDialog } from '~/components/RedirectDialog'
 import type { ReactNode } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { loadTenants, whoAmI } from '~/lib/api/tenant.server'
-import { renderFieldError } from '~/lib/form-errors'
 
 type SelectOption = {
   label: string
@@ -195,7 +194,7 @@ export default function CreatePeerPage() {
         <Flex direction='column' gap='4'>
           <Heading size='5'>Create Peer</Heading>
 
-          <ErrorPanel errors={response?.errors.message} />
+          {renderErrorPanel(response?.errors.message)}
 
           <Card className='max-w-3xl'>
             <Form method='post' replace>

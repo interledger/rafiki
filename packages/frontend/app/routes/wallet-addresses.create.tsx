@@ -8,7 +8,7 @@ import {
   useNavigation
 } from '@remix-run/react'
 import { Box, Button, Card, Flex, Heading, Select, Text, TextField } from '@radix-ui/themes'
-import { ErrorPanel } from '~/components/ui'
+import { renderErrorPanel, renderFieldError } from '~/lib/form-errors'
 import { loadAssets } from '~/lib/api/asset.server'
 import { createWalletAddress } from '~/lib/api/wallet-address.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
@@ -22,7 +22,6 @@ import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
 import type { listTenants } from '~/lib/api/tenant.server'
 import { whoAmI, loadTenants, getTenantInfo } from '~/lib/api/tenant.server'
-import { renderFieldError } from '~/lib/form-errors'
 
 const WALLET_ADDRESS_URL_KEY = 'WALLET_ADDRESS_URL'
 
@@ -259,7 +258,7 @@ export default function CreateWalletAddressPage() {
       <Flex direction='column' gap='4'>
         <Heading size='5'>Create Wallet Address</Heading>
 
-        <ErrorPanel errors={response?.errors.message} />
+        {renderErrorPanel(response?.errors.message)}
 
         <Card className='max-w-3xl'>
           <Form method='post' replace>

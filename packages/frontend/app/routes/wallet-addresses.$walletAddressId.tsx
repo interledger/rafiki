@@ -22,7 +22,7 @@ import {
   TextField,
   Select
 } from '@radix-ui/themes'
-import { ErrorPanel } from '~/components/ui'
+import { renderErrorPanel, renderFieldError } from '~/lib/form-errors'
 import {
   getWalletAddress,
   updateWalletAddress
@@ -32,7 +32,6 @@ import { updateWalletAddressSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import { capitalize, formatAmount } from '~/shared/utils'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
-import { renderFieldError } from '~/lib/form-errors'
 
 type FormFieldProps = {
   name: string
@@ -136,7 +135,7 @@ export default function ViewWalletAddressPage() {
                   {new Date(walletAddress.createdAt).toLocaleString()}
                 </Text>
               </Flex>
-              <ErrorPanel errors={response?.errors.message} />
+              {renderErrorPanel(response?.errors.message)}
               <Form method='post' replace preventScrollReset>
                 <fieldset disabled={isSubmitting}>
                   <Flex direction='column' gap='4'>
