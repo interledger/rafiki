@@ -12,8 +12,8 @@ import {
   Link
 } from '@remix-run/react'
 import { z } from 'zod'
-import { Box, Button, Card, Flex, Heading, Text, TextField } from '@radix-ui/themes'
-import { ErrorPanel, FieldError, Dropdown } from '~/components/ui'
+import { Box, Button, Card, Flex, Heading, Text, TextField, Select } from '@radix-ui/themes'
+import { ErrorPanel, FieldError } from '~/components/ui'
 import {
   getWalletAddress,
   updateWalletAddress
@@ -133,21 +133,22 @@ export default function ViewWalletAddressPage() {
                       defaultValue={walletAddress.publicName ?? undefined}
                       error={response?.errors.fieldErrors.publicName}
                     />
-                    <Dropdown
-                      options={[
-                        { label: 'Active', value: 'ACTIVE' },
-                        { label: 'Inactive', value: 'INACTIVE' }
-                      ]}
-                      name='status'
-                      placeholder='Select status...'
-                      defaultValue={{
-                        label: capitalize(walletAddress.status),
-                        value: walletAddress.status
-                      }}
-                      error={response?.errors.fieldErrors.status}
-                      label='Status'
-                      required
-                    />
+                    <Flex direction='column' gap='2'>
+                      <Text asChild size='2' weight='medium' className='tracking-wide text-gray-700'>
+                        <label htmlFor='status'>
+                          Status
+                          <span className='text-vermillion'> *</span>
+                        </label>
+                      </Text>
+                      <Select.Root name='status' defaultValue={walletAddress.status} required>
+                        <Select.Trigger placeholder='Select status...' />
+                        <Select.Content>
+                          <Select.Item value='ACTIVE'>Active</Select.Item>
+                          <Select.Item value='INACTIVE'>Inactive</Select.Item>
+                        </Select.Content>
+                      </Select.Root>
+                      <FieldError error={response?.errors.fieldErrors.status} />
+                    </Flex>
                   </Flex>
                   <Flex justify='end' mt='4'>
                     <Button

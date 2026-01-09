@@ -15,7 +15,6 @@ import {
 } from '@remix-run/react'
 import { type FormEvent, type ReactNode, useRef, useState } from 'react'
 import { z } from 'zod'
-import { DangerZone } from '~/components'
 import {
   ConfirmationDialog,
   type ConfirmationDialogRef
@@ -317,24 +316,30 @@ export default function ViewPeerPage() {
                 Asset Information
               </Text>
               <Flex gap='6' wrap='wrap'>
-                <Box>
-                  <Text weight='medium'>Code</Text>
+                <Flex direction='column' gap='1'>
+                  <Text size='2' weight='medium' className='text-gray-700'>
+                    Code
+                  </Text>
                   <Text size='2' color='gray'>
                     {peer.asset.code}
                   </Text>
-                </Box>
-                <Box>
-                  <Text weight='medium'>Scale</Text>
+                </Flex>
+                <Flex direction='column' gap='1'>
+                  <Text size='2' weight='medium' className='text-gray-700'>
+                    Scale
+                  </Text>
                   <Text size='2' color='gray'>
                     {peer.asset.scale}
                   </Text>
-                </Box>
-                <Box>
-                  <Text weight='medium'>Withdrawal threshold</Text>
+                </Flex>
+                <Flex direction='column' gap='1'>
+                  <Text size='2' weight='medium' className='text-gray-700'>
+                    Withdrawal threshold
+                  </Text>
                   <Text size='2' color='gray'>
                     {peer.asset.withdrawalThreshold ?? 'No withdrawal threshold'}
                   </Text>
-                </Box>
+                </Flex>
               </Flex>
               <Flex justify='end'>
                 <Button asChild>
@@ -350,12 +355,12 @@ export default function ViewPeerPage() {
                 Liquidity Information
               </Text>
               <Flex justify='between' align='center'>
-                <Box>
+                <Flex direction='column' gap='1'>
                   <Text weight='medium'>Amount</Text>
                   <Text size='2' color='gray'>
                     {formatAmount(peer.liquidity ?? '0', peer.asset.scale)} {peer.asset.code}
                   </Text>
-                </Box>
+                </Flex>
                 <Flex gap='3'>
                   <Button asChild>
                     <Link
@@ -378,18 +383,18 @@ export default function ViewPeerPage() {
                 </Flex>
               </Flex>
             </Flex>
-
-            <DangerZone title='Delete Peer'>
-              <Form method='post' onSubmit={submitHandler}>
-                <input type='hidden' name='id' value={peer.id} />
-                <input type='hidden' name='intent' value='delete' />
-                <Button type='submit' color='red' aria-label='delete peer'>
-                  Delete peer
-                </Button>
-              </Form>
-            </DangerZone>
           </Flex>
         </Card>
+
+        <Flex justify='end' className='max-w-3xl'>
+          <Form method='post' onSubmit={submitHandler}>
+            <input type='hidden' name='id' value={peer.id} />
+            <input type='hidden' name='intent' value='delete' />
+            <Button type='submit' color='red' aria-label='delete peer'>
+              Delete peer
+            </Button>
+          </Form>
+        </Flex>
 
         <ConfirmationDialog
           ref={dialogRef}

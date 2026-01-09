@@ -154,21 +154,27 @@ export default function ViewTenantPage() {
                       disabled
                       readOnly
                     />
-                    <FormField
-                      label='Public Name'
-                      name='publicName'
-                      disabled={tenantDeleted}
-                      defaultValue={tenant.publicName ?? undefined}
-                      error={response?.errors?.general.fieldErrors.publicName}
-                    />
-                    <FormField
-                      label='Email'
-                      name='email'
-                      type='email'
-                      disabled={tenantDeleted}
-                      defaultValue={tenant.email ?? undefined}
-                      error={response?.errors?.general.fieldErrors.email}
-                    />
+                    <Flex gap='3' className='flex-1'>
+                      <Box className='flex-1'>
+                        <FormField
+                          label='Public Name'
+                          name='publicName'
+                          disabled={tenantDeleted}
+                          defaultValue={tenant.publicName ?? undefined}
+                          error={response?.errors?.general.fieldErrors.publicName}
+                        />
+                      </Box>
+                      <Box className='flex-1'>
+                        <FormField
+                          label='Email'
+                          name='email'
+                          type='email'
+                          disabled={tenantDeleted}
+                          defaultValue={tenant.email ?? undefined}
+                          error={response?.errors?.general.fieldErrors.email}
+                        />
+                      </Box>
+                    </Flex>
                   </Flex>
                   <Flex justify='end' mt='4'>
                     {!tenantDeleted && (
@@ -262,20 +268,20 @@ export default function ViewTenantPage() {
                 </Form>
               </Flex>
             )}
-
-            {!tenantDeleted && me.isOperator && me.id !== tenant.id && (
-              <DangerZone title='Delete Tenant'>
-                <Form method='post' onSubmit={submitHandler}>
-                  <input type='hidden' name='id' value={tenant.id} />
-                  <input type='hidden' name='intent' value='delete' />
-                  <Button type='submit' color='red' aria-label='delete tenant'>
-                    Delete tenant
-                  </Button>
-                </Form>
-              </DangerZone>
-            )}
           </Flex>
         </Card>
+
+        {!tenantDeleted && me.isOperator && me.id !== tenant.id && (
+          <Flex justify='end' className='max-w-3xl'>
+            <Form method='post' onSubmit={submitHandler}>
+              <input type='hidden' name='id' value={tenant.id} />
+              <input type='hidden' name='intent' value='delete' />
+              <Button type='submit' color='red' aria-label='delete tenant'>
+                Delete tenant
+              </Button>
+            </Form>
+          </Flex>
+        )}
 
         <ConfirmationDialog
           ref={dialogRef}

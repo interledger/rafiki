@@ -15,7 +15,6 @@ import {
 } from '@remix-run/react'
 import { type ChangeEventHandler, type FormEvent, useRef, useState } from 'react'
 import { z } from 'zod'
-import { DangerZone } from '~/components'
 import { Box, Button, Card, Flex, Heading, Text, TextField } from '@radix-ui/themes'
 import { ErrorPanel, FieldError } from '~/components/ui'
 import {
@@ -145,8 +144,8 @@ export default function ViewAssetPage() {
         <Heading size='5'>Asset Details</Heading>
 
         <Card className='max-w-3xl'>
-          <Flex direction='column' gap='5'>
-            <Flex direction='column' gap='4'>
+          <Flex direction='column'>
+            <Flex direction='column' gap='4' pb='6'>
               <Flex align='center' justify='between' gap='3' wrap='wrap'>
                 <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
                   General Information
@@ -161,22 +160,28 @@ export default function ViewAssetPage() {
                   <Flex direction='column' gap='4'>
                     <input type='hidden' name='id' value={asset.id} />
                     <FormField label='Asset ID' name='assetId' value={asset.id} disabled readOnly />
-                    <Flex gap='3'>
-                      <FormField label='Code' name='code' value={asset.code} disabled readOnly />
-                      <FormField
-                        label='Scale'
-                        name='scale'
-                        value={asset.scale}
-                        disabled
-                        readOnly
-                      />
-                      <FormField
-                        type='number'
-                        name='withdrawalThreshold'
-                        label='Withdrawal Threshold'
-                        defaultValue={asset.withdrawalThreshold ?? undefined}
-                        error={response?.errors.general.fieldErrors.withdrawalThreshold}
-                      />
+                    <Flex gap='3' className='flex-1'>
+                      <Box className='flex-1'>
+                        <FormField label='Code' name='code' value={asset.code} disabled readOnly />
+                      </Box>
+                      <Box className='flex-1'>
+                        <FormField
+                          label='Scale'
+                          name='scale'
+                          value={asset.scale}
+                          disabled
+                          readOnly
+                        />
+                      </Box>
+                      <Box className='flex-1'>
+                        <FormField
+                          type='number'
+                          name='withdrawalThreshold'
+                          label='Withdrawal Threshold'
+                          defaultValue={asset.withdrawalThreshold ?? undefined}
+                          error={response?.errors.general.fieldErrors.withdrawalThreshold}
+                        />
+                      </Box>
                     </Flex>
                   </Flex>
                   <Flex justify='end' mt='4'>
@@ -192,18 +197,18 @@ export default function ViewAssetPage() {
                 </fieldset>
               </Form>
             </Flex>
-
-            <Flex direction='column' gap='4'>
+            <hr/>
+            <Flex direction='column' gap='4' pt='6' pb='6'>
               <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
                 Liquidity Information
               </Text>
               <Flex justify='between' align='center'>
-                <Box>
+                <Flex direction='column' gap='1'>
                   <Text weight='medium'>Amount</Text>
                   <Text size='2' color='gray'>
                     {formatAmount(asset.liquidity ?? '0', asset.scale)} {asset.code}
                   </Text>
-                </Box>
+                </Flex>
                 <Flex gap='3'>
                   <Button asChild>
                     <Link
@@ -226,8 +231,8 @@ export default function ViewAssetPage() {
                 </Flex>
               </Flex>
             </Flex>
-
-            <Flex direction='column' gap='4'>
+            <hr/>
+            <Flex direction='column' gap='4' pt='6'>
               <Flex direction='column' gap='2'>
                 <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
                   Sending Fee
@@ -253,23 +258,29 @@ export default function ViewAssetPage() {
                 <fieldset disabled={currentPageAction}>
                   <Flex direction='column' gap='4'>
                     <input type='hidden' name='assetId' value={asset.id} />
-                    <FormField
-                      type='number'
-                      name='fixed'
-                      label='Fixed Fee'
-                      defaultValue={asset.sendingFee?.fixed ?? undefined}
-                      error={response?.errors.sendingFee.fieldErrors.fixed}
-                    />
-                    <FormField
-                      type='number'
-                      name='basisPoints'
-                      label='Basis Points'
-                      error={response?.errors.sendingFee.fieldErrors.basisPoints}
-                      value={basisPointsInput}
-                      onChange={(e) =>
-                        setBasisPointsInput(parseFloat(e?.target?.value))
-                      }
-                    />
+                    <Flex gap='3' className='flex-1'>
+                      <Box className='flex-1'>
+                        <FormField
+                          type='number'
+                          name='fixed'
+                          label='Fixed Fee'
+                          defaultValue={asset.sendingFee?.fixed ?? undefined}
+                          error={response?.errors.sendingFee.fieldErrors.fixed}
+                        />
+                      </Box>
+                      <Box className='flex-1'>
+                        <FormField
+                          type='number'
+                          name='basisPoints'
+                          label='Basis Points'
+                          error={response?.errors.sendingFee.fieldErrors.basisPoints}
+                          value={basisPointsInput}
+                          onChange={(e) =>
+                            setBasisPointsInput(parseFloat(e?.target?.value))
+                          }
+                        />
+                      </Box>
+                    </Flex>
                     <Text size='2' color='gray'>
                       A single basis point is a fee equal to 0.01% of the total amount.
                       A fee of {basisPointsInput || 1} basis point on $100 is $
@@ -289,18 +300,18 @@ export default function ViewAssetPage() {
                 </fieldset>
               </Form>
             </Flex>
-
-            <DangerZone title='Delete Asset'>
-              <Form method='post' onSubmit={submitHandler}>
-                <input type='hidden' name='id' value={asset.id} />
-                <input type='hidden' name='intent' value='delete' />
-                <Button type='submit' color='red' aria-label='delete asset'>
-                  Delete asset
-                </Button>
-              </Form>
-            </DangerZone>
           </Flex>
         </Card>
+
+        <Flex justify='end' className='max-w-3xl'>
+          <Form method='post' onSubmit={submitHandler}>
+            <input type='hidden' name='id' value={asset.id} />
+            <input type='hidden' name='intent' value='delete' />
+            <Button type='submit' color='red' aria-label='delete asset'>
+              Delete asset
+            </Button>
+          </Form>
+        </Flex>
 
         <ConfirmationDialog
           ref={dialogRef}
