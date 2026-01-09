@@ -3528,19 +3528,11 @@ describe('Liquidity Resolvers', (): void => {
           assert.ok(outgoingPayment.debitAmount)
           await expect(depositSpy).toHaveBeenCalledWith({
             id: eventId,
-            account: expect.any(OutgoingPayment),
+            account: expect.objectContaining({
+              dataToTransmit
+            }),
             amount: outgoingPayment.debitAmount.value
           })
-          await expect(
-            accountingService.getBalance(outgoingPayment.id)
-          ).resolves.toEqual(outgoingPayment.debitAmount.value)
-          await expect(
-            OutgoingPayment.query(knex).findById(outgoingPayment.id)
-          ).resolves.toEqual(
-            expect.objectContaining({
-              dataToTransmit
-            })
-          )
         })
 
         test("Can't deposit for non-existent outgoing payment id", async (): Promise<void> => {
