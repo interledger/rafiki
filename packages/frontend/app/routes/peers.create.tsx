@@ -9,7 +9,7 @@ import {
   useLoaderData,
   useNavigation
 } from '@remix-run/react'
-import { PageHeader } from '~/components/PageHeader'
+import { FormGroup, PageHeader } from '~/components'
 import type { SelectOption } from '~/components/ui'
 import { Button, ErrorPanel, Input, Select } from '~/components/ui'
 import { loadAssets } from '~/lib/api/asset.server'
@@ -87,213 +87,197 @@ export default function CreatePeerPage() {
 
             <fieldset disabled={isSubmitting}>
               {/* Peer General Info */}
-              <div className='grid grid-cols-1 px-0 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-                <div className='col-span-1 pt-3'>
-                  <h3 className='text-lg font-medium'>General Information</h3>
+              <FormGroup title='General Information'>
+                <div className='w-full p-4 space-y-3'>
+                  <Input
+                    name='name'
+                    label='Name'
+                    placeholder='Peer name'
+                    error={response?.errors?.fieldErrors.name}
+                    description={
+                      <>
+                        The name of the{' '}
+                        <a
+                          className='default-link'
+                          href='https://rafiki.dev/resources/glossary#peer'
+                        >
+                          peer
+                        </a>{' '}
+                        to be added.
+                      </>
+                    }
+                  />
+                  <Input
+                    name='staticIlpAddress'
+                    label='Static ILP Address'
+                    placeholder='ILP Address'
+                    required
+                    error={response?.errors?.fieldErrors?.staticIlpAddress}
+                    description={
+                      <>
+                        {"The peer's "}
+                        <a
+                          className='default-link'
+                          href='https://interledger.org/developers/rfcs/ilp-addresses/'
+                        >
+                          address on the Interledger network.
+                        </a>
+                      </>
+                    }
+                  />
+                  <Input
+                    name='maxPacketAmount'
+                    label='Max Packet Amount'
+                    placeholder='Max Packet Amount'
+                    error={response?.errors?.fieldErrors?.maxPacketAmount}
+                    description={
+                      <>
+                        The maximum amount of value that can be sent in a single{' '}
+                        <a
+                          className='default-link'
+                          href='https://interledger.org/developers/rfcs/stream-protocol/#35-packets-and-frames'
+                        >
+                          Interledger STREAM Packet
+                        </a>
+                        .
+                      </>
+                    }
+                  />
                 </div>
-                <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-                  <div className='w-full p-4 space-y-3'>
-                    <Input
-                      name='name'
-                      label='Name'
-                      placeholder='Peer name'
-                      error={response?.errors?.fieldErrors.name}
-                      description={
-                        <>
-                          The name of the{' '}
-                          <a
-                            className='default-link'
-                            href='https://rafiki.dev/resources/glossary#peer'
-                          >
-                            peer
-                          </a>{' '}
-                          to be added.
-                        </>
-                      }
-                    />
-                    <Input
-                      name='staticIlpAddress'
-                      label='Static ILP Address'
-                      placeholder='ILP Address'
-                      required
-                      error={response?.errors?.fieldErrors?.staticIlpAddress}
-                      description={
-                        <>
-                          {"The peer's "}
-                          <a
-                            className='default-link'
-                            href='https://interledger.org/developers/rfcs/ilp-addresses/'
-                          >
-                            address on the Interledger network.
-                          </a>
-                        </>
-                      }
-                    />
-                    <Input
-                      name='maxPacketAmount'
-                      label='Max Packet Amount'
-                      placeholder='Max Packet Amount'
-                      error={response?.errors?.fieldErrors?.maxPacketAmount}
-                      description={
-                        <>
-                          The maximum amount of value that can be sent in a
-                          single{' '}
-                          <a
-                            className='default-link'
-                            href='https://interledger.org/developers/rfcs/stream-protocol/#35-packets-and-frames'
-                          >
-                            Interledger STREAM Packet
-                          </a>
-                          .
-                        </>
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
+              </FormGroup>
               {/* Peer General Info - END */}
               {/* Peer HTTP Info */}
-              <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-                <div className='col-span-1 pt-3'>
-                  <h3 className='text-lg font-medium'>HTTP Information</h3>
+              <FormGroup title='HTTP Information'>
+                <div className='w-full p-4 space-y-3'>
+                  <Input
+                    name='incomingAuthTokens'
+                    label='Incoming Auth Tokens'
+                    placeholder='Accepts a comma separated list of tokens'
+                    error={response?.errors?.fieldErrors?.incomingAuthTokens}
+                    description={
+                      <>
+                        List of valid tokens to accept when receiving incoming{' '}
+                        <a
+                          className='default-link'
+                          href='https://rafiki.dev/integration/deployment/services/backend-service/#interledger-connector'
+                        >
+                          ILP packets
+                        </a>{' '}
+                        from the peer.
+                      </>
+                    }
+                  />
+                  <Input
+                    name='outgoingAuthToken'
+                    label='Outgoing Auth Token'
+                    placeholder='Outgoing HTTP Auth Token'
+                    required
+                    error={response?.errors?.fieldErrors?.outgoingAuthToken}
+                    description={
+                      <>
+                        Valid auth token to present when sending outgoing{' '}
+                        <a
+                          className='default-link'
+                          href='https://rafiki.dev/integration/deployment/services/backend-service/#interledger-connector'
+                        >
+                          ILP packets
+                        </a>{' '}
+                        to the peer.
+                      </>
+                    }
+                  />
+                  <Input
+                    name='outgoingEndpoint'
+                    label='Outgoing Endpoint'
+                    placeholder='Outgoing HTTP Endpoint'
+                    required
+                    error={response?.errors?.fieldErrors?.outgoingEndpoint}
+                    description={
+                      <>
+                        Endpoint on the peer to which outgoing ILP packets will
+                        be sent.
+                      </>
+                    }
+                  />
                 </div>
-                <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-                  <div className='w-full p-4 space-y-3'>
-                    <Input
-                      name='incomingAuthTokens'
-                      label='Incoming Auth Tokens'
-                      placeholder='Accepts a comma separated list of tokens'
-                      error={response?.errors?.fieldErrors?.incomingAuthTokens}
-                      description={
-                        <>
-                          List of valid tokens to accept when receiving incoming{' '}
-                          <a
-                            className='default-link'
-                            href='https://rafiki.dev/integration/deployment/services/backend-service/#interledger-connector'
-                          >
-                            ILP packets
-                          </a>{' '}
-                          from the peer.
-                        </>
-                      }
-                    />
-                    <Input
-                      name='outgoingAuthToken'
-                      label='Outgoing Auth Token'
-                      placeholder='Outgoing HTTP Auth Token'
-                      required
-                      error={response?.errors?.fieldErrors?.outgoingAuthToken}
-                      description={
-                        <>
-                          Valid auth token to present when sending outgoing{' '}
-                          <a
-                            className='default-link'
-                            href='https://rafiki.dev/integration/deployment/services/backend-service/#interledger-connector'
-                          >
-                            ILP packets
-                          </a>{' '}
-                          to the peer.
-                        </>
-                      }
-                    />
-                    <Input
-                      name='outgoingEndpoint'
-                      label='Outgoing Endpoint'
-                      placeholder='Outgoing HTTP Endpoint'
-                      required
-                      error={response?.errors?.fieldErrors?.outgoingEndpoint}
-                      description={
-                        <>
-                          Endpoint on the peer to which outgoing ILP packets
-                          will be sent.
-                        </>
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
+              </FormGroup>
               {/* Peer HTTP Info - END */}
               {/* Peer Asset */}
-              <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-                <div className='col-span-1 pt-3'>
-                  <h3 className='text-lg font-medium'>Asset Information</h3>
+              <FormGroup title='Asset Information'>
+                <div className='w-full p-4 space-y-3'>
+                  {tenants ? (
+                    <Select
+                      options={tenants.map((tenant) => ({
+                        value: tenant.node.id,
+                        label: `${tenant.node.id} ${tenant.node.publicName ? `(${tenant.node.publicName})` : ''}`
+                      }))}
+                      name='tenantId'
+                      placeholder='Select tenant...'
+                      required
+                      onChange={(value) => setTenantId(value)}
+                      description={
+                        <>
+                          The tenant whose{' '}
+                          <a
+                            className='default-link'
+                            href='https://rafiki.dev/overview/concepts/accounting#assets'
+                          >
+                            asset
+                          </a>{' '}
+                          will sent to & received from the peer.
+                        </>
+                      }
+                      bringForward
+                    />
+                  ) : (
+                    <Select
+                      options={assets.map((asset) => ({
+                        value: asset.node.id,
+                        label: `${asset.node.code} (Scale: ${asset.node.scale})`
+                      }))}
+                      error={response?.errors.fieldErrors.asset}
+                      name='asset'
+                      placeholder='Select asset...'
+                      label='Asset'
+                      description={
+                        <>
+                          The type of{' '}
+                          <a
+                            className='default-link'
+                            href='https://rafiki.dev/overview/concepts/accounting#assets'
+                          >
+                            asset
+                          </a>{' '}
+                          that is sent to & received from the peer.
+                        </>
+                      }
+                      required
+                    />
+                  )}
+                  {tenants && tenantId && (
+                    <Select
+                      options={getAssetsOfTenant()}
+                      error={response?.errors.fieldErrors.asset}
+                      name='asset'
+                      placeholder='Select asset...'
+                      label='Asset'
+                      description={
+                        <>
+                          The type of{' '}
+                          <a
+                            className='default-link'
+                            href='https://rafiki.dev/overview/concepts/accounting#assets'
+                          >
+                            asset
+                          </a>{' '}
+                          that is sent to & received from the peer.
+                        </>
+                      }
+                      required
+                    />
+                  )}
                 </div>
-                <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-                  <div className='w-full p-4 space-y-3'>
-                    {tenants ? (
-                      <Select
-                        options={tenants.map((tenant) => ({
-                          value: tenant.node.id,
-                          label: `${tenant.node.id} ${tenant.node.publicName ? `(${tenant.node.publicName})` : ''}`
-                        }))}
-                        name='tenantId'
-                        placeholder='Select tenant...'
-                        required
-                        onChange={(value) => setTenantId(value)}
-                        description={
-                          <>
-                            The tenant whose{' '}
-                            <a
-                              className='default-link'
-                              href='https://rafiki.dev/overview/concepts/accounting#assets'
-                            >
-                              asset
-                            </a>{' '}
-                            will sent to & received from the peer.
-                          </>
-                        }
-                        bringForward
-                      />
-                    ) : (
-                      <Select
-                        options={assets.map((asset) => ({
-                          value: asset.node.id,
-                          label: `${asset.node.code} (Scale: ${asset.node.scale})`
-                        }))}
-                        error={response?.errors.fieldErrors.asset}
-                        name='asset'
-                        placeholder='Select asset...'
-                        label='Asset'
-                        description={
-                          <>
-                            The type of{' '}
-                            <a
-                              className='default-link'
-                              href='https://rafiki.dev/overview/concepts/accounting#assets'
-                            >
-                              asset
-                            </a>{' '}
-                            that is sent to & received from the peer.
-                          </>
-                        }
-                        required
-                      />
-                    )}
-                    {tenants && tenantId && (
-                      <Select
-                        options={getAssetsOfTenant()}
-                        error={response?.errors.fieldErrors.asset}
-                        name='asset'
-                        placeholder='Select asset...'
-                        label='Asset'
-                        description={
-                          <>
-                            The type of{' '}
-                            <a
-                              className='default-link'
-                              href='https://rafiki.dev/overview/concepts/accounting#assets'
-                            >
-                              asset
-                            </a>{' '}
-                            that is sent to & received from the peer.
-                          </>
-                        }
-                        required
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
+              </FormGroup>
               {/* Peer Asset - End */}
               <div className='flex justify-end py-3'>
                 <Button aria-label='create peer' type='submit'>

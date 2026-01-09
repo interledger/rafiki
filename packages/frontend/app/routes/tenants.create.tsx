@@ -6,7 +6,7 @@ import {
   useLoaderData,
   useNavigation
 } from '@remix-run/react'
-import { PageHeader } from '~/components'
+import { FormGroup, PageHeader } from '~/components'
 import { Button, ErrorPanel, Input, PasswordInput } from '~/components/ui'
 import { createTenant, whoAmI } from '~/lib/api/tenant.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
@@ -129,98 +129,76 @@ export default function CreateTenantPage() {
 
           <fieldset disabled={isSubmitting}>
             {/* Tenant General Info */}
-            <div className='grid grid-cols-1 px-0 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-              <div className='col-span-1 pt-3'>
-                <h3 className='text-lg font-medium'>General Information</h3>
+            <FormGroup title='General Information'>
+              <div className='w-full p-4 space-y-3'>
+                <Input
+                  name='publicName'
+                  label='Public Name'
+                  placeholder='Public name'
+                  error={response?.errors?.fieldErrors.publicName}
+                />
+                <Input
+                  name='email'
+                  label='Email'
+                  placeholder='Email'
+                  error={response?.errors?.fieldErrors.email}
+                />
               </div>
-              <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-                <div className='w-full p-4 space-y-3'>
-                  <Input
-                    name='publicName'
-                    label='Public Name'
-                    placeholder='Public name'
-                    error={response?.errors?.fieldErrors.publicName}
-                  />
-                  <Input
-                    name='email'
-                    label='Email'
-                    placeholder='Email'
-                    error={response?.errors?.fieldErrors.email}
-                  />
-                </div>
-              </div>
-            </div>
+            </FormGroup>
             {/* Tenant General Info - END */}
             {/* Tenant Sensitive Info */}
-            <div className='grid grid-cols-1 px-0 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-              <div className='col-span-1 pt-3'>
-                <h3 className='text-lg font-medium'>Sensitive Information</h3>
+            <FormGroup title='Sensitive Information'>
+              <div className='w-full p-4 space-y-3'>
+                <PasswordInput
+                  name='apiSecret'
+                  label='API Secret'
+                  placeholder='The API secret. Treat as sensitive information.'
+                  error={response?.errors?.fieldErrors.apiSecret}
+                  required
+                />
               </div>
-              <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-                <div className='w-full p-4 space-y-3'>
-                  <PasswordInput
-                    name='apiSecret'
-                    label='API Secret'
-                    placeholder='The API secret. Treat as sensitive information.'
-                    error={response?.errors?.fieldErrors.apiSecret}
-                    required
-                  />
-                </div>
-              </div>
-            </div>
+            </FormGroup>
             {/* Tenant Sensitive Info - END */}
             {/* Tenant Identity Provider */}
-            <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-              <div className='col-span-1 pt-3'>
-                <h3 className='text-lg font-medium'>
-                  Identity Provider Information
-                </h3>
+            <FormGroup title='Identity Provider Information'>
+              <div className='w-full p-4 space-y-3'>
+                <Input
+                  name='idpConsentUrl'
+                  label='Consent URL'
+                  placeholder='Provide the Identity Provider Consent URL'
+                  error={response?.errors?.fieldErrors.idpConsentUrl}
+                />
+                <PasswordInput
+                  name='idpSecret'
+                  label='Secret'
+                  placeholder='Provide the Identity Provider Secret'
+                  error={response?.errors?.fieldErrors.idpSecret}
+                />
               </div>
-              <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-                <div className='w-full p-4 space-y-3'>
-                  <Input
-                    name='idpConsentUrl'
-                    label='Consent URL'
-                    placeholder='Provide the Identity Provider Consent URL'
-                    error={response?.errors?.fieldErrors.idpConsentUrl}
-                  />
-                  <PasswordInput
-                    name='idpSecret'
-                    label='Secret'
-                    placeholder='Provide the Identity Provider Secret'
-                    error={response?.errors?.fieldErrors.idpSecret}
-                  />
-                </div>
-              </div>
-            </div>
+            </FormGroup>
             {/* Tenant Identity Provider - End */}
             {/* Tenant Settings */}
-            <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-              <div className='col-span-1 pt-3'>
-                <h3 className='text-lg font-medium'>Tenant Settings</h3>
+            <FormGroup title='Tenant Settings'>
+              <div className='w-full p-4 space-y-3'>
+                {tenantSettings.map((setting) => (
+                  <div key={`div-${setting.name}`}>
+                    <Input
+                      key={setting.name}
+                      name={setting.name}
+                      label={setting.label}
+                      placeholder={setting.placeholder}
+                    />
+                    <p
+                      id={`${setting.name}-error`}
+                      className='text-red-500 text-sa'
+                    >
+                      {getTenantSettingError(setting.name)}
+                    </p>
+                  </div>
+                ))}
               </div>
-              <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-                <div className='w-full p-4 space-y-3'>
-                  {tenantSettings.map((setting) => (
-                    <div key={`div-${setting.name}`}>
-                      <Input
-                        key={setting.name}
-                        name={setting.name}
-                        label={setting.label}
-                        placeholder={setting.placeholder}
-                      />
-                      <p
-                        id={`${setting.name}-error`}
-                        className='text-red-500 text-sa'
-                      >
-                        {getTenantSettingError(setting.name)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                <ErrorPanel errors={tenantSettingErrors} />
-              </div>
-            </div>
+              <ErrorPanel errors={tenantSettingErrors} />
+            </FormGroup>
             {/* Tenant Settings - END */}
             <div className='flex justify-end py-3'>
               <Button aria-label='create tenant' type='submit'>
