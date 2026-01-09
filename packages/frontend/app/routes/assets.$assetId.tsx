@@ -161,21 +161,23 @@ export default function ViewAssetPage() {
                   <Flex direction='column' gap='4'>
                     <input type='hidden' name='id' value={asset.id} />
                     <FormField label='Asset ID' name='assetId' value={asset.id} disabled readOnly />
-                    <FormField label='Code' name='code' value={asset.code} disabled readOnly />
-                    <FormField
-                      label='Scale'
-                      name='scale'
-                      value={asset.scale}
-                      disabled
-                      readOnly
-                    />
-                    <FormField
-                      type='number'
-                      name='withdrawalThreshold'
-                      label='Withdrawal Threshold'
-                      defaultValue={asset.withdrawalThreshold ?? undefined}
-                      error={response?.errors.general.fieldErrors.withdrawalThreshold}
-                    />
+                    <Flex gap='3'>
+                      <FormField label='Code' name='code' value={asset.code} disabled readOnly />
+                      <FormField
+                        label='Scale'
+                        name='scale'
+                        value={asset.scale}
+                        disabled
+                        readOnly
+                      />
+                      <FormField
+                        type='number'
+                        name='withdrawalThreshold'
+                        label='Withdrawal Threshold'
+                        defaultValue={asset.withdrawalThreshold ?? undefined}
+                        error={response?.errors.general.fieldErrors.withdrawalThreshold}
+                      />
+                    </Flex>
                   </Flex>
                   <Flex justify='end' mt='4'>
                     <Button
