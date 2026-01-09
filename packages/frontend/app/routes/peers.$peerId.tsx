@@ -19,7 +19,15 @@ import {
   ConfirmationDialog,
   type ConfirmationDialogRef
 } from '~/components/ConfirmationDialog'
-import { Box, Button, Card, Flex, Heading, Text, TextField } from '@radix-ui/themes'
+import {
+  Box,
+  Button,
+  Card,
+  Flex,
+  Heading,
+  Text,
+  TextField
+} from '@radix-ui/themes'
 import { ErrorPanel, FieldError } from '~/components/ui'
 import { deletePeer, getPeer, updatePeer } from '~/lib/api/peer.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
@@ -60,7 +68,12 @@ const FormField = ({
   description
 }: FormFieldProps) => (
   <Flex direction='column' gap='1'>
-    <Text asChild size='2' weight='medium' className='tracking-wide text-gray-700'>
+    <Text
+      asChild
+      size='2'
+      weight='medium'
+      className='tracking-wide text-gray-700'
+    >
       <label htmlFor={name}>
         {label}
         {required ? <span className='text-vermillion'> *</span> : null}
@@ -189,7 +202,9 @@ export default function ViewPeerPage() {
                       defaultValue={peer.staticIlpAddress}
                       placeholder='ILP Address'
                       required
-                      error={response?.errors.general.fieldErrors.staticIlpAddress}
+                      error={
+                        response?.errors.general.fieldErrors.staticIlpAddress
+                      }
                       description={
                         <>
                           {"The peer's "}
@@ -205,13 +220,18 @@ export default function ViewPeerPage() {
                     <FormField
                       type='number'
                       name='maxPacketAmount'
-                      defaultValue={peer.maxPacketAmount ? peer.maxPacketAmount : ''}
+                      defaultValue={
+                        peer.maxPacketAmount ? peer.maxPacketAmount : ''
+                      }
                       label='Max Packet Amount'
                       placeholder='Max Packet Amount'
-                      error={response?.errors.general.fieldErrors.maxPacketAmount}
+                      error={
+                        response?.errors.general.fieldErrors.maxPacketAmount
+                      }
                       description={
                         <>
-                          The maximum amount of value that can be sent in a single{' '}
+                          The maximum amount of value that can be sent in a
+                          single{' '}
                           <a
                             className='default-link'
                             href='https://interledger.org/developers/rfcs/stream-protocol/#35-packets-and-frames'
@@ -236,7 +256,7 @@ export default function ViewPeerPage() {
                 </fieldset>
               </Form>
             </Flex>
-
+            <hr />
             <Flex direction='column' gap='4'>
               <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
                 HTTP Information
@@ -250,7 +270,9 @@ export default function ViewPeerPage() {
                       name='incomingAuthTokens'
                       label='Incoming Auth Tokens'
                       placeholder='Accepts a comma separated list of tokens'
-                      error={response?.errors.http.fieldErrors.incomingAuthTokens}
+                      error={
+                        response?.errors.http.fieldErrors.incomingAuthTokens
+                      }
                       description={
                         <>
                           List of valid tokens to accept when receiving incoming{' '}
@@ -271,7 +293,9 @@ export default function ViewPeerPage() {
                       required
                       type='password'
                       defaultValue={peer.http.outgoing.authToken}
-                      error={response?.errors.http.fieldErrors.outgoingAuthToken}
+                      error={
+                        response?.errors.http.fieldErrors.outgoingAuthToken
+                      }
                       description={
                         <>
                           Valid auth token to present when sending outgoing{' '}
@@ -293,7 +317,10 @@ export default function ViewPeerPage() {
                       defaultValue={peer.http.outgoing.endpoint}
                       error={response?.errors.http.fieldErrors.outgoingEndpoint}
                       description={
-                        <>Endpoint on the peer to which outgoing ILP packets will be sent.</>
+                        <>
+                          Endpoint on the peer to which outgoing ILP packets
+                          will be sent.
+                        </>
                       }
                     />
                   </Flex>
@@ -310,7 +337,7 @@ export default function ViewPeerPage() {
                 </fieldset>
               </Form>
             </Flex>
-
+            <hr />
             <Flex direction='column' gap='4'>
               <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
                 Asset Information
@@ -337,19 +364,23 @@ export default function ViewPeerPage() {
                     Withdrawal threshold
                   </Text>
                   <Text size='2' color='gray'>
-                    {peer.asset.withdrawalThreshold ?? 'No withdrawal threshold'}
+                    {peer.asset.withdrawalThreshold ??
+                      'No withdrawal threshold'}
                   </Text>
                 </Flex>
               </Flex>
               <Flex justify='end'>
                 <Button asChild>
-                  <Link aria-label='go to asset page' to={`/assets/${peer.asset.id}`}>
+                  <Link
+                    aria-label='go to asset page'
+                    to={`/assets/${peer.asset.id}`}
+                  >
                     View asset
                   </Link>
                 </Button>
               </Flex>
             </Flex>
-
+            <hr />
             <Flex direction='column' gap='4'>
               <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
                 Liquidity Information
@@ -358,7 +389,8 @@ export default function ViewPeerPage() {
                 <Flex direction='column' gap='1'>
                   <Text weight='medium'>Amount</Text>
                   <Text size='2' color='gray'>
-                    {formatAmount(peer.liquidity ?? '0', peer.asset.scale)} {peer.asset.code}
+                    {formatAmount(peer.liquidity ?? '0', peer.asset.scale)}{' '}
+                    {peer.asset.code}
                   </Text>
                 </Flex>
                 <Flex gap='3'>

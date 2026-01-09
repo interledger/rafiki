@@ -12,7 +12,16 @@ import {
   Link
 } from '@remix-run/react'
 import { z } from 'zod'
-import { Box, Button, Card, Flex, Heading, Text, TextField, Select } from '@radix-ui/themes'
+import {
+  Box,
+  Button,
+  Card,
+  Flex,
+  Heading,
+  Text,
+  TextField,
+  Select
+} from '@radix-ui/themes'
 import { ErrorPanel, FieldError } from '~/components/ui'
 import {
   getWalletAddress,
@@ -50,7 +59,12 @@ const FormField = ({
   readOnly
 }: FormFieldProps) => (
   <Flex direction='column' gap='2'>
-    <Text asChild size='2' weight='medium' className='tracking-wide text-gray-700'>
+    <Text
+      asChild
+      size='2'
+      weight='medium'
+      className='tracking-wide text-gray-700'
+    >
       <label htmlFor={name}>
         {label}
         {required ? <span className='text-vermillion'> *</span> : null}
@@ -117,7 +131,8 @@ export default function ViewWalletAddressPage() {
                   General Information
                 </Text>
                 <Text size='2' color='gray'>
-                  Created at {new Date(walletAddress.createdAt).toLocaleString()}
+                  Created at{' '}
+                  {new Date(walletAddress.createdAt).toLocaleString()}
                 </Text>
               </Flex>
               <ErrorPanel errors={response?.errors.message} />
@@ -125,8 +140,20 @@ export default function ViewWalletAddressPage() {
                 <fieldset disabled={isSubmitting}>
                   <Flex direction='column' gap='4'>
                     <input type='hidden' name='id' value={walletAddress.id} />
-                    <FormField label='ID' name='walletAddressId' value={walletAddress.id} disabled readOnly />
-                    <FormField label='URL' name='address' value={walletAddress.address} disabled readOnly />
+                    <FormField
+                      label='ID'
+                      name='walletAddressId'
+                      value={walletAddress.id}
+                      disabled
+                      readOnly
+                    />
+                    <FormField
+                      label='URL'
+                      name='address'
+                      value={walletAddress.address}
+                      disabled
+                      readOnly
+                    />
                     <FormField
                       name='publicName'
                       label='Public name'
@@ -134,13 +161,22 @@ export default function ViewWalletAddressPage() {
                       error={response?.errors.fieldErrors.publicName}
                     />
                     <Flex direction='column' gap='2'>
-                      <Text asChild size='2' weight='medium' className='tracking-wide text-gray-700'>
+                      <Text
+                        asChild
+                        size='2'
+                        weight='medium'
+                        className='tracking-wide text-gray-700'
+                      >
                         <label htmlFor='status'>
                           Status
                           <span className='text-vermillion'> *</span>
                         </label>
                       </Text>
-                      <Select.Root name='status' defaultValue={walletAddress.status} required>
+                      <Select.Root
+                        name='status'
+                        defaultValue={walletAddress.status}
+                        required
+                      >
                         <Select.Trigger placeholder='Select status...' />
                         <Select.Content>
                           <Select.Item value='ACTIVE'>Active</Select.Item>
@@ -161,30 +197,37 @@ export default function ViewWalletAddressPage() {
                 </fieldset>
               </Form>
             </Flex>
-
+            <hr />
             <Flex direction='column' gap='4'>
               <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
                 Asset Information
               </Text>
               <Flex gap='6' wrap='wrap'>
-                <Box>
-                  <Text weight='medium'>Code</Text>
+                <Flex direction='column' gap='1'>
+                  <Text size='2' weight='medium' className='text-gray-700'>
+                    Code
+                  </Text>
                   <Text size='2' color='gray'>
                     {walletAddress.asset.code}
                   </Text>
-                </Box>
-                <Box>
-                  <Text weight='medium'>Scale</Text>
+                </Flex>
+                <Flex direction='column' gap='1'>
+                  <Text size='2' weight='medium' className='text-gray-700'>
+                    Scale
+                  </Text>
                   <Text size='2' color='gray'>
                     {walletAddress.asset.scale}
                   </Text>
-                </Box>
-                <Box>
-                  <Text weight='medium'>Withdrawal threshold</Text>
-                  <Text size='2' color='gray'>
-                    {walletAddress.asset.withdrawalThreshold ?? 'No withdrawal threshold'}
+                </Flex>
+                <Flex direction='column' gap='1'>
+                  <Text size='2' weight='medium' className='text-gray-700'>
+                    Withdrawal threshold
                   </Text>
-                </Box>
+                  <Text size='2' color='gray'>
+                    {walletAddress.asset.withdrawalThreshold ??
+                      'No withdrawal threshold'}
+                  </Text>
+                </Flex>
               </Flex>
               <Flex justify='end'>
                 <Button asChild>
@@ -197,18 +240,18 @@ export default function ViewWalletAddressPage() {
                 </Button>
               </Flex>
             </Flex>
-
+            <hr />
             <Flex direction='column' gap='4'>
               <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
                 Liquidity Information
               </Text>
               <Flex justify='between' align='center'>
-                <Box>
+                <Flex direction='column' gap='1'>
                   <Text weight='medium'>Amount</Text>
                   <Text size='2' color='gray'>
                     {displayLiquidityAmount}
                   </Text>
-                </Box>
+                </Flex>
                 <Flex gap='3'>
                   {BigInt(walletAddress.liquidity ?? '0') ? (
                     <Button asChild>
@@ -231,13 +274,14 @@ export default function ViewWalletAddressPage() {
                 </Flex>
               </Flex>
             </Flex>
-
-            <Flex direction='column' gap='4'>
+            <hr />
+in             <Flex direction='column' gap='4'>
               <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
                 Payments
               </Text>
               <Text size='2' color='gray'>
-                View the payments involving this wallet address on the payments page.
+                View the payments involving this wallet address on the payments
+                page.
               </Text>
               <Flex justify='end'>
                 <Button asChild>

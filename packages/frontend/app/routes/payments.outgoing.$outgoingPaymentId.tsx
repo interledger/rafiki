@@ -62,39 +62,31 @@ export default function ViewOutgoingPaymentPage() {
   return (
     <Box p='4'>
       <Flex direction='column' gap='4'>
-        <Flex justify='between' align='center'>
-          <Heading size='5'>Outgoing Payment Details</Heading>
-          <Button asChild>
-            <Link aria-label='go back to payments page' to='/payments'>
-              Go to payments page
-            </Link>
-          </Button>
-        </Flex>
+        <Heading size='5'>Outgoing Payment Details</Heading>
 
         <Card className='max-w-3xl'>
-          <Flex direction='column' gap='5'>
-            {/* General Information */}
-            <Flex direction='column' gap='4'>
-              <Flex align='center' justify='between' gap='3' wrap='wrap'>
-                <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
-                  General Information
-                </Text>
-                <Text size='2' color='gray'>
-                  Created at {new Date(outgoingPayment.createdAt).toLocaleString()}
-                </Text>
-              </Flex>
+          <Flex direction='column' gap='4'>
+            <Flex align='center' justify='between' gap='3' wrap='wrap'>
+              <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                General Information
+              </Text>
+              <Text size='2' color='gray'>
+                Created at {new Date(outgoingPayment.createdAt).toLocaleString()}
+              </Text>
+            </Flex>
 
-              <Flex direction='column' gap='3'>
-                <Box>
+            <Flex direction='column' gap='3'>
+              <Flex gap='6' wrap='wrap'>
+                <Flex direction='column' gap='1'>
                   <Text size='2' weight='medium' className='text-gray-700'>
                     Outgoing Payment ID
                   </Text>
-                  <Text size='2' className='mt-1'>
+                  <Text size='2' color='gray'>
                     {outgoingPayment.id}
                   </Text>
-                </Box>
+                </Flex>
 
-                <Box>
+                <Flex direction='column' gap='1'>
                   <Text size='2' weight='medium' className='text-gray-700'>
                     Wallet Address ID
                   </Text>
@@ -104,83 +96,85 @@ export default function ViewOutgoingPaymentPage() {
                   >
                     {outgoingPayment.walletAddressId}
                   </Link>
-                </Box>
+                </Flex>
 
-                <Box>
+                <Flex direction='column' gap='1'>
                   <Text size='2' weight='medium' className='text-gray-700'>
                     State
                   </Text>
-                  <Box className='mt-1'>
+                  <Box>
                     <Badge color={badgeColorByPaymentState[outgoingPayment.state]}>
                       {outgoingPayment.state}
                     </Badge>
                   </Box>
-                </Box>
+                </Flex>
+              </Flex>
 
-                <Box>
-                  <Text size='2' weight='medium' className='text-gray-700'>
-                    Receiver
-                  </Text>
-                  <Link className='default-link text-sm' to={outgoingPayment.receiver}>
-                    {outgoingPayment.receiver}
-                  </Link>
-                </Box>
+              <Flex direction='column' gap='1'>
+                <Text size='2' weight='medium' className='text-gray-700'>
+                  Receiver
+                </Text>
+                <Link className='default-link text-sm' to={outgoingPayment.receiver}>
+                  {outgoingPayment.receiver}
+                </Link>
+              </Flex>
 
-                <Box>
+              <Flex gap='6' wrap='wrap' className='w-full'>
+                <Flex direction='column' gap='1' className='flex-1 min-w-[150px]'>
                   <Text size='2' weight='medium' className='text-gray-700'>
                     Receive Amount
                   </Text>
-                  <Text size='2' className='mt-1'>
+                  <Text size='2' color='gray'>
                     {formatAmount(
                       outgoingPayment.receiveAmount.value,
                       outgoingPayment.receiveAmount.assetScale
                     )}{' '}
                     {outgoingPayment.receiveAmount.assetCode}
                   </Text>
-                </Box>
+                </Flex>
 
-                <Box>
+                <Flex direction='column' gap='1' className='flex-1 min-w-[150px]'>
                   <Text size='2' weight='medium' className='text-gray-700'>
                     Debit Amount
                   </Text>
-                  <Text size='2' className='mt-1'>
+                  <Text size='2' color='gray'>
                     {formatAmount(
                       outgoingPayment.debitAmount.value,
                       outgoingPayment.debitAmount.assetScale
                     )}{' '}
                     {outgoingPayment.debitAmount.assetCode}
                   </Text>
-                </Box>
+                </Flex>
 
-                <Box>
+                <Flex direction='column' gap='1' className='flex-1 min-w-[150px]'>
                   <Text size='2' weight='medium' className='text-gray-700'>
                     Sent Amount
                   </Text>
-                  <Text size='2' className='mt-1'>
+                  <Text size='2' color='gray'>
                     {formatAmount(
                       outgoingPayment.sentAmount.value,
                       outgoingPayment.sentAmount.assetScale
                     )}{' '}
                     {outgoingPayment.sentAmount.assetCode}
                   </Text>
-                </Box>
+                </Flex>
 
-                <Box>
+                <Flex direction='column' gap='1' className='flex-1 min-w-[150px]'>
                   <Text size='2' weight='medium' className='text-gray-700'>
                     Error
                   </Text>
                   {outgoingPayment.error ? (
-                    <Text size='2' className='mt-1 text-red-500'>
+                    <Text size='2' className='text-red-500'>
                       {outgoingPayment.error}
                     </Text>
                   ) : (
-                    <Text size='2' className='mt-1 italic'>
+                    <Text size='2' color='gray' className='italic'>
                       None
                     </Text>
                   )}
-                </Box>
+                </Flex>
 
-                <Box>
+                <Flex direction='column' gap='1' className='flex-1 min-w-[150px]'>
                   {outgoingPayment.metadata ? (
                     <details>
                       <summary className='cursor-pointer font-medium text-sm text-gray-700'>
@@ -198,65 +192,66 @@ export default function ViewOutgoingPaymentPage() {
                       <Text size='2' weight='medium' className='text-gray-700'>
                         Metadata
                       </Text>
-                      <Text size='2' className='mt-1 italic'>
+                      <Text size='2' color='gray' className='italic'>
                         None
                       </Text>
                     </>
                   )}
-                </Box>
+                </Flex>
               </Flex>
             </Flex>
+          </Flex>
+        </Card>
 
-            {/* Liquidity Information */}
-            <Flex direction='column' gap='4'>
-              <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
-                Liquidity Information
-              </Text>
-              <Flex justify='between' align='center'>
-                <Box>
-                  <Text weight='medium'>Amount</Text>
-                  <Text size='2' color='gray'>
-                    {withdrawLiquidityDisplayAmount}
-                  </Text>
-                </Box>
-                <Flex gap='3'>
-                  {BigInt(outgoingPayment.liquidity ?? '0') ? (
-                    <Button asChild>
-                      <Link
-                        aria-label='withdraw outgoing payment liquidity page'
-                        preventScrollReset
-                        to={`/payments/outgoing/${outgoingPayment.id}/withdraw-liquidity`}
-                      >
-                        Withdraw liquidity
-                      </Link>
-                    </Button>
-                  ) : (
-                    <Button
-                      disabled={true}
+        <Card className='max-w-3xl'>
+          <Flex direction='column' gap='4'>
+            <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+              Liquidity Information
+            </Text>
+            <Flex justify='between' align='center'>
+              <Flex direction='column' gap='1'>
+                <Text weight='medium'>Amount</Text>
+                <Text size='2' color='gray'>
+                  {withdrawLiquidityDisplayAmount}
+                </Text>
+              </Flex>
+              <Flex gap='3'>
+                {BigInt(outgoingPayment.liquidity ?? '0') ? (
+                  <Button asChild>
+                    <Link
                       aria-label='withdraw outgoing payment liquidity page'
+                      preventScrollReset
+                      to={`/payments/outgoing/${outgoingPayment.id}/withdraw-liquidity`}
                     >
                       Withdraw liquidity
-                    </Button>
-                  )}
-                  {outgoingPayment.state === OutgoingPaymentState.Funding ? (
-                    <Button asChild>
-                      <Link
-                        aria-label='deposit outgoing payment liquidity page'
-                        preventScrollReset
-                        to={`/payments/outgoing/${outgoingPayment.id}/deposit-liquidity`}
-                      >
-                        Deposit liquidity
-                      </Link>
-                    </Button>
-                  ) : (
-                    <Button
-                      disabled={true}
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button
+                    disabled={true}
+                    aria-label='withdraw outgoing payment liquidity page'
+                  >
+                    Withdraw liquidity
+                  </Button>
+                )}
+                {outgoingPayment.state === OutgoingPaymentState.Funding ? (
+                  <Button asChild>
+                    <Link
                       aria-label='deposit outgoing payment liquidity page'
+                      preventScrollReset
+                      to={`/payments/outgoing/${outgoingPayment.id}/deposit-liquidity`}
                     >
                       Deposit liquidity
-                    </Button>
-                  )}
-                </Flex>
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button
+                    disabled={true}
+                    aria-label='deposit outgoing payment liquidity page'
+                  >
+                    Deposit liquidity
+                  </Button>
+                )}
               </Flex>
             </Flex>
           </Flex>
