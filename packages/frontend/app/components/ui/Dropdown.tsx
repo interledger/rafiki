@@ -1,8 +1,8 @@
 import { Listbox, Transition } from '@headlessui/react'
 import { Fragment, useState } from 'react'
 import { Text } from '@radix-ui/themes'
-import { FieldError } from './FieldError'
 import { Check, Chevron } from '../icons'
+import { renderFieldError } from '~/lib/form-errors'
 
 export type DropdownOption = {
   label: string
@@ -70,7 +70,7 @@ export const Dropdown = ({
             )}
           </Listbox.Button>
         </div>
-        {error ? <FieldError error={error} /> : null}
+        {renderFieldError(error)}
         <Transition
           as={Fragment}
           leave='transition ease-in duration-100'

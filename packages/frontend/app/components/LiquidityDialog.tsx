@@ -2,7 +2,7 @@ import { Form } from '@remix-run/react'
 import type { ChangeEvent } from 'react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { Button, Dialog, Flex, Text, TextField } from '@radix-ui/themes'
-import { FieldError } from '~/components/ui'
+import { renderFieldError } from '~/lib/form-errors'
 
 type BasicAsset = {
   code: string
@@ -79,7 +79,7 @@ export const LiquidityDialog = ({
                 className='flex-1'
               />
             </Flex>
-            <FieldError error={errorMessage} />
+                  {renderFieldError(errorMessage)}
           </Flex>
 
           <Form method='post' replace preventScrollReset>

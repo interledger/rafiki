@@ -22,7 +22,7 @@ import {
   TextField,
   Select
 } from '@radix-ui/themes'
-import { ErrorPanel, FieldError } from '~/components/ui'
+import { ErrorPanel } from '~/components/ui'
 import {
   getWalletAddress,
   updateWalletAddress
@@ -32,6 +32,7 @@ import { updateWalletAddressSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import { capitalize, formatAmount } from '~/shared/utils'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
+import { renderFieldError } from '~/lib/form-errors'
 
 type FormFieldProps = {
   name: string
@@ -83,7 +84,7 @@ const FormField = ({
       size='3'
       className='w-full'
     />
-    <FieldError error={error} />
+    {renderFieldError(error)}
   </Flex>
 )
 
@@ -183,7 +184,7 @@ export default function ViewWalletAddressPage() {
                           <Select.Item value='INACTIVE'>Inactive</Select.Item>
                         </Select.Content>
                       </Select.Root>
-                      <FieldError error={response?.errors.fieldErrors.status} />
+                      {renderFieldError(response?.errors.fieldErrors.status)}
                     </Flex>
                   </Flex>
                   <Flex justify='end' mt='4'>

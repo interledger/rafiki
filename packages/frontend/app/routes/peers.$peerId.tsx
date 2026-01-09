@@ -28,7 +28,7 @@ import {
   Text,
   TextField
 } from '@radix-ui/themes'
-import { ErrorPanel, FieldError } from '~/components/ui'
+import { ErrorPanel } from '~/components/ui'
 import { deletePeer, getPeer, updatePeer } from '~/lib/api/peer.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import {
@@ -39,6 +39,7 @@ import {
 import type { ZodFieldErrors } from '~/shared/types'
 import { formatAmount } from '~/shared/utils'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
+import { renderFieldError } from '~/lib/form-errors'
 
 type FormFieldProps = {
   name: string
@@ -97,7 +98,7 @@ const FormField = ({
       size='3'
       className='w-full mt-1'
     />
-    <FieldError error={error} />
+    {renderFieldError(error)}
   </Flex>
 )
 
@@ -342,8 +343,8 @@ export default function ViewPeerPage() {
               <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
                 Asset Information
               </Text>
-              <Flex gap='6' wrap='wrap'>
-                <Flex direction='column' gap='1'>
+              <Flex gap='6' wrap='wrap' className='w-full'>
+                <Flex direction='column' gap='1' className='flex-1 min-w-[160px]'>
                   <Text size='2' weight='medium' className='text-gray-700'>
                     Code
                   </Text>
@@ -351,7 +352,7 @@ export default function ViewPeerPage() {
                     {peer.asset.code}
                   </Text>
                 </Flex>
-                <Flex direction='column' gap='1'>
+                <Flex direction='column' gap='1' className='flex-1 min-w-[160px]'>
                   <Text size='2' weight='medium' className='text-gray-700'>
                     Scale
                   </Text>
@@ -359,7 +360,7 @@ export default function ViewPeerPage() {
                     {peer.asset.scale}
                   </Text>
                 </Flex>
-                <Flex direction='column' gap='1'>
+                <Flex direction='column' gap='1' className='flex-1 min-w-[200px]'>
                   <Text size='2' weight='medium' className='text-gray-700'>
                     Withdrawal threshold
                   </Text>

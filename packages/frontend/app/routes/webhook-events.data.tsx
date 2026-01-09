@@ -63,8 +63,8 @@ export default function WebhookEventData() {
                     <XIcon className='h-8 w-8' aria-hidden='true' />
                   </button>
                 </div>
-                <div className='mt-6 overflow-auto flex-1 text-sm break-words whitespace-pre'>
-                  <pre
+                <div className='overflow-auto flex-1 text-xs break-words whitespace-pre'>
+                  <pre className='text-xs'
                     dangerouslySetInnerHTML={{
                       __html: prettify(state && state.data ? state.data : {})
                     }}

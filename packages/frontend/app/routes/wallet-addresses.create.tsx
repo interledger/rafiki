@@ -8,7 +8,7 @@ import {
   useNavigation
 } from '@remix-run/react'
 import { Box, Button, Card, Flex, Heading, Select, Text, TextField } from '@radix-ui/themes'
-import { ErrorPanel, FieldError } from '~/components/ui'
+import { ErrorPanel } from '~/components/ui'
 import { loadAssets } from '~/lib/api/asset.server'
 import { createWalletAddress } from '~/lib/api/wallet-address.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
@@ -22,6 +22,7 @@ import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
 import type { listTenants } from '~/lib/api/tenant.server'
 import { whoAmI, loadTenants, getTenantInfo } from '~/lib/api/tenant.server'
+import { renderFieldError } from '~/lib/form-errors'
 
 const WALLET_ADDRESS_URL_KEY = 'WALLET_ADDRESS_URL'
 
@@ -70,7 +71,7 @@ const FormField = ({
       size='3'
       className='w-full'
     />
-    <FieldError error={error} />
+    {renderFieldError(error)}
   </Flex>
 )
 
@@ -120,7 +121,7 @@ const PlainInputField = ({
         style={{ borderColor: 'var(--gray-a7)' }}
       />
     </div>
-    <FieldError error={error} />
+    {renderFieldError(error)}
   </Flex>
 )
 
@@ -189,7 +190,7 @@ const SelectField = ({
           </Select.Content>
         </Select.Root>
       </div>
-      <FieldError error={error} />
+    {renderFieldError(error)}
     </Flex>
   )
 }

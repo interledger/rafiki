@@ -7,7 +7,8 @@ import {
   useNavigation
 } from '@remix-run/react'
 import { Box, Button, Card, Flex, Heading, Select, Text, TextField } from '@radix-ui/themes'
-import { ErrorPanel, FieldError } from '~/components/ui'
+import { ErrorPanel } from '~/components/ui'
+import { renderFieldError } from '~/lib/form-errors'
 import { createAsset } from '~/lib/api/asset.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createAssetSchema } from '~/lib/validate.server'
@@ -55,7 +56,7 @@ const FormField = ({
       size='3'
       className='w-full'
     />
-    <FieldError error={error} />
+    {renderFieldError(error)}
   </Flex>
 )
 
@@ -110,7 +111,7 @@ const SelectField = ({
           </Select.Content>
         </Select.Root>
       </div>
-      <FieldError error={error} />
+      {renderFieldError(error)}
     </Flex>
   )
 }

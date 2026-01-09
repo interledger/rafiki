@@ -15,7 +15,7 @@ import { type FormEvent, useRef, useState } from 'react'
 import type { ZodSchema } from 'zod'
 import { z } from 'zod'
 import { Box, Button, Card, Flex, Heading, Text, TextField } from '@radix-ui/themes'
-import { ErrorPanel, FieldError } from '~/components/ui'
+import { ErrorPanel } from '~/components/ui'
 import {
   ConfirmationDialog,
   type ConfirmationDialogRef
@@ -32,6 +32,7 @@ import type { ZodFieldErrors } from '~/shared/types'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { getTenantInfo } from '~/lib/api/tenant.server'
 import type { UpdateTenantInput } from '~/generated/graphql'
+import { renderFieldError } from '~/lib/form-errors'
 
 type FormFieldProps = {
   name: string
@@ -78,7 +79,7 @@ const FormField = ({
       size='3'
       className='w-full'
     />
-    <FieldError error={error} />
+    {renderFieldError(error)}
   </Flex>
 )
 

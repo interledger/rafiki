@@ -12,7 +12,7 @@ import type { UiContainer } from '@ory/client'
 import { useLoaderData } from '@remix-run/react'
 import { PageHeader } from '~/components'
 import { Button, Text, TextField } from '@radix-ui/themes'
-import { FieldError } from '../components/ui'
+import { renderFieldError } from '../lib/form-errors'
 import variables from '../lib/envConfig.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 
@@ -156,11 +156,11 @@ export default function Settings() {
                                 size='3'
                                 className='w-full'
                               />
-                              <FieldError
-                                error={field.messages
+                              {renderFieldError(
+                                field.messages
                                   .map((message) => message.text)
-                                  .join('; ')}
-                              />
+                                  .join('; ')
+                              )}
                             </div>
                           )}
                         </div>
@@ -248,11 +248,11 @@ export default function Settings() {
                                 size='3'
                                 className='w-full'
                               />
-                              <FieldError
-                                error={field.messages
+                              {renderFieldError(
+                                field.messages
                                   .map((message) => message.text)
-                                  .join('; ')}
-                              />
+                                  .join('; ')
+                              )}
                             </div>
                           )}
                         </div>

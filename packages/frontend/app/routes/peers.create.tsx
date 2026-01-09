@@ -10,7 +10,7 @@ import {
   useNavigation
 } from '@remix-run/react'
 import { Box, Button, Card, Flex, Heading, Select, Text, TextField } from '@radix-ui/themes'
-import { ErrorPanel, FieldError } from '~/components/ui'
+import { ErrorPanel } from '~/components/ui'
 import { loadAssets } from '~/lib/api/asset.server'
 import { createPeer } from '~/lib/api/peer.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
@@ -22,6 +22,7 @@ import { RedirectDialog } from '~/components/RedirectDialog'
 import type { ReactNode } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { loadTenants, whoAmI } from '~/lib/api/tenant.server'
+import { renderFieldError } from '~/lib/form-errors'
 
 type SelectOption = {
   label: string
@@ -68,7 +69,7 @@ const FormField = ({
       size='3'
       className='w-full mt-1'
     />
-    <FieldError error={error} />
+    {renderFieldError(error)}
   </Flex>
 )
 
@@ -137,7 +138,7 @@ const SelectField = ({
           </Select.Content>
         </Select.Root>
       </div>
-      <FieldError error={error} />
+      {renderFieldError(error)}
     </Flex>
   )
 }
