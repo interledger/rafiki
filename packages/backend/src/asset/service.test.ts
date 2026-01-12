@@ -26,8 +26,7 @@ import {
   TenantSettingService
 } from '../tenants/settings/service'
 import { exchangeRatesSetting } from '../tests/tenantSettings'
-import { createTenantSettings } from '../tests/tenantSettings'
-import { TenantSettingKeys } from '../tenants/settings/model'
+import { TenantService } from '../tenants/service'
 
 describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
@@ -35,6 +34,7 @@ describe('Asset Service', (): void => {
   let assetService: AssetService
   let peerService: PeerService
   let walletAddressService: WalletAddressService
+  let tenantService: TenantService
   let tenantSettingService: TenantSettingService
   let config: IAppConfig
 
@@ -44,6 +44,7 @@ describe('Asset Service', (): void => {
     config = await deps.use('config')
     assetService = await deps.use('assetService')
     walletAddressService = await deps.use('walletAddressService')
+    tenantService = await deps.use('tenantService')
     tenantSettingService = await deps.use('tenantSettingService')
     peerService = await deps.use('peerService')
   })
@@ -74,14 +75,9 @@ describe('Asset Service', (): void => {
   })
 
   beforeEach(async () => {
-    await createTenantSettings(deps, {
-      tenantId: Config.operatorTenantId,
-      setting: [
-        {
-          key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
-          value: 'https://alice.me'
-        }
-      ]
+    await tenantService.update({
+      id: Config.operatorTenantId,
+      walletAddressPrefix: 'https://alice.me'
     })
   })
 

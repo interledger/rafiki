@@ -27,8 +27,6 @@ import { sleep } from '../../shared/utils'
 import { withConfigOverride } from '../../tests/helpers'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
 import { CacheDataStore } from '../../middleware/cache/data-stores'
-import { createTenantSettings } from '../../tests/tenantSettings'
-import { TenantSettingKeys } from '../../tenants/settings/model'
 import { IncomingPaymentInitiationReason } from '../payment/incoming/types'
 
 describe('Open Payments Wallet Address Service', (): void => {
@@ -61,25 +59,17 @@ describe('Open Payments Wallet Address Service', (): void => {
   })
 
   describe('Create or Get Wallet Address', (): void => {
+    let prefix: string
     let tenantId: string
     let options: CreateOptions
 
     beforeEach(async (): Promise<void> => {
-      tenantId = (await createTenant(deps)).id
+      prefix = `https://alice.me/${uuid()}`
+      tenantId = (await createTenant(deps, { walletAddressPrefix: prefix })).id
       const { id: assetId } = await createAsset(deps, { tenantId })
 
-      await createTenantSettings(deps, {
-        tenantId: tenantId,
-        setting: [
-          {
-            key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
-            value: 'https://alice.me'
-          }
-        ]
-      })
-
       options = {
-        address: 'https://alice.me/.well-known/pay',
+        address: `${prefix}/.well-known/pay`,
         assetId,
         tenantId
       }
@@ -104,64 +94,13 @@ describe('Open Payments Wallet Address Service', (): void => {
       }
     )
 
-    test.each`
-      isOperator | tenantSettingUrl
-      ${false}   | ${undefined}
-      ${true}    | ${undefined}
-      ${true}    | ${`https://alice.me/${uuid()}`}
-    `(
-      'operator - $isOperator with tenantSettingUrl - $tenantSettingUrl',
-      async ({ isOperator, tenantSettingUrl }): Promise<void> => {
-        const address = 'test'
-        const tempTenant = await createTenant(deps)
-        const { id: tempAssetId } = await createAsset(deps, {
-          tenantId: tempTenant.id
-        })
-
-        let expected: string = WalletAddressError.WalletAddressSettingNotFound
-        if (tenantSettingUrl) {
-          await createTenantSettings(deps, {
-            tenantId: tempTenant.id,
-            setting: [
-              {
-                key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
-                value: tenantSettingUrl
-              }
-            ]
-          })
-          expected = `${tenantSettingUrl}/${address}`
-        } else {
-          if (isOperator) {
-            expected = `https://op.example/${address}`
-          }
-        }
-
-        const created = await walletAddressService.create({
-          ...options,
-          address,
-          isOperator,
-          assetId: tempAssetId,
-          tenantId: tempTenant.id
-        })
-
-        if (isWalletAddressError(expected)) {
-          expect(created).toEqual(expected)
-        } else {
-          assert.ok(!isWalletAddressError(created))
-          expect(created.address).toEqual(expected)
-        }
-      }
-    )
-
-    test('should return error without tenant settings if caller is not an operator', async () => {
-      const tempTenant = await createTenant(deps)
-
+    test('should return error if unknown tenant', async () => {
       expect(
         await walletAddressService.create({
           ...options,
-          tenantId: tempTenant.id
+          tenantId: uuid()
         })
-      ).toEqual(WalletAddressError.WalletAddressSettingNotFound)
+      ).toEqual(WalletAddressError.UnknownTenant)
     })
 
     test('should return InvalidUrl error if wallet address URL does not start with tenant wallet address URL', async (): Promise<void> => {
@@ -173,21 +112,23 @@ describe('Open Payments Wallet Address Service', (): void => {
     })
 
     test.each`
-      setting                    | address                        | generated
-      ${'https://alice.me/ilp'}  | ${'https://alice.me/ilp/test'} | ${'https://alice.me/ilp/test'}
-      ${'https://alice.me/ilp'}  | ${'test'}                      | ${'https://alice.me/ilp/test'}
-      ${'https://alice.me/ilp'}  | ${'/test'}                     | ${'https://alice.me/ilp/test'}
-      ${'https://alice.me/ilp/'} | ${'test'}                      | ${'https://alice.me/ilp/test'}
-      ${'https://alice.me/ilp/'} | ${'/test'}                     | ${'https://alice.me/ilp/test'}
+      prefix                       | address                          | generated
+      ${'https://alice.me/ilp/1'}  | ${'https://alice.me/ilp/1/test'} | ${'https://alice.me/ilp/1/test'}
+      ${'https://alice.me/ilp/2'}  | ${'test'}                        | ${'https://alice.me/ilp/2/test'}
+      ${'https://alice.me/ilp/3'}  | ${'/test'}                       | ${'https://alice.me/ilp/3/test'}
+      ${'https://alice.me/ilp/4/'} | ${'test'}                        | ${'https://alice.me/ilp/4/test'}
+      ${'https://alice.me/ilp/5'}  | ${'/test'}                       | ${'https://alice.me/ilp/5/test'}
     `(
-      'should create address $generated with address $address and setting $setting',
-      async ({ setting, address, generated }): Promise<void> => {
-        await createTenantSettings(deps, {
-          tenantId: tenantId,
-          setting: [
-            { key: TenantSettingKeys.WALLET_ADDRESS_URL.name, value: setting }
-          ]
+      'should create address $generated with address $address and prefix $prefix',
+      async ({ prefix, address, generated }): Promise<void> => {
+        const tenant = await createTenant(deps, {
+          walletAddressPrefix: prefix
         })
+        const asset = await createAsset(deps, { tenantId: tenant.id })
+        const options = {
+          tenantId: tenant.id,
+          assetId: asset.id
+        }
 
         const walletAddress = await walletAddressService.create({
           ...options,
@@ -236,7 +177,7 @@ describe('Open Payments Wallet Address Service', (): void => {
     })
 
     test('Creating wallet address with case insensitiveness', async (): Promise<void> => {
-      const address = 'https://Alice.me/pay'
+      const address = `${prefix.replace('a', 'A')}/pay`
       await expect(
         walletAddressService.create({
           ...options,
@@ -246,7 +187,7 @@ describe('Open Payments Wallet Address Service', (): void => {
     })
 
     test('Wallet address cannot be created if the url is duplicated', async (): Promise<void> => {
-      const address = 'https://Alice.me/pay'
+      const address = `${prefix}/pay`
       const wallet = walletAddressService.create({
         ...options,
         address
@@ -616,15 +557,8 @@ describe('Open Payments Wallet Address Service', (): void => {
           { walletAddressLookupTimeoutMs: 0 },
           async (): Promise<void> => {
             const walletAddressUrl = `https://${faker.internet.domainName()}/.well-known/pay`
-            const tenant = await createTenant(deps)
-            await createTenantSettings(deps, {
-              tenantId: tenant.id,
-              setting: [
-                {
-                  key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
-                  value: `${walletAddressUrl}/${uuid()}`
-                }
-              ]
+            const tenant = await createTenant(deps, {
+              walletAddressPrefix: `${walletAddressUrl}/${uuid()}`
             })
 
             await expect(
@@ -661,7 +595,11 @@ describe('Open Payments Wallet Address Service', (): void => {
           () => config,
           { walletAddressPollingFrequencyMs: 10 },
           async (): Promise<void> => {
-            const walletAddressUrl = `https://${faker.internet.domainName()}/.well-known/pay`
+            const prefix = `https://${faker.internet.domainName()}`
+            const tenant = await createTenant(deps, {
+              walletAddressPrefix: prefix
+            })
+            const walletAddressUrl = `${prefix}/.well-known/pay`
 
             const [getOrPollByUrlWalletAddress, createdWalletAddress] =
               await Promise.all([
@@ -669,7 +607,7 @@ describe('Open Payments Wallet Address Service', (): void => {
                 (async () => {
                   await sleep(5)
                   return createWalletAddress(deps, {
-                    tenantId: Config.operatorTenantId,
+                    tenantId: tenant.id,
                     address: walletAddressUrl
                   })
                 })()

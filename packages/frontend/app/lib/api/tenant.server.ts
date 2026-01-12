@@ -56,6 +56,7 @@ export const listTenants = async (request: Request, args: QueryTenantsArgs) => {
               apiSecret
               idpConsentUrl
               idpSecret
+              walletAddressPrefix
               publicName
               createdAt
               deletedAt
@@ -180,6 +181,7 @@ export const getTenantInfo = async (
           idpConsentUrl
           idpSecret
           publicName
+          walletAddressPrefix
           createdAt
           deletedAt
           settings {
