@@ -236,6 +236,12 @@ describe('Payment Routes', () => {
                 assetCode: 'USD',
                 assetScale: 2
               },
+              tenant: {
+                id: v4(),
+                apiSecret: 'test-secret',
+                settings: [],
+                createdAt: new Date().toString()
+              },
               expiresAt: new Date().toString(),
               createdAt: new Date().toString(),
               tenantId: v4(),
@@ -333,6 +339,12 @@ describe('Payment Routes', () => {
                 value: BigInt(500),
                 assetCode: 'USD',
                 assetScale: 2
+              },
+              tenant: {
+                id: v4(),
+                apiSecret: 'test-secret',
+                settings: [],
+                createdAt: new Date().toString()
               },
               expiresAt: new Date().toString(),
               createdAt: new Date().toString(),

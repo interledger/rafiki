@@ -38,6 +38,15 @@ export const GET_WALLET_ADDRESS_BY_URL = gql`
               assetScale
               value
             }
+            tenant {
+              id
+              apiSecret
+              settings {
+                key
+                value
+              }
+              createdAt
+            }
             expiresAt
             createdAt
           }
