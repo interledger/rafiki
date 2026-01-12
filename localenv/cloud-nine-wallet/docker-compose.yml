@@ -86,7 +86,7 @@ services:
     networks:
       - rafiki
     environment:
-      NODE_ENV: ${NODE_ENV:-development}
+      NODE_ENV: production
       INSTANCE_NAME: CLOUD-NINE
       TRUST_PROXY: ${TRUST_PROXY}
       LOG_LEVEL: debug
@@ -149,7 +149,7 @@ services:
       - '3009:3009'
       - '3011:3011'
     environment:
-      NODE_ENV: ${NODE_ENV:-development}
+      NODE_ENV: production
       TRUST_PROXY: ${TRUST_PROXY}
       AUTH_DATABASE_URL: postgresql://cloud_nine_wallet_auth:cloud_nine_wallet_auth@shared-database/cloud_nine_wallet_auth
       AUTH_SERVER_URL: ${CLOUD_NINE_AUTH_SERVER_DOMAIN:-http://localhost:3006}
