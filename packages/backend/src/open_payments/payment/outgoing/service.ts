@@ -1234,6 +1234,13 @@ export async function updateGrantSpentAmounts(
       { payment, latestPaymentSpentAmounts },
       'Could not find grant spent amounts for payment when updating spent amounts'
     )
+    deps.telemetry.incrementCounter(
+      'grant_spent_amounts_missing_record_total',
+      1,
+      {
+        callName: 'updateGrantSpentAmounts'
+      }
+    )
     return
   }
 
@@ -1251,7 +1258,14 @@ export async function updateGrantSpentAmounts(
   if (!records) {
     deps.logger.error(
       { payment, latestPaymentSpentAmounts },
-      'Could not find grant spent amounts for grant when reverting spent amounts'
+      'Could not find grant spent amounts for grant when updating spent amounts'
+    )
+    deps.telemetry.incrementCounter(
+      'grant_spent_amounts_missing_record_total',
+      1,
+      {
+        callName: 'updateGrantSpentAmounts'
+      }
     )
     return
   }
@@ -1485,6 +1499,13 @@ export async function revertGrantSpentAmounts(
       { payment },
       'Could not find grant spent amounts by payment when reverting spent amounts'
     )
+    deps.telemetry.incrementCounter(
+      'grant_spent_amounts_missing_record_total',
+      1,
+      {
+        callName: 'revertGrantSpentAmounts'
+      }
+    )
     return
   }
 
@@ -1497,6 +1518,13 @@ export async function revertGrantSpentAmounts(
     deps.logger.error(
       { payment, latestPaymentSpentAmounts },
       'Could not find grant spent amounts for grant when reverting spent amounts'
+    )
+    deps.telemetry.incrementCounter(
+      'grant_spent_amounts_missing_record_total',
+      1,
+      {
+        callName: 'revertGrantSpentAmounts'
+      }
     )
     return
   }
