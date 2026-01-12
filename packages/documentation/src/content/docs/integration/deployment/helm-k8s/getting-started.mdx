@@ -1,5 +1,5 @@
 ---
-title: Helm & Kubernetes
+title: Get Started
 ---
 
 import { LinkOut } from '@interledger/docs-design-system'
@@ -8,6 +8,13 @@ import AuthEnv from '/src/partials/auth-variables-helm.mdx'
 import FrontEnv from '/src/partials/frontend-variables-helm.mdx'
 
 This guide explains how to deploy Rafiki using Helm charts on a Kubernetes cluster. Helm is a package manager for Kubernetes that allows you to define, install, and upgrade complex Kubernetes applications through Helm charts.
+
+This section provides an overview of deploying Rafiki with Helm and Kubernetes. For a deployment example, refer to the subsequent pages:
+
+- [Peered Rafiki instances overview and architecture](/integration/deployment/helm-k8s/peered-rafiki-architecture)
+- [Deploy ASE A using the Test Wallet](/integration/deployment/helm-k8s/ase-a-test-wallet)
+- [Deploy ASE B using the Interledger Wallet](/integration/deployment/helm-k8s/ase-b-interledger-app)
+- [Peer the ASEs](/integration/deployment/helm-k8s/ase-peering)
 
 Rafiki uses the following key infrastructure components:
 
@@ -308,7 +315,7 @@ The Rafiki `backend` service handles the core Open Payments functionality and bu
 **Ports exposed:**
 
 - `3000` (openPayments) - Open Payments resource server API
-- `3001` (admin) - Backend Admin API and GraphQL endpoint
+- `3001` (admin) - [Backend Admin API](/apis/graphql/backend) and GraphQL endpoint
 - `3002` (connector) - ILP connector for sending and receiving packets
 - `3005` (autoPeering) - Auto-peering service (when enabled)
 
@@ -322,7 +329,7 @@ TigerBeetle is strongly recommended for production deployments due to its high-p
 <details>
 <summary>Frontend service</summary>
 
-The Rafiki `frontend` service provides an administrative web interface for managing your Rafiki instance. It offers a user-friendly dashboard for monitoring and managing wallet addresses, payments, peers, and other Open Payments resources. The frontend communicates with the Backend Admin API to perform administrative operations.
+The Rafiki `frontend` service provides an administrative web interface for managing your Rafiki instance. It offers a user-friendly dashboard for monitoring and managing wallet addresses, payments, peers, and other Open Payments resources. The frontend communicates with the [Backend Admin API](/apis/graphql/backend) to perform administrative operations.
 
 **Ports exposed:**
 

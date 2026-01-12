@@ -1,0 +1,91 @@
+---
+title: Peered Rafiki Instances Architecture
+description: High-level architecture for deploying two Rafiki-powered Account Servicing Entities (ASE A and ASE B) on Kubernetes using Interledger Helm charts.
+---
+
+import { LinkOut, LargeImg } from '@interledger/docs-design-system'
+
+This guide provides an **architectural overview** of a reference deployment where:
+
+- Account Servicing Entity A (**ASE A**) runs the **Test Wallet** from <LinkOut href='https://github.com/interledger/testnet'>github.com/interledger/testnet</LinkOut> and its own Rafiki instance.
+- Account Servicing Entity B (**ASE B**) runs the **Interledger App Wallet** (container images are available from `ghcr.io/interledger`) and its own Rafiki instance.
+- Both ASEs deploy to Kubernetes clusters (on any cloud provider) using the public Interledger Helm charts served from `https://interledger.github.io/charts/interledger`.
+- The two Rafiki instances are peered, enabling their users to send Interledger payments between ASE A and ASE B.
+
+## Components
+
+Each ASE deployment consists of:
+
+- **Rafiki Layer**:
+  - `auth` – Open Payments authorization server.
+  - `backend` – Open Payments resource server and ILP connector.
+  - `frontend` – Rafiki Admin UI.
+- **Wallet (Integrator) Layer**:
+  - Wallet backend – Integrates with Rafiki via Open Payments APIs.
+  - Wallet frontend – User-facing web app.
+- **Data stores**:
+  - **PostgreSQL** – Open Payments resources and wallet addresses database.
+  - **Redis** – Caching and session management.
+  - **TigerBeetle** – High-performance accounting database for Rafiki.
+- **Ingress / DNS**:
+  - Kubernetes Ingress exposes Rafiki and wallet HTTP endpoints with TLS.
+  - Public DNS records point to the ingress IPs or load balancer hostnames.
+
+## High-level topology
+
+The deployment uses **two independent Kubernetes clusters**, one per ASE. Each cluster can be deployed on any cloud provider (AWS EKS, Google GKE, Azure AKS) or on-premises:
+
+- **Kubernetes Cluster A** (for example, `ase-a-cluster`):
+  - Namespace `rafiki-ase-a` (Rafiki Layer)
+  - Namespace `wallet-ase-a` (Test Wallet Layer)
+- **Kubernetes Cluster B** (for example, `ase-b-cluster`):
+  - Namespace `rafiki-ase-b` (Rafiki Layer)
+  - Namespace `wallet-ase-b` (Interledger App Wallet Layer)
+
+Each cluster has:
+
+- A **Rafiki instance** fronted by an HTTPS ingress (Open Payments + Admin + Auth endpoints).
+- A **wallet app** fronted by an HTTPS ingress (user-facing web app + API).
+- **Private services** for databases, Redis, and Rafiki connector endpoints.
+- **ILP Peering** connection between the two Rafiki backend connectors.
+
+## Architecture diagram
+
+The following diagram shows the major components and how they interact:
+
+<LargeImg
+  src='/img/rafiki-peering-diagram.png'
+  alt='Peered Rafiki Instances Architecture'
+/>
+
+## Helm charts and Git repositories
+
+- Public Helm repository:
+
+  ```bash
+  helm repo add interledger-helm https://interledger.github.io/charts/interledger
+  helm repo update
+  ```
+
+  Charts used:
+
+  - `interledger-helm/rafiki` – Rafiki instance (auth, backend, frontend)
+  - `interledger-helm/testnet-wallet` – Example wallet implementation
+  - `interledger-helm/ilf-wallet-backend` – Interledger App wallet backend
+  - `interledger-helm/ilf-wallet-frontend` – Interledger App wallet frontend
+  - `interledger-helm/ilf-wallet-admin` – Interledger App wallet admin
+
+- Git repositories:
+  - Rafiki: <LinkOut href='https://github.com/interledger/rafiki'>github.com/interledger/rafiki</LinkOut>
+  - Testnet Wallet: <LinkOut href='https://github.com/interledger/testnet'>github.com/interledger/testnet</LinkOut>
+  - Helm charts: <LinkOut href='https://github.com/interledger/charts'>github.com/interledger/charts</LinkOut>
+
+:::note
+The Interledger App Wallet git repository is not publicly accessible. Integrators should obtain the referenced Helm charts from `https://interledger.github.io/charts/interledger` where they are publicly served from.
+:::
+
+## Next steps
+
+- **Deploy ASE A** (Rafiki + Test Wallet): refer to [Deploy ASE A using Test Wallet](/integration/deployment/helm-k8s/ase-a-test-wallet).
+- **Deploy ASE B** (Rafiki + Interledger App Wallet): refer to [Deploy ASE B using Interledger App Wallet](/integration/deployment/helm-k8s/ase-b-interledger-app).
+- **Peer the Rafiki instances** to enable Interledger payments: refer to [Peer ASE A and ASE B](/integration/deployment/helm-k8s/ase-peering).
