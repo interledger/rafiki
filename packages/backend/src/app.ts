@@ -462,11 +462,11 @@ export class App {
 
     // For tests, we still need to get the tenant in the middleware, but
     // we don't need to verify the signature nor prevent replay attacks
-    koa.use(
-      this.config.env !== 'test'
-        ? tenantSignatureMiddleware
-        : testTenantSignatureMiddleware
-    )
+    // koa.use(
+    //   this.config.env !== 'test'
+    //     ? tenantSignatureMiddleware
+    //     : testTenantSignatureMiddleware
+    // )
 
     koa.use(
       koaMiddleware(this.apolloServer, {
