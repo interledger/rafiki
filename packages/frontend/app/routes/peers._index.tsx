@@ -57,7 +57,13 @@ export default function PeersPage() {
         </PageHeader>
         <Table>
           <Table.Head
-            columns={['Name', 'ILP Address', 'Asset', 'Outgoing HTTP Endpoint']}
+            columns={[
+              'Name',
+              'ILP Address',
+              'Asset',
+              'Outgoing HTTP Endpoint',
+              'Tenant'
+            ]}
           />
           <Table.Body>
             {peers.edges.length ? (
@@ -84,6 +90,26 @@ export default function PeersPage() {
                     {peer.node.asset.code} (Scale: {peer.node.asset.scale})
                   </Table.Cell>
                   <Table.Cell>{peer.node.http.outgoing.endpoint}</Table.Cell>
+                  <Table.Cell>
+                    <div className='flex flex-col'>
+                      <div>
+                        <span className='mr-2'>
+                          {peer.node.tenant?.publicName ? (
+                            <span className='font-medium'>
+                              {peer.node.tenant.publicName}
+                            </span>
+                          ) : (
+                            <span className='text-tealish/80'>
+                              No public name
+                            </span>
+                          )}
+                        </span>
+                        <div className='text-tealish/50 text-xs'>
+                          (ID: {peer.node.tenant?.id})
+                        </div>
+                      </div>
+                    </div>
+                  </Table.Cell>
                 </Table.Row>
               ))
             ) : (
