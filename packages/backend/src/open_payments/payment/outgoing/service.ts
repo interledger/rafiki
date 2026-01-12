@@ -1209,8 +1209,8 @@ function calculateIntervalAmounts(
     receiveAmountDifference
 
   return {
-    debit: BigInt(Math.max(0, Number(newDebit))),
-    receive: BigInt(Math.max(0, Number(newReceive)))
+    debit: newDebit < 0n ? 0n : newDebit,
+    receive: newReceive < 0n ? 0n : newReceive
   }
 }
 
@@ -1258,15 +1258,11 @@ export async function updateGrantSpentAmounts(
 
   const { latestGrantSpentAmounts, latestIntervalSpentAmounts } = records
 
-  const newGrantTotalReceiveAmountValue = BigInt(
-    Math.max(
-      0,
-      Number(
-        latestGrantSpentAmounts.grantTotalReceiveAmountValue -
-          receiveAmountDifference
-      )
-    )
-  )
+  const grantTotalReceiveDiff =
+    latestGrantSpentAmounts.grantTotalReceiveAmountValue -
+    receiveAmountDifference
+  const newGrantTotalReceiveAmountValue =
+    grantTotalReceiveDiff < 0n ? 0n : grantTotalReceiveDiff
 
   const {
     debit: newIntervalDebitAmountValue,
@@ -1511,23 +1507,15 @@ export async function revertGrantSpentAmounts(
   const reservedReceiveAmount =
     latestPaymentSpentAmounts.paymentReceiveAmountValue
 
-  const newGrantTotalDebitAmountValue = BigInt(
-    Math.max(
-      0,
-      Number(
-        latestGrantSpentAmounts.grantTotalDebitAmountValue - reservedDebitAmount
-      )
-    )
-  )
-  const newGrantTotalReceiveAmountValue = BigInt(
-    Math.max(
-      0,
-      Number(
-        latestGrantSpentAmounts.grantTotalReceiveAmountValue -
-          reservedReceiveAmount
-      )
-    )
-  )
+  const grantTotalDebitDiff =
+    latestGrantSpentAmounts.grantTotalDebitAmountValue - reservedDebitAmount
+  const newGrantTotalDebitAmountValue =
+    grantTotalDebitDiff < 0n ? 0n : grantTotalDebitDiff
+
+  const grantTotalReceiveDiff =
+    latestGrantSpentAmounts.grantTotalReceiveAmountValue - reservedReceiveAmount
+  const newGrantTotalReceiveAmountValue =
+    grantTotalReceiveDiff < 0n ? 0n : grantTotalReceiveDiff
 
   const {
     debit: newIntervalDebitAmountValue,
