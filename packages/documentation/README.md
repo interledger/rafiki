@@ -30,6 +30,18 @@ $ pnpm build:docs
 
 This command generates static content into the build directory and can be served using any static contents hosting service.
 
+### Formatting and Linting
+
+The documentation uses [Prettier](https://prettier.io/) for formatting and [ESLint](https://eslint.org/) for linting. From the root of the repository, you can run:
+
+```sh
+# Format documentation files
+$ pnpm format:docs
+
+# Lint documentation files
+$ pnpm lint:docs
+```
+
 ## Editing Content
 
 Starlight looks for `.md` or `.mdx` files in the `src/content/docs/` directory. Each file is exposed as a route based on its file name. Due to the nature of how Starlight deals with content and their generated URLs, all docs content lives in `/src/content/docs/`. For example, the home page of the documentation lives within the `/src/content/docs/` folder and is rendered at rafiki.dev, not rafiki.dev/docs.
