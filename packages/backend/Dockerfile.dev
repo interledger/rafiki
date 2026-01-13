@@ -1,4 +1,4 @@
-FROM node:20-alpine3.21
+FROM node:20-alpine3.23
 
 RUN adduser -D rafiki
 WORKDIR /home/rafiki
@@ -9,6 +9,7 @@ RUN mkdir -p /home/rafiki/.local/bin
 ENV PATH="/home/rafiki/.local/bin:$PATH"
 RUN corepack enable --install-directory ~/.local/bin
 RUN corepack prepare pnpm@8.7.4 --activate
+RUN pnpm i glob@10.5.0
 COPY pnpm-lock.yaml package.json pnpm-workspace.yaml .npmrc tsconfig.json tsconfig.build.json ./
 
 # Fetch the pnpm dependencies, but use a local cache.
