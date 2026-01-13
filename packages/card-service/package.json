@@ -7,7 +7,7 @@
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests --maxWorkers=50%",
     "test:ci": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests --maxWorkers=2",
     "test:cov": "pnpm test -- --coverage",
-    "dev": "ts-node-dev --inspect=0.0.0.0:9229 --respawn --transpile-only src/index.ts",
+    "dev": "TS_NODE_TRANSPILE_ONLY=true node-dev --inspect=0.0.0.0:9229 --respawn src/index.ts",
     "copy-files": "cp -r ./src/openapi ./dist/"
   },
   "dependencies": {
@@ -21,7 +21,9 @@
     "json-canonicalize": "^1.0.6",
     "koa": "^2.15.4",
     "koa-bodyparser": "^4.4.1",
+    "node-dev": "^8.0.0",
     "pino": "^8.19.0",
+    "ts-node": "^10.9.2",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
@@ -34,7 +36,6 @@
     "jest-environment-node": "^29.7.0",
     "nock": "14.0.0-beta.19",
     "node-mocks-http": "^1.16.2",
-    "testcontainers": "^10.16.0",
-    "ts-node-dev": "^2.0.0"
+    "testcontainers": "^10.16.0"
   }
 }
