@@ -125,6 +125,46 @@ The Rafiki local environment is the best way to explore Rafiki locally. The [loc
 | Run individual tests (e.g. backend)                     | `pnpm --filter backend test`             |
 | Run all tests                                           | `pnpm -r --workspace-concurrency=1 test` |
 | Format and lint code                                    | `pnpm format`                            |
+| Format documentation                                    | `pnpm format:docs`                       |
+| Lint code                                               | `pnpm lint`                              |
+| Lint documentation                                      | `pnpm lint:docs`                         |
 | Check lint and formatting                               | `pnpm checks`                            |
 | Verify code formatting                                  | `pnpm check:prettier`                    |
 | Verify lint                                             | `pnpm check:lint`                        |
+
+### Formatting and Linting
+
+Rafiki uses [Prettier](https://prettier.io/) for code formatting and [ESLint](https://eslint.org/) with TypeScript support for linting. All code must be properly formatted and pass linting checks before committing.
+
+#### Formatting Code
+
+To automatically format all code in the repository:
+
+```sh
+pnpm format
+```
+
+This command will:
+- Format all files using Prettier
+- Automatically fix ESLint issues where possible
+
+#### Checking Code Quality
+
+Before committing your changes, verify that your code passes all formatting and linting checks:
+
+```sh
+pnpm checks
+```
+
+This runs both Prettier and ESLint checks without modifying files. You can also run them individually:
+
+- Check formatting only: `pnpm check:prettier`
+- Check linting only: `pnpm check:lint`
+
+#### Editor Integration
+
+For the best development experience, we recommend configuring your editor to:
+- Format on save using Prettier
+- Show ESLint errors inline
+
+Most modern editors have extensions/plugins available for both Prettier and ESLint.
