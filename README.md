@@ -145,6 +145,7 @@ pnpm format
 ```
 
 This command will:
+
 - Format all files using Prettier
 - Automatically fix ESLint issues where possible
 
@@ -164,6 +165,7 @@ This runs both Prettier and ESLint checks without modifying files. You can also 
 #### Editor Integration
 
 For the best development experience, we recommend configuring your editor to:
+
 - Format on save using Prettier
 - Show ESLint errors inline
 
