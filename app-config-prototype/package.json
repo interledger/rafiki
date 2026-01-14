@@ -1,0 +1,24 @@
+{
+  "name": "app-config-prototype",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Prototype for schema-based config with validation and doc generation",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "demo:valid": "tsx src/scripts/demo-valid.ts",
+    "demo:invalid": "tsx src/scripts/demo-invalid.ts",
+    "generate:docs": "tsx src/scripts/generate-docs.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "zod": "^3.24.1",
+    "zod-to-json-schema": "^3.24.1",
+    "zod2md": "^0.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

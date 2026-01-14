@@ -3,3 +3,4 @@ packages:
   - 'localenv/mock-account-servicing-entity'
   - 'test/*'
   - 'bruno/collections/Rafiki'
+  - 'app-config-prototype'
