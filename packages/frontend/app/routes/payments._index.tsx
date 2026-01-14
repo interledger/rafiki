@@ -12,9 +12,18 @@ import {
   Form,
   useActionData
 } from '@remix-run/react'
-import { Badge, PageHeader } from '~/components'
-import { PopoverFilter } from '~/components/Filters'
-import { Button, Table, ErrorPanel, FieldError } from '~/components/ui'
+import {
+  Box,
+  Button,
+  DropdownMenu,
+  Flex,
+  Heading,
+  Table,
+  Text,
+  TextField
+} from '@radix-ui/themes'
+import { Badge } from '~/components'
+import { renderErrorPanel, renderFieldError } from '~/lib/form-errors'
 import { listPayments } from '~/lib/api/payments.server'
 import { paymentsSearchParams } from '~/lib/validate.server'
 import { PaymentType } from '~/generated/graphql'
@@ -119,44 +128,68 @@ export default function PaymentsPage() {
   }
 
   return (
-    <div className='pt-4 flex flex-col space-y-8'>
-      <div className='flex flex-col rounded-md bg-offwhite px-6'>
-        <PageHeader>
-          <div className='flex-1'>
-            <h3 className='text-2xl leading-10'>Payments</h3>
-          </div>
-        </PageHeader>
-        <div className='p-1'>
-          <h3 className='text-lg font-bold'>Filters</h3>
-          <div className='pt-5'>
-            <ErrorPanel errors={response?.errors.message} />
-          </div>
-          <div className='flex flex-col'>
-            <PopoverFilter
-              label='Payment type'
-              values={type.length > 0 ? type : ['all']}
-              options={[
-                {
-                  name: 'All',
-                  value: 'all',
-                  action: () =>
+    <Box p='4'>
+      <Flex direction='column' gap='4'>
+          <Flex align='start' justify='between' gap='3' wrap='wrap'>
+            <Heading size='5'>Payments</Heading>
+          <Flex align='center' gap='2' className='flex-wrap md:flex-nowrap'>
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger className='inline-flex min-w-[220px] items-center justify-between gap-2 rounded-md border border-pearl bg-white px-3 py-2 text-sm text-tealish shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F37F64]'>
+                <Flex align='center' justify='between' gap='2' className='w-full'>
+                  <span className='truncate'>
+                    {type.length
+                      ? `Payments: ${type.map((value) => capitalize(value)).join(', ')}`
+                      : 'All Payments'}
+                  </span>
+                  <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    width='14'
+                    height='14'
+                    viewBox='0 0 20 20'
+                    fill='currentColor'
+                    aria-hidden='true'
+                  >
+                    <path
+                      fillRule='evenodd'
+                      d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z'
+                      clipRule='evenodd'
+                    />
+                  </svg>
+                </Flex>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content
+                align='start'
+                style={{ backgroundColor: '#fff' }}
+                className='shadow-lg'
+              >
+                <DropdownMenu.CheckboxItem
+                  checked={type.length === 0}
+                  onCheckedChange={() =>
                     updateParams({
                       type: null,
                       before: null,
                       after: null,
                       walletAddressId
                     })
-                },
-                ...Object.values(PaymentType).map((value) => ({
-                  name: capitalize(value),
-                  value: value,
-                  action: () => setTypeFilterParams(value)
-                }))
-              ]}
-            />
+                  }
+                >
+                  All
+                </DropdownMenu.CheckboxItem>
+                <DropdownMenu.Separator />
+                {Object.values(PaymentType).map((value) => (
+                  <DropdownMenu.CheckboxItem
+                    key={value}
+                    checked={type.includes(value)}
+                    onCheckedChange={() => setTypeFilterParams(value)}
+                  >
+                    {capitalize(value)}
+                  </DropdownMenu.CheckboxItem>
+                ))}
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+
             <Form
               method='post'
-              className='relative mt-2'
               onSubmit={(e) => {
                 if (!walletId) {
                   e.preventDefault()
@@ -169,11 +202,11 @@ export default function PaymentsPage() {
                 }
               }}
             >
-              <div className='flex items-center space-x-3'>
-                <input
+              <Flex gap='2' align='center'>
+                <TextField.Root
                   name='walletAddressId'
                   placeholder='Wallet address ID'
-                  className='border-none relative w-[400px] cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-pearl focus:outline-none focus:ring-2 focus:ring-[#F37F64] sm:text-sm sm:leading-6'
+                  style={{ width: '320px' }}
                   value={walletId}
                   onChange={(e) => setWalletId(e.target.value)}
                 />
@@ -182,10 +215,11 @@ export default function PaymentsPage() {
                   type='hidden'
                   value={searchParams.get('type') ?? ''}
                 />
-                <Button aria-label='filter on wallet address ID' type='submit'>
+                <Button type='submit'>
                   <svg
                     xmlns='http://www.w3.org/2000/svg'
-                    className='h-6 w-6'
+                    width='16'
+                    height='16'
                     fill='none'
                     viewBox='0 0 24 24'
                     stroke='currentColor'
@@ -198,97 +232,102 @@ export default function PaymentsPage() {
                     />
                   </svg>
                 </Button>
-              </div>
-              <FieldError
-                error={response?.errors?.fieldErrors.walletAddressId}
-              />
+              </Flex>
+              {renderFieldError(response?.errors?.fieldErrors.walletAddressId)}
             </Form>
-          </div>
-          <div className='flex justify-between mt-4'>
-            <Button
-              aria-label='reset filters'
-              onClick={() => {
-                navigate('/payments')
-                setWalletId('')
-                setSearchParams(new URLSearchParams())
-              }}
-            >
-              Reset Filters
-            </Button>
-          </div>
-        </div>
-        <Table>
-          <Table.Head columns={['ID', 'Type', 'State', 'Date']} />
-          <Table.Body>
-            {payments.edges.length ? (
-              payments.edges.map((payment) => (
-                <Table.Row
-                  key={payment.node.id}
-                  className='cursor-pointer'
-                  onClick={() => {
-                    const subpath = paymentSubpathByType[payment.node.type]
-                    return navigate(`/payments/${subpath}/${payment.node.id}`)
-                  }}
-                >
-                  <Table.Cell>{payment.node.id}</Table.Cell>
-                  <Table.Cell>{capitalize(payment.node.type)}</Table.Cell>
-                  <Table.Cell>
-                    <Badge
-                      color={
-                        badgeColorByPaymentState[
-                          payment.node.state as CombinedPaymentState
-                        ]
-                      }
-                    >
-                      {payment.node.state}
-                    </Badge>
-                  </Table.Cell>
-                  <Table.Cell>
-                    {new Date(payment.node.createdAt).toLocaleString()}
+          </Flex>
+        </Flex>
+
+        {renderErrorPanel(response?.errors.message)}
+
+        <Flex direction='column' gap='4'>
+          <Box className='overflow-hidden rounded-md border border-pearl bg-white'>
+            <Table.Root>
+              <Table.Header className='bg-pearl/40'>
+              <Table.Row>
+                <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>State</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Date</Table.ColumnHeaderCell>
+              </Table.Row>
+              </Table.Header>
+              <Table.Body>
+              {payments.edges.length ? (
+                payments.edges.map((payment) => (
+                  <Table.Row
+                    key={payment.node.id}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => {
+                      const subpath = paymentSubpathByType[payment.node.type]
+                      return navigate(`/payments/${subpath}/${payment.node.id}`)
+                    }}
+                  >
+                    <Table.Cell>
+                      <Text>{payment.node.id}</Text>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Text weight='medium'>{capitalize(payment.node.type)}</Text>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Badge
+                        color={
+                          badgeColorByPaymentState[
+                            payment.node.state as CombinedPaymentState
+                          ]
+                        }
+                      >
+                        {payment.node.state}
+                      </Badge>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Text>{new Date(payment.node.createdAt).toLocaleString()}</Text>
+                    </Table.Cell>
+                  </Table.Row>
+                ))
+              ) : (
+                <Table.Row>
+                  <Table.Cell colSpan={4} align='center'>
+                    <Text>No payments found.</Text>
                   </Table.Cell>
                 </Table.Row>
-              ))
-            ) : (
-              <Table.Row>
-                <Table.Cell colSpan={4} className='text-center'>
-                  No payments found.
-                </Table.Cell>
-              </Table.Row>
-            )}
-          </Table.Body>
-        </Table>
-        <div className='flex items-center justify-between p-5'>
-          <Button
-            aria-label='go to previous page'
-            disabled={!payments.pageInfo.hasPreviousPage}
-            onClick={() =>
-              updateParams({
-                before: payments.pageInfo.startCursor ?? null,
-                after: null,
-                walletAddressId,
-                type: searchParams.get('type')
-              })
-            }
-          >
-            Previous
-          </Button>
-          <Button
-            aria-label='go to next page'
-            disabled={!payments.pageInfo.hasNextPage}
-            onClick={() =>
-              updateParams({
-                before: null,
-                after: payments.pageInfo.endCursor ?? null,
-                walletAddressId,
-                type: searchParams.get('type')
-              })
-            }
-          >
-            Next
-          </Button>
-        </div>
-      </div>
-    </div>
+              )}
+              </Table.Body>
+            </Table.Root>
+          </Box>
+
+          <Flex justify='between' pt='2'>
+            <Button
+              variant='soft'
+              disabled={!payments.pageInfo.hasPreviousPage}
+              onClick={() =>
+                updateParams({
+                  before: payments.pageInfo.startCursor ?? null,
+                  after: null,
+                  walletAddressId,
+                  type: searchParams.get('type')
+                })
+              }
+            >
+              Previous
+            </Button>
+            <Button
+              variant='soft'
+              disabled={!payments.pageInfo.hasNextPage}
+              onClick={() =>
+                updateParams({
+                  before: null,
+                  after: payments.pageInfo.endCursor ?? null,
+                  walletAddressId,
+                  type: searchParams.get('type')
+                })
+              }
+            >
+              Next
+            </Button>
+          </Flex>
+        </Flex>
+      </Flex>
+    </Box>
   )
 }
 

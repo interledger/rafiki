@@ -1,6 +1,6 @@
 import { Form, useActionData, useNavigation } from '@remix-run/react'
 import { useRef, useState, useEffect } from 'react'
-import { Input, Button } from '~/components/ui'
+import { Button, Text, TextField } from '@radix-ui/themes'
 import { validate as validateUUID } from 'uuid'
 
 interface ApiCredentialsFormProps {
@@ -52,11 +52,11 @@ export const ApiCredentialsForm = ({
     <div className='space-y-4'>
       {showClearCredentials ? (
         <Form method='post' action='/api/set-credentials' className='space-y-4'>
-          <p className='text-green-600'>✓ API credentials configured</p>
+          <p className='text-green-600 mb-4'>✓ API credentials configured</p>
           <input hidden readOnly name='intent' value='clear' />
           <Button
             type='submit'
-            intent='danger'
+            color='red'
             aria-label='Clear API credentials'
             disabled={isSubmitting}
           >
@@ -70,29 +70,55 @@ export const ApiCredentialsForm = ({
           className='space-y-4'
           ref={formRef} // Reference for the credentials form
         >
-          <Input
-            ref={inputRef}
-            required
-            type='text'
-            name='tenantId'
-            label='Tenant ID'
-            defaultValue={defaultTenantId}
-            onChange={handleTenantIdChange}
-            aria-invalid={!!tenantIdError}
-            aria-describedby={tenantIdError ? 'tenantId-error' : undefined}
-          />
+          <div>
+            <Text
+              as='label'
+              htmlFor='tenant-id'
+              size='2'
+              weight='medium'
+              className='block tracking-wide text-gray-700 mb-1'
+            >
+              Tenant ID<Text as='span' color='red'> *</Text>
+            </Text>
+            <TextField.Root
+              id='tenant-id'
+              ref={inputRef}
+              required
+              type='text'
+              name='tenantId'
+              defaultValue={defaultTenantId}
+              onChange={handleTenantIdChange}
+              aria-invalid={!!tenantIdError}
+              aria-describedby={tenantIdError ? 'tenantId-error' : undefined}
+              size='3'
+              className='w-full'
+            />
+          </div>
           {tenantIdError && (
             <p id='tenantId-error' className='text-red-500 text-sm'>
               {tenantIdError}
             </p>
           )}
-          <Input
-            required
-            type='password'
-            name='apiSecret'
-            label='API Secret'
-            defaultValue={defaultApiSecret}
-          />
+          <div>
+            <Text
+              as='label'
+              htmlFor='api-secret'
+              size='2'
+              weight='medium'
+              className='block tracking-wide text-gray-700 mb-1'
+            >
+              API Secret<Text as='span' color='red'> *</Text>
+            </Text>
+            <TextField.Root
+              id='api-secret'
+              required
+              type='password'
+              name='apiSecret'
+              defaultValue={defaultApiSecret}
+              size='3'
+              className='w-full'
+            />
+          </div>
           <input hidden readOnly name='intent' value='save' />
           <div className='flex justify-center'>
             <Button

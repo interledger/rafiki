@@ -2,8 +2,10 @@ import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import type { TypedResponse } from '@remix-run/node'
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
+import { Card, Heading, Text } from '@radix-ui/themes'
 import { ApiCredentialsForm } from '~/components/ApiCredentialsForm'
 import { getSession } from '~/lib/session.server'
+import bgUrl from '~/assets/bg.webp'
 
 interface LoaderData {
   hasCredentials: boolean
@@ -40,26 +42,30 @@ export default function Index() {
     useLoaderData<LoaderData>()
 
   return (
-    <div className='pt-4 flex flex-col'>
-      <div className='flex flex-col rounded-md bg-offwhite px-6 text-center min-h-[calc(100vh-7rem)] md:min-h-[calc(100vh-3rem)]'>
-        <div className='p-4 space-y-6 md:p-10 md:space-y-16'>
-          <h1 className='text-6xl pt-10 md:text-9xl md:pt-16 text-[#F37F64]'>
-            Welcome!
-          </h1>
-          <div className='space-y-8'>
-            <p className='text-4xl md:text-7xl'>Rafiki Admin</p>
-            <p>This is Rafiki&apos;s administrative user interface.</p>
-          </div>
-          <p>
-            In this web application, you&apos;ll be able to manage peering
-            relationships, assets, and wallet addresses, among other settings.
-          </p>
-
-          <div className='space-y-4'>
-            <p className='text-gray-600'>
-              To get started, please configure your API credentials
-            </p>
-            <div className='max-w-md mx-auto'>
+    <div className='relative min-h-screen overflow-hidden'>
+      <div
+        className='absolute inset-0 bg-cover bg-center'
+        style={{ backgroundImage: `url(${bgUrl})` }}
+      />
+      <div className='absolute inset-0 bg-black/20' />
+      <div className='relative flex min-h-screen items-center justify-center px-6 py-10'>
+        <Card className='w-full max-w-xl border border-pearl/80 bg-white/90 shadow-xl'>
+          <div className='space-y-6 text-center'>
+            <Text
+              size='2'
+              weight='medium'
+              className='tracking-[0.35em] text-gray-500 uppercase'
+            >
+              Welcome
+            </Text>
+            <Heading size='8' className='text-[#F37F64] mb-4'>
+              Rafiki Admin
+            </Heading>
+            <Text as='p' size='3' color='gray' className='mt-6'>
+              Configure your API credentials to start managing tenants, assets,
+              and wallet addresses.
+            </Text>
+            <div className='pt-2'>
               <ApiCredentialsForm
                 showClearCredentials={
                   hasCredentials && !defaultTenantId && !defaultApiSecret
@@ -69,12 +75,7 @@ export default function Index() {
               />
             </div>
           </div>
-          <p>
-            <a href='https://rafiki.dev' className='font-semibold'>
-              https://rafiki.dev
-            </a>
-          </p>
-        </div>
+        </Card>
       </div>
     </div>
   )
