@@ -19,26 +19,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
-
-      # --- DEBUG: tool versions ---
-      - name: Debug Prettier + Node versions
-        run: |
-          node --version
-          pnpm --version
-          pnpm exec prettier --version
-
-      # --- DEBUG: show prettier config resolution ---
-      - name: Debug Prettier config
-        run: |
-          pnpm exec prettier --debug-check packages/documentation/src/content/docs/admin/admin-user-guide.mdx
-
-      # --- DEBUG: show actual diff ---
-      - name: Debug Prettier diff
-        run: |
-          pnpm exec prettier packages/documentation/src/content/docs/admin/admin-user-guide.mdx > /tmp/prettier.out
-          diff -u packages/documentation/src/content/docs/admin/admin-user-guide.mdx /tmp/prettier.out || true
-
-
       - run: pnpm checks
 
   backend:
