@@ -32,7 +32,7 @@ import {
 } from '../../wallet_address/service'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
-import { Interval } from 'luxon'
+import { DateTime, Interval } from 'luxon'
 import { knex } from 'knex'
 import { AccountAlreadyExistsError } from '../../../accounting/errors'
 import { PaymentMethodHandlerService } from '../../../payment-method/handler/service'
@@ -46,8 +46,17 @@ import { IAppConfig } from '../../../config/app'
 import { AssetService } from '../../../asset/service'
 import { Span, trace } from '@opentelemetry/api'
 import { FeeService } from '../../../fee/service'
+import { OutgoingPaymentGrantSpentAmounts } from './model'
+import { v4 as uuid } from 'uuid'
 import { OutgoingPaymentCardDetails } from './card/model'
 import { encryptDbData } from '../../../shared/utils'
+
+const DEFAULT_GRANT_LOCK_TIMEOUT_MS = 5000
+
+export interface GrantSpentAmounts {
+  spentDebitAmount: Amount | null
+  spentReceiveAmount: Amount | null
+}
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
@@ -62,6 +71,10 @@ export interface OutgoingPaymentService
     options: FundOutgoingPaymentOptions
   ): Promise<OutgoingPayment | FundingError>
   processNext(): Promise<string | undefined>
+  getGrantSpentAmounts(options: {
+    grantId: string
+    limits?: Limits
+  }): Promise<GrantSpentAmounts>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -91,7 +104,8 @@ export async function createOutgoingPaymentService(
     cancel: (options) => cancelOutgoingPayment(deps, options),
     fund: (options) => fundPayment(deps, options),
     processNext: () => worker.processPendingPayment(deps),
-    getWalletAddressPage: (options) => getWalletAddressPage(deps, options)
+    getWalletAddressPage: (options) => getWalletAddressPage(deps, options),
+    getGrantSpentAmounts: (options) => getGrantSpentAmounts(deps, options)
   }
 }
 
@@ -272,6 +286,9 @@ async function cancelOutgoingPayment(
     payment.walletAddress = await deps.walletAddressService.get(
       payment.walletAddressId
     )
+    if (payment.grantId) {
+      await revertGrantSpentAmounts({ ...deps, knex: trx }, payment)
+    }
 
     if (payment.initiatedBy === OutgoingPaymentInitiationReason.Card) {
       await sendWebhookEvent(
@@ -376,21 +393,18 @@ async function createOutgoingPayment(
         }
 
         const payment = await OutgoingPayment.transaction(async (trx) => {
+          let existingGrant: OutgoingPaymentGrant | undefined
+
           if (grantId) {
-            const stopTimerGrant = deps.telemetry.startTimer(
-              'outgoing_payment_service_insertgrant_time_ms',
-              {
-                callName: 'OutgoingPaymentGrantModel:insert',
-                description: 'Time to insert grant in outgoing payment'
-              }
-            )
-            await OutgoingPaymentGrant.query(trx)
-              .insert({
-                id: grantId
-              })
-              .onConflict('id')
-              .ignore()
-            stopTimerGrant()
+            existingGrant =
+              await OutgoingPaymentGrant.query(trx).findById(grantId)
+
+            if (!existingGrant) {
+              await OutgoingPaymentGrant.query(trx)
+                .insert({ id: grantId })
+                .onConflict('id')
+                .ignore()
+            }
           }
           const stopTimerInsertPayment = deps.telemetry.startTimer(
             'outgoing_payment_service_insertpayment_time_ms',
@@ -417,6 +431,7 @@ async function createOutgoingPayment(
             metadata: options.metadata,
             state: OutgoingPaymentState.Funding,
             grantId,
+            createdAt: new Date(),
             initiatedBy
           })
 
@@ -455,14 +470,19 @@ async function createOutgoingPayment(
                 description: 'Time to validate a grant'
               }
             )
+
             const isValid = await validateGrantAndAddSpentAmountsToPayment(
               deps,
-              payment,
-              options.grant,
-              trx,
-              options.callback,
-              options.grantLockTimeoutMs
+              {
+                payment,
+                grant: options.grant,
+                trx,
+                callback: options.callback,
+                isExistingGrant: Boolean(existingGrant),
+                grantLockTimeoutMs: options.grantLockTimeoutMs
+              }
             )
+
             stopTimerValidateGrant()
             if (!isValid) {
               throw OutgoingPaymentError.InsufficientGrant
@@ -551,20 +571,10 @@ function validateAccessLimits(
   }
 }
 
-function validatePaymentInterval({
-  limits,
-  payment
-}: {
-  limits: PaymentLimits
-  payment: OutgoingPayment
-}): boolean {
-  return (
-    !limits.paymentInterval ||
-    (limits.paymentInterval.start !== null &&
-      limits.paymentInterval.start.toMillis() <= payment.createdAt.getTime() &&
-      limits.paymentInterval.end !== null &&
-      payment.createdAt.getTime() < limits.paymentInterval.end.toMillis())
-  )
+export enum IntervalStatus {
+  Previous = 'previous',
+  Current = 'current',
+  Next = 'next'
 }
 
 function validateAmountAssets(
@@ -588,19 +598,148 @@ function validateAmountAssets(
   )
 }
 
-interface PaymentLimits extends Limits {
+export interface PaymentLimits extends Limits {
   paymentInterval?: Interval
 }
 
-// "payment" is locked by the "deps.knex" transaction.
+/**
+ * Legacy path: calculates spent amounts from historical payments.
+ * Used when a grant exists with outgoing payments made against it, but there are no
+ * spent amounts records yet (e.g., during migration/deployment).
+ */
+export async function calculateLegacyGrantSpentAmounts(
+  deps: ServiceDependencies,
+  args: {
+    grantId: string
+    trx: TransactionOrKnex
+    paymentLimits?: PaymentLimits
+    excludePaymentId?: string
+  }
+): Promise<{
+  grantTotalDebitAmountValue: bigint
+  grantTotalReceiveAmountValue: bigint
+  intervalDebitAmountValue: bigint | null
+  intervalReceiveAmountValue: bigint | null
+  latestPayment: {
+    id: string
+    debitAmountValue: bigint
+    debitAmountCode: string
+    debitAmountScale: number
+    receiveAmountValue: bigint
+    receiveAmountCode: string
+    receiveAmountScale: number
+    state: OutgoingPaymentState
+  } | null
+}> {
+  const { grantId, trx, paymentLimits, excludePaymentId } = args
+
+  const hasInterval = !!paymentLimits?.paymentInterval
+
+  let grantTotalDebitAmountValue = 0n
+  let grantTotalReceiveAmountValue = 0n
+  let intervalDebitAmountValue: bigint | null = hasInterval ? 0n : null
+  let intervalReceiveAmountValue: bigint | null = hasInterval ? 0n : null
+
+  const query = OutgoingPayment.query(trx)
+    .where({ grantId })
+    .withGraphFetched('quote')
+    .orderBy('createdAt', 'asc')
+
+  if (excludePaymentId) {
+    query.andWhereNot({ id: excludePaymentId })
+  }
+
+  const grantPayments = await query
+
+  for (const grantPayment of grantPayments) {
+    const asset = await deps.assetService.get(grantPayment.quote.assetId)
+    if (asset) grantPayment.quote.asset = asset
+
+    const addToInterval =
+      paymentLimits?.paymentInterval &&
+      paymentLimits.paymentInterval.contains(
+        DateTime.fromJSDate(grantPayment.createdAt)
+      )
+
+    if (grantPayment.failed) {
+      const totalSent = validateSentAmount(
+        deps,
+        grantPayment,
+        await deps.accountingService.getTotalSent(grantPayment.id)
+      )
+
+      if (totalSent === BigInt(0)) {
+        continue
+      }
+
+      grantTotalDebitAmountValue += totalSent
+      // Estimate delivered amount of failed payment
+      const estimatedReceived =
+        (grantPayment.receiveAmount.value * totalSent) /
+        grantPayment.debitAmount.value
+      grantTotalReceiveAmountValue += estimatedReceived
+
+      if (addToInterval) {
+        intervalDebitAmountValue = (intervalDebitAmountValue ?? 0n) + totalSent
+        intervalReceiveAmountValue =
+          (intervalReceiveAmountValue ?? 0n) + estimatedReceived
+      }
+    } else {
+      grantTotalDebitAmountValue += grantPayment.debitAmount.value
+      grantTotalReceiveAmountValue += grantPayment.receiveAmount.value
+
+      if (addToInterval) {
+        intervalDebitAmountValue =
+          (intervalDebitAmountValue ?? 0n) + grantPayment.debitAmount.value
+        intervalReceiveAmountValue =
+          (intervalReceiveAmountValue ?? 0n) + grantPayment.receiveAmount.value
+      }
+    }
+  }
+
+  const latestPayment =
+    grantPayments.length > 0 ? grantPayments[grantPayments.length - 1] : null
+
+  return {
+    grantTotalDebitAmountValue,
+    grantTotalReceiveAmountValue,
+    intervalDebitAmountValue,
+    intervalReceiveAmountValue,
+    latestPayment: latestPayment
+      ? {
+          id: latestPayment.id,
+          debitAmountValue: latestPayment.debitAmount.value,
+          debitAmountCode: latestPayment.debitAmount.assetCode,
+          debitAmountScale: latestPayment.debitAmount.assetScale,
+          receiveAmountValue: latestPayment.receiveAmount.value,
+          receiveAmountCode: latestPayment.receiveAmount.assetCode,
+          receiveAmountScale: latestPayment.receiveAmount.assetScale,
+          state: latestPayment.state
+        }
+      : null
+  }
+}
+
 async function validateGrantAndAddSpentAmountsToPayment(
   deps: ServiceDependencies,
-  payment: OutgoingPayment,
-  grant: Grant,
-  trx: TransactionOrKnex,
-  callback?: (f: unknown) => NodeJS.Timeout,
-  grantLockTimeoutMs: number = 5000
+  args: {
+    payment: OutgoingPayment
+    grant: Grant
+    trx: TransactionOrKnex
+    callback?: (f: unknown) => NodeJS.Timeout
+    isExistingGrant: boolean
+    grantLockTimeoutMs?: number
+  }
 ): Promise<boolean> {
+  const {
+    payment,
+    grant,
+    trx,
+    callback,
+    isExistingGrant,
+    grantLockTimeoutMs = DEFAULT_GRANT_LOCK_TIMEOUT_MS
+  } = args
+
   if (!grant.limits) {
     return true
   }
@@ -622,84 +761,200 @@ async function validateGrantAndAddSpentAmountsToPayment(
     return false
   }
 
-  await OutgoingPaymentGrant.query(trx || deps.knex)
+  // Lock the grant record
+  await OutgoingPaymentGrant.query(trx)
     .where('id', grant.id)
     .forNoKeyUpdate()
     .timeout(grantLockTimeoutMs)
 
   if (callback) await new Promise(callback)
 
-  const grantPayments = await OutgoingPayment.query(trx || deps.knex)
-    .where({
-      grantId: grant.id
-    })
-    .andWhereNot({
-      id: payment.id
-    })
-    .withGraphFetched('quote')
+  // Get the most recent spent amounts record
+  const latestSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(trx)
+    .where('grantId', grant.id)
+    .orderBy('createdAt', 'desc')
+    .limit(1)
+    .first()
 
-  if (grantPayments.length === 0) {
-    return true
-  }
-
-  const amounts = {
-    sent: {
-      assetCode: payment.asset.code,
-      assetScale: payment.asset.scale,
-      value: BigInt(0)
-    },
-    received: {
-      assetCode: payment.receiveAmount.assetCode,
-      assetScale: payment.receiveAmount.assetScale,
-      value: BigInt(0)
-    }
-  }
-  for (const grantPayment of grantPayments) {
-    const asset = await deps.assetService.get(grantPayment.quote.assetId)
-    if (asset) grantPayment.quote.asset = asset
-
-    if (
-      validatePaymentInterval({
-        limits: paymentLimits,
-        payment: grantPayment
-      })
-    ) {
-      if (grantPayment.failed) {
-        const totalSent = validateSentAmount(
-          deps,
-          payment,
-          await deps.accountingService.getTotalSent(grantPayment.id)
-        )
-
-        if (totalSent === BigInt(0)) {
-          continue
-        }
-        amounts.sent.value += totalSent
-        // Estimate delivered amount of failed payment
-        amounts.received.value +=
-          (grantPayment.receiveAmount.value * totalSent) /
-          grantPayment.debitAmount.value
-      } else {
-        amounts.sent.value += grantPayment.debitAmount.value
-        amounts.received.value += grantPayment.receiveAmount.value
-      }
-    }
-  }
   if (
-    (paymentLimits.debitAmount &&
-      paymentLimits.debitAmount.value - amounts.sent.value <
-        payment.debitAmount.value) ||
-    (paymentLimits.receiveAmount &&
-      paymentLimits.receiveAmount.value - amounts.received.value <
-        payment.receiveAmount.value)
+    paymentLimits.paymentInterval &&
+    (!paymentLimits.paymentInterval.start || !paymentLimits.paymentInterval.end)
   ) {
-    payment.grantSpentDebitAmount = amounts.sent
-    payment.grantSpentReceiveAmount = amounts.received
-    return false
+    deps.logger.error(
+      {
+        grantId: grant.id,
+        paymentId: payment.id,
+        intervalStart: paymentLimits.paymentInterval.start?.toJSDate(),
+        intervalEnd: paymentLimits.paymentInterval.end?.toJSDate()
+      },
+      'Payment interval missing start or end'
+    )
+    throw OutgoingPaymentError.InvalidInterval
   }
-  payment.grantSpentDebitAmount = amounts.sent
-  payment.grantSpentReceiveAmount = amounts.received
+
+  // check if payment interval is before latest spent amounts interval
+  if (
+    paymentLimits.paymentInterval &&
+    latestSpentAmounts?.intervalStart &&
+    latestSpentAmounts?.intervalEnd &&
+    paymentLimits.paymentInterval.end &&
+    paymentLimits.paymentInterval.end.toJSDate() <=
+      latestSpentAmounts.intervalStart
+  ) {
+    deps.logger.error(
+      {
+        grantId: grant.id,
+        paymentId: payment.id,
+        paymentIntervalStart: paymentLimits.paymentInterval.start?.toJSDate(),
+        paymentIntervalEnd: paymentLimits.paymentInterval.end.toJSDate(),
+        latestIntervalStart: latestSpentAmounts.intervalStart,
+        latestIntervalEnd: latestSpentAmounts.intervalEnd
+      },
+      'Payment interval is before latest spent amounts interval'
+    )
+    throw OutgoingPaymentError.InvalidInterval
+  }
+
+  const outgoingPaymentGrantSpentAmounts =
+    OutgoingPaymentGrantSpentAmounts.create({
+      id: uuid(),
+      grantId: grant.id,
+      outgoingPaymentId: payment.id,
+      receiveAmountScale: payment.receiveAmount.assetScale,
+      receiveAmountCode: payment.receiveAmount.assetCode,
+      paymentReceiveAmountValue: payment.receiveAmount.value,
+      intervalReceiveAmountValue: null,
+      grantTotalReceiveAmountValue: 0n,
+      debitAmountScale: payment.debitAmount.assetScale,
+      debitAmountCode: payment.debitAmount.assetCode,
+      paymentDebitAmountValue: payment.debitAmount.value,
+      intervalDebitAmountValue: null,
+      grantTotalDebitAmountValue: 0n,
+      paymentState: payment.state,
+      intervalStart: paymentLimits.paymentInterval?.start?.toJSDate() || null,
+      intervalEnd: paymentLimits.paymentInterval?.end?.toJSDate() || null,
+      createdAt: new Date()
+    })
+
+  const hasInterval = !!paymentLimits.paymentInterval
+
+  if (isExistingGrant && !latestSpentAmounts) {
+    // Legacy path: calculate spent amounts from historical payments
+    const legacyAmounts = await calculateLegacyGrantSpentAmounts(deps, {
+      grantId: grant.id,
+      trx,
+      paymentLimits,
+      excludePaymentId: payment.id
+    })
+
+    outgoingPaymentGrantSpentAmounts.grantTotalDebitAmountValue =
+      legacyAmounts.grantTotalDebitAmountValue
+    outgoingPaymentGrantSpentAmounts.grantTotalReceiveAmountValue =
+      legacyAmounts.grantTotalReceiveAmountValue
+    outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue =
+      legacyAmounts.intervalDebitAmountValue
+    outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue =
+      legacyAmounts.intervalReceiveAmountValue
+  } else {
+    // detect if we need to restart interval sum at 0 or continue from last
+    const isInIntervalAndFirstPayment = hasInterval
+      ? !latestSpentAmounts ||
+        (latestSpentAmounts.intervalEnd &&
+          paymentLimits.paymentInterval?.start &&
+          latestSpentAmounts.intervalEnd <=
+            paymentLimits.paymentInterval.start.toJSDate())
+      : false
+
+    outgoingPaymentGrantSpentAmounts.grantTotalDebitAmountValue =
+      latestSpentAmounts?.grantTotalDebitAmountValue ?? 0n
+    outgoingPaymentGrantSpentAmounts.grantTotalReceiveAmountValue =
+      latestSpentAmounts?.grantTotalReceiveAmountValue ?? 0n
+
+    if (hasInterval) {
+      outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue =
+        isInIntervalAndFirstPayment
+          ? 0n
+          : latestSpentAmounts?.intervalDebitAmountValue ?? 0n
+      outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue =
+        isInIntervalAndFirstPayment
+          ? 0n
+          : latestSpentAmounts?.intervalReceiveAmountValue ?? 0n
+    }
+  }
+
+  if (hasInterval) {
+    const debit = outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue
+    const receive = outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue
+
+    if (debit === null || receive === null) {
+      throw OutgoingPaymentError.InvalidInterval
+    }
+
+    setGrantSpentAmounts(payment, debit, receive)
+
+    if (exceedsGrantLimits(payment, paymentLimits, debit, receive)) {
+      return false
+    }
+
+    // add current payment to interval
+    outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue =
+      debit + payment.debitAmount.value
+    outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue =
+      receive + payment.receiveAmount.value
+  } else {
+    const debit = outgoingPaymentGrantSpentAmounts.grantTotalDebitAmountValue
+    const receive =
+      outgoingPaymentGrantSpentAmounts.grantTotalReceiveAmountValue
+
+    setGrantSpentAmounts(payment, debit, receive)
+
+    if (exceedsGrantLimits(payment, paymentLimits, debit, receive)) {
+      return false
+    }
+  }
+
+  // update totals
+  outgoingPaymentGrantSpentAmounts.grantTotalDebitAmountValue +=
+    payment.debitAmount.value
+  outgoingPaymentGrantSpentAmounts.grantTotalReceiveAmountValue +=
+    payment.receiveAmount.value
+
+  await outgoingPaymentGrantSpentAmounts.$query(trx).insert()
+
   return true
+}
+
+function setGrantSpentAmounts(
+  payment: OutgoingPayment,
+  spentValue: bigint,
+  spentReceive: bigint
+): void {
+  payment.grantSpentDebitAmount = {
+    value: spentValue,
+    assetCode: payment.debitAmount.assetCode,
+    assetScale: payment.debitAmount.assetScale
+  }
+  payment.grantSpentReceiveAmount = {
+    value: spentReceive,
+    assetCode: payment.receiveAmount.assetCode,
+    assetScale: payment.receiveAmount.assetScale
+  }
+}
+
+function exceedsGrantLimits(
+  payment: OutgoingPayment,
+  limits: PaymentLimits,
+  spentValue: bigint,
+  spentReceive: bigint
+): boolean {
+  return (
+    (limits.debitAmount &&
+      limits.debitAmount.value - spentValue < payment.debitAmount.value) ||
+    (limits.receiveAmount &&
+      limits.receiveAmount.value - spentReceive <
+        payment.receiveAmount.value) ||
+    false
+  )
 }
 
 export interface FundOutgoingPaymentOptions {
@@ -865,4 +1120,458 @@ function validateSentAmount(
     errorMessage
   )
   throw new Error(errorMessage)
+}
+
+/**
+ * Gets the latest spent amounts record by payment.
+ */
+async function getLatestPaymentSpentAmounts(
+  deps: ServiceDependencies,
+  id: string
+): Promise<OutgoingPaymentGrantSpentAmounts | undefined> {
+  return await OutgoingPaymentGrantSpentAmounts.query(deps.knex)
+    .where('outgoingPaymentId', id)
+    .orderBy('createdAt', 'desc')
+    .first()
+}
+
+/**
+ * Gets the latest spent amounts records by grantId and payment interval if needed.
+ */
+async function getRemainingGrantSpentAmounts(
+  deps: ServiceDependencies,
+  grantId: string,
+  latestPaymentSpentAmounts: OutgoingPaymentGrantSpentAmounts
+): Promise<{
+  latestGrantSpentAmounts: OutgoingPaymentGrantSpentAmounts
+  latestIntervalSpentAmounts: OutgoingPaymentGrantSpentAmounts | null
+} | null> {
+  const latestGrantSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+    deps.knex
+  )
+    .where('grantId', grantId)
+    .orderBy('createdAt', 'desc')
+    .first()
+
+  if (!latestGrantSpentAmounts) return null
+
+  // For interval amounts, we need the latest record from this payment's interval
+  // (not necessarily the latest overall, nor this specific payment's spent amount record)
+  let latestIntervalSpentAmounts: OutgoingPaymentGrantSpentAmounts | null = null
+
+  if (
+    latestPaymentSpentAmounts.intervalStart &&
+    latestPaymentSpentAmounts.intervalEnd
+  ) {
+    if (
+      latestGrantSpentAmounts.intervalStart?.getTime() !==
+        latestPaymentSpentAmounts.intervalStart.getTime() ||
+      latestGrantSpentAmounts.intervalEnd?.getTime() !==
+        latestPaymentSpentAmounts.intervalEnd.getTime()
+    ) {
+      latestIntervalSpentAmounts =
+        (await OutgoingPaymentGrantSpentAmounts.query(deps.knex)
+          .where('grantId', grantId)
+          .where('intervalStart', latestPaymentSpentAmounts.intervalStart)
+          .where('intervalEnd', latestPaymentSpentAmounts.intervalEnd)
+          .orderBy('createdAt', 'desc')
+          .first()) ?? null
+    } else {
+      latestIntervalSpentAmounts = latestGrantSpentAmounts
+    }
+  }
+
+  return { latestGrantSpentAmounts, latestIntervalSpentAmounts }
+}
+
+/**
+ * Calculates new interval amounts based on previous interval spent amounts.
+ */
+function calculateIntervalAmounts(
+  latestPaymentSpentAmounts: OutgoingPaymentGrantSpentAmounts,
+  latestIntervalSpentAmounts: OutgoingPaymentGrantSpentAmounts | null,
+  debitAmountDifference: bigint,
+  receiveAmountDifference: bigint
+): { debit: bigint | null; receive: bigint | null } {
+  if (
+    latestPaymentSpentAmounts.intervalStart === null ||
+    latestPaymentSpentAmounts.intervalEnd === null ||
+    !latestIntervalSpentAmounts
+  ) {
+    return { debit: null, receive: null }
+  }
+
+  const newDebit =
+    (latestIntervalSpentAmounts.intervalDebitAmountValue ?? 0n) -
+    debitAmountDifference
+  const newReceive =
+    (latestIntervalSpentAmounts.intervalReceiveAmountValue ?? 0n) -
+    receiveAmountDifference
+
+  return {
+    debit: newDebit < 0n ? 0n : newDebit,
+    receive: newReceive < 0n ? 0n : newReceive
+  }
+}
+
+/**
+ * Compares the final settled amounts with the amounts on hold
+ * and inserts a new OutgoingPaymentGrantSpentAmount record if needed.
+ */
+export async function updateGrantSpentAmounts(
+  deps: ServiceDependencies,
+  payment: OutgoingPayment,
+  finalAmounts: { debit: bigint; receive: bigint }
+) {
+  if (!payment.grantId) return
+
+  const latestPaymentSpentAmounts = await getLatestPaymentSpentAmounts(
+    deps,
+    payment.id
+  )
+  if (!latestPaymentSpentAmounts) {
+    deps.logger.error(
+      { payment, latestPaymentSpentAmounts },
+      'Could not find grant spent amounts for payment when updating spent amounts'
+    )
+    deps.telemetry.incrementCounter(
+      'grant_spent_amounts_missing_record_total',
+      1,
+      {
+        callName: 'updateGrantSpentAmounts'
+      }
+    )
+    return
+  }
+
+  const reservedReceiveAmount =
+    latestPaymentSpentAmounts.paymentReceiveAmountValue
+  const receiveAmountDifference = reservedReceiveAmount - finalAmounts.receive
+
+  if (receiveAmountDifference === 0n) return
+
+  const records = await getRemainingGrantSpentAmounts(
+    deps,
+    payment.grantId,
+    latestPaymentSpentAmounts
+  )
+  if (!records) {
+    deps.logger.error(
+      { payment, latestPaymentSpentAmounts },
+      'Could not find grant spent amounts for grant when updating spent amounts'
+    )
+    deps.telemetry.incrementCounter(
+      'grant_spent_amounts_missing_record_total',
+      1,
+      {
+        callName: 'updateGrantSpentAmounts'
+      }
+    )
+    return
+  }
+
+  const { latestGrantSpentAmounts, latestIntervalSpentAmounts } = records
+
+  const grantTotalReceiveDiff =
+    latestGrantSpentAmounts.grantTotalReceiveAmountValue -
+    receiveAmountDifference
+  const newGrantTotalReceiveAmountValue =
+    grantTotalReceiveDiff < 0n ? 0n : grantTotalReceiveDiff
+
+  const {
+    debit: newIntervalDebitAmountValue,
+    receive: newIntervalReceiveAmountValue
+  } = calculateIntervalAmounts(
+    latestPaymentSpentAmounts,
+    latestIntervalSpentAmounts,
+    0n,
+    receiveAmountDifference
+  )
+
+  await OutgoingPaymentGrantSpentAmounts.query(deps.knex).insert({
+    id: uuid(),
+    grantId: latestPaymentSpentAmounts.grantId,
+    outgoingPaymentId: payment.id,
+    paymentDebitAmountValue: finalAmounts.debit,
+    debitAmountScale: latestPaymentSpentAmounts.debitAmountScale,
+    debitAmountCode: latestPaymentSpentAmounts.debitAmountCode,
+    intervalDebitAmountValue: newIntervalDebitAmountValue,
+    grantTotalDebitAmountValue:
+      latestGrantSpentAmounts.grantTotalDebitAmountValue,
+    paymentReceiveAmountValue: finalAmounts.receive,
+    receiveAmountScale: latestPaymentSpentAmounts.receiveAmountScale,
+    receiveAmountCode: latestPaymentSpentAmounts.receiveAmountCode,
+    intervalReceiveAmountValue: newIntervalReceiveAmountValue,
+    grantTotalReceiveAmountValue: newGrantTotalReceiveAmountValue,
+    intervalStart: latestPaymentSpentAmounts.intervalStart,
+    intervalEnd: latestPaymentSpentAmounts.intervalEnd,
+    createdAt: new Date(),
+    paymentState: OutgoingPaymentState.Completed
+  })
+}
+
+/**
+ * Gets the spent amounts for a grant.
+ * The spent amounts are scoped to current interval, if any, else they are
+ * for the total lifetime of the grant.
+ */
+async function getGrantSpentAmounts(
+  deps: ServiceDependencies,
+  options: { grantId: string; limits?: Limits }
+): Promise<GrantSpentAmounts> {
+  const { grantId, limits } = options
+  const currentInterval = parseIntervalSafely(deps, limits?.interval)
+  if (limits?.interval && !currentInterval) {
+    return { spentDebitAmount: null, spentReceiveAmount: null }
+  }
+
+  const latestRecord = await OutgoingPaymentGrantSpentAmounts.query(deps.knex)
+    .where('grantId', grantId)
+    .orderBy('createdAt', 'desc')
+    .first()
+
+  if (latestRecord) {
+    // No interval requested - return totals
+    if (!currentInterval) {
+      return {
+        spentDebitAmount: {
+          value: latestRecord.grantTotalDebitAmountValue,
+          assetCode: latestRecord.debitAmountCode,
+          assetScale: latestRecord.debitAmountScale
+        },
+        spentReceiveAmount: {
+          value: latestRecord.grantTotalReceiveAmountValue,
+          assetCode: latestRecord.receiveAmountCode,
+          assetScale: latestRecord.receiveAmountScale
+        }
+      }
+    }
+
+    // Check if record matches current interval
+    if (latestRecord.intervalStart && latestRecord.intervalEnd) {
+      const recordInterval = Interval.fromDateTimes(
+        DateTime.fromJSDate(latestRecord.intervalStart),
+        DateTime.fromJSDate(latestRecord.intervalEnd)
+      )
+      if (recordInterval.equals(currentInterval)) {
+        return {
+          spentDebitAmount: {
+            value: latestRecord.intervalDebitAmountValue ?? BigInt(0),
+            assetCode: latestRecord.debitAmountCode,
+            assetScale: latestRecord.debitAmountScale
+          },
+          spentReceiveAmount: {
+            value: latestRecord.intervalReceiveAmountValue ?? BigInt(0),
+            assetCode: latestRecord.receiveAmountCode,
+            assetScale: latestRecord.receiveAmountScale
+          }
+        }
+      }
+    } else {
+      deps.logger.warn(
+        {
+          intervalStart: latestRecord.intervalStart,
+          intervalEnd: latestRecord.intervalEnd
+        },
+        'Grant spent amount interval missing start or end'
+      )
+    }
+
+    // New interval - return zeros
+    return {
+      spentDebitAmount: {
+        value: BigInt(0),
+        assetCode: latestRecord.debitAmountCode,
+        assetScale: latestRecord.debitAmountScale
+      },
+      spentReceiveAmount: {
+        value: BigInt(0),
+        assetCode: latestRecord.receiveAmountCode,
+        assetScale: latestRecord.receiveAmountScale
+      }
+    }
+  }
+
+  // No spent amounts record - check for legacy grant
+  const isExistingGrant = !!(await OutgoingPaymentGrant.query(
+    deps.knex
+  ).findById(grantId))
+  if (!isExistingGrant) {
+    return { spentDebitAmount: null, spentReceiveAmount: null }
+  }
+
+  // Legacy path
+  const paymentLimits = currentInterval
+    ? { ...limits, paymentInterval: currentInterval }
+    : undefined
+
+  const legacy = await calculateLegacyGrantSpentAmounts(deps, {
+    grantId,
+    trx: deps.knex,
+    paymentLimits
+  })
+
+  if (!legacy.latestPayment) {
+    deps.logger.warn(
+      { grantId },
+      'Expected to find existing payments for grant'
+    )
+    return { spentDebitAmount: null, spentReceiveAmount: null }
+  }
+
+  // Insert the legacy spent amounts as a new record to migrate the data
+  await OutgoingPaymentGrantSpentAmounts.query(deps.knex).insert({
+    id: uuid(),
+    grantId,
+    outgoingPaymentId: legacy.latestPayment.id,
+    paymentDebitAmountValue: legacy.latestPayment.debitAmountValue,
+    debitAmountScale: legacy.latestPayment.debitAmountScale,
+    debitAmountCode: legacy.latestPayment.debitAmountCode,
+    intervalDebitAmountValue: legacy.intervalDebitAmountValue,
+    grantTotalDebitAmountValue: legacy.grantTotalDebitAmountValue,
+    paymentReceiveAmountValue: legacy.latestPayment.receiveAmountValue,
+    receiveAmountScale: legacy.latestPayment.receiveAmountScale,
+    receiveAmountCode: legacy.latestPayment.receiveAmountCode,
+    intervalReceiveAmountValue: legacy.intervalReceiveAmountValue,
+    grantTotalReceiveAmountValue: legacy.grantTotalReceiveAmountValue,
+    intervalStart: currentInterval?.start?.toJSDate() ?? null,
+    intervalEnd: currentInterval?.end?.toJSDate() ?? null,
+    createdAt: new Date(),
+    paymentState: legacy.latestPayment.state
+  })
+
+  return {
+    spentDebitAmount: {
+      value: currentInterval
+        ? legacy.intervalDebitAmountValue ?? BigInt(0)
+        : legacy.grantTotalDebitAmountValue,
+      assetCode: legacy.latestPayment.debitAmountCode,
+      assetScale: legacy.latestPayment.debitAmountScale
+    },
+    spentReceiveAmount: {
+      value: currentInterval
+        ? legacy.intervalReceiveAmountValue ?? BigInt(0)
+        : legacy.grantTotalReceiveAmountValue,
+      assetCode: legacy.latestPayment.receiveAmountCode,
+      assetScale: legacy.latestPayment.receiveAmountScale
+    }
+  }
+}
+
+function parseIntervalSafely(
+  deps: ServiceDependencies,
+  intervalStr?: string
+): Interval | null {
+  if (!intervalStr) return null
+
+  try {
+    const interval = getInterval(intervalStr, new Date())
+    if (!interval?.start || !interval?.end) {
+      deps.logger.warn(
+        { interval: intervalStr },
+        'Interval missing start or end'
+      )
+      return null
+    }
+    return interval
+  } catch (err) {
+    deps.logger.warn({ err, interval: intervalStr }, 'Could not parse interval')
+    return null
+  }
+}
+
+/**
+ * Reverts the grant spent amounts when a payment fails.
+ * Inserts a spent amount record with the reserved amounts adjusted out.
+ */
+export async function revertGrantSpentAmounts(
+  deps: ServiceDependencies,
+  payment: OutgoingPayment
+): Promise<void> {
+  if (!payment.grantId) return
+
+  const latestPaymentSpentAmounts = await getLatestPaymentSpentAmounts(
+    deps,
+    payment.id
+  )
+  if (!latestPaymentSpentAmounts) {
+    deps.logger.error(
+      { payment },
+      'Could not find grant spent amounts by payment when reverting spent amounts'
+    )
+    deps.telemetry.incrementCounter(
+      'grant_spent_amounts_missing_record_total',
+      1,
+      {
+        callName: 'revertGrantSpentAmounts'
+      }
+    )
+    return
+  }
+
+  const records = await getRemainingGrantSpentAmounts(
+    deps,
+    payment.grantId,
+    latestPaymentSpentAmounts
+  )
+  if (!records) {
+    deps.logger.error(
+      { payment, latestPaymentSpentAmounts },
+      'Could not find grant spent amounts for grant when reverting spent amounts'
+    )
+    deps.telemetry.incrementCounter(
+      'grant_spent_amounts_missing_record_total',
+      1,
+      {
+        callName: 'revertGrantSpentAmounts'
+      }
+    )
+    return
+  }
+
+  const { latestGrantSpentAmounts, latestIntervalSpentAmounts } = records
+
+  const reservedDebitAmount = latestPaymentSpentAmounts.paymentDebitAmountValue
+  const reservedReceiveAmount =
+    latestPaymentSpentAmounts.paymentReceiveAmountValue
+
+  const grantTotalDebitDiff =
+    latestGrantSpentAmounts.grantTotalDebitAmountValue - reservedDebitAmount
+  const newGrantTotalDebitAmountValue =
+    grantTotalDebitDiff < 0n ? 0n : grantTotalDebitDiff
+
+  const grantTotalReceiveDiff =
+    latestGrantSpentAmounts.grantTotalReceiveAmountValue - reservedReceiveAmount
+  const newGrantTotalReceiveAmountValue =
+    grantTotalReceiveDiff < 0n ? 0n : grantTotalReceiveDiff
+
+  const {
+    debit: newIntervalDebitAmountValue,
+    receive: newIntervalReceiveAmountValue
+  } = calculateIntervalAmounts(
+    latestPaymentSpentAmounts,
+    latestIntervalSpentAmounts,
+    reservedDebitAmount,
+    reservedReceiveAmount
+  )
+
+  await OutgoingPaymentGrantSpentAmounts.query(deps.knex).insert({
+    id: uuid(),
+    grantId: latestPaymentSpentAmounts.grantId,
+    outgoingPaymentId: payment.id,
+    paymentDebitAmountValue: BigInt(0),
+    debitAmountScale: latestPaymentSpentAmounts.debitAmountScale,
+    debitAmountCode: latestPaymentSpentAmounts.debitAmountCode,
+    intervalDebitAmountValue: newIntervalDebitAmountValue,
+    grantTotalDebitAmountValue: newGrantTotalDebitAmountValue,
+    paymentReceiveAmountValue: BigInt(0),
+    receiveAmountScale: latestPaymentSpentAmounts.receiveAmountScale,
+    receiveAmountCode: latestPaymentSpentAmounts.receiveAmountCode,
+    intervalReceiveAmountValue: newIntervalReceiveAmountValue,
+    grantTotalReceiveAmountValue: newGrantTotalReceiveAmountValue,
+    createdAt: new Date(),
+    paymentState: payment.state,
+    intervalStart: latestPaymentSpentAmounts.intervalStart,
+    intervalEnd: latestPaymentSpentAmounts.intervalEnd
+  })
 }
