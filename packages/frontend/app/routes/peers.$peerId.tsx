@@ -10,16 +10,25 @@ import {
   useFormAction,
   useLoaderData,
   useNavigation,
-  useSubmit
+  useSubmit,
+  Link
 } from '@remix-run/react'
-import { type FormEvent, useRef, useState } from 'react'
+import { type FormEvent, type ReactNode, useRef, useState } from 'react'
 import { z } from 'zod'
-import { DangerZone, PageHeader } from '~/components'
 import {
   ConfirmationDialog,
   type ConfirmationDialogRef
 } from '~/components/ConfirmationDialog'
-import { Button, ErrorPanel, Input, PasswordInput } from '~/components/ui'
+import {
+  Box,
+  Button,
+  Card,
+  Flex,
+  Heading,
+  Text,
+  TextField
+} from '@radix-ui/themes'
+import { renderErrorPanel, renderFieldError } from '~/lib/form-errors'
 import { deletePeer, getPeer, updatePeer } from '~/lib/api/peer.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import {
@@ -30,6 +39,67 @@ import {
 import type { ZodFieldErrors } from '~/shared/types'
 import { formatAmount } from '~/shared/utils'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
+
+type FormFieldProps = {
+  name: string
+  label: string
+  placeholder?: string
+  type?: 'text' | 'email' | 'password' | 'number'
+  error?: string | string[]
+  required?: boolean
+  defaultValue?: string | number
+  value?: string | number
+  disabled?: boolean
+  readOnly?: boolean
+  description?: ReactNode
+}
+
+const FormField = ({
+  name,
+  label,
+  placeholder,
+  type = 'text',
+  error,
+  required,
+  defaultValue,
+  value,
+  disabled,
+  readOnly,
+  description
+}: FormFieldProps) => (
+  <Flex direction='column' gap='1'>
+    <Text
+      asChild
+      size='2'
+      weight='medium'
+      className='tracking-wide text-gray-700'
+    >
+      <label htmlFor={name}>
+        {label}
+        {required ? <span className='text-vermillion'> *</span> : null}
+      </label>
+    </Text>
+    {description ? (
+      <Text size='2' color='gray'>
+        {description}
+      </Text>
+    ) : null}
+    <TextField.Root
+      id={name}
+      name={name}
+      type={type}
+      placeholder={placeholder}
+      required={required}
+      defaultValue={defaultValue}
+      value={value}
+      disabled={disabled}
+      readOnly={readOnly}
+      size='3'
+      className='w-full mt-1'
+    />
+    {renderFieldError(error)}
+  </Flex>
+)
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const cookies = request.headers.get('cookie')
@@ -75,292 +145,299 @@ export default function ViewPeerPage() {
   }
 
   return (
-    <div className='pt-4 flex flex-col space-y-4'>
-      <div className='flex flex-col rounded-md bg-offwhite px-6'>
-        {/* Peer General Info */}
-        <PageHeader>
-          <div>
-            {peer.name ? (
-              <h4>
-                Name:{' '}
-                <span className='text-sm sm:text-base font-semibold'>
-                  {peer.name}
-                </span>
-              </h4>
-            ) : null}
-          </div>
-          <Button aria-label='go back to peers page' to='/peers'>
-            Go to peers page
-          </Button>
-        </PageHeader>
-        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-          {/* Peer General Info*/}
-          <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>General Information</h3>
-            <p className='text-sm'>
-              Created at {new Date(peer.createdAt).toLocaleString()}
-            </p>
-            <ErrorPanel errors={response?.errors.general.message} />
-          </div>
-          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <Form method='post' replace preventScrollReset>
-              <fieldset disabled={currentPageAction}>
-                <div className='w-full p-4 space-y-3'>
-                  <Input type='hidden' name='id' value={peer.id} />
-                  <Input
-                    label='Peer ID'
-                    value={peer.id}
-                    placeholder='Peer ID'
-                    disabled
-                    readOnly
-                  />
-                  <Input
-                    name='name'
-                    label='Name'
-                    defaultValue={peer.name ?? ''}
-                    placeholder='Peer name'
-                    error={response?.errors.general.fieldErrors.name}
-                    description={
-                      <>
-                        The name of the{' '}
-                        <a
-                          className='default-link'
-                          href='https://rafiki.dev/resources/glossary#peer'
-                        >
-                          peer
-                        </a>
-                        .
-                      </>
-                    }
-                  />
-                  <Input
-                    name='staticIlpAddress'
-                    label='Static ILP Address'
-                    defaultValue={peer.staticIlpAddress}
-                    placeholder='ILP Address'
-                    required
-                    error={
-                      response?.errors.general.fieldErrors.staticIlpAddress
-                    }
-                    description={
-                      <>
-                        {"The peer's "}
-                        <a
-                          className='default-link'
-                          href='https://interledger.org/developers/rfcs/ilp-addresses/'
-                        >
-                          address on the Interledger network.
-                        </a>
-                      </>
-                    }
-                  />
-                  <Input
-                    type='number'
-                    name='maxPacketAmount'
-                    defaultValue={
-                      peer.maxPacketAmount ? peer.maxPacketAmount : ''
-                    }
-                    label='Max Packet Amount'
-                    placeholder='Max Packet Amount'
-                    error={response?.errors.general.fieldErrors.maxPacketAmount}
-                    description={
-                      <>
-                        The maximum amount of value that can be sent in a single{' '}
-                        <a
-                          className='default-link'
-                          href='https://interledger.org/developers/rfcs/stream-protocol/#35-packets-and-frames'
-                        >
-                          Interledger STREAM Packet
-                        </a>
-                        .
-                      </>
-                    }
-                  />
-                </div>
-                <div className='flex justify-end p-4'>
-                  <Button
-                    aria-label='save general information'
-                    type='submit'
-                    name='intent'
-                    value='general'
+    <Box p='4'>
+      <Flex direction='column' gap='4'>
+        <Heading size='5'>Peer Details</Heading>
+        {peer.name ? (
+          <Text size='2' color='gray'>
+            Name: {peer.name}
+          </Text>
+        ) : null}
+
+        <Card className='max-w-3xl'>
+          <Flex direction='column' gap='5'>
+            <Flex direction='column' gap='4'>
+              <Flex align='center' justify='between' gap='3' wrap='wrap'>
+                <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                  General Information
+                </Text>
+                <Text size='2' color='gray'>
+                  Created at {new Date(peer.createdAt).toLocaleString()}
+                </Text>
+              </Flex>
+              {renderErrorPanel(response?.errors.general.message)}
+              <Form method='post' replace preventScrollReset>
+                <fieldset disabled={currentPageAction}>
+                  <Flex direction='column' gap='4'>
+                    <input type='hidden' name='id' value={peer.id} />
+                    <FormField
+                      label='Peer ID'
+                      name='peerId'
+                      value={peer.id}
+                      disabled
+                      readOnly
+                    />
+                    <FormField
+                      name='name'
+                      label='Name'
+                      defaultValue={peer.name ?? ''}
+                      placeholder='Peer name'
+                      error={response?.errors.general.fieldErrors.name}
+                      description={
+                        <>
+                          The name of the{' '}
+                          <a
+                            className='default-link'
+                            href='https://rafiki.dev/resources/glossary#peer'
+                          >
+                            peer
+                          </a>
+                          .
+                        </>
+                      }
+                    />
+                    <FormField
+                      name='staticIlpAddress'
+                      label='Static ILP Address'
+                      defaultValue={peer.staticIlpAddress}
+                      placeholder='ILP Address'
+                      required
+                      error={
+                        response?.errors.general.fieldErrors.staticIlpAddress
+                      }
+                      description={
+                        <>
+                          {"The peer's "}
+                          <a
+                            className='default-link'
+                            href='https://interledger.org/developers/rfcs/ilp-addresses/'
+                          >
+                            address on the Interledger network.
+                          </a>
+                        </>
+                      }
+                    />
+                    <FormField
+                      type='number'
+                      name='maxPacketAmount'
+                      defaultValue={
+                        peer.maxPacketAmount ? peer.maxPacketAmount : ''
+                      }
+                      label='Max Packet Amount'
+                      placeholder='Max Packet Amount'
+                      error={
+                        response?.errors.general.fieldErrors.maxPacketAmount
+                      }
+                      description={
+                        <>
+                          The maximum amount of value that can be sent in a
+                          single{' '}
+                          <a
+                            className='default-link'
+                            href='https://interledger.org/developers/rfcs/stream-protocol/#35-packets-and-frames'
+                          >
+                            Interledger STREAM Packet
+                          </a>
+                          .
+                        </>
+                      }
+                    />
+                  </Flex>
+                  <Flex justify='end' mt='4'>
+                    <Button
+                      aria-label='save general information'
+                      type='submit'
+                      name='intent'
+                      value='general'
+                    >
+                      {currentPageAction ? 'Saving ...' : 'Save'}
+                    </Button>
+                  </Flex>
+                </fieldset>
+              </Form>
+            </Flex>
+            <hr />
+            <Flex direction='column' gap='4'>
+              <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                HTTP Information
+              </Text>
+              {renderErrorPanel(response?.errors.http.message)}
+              <Form method='post' replace preventScrollReset>
+                <fieldset disabled={currentPageAction}>
+                  <Flex direction='column' gap='4'>
+                    <input type='hidden' name='id' value={peer.id} />
+                    <FormField
+                      name='incomingAuthTokens'
+                      label='Incoming Auth Tokens'
+                      placeholder='Accepts a comma separated list of tokens'
+                      error={
+                        response?.errors.http.fieldErrors.incomingAuthTokens
+                      }
+                      description={
+                        <>
+                          List of valid tokens to accept when receiving incoming{' '}
+                          <a
+                            className='default-link'
+                            href='https://rafiki.dev/integration/deployment/services/backend-service/#interledger-connector'
+                          >
+                            ILP packets
+                          </a>{' '}
+                          from the peer.
+                        </>
+                      }
+                    />
+                    <FormField
+                      name='outgoingAuthToken'
+                      label='Outgoing Auth Token'
+                      placeholder='Outgoing HTTP Auth Token'
+                      required
+                      type='password'
+                      defaultValue={peer.http.outgoing.authToken}
+                      error={
+                        response?.errors.http.fieldErrors.outgoingAuthToken
+                      }
+                      description={
+                        <>
+                          Valid auth token to present when sending outgoing{' '}
+                          <a
+                            className='default-link'
+                            href='https://rafiki.dev/integration/deployment/services/backend-service/#interledger-connector'
+                          >
+                            ILP packets
+                          </a>{' '}
+                          to the peer.
+                        </>
+                      }
+                    />
+                    <FormField
+                      name='outgoingEndpoint'
+                      label='Outgoing Endpoint'
+                      placeholder='Outgoing HTTP Endpoint'
+                      required
+                      defaultValue={peer.http.outgoing.endpoint}
+                      error={response?.errors.http.fieldErrors.outgoingEndpoint}
+                      description={
+                        <>
+                          Endpoint on the peer to which outgoing ILP packets
+                          will be sent.
+                        </>
+                      }
+                    />
+                  </Flex>
+                  <Flex justify='end' mt='4'>
+                    <Button
+                      aria-label='save http information'
+                      type='submit'
+                      name='intent'
+                      value='http'
+                    >
+                      {currentPageAction ? 'Saving ...' : 'Save'}
+                    </Button>
+                  </Flex>
+                </fieldset>
+              </Form>
+            </Flex>
+            <hr />
+            <Flex direction='column' gap='4'>
+              <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                Asset Information
+              </Text>
+              <Flex gap='6' wrap='wrap' className='w-full'>
+                <Flex direction='column' gap='1' className='flex-1 min-w-[160px]'>
+                  <Text size='2' weight='medium' className='text-gray-700'>
+                    Code
+                  </Text>
+                  <Text size='2' color='gray'>
+                    {peer.asset.code}
+                  </Text>
+                </Flex>
+                <Flex direction='column' gap='1' className='flex-1 min-w-[160px]'>
+                  <Text size='2' weight='medium' className='text-gray-700'>
+                    Scale
+                  </Text>
+                  <Text size='2' color='gray'>
+                    {peer.asset.scale}
+                  </Text>
+                </Flex>
+                <Flex direction='column' gap='1' className='flex-1 min-w-[200px]'>
+                  <Text size='2' weight='medium' className='text-gray-700'>
+                    Withdrawal threshold
+                  </Text>
+                  <Text size='2' color='gray'>
+                    {peer.asset.withdrawalThreshold ??
+                      'No withdrawal threshold'}
+                  </Text>
+                </Flex>
+              </Flex>
+              <Flex justify='end'>
+                <Button asChild>
+                  <Link
+                    aria-label='go to asset page'
+                    to={`/assets/${peer.asset.id}`}
                   >
-                    {currentPageAction ? 'Saving ...' : 'Save'}
-                  </Button>
-                </div>
-              </fieldset>
-            </Form>
-          </div>
-        </div>
-        {/* Peer General Info - END */}
-        {/* Peer HTTP Info */}
-        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-          <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>HTTP Information</h3>
-            <ErrorPanel errors={response?.errors.http.message} />
-          </div>
-          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <Form method='post' replace preventScrollReset>
-              <fieldset disabled={currentPageAction}>
-                <div className='w-full p-4 space-y-3'>
-                  <Input type='hidden' name='id' value={peer.id} />
-                  <Input
-                    name='incomingAuthTokens'
-                    label='Incoming Auth Tokens'
-                    placeholder='Accepts a comma separated list of tokens'
-                    error={response?.errors.http.fieldErrors.incomingAuthTokens}
-                    description={
-                      <>
-                        List of valid tokens to accept when receiving incoming{' '}
-                        <a
-                          className='default-link'
-                          href='https://rafiki.dev/integration/deployment/services/backend-service/#interledger-connector'
-                        >
-                          ILP packets
-                        </a>{' '}
-                        from the peer.
-                      </>
-                    }
-                  />
-                  <PasswordInput
-                    name='outgoingAuthToken'
-                    label='Outgoing Auth Token'
-                    placeholder='Outgoing HTTP Auth Token'
-                    required
-                    defaultValue={peer.http.outgoing.authToken}
-                    error={response?.errors.http.fieldErrors.outgoingAuthToken}
-                    description={
-                      <>
-                        Valid auth token to present when sending outgoing{' '}
-                        <a
-                          className='default-link'
-                          href='https://rafiki.dev/integration/deployment/services/backend-service/#interledger-connector'
-                        >
-                          ILP packets
-                        </a>{' '}
-                        to the peer.
-                      </>
-                    }
-                  />
-                  <Input
-                    name='outgoingEndpoint'
-                    label='Outgoing Endpoint'
-                    placeholder='Outgoing HTTP Endpoint'
-                    required
-                    defaultValue={peer.http.outgoing.endpoint}
-                    error={response?.errors.http.fieldErrors.outgoingEndpoint}
-                    description={
-                      <>
-                        Endpoint on the peer to which outgoing ILP packets will
-                        be sent.
-                      </>
-                    }
-                  />
-                </div>
-                <div className='flex justify-end p-4'>
-                  <Button
-                    aria-label='save http information'
-                    type='submit'
-                    name='intent'
-                    value='http'
-                  >
-                    {currentPageAction ? 'Saving ...' : 'Save'}
-                  </Button>
-                </div>
-              </fieldset>
-            </Form>
-          </div>
-        </div>
-        {/* Peer HTTP Info - END */}
-        {/* Peer Asset Info */}
-        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-          <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Asset Information</h3>
-          </div>
-          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <div className='w-full p-4 gap-4 grid grid-cols-1 lg:grid-cols-3'>
-              <div>
-                <p className='font-medium'>Code</p>
-                <p className='mt-1'>{peer.asset.code}</p>
-              </div>
-              <div>
-                <p className='font-medium'>Scale</p>
-                <p className='mt-1'>{peer.asset.scale}</p>
-              </div>
-              <div>
-                <p className='font-medium'>Withdrawal threshold</p>
-                <p className='mt-1'>
-                  {peer.asset.withdrawalThreshold ?? 'No withdrawal threshhold'}
-                </p>
-              </div>
-            </div>
-            <div className='flex justify-end p-4'>
-              <Button
-                aria-label='go to asset page'
-                type='button'
-                to={`/assets/${peer.asset.id}`}
-              >
-                View asset
-              </Button>
-            </div>
-          </div>
-        </div>
-        {/* Peer Asset Info - END */}
-        {/* Peer Liquidity Info */}
-        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-          <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Liquidity Information</h3>
-          </div>
-          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <div className='w-full p-4 flex justify-between items-center'>
-              <div>
-                <p className='font-medium'>Amount</p>
-                <p className='mt-1'>
-                  {formatAmount(peer.liquidity ?? '0', peer.asset.scale)}{' '}
-                  {peer.asset.code}
-                </p>
-              </div>
-              <div className='flex space-x-4'>
-                <Button
-                  aria-label='deposit peer liquidity page'
-                  preventScrollReset
-                  type='button'
-                  to={`/peers/${peer.id}/deposit-liquidity`}
-                >
-                  Deposit liquidity
+                    View asset
+                  </Link>
                 </Button>
-                <Button
-                  aria-label='withdraw peer liquidity page'
-                  preventScrollReset
-                  type='button'
-                  to={`/peers/${peer.id}/withdraw-liquidity`}
-                >
-                  Withdraw liquidity
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* Peer Liquidity Info - END */}
-        {/* DELETE PEER - Danger zone */}
-        <DangerZone title='Delete Peer'>
+              </Flex>
+            </Flex>
+            <hr />
+            <Flex direction='column' gap='4'>
+              <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                Liquidity Information
+              </Text>
+              <Flex justify='between' align='center'>
+                <Flex direction='column' gap='1'>
+                  <Text weight='medium'>Amount</Text>
+                  <Text size='2' color='gray'>
+                    {formatAmount(peer.liquidity ?? '0', peer.asset.scale)}{' '}
+                    {peer.asset.code}
+                  </Text>
+                </Flex>
+                <Flex gap='3'>
+                  <Button asChild>
+                    <Link
+                      aria-label='deposit peer liquidity page'
+                      preventScrollReset
+                      to={`/peers/${peer.id}/deposit-liquidity`}
+                    >
+                      Deposit liquidity
+                    </Link>
+                  </Button>
+                  <Button asChild>
+                    <Link
+                      aria-label='withdraw peer liquidity page'
+                      preventScrollReset
+                      to={`/peers/${peer.id}/withdraw-liquidity`}
+                    >
+                      Withdraw liquidity
+                    </Link>
+                  </Button>
+                </Flex>
+              </Flex>
+            </Flex>
+          </Flex>
+        </Card>
+
+        <Flex justify='end' className='max-w-3xl'>
           <Form method='post' onSubmit={submitHandler}>
-            <Input type='hidden' name='id' value={peer.id} />
-            <Input type='hidden' name='intent' value='delete' />
-            <Button type='submit' intent='danger' aria-label='delete peer'>
+            <input type='hidden' name='id' value={peer.id} />
+            <input type='hidden' name='intent' value='delete' />
+            <Button type='submit' color='red' aria-label='delete peer'>
               Delete peer
             </Button>
           </Form>
-        </DangerZone>
-      </div>
-      <ConfirmationDialog
-        ref={dialogRef}
-        onConfirm={onConfirm}
-        title='Delete Peer'
-        keyword={peer.name || 'delete peer'}
-        confirmButtonText='Delete this peer'
-      />
+        </Flex>
+
+        <ConfirmationDialog
+          ref={dialogRef}
+          onConfirm={onConfirm}
+          title='Delete Peer'
+          keyword={peer.name || 'delete peer'}
+          confirmButtonText='Delete this peer'
+        />
+      </Flex>
       <Outlet />
-    </div>
+    </Box>
   )
 }
 

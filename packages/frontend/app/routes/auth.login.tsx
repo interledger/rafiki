@@ -7,7 +7,8 @@ import { uuidSchema } from '~/lib/validate.server'
 import { isUiNodeInputAttributes } from '@ory/integrations/ui'
 import type { UiContainer } from '@ory/client'
 import { useLoaderData } from '@remix-run/react'
-import { Button, Input } from '../components/ui'
+import { Button, Text, TextField } from '@radix-ui/themes'
+import { renderFieldError } from '../lib/form-errors'
 import variables from '../lib/envConfig.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 
@@ -49,6 +50,40 @@ export default function Login() {
   const uiContainer: UiContainer = responseData.ui
   const uiNodes = uiContainer.nodes
   const actionUrl = uiContainer.action
+  type TextFieldType =
+    | 'text'
+    | 'email'
+    | 'password'
+    | 'number'
+    | 'tel'
+    | 'url'
+    | 'search'
+    | 'date'
+    | 'datetime-local'
+    | 'time'
+    | 'week'
+    | 'month'
+    | 'hidden'
+  const normalizeType = (type: string): TextFieldType => {
+    const allowed: TextFieldType[] = [
+      'text',
+      'email',
+      'password',
+      'number',
+      'tel',
+      'url',
+      'search',
+      'date',
+      'datetime-local',
+      'time',
+      'week',
+      'month',
+      'hidden'
+    ]
+    return allowed.includes(type as TextFieldType)
+      ? (type as TextFieldType)
+      : 'text'
+  }
   return (
     <div className='pt-4 flex flex-col'>
       <div className='flex flex-col rounded-md bg-offwhite px-6 text-center min-h-[calc(100vh-3rem)]'>
@@ -74,20 +109,44 @@ export default function Login() {
                         attributes.type !== 'submit'
                       ) {
                         return (
-                          <Input
-                            key={index}
-                            type={attributes.type}
-                            name={attributes.name}
-                            required={attributes.required}
-                            disabled={attributes.disabled}
-                            defaultValue={attributes.value}
-                            label={
-                              attributes.type !== 'hidden' ? label : undefined
-                            }
-                            error={field.messages
-                              .map((message) => message.text)
-                              .join('; ')}
-                          />
+                          attributes.type === 'hidden' ? (
+                            <input
+                              key={index}
+                              type='hidden'
+                              name={attributes.name}
+                              value={attributes.value}
+                            />
+                          ) : (
+                            <div key={index}>
+                              <Text
+                                as='label'
+                                htmlFor={attributes.name}
+                                size='2'
+                                weight='medium'
+                                className='block'
+                              >
+                                {label}
+                                {attributes.required ? (
+                                  <Text as='span' color='red'> *</Text>
+                                ) : null}
+                              </Text>
+                              <TextField.Root
+                                id={attributes.name}
+                                type={normalizeType(attributes.type)}
+                                name={attributes.name}
+                                required={attributes.required}
+                                disabled={attributes.disabled}
+                                defaultValue={attributes.value}
+                                size='3'
+                                className='w-full'
+                              />
+                              {renderFieldError(
+                                field.messages
+                                  .map((message) => message.text)
+                                  .join('; ')
+                              )}
+                            </div>
+                          )
                         )
                       }
                       return null
