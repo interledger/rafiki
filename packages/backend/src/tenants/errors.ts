@@ -1,6 +1,8 @@
 export enum TenantError {
   TenantNotFound = 'TenantNotFound',
-  InvalidTenantId = 'InvalidTenantId'
+  InvalidTenantId = 'InvalidTenantId',
+  InvalidTenantInput = 'InvalidTenantInput',
+  DuplicateWalletAddressPrefix = 'DuplicateWalletAddressPrefix'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -11,5 +13,7 @@ export const errorToMessage: {
   [key in TenantError]: string
 } = {
   [TenantError.TenantNotFound]: 'Tenant not found',
-  [TenantError.InvalidTenantId]: 'Invalid Tenant ID'
+  [TenantError.InvalidTenantId]: 'Invalid Tenant ID',
+  [TenantError.InvalidTenantInput]: 'Invalid Tenant input',
+  [TenantError.DuplicateWalletAddressPrefix]: 'Duplicate Wallet Address prefix'
 }

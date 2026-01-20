@@ -24,6 +24,7 @@ export class Tenant extends BaseModel {
   public apiSecret!: string
   public idpConsentUrl!: string
   public idpSecret!: string
+  public walletAddressPrefix!: string
   public publicName?: string
   public settings?: TenantSetting[]
 

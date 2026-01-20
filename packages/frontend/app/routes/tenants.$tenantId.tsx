@@ -120,6 +120,15 @@ export default function ViewTenantPage() {
                     defaultValue={tenant.email ?? undefined}
                     error={response?.errors?.general.fieldErrors.email}
                   />
+                  <Input
+                    label='Wallet Address Prefix'
+                    name='walletAddressPrefix'
+                    disabled={tenantDeleted || !!tenant.walletAddressPrefix}
+                    defaultValue={tenant.walletAddressPrefix ?? undefined}
+                    error={
+                      response?.errors?.general.fieldErrors.walletAddressPrefix
+                    }
+                  />
                 </div>
                 <div className='flex justify-end p-4'>
                   {!tenantDeleted && (

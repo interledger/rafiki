@@ -414,6 +414,8 @@ export type CreateTenantInput = {
   publicName?: InputMaybe<Scalars['String']['input']>;
   /** Initial settings for tenant. */
   settings?: InputMaybe<Array<TenantSettingInput>>;
+  /** Prefix for all wallet addresses belonging to this tenant. */
+  walletAddressPrefix: Scalars['String']['input'];
 };
 
 export type CreateTenantSettingsInput = {
@@ -1562,6 +1564,8 @@ export type Tenant = Model & {
   publicName?: Maybe<Scalars['String']['output']>;
   /** List of settings for the tenant. */
   settings: Array<TenantSetting>;
+  /** Prefix for wallet addresses belonging to this tenant. */
+  walletAddressPrefix: Scalars['String']['output'];
 };
 
 export type TenantEdge = {
@@ -1595,7 +1599,6 @@ export type TenantSettingInput = {
 export enum TenantSettingKey {
   ExchangeRatesUrl = 'EXCHANGE_RATES_URL',
   IlpAddress = 'ILP_ADDRESS',
-  WalletAddressUrl = 'WALLET_ADDRESS_URL',
   WebhookMaxRetry = 'WEBHOOK_MAX_RETRY',
   WebhookTimeout = 'WEBHOOK_TIMEOUT',
   WebhookUrl = 'WEBHOOK_URL'
@@ -1696,6 +1699,8 @@ export type UpdateTenantInput = {
   idpSecret?: InputMaybe<Scalars['String']['input']>;
   /** Public name for the tenant. */
   publicName?: InputMaybe<Scalars['String']['input']>;
+  /** Prefix for all wallet addresses belonging to this tenant. */
+  walletAddressPrefix?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateWalletAddressInput = {
@@ -2719,6 +2724,7 @@ export type TenantResolvers<ContextType = any, ParentType extends ResolversParen
   idpSecret?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   publicName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   settings?: Resolver<Array<ResolversTypes['TenantSetting']>, ParentType, ContextType>;
+  walletAddressPrefix?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

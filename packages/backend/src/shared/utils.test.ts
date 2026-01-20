@@ -303,7 +303,8 @@ describe('utils', (): void => {
         publicName: faker.company.name(),
         apiSecret: crypto.randomBytes(8).toString('base64'),
         idpConsentUrl: faker.internet.url(),
-        idpSecret: 'test-idp-secret'
+        idpSecret: 'test-idp-secret',
+        walletAddressPrefix: faker.internet.url()
       })
 
       operator = await Tenant.query(appContainer.knex).insertAndFetch({
@@ -311,7 +312,8 @@ describe('utils', (): void => {
         publicName: faker.company.name(),
         apiSecret: operatorApiSecret,
         idpConsentUrl: faker.internet.url(),
-        idpSecret: 'test-idp-secret'
+        idpSecret: 'test-idp-secret',
+        walletAddressPrefix: faker.internet.url()
       })
     })
 

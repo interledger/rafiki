@@ -1,8 +1,8 @@
 import axios from 'axios'
 import { IocContract } from '@adonisjs/fold'
-import { faker } from '@faker-js/faker'
 import { Scope } from 'nock'
 import { URL } from 'url'
+import assert from 'assert'
 
 import { testAccessToken } from './app'
 import { createAsset } from './asset'
@@ -12,8 +12,7 @@ import { isWalletAddressError } from '../open_payments/wallet_address/errors'
 import { WalletAddress } from '../open_payments/wallet_address/model'
 import { CreateOptions as BaseCreateOptions } from '../open_payments/wallet_address/service'
 import { LiquidityAccountType } from '../accounting/service'
-import { createTenantSettings } from './tenantSettings'
-import { TenantSettingKeys } from '../tenants/settings/model'
+import { v4 } from 'uuid'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -31,28 +30,25 @@ export async function createWalletAddress(
   deps: IocContract<AppServices>,
   options: Partial<CreateOptions> = {}
 ): Promise<MockWalletAddress> {
+  const tenantService = await deps.use('tenantService')
   const walletAddressService = await deps.use('walletAddressService')
-  const tenantIdToUse = options.tenantId || (await createTenant(deps)).id
+  const tenantToUse = options.tenantId
+    ? await tenantService.get(options.tenantId)
+    : await createTenant(deps)
+  assert.ok(tenantToUse)
 
   const baseWalletAddressUrl = new URL(
-    options.address || `https://${faker.internet.domainName()}`
+    options.address || tenantToUse.walletAddressPrefix
   )
-  await createTenantSettings(deps, {
-    tenantId: tenantIdToUse,
-    setting: [
-      {
-        key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
-        value: baseWalletAddressUrl.origin
-      }
-    ]
-  })
+
   const walletAddressOrError = (await walletAddressService.create({
     ...options,
     assetId:
       options.assetId ||
-      (await createAsset(deps, { tenantId: tenantIdToUse })).id,
-    tenantId: tenantIdToUse,
-    address: options.address || `${baseWalletAddressUrl.origin}/.well-known/pay`
+      (await createAsset(deps, { tenantId: tenantToUse.id })).id,
+    tenantId: tenantToUse.id,
+    address:
+      options.address || `${baseWalletAddressUrl.href}/${v4()}/.well-known/pay`
   })) as MockWalletAddress
   if (isWalletAddressError(walletAddressOrError)) {
     throw new Error(walletAddressOrError)

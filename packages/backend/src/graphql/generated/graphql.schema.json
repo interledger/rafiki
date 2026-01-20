@@ -2470,6 +2470,22 @@
             "defaultValue": null,
             "isDeprecated": false,
             "deprecationReason": null
+          },
+          {
+            "name": "walletAddressPrefix",
+            "description": "Prefix for all wallet addresses belonging to this tenant.",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
           }
         ],
         "interfaces": null,
@@ -8928,6 +8944,22 @@
             },
             "isDeprecated": false,
             "deprecationReason": null
+          },
+          {
+            "name": "walletAddressPrefix",
+            "description": "Prefix for wallet addresses belonging to this tenant.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
           }
         ],
         "inputFields": null,
@@ -9118,12 +9150,6 @@
           },
           {
             "name": "ILP_ADDRESS",
-            "description": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "WALLET_ADDRESS_URL",
             "description": null,
             "isDeprecated": false,
             "deprecationReason": null
@@ -9673,6 +9699,18 @@
           {
             "name": "publicName",
             "description": "Public name for the tenant.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "walletAddressPrefix",
+            "description": "Prefix for all wallet addresses belonging to this tenant.",
             "type": {
               "kind": "SCALAR",
               "name": "String",

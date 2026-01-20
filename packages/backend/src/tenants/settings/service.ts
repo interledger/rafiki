@@ -50,7 +50,6 @@ export interface TenantSettingService {
     pagination?: Pagination,
     sortOrder?: SortOrder
   ) => Promise<TenantSetting[]>
-  getSettingsByPrefix: (prefix: string) => Promise<TenantSetting[]>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -76,9 +75,7 @@ export async function createTenantSettingService(
       tenantId: string,
       pagination?: Pagination,
       sortOrder?: SortOrder
-    ) => getTenantSettingPageForTenant(deps, tenantId, pagination, sortOrder),
-    getSettingsByPrefix: (prefix: string) =>
-      getWalletAddressSettingsByPrefix(deps, prefix)
+    ) => getTenantSettingPageForTenant(deps, tenantId, pagination, sortOrder)
   }
 }
 
@@ -121,17 +118,6 @@ async function updateTenantSetting(
     return TenantSettingError.InvalidSetting
   }
 
-  if (options.key === TenantSettingKeys.WALLET_ADDRESS_URL.name) {
-    const existingSetting = await TenantSetting.query(deps.knex).findOne({
-      key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
-      value: options.value
-    })
-
-    if (existingSetting) {
-      return TenantSettingError.DuplicateWalletAddressUrl
-    }
-  }
-
   return TenantSetting.query(deps.knex)
     .patch({ value: options.value })
     .whereNull('deletedAt')
@@ -152,19 +138,6 @@ async function createTenantSetting(
       !TENANT_SETTING_VALIDATORS[setting.key](setting.value)
     ) {
       return TenantSettingError.InvalidSetting
-    }
-
-    if (setting.key === TenantSettingKeys.WALLET_ADDRESS_URL.name) {
-      const existingSetting = await TenantSetting.query(
-        extra?.trx ?? deps.knex
-      ).findOne({
-        key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
-        value: setting.value
-      })
-
-      if (existingSetting) {
-        return TenantSettingError.DuplicateWalletAddressUrl
-      }
     }
   }
 
@@ -196,15 +169,4 @@ async function getTenantSettingPageForTenant(
     .whereNull('deletedAt')
     .andWhere('tenantId', tenantId)
     .getPage(pagination, sortOrder)
-}
-
-async function getWalletAddressSettingsByPrefix(
-  deps: ServiceDependencies,
-  prefix: string
-): Promise<TenantSetting[]> {
-  return await TenantSetting.query(deps.knex)
-    .whereILike('value', `${prefix}%`)
-    .andWhere({
-      key: TenantSettingKeys.WALLET_ADDRESS_URL.name
-    })
 }
