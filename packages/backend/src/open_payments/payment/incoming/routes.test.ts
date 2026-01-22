@@ -11,6 +11,7 @@ import { initIocContainer } from '../../..'
 import { AppServices, CreateContext, CompleteContext } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPayment, IncomingPaymentState } from './model'
+import { IncomingPaymentInitiationReason } from './types'
 import {
   IncomingPaymentRoutes,
   CreateBody,
@@ -94,7 +95,8 @@ describe('Incoming Payment Routes', (): void => {
           expiresAt,
           incomingAmount,
           metadata,
-          tenantId
+          tenantId,
+          initiationReason: IncomingPaymentInitiationReason.OpenPayments
         }),
       get: (ctx) => {
         jest
@@ -138,7 +140,8 @@ describe('Incoming Payment Routes', (): void => {
         })
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId: walletAddress.id,
-          tenantId
+          tenantId,
+          initiationReason: IncomingPaymentInitiationReason.OpenPayments
         })
         await incomingPayment.$query().update({ state: paymentState })
 
@@ -166,7 +169,8 @@ describe('Incoming Payment Routes', (): void => {
         })
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId: walletAddress.id,
-          tenantId
+          tenantId,
+          initiationReason: IncomingPaymentInitiationReason.OpenPayments
         })
 
         const ctx = setup<ReadContextWithAuthenticatedStatus>({
@@ -224,7 +228,8 @@ describe('Incoming Payment Routes', (): void => {
         })
         expect(createSpy).toHaveBeenCalledWith({
           walletAddressId: walletAddress.id,
-          tenantId
+          tenantId,
+          initiationReason: IncomingPaymentInitiationReason.OpenPayments
         })
       }
     )
@@ -269,7 +274,8 @@ describe('Incoming Payment Routes', (): void => {
           metadata,
           expiresAt: expiresAt ? new Date(expiresAt) : undefined,
           client,
-          tenantId
+          tenantId,
+          initiationReason: IncomingPaymentInitiationReason.OpenPayments
         })
         expect(ctx.response).toSatisfyApiSpec()
         const incomingPaymentId = (
@@ -305,7 +311,8 @@ describe('Incoming Payment Routes', (): void => {
         expiresAt,
         incomingAmount,
         metadata,
-        tenantId
+        tenantId,
+        initiationReason: IncomingPaymentInitiationReason.OpenPayments
       })
     })
     test('returns 200 with an updated open payments incoming payment', async (): Promise<void> => {
@@ -351,7 +358,8 @@ describe('Incoming Payment Routes', (): void => {
         expiresAt,
         incomingAmount,
         metadata,
-        tenantId
+        tenantId,
+        initiationReason: IncomingPaymentInitiationReason.OpenPayments
       })
 
       const ctx = setup<ReadContextWithAuthenticatedStatus>({

@@ -284,7 +284,7 @@ async function getQuote(
 async function pay(
   deps: ServiceDependencies,
   options: PayOptions
-): Promise<void> {
+): Promise<bigint> {
   const { receiver, outgoingPayment, finalDebitAmount, finalReceiveAmount } =
     options
 
@@ -339,6 +339,13 @@ async function pay(
 
   const destination = resolveIlpDestination(receiver)
 
+  const stopTimerRoundTrip = deps.telemetry.startTimer(
+    'ilp_payment_round_trip_ms',
+    {
+      description: 'ILP payment round trip time from sender to receiver',
+      callName: 'Pay:pay'
+    }
+  )
   try {
     const receipt = await Pay.pay({
       plugin,
@@ -362,6 +369,7 @@ async function pay(
       },
       'ILP payment completed'
     )
+    return receipt.amountDelivered
   } catch (err) {
     const errorMessage = 'Received error during ILP pay'
     deps.logger.error(
@@ -374,6 +382,8 @@ async function pay(
       retryable: canRetryError(err as Error | Pay.PaymentError)
     })
   } finally {
+    stopTimerRoundTrip()
+
     try {
       await Pay.closeConnection(plugin, destination)
     } catch (error) {

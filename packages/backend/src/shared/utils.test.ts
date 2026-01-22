@@ -1,4 +1,4 @@
-import crypto from 'crypto'
+import crypto, { createDecipheriv } from 'node:crypto'
 import { IocContract } from '@adonisjs/fold'
 import { Redis } from 'ioredis'
 import { faker } from '@faker-js/faker'
@@ -11,7 +11,7 @@ import {
   sleep,
   getTenantFromApiSignature,
   ensureTrailingSlash,
-  urlWithoutTenantId
+  encryptDbData
 } from './utils'
 import { AppServices, AppContext } from '../app'
 import { TestContainer, createTestApp } from '../tests/app'
@@ -458,12 +458,22 @@ describe('utils', (): void => {
     expect(ensureTrailingSlash(`${path}/`)).toBe(`${path}/`)
   })
 
-  test('test tenant id stripped from url', async (): Promise<void> => {
-    expect(
-      urlWithoutTenantId(
-        'http://happy-life-bank-test-auth:4106/cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d'
-      )
-    ).toBe('http://happy-life-bank-test-auth:4106')
-    expect(urlWithoutTenantId('http://happy-life')).toBe('http://happy-life')
+  test('can encrypt data with symmetric key', async (): Promise<void> => {
+    const key = crypto.randomBytes(32).toString('base64')
+
+    const plaintext = faker.internet.email()
+
+    const encrypted = JSON.parse(encryptDbData(plaintext, key))
+
+    const decipher = createDecipheriv(
+      'aes-256-gcm',
+      Uint8Array.from(Buffer.from(key, 'base64')),
+      encrypted.iv
+    )
+    decipher.setAuthTag(Uint8Array.from(Buffer.from(encrypted.tag, 'base64')))
+    let decipherText = decipher.update(encrypted.cipherText, 'base64', 'utf8')
+    decipherText += decipher.final('utf8')
+
+    expect(decipherText).toEqual(plaintext)
   })
 })

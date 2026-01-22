@@ -6,7 +6,6 @@ import {
   Mermaid,
   MermaidWrapper,
   LinkOut,
-  Disclosure,
   LargeImg
 } from '@interledger/docs-design-system'
 
@@ -33,7 +32,7 @@ These packages depend on the following databases:
   style='max-width:300px'
 />
 
-The Local Playground comes with containerized versions of the Rafiki packages and two pre-configured docker-compose files (<LinkOut href="https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml">Cloud Nine Wallet</LinkOut> and <LinkOut href='https://github.com/interledger/rafiki/blob/main/localenv/happy-life-bank/docker-compose.yml'>Happy Life Bank</LinkOut>) to start two mock account servicing entities with their respective Rafiki `backend` and `auth` servers. They automatically peer, and two to three user accounts are created on both of them.
+The Local Playground comes with containerized versions of the Rafiki packages and three pre-configured docker-compose files. <LinkOut href="https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml">Cloud Nine Wallet</LinkOut> and <LinkOut href='https://github.com/interledger/rafiki/blob/main/localenv/happy-life-bank/docker-compose.yml'>Happy Life Bank</LinkOut> will start two mock account servicing entities with their respective Rafiki `backend` and `auth` servers. They automatically peer, and two to three user accounts are created on both of them. The third file is for <LinkOut href="https://github.com/interledger/rafiki/blob/main/localenv/cloud-ten-wallet/docker-compose.yml">Cloud Ten Wallet</LinkOut> which is a mock ASE representing a tenant in a multi-tenant environment. See [Enabling multi-tenancy](#enabling-multi-tenancy) for more information.
 
 This environment will set up a playground where you can use the GraphQL Admin APIs and the Open Payments APIs.
 
@@ -72,11 +71,21 @@ If you want the primary instance (Cloud Nine Wallet) to use Postgres as the acco
 pnpm localenv:compose:psql up
 ```
 
+#### Enabling multi-tenancy
+
+The Local Playground can be configured to simulate a multi-tenant environment. In this configuration, Cloud Nine Wallet and Happy Life Bank are configured as separate operators, while Cloud Ten Wallet is configured as a tenant of Cloud Nine Wallet.
+
+To run the local environment with multi-tenancy enabled, execute the following command from the root of the project:
+
+```bash title="Enabling multi-tenancy"
+pnpm localenv:compose:multitenancy up
+```
+
+### Environment components
+
 The local environment consists of a primary and secondary Rafiki instance, each with its docker-compose file (<LinkOut href='https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml'>Cloud Nine Wallet</LinkOut>, <LinkOut href='https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml'>Happy Life Bank</LinkOut>). The primary Cloud Nine Wallet docker-compose file (`./cloud-nine-wallet/docker-compose.yml`) includes the primary Rafiki `backend` and `auth` services, as well as the required data stores, which include TigerBeetle (if enabled), Redis, and Postgres. The primary instance contains all of the necessary components so that it can run independently.
 
 The secondary Happy Life Bank docker-compose file (`./happy-life-bank/docker-compose.yml`) includes only the Rafiki services, not the data stores. It uses the data stores created by the primary Rafiki instance, so it can’t be run independently. The `pnpm localenv:compose up` command starts both the primary and secondary instances.
-
-### Environment components
 
 The following components are made available via the Local Playground:
 

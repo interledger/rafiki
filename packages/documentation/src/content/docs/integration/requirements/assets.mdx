@@ -7,10 +7,19 @@ tableOfContents:
 import { Tabs, TabItem } from '@astrojs/starlight/components'
 import { Badge } from '@astrojs/starlight/components'
 import { LinkOut } from '@interledger/docs-design-system'
+import TenantIdHmacNote from '/src/partials/tenant-id-hmac-note.mdx'
 
 An asset represents an item of value that can be transferred via the Interledger Protocol. Assets in Rafiki are added through the Backend Admin API or the [Rafiki Admin](/admin/admin-user-guide/#assets) application.
 
+**Permissions**
+
+Operators can create, view, edit, and delete both their own assets and those that belong to any tenant.
+
+Tenants can create, view, edit, and delete their own assets only.
+
 ## Add an asset
+
+Use the `createAsset` mutation to register a new asset with your Rafiki instance.
 
 <Tabs>
   <TabItem label="Operation">
@@ -24,6 +33,7 @@ An asset represents an item of value that can be transferred via the Interledger
           id
           code
           scale
+          tenantId
         }
       }
     }
@@ -39,6 +49,11 @@ An asset represents an item of value that can be transferred via the Interledger
     }
     ```
     For more information about this mutation's input object, see [`CreateAssetInput`](/apis/graphql/backend/#definition-CreateAssetInput).
+
+    :::note[Tenant ID and HMAC-signed request headers]
+    <TenantIdHmacNote />
+    :::
+
   </TabItem>
   <TabItem label="Response">
     ```json
@@ -51,11 +66,153 @@ An asset represents an item of value that can be transferred via the Interledger
           "asset": {
             "id": "b3dffeda-1e0e-47d4-82a3-69b1a622eeb9",
             "code": "USD",
-            "scale": 2
+            "scale": 2,
+            "tenantId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
           }
         }
       }
     }
     ```
+
+:::note[Tenant ID in the asset response]
+The `asset` object in the response will include the `tenantId` of the tenant to which the asset belongs. This `tenantId` is used to identify the tenant when processing requests related to the asset.
+:::
+
+  </TabItem>
+</Tabs>
+
+## Update an asset
+
+Once an asset has been created, you may need to adjust its operational threshold values. You can use the `updateAsset` mutation to modify the `liquidityThreshold`.
+
+This threshold determines when Rafiki triggers low‑liquidity notifications or webhooks, but does not directly deposit or withdraw asset liquidity.
+
+For information about adding or removing liquidity, see [Asset liquidity](/admin/liquidity/asset-liquidity).
+
+<Tabs>
+  <TabItem label="Operation">
+    ```graphql
+    mutation UpdateAsset($input: UpdateAssetInput!) {
+      updateAsset(input: $input) {
+        asset {
+          id
+          code
+          scale
+          withdrawalThreshold
+          liquidityThreshold
+          tenantId
+        }
+      }
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Variables">
+    The input object for the update operation requires the asset `id`. Only the threshold fields are editable; all other fields are immutable.
+
+    ```json
+    {
+      "input": {
+        "id": "b3dffeda-1e0e-47d4-82a3-69b1a622eeb9",
+        "withdrawalThreshold": 100,
+        "liquidityThreshold": 500
+      }
+    }
+    ```
+
+    For more information about this mutation’s input object, see [`UpdateAssetInput`](/apis/graphql/backend/#definition-UpdateAssetInput).
+
+    :::note[Tenant ID and HMAC-signed request headers]
+    <TenantIdHmacNote />
+    :::
+
+  </TabItem>
+
+  <TabItem label="Response">
+    ```json
+    {
+      "data": {
+        "updateAsset": {
+          "asset": {
+            "id": "b3dffeda-1e0e-47d4-82a3-69b1a622eeb9",
+            "code": "USD",
+            "scale": 2,
+            "withdrawalThreshold": 100,
+            "liquidityThreshold": 500,
+            "tenantId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+          }
+        }
+      }
+    }
+    ```
+
+:::note[Tenant ID in the asset response]
+The `asset` object in the response will include the `tenantId` of the tenant to which the asset belongs. This `tenantId` is used to identify the tenant when processing requests related to the asset.
+:::
+
+  </TabItem>
+</Tabs>
+
+---
+
+## Delete an asset
+
+Deleting an asset removes it from active use within a Rafiki instance.
+
+You can only delete an asset if it's not associated with any peers or wallet addresses. Rafiki prevents deleting any asset that's still in use.
+
+<Tabs>
+  <TabItem label="Operation">
+    ```graphql
+    mutation DeleteAsset($input: DeleteAssetInput!) {
+      deleteAsset(input: $input) {
+        asset {
+          id
+          code
+          scale
+          tenantId
+        }
+      }
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Variables">
+    ```json
+    {
+      "input": {
+        "id": "b3dffeda-1e0e-47d4-82a3-69b1a622eeb9"
+      }
+    }
+    ```
+
+    For more information about this mutation’s input object, see [`DeleteAssetInput`](/apis/graphql/backend/#definition-DeleteAssetInput).
+
+    :::note[Tenant ID and HMAC-signed request headers]
+    <TenantIdHmacNote />
+    :::
+
+  </TabItem>
+
+  <TabItem label="Response">
+    ```json
+    {
+      "data": {
+        "deleteAsset": {
+          "asset": {
+            "id": "b3dffeda-1e0e-47d4-82a3-69b1a622eeb9",
+            "code": "USD",
+            "scale": 2,
+            "tenantId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+          }
+        }
+      }
+    }
+    ```
+
+:::note[Tenant ID in the asset response]
+The `asset` object in the response will include the `tenantId` of the tenant to which the asset belongs. This `tenantId` is used to identify the tenant when processing requests related to the asset.
+:::
+
   </TabItem>
 </Tabs>

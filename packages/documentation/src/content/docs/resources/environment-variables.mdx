@@ -8,7 +8,7 @@ import AuthEnv from '/src/partials/auth-variables.mdx'
 import FrontEnv from '/src/partials/frontend-variables.mdx'
 import VarWarn from '/src/partials/variables-warning.mdx'
 
-Environment variables are key value pairs used to configure how your Rafiki instance will run within your infrastructure and integrate with your systems.
+Environment variables are key value pairs used to configure how your Rafiki instance will run within your infrastructure and integrate with your systems. Some environment variables are configured globally for the entire instance, while others can be configured to allow customized settings for each tenant.
 
 Each environment variable name is uppercase, followed by an equal sign and the value of the variable.
 
@@ -20,7 +20,10 @@ The environment variable in the preceding example specifies the HTTP endpoint at
 
 To run Rafiki you must set the environment variables for the `backend`, `auth` and `frontend` services where listed as required below.
 
+:::caution
+
 <VarWarn />
+:::
 
 ## Backend
 

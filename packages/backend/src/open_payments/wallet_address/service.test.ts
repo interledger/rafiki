@@ -29,6 +29,7 @@ import { WalletAddressAdditionalProperty } from './additional_property/model'
 import { CacheDataStore } from '../../middleware/cache/data-stores'
 import { createTenantSettings } from '../../tests/tenantSettings'
 import { TenantSettingKeys } from '../../tenants/settings/model'
+import { IncomingPaymentInitiationReason } from '../payment/incoming/types'
 
 describe('Open Payments Wallet Address Service', (): void => {
   let deps: IocContract<AppServices>
@@ -107,7 +108,7 @@ describe('Open Payments Wallet Address Service', (): void => {
       isOperator | tenantSettingUrl
       ${false}   | ${undefined}
       ${true}    | ${undefined}
-      ${true}    | ${'https://alice.me'}
+      ${true}    | ${`https://alice.me/${uuid()}`}
     `(
       'operator - $isOperator with tenantSettingUrl - $tenantSettingUrl',
       async ({ isOperator, tenantSettingUrl }): Promise<void> => {
@@ -342,7 +343,8 @@ describe('Open Payments Wallet Address Service', (): void => {
                 description: 'Test incoming payment',
                 externalRef: '#123'
               },
-              tenantId: Config.operatorTenantId
+              tenantId: Config.operatorTenantId,
+              initiationReason: IncomingPaymentInitiationReason.Admin
             })
 
             await walletAddressService.update({
@@ -387,7 +389,8 @@ describe('Open Payments Wallet Address Service', (): void => {
                 description: 'Test incoming payment',
                 externalRef: '#123'
               },
-              tenantId: Config.operatorTenantId
+              tenantId: Config.operatorTenantId,
+              initiationReason: IncomingPaymentInitiationReason.Admin
             })
 
             await walletAddressService.update({

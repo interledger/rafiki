@@ -22,7 +22,7 @@ import {
 import { Interaction, InteractionState } from './model'
 import { Grant, GrantState, GrantFinalization } from '../grant/model'
 import { Access } from '../access/model'
-import { generateNonce } from '../shared/utils'
+import { ensureTrailingSlash, generateNonce } from '../shared/utils'
 import { GNAPErrorCode } from '../shared/gnapErrors'
 import { generateBaseGrant } from '../tests/grant'
 import { generateBaseInteraction } from '../tests/interaction'
@@ -73,7 +73,7 @@ describe('Interaction Routes', (): void => {
   afterEach(async (): Promise<void> => {
     jest.restoreAllMocks()
     jest.useRealTimers()
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -95,6 +95,7 @@ describe('Interaction Routes', (): void => {
         'Interaction start fails if tenant for $description grant has no configured idp',
         async ({ isFinishableGrant }): Promise<void> => {
           const unconfiguredTenant = await Tenant.query().insertAndFetch({
+            apiSecret: v4(),
             idpConsentUrl: undefined,
             idpSecret: undefined
           })
@@ -417,13 +418,14 @@ describe('Interaction Routes', (): void => {
           const { clientNonce } = grant
           const { nonce: interactNonce, ref: interactRef } = interaction
 
-          const grantRequestUrl = config.authServerUrl + `/`
-
+          const grantRequestUrl =
+            ensureTrailingSlash(config.authServerUrl) + grant.tenantId
           const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${grantRequestUrl}`
           const hash = crypto
             .createHash('sha-256')
             .update(data)
             .digest('base64')
+
           clientRedirectUri.searchParams.set('hash', hash)
           assert.ok(interactRef)
           clientRedirectUri.searchParams.set('interact_ref', interactRef)
@@ -433,6 +435,7 @@ describe('Interaction Routes', (): void => {
           await expect(interactionRoutes.finish(ctx)).resolves.toBeUndefined()
           expect(ctx.response).toSatisfyApiSpec()
           expect(ctx.status).toBe(302)
+
           expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
 
           const issuedGrant = await Grant.query().findById(grant.id)
@@ -834,7 +837,8 @@ describe('Interaction Routes', (): void => {
               type: access.type
             }
           ],
-          state: interaction.state
+          state: interaction.state,
+          subject: undefined
         })
       })
 
@@ -966,6 +970,7 @@ describe('Interaction Routes', (): void => {
 
       test('cannot accept/reject interaction with unconfigured tenant', async (): Promise<void> => {
         const unconfiguredTenant = await Tenant.query().insertAndFetch({
+          apiSecret: v4(),
           idpConsentUrl: undefined,
           idpSecret: undefined
         })

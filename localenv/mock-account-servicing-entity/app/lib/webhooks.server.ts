@@ -118,7 +118,8 @@ export async function handleOutgoingPaymentCreated(
       variables: {
         input: {
           outgoingPaymentId: payment.id,
-          idempotencyKey: uuid()
+          idempotencyKey: uuid(),
+          dataToTransmit: acc.name
         }
       }
     })

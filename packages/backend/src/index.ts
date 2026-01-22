@@ -7,23 +7,12 @@ import { createClient } from 'tigerbeetle-node'
 import { createClient as createIntrospectionClient } from 'token-introspection'
 import net from 'net'
 import dns from 'dns'
-import { createHmac } from 'crypto'
 
 import { createAuthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
 import { createOpenAPI } from '@interledger/openapi'
 import path from 'path'
 import { StreamServer } from '@interledger/stream-receiver'
 import axios from 'axios'
-import {
-  ApolloClient,
-  ApolloLink,
-  createHttpLink,
-  InMemoryCache
-} from '@apollo/client'
-import { onError } from '@apollo/client/link/error'
-import { setContext } from '@apollo/client/link/context'
-import { canonicalize } from 'json-canonicalize'
-import { print } from 'graphql/language/printer'
 
 import { createAccountingService as createPsqlAccountingService } from './accounting/psql/service'
 import { createAccountingService as createTigerbeetleAccountingService } from './accounting/tigerbeetle/service'
@@ -75,6 +64,7 @@ import { createTenantService } from './tenants/service'
 import { AuthServiceClient } from './auth-service-client/client'
 import { createTenantSettingService } from './tenants/settings/service'
 import { createPaymentMethodProviderService } from './payment-method/provider/service'
+import { createRouterService } from './payment-method/ilp/connector/ilp-routing/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -147,78 +137,6 @@ export function initIocContainer(
       serverSecret: config.streamSecret,
       serverAddress: config.ilpAddress
     })
-  })
-
-  container.singleton('apolloClient', async (deps) => {
-    const [logger, config] = await Promise.all([
-      deps.use('logger'),
-      deps.use('config')
-    ])
-
-    const httpLink = createHttpLink({
-      uri: config.authAdminApiUrl
-    })
-
-    const errorLink = onError(({ graphQLErrors }) => {
-      if (graphQLErrors) {
-        logger.error(graphQLErrors)
-        graphQLErrors.map(({ extensions }) => {
-          if (extensions && extensions.code === 'UNAUTHENTICATED') {
-            logger.error('UNAUTHENTICATED')
-          }
-
-          if (extensions && extensions.code === 'FORBIDDEN') {
-            logger.error('FORBIDDEN')
-          }
-        })
-      }
-    })
-
-    const authLink = setContext((request, { headers }) => {
-      if (!config.authAdminApiSecret || !config.authAdminApiSignatureVersion)
-        return { headers }
-      const timestamp = Date.now()
-      const version = config.authAdminApiSignatureVersion
-
-      const { query, variables, operationName } = request
-      const formattedRequest = {
-        variables,
-        operationName,
-        query: print(query)
-      }
-
-      const payload = `${timestamp}.${canonicalize(formattedRequest)}`
-      const hmac = createHmac('sha256', config.authAdminApiSecret)
-      hmac.update(payload)
-      const digest = hmac.digest('hex')
-
-      return {
-        headers: {
-          ...headers,
-          signature: `t=${timestamp}, v${version}=${digest}`
-        }
-      }
-    })
-
-    const link = ApolloLink.from([errorLink, authLink, httpLink])
-
-    const client = new ApolloClient({
-      cache: new InMemoryCache({}),
-      link: link,
-      defaultOptions: {
-        query: {
-          fetchPolicy: 'no-cache'
-        },
-        mutate: {
-          fetchPolicy: 'no-cache'
-        },
-        watchQuery: {
-          fetchPolicy: 'no-cache'
-        }
-      }
-    })
-
-    return client
   })
 
   container.singleton('tenantCache', async () => {
@@ -405,7 +323,8 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       accountingService: await deps.use('accountingService'),
       assetService: await deps.use('assetService'),
-      httpTokenService: await deps.use('httpTokenService')
+      httpTokenService: await deps.use('httpTokenService'),
+      routerService: await deps.use('routerService')
     })
   })
   container.singleton('authServerService', async (deps) => {
@@ -524,6 +443,19 @@ export function initIocContainer(
     return createWalletAddressKeyService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex')
+    })
+  })
+  container.singleton('staticRoutesStore', async () => {
+    return createInMemoryDataStore(Number.MAX_SAFE_INTEGER)
+  })
+
+  container.singleton('routerService', async (deps) => {
+    const config = await deps.use('config')
+    return await createRouterService({
+      logger: await deps.use('logger'),
+      staticIlpAddress: config.ilpAddress,
+      staticRoutes: await deps.use('staticRoutesStore'),
+      config
     })
   })
 
@@ -735,6 +667,33 @@ export const gracefulShutdown = async (
   telemetry.shutdown()
 }
 
+const loadRoutesFromDatabase = async (
+  container: IocContract<AppServices>
+): Promise<void> => {
+  const peerService = await container.use('peerService')
+  const routerService = await container.use('routerService')
+  const logger = await container.use('logger')
+
+  const peers = await peerService.getPage()
+  logger.info(
+    { peerCount: peers.length },
+    'loading static routes from database'
+  )
+
+  for (const peer of peers) {
+    // If no routes are set, we use the static address of our peers as the only routes
+    const routes = peer.routes || [peer.staticIlpAddress]
+    for (const route of routes) {
+      await routerService.addStaticRoute(
+        route,
+        peer.id,
+        peer.tenantId,
+        peer.assetId
+      )
+    }
+  }
+}
+
 export const start = async (
   container: IocContract<AppServices>,
   app: App
@@ -810,6 +769,7 @@ export const start = async (
   if (error) throw error
 
   await app.boot()
+  await loadRoutesFromDatabase(container)
   await app.startAdminServer(config.adminPort)
   logger.info(`Admin listening on ${app.getAdminPort()}`)
 

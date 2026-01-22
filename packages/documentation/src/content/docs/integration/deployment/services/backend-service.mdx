@@ -16,12 +16,17 @@ Rafiki’s <LinkOut href="https://github.com/interledger/rafiki/tree/main/packag
 
 The following are required when using the `backend` service.
 
-- A Redis database as a cache to share STREAM connection details and total amounts received across processes
-- A Postgres database, separate from the `auth` service’s database, for Open Payments resources
-- TigerBeetle or a separate Postgres database for accounting liquidity
-  :::note
-  You can use the same database instance of Postgres for the `backend` service, `auth` service, and accounting liquidity (if not using TigerBeetle). However, separate database schemas are required within the Rafiki instance to maintain boundaries between the managed objects.
-  :::
+- `OPERATOR_TENANT_ID` (UUID v4) and a strong, random `ADMIN_API_SECRET`
+- Redis database as a cache to share STREAM connection details and total amounts received across processes
+- Postgres database, separate from the `auth` service’s database, for Open Payments resources
+- Create the operator tenant record in the Postgres database with `OPERATOR_TENANT_ID` prior to startup (on startup, the backend syncs the operator's API secret from `ADMIN_API_SECRET`)
+- TigerBeetle or separate Postgres database for accounting liquidity
+
+On startup, the `backend` service seeds/updates the `OPERATOR_TENANT_ID` and syncs its API secret from `ADMIN_API_SECRET`.
+
+:::note
+You can use the same database instance of Postgres for the `backend` service, `auth` service, and accounting liquidity (if not using TigerBeetle). However, separate database schemas are required within the Rafiki instance to maintain boundaries between the managed objects.
+:::
 
 You must also set the environment variables for the `backend` service.
 
@@ -55,7 +60,15 @@ A packet can either continue on to your peer via HTTP or end at your Rafiki inst
 
 ## GraphQL Backend Admin API
 
-The `backend` service exposes a GraphQL [Backend Admin API](/apis/graphql/admin-api-overview#backend-admin-api) to manage assets, peers, wallet addresses, Open Payments resources, and several types of liquidity.
+The `backend` service exposes a GraphQL [Backend Admin API](/apis/graphql/admin-api-overview#backend-admin-api) to manage tenants, assets, peers, wallet addresses, Open Payments resources, and several types of liquidity, all within a specific tenant's context.
+
+### Authentication and authorization
+
+To ensure the security and integrity of your Rafiki instance, all requests to the Backend Admin API must include a `tenant-id` header and be signed using HMAC SHA-256 with the tenant's API secret. Include a `signature` header containing the request signature and a `tenant-id` header identifying the tenant on whose behalf the request is made. Rafiki validates the signature, derives the tenant context from the signed headers, and applies tenant-based access control. The [Rafiki Admin application](/admin/admin-user-guide/) automatically signs requests and includes the `tenant-id` header.
+
+## Tenant management
+
+Tenants are added to Rafiki through the Backend Admin API or the Rafiki Admin application. The `auth` service does not expose a public endpoint to create tenants. Tenant creation in the `auth` service is triggered by the `backend` service. The operator tenant is identified by the `OPERATOR_TENANT_ID` environment variable and secured with the `ADMIN_API_SECRET` environment variable. The operator has elevated permissions and can manage resources for all other tenants. The operator can also choose to receive webhook events for all tenants by setting the `SEND_TENANT_WEBHOOKS_TO_OPERATOR` environment variable to `true`.
 
 ## Environment variables
 

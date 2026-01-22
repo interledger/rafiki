@@ -30,6 +30,7 @@ import {
 import { TelemetryService } from '../../../telemetry/service'
 import { TenantSettingService } from '../../../tenants/settings/service'
 import { IAppConfig } from '../../../config/app'
+import { createIlpTimingMiddleware } from './core/middleware/ilp-timing'
 
 interface ServiceDependencies extends BaseService {
   config: IAppConfig
@@ -59,7 +60,6 @@ export async function createConnectorService({
 }: ServiceDependencies): Promise<Rafiki> {
   return createApp(
     {
-      //router: router,
       logger: logger.child({
         service: 'ConnectorService'
       }),
@@ -74,6 +74,9 @@ export async function createConnectorService({
       tenantSettingService
     },
     compose([
+      // ILP packet processing time (must be first to measure entire chain)
+      createIlpTimingMiddleware(),
+
       // Incoming Rules
       createIncomingErrorHandlerMiddleware(ilpAddress),
       createStreamAddressMiddleware(),

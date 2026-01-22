@@ -125,9 +125,6 @@ export const Config = {
 
   authServerGrantUrl: envString('AUTH_SERVER_GRANT_URL'),
   authServerIntrospectionUrl: envString('AUTH_SERVER_INTROSPECTION_URL'),
-  authAdminApiUrl: envString('AUTH_ADMIN_API_URL'),
-  authAdminApiSecret: envString('AUTH_ADMIN_API_SECRET'),
-  authAdminApiSignatureVersion: envInt('AUTH_ADMIN_API_SIGNATURE_VERSION', 1),
   authServiceApiUrl: envString('AUTH_SERVICE_API_URL'),
 
   outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 1),
@@ -162,8 +159,8 @@ export const Config = {
   signatureSecret: process.env.SIGNATURE_SECRET, // optional
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
 
-  adminApiSecret: envString('API_SECRET'),
-  adminApiSignatureVersion: envInt('API_SIGNATURE_VERSION', 1),
+  adminApiSecret: envString('ADMIN_API_SECRET'),
+  adminApiSignatureVersion: envInt('ADMIN_API_SIGNATURE_VERSION', 1),
   adminApiSignatureTtlSeconds: envInt('ADMIN_API_SIGNATURE_TTL_SECONDS', 30),
 
   keyId: envString('KEY_ID'),
@@ -173,6 +170,10 @@ export const Config = {
   graphQLIdempotencyKeyTtlMs: envInt(
     'GRAPHQL_IDEMPOTENCY_KEY_TTL_MS',
     86400000
+  ),
+  walletAddressNotFoundPollingEnabled: envBool(
+    'WALLET_ADDRESS_NOT_FOUND_POLLING_ENABLED',
+    false
   ),
   walletAddressLookupTimeoutMs: envInt(
     'WALLET_ADDRESS_LOOKUP_TIMEOUT_MS',
@@ -198,6 +199,7 @@ export const Config = {
   walletAddressRedirectHtmlPage: process.env.WALLET_ADDRESS_REDIRECT_HTML_PAGE,
   localCacheDuration: envInt('LOCAL_CACHE_DURATION_MS', 15_000),
   operatorTenantId: envString('OPERATOR_TENANT_ID'),
+  enableIlpTiming: envBool('ENABLE_ILP_TIMING_TELEMETRY', true),
   dbSchema: undefined as string | undefined,
   sendTenantWebhooksToOperator: envBool(
     'SEND_TENANT_WEBHOOKS_TO_OPERATOR',
@@ -205,7 +207,24 @@ export const Config = {
   ),
   kycAseDecisionUrl: process.env.KYC_ASE_DECISION_URL,
   kycDecisionMaxWaitMs: envInt('KYC_DECISION_MAX_WAIT_MS', 1500),
-  kycDecisionSafetyMarginMs: envInt('KYC_DECISION_SAFETY_MARGIN_MS', 100)
+  kycDecisionSafetyMarginMs: envInt('KYC_DECISION_SAFETY_MARGIN_MS', 100),
+  cardServiceUrl: optional(envString, 'CARD_SERVICE_URL'),
+  posServiceUrl: optional(envString, 'POS_SERVICE_URL'),
+  posWebhookServiceUrl: optional(envString, 'POS_WEBHOOK_SERVICE_URL'),
+  cardWebhookUrl: optional(envString, 'CARD_WEBHOOK_SERVICE_URL'),
+  dbEncryptionSecret: optional(envString, 'DB_ENCRYPTION_SECRET')
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function optional<T extends (...args: any[]) => ReturnType<T>>(
+  envGetter: T,
+  envVar: string
+): ReturnType<T> | undefined {
+  try {
+    return envGetter(envVar)
+  } catch (err) {
+    return undefined
+  }
 }
 
 function parseRedisTlsConfig(

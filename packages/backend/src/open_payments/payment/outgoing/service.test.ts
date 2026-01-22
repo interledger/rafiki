@@ -2,6 +2,7 @@ import assert from 'assert'
 import { faker } from '@faker-js/faker'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
+import { randomBytes } from 'node:crypto'
 
 import {
   FundingError,
@@ -9,7 +10,11 @@ import {
   OutgoingPaymentError,
   isOutgoingPaymentError
 } from './errors'
-import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
+import {
+  CreateFromCardPayment,
+  CreateOutgoingPaymentOptions,
+  OutgoingPaymentService
+} from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config, IAppConfig } from '../../../config/app'
 import { Grant } from '../../auth/middleware'
@@ -33,10 +38,12 @@ import {
   OutgoingPaymentState,
   PaymentData,
   OutgoingPaymentEvent,
-  OutgoingPaymentEventType
+  OutgoingPaymentEventType,
+  OutgoingPaymentGrantSpentAmounts
 } from './model'
 import { RETRY_BACKOFF_SECONDS } from './worker'
 import { IncomingPayment, IncomingPaymentState } from '../incoming/model'
+import { IncomingPaymentInitiationReason } from '../incoming/types'
 import { isTransferError } from '../../../accounting/errors'
 import { AccountingService } from '../../../accounting/service'
 import { AssetOptions } from '../../../asset/service'
@@ -62,6 +69,7 @@ import {
 } from '../../../tests/tenantSettings'
 import { OpenPaymentsPaymentMethod } from '../../../payment-method/provider/service'
 import { IlpAddress } from 'ilp-packet'
+import { OutgoingPaymentCardDetails } from './card/model'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -107,10 +115,10 @@ describe('OutgoingPaymentService', (): void => {
     [key in OutgoingPaymentState]: OutgoingPaymentEventType | undefined
   } = {
     [OutgoingPaymentState.Funding]: OutgoingPaymentEventType.PaymentCreated,
-    [OutgoingPaymentState.Sending]: undefined,
+    [OutgoingPaymentState.Sending]: OutgoingPaymentEventType.PaymentFunded,
     [OutgoingPaymentState.Failed]: OutgoingPaymentEventType.PaymentFailed,
     [OutgoingPaymentState.Completed]: OutgoingPaymentEventType.PaymentCompleted,
-    [OutgoingPaymentState.Cancelled]: undefined
+    [OutgoingPaymentState.Cancelled]: OutgoingPaymentEventType.PaymentCancelled
   }
 
   async function processNext(
@@ -126,7 +134,7 @@ describe('OutgoingPaymentService', (): void => {
     if (expectState) expect(payment.state).toBe(expectState)
     expect(payment.error).toEqual(expectedError || null)
     const type = webhookTypes[payment.state]
-    if (type) {
+    if (type && type !== OutgoingPaymentEventType.PaymentFunded) {
       await expect(
         OutgoingPaymentEvent.query(knex).where({
           type
@@ -173,6 +181,8 @@ describe('OutgoingPaymentService', (): void => {
           debitAmount: args.finalDebitAmount,
           receiveAmount: args.finalReceiveAmount
         })
+
+        return args.finalReceiveAmount
       })
   }
 
@@ -322,7 +332,8 @@ describe('OutgoingPaymentService', (): void => {
 
     incomingPayment = await createIncomingPayment(deps, {
       walletAddressId: receiverWalletAddress.id,
-      tenantId: Config.operatorTenantId
+      tenantId: Config.operatorTenantId,
+      initiationReason: IncomingPaymentInitiationReason.Admin
     })
     receiver = incomingPayment.getUrl(config.openPaymentsUrl)
 
@@ -450,7 +461,8 @@ describe('OutgoingPaymentService', (): void => {
         })
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId: receiverWalletAddress.id,
-          tenantId: Config.operatorTenantId
+          tenantId: Config.operatorTenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
         })
         otherReceiver = incomingPayment.getUrl(config.openPaymentsUrl)
 
@@ -669,6 +681,154 @@ describe('OutgoingPaymentService', (): void => {
         }
       }
     )
+
+    describe('Grant Spent Amounts', () => {
+      beforeEach(async (): Promise<void> => {
+        jest.useFakeTimers()
+      })
+      afterEach(async (): Promise<void> => {
+        jest.useRealTimers()
+      })
+
+      test('should not create spent amounts record when cancelling payment without grant', async (): Promise<void> => {
+        const payment = await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver,
+          debitAmount: {
+            value: BigInt(100),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        const cancelResult = await outgoingPaymentService.cancel({
+          tenantId,
+          id: payment.id
+        })
+
+        assert.ok(cancelResult instanceof OutgoingPayment)
+        expect(cancelResult.state).toBe(OutgoingPaymentState.Cancelled)
+
+        // Verify no spent amounts records exist
+        const spentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        ).where({ outgoingPaymentId: payment.id })
+
+        expect(spentAmounts).toHaveLength(0)
+      })
+
+      test('should revert grant spent amounts with interval when cancelling payment', async (): Promise<void> => {
+        jest.setSystemTime(new Date('2025-01-02T00:00:00Z'))
+
+        const grant: Grant = {
+          id: uuid(),
+          limits: {
+            debitAmount: {
+              value: BigInt(1000),
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            interval: 'R/2025-01-01T00:00:00Z/P1M'
+          }
+        }
+        await OutgoingPaymentGrant.query(knex).insertAndFetch({
+          id: grant.id
+        })
+
+        const paymentAmount = BigInt(100)
+
+        // Create first payment
+        const firstPayment = await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver,
+          debitAmount: {
+            value: paymentAmount,
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        jest.advanceTimersByTime(500)
+
+        // Create second payment
+        const secondPaymentAmount = BigInt(200)
+        const secondPayment = await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: secondPaymentAmount,
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        jest.advanceTimersByTime(500)
+
+        // Verify spent amounts before cancellation
+        const beforeCancelSpentAmounts =
+          await OutgoingPaymentGrantSpentAmounts.query(knex)
+            .where({ grantId: grant.id })
+            .orderBy('createdAt', 'desc')
+            .first()
+
+        assert(beforeCancelSpentAmounts)
+        expect(beforeCancelSpentAmounts).toMatchObject({
+          grantId: grant.id,
+          outgoingPaymentId: secondPayment.id,
+          paymentDebitAmountValue: secondPaymentAmount,
+          intervalDebitAmountValue: paymentAmount + secondPaymentAmount,
+          grantTotalDebitAmountValue: paymentAmount + secondPaymentAmount,
+          paymentState: OutgoingPaymentState.Funding
+        })
+
+        // Cancel the second payment
+        const cancelResult = await outgoingPaymentService.cancel({
+          tenantId,
+          id: secondPayment.id,
+          reason: 'Testing interval cancellation'
+        })
+
+        assert.ok(cancelResult instanceof OutgoingPayment)
+        expect(cancelResult.state).toBe(OutgoingPaymentState.Cancelled)
+
+        // Verify spent amounts were reverted correctly
+        const afterCancelSpentAmounts =
+          await OutgoingPaymentGrantSpentAmounts.query(knex)
+            .where({ grantId: grant.id })
+            .orderBy('createdAt', 'desc')
+            .first()
+
+        assert(afterCancelSpentAmounts)
+        expect(afterCancelSpentAmounts.id).not.toBe(beforeCancelSpentAmounts.id)
+        expect(afterCancelSpentAmounts).toMatchObject({
+          grantId: grant.id,
+          outgoingPaymentId: secondPayment.id,
+          paymentDebitAmountValue: 0n,
+          paymentReceiveAmountValue: 0n,
+          intervalDebitAmountValue: firstPayment.debitAmount.value,
+          intervalReceiveAmountValue: firstPayment.receiveAmount.value,
+          grantTotalDebitAmountValue: firstPayment.debitAmount.value,
+          grantTotalReceiveAmountValue: firstPayment.receiveAmount.value,
+          paymentState: OutgoingPaymentState.Cancelled,
+          intervalStart: expect.any(Date),
+          intervalEnd: expect.any(Date)
+        })
+      })
+    })
   })
 
   describe('create', (): void => {
@@ -708,6 +868,9 @@ describe('OutgoingPaymentService', (): void => {
         debitAmount,
         method: 'ilp'
       })
+      await expect(
+        OutgoingPaymentGrantSpentAmounts.query(knex)
+      ).resolves.toEqual([])
     })
 
     test(
@@ -795,12 +958,43 @@ describe('OutgoingPaymentService', (): void => {
             grant
           }
 
+          // Must account for interledger/pay off-by-one issue (even with 0 slippage/fees)
+          const adjustedReceiveAmountValue = debitAmount.value - 1n
+
           for (let i = 0; i < 3; i++) {
             const payment = await outgoingPaymentService.create(options)
             assert.ok(!isOutgoingPaymentError(payment))
+
             expect(payment.grantSpentReceiveAmount?.value ?? 0n).toBe(
-              // Must account for interledger/pay off-by-one issue (even with 0 slippage/fees)
-              BigInt((debitAmount.value - BigInt(1)) * BigInt(i))
+              adjustedReceiveAmountValue * BigInt(i)
+            )
+
+            const spentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+              knex
+            )
+              .where({ outgoingPaymentId: payment.id })
+              .first()
+            assert(spentAmounts)
+
+            expect(spentAmounts).toEqual(
+              expect.objectContaining({
+                grantId: grant.id,
+                outgoingPaymentId: payment.id,
+                debitAmountCode: debitAmount.assetCode,
+                debitAmountScale: debitAmount.assetScale,
+                paymentDebitAmountValue: debitAmount.value,
+                grantTotalDebitAmountValue: debitAmount.value * BigInt(i + 1),
+                receiveAmountCode: debitAmount.assetCode,
+                receiveAmountScale: debitAmount.assetScale,
+                paymentReceiveAmountValue: adjustedReceiveAmountValue,
+                grantTotalReceiveAmountValue:
+                  adjustedReceiveAmountValue * BigInt(i + 1),
+                intervalDebitAmountValue: null,
+                intervalReceiveAmountValue: null,
+                intervalStart: null,
+                intervalEnd: null,
+                paymentState: 'FUNDING'
+              })
             )
           }
         }
@@ -1235,28 +1429,39 @@ describe('OutgoingPaymentService', (): void => {
             ).resolves.toEqual(OutgoingPaymentError.InsufficientGrant)
           })
           test.each`
-            limits                                                                         | description
-            ${{ debitAmount: { assetCode: 'EUR', assetScale: asset.scale } }}              | ${'debitAmount asset code'}
-            ${{ debitAmount: { assetCode: asset.code, assetScale: 2 } }}                   | ${'debitAmount asset scale'}
-            ${{ receiveAmount: { assetCode: 'EUR', assetScale: destinationAsset.scale } }} | ${'receiveAmount asset code'}
-            ${{ receiveAmount: { assetCode: destinationAsset.code, assetScale: 2 } }}      | ${'receiveAmount asset scale'}
+            limits                                                                         | withInterval | description
+            ${{ debitAmount: { assetCode: 'EUR', assetScale: asset.scale } }}              | ${true}      | ${'debitAmount asset code with interval'}
+            ${{ debitAmount: { assetCode: asset.code, assetScale: 2 } }}                   | ${true}      | ${'debitAmount asset scale with interval'}
+            ${{ receiveAmount: { assetCode: 'EUR', assetScale: destinationAsset.scale } }} | ${true}      | ${'receiveAmount asset code with interval'}
+            ${{ receiveAmount: { assetCode: destinationAsset.code, assetScale: 2 } }}      | ${true}      | ${'receiveAmount asset scale with interval'}
+            ${{ debitAmount: { assetCode: 'EUR', assetScale: asset.scale } }}              | ${false}     | ${'debitAmount asset code without interval'}
+            ${{ debitAmount: { assetCode: asset.code, assetScale: 2 } }}                   | ${false}     | ${'debitAmount asset scale without interval'}
+            ${{ receiveAmount: { assetCode: 'EUR', assetScale: destinationAsset.scale } }} | ${false}     | ${'receiveAmount asset code without interval'}
+            ${{ receiveAmount: { assetCode: destinationAsset.code, assetScale: 2 } }}      | ${false}     | ${'receiveAmount asset scale without interval'}
           `(
             'fails if grant limits do not match payment - $description',
-            async ({ limits }): Promise<void> => {
+            async ({ limits, withInterval }): Promise<void> => {
               assert.ok(grant)
-              grant.limits = { ...limits, interval }
+              const grantLimits = { ...limits }
+              if (withInterval) {
+                grantLimits.interval = interval
+              }
+              grant.limits = grantLimits
+
               await expect(
                 outgoingPaymentService.create({ ...options, grant })
               ).resolves.toEqual(OutgoingPaymentError.InsufficientGrant)
             }
           )
           test.each`
-            debitAmount | description
-            ${true}     | ${'debitAmount'}
-            ${false}    | ${'receiveAmount'}
+            debitAmount | withInterval | description
+            ${true}     | ${true}      | ${'debitAmount with interval'}
+            ${false}    | ${true}      | ${'receiveAmount with interval'}
+            ${true}     | ${false}     | ${'debitAmount without interval'}
+            ${false}    | ${false}     | ${'receiveAmount without interval'}
           `(
             'fails if grant limit $description is not enough for payment',
-            async ({ debitAmount }): Promise<void> => {
+            async ({ debitAmount, withInterval }): Promise<void> => {
               const amount = {
                 value: BigInt(12),
                 assetCode: debitAmount
@@ -1267,29 +1472,33 @@ describe('OutgoingPaymentService', (): void => {
                   : quote.receiveAmount.assetScale
               }
               assert.ok(grant)
-              grant.limits = debitAmount
-                ? {
-                    debitAmount: amount,
-                    interval
-                  }
-                : {
-                    receiveAmount: amount,
-                    interval
-                  }
+              const limits: Grant['limits'] = debitAmount
+                ? { debitAmount: amount }
+                : { receiveAmount: amount }
+
+              if (withInterval) {
+                limits.interval = interval
+              }
+
+              grant.limits = limits
               await expect(
                 outgoingPaymentService.create({ ...options, grant })
               ).resolves.toEqual(OutgoingPaymentError.InsufficientGrant)
             }
           )
           test.each`
-            debitAmount | failed   | description
-            ${true}     | ${false} | ${'debitAmount'}
-            ${false}    | ${false} | ${'receiveAmount'}
-            ${true}     | ${true}  | ${'debitAmount, failed first payment'}
-            ${false}    | ${true}  | ${'receiveAmount, failed first payment'}
+            debitAmount | failed   | withInterval | description
+            ${true}     | ${false} | ${true}      | ${'debitAmount with interval'}
+            ${false}    | ${false} | ${true}      | ${'receiveAmount with interval'}
+            ${true}     | ${true}  | ${true}      | ${'debitAmount, failed first payment with interval'}
+            ${false}    | ${true}  | ${true}      | ${'receiveAmount, failed first payment with interval'}
+            ${true}     | ${false} | ${false}     | ${'debitAmount without interval'}
+            ${false}    | ${false} | ${false}     | ${'receiveAmount without interval'}
+            ${true}     | ${true}  | ${false}     | ${'debitAmount, failed first payment without interval'}
+            ${false}    | ${true}  | ${false}     | ${'receiveAmount, failed first payment without interval'}
           `(
             'fails if limit was already used up - $description',
-            async ({ debitAmount, failed }): Promise<void> => {
+            async ({ debitAmount, failed, withInterval }): Promise<void> => {
               const grantAmount = {
                 value: BigInt(200),
                 assetCode: debitAmount
@@ -1299,30 +1508,38 @@ describe('OutgoingPaymentService', (): void => {
                   ? quote.asset.scale
                   : quote.receiveAmount.assetScale
               }
+
               assert.ok(grant)
-              grant.limits = {
-                debitAmount: debitAmount ? grantAmount : undefined,
-                receiveAmount: debitAmount ? undefined : grantAmount,
-                interval
+
+              const grantLimits: Grant['limits'] = debitAmount
+                ? { debitAmount: grantAmount }
+                : { receiveAmount: grantAmount }
+
+              if (withInterval) {
+                grantLimits.interval = interval
               }
+
+              grant.limits = grantLimits
+
               const paymentAmount = {
                 ...grantAmount,
                 value: BigInt(190)
               }
+
               const firstPayment = await createOutgoingPayment(deps, {
                 tenantId,
                 walletAddressId,
                 client,
-                receiver: `${
-                  Config.openPaymentsUrl
-                }/incoming-payments/${uuid()}`,
+                receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
                 debitAmount: debitAmount ? paymentAmount : undefined,
                 receiveAmount: debitAmount ? undefined : paymentAmount,
                 grant,
                 validDestination: false,
                 method: 'ilp'
               })
+
               assert.ok(firstPayment)
+
               if (failed) {
                 await firstPayment
                   .$query(knex)
@@ -1356,22 +1573,31 @@ describe('OutgoingPaymentService', (): void => {
           )
 
           test.each`
-            debitAmount | competingPayment | failed       | half     | description
-            ${true}     | ${false}         | ${undefined} | ${false} | ${'debitAmount w/o competing payment'}
-            ${false}    | ${false}         | ${undefined} | ${false} | ${'receiveAmount w/o competing payment'}
-            ${true}     | ${true}          | ${false}     | ${false} | ${'debitAmount w/ competing payment'}
-            ${false}    | ${true}          | ${false}     | ${false} | ${'receiveAmount w/ competing payment'}
-            ${true}     | ${true}          | ${true}      | ${false} | ${'debitAmount w/ failed competing payment'}
-            ${false}    | ${true}          | ${true}      | ${false} | ${'receiveAmount w/ failed competing payment'}
-            ${true}     | ${true}          | ${true}      | ${true}  | ${'debitAmount w/ half-way failed competing payment'}
-            ${false}    | ${true}          | ${true}      | ${true}  | ${'receiveAmount half-way w/ failed competing payment'}
+            debitAmount | competingPayment | failed       | half     | withInterval | description
+            ${true}     | ${false}         | ${undefined} | ${false} | ${true}      | ${'debitAmount w/o competing payment with interval'}
+            ${false}    | ${false}         | ${undefined} | ${false} | ${true}      | ${'receiveAmount w/o competing payment with interval'}
+            ${true}     | ${true}          | ${false}     | ${false} | ${true}      | ${'debitAmount w/ competing payment with interval'}
+            ${false}    | ${true}          | ${false}     | ${false} | ${true}      | ${'receiveAmount w/ competing payment with interval'}
+            ${true}     | ${true}          | ${true}      | ${false} | ${true}      | ${'debitAmount w/ failed competing payment with interval'}
+            ${false}    | ${true}          | ${true}      | ${false} | ${true}      | ${'receiveAmount w/ failed competing payment with interval'}
+            ${true}     | ${true}          | ${true}      | ${true}  | ${true}      | ${'debitAmount w/ half-way failed competing payment with interval'}
+            ${false}    | ${true}          | ${true}      | ${true}  | ${true}      | ${'receiveAmount half-way w/ failed competing payment with interval'}
+            ${true}     | ${false}         | ${undefined} | ${false} | ${false}     | ${'debitAmount w/o competing payment without interval'}
+            ${false}    | ${false}         | ${undefined} | ${false} | ${false}     | ${'receiveAmount w/o competing payment without interval'}
+            ${true}     | ${true}          | ${false}     | ${false} | ${false}     | ${'debitAmount w/ competing payment without interval'}
+            ${false}    | ${true}          | ${false}     | ${false} | ${false}     | ${'receiveAmount w/ competing payment without interval'}
+            ${true}     | ${true}          | ${true}      | ${false} | ${false}     | ${'debitAmount w/ failed competing payment without interval'}
+            ${false}    | ${true}          | ${true}      | ${false} | ${false}     | ${'receiveAmount w/ failed competing payment without interval'}
+            ${true}     | ${true}          | ${true}      | ${true}  | ${false}     | ${'debitAmount w/ half-way failed competing payment without interval'}
+            ${false}    | ${true}          | ${true}      | ${true}  | ${false}     | ${'receiveAmount half-way w/ failed competing payment without interval'}
           `(
             'succeeds if grant limit is enough for payment - $description',
             async ({
               debitAmount,
               competingPayment,
               failed,
-              half
+              half,
+              withInterval
             }): Promise<void> => {
               const grantAmount = {
                 value: BigInt(1234567),
@@ -1382,39 +1608,44 @@ describe('OutgoingPaymentService', (): void => {
                   ? quote.asset.scale
                   : quote.receiveAmount.assetScale
               }
+
               assert.ok(grant)
-              grant.limits = debitAmount
-                ? {
-                    debitAmount: grantAmount,
-                    interval
-                  }
-                : {
-                    receiveAmount: grantAmount,
-                    interval
-                  }
+
+              const limits: Grant['limits'] = debitAmount
+                ? { debitAmount: grantAmount }
+                : { receiveAmount: grantAmount }
+
+              if (withInterval) {
+                limits.interval = interval
+              }
+
+              grant.limits = limits
+
               if (competingPayment) {
                 const paymentAmount = {
                   ...grantAmount,
                   value: BigInt(7)
                 }
+
                 const firstPayment = await createOutgoingPayment(deps, {
                   tenantId,
                   walletAddressId,
                   client,
-                  receiver: `${
-                    Config.openPaymentsUrl
-                  }/incoming-payments/${uuid()}`,
+                  receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
                   debitAmount: debitAmount ? paymentAmount : undefined,
                   receiveAmount: debitAmount ? undefined : paymentAmount,
                   grant,
                   validDestination: false,
                   method: 'ilp'
                 })
+
                 assert.ok(firstPayment)
+
                 if (failed) {
                   await firstPayment
                     .$query(knex)
                     .patch({ state: OutgoingPaymentState.Failed })
+
                   if (half) {
                     jest
                       .spyOn(accountingService, 'getTotalSent')
@@ -1422,6 +1653,7 @@ describe('OutgoingPaymentService', (): void => {
                   }
                 }
               }
+
               await expect(
                 outgoingPaymentService.create({ ...options, grant })
               ).resolves.toBeInstanceOf(OutgoingPayment)
@@ -1431,7 +1663,383 @@ describe('OutgoingPaymentService', (): void => {
       }
     })
 
-    test('fails to create when both debitAmount and receiveAmount are set to grant limits', async () => {
+    describe('legacy grant spent amounts calculated from history of payments', (): void => {
+      let grant: Grant
+      let client: string
+
+      beforeEach(async (): Promise<void> => {
+        // setup existing grant
+        grant = {
+          id: uuid()
+        }
+        client = faker.internet.url({ appendSlash: false })
+        await OutgoingPaymentGrant.query(knex).insertAndFetch({
+          id: grant.id
+        })
+      })
+
+      test('without interval', async (): Promise<void> => {
+        // amount limit only, no interval
+        grant.limits = {
+          debitAmount: {
+            value: BigInt(1000),
+            assetCode: 'USD',
+            assetScale: 9
+          }
+        }
+
+        const legacyPayment1Amount = BigInt(100)
+        const legacyPayment2Amount = BigInt(150)
+        const newPaymentAmount = BigInt(200)
+
+        await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: legacyPayment1Amount,
+            assetCode: 'USD',
+            assetScale: 9
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+        await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: legacyPayment2Amount,
+            assetCode: 'USD',
+            assetScale: 9
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        // remove spent amounts records to simulate a grant that existed before
+        // tracking spent amounts via OutgoingPaymentGrantSpentAmounts
+        await OutgoingPaymentGrantSpentAmounts.query(knex)
+          .where('grantId', grant.id)
+          .delete()
+
+        const quote = await createQuote(deps, {
+          tenantId,
+          walletAddressId,
+          receiver,
+          debitAmount: {
+            value: newPaymentAmount,
+            assetCode: 'USD',
+            assetScale: 9
+          },
+          method: 'ilp'
+        })
+        const payment = await outgoingPaymentService.create({
+          tenantId,
+          walletAddressId,
+          client,
+          quoteId: quote.id,
+          grant
+        })
+        assert.ok(!isOutgoingPaymentError(payment))
+
+        expect(payment.grantSpentDebitAmount?.value).toBe(
+          legacyPayment1Amount + legacyPayment2Amount
+        )
+        const spentAmounts = await OutgoingPaymentGrantSpentAmounts.query(knex)
+          .where({ outgoingPaymentId: payment.id })
+          .first()
+        assert(spentAmounts)
+        expect(spentAmounts).toEqual(
+          expect.objectContaining({
+            grantId: grant.id,
+            outgoingPaymentId: payment.id,
+            grantTotalDebitAmountValue:
+              legacyPayment1Amount + legacyPayment2Amount + newPaymentAmount,
+            intervalDebitAmountValue: null,
+            intervalReceiveAmountValue: null,
+            intervalStart: null,
+            intervalEnd: null,
+            paymentState: 'FUNDING'
+          })
+        )
+      })
+
+      test('with interval', async (): Promise<void> => {
+        const start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000) // 5 days ago
+        const interval = `R0/${start.toISOString()}/P1M`
+
+        // with amount and interval limits
+        grant.limits = {
+          debitAmount: {
+            value: BigInt(1000),
+            assetCode: 'USD',
+            assetScale: 9
+          },
+          interval
+        }
+
+        const legacyPaymentInIntervalAmount = BigInt(100)
+        const legacyPaymentBeforeIntervalAmount = BigInt(75)
+        const newPaymentAmount = BigInt(200)
+
+        // legacy payment in interval
+        await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: legacyPaymentInIntervalAmount,
+            assetCode: 'USD',
+            assetScale: 9
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+        const legacyPaymentBeforeInterval = await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: legacyPaymentBeforeIntervalAmount,
+            assetCode: 'USD',
+            assetScale: 9
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        // manually set to be outside interval
+        const oldDate = new Date(start.getTime() - 50 * 24 * 60 * 60 * 1000) // 50 days before interval start
+        await legacyPaymentBeforeInterval
+          .$query(knex)
+          .patch({ createdAt: oldDate })
+
+        // remove spent amounts records to simulate a grant that existed before
+        // tracking spent amounts via OutgoingPaymentGrantSpentAmounts
+        await OutgoingPaymentGrantSpentAmounts.query(knex)
+          .where('grantId', grant.id)
+          .delete()
+
+        const quote = await createQuote(deps, {
+          tenantId,
+          walletAddressId,
+          receiver,
+          debitAmount: {
+            value: newPaymentAmount,
+            assetCode: 'USD',
+            assetScale: 9
+          },
+          method: 'ilp'
+        })
+        const payment = await outgoingPaymentService.create({
+          tenantId,
+          walletAddressId,
+          client,
+          quoteId: quote.id,
+          grant
+        })
+
+        assert.ok(!isOutgoingPaymentError(payment))
+
+        // should not include out of interval payment
+        expect(payment.grantSpentDebitAmount?.value).toBe(
+          legacyPaymentInIntervalAmount
+        )
+
+        const spentAmounts = await OutgoingPaymentGrantSpentAmounts.query(knex)
+          .where({ outgoingPaymentId: payment.id })
+          .first()
+        assert(spentAmounts)
+        expect(spentAmounts).toEqual(
+          expect.objectContaining({
+            grantId: grant.id,
+            outgoingPaymentId: payment.id,
+            // all legacy payments and new payment
+            grantTotalDebitAmountValue:
+              legacyPaymentInIntervalAmount +
+              legacyPaymentBeforeIntervalAmount +
+              newPaymentAmount,
+            // all legacy payments and new payments in current interval
+            intervalDebitAmountValue:
+              legacyPaymentInIntervalAmount + newPaymentAmount,
+            intervalStart: expect.any(Date),
+            intervalEnd: expect.any(Date),
+            paymentState: 'FUNDING'
+          })
+        )
+      })
+
+      test('with failed payments - correctly handles partially sent amounts', async (): Promise<void> => {
+        grant.limits = {
+          debitAmount: {
+            value: BigInt(1000),
+            assetCode: 'USD',
+            assetScale: 9
+          }
+        }
+
+        const successfulPaymentAmount = BigInt(100)
+        const failedPaymentRequestedAmount = BigInt(200)
+        const failedPaymentActualSentAmount = BigInt(150)
+        const newPaymentAmount = BigInt(50)
+
+        // successful payment
+        await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: successfulPaymentAmount,
+            assetCode: 'USD',
+            assetScale: 9
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        const failedPayment = await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: failedPaymentRequestedAmount,
+            assetCode: 'USD',
+            assetScale: 9
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+        await failedPayment.$query(knex).patch({
+          state: OutgoingPaymentState.Failed
+        })
+
+        // return partial amount for failed payment
+        const mockGetTotalSent = jest.spyOn(accountingService, 'getTotalSent')
+        mockGetTotalSent.mockResolvedValueOnce(failedPaymentActualSentAmount)
+
+        // remove spent amounts records to simulate a grant that existed before
+        // tracking spent amounts via OutgoingPaymentGrantSpentAmounts
+        await OutgoingPaymentGrantSpentAmounts.query(knex)
+          .where('grantId', grant.id)
+          .delete()
+
+        const quote = await createQuote(deps, {
+          tenantId,
+          walletAddressId,
+          receiver,
+          debitAmount: {
+            value: newPaymentAmount,
+            assetCode: 'USD',
+            assetScale: 9
+          },
+          method: 'ilp'
+        })
+
+        const payment = await outgoingPaymentService.create({
+          tenantId,
+          walletAddressId,
+          client,
+          quoteId: quote.id,
+          grant
+        })
+
+        assert.ok(!isOutgoingPaymentError(payment))
+
+        const expectedTotalSpent =
+          successfulPaymentAmount + failedPaymentActualSentAmount
+        const expectedGrantTotal = expectedTotalSpent + newPaymentAmount
+
+        expect(payment.grantSpentDebitAmount?.value).toBe(expectedTotalSpent)
+
+        const spentAmounts = await OutgoingPaymentGrantSpentAmounts.query(knex)
+          .where({ outgoingPaymentId: payment.id })
+          .first()
+
+        assert(spentAmounts)
+        expect(spentAmounts.grantTotalDebitAmountValue).toBe(expectedGrantTotal)
+        expect(mockGetTotalSent).toHaveBeenCalledWith(failedPayment.id)
+      })
+
+      test('with failed payment that sent nothing - excludes from spent amounts', async (): Promise<void> => {
+        grant.limits = {
+          debitAmount: {
+            value: BigInt(1000),
+            assetCode: 'USD',
+            assetScale: 9
+          }
+        }
+
+        const failedPayment = await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: BigInt(200),
+            assetCode: 'USD',
+            assetScale: 9
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        await failedPayment.$query(knex).patch({
+          state: OutgoingPaymentState.Failed
+        })
+
+        const mockGetTotalSent = jest.spyOn(accountingService, 'getTotalSent')
+        mockGetTotalSent.mockResolvedValueOnce(BigInt(0))
+
+        // remove spent amounts records to simulate a grant that existed before
+        // tracking spent amounts via OutgoingPaymentGrantSpentAmounts
+        await OutgoingPaymentGrantSpentAmounts.query(knex)
+          .where('grantId', grant.id)
+          .delete()
+
+        const quote = await createQuote(deps, {
+          tenantId,
+          walletAddressId,
+          receiver,
+          debitAmount: {
+            value: BigInt(50),
+            assetCode: 'USD',
+            assetScale: 9
+          },
+          method: 'ilp'
+        })
+
+        const payment = await outgoingPaymentService.create({
+          tenantId,
+          walletAddressId,
+          client,
+          quoteId: quote.id,
+          grant
+        })
+
+        assert.ok(!isOutgoingPaymentError(payment))
+
+        // failed payment should have sent nothing
+        expect(payment.grantSpentDebitAmount?.value).toBe(BigInt(0))
+        expect(mockGetTotalSent).toHaveBeenCalledWith(failedPayment.id)
+      })
+    })
+
+    test(
+      'fails to create when both debitAmount and receiveAmount are set to grant limits',
       withConfigOverride(
         () => config,
         { slippage: 0 },
@@ -1485,6 +2093,50 @@ describe('OutgoingPaymentService', (): void => {
           expect(payment).toBe(OutgoingPaymentError.OnlyOneGrantAmountAllowed)
         }
       )
+    )
+
+    test('stores card details when card payment', async () => {
+      const paymentMethods: OpenPaymentsPaymentMethod[] = [
+        {
+          type: 'ilp',
+          ilpAddress: 'test.ilp' as IlpAddress,
+          sharedSecret: ''
+        }
+      ]
+      const debitAmount = {
+        value: BigInt(123),
+        assetCode: receiverWalletAddress.asset.code,
+        assetScale: receiverWalletAddress.asset.scale
+      }
+      const options: CreateFromCardPayment = {
+        walletAddressId: receiverWalletAddress.id,
+        debitAmount,
+        incomingPayment: incomingPayment.toOpenPaymentsTypeWithMethods(
+          config.openPaymentsUrl,
+          receiverWalletAddress,
+          paymentMethods
+        ).id,
+        tenantId,
+        cardDetails: {
+          requestId: crypto.randomUUID(),
+          initiatedAt: new Date(),
+          data: {
+            signature: 'signature',
+            payload: 'payload'
+          }
+        }
+      }
+
+      const outgoingPayment = await outgoingPaymentService.create(options)
+
+      assert(outgoingPayment instanceof OutgoingPayment)
+
+      const cardDetails = await OutgoingPaymentCardDetails.query(knex).where({
+        outgoingPaymentId: outgoingPayment.id
+      })
+
+      expect(cardDetails).toHaveLength(1)
+      expect(cardDetails[0].requestId).toBe(options.cardDetails.requestId)
     })
   })
 
@@ -1534,7 +2186,8 @@ describe('OutgoingPaymentService', (): void => {
           assetCode: receiverWalletAddress.asset.code,
           assetScale: receiverWalletAddress.asset.scale
         },
-        tenantId: Config.operatorTenantId
+        tenantId: Config.operatorTenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
       })
       assert.ok(incomingPayment.walletAddress)
 
@@ -1618,7 +2271,8 @@ describe('OutgoingPaymentService', (): void => {
           assetCode: receiverWalletAddress.asset.code,
           assetScale: receiverWalletAddress.asset.scale
         },
-        tenantId: Config.operatorTenantId
+        tenantId: Config.operatorTenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
       })
       assert.ok(incomingPayment.walletAddress)
 
@@ -1691,7 +2345,8 @@ describe('OutgoingPaymentService', (): void => {
           assetCode: receiverWalletAddress.asset.code,
           assetScale: receiverWalletAddress.asset.scale
         },
-        tenantId: Config.operatorTenantId
+        tenantId: Config.operatorTenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
       })
       assert.ok(incomingPayment.id)
       assert.ok(incomingPayment.createdAt)
@@ -2018,6 +2673,125 @@ describe('OutgoingPaymentService', (): void => {
     })
   })
 
+  describe('webhook events for funded/cancelled (card vs non-card)', (): void => {
+    test('emits funded only for card flows', async (): Promise<void> => {
+      // Create card flow outgoing payment
+      const cardIncomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: receiverWalletAddress.id,
+        tenantId: Config.operatorTenantId,
+        initiationReason: IncomingPaymentInitiationReason.Card
+      })
+      const cardOptions: CreateFromCardPayment = {
+        walletAddressId,
+        debitAmount,
+        incomingPayment: cardIncomingPayment.getUrl(config.openPaymentsUrl),
+        tenantId,
+        cardDetails: {
+          requestId: crypto.randomUUID(),
+          data: {
+            signature: 'sig',
+            payload: 'payload'
+          },
+          initiatedAt: new Date()
+        }
+      }
+
+      const cardOutgoingPayment =
+        await outgoingPaymentService.create(cardOptions)
+      assert.ok(!isOutgoingPaymentError(cardOutgoingPayment))
+      await outgoingPaymentService.fund({
+        id: cardOutgoingPayment.id,
+        tenantId,
+        amount: debitAmount.value,
+        transferId: uuid()
+      })
+      await expect(
+        OutgoingPaymentEvent.query(knex).where({
+          outgoingPaymentId: cardOutgoingPayment.id,
+          type: OutgoingPaymentEventType.PaymentFunded
+        })
+      ).resolves.not.toHaveLength(0)
+
+      // Create non-card outgoing payment
+      const nonCard = await createOutgoingPayment(deps, {
+        tenantId,
+        walletAddressId,
+        client,
+        receiver,
+        debitAmount,
+        validDestination: true,
+        method: 'ilp'
+      })
+      await outgoingPaymentService.fund({
+        id: nonCard.id,
+        tenantId,
+        amount: debitAmount.value,
+        transferId: uuid()
+      })
+      await expect(
+        OutgoingPaymentEvent.query(knex).where({
+          outgoingPaymentId: nonCard.id,
+          type: OutgoingPaymentEventType.PaymentFunded
+        })
+      ).resolves.toHaveLength(0)
+    })
+
+    test('emits cancelled only for card flows', async (): Promise<void> => {
+      // Create card flow outgoing payment and cancel
+      const cardIncomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: receiverWalletAddress.id,
+        tenantId: Config.operatorTenantId,
+        initiationReason: IncomingPaymentInitiationReason.Card
+      })
+      const cardOptions: CreateFromCardPayment = {
+        walletAddressId,
+        debitAmount,
+        incomingPayment: cardIncomingPayment.getUrl(config.openPaymentsUrl),
+        tenantId,
+        cardDetails: {
+          requestId: crypto.randomUUID(),
+          data: {
+            signature: 'sig',
+            payload: 'payload'
+          },
+          initiatedAt: new Date()
+        }
+      }
+      const cardOutgoingPayment =
+        await outgoingPaymentService.create(cardOptions)
+      assert.ok(!isOutgoingPaymentError(cardOutgoingPayment))
+
+      await outgoingPaymentService.cancel({
+        id: cardOutgoingPayment.id,
+        tenantId
+      })
+      await expect(
+        OutgoingPaymentEvent.query(knex).where({
+          outgoingPaymentId: cardOutgoingPayment.id,
+          type: OutgoingPaymentEventType.PaymentCancelled
+        })
+      ).resolves.not.toHaveLength(0)
+
+      // Create non-card outgoing payment and cancel
+      const nonCard = await createOutgoingPayment(deps, {
+        tenantId,
+        walletAddressId,
+        client,
+        receiver,
+        debitAmount,
+        validDestination: true,
+        method: 'ilp'
+      })
+      await outgoingPaymentService.cancel({ id: nonCard.id, tenantId })
+      await expect(
+        OutgoingPaymentEvent.query(knex).where({
+          outgoingPaymentId: nonCard.id,
+          type: OutgoingPaymentEventType.PaymentCancelled
+        })
+      ).resolves.toHaveLength(0)
+    })
+  })
+
   describe('fund', (): void => {
     let payment: OutgoingPayment
     let quoteAmount: bigint
@@ -2104,6 +2878,436 @@ describe('OutgoingPaymentService', (): void => {
           id: payment.id
         })
         expect(after?.state).toBe(startState)
+      })
+    })
+
+    it(
+      'can add encrypted data to be transmitted',
+      withConfigOverride(
+        () => config,
+        {
+          dbEncryptionSecret: randomBytes(32).toString('base64')
+        },
+        async (): Promise<void> => {
+          const encryptedData = JSON.stringify({ data: faker.internet.email() })
+          const fundedPayment = await outgoingPaymentService.fund({
+            id: payment.id,
+            tenantId,
+            amount: quoteAmount,
+            transferId: uuid(),
+            dataToTransmit: encryptedData
+          })
+
+          assert.ok(!isTransferError(fundedPayment))
+          assert.ok(!isOutgoingPaymentError(fundedPayment))
+          expect(JSON.parse(fundedPayment.dataToTransmit as string)).toEqual(
+            expect.objectContaining({
+              cipherText: expect.any(String),
+              tag: expect.objectContaining({
+                data: expect.any(Array),
+                type: 'Buffer'
+              })
+            })
+          )
+          expect(
+            fundedPayment.getDataToTransmit(config.dbEncryptionSecret)
+          ).toEqual(encryptedData)
+        }
+      )
+    )
+
+    it(
+      'inserts data as-is without configured secret',
+      withConfigOverride(
+        () => config,
+        {
+          dbEncryptionSecret: undefined
+        },
+        async (): Promise<void> => {
+          const encryptedData = JSON.stringify({ data: faker.internet.email() })
+          const fundedPayment = await outgoingPaymentService.fund({
+            id: payment.id,
+            tenantId,
+            amount: quoteAmount,
+            transferId: uuid(),
+            dataToTransmit: encryptedData
+          })
+
+          assert.ok(!isTransferError(fundedPayment))
+          assert.ok(!isOutgoingPaymentError(fundedPayment))
+          expect(fundedPayment.dataToTransmit).toEqual(encryptedData)
+        }
+      )
+    )
+  })
+
+  describe('getGrantSpentAmounts', (): void => {
+    let grant: Grant
+    let debitAmountOptions: Amount
+
+    beforeEach(async (): Promise<void> => {
+      grant = {
+        id: uuid()
+      }
+      debitAmountOptions = {
+        value: BigInt(1000),
+        assetCode: asset.code,
+        assetScale: asset.scale
+      }
+    })
+
+    describe('without interval', (): void => {
+      test('handles non-existent grant', async (): Promise<void> => {
+        const nonExistentGrantId = uuid()
+
+        const result = await outgoingPaymentService.getGrantSpentAmounts({
+          grantId: nonExistentGrantId
+        })
+
+        expect(result).toEqual({
+          spentDebitAmount: null,
+          spentReceiveAmount: null
+        })
+      })
+
+      test('returns null amounts when no spent amounts records exist', async (): Promise<void> => {
+        const result = await outgoingPaymentService.getGrantSpentAmounts({
+          grantId: grant.id
+        })
+
+        expect(result).toEqual({
+          spentDebitAmount: null,
+          spentReceiveAmount: null
+        })
+      })
+
+      test('uses legacy path and calculates amounts correctly when grant exists but no spent amounts records', async (): Promise<void> => {
+        grant.limits = {
+          debitAmount: debitAmountOptions
+        }
+        await OutgoingPaymentGrant.query(knex).insert({ id: grant.id })
+
+        const payment1 = await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: BigInt(100),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        const payment2 = await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: BigInt(150),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        assert.ok(!isOutgoingPaymentError(payment1))
+        assert.ok(!isOutgoingPaymentError(payment2))
+
+        // Remove spent amounts records to simulate a grant that existed before
+        // tracking spent amounts via OutgoingPaymentGrantSpentAmounts
+        await OutgoingPaymentGrantSpentAmounts.query(knex)
+          .where('grantId', grant.id)
+          .delete()
+        const spentAmountsBefore = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where('grantId', grant.id)
+          .first()
+        expect(spentAmountsBefore).toBeUndefined()
+
+        const result = await outgoingPaymentService.getGrantSpentAmounts({
+          grantId: grant.id,
+          limits: grant.limits
+        })
+
+        // should calculate from historical payments: 100 + 150 = 250 debit
+        expect(result.spentDebitAmount).not.toBeNull()
+        expect(result.spentReceiveAmount).not.toBeNull()
+        expect(result.spentDebitAmount?.value).toBe(BigInt(250))
+        expect(result.spentDebitAmount?.assetCode).toBe(asset.code)
+        expect(result.spentDebitAmount?.assetScale).toBe(asset.scale)
+        expect(result.spentReceiveAmount?.value).toBe(
+          payment1.quote.receiveAmount.value +
+            payment2.quote.receiveAmount.value
+        )
+        expect(result.spentReceiveAmount?.assetCode).toBe(
+          payment2.quote.receiveAmount.assetCode
+        )
+        expect(result.spentReceiveAmount?.assetScale).toBe(
+          payment2.quote.receiveAmount.assetScale
+        )
+      })
+
+      test('returns total grant amounts from latest record', async (): Promise<void> => {
+        grant.limits = {
+          debitAmount: debitAmountOptions
+        }
+        await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: BigInt(100),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        const payment2 = await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: BigInt(150),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        const result = await outgoingPaymentService.getGrantSpentAmounts({
+          grantId: grant.id,
+          limits: grant.limits
+        })
+
+        const latestSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ outgoingPaymentId: payment2.id })
+          .first()
+
+        assert(latestSpentAmounts)
+        expect(result).toEqual({
+          spentDebitAmount: {
+            value: latestSpentAmounts.grantTotalDebitAmountValue,
+            assetCode: latestSpentAmounts.debitAmountCode,
+            assetScale: latestSpentAmounts.debitAmountScale
+          },
+          spentReceiveAmount: {
+            value: latestSpentAmounts.grantTotalReceiveAmountValue,
+            assetCode: latestSpentAmounts.receiveAmountCode,
+            assetScale: latestSpentAmounts.receiveAmountScale
+          }
+        })
+      })
+    })
+
+    describe('with interval', (): void => {
+      let interval: string
+      let intervalStart: Date
+
+      beforeEach((): void => {
+        intervalStart = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000) // 5 days ago
+        interval = `R0/${intervalStart.toISOString()}/P1M`
+      })
+
+      test('returns interval amounts from current interval', async (): Promise<void> => {
+        grant.limits = {
+          debitAmount: debitAmountOptions,
+          interval
+        }
+        const payment = await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: BigInt(100),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        const result = await outgoingPaymentService.getGrantSpentAmounts({
+          grantId: grant.id,
+          limits: grant.limits
+        })
+
+        const spentAmounts = await OutgoingPaymentGrantSpentAmounts.query(knex)
+          .where({ outgoingPaymentId: payment.id })
+          .first()
+
+        assert(spentAmounts)
+        expect(result).toEqual({
+          spentDebitAmount: {
+            value: spentAmounts.intervalDebitAmountValue ?? BigInt(0),
+            assetCode: spentAmounts.debitAmountCode,
+            assetScale: spentAmounts.debitAmountScale
+          },
+          spentReceiveAmount: {
+            value: spentAmounts.intervalReceiveAmountValue ?? BigInt(0),
+            assetCode: spentAmounts.receiveAmountCode,
+            assetScale: spentAmounts.receiveAmountScale
+          }
+        })
+      })
+
+      test('returns latest interval amounts when multiple payments in current interval', async (): Promise<void> => {
+        grant.limits = {
+          debitAmount: debitAmountOptions,
+          interval
+        }
+        await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: BigInt(100),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        await createOutgoingPayment(deps, {
+          tenantId,
+          walletAddressId,
+          client,
+          receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+          debitAmount: {
+            value: BigInt(150),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          grant,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        const result = await outgoingPaymentService.getGrantSpentAmounts({
+          grantId: grant.id,
+          limits: grant.limits
+        })
+
+        const latestSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+          knex
+        )
+          .where({ grantId: grant.id })
+          .first()
+        assert(latestSpentAmounts)
+
+        expect(result).toEqual({
+          spentDebitAmount: {
+            value: latestSpentAmounts.intervalDebitAmountValue ?? BigInt(0),
+            assetCode: latestSpentAmounts.debitAmountCode,
+            assetScale: latestSpentAmounts.debitAmountScale
+          },
+          spentReceiveAmount: {
+            value: latestSpentAmounts.intervalReceiveAmountValue ?? BigInt(0),
+            assetCode: latestSpentAmounts.receiveAmountCode,
+            assetScale: latestSpentAmounts.receiveAmountScale
+          }
+        })
+      })
+
+      test('returns null when payments exist but outside current interval', async (): Promise<void> => {
+        jest.useFakeTimers()
+
+        try {
+          const startDate = new Date('2024-01-15T00:00:00Z')
+          jest.setSystemTime(startDate)
+
+          // monthly repeating interval
+          const monthlyInterval = `R/${startDate.toISOString()}/P1M`
+          grant.limits = {
+            debitAmount: debitAmountOptions,
+            interval: monthlyInterval
+          }
+
+          // payment in the first interval
+          const payment = await createOutgoingPayment(deps, {
+            tenantId,
+            walletAddressId,
+            client,
+            receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
+            debitAmount: {
+              value: BigInt(100),
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            grant,
+            validDestination: false,
+            method: 'ilp'
+          })
+
+          const latestSpentAmounts =
+            await OutgoingPaymentGrantSpentAmounts.query(knex)
+              .where({ grantId: grant.id })
+              .first()
+          assert(latestSpentAmounts)
+
+          // advance time by 35 days to move into the next interval
+          jest.advanceTimersByTime(35 * 24 * 60 * 60 * 1000)
+
+          // should find no records for current interval
+          const result = await outgoingPaymentService.getGrantSpentAmounts({
+            grantId: grant.id,
+            limits: {
+              debitAmount: debitAmountOptions,
+              interval: monthlyInterval
+            }
+          })
+
+          expect(result).toEqual({
+            spentDebitAmount: {
+              value: 0n,
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            spentReceiveAmount: {
+              value: 0n,
+              assetCode: payment.receiveAmount.assetCode,
+              assetScale: payment.receiveAmount.assetScale
+            }
+          })
+        } finally {
+          jest.useRealTimers()
+        }
+      })
+
+      test('returns null when interval is invalid', async (): Promise<void> => {
+        const result = await outgoingPaymentService.getGrantSpentAmounts({
+          grantId: grant.id,
+          limits: {
+            debitAmount: debitAmountOptions,
+            interval: 'invalid-interval'
+          }
+        })
+
+        expect(result).toEqual({
+          spentDebitAmount: null,
+          spentReceiveAmount: null
+        })
       })
     })
   })

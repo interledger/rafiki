@@ -53,8 +53,13 @@ import { ApolloArmor } from '@escape.tech/graphql-armor'
 import { Redis } from 'ioredis'
 import { LoggingPlugin } from './graphql/plugin'
 import { gnapServerErrorMiddleware } from './shared/gnapErrors'
-import { verifyApiSignature } from './shared/utils'
+import {
+  authenticatedTenantMiddleware,
+  unauthenticatedTenantMiddleware
+} from './signature/tenant'
 import { TenantService } from './tenant/service'
+import { TenantRoutes } from './tenant/routes'
+import { Tenant } from './tenant/model'
 
 export interface AppContextData extends DefaultContext {
   logger: Logger
@@ -90,6 +95,18 @@ export interface DatabaseCleanupRule {
   defaultExpirationOffsetDays: number
 }
 
+export interface TenantedAppContext extends AppContext {
+  tenantApiSignatureResult: {
+    tenant: Tenant
+    isOperator: boolean
+  }
+}
+
+export interface TenantedApolloContext extends ApolloContext {
+  tenant: Tenant
+  isOperator: boolean
+}
+
 export interface AppServices {
   logger: Promise<Logger>
   knex: Promise<Knex>
@@ -104,6 +121,7 @@ export interface AppServices {
   interactionRoutes: Promise<InteractionRoutes>
   redis: Promise<Redis>
   tenantService: Promise<TenantService>
+  tenantRoutes: Promise<TenantRoutes>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -202,6 +220,30 @@ export class App {
 
     koa.use(bodyParser())
 
+    const redis = await this.container.use('redis')
+    koa.use(
+      async (
+        ctx: {
+          path: string
+          status: number
+        },
+        next: Koa.Next
+      ): Promise<void> => {
+        if (ctx.path === '/healthz') {
+          const knex = await this.container.use('knex')
+          try {
+            await redis.ping()
+            await knex.raw('SELECT 1')
+            ctx.status = 200
+          } catch (err) {
+            ctx.status = 500
+          }
+        } else {
+          return next()
+        }
+      }
+    )
+
     koa.use(
       async (
         ctx: {
@@ -218,20 +260,23 @@ export class App {
       }
     )
 
-    if (this.config.adminApiSecret) {
-      koa.use(async (ctx, next: Koa.Next): Promise<void> => {
-        if (!(await verifyApiSignature(ctx, this.config))) {
-          ctx.throw(401, 'Unauthorized')
-        }
-
-        return next()
-      })
-    }
+    // For tests, we still need to get the tenant in the middleware, but
+    // we don't need to verify the signature nor prevent replay attacks
+    koa.use(
+      this.config.env !== 'test'
+        ? authenticatedTenantMiddleware
+        : unauthenticatedTenantMiddleware
+    )
 
     koa.use(
       koaMiddleware(apolloServer, {
-        context: async (): Promise<ApolloContext> => {
+        context: async ({
+          ctx
+        }: {
+          ctx: TenantedAppContext
+        }): Promise<TenantedApolloContext> => {
           return {
+            ...ctx.tenantApiSignatureResult,
             container: this.container,
             logger: await this.container.use('logger')
           }
@@ -247,8 +292,16 @@ export class App {
 
     const router = new Router<DefaultState, AppContext>()
     router.use(bodyParser())
-    router.get('/healthz', (ctx: AppContext): void => {
-      ctx.status = 200
+    router.get('/healthz', async (ctx: AppContext): Promise<void> => {
+      const redis = await this.container.use('redis')
+      const knex = await this.container.use('knex')
+      try {
+        await redis.ping()
+        await knex.raw('SELECT 1')
+        ctx.status = 200
+      } catch (e) {
+        ctx.status = 500
+      }
     })
     router.use(gnapServerErrorMiddleware)
 
@@ -392,8 +445,16 @@ export class App {
 
     const router = new Router<DefaultState, AppContext>()
     router.use(bodyParser())
-    router.get('/healthz', (ctx: AppContext): void => {
-      ctx.status = 200
+    router.get('/healthz', async (ctx: AppContext): Promise<void> => {
+      const redis = await this.container.use('redis')
+      const knex = await this.container.use('knex')
+      try {
+        await redis.ping()
+        await knex.raw('SELECT 1')
+        ctx.status = 200
+      } catch (e) {
+        ctx.status = 500
+      }
     })
 
     const accessTokenRoutes = await this.container.use('accessTokenRoutes')
@@ -484,13 +545,20 @@ export class App {
 
     koa.use(errorHandler)
 
-    router.get('/healthz', (ctx: AppContext): void => {
-      ctx.status = 200
+    router.get('/healthz', async (ctx: AppContext): Promise<void> => {
+      const redis = await this.container.use('redis')
+      const knex = await this.container.use('knex')
+      try {
+        await redis.ping()
+        await knex.raw('SELECT 1')
+        ctx.status = 200
+      } catch (e) {
+        ctx.status = 500
+      }
     })
 
     const tenantRoutes = await this.container.use('tenantRoutes')
 
-    router.get('/tenant/:id', tenantRoutes.get)
     router.post('/tenant', tenantRoutes.create)
     router.patch('/tenant/:id', tenantRoutes.update)
     router.delete('/tenant/:id', tenantRoutes.delete)

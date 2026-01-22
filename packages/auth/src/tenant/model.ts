@@ -5,6 +5,8 @@ export class Tenant extends BaseModel {
     return 'tenants'
   }
 
+  public apiSecret!: string
+
   public idpConsentUrl?: string
   public idpSecret?: string
 

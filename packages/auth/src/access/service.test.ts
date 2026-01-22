@@ -1,5 +1,4 @@
 import nock from 'nock'
-import { Knex } from 'knex'
 import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
 import { Config } from '../config/app'
@@ -13,6 +12,7 @@ import { AccessError } from './errors'
 import { generateBaseGrant } from '../tests/grant'
 import { AccessType, AccessAction } from '@interledger/open-payments'
 import { Access } from './model'
+import { TransactionOrKnex } from 'objection'
 import { Tenant } from '../tenant/model'
 import { generateTenant } from '../tests/tenant'
 
@@ -20,7 +20,7 @@ describe('Access Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let accessService: AccessService
-  let trx: Knex.Transaction
+  let trx: TransactionOrKnex
   let grant: Grant
 
   beforeEach(async (): Promise<void> => {
@@ -34,10 +34,11 @@ describe('Access Service', (): void => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     accessService = await deps.use('accessService')
+    trx = appContainer.knex
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {

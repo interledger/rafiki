@@ -11,19 +11,21 @@
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "lint": "eslint --max-warnings=0 --fix .",
+    "lint:docs": "pnpm -C ./packages/documentation lint",
     "format": "prettier --write . && pnpm lint",
-    "format:docs": "prettier --write ./docs/**/*.md",
+    "format:docs": "pnpm -C ./packages/documentation format",
     "checks": "pnpm check:prettier && pnpm check:lint",
     "check:lint": "eslint --max-warnings=0 .",
     "check:prettier": "prettier --check .",
     "clean": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
     "build": "tsc --build",
-    "localenv:compose:psql": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/merged/docker-compose.yml",
+    "localenv:compose:psql": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/global-bank/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/merged/docker-compose.yml",
     "localenv:compose": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/merged/docker-compose.yml -f ./localenv/tigerbeetle/docker-compose.yml --env-file ./localenv/tigerbeetle/.env.tigerbeetle",
+    "localenv:compose:multihop": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/global-bank/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/multihop/docker-compose.yml -f ./localenv/merged/docker-compose.yml -f ./localenv/tigerbeetle/docker-compose.yml --env-file ./localenv/tigerbeetle/.env.tigerbeetle",
     "localenv:compose:multitenancy": "docker compose -f ./localenv/cloud-ten-wallet/docker-compose.yml -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/merged/docker-compose.yml -f ./localenv/tigerbeetle/docker-compose.yml --env-file ./localenv/tigerbeetle/.env.tigerbeetle",
-    "localenv:compose:psql:telemetry": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/merged/docker-compose.yml -f ./localenv/telemetry/docker-compose.yml",
-    "localenv:compose:telemetry": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/merged/docker-compose.yml -f ./localenv/tigerbeetle/docker-compose.yml -f ./localenv/telemetry/docker-compose.yml --env-file ./localenv/tigerbeetle/.env.tigerbeetle",
-    "localenv:compose:adminauth": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/merged/docker-compose.yml -f ./localenv/admin-auth/docker-compose.yml",
+    "localenv:compose:psql:telemetry": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/global-bank/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/merged/docker-compose.yml -f ./localenv/telemetry/docker-compose.yml",
+    "localenv:compose:telemetry": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/global-bank/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/merged/docker-compose.yml -f ./localenv/tigerbeetle/docker-compose.yml -f ./localenv/telemetry/docker-compose.yml --env-file ./localenv/tigerbeetle/.env.tigerbeetle",
+    "localenv:compose:adminauth": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/global-bank/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/merged/docker-compose.yml -f ./localenv/admin-auth/docker-compose.yml",
     "localenv:seed:auth": "pnpm -C ./packages/auth knex seed:run --env=development && pnpm -C ./packages/auth knex seed:run --env=peerdevelopment",
     "sanity": "pnpm -r build && pnpm -r test",
     "localenv:compose:autopeer": "run-p tunnel:start wait-tunnel:localenv:compose",
@@ -67,7 +69,7 @@
       "katex": ">=0.16.21",
       "jose": ">=4.15.5",
       "undici@>=5.0.0": "^5.28.5",
-      "undici@>=6.0.0": "^6.21.1",
+      "undici@>=6.0.0": "^6.21.2",
       "tar@<6.2.1": ">=6.2.1",
       "braces@<3.0.3": ">=3.0.3",
       "dset@<3.1.4": ">=3.1.4",
@@ -76,7 +78,8 @@
       "next": "^15.2.3",
       "form-data": "^4.0.4",
       "@interledger/stream-receiver": "workspace:*",
-      "@interledger/pay": "workspace:*"
+      "@interledger/pay": "workspace:*",
+      "sha.js": ">=2.4.12"
     }
   }
 }

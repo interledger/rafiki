@@ -5,7 +5,11 @@ import {
   OutgoingPaymentEvent,
   OutgoingPaymentEventType
 } from './model'
-import { ServiceDependencies } from './service'
+import {
+  revertGrantSpentAmounts,
+  ServiceDependencies,
+  updateGrantSpentAmounts
+} from './service'
 import { Receiver } from '../../receiver/model'
 import { TransactionOrKnex } from 'objection'
 import { ValueType } from '@opentelemetry/api'
@@ -86,6 +90,8 @@ export async function handleSending(
     description: 'Time to complete a payment',
     callName: 'PaymentMethodHandlerService:pay'
   })
+  let amountDelivered
+  let finalDebitAmount
   if (receiver.isLocal) {
     if (
       !payment.quote.debitAmountMinusFees ||
@@ -99,21 +105,28 @@ export async function handleSending(
       )
       throw LifecycleError.BadState
     }
-    await deps.paymentMethodHandlerService.pay('LOCAL', {
+    finalDebitAmount = payment.quote.debitAmountMinusFees
+    amountDelivered = await deps.paymentMethodHandlerService.pay('LOCAL', {
       receiver,
       outgoingPayment: payment,
-      finalDebitAmount: payment.quote.debitAmountMinusFees,
+      finalDebitAmount,
       finalReceiveAmount: maxReceiveAmount
     })
   } else {
-    await deps.paymentMethodHandlerService.pay('ILP', {
+    finalDebitAmount = maxDebitAmount
+    amountDelivered = await deps.paymentMethodHandlerService.pay('ILP', {
       receiver,
       outgoingPayment: payment,
-      finalDebitAmount: maxDebitAmount,
+      finalDebitAmount,
       finalReceiveAmount: maxReceiveAmount
     })
   }
   stopTimer()
+
+  await updateGrantSpentAmounts(deps, payment, {
+    debit: finalDebitAmount,
+    receive: amountDelivered
+  })
 
   await Promise.all([
     deps.telemetry.incrementCounter('transactions_total', 1, {
@@ -168,10 +181,17 @@ export async function handleFailed(
   const stopTimer = deps.telemetry.startTimer('handle_failed_ms', {
     callName: 'OutgoingPaymentLifecycle:handleFailed'
   })
+  const failedAt = new Date()
   await payment.$query(deps.knex).patch({
     state: OutgoingPaymentState.Failed,
-    error
+    error,
+    updatedAt: failedAt
   })
+
+  if (payment.grantId) {
+    await revertGrantSpentAmounts(deps, payment)
+  }
+
   await sendWebhookEvent(deps, payment, OutgoingPaymentEventType.PaymentFailed)
   stopTimer()
 }
@@ -213,15 +233,16 @@ export async function sendWebhookEvent(
     callName: 'OutgoingPaymentLifecycle:sendWebhookEvent'
   })
   // TigerBeetle accounts are only created as the OutgoingPayment is funded.
-  // So default the amountSent and balance to 0 for outgoing payments still in the funding state
-  const amountSent =
-    payment.state === OutgoingPaymentState.Funding
-      ? BigInt(0)
-      : await deps.accountingService.getTotalSent(payment.id)
-  const balance =
-    payment.state === OutgoingPaymentState.Funding
-      ? BigInt(0)
-      : await deps.accountingService.getBalance(payment.id)
+  // So default the amountSent and balance to 0 for outgoing payments still in the funding or cancelled states
+  const isZeroAmountSent =
+    payment.state === OutgoingPaymentState.Funding ||
+    payment.state === OutgoingPaymentState.Cancelled
+  const amountSent = isZeroAmountSent
+    ? BigInt(0)
+    : await deps.accountingService.getTotalSent(payment.id)
+  const balance = isZeroAmountSent
+    ? BigInt(0)
+    : await deps.accountingService.getBalance(payment.id)
 
   if (amountSent === undefined || balance === undefined) {
     stopTimer()
@@ -242,7 +263,20 @@ export async function sendWebhookEvent(
     data: payment.toData({ amountSent, balance }),
     withdrawal,
     tenantId: payment.tenantId,
-    webhooks: finalizeWebhookRecipients([payment.tenantId], deps.config)
+    webhooks: finalizeWebhookRecipients(
+      (() => {
+        const notifyCardOnly =
+          type === OutgoingPaymentEventType.PaymentFunded ||
+          type === OutgoingPaymentEventType.PaymentCancelled
+        return {
+          tenantIds: [payment.tenantId],
+          sendToCardService: notifyCardOnly,
+          omitTenantRecipients: notifyCardOnly
+        }
+      })(),
+      deps.config,
+      deps.logger
+    )
   })
   stopTimer()
 }

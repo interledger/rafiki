@@ -1,0 +1,58 @@
+assets:
+  - code: USD
+    scale: 2
+    liquidity: 10000000000
+    liquidityThreshold: 10000000
+peeringAsset: 'USD'
+peers:
+  - initialLiquidity: '100000000000000'
+    peerUrl: http://cloud-nine-wallet-backend:3002
+    peerIlpAddress: test.cloud-nine-wallet
+    liquidityThreshold: 1000000
+    maxPacketAmount: 10000
+    tokens:
+      incoming:
+        - cloud-nine-to-global
+      outgoing: global-to-cloud-nine
+    routes:
+      - "test.cloud-nine-wallet"
+  - initialLiquidity: '100000000000000'
+    peerUrl: http://happy-life-bank-backend:3002
+    peerIlpAddress: test.happy-life-bank
+    liquidityThreshold: 1000000
+    maxPacketAmount: 10000
+    tokens:
+      incoming:
+        - happy-to-global
+      outgoing: global-to-happy
+    routes:
+      - "test.happy-life-bank"
+accounts:
+  - name: 'John Doe'
+    path: accounts/jdoe
+    id: 77a3a431-8ee1-48fc-ac85-70e2f5eba8e6
+    initialBalance: 1000000
+    brunoEnvVar: jdoeWalletAddress
+    assetCode: USD
+  - name: 'Global Corp'
+    id: 4455cc54-b583-455b-836a-e5275c5c05b8
+    initialBalance: 5000000
+    path: accounts/gcorp
+    brunoEnvVar: gcorpWalletAddress
+    assetCode: USD
+  - name: 'Jane Smith'
+    path: accounts/jsmith
+    id: 447ac10b-58cc-4372-a567-0e02b2c3d480
+    initialBalance: 2000000
+    brunoEnvVar: jsmithWalletAddress
+    assetCode: USD
+rates:
+  USD:
+    MXN: 17.07
+    EUR: 0.91
+    JPY: 147.71
+fees:
+  - fixed: 100
+    basisPoints: 200
+    asset: USD
+    scale: 2

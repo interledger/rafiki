@@ -1,0 +1,97 @@
+assets:
+  - code: USD
+    scale: 2
+    liquidity: 10000000
+    liquidityThreshold: 10000000
+  - code: EUR
+    scale: 2
+    liquidity: 10000000
+    liquidityThreshold: 10000000
+peeringAsset: 'USD'
+peers:
+  # In multihop mode, route via global-bank and make happy-life-bank unreachable
+  - initialLiquidity: '10000000'
+    peerUrl: http://global-bank-backend:3002
+    peerIlpAddress: test.global-bank
+    liquidityThreshold: 1000000
+    tokens:
+      incoming:
+        - global-to-cloud-nine
+      outgoing: cloud-nine-to-global
+    routes:
+      - "test.happy-life-bank"
+  - initialLiquidity: '10000000'
+    peerUrl: http://happy-life-bank-backend:3002
+    peerIlpAddress: test.unreachable.happy-life-bank
+    liquidityThreshold: 1000000
+    tokens:
+      incoming:
+        - happy-to-cloud-nine
+      outgoing: cloud-nine-to-happy
+    routes:
+      - "test.unreachable.happy-life-bank"
+accounts:
+  - name: 'Grace Franklin'
+    path: accounts/gfranklin
+    id: 742ab7cd-1624-4d2e-af6e-e15a71638669
+    initialBalance: 40000000
+    brunoEnvVar: gfranklinWalletAddress
+    assetCode: USD
+  - name: 'Bert Hamchest'
+    id: a9adbe1a-df31-4766-87c9-d2cb2e636a9b
+    initialBalance: 40000000
+    path: accounts/bhamchest
+    brunoEnvVar: bhamchestWalletAddress
+    assetCode: USD
+  - name: "World's Best Donut Co"
+    id: 5726eefe-8737-459d-a36b-0acce152cb90
+    initialBalance: 20000000
+    path: accounts/wbdc
+    brunoEnvVar: wbdcWalletAddress
+    assetCode: USD
+  - name: "Broke Account"
+    id: 5a95366f-8cb4-4925-88d9-ae57dcb444bb
+    initialBalance: 50
+    path: accounts/broke
+    brunoEnvVar: brokeWalletAddress
+    assetCode: USD
+  - name: "Luca Rossi"
+    id: 63dcc665-d946-4263-ac27-d0da1eb08a83
+    initialBalance: 50
+    path: accounts/lrossi
+    brunoEnvVar: lrossiWalletAddressId
+    assetCode: EUR
+rates:
+  EUR:
+    MXN: 18.78
+    USD: 1.10
+    JPY: 157.83
+  USD:
+    MXN: 17.07
+    EUR: 0.91
+    JPY: 147.71
+  MXN:
+    USD: 0.059
+    EUR: 0.054
+    JPY: 8.65
+  JPY:
+    USD: 0.007
+    EUR: 0.006
+    MXN: 0.12
+fees:
+  - fixed: 100
+    basisPoints: 200
+    asset: USD
+    scale: 2
+  - fixed: 100
+    basisPoints: 200
+    asset: EUR
+    scale: 2
+  - fixed: 100
+    basisPoints: 200
+    asset: MXN
+    scale: 2
+  - fixed: 1
+    basisPoints: 200
+    asset: JPY
+    scale: 0

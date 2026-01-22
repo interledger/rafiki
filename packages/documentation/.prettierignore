@@ -1,0 +1,10 @@
+.github
+.astro
+node_modules
+public
+build
+**/*.min.css
+**/*.min.js
+
+
+

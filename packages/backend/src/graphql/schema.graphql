@@ -111,6 +111,24 @@ type Query {
     id: String!
   ): IncomingPayment
 
+  "Fetch a paginated list of incoming payments."
+  incomingPayments(
+    "Forward pagination: Cursor (incoming payment ID) to start retrieving incoming payments after this point."
+    after: String
+    "Backward pagination: Cursor (outgoing payment ID) to start retrieving incoming payments before this point."
+    before: String
+    "Forward pagination: Limit the result to the first **n** incoming payments after the `after` cursor."
+    first: Int
+    "Backward pagination: Limit the result to the last **n** incoming payments before the `before` cursor."
+    last: Int
+    "Specify the sort order of incoming payments based on their creation date, either ascending or descending."
+    sortOrder: SortOrder
+    "Filter incoming payments based on specific criteria such as initiation reason."
+    filter: IncomingPaymentFilter
+    "Unique identifier of the tenant associated with the incoming payment. Optional, if not provided, the tenantId will be obtained from the signature."
+    tenantId: String
+  ): IncomingPaymentConnection!
+
   "Fetch a paginated list of webhook events."
   webhookEvents(
     "Forward pagination: Cursor (webhook event ID) to start retrieving webhook events after this point."
@@ -267,6 +285,9 @@ type Mutation {
 
   "Create an internal or external Open Payments incoming payment. The receiver has a wallet address on either this or another Open Payments resource server."
   createReceiver(input: CreateReceiverInput!): CreateReceiverResponse!
+
+  "Complete an internal or external Open Payments incoming payment. The receiver has a wallet address on either this or another Open Payments resource server."
+  completeReceiver(input: CompleteReceiverInput!): CompleteReceiverResponse!
 
   "Update an existing incoming payment."
   updateIncomingPayment(
@@ -457,6 +478,8 @@ input CreatePeerInput {
   initialLiquidity: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
+  "Routes for the peer."
+  routes: [String!]
 }
 
 input CreateOrUpdatePeerByUrlInput {
@@ -491,6 +514,8 @@ input UpdatePeerInput {
   liquidityThreshold: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
+  "New routes for the peer."
+  routes: [String!]
 }
 
 input HttpInput {
@@ -579,6 +604,8 @@ input DepositOutgoingPaymentLiquidityInput {
   outgoingPaymentId: String!
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String!
+  "Data to transmit to the recipient during payment."
+  dataToTransmit: String
 }
 
 input CreateIncomingPaymentWithdrawalInput {
@@ -755,6 +782,8 @@ type Peer implements Model {
   liquidity: UInt64
   "The date and time when the peer was created."
   createdAt: String!
+  "Routes for the peer."
+  routes: [String!]!
   "Unique identifier of the tenant associated with the peer."
   tenantId: ID!
 }
@@ -820,6 +849,8 @@ type WalletAddress implements Model {
     last: Int
     "Specify the sort order of incoming payments based on their creation date, either ascending or descending."
     sortOrder: SortOrder
+    "Filter incoming payments based on specific criteria such as initiation reason."
+    filter: IncomingPaymentFilter
   ): IncomingPaymentConnection
 
   "List of quotes created at this wallet address"
@@ -921,6 +952,11 @@ type IncomingPaymentEdge {
   cursor: String!
 }
 
+input IncomingPaymentFilter {
+  "Filter for incoming payments based on the initiation reason."
+  initiatedBy: FilterString
+}
+
 interface BasePayment {
   "Unique identifier for the payment."
   id: ID!
@@ -937,6 +973,8 @@ interface BasePayment {
 type IncomingPayment implements BasePayment & Model {
   "Unique identifier of the incoming payment."
   id: ID!
+  "The URL of the incoming payment."
+  url: String!
   "Unique identifier of the wallet address under which the incoming payment was created."
   walletAddressId: ID!
   "Information about the wallet address of the Open Payments client that created the incoming payment."
@@ -957,6 +995,8 @@ type IncomingPayment implements BasePayment & Model {
   createdAt: String!
   "The tenant UUID associated with the incoming payment. If not provided, it will be obtained from the signature."
   tenantId: String
+  "The sender's wallet address URL. Applicable only to card payments."
+  senderWalletAddress: String
 }
 
 type Receiver {
@@ -1233,11 +1273,24 @@ input CreateOutgoingPaymentInput {
   idempotencyKey: String
 }
 
+input CardDetailsInput {
+  data: JSONObject!
+  requestId: String!
+  initiatedAt: String!
+}
+
 input CancelOutgoingPaymentInput {
   "Unique identifier of the outgoing payment to cancel."
   id: ID!
   "Reason why this outgoing payment has been canceled. This value will be publicly visible in the metadata field if this outgoing payment is requested through Open Payments."
   reason: String
+  "If card flow, optional machine-readable failure reason"
+  cardPaymentFailureReason: CardPaymentFailureReason
+}
+
+enum CardPaymentFailureReason {
+  invalid_signature
+  invalid_request
 }
 
 input CreateOutgoingPaymentFromIncomingPaymentInput {
@@ -1251,6 +1304,8 @@ input CreateOutgoingPaymentFromIncomingPaymentInput {
   metadata: JSONObject
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
+  "Used for the card service to provide the card expiry and signature"
+  cardDetails: CardDetailsInput
 }
 
 input CreateIncomingPaymentInput {
@@ -1264,6 +1319,10 @@ input CreateIncomingPaymentInput {
   incomingAmount: AmountInput
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
+  "Whether or not the incoming payment is being created for a card payment."
+  isCardPayment: Boolean
+  "The sender's wallet address URL. Applicable only to card payments."
+  senderWalletAddress: String
 }
 
 input CreateReceiverInput {
@@ -1277,6 +1336,11 @@ input CreateReceiverInput {
   metadata: JSONObject
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
+}
+
+input CompleteReceiverInput {
+  "URL of the incoming payment to be completed."
+  incomingPaymentUrl: String!
 }
 
 input UpdateIncomingPaymentInput {
@@ -1297,6 +1361,11 @@ type IncomingPaymentResponse {
 }
 
 type CreateReceiverResponse {
+  "The receiver object returned in the response."
+  receiver: Receiver
+}
+
+type CompleteReceiverResponse {
   "The receiver object returned in the response."
   receiver: Receiver
 }
@@ -1482,8 +1551,10 @@ input WebhookEventFilter {
 }
 
 input FilterString {
-  "Array of strings to filter by."
-  in: [String!]!
+  "Array of strings to include."
+  in: [String!]
+  "Array of strings to exclude."
+  notIn: [String!]
 }
 
 interface Model {
