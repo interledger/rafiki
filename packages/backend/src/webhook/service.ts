@@ -296,7 +296,7 @@ async function getWebhookEventsPage(
     query.whereNotIn('type', filter.type.notIn)
   }
 
-  return await query.getPage(pagination, sortOrder).withGraphFetched('tenant')
+  return await query.getPage(pagination, sortOrder)
 }
 
 type FinalizeRecipientsOptions = {
