@@ -1120,6 +1120,16 @@ describe('Incoming Payment Service', (): void => {
   })
 
   describe('processPartialPayment', (): void => {
+    interface PartialPayment {
+      uuid: string
+      amount: {
+        value: string
+        assetCode: string
+        assetScale: number
+      }
+      dataFromSender: string
+    }
+
     let incomingPayment: IncomingPayment
 
     const dbEncryptionOverride: Partial<IAppConfig> = {
@@ -1147,9 +1157,11 @@ describe('Incoming Payment Service', (): void => {
           const dataFromSender = JSON.stringify({
             data: faker.internet.email()
           })
+          const partialPaymentId = uuid()
           const processedPayment =
             await incomingPaymentService.processPartialPayment(
               incomingPayment.id,
+              partialPaymentId,
               100n,
               dataFromSender
             )
@@ -1163,10 +1175,13 @@ describe('Incoming Payment Service', (): void => {
             .withGraphFetched('webhooks')
             .first()
           assert.ok(webhookEvent)
-          assert.ok(webhookEvent.data.dataFromSender)
+          assert.ok(
+            (webhookEvent.data.partialPayment as PartialPayment).dataFromSender
+          )
 
           const webhookDataToTransmit = JSON.parse(
-            webhookEvent.data.dataFromSender as string
+            (webhookEvent.data.partialPayment as PartialPayment)
+              .dataFromSender as string
           )
           const decipher = createDecipheriv(
             'aes-256-gcm',
@@ -1186,15 +1201,19 @@ describe('Incoming Payment Service', (): void => {
           decrypted += decipher.final('utf8')
 
           expect(decrypted).toEqual(dataFromSender)
+
           expect(
-            (webhookEvent.data.receivedAmount as { value: string }).value
+            (webhookEvent.data.partialPayment as PartialPayment).uuid
+          ).toEqual(partialPaymentId)
+          expect(
+            (webhookEvent.data.partialPayment as PartialPayment).amount.value
           ).toEqual('100')
           expect(
-            (webhookEvent.data.receivedAmount as { assetCode: string })
+            (webhookEvent.data.partialPayment as PartialPayment).amount
               .assetCode
           ).toEqual(incomingPayment.asset.code)
           expect(
-            (webhookEvent.data.receivedAmount as { assetScale: number })
+            (webhookEvent.data.partialPayment as PartialPayment).amount
               .assetScale
           ).toEqual(incomingPayment.asset.scale)
 
@@ -1216,9 +1235,11 @@ describe('Incoming Payment Service', (): void => {
             data: faker.internet.email()
           })
 
+          const partialPaymentId = uuid()
           const processedPayment =
             await incomingPaymentService.processPartialPayment(
               incomingPayment.id,
+              partialPaymentId,
               100n,
               dataFromSender
             )
@@ -1233,16 +1254,21 @@ describe('Incoming Payment Service', (): void => {
             .first()
           assert.ok(webhookEvent)
 
-          expect(webhookEvent.data.dataFromSender).toEqual(dataFromSender)
           expect(
-            (webhookEvent.data.receivedAmount as { value: string }).value
+            (webhookEvent.data.partialPayment as PartialPayment).dataFromSender
+          ).toEqual(dataFromSender)
+          expect(
+            (webhookEvent.data.partialPayment as PartialPayment).uuid
+          ).toEqual(partialPaymentId)
+          expect(
+            (webhookEvent.data.partialPayment as PartialPayment).amount.value
           ).toEqual('100')
           expect(
-            (webhookEvent.data.receivedAmount as { assetCode: string })
+            (webhookEvent.data.partialPayment as PartialPayment).amount
               .assetCode
           ).toEqual(incomingPayment.asset.code)
           expect(
-            (webhookEvent.data.receivedAmount as { assetScale: number })
+            (webhookEvent.data.partialPayment as PartialPayment).amount
               .assetScale
           ).toEqual(incomingPayment.asset.scale)
           expect(webhookEvent.webhooks).toHaveLength(1)

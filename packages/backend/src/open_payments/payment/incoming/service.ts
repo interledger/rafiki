@@ -80,6 +80,7 @@ export interface IncomingPaymentService
   ): Promise<IncomingPayment | IncomingPaymentError>
   processPartialPayment(
     id: string,
+    partialPaymentId: string,
     value: bigint,
     dataFromSender?: string
   ): Promise<IncomingPayment | IncomingPaymentError>
@@ -113,8 +114,8 @@ export async function createIncomingPaymentService(
     processNext: () => processNextIncomingPayment(deps),
     update: (options) => updateIncomingPayment(deps, options),
     getPage: (options) => getPage(deps, options),
-    processPartialPayment: (id, value, dataFromSender) =>
-      processPartialPayment(deps, id, value, dataFromSender)
+    processPartialPayment: (id, partialPaymentId, value, dataFromSender) =>
+      processPartialPayment(deps, id, partialPaymentId, value, dataFromSender)
   }
 }
 
@@ -559,6 +560,7 @@ async function addReceivedAmount(
 async function processPartialPayment(
   deps: ServiceDependencies,
   id: string,
+  partialPaymentId: string,
   value: bigint,
   dataFromSender?: string
 ): Promise<IncomingPayment | IncomingPaymentError> {
@@ -574,10 +576,18 @@ async function processPartialPayment(
     type: IncomingPaymentEventType.IncomingPaymentPartialPaymentReceived,
     data: {
       ...incomingPayment.toData(value),
-      dataFromSender:
-        dataFromSender && config.dbEncryptionSecret
-          ? encryptDbData(dataFromSender, config.dbEncryptionSecret)
-          : dataFromSender
+      partialPayment: {
+        uuid: partialPaymentId,
+        amount: {
+          value,
+          assetCode: incomingPayment.asset.code,
+          assetScale: incomingPayment.asset.scale
+        },
+        dataFromSender:
+          dataFromSender && config.dbEncryptionSecret
+            ? encryptDbData(dataFromSender, config.dbEncryptionSecret)
+            : dataFromSender
+      }
     },
     tenantId: incomingPayment.tenantId,
     webhooks: finalizeWebhookRecipients(

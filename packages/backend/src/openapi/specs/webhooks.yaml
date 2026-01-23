@@ -201,9 +201,20 @@ components:
             expiresAt:
               type: string
               format: date-time
-            dataFromSender:
+            partialPayment:
               type: object
-              additionalProperties: true
+              required:
+                - uuid
+                - amount
+              properties:
+                uuid:
+                  type: string
+                  format: uuid
+                amount:
+                  $ref: '#/components/schemas/amount'
+                dataFromSender:
+                  type: object
+                  additionalProperties: true
       additionalProperties: false
     outgoingPaymentEvent:
       required:
