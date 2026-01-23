@@ -632,8 +632,8 @@ importers:
         specifier: ^0.36.2
         version: 0.36.3(astro@5.16.0)
       '@interledger/docs-design-system':
-        specifier: ^0.10.3
-        version: 0.10.3
+        specifier: ^0.11.0
+        version: 0.11.0
       astro:
         specifier: 5.16.0
         version: 5.16.0(typescript@5.8.3)
@@ -5700,8 +5700,8 @@ packages:
     dev: false
     optional: true
 
-  /@interledger/docs-design-system@0.10.3:
-    resolution: {integrity: sha512-kQdpHUDqS3RWYrYuL6dunOG0h0alNZBNqh2n+J09LCiDxwz9/7aVvF8fCdo2gaTI8w+lcE9/CRnuEF7h26PLUA==}
+  /@interledger/docs-design-system@0.11.0:
+    resolution: {integrity: sha512-gcHZEI7qnzu7O4e2DZiyQUfO+wkLQ7XB/y3igKB5Eow2+/kKTMUJFI2Y277Kw2imhqD5mBBtGFOOiahy6y0qkA==}
     dependencies:
       mermaid: 11.12.2
     dev: false
