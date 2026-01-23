@@ -1144,13 +1144,14 @@ describe('Incoming Payment Service', (): void => {
         () => config,
         dbEncryptionOverride,
         async (): Promise<void> => {
-          const dataToTransmit = JSON.stringify({
+          const dataFromSender = JSON.stringify({
             data: faker.internet.email()
           })
           const processedPayment =
             await incomingPaymentService.processPartialPayment(
               incomingPayment.id,
-              dataToTransmit
+              100n,
+              dataFromSender
             )
           assert.ok(!isIncomingPaymentError(processedPayment))
 
@@ -1162,10 +1163,10 @@ describe('Incoming Payment Service', (): void => {
             .withGraphFetched('webhooks')
             .first()
           assert.ok(webhookEvent)
-          assert.ok(webhookEvent.data.dataToTransmit)
+          assert.ok(webhookEvent.data.dataFromSender)
 
           const webhookDataToTransmit = JSON.parse(
-            webhookEvent.data.dataToTransmit as string
+            webhookEvent.data.dataFromSender as string
           )
           const decipher = createDecipheriv(
             'aes-256-gcm',
@@ -1184,7 +1185,19 @@ describe('Incoming Payment Service', (): void => {
           )
           decrypted += decipher.final('utf8')
 
-          expect(decrypted).toEqual(dataToTransmit)
+          expect(decrypted).toEqual(dataFromSender)
+          expect(
+            (webhookEvent.data.receivedAmount as { value: string }).value
+          ).toEqual('100')
+          expect(
+            (webhookEvent.data.receivedAmount as { assetCode: string })
+              .assetCode
+          ).toEqual(incomingPayment.asset.code)
+          expect(
+            (webhookEvent.data.receivedAmount as { assetScale: number })
+              .assetScale
+          ).toEqual(incomingPayment.asset.scale)
+
           expect(webhookEvent.webhooks).toHaveLength(1)
         }
       )
@@ -1199,14 +1212,15 @@ describe('Incoming Payment Service', (): void => {
           dbEncryptionSecret: undefined
         },
         async (): Promise<void> => {
-          const dataToTransmit = JSON.stringify({
+          const dataFromSender = JSON.stringify({
             data: faker.internet.email()
           })
 
           const processedPayment =
             await incomingPaymentService.processPartialPayment(
               incomingPayment.id,
-              dataToTransmit
+              100n,
+              dataFromSender
             )
           assert.ok(!isIncomingPaymentError(processedPayment))
 
@@ -1219,7 +1233,18 @@ describe('Incoming Payment Service', (): void => {
             .first()
           assert.ok(webhookEvent)
 
-          expect(webhookEvent.data.dataToTransmit).toEqual(dataToTransmit)
+          expect(webhookEvent.data.dataFromSender).toEqual(dataFromSender)
+          expect(
+            (webhookEvent.data.receivedAmount as { value: string }).value
+          ).toEqual('100')
+          expect(
+            (webhookEvent.data.receivedAmount as { assetCode: string })
+              .assetCode
+          ).toEqual(incomingPayment.asset.code)
+          expect(
+            (webhookEvent.data.receivedAmount as { assetScale: number })
+              .assetScale
+          ).toEqual(incomingPayment.asset.scale)
           expect(webhookEvent.webhooks).toHaveLength(1)
         }
       )
