@@ -88,6 +88,10 @@ export const listPeers = async (request: Request, args: QueryPeersArgs) => {
                 code
                 scale
               }
+              tenant {
+                id
+                publicName
+              }
             }
           }
           pageInfo {

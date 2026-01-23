@@ -119,7 +119,7 @@ export default function WebhookEventsPage() {
             </div>
           </div>
           <Table>
-            <Table.Head columns={['ID', 'Type', 'Date', 'Data']} />
+            <Table.Head columns={['ID', 'Type', 'Date', 'Tenant', 'Data']} />
             <Table.Body>
               {webhooks.edges.length ? (
                 webhooks.edges.map((webhook) => (
@@ -130,12 +130,32 @@ export default function WebhookEventsPage() {
                       {new Date(webhook.node.createdAt).toLocaleString()}
                     </Table.Cell>
                     <Table.Cell>
+                      <span>
+                        <div>
+                          <span className='mr-2'>
+                            {webhook.node.tenant?.publicName ? (
+                              <span className='font-medium'>
+                                {webhook.node.tenant.publicName}
+                              </span>
+                            ) : (
+                              <span className='text-tealish/80'>
+                                No public name
+                              </span>
+                            )}
+                          </span>
+                          <div className='text-tealish/50 text-xs'>
+                            (ID: {webhook.node.tenant?.id})
+                          </div>
+                        </div>
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
                       <Button
                         aria-label='view webhook data'
                         state={{
                           data: {
                             ...webhook.node.data,
-                            tenantId: webhook.node.tenantId
+                            tenantId: webhook.node.tenant?.id
                           }
                         }}
                         to={`/webhook-events/data${
