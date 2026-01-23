@@ -10,6 +10,7 @@ import {
   WalletAddress,
   isFinalizedGrant,
   isPendingGrant
+  // OutgoingPaymentGrantSpentAmounts
 } from '@interledger/open-payments'
 import type { MockASE } from 'test-lib'
 import { UnionOmit, poll, pollCondition, wait } from '../utils'
@@ -22,6 +23,24 @@ import {
 export interface OpenPaymentsActionsDeps {
   sendingASE: MockASE
   receivingASE: MockASE
+}
+
+// TODO: import from open payments node package
+export type OutgoingPaymentGrantSpentAmounts = {
+  spentReceiveAmount?:
+    | {
+        value: string
+        assetCode: string
+        assetScale: number
+      }
+    | undefined
+  spentDebitAmount?:
+    | {
+        value: string
+        assetCode: string
+        assetScale: number
+      }
+    | undefined
 }
 
 export interface OpenPaymentsActions {
@@ -62,6 +81,10 @@ export interface OpenPaymentsActions {
     url: string,
     amountValueToSend: string
   ): Promise<PublicIncomingPayment>
+  getOutgoingPaymentGrantSpentAmounts(
+    senderWalletAddress: WalletAddress,
+    grant: Grant
+  ): Promise<OutgoingPaymentGrantSpentAmounts>
 }
 
 export function createOpenPaymentsActions(
@@ -87,7 +110,9 @@ export function createOpenPaymentsActions(
     getOutgoingPayment: (url, grantContinue) =>
       getOutgoingPayment(deps, url, grantContinue),
     getPublicIncomingPayment: (url, amountValueToSend) =>
-      getPublicIncomingPayment(deps, url, amountValueToSend)
+      getPublicIncomingPayment(deps, url, amountValueToSend),
+    getOutgoingPaymentGrantSpentAmounts: (senderWalletAddress, grant) =>
+      getOutgoingPaymentGrantSpentAmounts(deps, senderWalletAddress, grant)
   }
 }
 async function grantRequestIncomingPayment(
@@ -392,4 +417,20 @@ async function getPublicIncomingPayment(
   expect(incomingPayment.receivedAmount.value).toBe(expectedReceiveAmount)
 
   return incomingPayment
+}
+
+async function getOutgoingPaymentGrantSpentAmounts(
+  deps: OpenPaymentsActionsDeps,
+  senderWalletAddress: WalletAddress,
+  grant: Grant
+): Promise<OutgoingPaymentGrantSpentAmounts> {
+  const { sendingASE } = deps
+
+  const spentAmounts =
+    await sendingASE.opClient.outgoingPayment.getGrantSpentAmounts({
+      url: senderWalletAddress.resourceServer,
+      accessToken: grant.access_token.value
+    })
+
+  return spentAmounts
 }
