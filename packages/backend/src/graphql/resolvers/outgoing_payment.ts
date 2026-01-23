@@ -4,9 +4,11 @@ import {
   OutgoingPayment as SchemaOutgoingPayment,
   WalletAddressResolvers,
   QueryResolvers,
-  ResolversTypes
+  ResolversTypes,
+  OutgoingPaymentResolvers
 } from '../generated/graphql'
 import {
+  OutgoingPaymentError,
   isOutgoingPaymentError,
   errorToMessage,
   errorToCode
@@ -17,6 +19,7 @@ import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { GraphQLError } from 'graphql'
 import { GraphQLErrorCode } from '../errors'
+import { tenantToGraphQl } from './tenant'
 
 export const getOutgoingPayment: QueryResolvers<TenantedApolloContext>['outgoingPayment'] =
   async (parent, args, ctx): Promise<ResolversTypes['OutgoingPayment']> => {
@@ -230,6 +233,31 @@ export const getWalletAddressOutgoingPayments: WalletAddressResolvers<TenantedAp
     }
   }
 
+export const getOutgoingPaymentTenant: OutgoingPaymentResolvers<TenantedApolloContext>['tenant'] =
+  async (parent, args, ctx): Promise<ResolversTypes['Tenant'] | null> => {
+    if (!parent.id)
+      throw new GraphQLError('"id" required in request to resolve "tenant".')
+    const outgoingPaymentService = await ctx.container.use(
+      'outgoingPaymentService'
+    )
+    const outgoingPayment = await outgoingPaymentService.get({ id: parent.id })
+    if (!outgoingPayment)
+      throw new GraphQLError(
+        errorToMessage[OutgoingPaymentError.UnknownPayment],
+        {
+          extensions: {
+            code: errorToCode[OutgoingPaymentError.UnknownPayment]
+          }
+        }
+      )
+
+    const tenantService = await ctx.container.use('tenantService')
+    const tenant = await tenantService.get(outgoingPayment.tenantId)
+    if (!tenant) return null
+
+    return tenantToGraphQl(tenant)
+  }
+
 export function paymentToGraphql(
   payment: OutgoingPayment
 ): SchemaOutgoingPayment {
@@ -247,7 +275,6 @@ export function paymentToGraphql(
     metadata: payment.metadata,
     createdAt: new Date(+payment.createdAt).toISOString(),
     quote: quoteToGraphql(payment.quote),
-    grantId: payment.grantId,
-    tenantId: payment.tenantId
+    grantId: payment.grantId
   }
 }
