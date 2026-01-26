@@ -7,7 +7,6 @@
   },
   "include": ["src/**/*"],
   "ts-node": {
-    "swc": true,
-    "require": ["./src/telemetry/index.ts"]
+    "swc": true
   }
 }
