@@ -205,8 +205,14 @@ export const Config = {
     'SEND_TENANT_WEBHOOKS_TO_OPERATOR',
     false
   ),
-  partialPaymentDecisionMaxWaitMs: envInt('PARTIAL_PAYMENT_DECISION_MAX_WAIT_MS', 1500),
-  partialPaymentDecisionSafetyMarginMs: envInt('PARTIAL_PAYMENT_DECISION_SAFETY_MARGIN_MS', 100),
+  partialPaymentDecisionMaxWaitMs: envInt(
+    'PARTIAL_PAYMENT_DECISION_MAX_WAIT_MS',
+    1500
+  ),
+  partialPaymentDecisionSafetyMarginMs: envInt(
+    'PARTIAL_PAYMENT_DECISION_SAFETY_MARGIN_MS',
+    100
+  ),
   cardServiceUrl: optional(envString, 'CARD_SERVICE_URL'),
   posServiceUrl: optional(envString, 'POS_SERVICE_URL'),
   posWebhookServiceUrl: optional(envString, 'POS_WEBHOOK_SERVICE_URL'),

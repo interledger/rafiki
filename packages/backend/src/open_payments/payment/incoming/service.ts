@@ -607,7 +607,9 @@ async function processPartialPayment(
     const cacheKey = `partial_payment_decision:${id}:${partialIncomingPaymentId}`
 
     // Bounded polling: wait for decision up to (packet expiry - safetyMs) or maxWaitMs
-    const safetyMs = Number.isFinite(config.partialPaymentDecisionSafetyMarginMs)
+    const safetyMs = Number.isFinite(
+      config.partialPaymentDecisionSafetyMarginMs
+    )
       ? config.partialPaymentDecisionSafetyMarginMs
       : 100
     const maxWaitMs = Number.isFinite(config.partialPaymentDecisionMaxWaitMs)
@@ -629,7 +631,10 @@ async function processPartialPayment(
             const value = await redis.get(cacheKey)
             return value ?? ''
           } catch (e) {
-            deps.logger.warn({ e, incomingPaymentId: id }, 'decision read failed')
+            deps.logger.warn(
+              { e, incomingPaymentId: id },
+              'decision read failed'
+            )
             return ''
           }
         },

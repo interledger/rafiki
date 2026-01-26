@@ -4,7 +4,7 @@ import {
   StreamMaxMoneyFrame,
   FrameType,
   StreamMoneyFrame,
-  StreamReceiptFrame,
+  StreamReceiptFrame
 } from 'ilp-protocol-stream/dist/src/packet'
 import { MaxPacketAmountController } from '../controllers/max-packet'
 import { ExchangeRateController } from '../controllers/exchange-rate'
@@ -26,7 +26,7 @@ export enum PaymentType {
   /** Send up to a maximum source amount */
   FixedSend = 'FixedSend',
   /** Send to meet a minimum delivery amount, bounding the source amount and rates */
-  FixedDelivery = 'FixedDelivery',
+  FixedDelivery = 'FixedDelivery'
 }
 
 type PaymentSenderOptions = Omit<PayOptions, 'quote'> & { quote: IntQuote }
@@ -70,23 +70,30 @@ export class PaymentSender extends StreamSender<PaymentProgress> {
   private readonly rateCalculator: ExchangeRateController
   private readonly maxPacketController: MaxPacketAmountController
 
-  constructor({ plugin, destination, quote, progressHandler, appData }: PaymentSenderOptions) {
+  constructor({
+    plugin,
+    destination,
+    quote,
+    progressHandler,
+    appData
+  }: PaymentSenderOptions) {
     super(plugin, destination)
     const { requestCounter } = destination
 
     this.quote = quote
     this.progressHandler = progressHandler
 
-    this.maxPacketController = new MaxPacketAmountController(this.quote.maxPacketAmount)
+    this.maxPacketController = new MaxPacketAmountController(
+      this.quote.maxPacketAmount
+    )
     this.rateCalculator = new ExchangeRateController(
       quote.lowEstimatedExchangeRate,
       quote.highEstimatedExchangeRate
     )
 
-    const appDataController =
-      appData
-        ? new AppDataController(appData, PaymentSender.DEFAULT_STREAM_ID)
-        : undefined
+    const appDataController = appData
+      ? new AppDataController(appData, PaymentSender.DEFAULT_STREAM_ID)
+      : undefined
 
     this.controllers = [
       new SequenceController(requestCounter),
@@ -98,7 +105,7 @@ export class PaymentSender extends StreamSender<PaymentProgress> {
       this.maxPacketController,
       new AssetDetailsController(destination),
       new PacingController(),
-      this.rateCalculator,
+      this.rateCalculator
     ]
 
     this.log.debug('starting payment.')
@@ -118,7 +125,9 @@ export class PaymentSender extends StreamSender<PaymentProgress> {
 
     // Compute source amount (always positive)
     const maxPacketAmount = this.maxPacketController.getNextMaxPacketAmount()
-    let sourceAmount = availableToSend.orLesser(maxPacketAmount).orLesser(Int.MAX_U64)
+    let sourceAmount = availableToSend
+      .orLesser(maxPacketAmount)
+      .orLesser(Int.MAX_U64)
 
     // Does this request complete the payment, so should the rounding correction be applied?
     let completesPayment = false
@@ -151,7 +160,9 @@ export class PaymentSender extends StreamSender<PaymentProgress> {
     // Allow up to 1 source unit to be lost to rounding only *on the final packet*.
     const applyCorrection = completesPayment && !this.appliedRoundingCorrection
     const minDestinationAmount = applyCorrection
-      ? sourceAmount.saturatingSubtract(Int.ONE).multiplyCeil(this.quote.minExchangeRate)
+      ? sourceAmount
+          .saturatingSubtract(Int.ONE)
+          .multiplyCeil(this.quote.minExchangeRate)
       : sourceAmount.multiplyCeil(this.quote.minExchangeRate)
 
     // If the min destination amount isn't met, the rate dropped and payment cannot be completed.
@@ -167,7 +178,9 @@ export class PaymentSender extends StreamSender<PaymentProgress> {
 
     // Update in-flight amounts (request will be applied synchronously)
     this.sourceAmountInFlight = this.sourceAmountInFlight.add(sourceAmount)
-    this.destinationAmountInFlight = this.destinationAmountInFlight.add(highEndDestinationAmount)
+    this.destinationAmountInFlight = this.destinationAmountInFlight.add(
+      highEndDestinationAmount
+    )
     this.appliedRoundingCorrection = applyCorrection
 
     this.progressHandler?.(this.getProgress())
@@ -181,7 +194,9 @@ export class PaymentSender extends StreamSender<PaymentProgress> {
     return SendState.Send((reply) => {
       // Delivered amount must be *at least* the minimum acceptable amount we told the receiver
       // No matter what, since they fulfilled it, we must assume they got at least the minimum
-      const destinationAmount = minDestinationAmount.orGreater(reply.destinationAmount)
+      const destinationAmount = minDestinationAmount.orGreater(
+        reply.destinationAmount
+      )
 
       if (reply.isFulfill()) {
         this.amountSent = this.amountSent.add(sourceAmount)
@@ -195,7 +210,10 @@ export class PaymentSender extends StreamSender<PaymentProgress> {
         )
       }
 
-      if (reply.isReject() && reply.destinationAmount?.isLessThan(minDestinationAmount)) {
+      if (
+        reply.isReject() &&
+        reply.destinationAmount?.isLessThan(minDestinationAmount)
+      ) {
         log.debug(
           'packet rejected for insufficient rate. received=%s minDestination=%s',
           reply.destinationAmount,
@@ -204,9 +222,12 @@ export class PaymentSender extends StreamSender<PaymentProgress> {
       }
 
       // Update in-flight amounts
-      this.sourceAmountInFlight = this.sourceAmountInFlight.saturatingSubtract(sourceAmount)
+      this.sourceAmountInFlight =
+        this.sourceAmountInFlight.saturatingSubtract(sourceAmount)
       this.destinationAmountInFlight =
-        this.destinationAmountInFlight.saturatingSubtract(highEndDestinationAmount)
+        this.destinationAmountInFlight.saturatingSubtract(
+          highEndDestinationAmount
+        )
       // If this packet failed (e.g. for some other reason), refund the delivery deficit so it may be retried
       if (reply.isReject() && applyCorrection) {
         this.appliedRoundingCorrection = false
@@ -233,7 +254,9 @@ export class PaymentSender extends StreamSender<PaymentProgress> {
       if (reply.isFulfill()) {
         if (!reply.destinationAmount) {
           // Technically, an intermediary could strip the data so we can't ascertain whose fault this is
-          log.warn('ending payment: packet fulfilled with no authentic STREAM data')
+          log.warn(
+            'ending payment: packet fulfilled with no authentic STREAM data'
+          )
           return SendState.Error(PaymentError.ReceiverProtocolViolation)
         } else if (reply.destinationAmount.isLessThan(minDestinationAmount)) {
           log.warn(
@@ -255,7 +278,9 @@ export class PaymentSender extends StreamSender<PaymentProgress> {
 
       const paidFixedDelivery =
         this.quote.paymentType === PaymentType.FixedDelivery &&
-        this.amountDelivered.isGreaterThanOrEqualTo(this.quote.minDeliveryAmount) &&
+        this.amountDelivered.isGreaterThanOrEqualTo(
+          this.quote.minDeliveryAmount
+        ) &&
         !this.sourceAmountInFlight.isPositive()
       if (paidFixedDelivery) {
         log.debug('payment complete: paid fixed destination amount.')
@@ -263,7 +288,8 @@ export class PaymentSender extends StreamSender<PaymentProgress> {
       }
 
       this.remoteReceiveMax =
-        this.updateReceiveMax(reply)?.orGreater(this.remoteReceiveMax) ?? this.remoteReceiveMax
+        this.updateReceiveMax(reply)?.orGreater(this.remoteReceiveMax) ??
+        this.remoteReceiveMax
       if (this.remoteReceiveMax?.isLessThan(this.quote.minDeliveryAmount)) {
         log.error(
           'ending payment: minimum delivery amount is too much for recipient. minDelivery=%s receiveMax=%s',
@@ -285,13 +311,16 @@ export class PaymentSender extends StreamSender<PaymentProgress> {
       amountSent: this.amountSent.value,
       amountDelivered: this.amountDelivered.value,
       sourceAmountInFlight: this.sourceAmountInFlight.value,
-      destinationAmountInFlight: this.destinationAmountInFlight.value,
+      destinationAmountInFlight: this.destinationAmountInFlight.value
     }
   }
 
   private updateReceiveMax({ frames }: StreamReply): Int | undefined {
     return frames
-      ?.filter((frame): frame is StreamMaxMoneyFrame => frame.type === FrameType.StreamMaxMoney)
+      ?.filter(
+        (frame): frame is StreamMaxMoneyFrame =>
+          frame.type === FrameType.StreamMaxMoney
+      )
       .filter((frame) => frame.streamId.equals(PaymentSender.DEFAULT_STREAM_ID))
       .map((frame) => Int.from(frame.receiveMax))?.[0]
   }
@@ -300,7 +329,8 @@ export class PaymentSender extends StreamSender<PaymentProgress> {
     // Check for receipt frame
     // No need to check streamId, since we only send over stream=1
     const receiptBuffer = frames?.find(
-      (frame): frame is StreamReceiptFrame => frame.type === FrameType.StreamReceipt
+      (frame): frame is StreamReceiptFrame =>
+        frame.type === FrameType.StreamReceipt
     )?.receipt
     if (!receiptBuffer) {
       return
@@ -315,11 +345,14 @@ export class PaymentSender extends StreamSender<PaymentProgress> {
     }
 
     const newTotalReceived = Int.from(receipt.totalReceived)
-    if (!this.latestReceipt || newTotalReceived.isGreaterThan(this.latestReceipt.totalReceived)) {
+    if (
+      !this.latestReceipt ||
+      newTotalReceived.isGreaterThan(this.latestReceipt.totalReceived)
+    ) {
       log.debug('updated latest stream receipt for %s', newTotalReceived)
       this.latestReceipt = {
         totalReceived: newTotalReceived,
-        buffer: receiptBuffer,
+        buffer: receiptBuffer
       }
     }
   }

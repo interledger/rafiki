@@ -9,23 +9,17 @@ import {
   IlpAddress,
   isValidIlpAddress,
   IlpError,
-  IlpReply
+  IlpReply,
 } from 'ilp-packet'
-import {
-  hmac,
-  sha256,
-  base64url,
-  ReplyBuilder,
-  decrypt,
-  encrypt
-} from './utils'
+import { hmac, sha256, base64url, ReplyBuilder, decrypt, encrypt } from './utils'
 import {
   Packet,
   ConnectionCloseFrame,
   FrameType,
   ErrorCode,
   ConnectionAssetDetailsFrame,
-  StreamReceiptFrame
+  StreamReceiptFrame,
+  StreamDataFrame,
 } from 'ilp-protocol-stream/dist/src/packet'
 import { LongValue } from 'ilp-protocol-stream/dist/src/util/long'
 import { createReceipt } from 'ilp-protocol-stream/dist/src/util/receipt'
@@ -72,8 +66,8 @@ export interface IncomingMoney {
   /** Inform the sender to close their connection */
   finalDecline(): IlpReject
 
-  /** Application StreamData frames carried on this Prepare (if any). Experimental accessor. */
-  dataFrames?: Array<{ streamId: number; offset: string; data: Buffer }>
+  /** Application StreamData frames carried on this Prepare (if any) */
+  dataFrames?: StreamDataFrame[]
 }
 
 /** Application-layer metadata to encode within the credentials of a new STREAM connection. */
@@ -130,22 +124,16 @@ interface ConnectionDetails {
  */
 export class StreamServer {
   /** Constant to derive key to encrypt connection tokens in the ILP address */
-  private static TOKEN_GENERATION_STRING = Buffer.from(
-    'ilp_stream_connection_token'
-  )
+  private static TOKEN_GENERATION_STRING = Buffer.from('ilp_stream_connection_token')
 
   /** Constant to derive shared secrets, combined with the connection token */
-  private static SHARED_SECRET_GENERATION_STRING = Buffer.from(
-    'ilp_stream_shared_secret'
-  )
+  private static SHARED_SECRET_GENERATION_STRING = Buffer.from('ilp_stream_shared_secret')
 
   /** Constant to derive packet decryption key, combined with the shared secret */
   private static ENCRYPTION_KEY_STRING = Buffer.from('ilp_stream_encryption')
 
   /** Constant to derive packet fulfillments, combined with the shared secret */
-  private static FULFILLMENT_GENERATION_STRING = Buffer.from(
-    'ilp_stream_fulfillment'
-  )
+  private static FULFILLMENT_GENERATION_STRING = Buffer.from('ilp_stream_fulfillment')
 
   /** Pre-allocated Buffer to serialize connection tokens (safe since `generateCredentials` is synchronous) */
   private static TOKEN_GENERATION_BUFFER = Buffer.alloc(767) // Max # of base64 characters in ILP address
@@ -154,7 +142,7 @@ export class StreamServer {
   private static TOKEN_FLAGS = {
     PAYMENT_TAG: 1, // 2^0
     RECEIPTS: 2, // 2^1
-    ASSET_DETAILS: 4 // 2^2
+    ASSET_DETAILS: 4, // 2^2
   }
 
   /** Base ILP address of the server accessible over its Interledger network */
@@ -176,14 +164,8 @@ export class StreamServer {
     }
 
     this.serverAddress = serverAddress
-    this.sharedSecretKeyGen = hmac(
-      serverSecret,
-      StreamServer.SHARED_SECRET_GENERATION_STRING
-    )
-    this.connectionTokenKeyGen = hmac(
-      serverSecret,
-      StreamServer.TOKEN_GENERATION_STRING
-    )
+    this.sharedSecretKeyGen = hmac(serverSecret, StreamServer.SHARED_SECRET_GENERATION_STRING)
+    this.connectionTokenKeyGen = hmac(serverSecret, StreamServer.TOKEN_GENERATION_STRING)
   }
 
   /**
@@ -196,15 +178,11 @@ export class StreamServer {
 
     if (receiptSetup) {
       if (receiptSetup.nonce.byteLength !== 16) {
-        throw new Error(
-          'Failed to generate credentials: receipt nonce must be 16 bytes'
-        )
+        throw new Error('Failed to generate credentials: receipt nonce must be 16 bytes')
       }
 
       if (receiptSetup.secret.byteLength !== 32) {
-        throw new Error(
-          'Failed to generate credentials: receipt secret must be 32 bytes'
-        )
+        throw new Error('Failed to generate credentials: receipt secret must be 32 bytes')
       }
     }
 
@@ -212,9 +190,7 @@ export class StreamServer {
       throw new Error('Failed to generate credentials: invalid asset scale')
     }
 
-    const paymentTag = options.paymentTag
-      ? Buffer.from(options.paymentTag, 'ascii')
-      : undefined
+    const paymentTag = options.paymentTag ? Buffer.from(options.paymentTag, 'ascii') : undefined
 
     const flags =
       (paymentTag ? StreamServer.TOKEN_FLAGS.PAYMENT_TAG : 0) |
@@ -250,20 +226,13 @@ export class StreamServer {
 
     return {
       ilpAddress: destinationAddress,
-      sharedSecret
+      sharedSecret,
     }
   }
 
-  private extractLocalAddressSegment(
-    destinationAddress: string
-  ): string | undefined {
-    const localAddressParts = destinationAddress
-      .slice(this.serverAddress.length + 1)
-      .split('.')
-    if (
-      destinationAddress.startsWith(this.serverAddress + '.') &&
-      !!localAddressParts[0]
-    ) {
+  private extractLocalAddressSegment(destinationAddress: string): string | undefined {
+    const localAddressParts = destinationAddress.slice(this.serverAddress.length + 1).split('.')
+    if (destinationAddress.startsWith(this.serverAddress + '.') && !!localAddressParts[0]) {
       return localAddressParts[0]
     }
   }
@@ -277,10 +246,8 @@ export class StreamServer {
       const flags = reader.readUInt8Number()
 
       const hasPaymentTag = (flags & StreamServer.TOKEN_FLAGS.PAYMENT_TAG) !== 0
-      const hasReceiptDetails =
-        (flags & StreamServer.TOKEN_FLAGS.RECEIPTS) !== 0
-      const hasAssetDetails =
-        (flags & StreamServer.TOKEN_FLAGS.ASSET_DETAILS) !== 0
+      const hasReceiptDetails = (flags & StreamServer.TOKEN_FLAGS.RECEIPTS) !== 0
+      const hasAssetDetails = (flags & StreamServer.TOKEN_FLAGS.ASSET_DETAILS) !== 0
 
       if (hasPaymentTag) {
         details.paymentTag = reader.readVarOctetString().toString('ascii')
@@ -289,14 +256,14 @@ export class StreamServer {
       if (hasReceiptDetails) {
         details.receiptSetup = {
           nonce: reader.read(16),
-          secret: reader.read(32)
+          secret: reader.read(32),
         }
       }
 
       if (hasAssetDetails) {
         details.asset = {
           code: reader.readVarOctetString().toString(),
-          scale: reader.readUInt8Number()
+          scale: reader.readUInt8Number(),
         }
       }
 
@@ -322,19 +289,14 @@ export class StreamServer {
    * ensure it's addressed to the server and decode encrypted metadata to attribute and handle the payment.
    */
   createReply(prepare: IlpPrepare): IncomingMoney | IlpReply {
-    const connectionId = sha256(
-      Buffer.from(prepare.destination, 'ascii')
-    ).toString('hex')
+    const connectionId = sha256(Buffer.from(prepare.destination, 'ascii')).toString('hex')
     const log = createLogger(`ilp-receiver:${connectionId.slice(0, 6)}`)
     const reply = new ReplyBuilder().setIlpAddress(this.serverAddress)
 
     // Ensure the packet is addressed to us
     const localSegment = this.extractLocalAddressSegment(prepare.destination)
     if (!localSegment) {
-      log.trace(
-        'got packet not addressed to the receiver. destination=%s',
-        prepare.destination
-      )
+      log.trace('got packet not addressed to the receiver. destination=%s', prepare.destination)
       return reply.buildReject(IlpError.F02_UNREACHABLE)
     }
 
@@ -355,9 +317,7 @@ export class StreamServer {
     const encryptionKey = hmac(sharedSecret, StreamServer.ENCRYPTION_KEY_STRING)
     let streamRequest: Packet
     try {
-      streamRequest = Packet._deserializeUnencrypted(
-        decrypt(encryptionKey, prepare.data)
-      )
+      streamRequest = Packet._deserializeUnencrypted(decrypt(encryptionKey, prepare.data))
     } catch (_) {
       log.trace('rejecting with F06: failed to decrypt STREAM data') // Inauthentic, could be anyone
       return reply.buildReject(IlpError.F06_UNEXPECTED_PAYMENT)
@@ -375,15 +335,9 @@ export class StreamServer {
     )
     log.trace('STREAM request frames: %o', streamRequest.frames)
 
-    const dataFrames = streamRequest.frames
-      .filter((f) => f.type === FrameType.StreamData)
-      .map((f: any) => ({
-        streamId:
-          Number(f.streamId?.toString ? f.streamId.toString() : f.streamId) ||
-          0,
-        offset: (f.offset?.toString && f.offset.toString()) || '0',
-        data: f.data as Buffer
-      }))
+    const dataFrames = streamRequest.frames.filter(
+      (f): f is StreamDataFrame => f.type === FrameType.StreamData,
+    )
 
     reply
       .setEncryptionKey(encryptionKey)
@@ -391,8 +345,7 @@ export class StreamServer {
       .setReceivedAmount(prepare.amount)
 
     const closeFrame = streamRequest.frames.find(
-      (frame): frame is ConnectionCloseFrame =>
-        frame.type === FrameType.ConnectionClose
+      (frame): frame is ConnectionCloseFrame => frame.type === FrameType.ConnectionClose
     )
     if (closeFrame) {
       log.trace(
@@ -430,17 +383,12 @@ export class StreamServer {
      */
 
     const receivedAmount = Long.fromString(prepare.amount, true)
-    const didReceiveMinimum = receivedAmount.greaterThanOrEqual(
-      streamRequest.prepareAmount
-    )
+    const didReceiveMinimum = receivedAmount.greaterThanOrEqual(streamRequest.prepareAmount)
     if (!didReceiveMinimum) {
       return reply.buildReject(IlpError.F99_APPLICATION_ERROR)
     }
 
-    const fulfillmentKey = hmac(
-      sharedSecret,
-      StreamServer.FULFILLMENT_GENERATION_STRING
-    )
+    const fulfillmentKey = hmac(sharedSecret, StreamServer.FULFILLMENT_GENERATION_STRING)
     const fulfillment = hmac(fulfillmentKey, prepare.data)
     const isFulfillable = sha256(fulfillment).equals(prepare.executionCondition)
     if (!isFulfillable) {
@@ -463,6 +411,7 @@ export class StreamServer {
       connectionId,
 
       paymentTag,
+      
       dataFrames: dataFrames.length > 0 ? dataFrames : undefined,
 
       setTotalReceived: (totalReceived: LongValue) => {
@@ -477,7 +426,7 @@ export class StreamServer {
           const receipt = createReceipt({
             ...receiptSetup,
             totalReceived,
-            streamId: 1
+            streamId: 1,
           })
           reply.addFrames(new StreamReceiptFrame(1, receipt))
         }
@@ -490,7 +439,7 @@ export class StreamServer {
       finalDecline: () =>
         reply
           .addFrames(new ConnectionCloseFrame(ErrorCode.NoError, ''))
-          .buildReject(IlpError.F99_APPLICATION_ERROR)
+          .buildReject(IlpError.F99_APPLICATION_ERROR),
     }
   }
 }
