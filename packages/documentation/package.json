@@ -20,7 +20,6 @@
     "rehype-autolink-headings": "^7.1.0",
     "rehype-mathjax": "^7.1.0",
     "remark-math": "^6.0.0",
-    "spectaql": "^3.0.5",
     "starlight-fullview-mode": "^0.2.6",
     "starlight-links-validator": "^0.19.1",
     "starlight-versions": "^0.5.6"
@@ -35,6 +34,7 @@
     "globals": "^16.5.0",
     "prettier": "3.2.5",
     "prettier-plugin-astro": "0.14.1",
+    "spectaql": "^3.0.5",
     "typescript-eslint": "^8.48.0"
   }
 }
