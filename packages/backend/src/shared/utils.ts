@@ -3,9 +3,10 @@ import { URL, type URL as URLType } from 'url'
 import { createHmac } from 'crypto'
 import { canonicalize } from 'json-canonicalize'
 import { IAppConfig } from '../config/app'
-import { AppContext } from '../app'
+import { AppContext, AppServices } from '../app'
 import { Tenant } from '../tenants/model'
 
+import { IocContract } from '@adonisjs/fold'
 export function validateId(id: string): boolean {
   return validate(id) && version(id) === 4
 }
@@ -240,4 +241,32 @@ export async function verifyApiSignature(
 export function ensureTrailingSlash(str: string): string {
   if (!str.endsWith('/')) return `${str}/`
   return str
+}
+
+export const loadRoutesFromDatabase = async (
+  container: IocContract<AppServices>
+): Promise<void> => {
+  const peerService = await container.use('peerService')
+  const routerService = await container.use('routerService')
+  const logger = await container.use('logger')
+
+  const peers = await peerService.getPage()
+  logger.info(
+    { peerCount: peers.length },
+    'loading static routes from database'
+  )
+
+  for (const peer of peers) {
+    // If no routes are set, we use the static address of our peers as the only routes
+    const routes =
+      peer.routes && peer.routes.length ? peer.routes : [peer.staticIlpAddress]
+    for (const route of routes) {
+      await routerService.addStaticRoute(
+        route,
+        peer.id,
+        peer.tenantId,
+        peer.assetId
+      )
+    }
+  }
 }
