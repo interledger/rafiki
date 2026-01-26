@@ -550,7 +550,7 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<TenantedApolloCo
     )
 
     try {
-      const { outgoingPaymentId, dataToTransmit } = args.input
+      const { outgoingPaymentId } = args.input
       const webhookService = await ctx.container.use('webhookService')
       const stopTimerWh = telemetry.startTimer('wh_get_latest_ms', {
         callName: 'WebhookService:getLatestByResourceId'
@@ -581,8 +581,7 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<TenantedApolloCo
         id: outgoingPaymentId,
         tenantId: ctx.tenant.id,
         amount: BigInt(event.data.debitAmount.value),
-        transferId: event.id,
-        dataToTransmit
+        transferId: event.id
       })
       stopTimerFund()
 

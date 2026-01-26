@@ -1,12 +1,11 @@
 import { validate, version } from 'uuid'
 import { URL, type URL as URLType } from 'url'
 import { createHmac } from 'crypto'
-import { createCipheriv, randomBytes } from 'node:crypto'
 import { canonicalize } from 'json-canonicalize'
 import { IAppConfig } from '../config/app'
 import { AppContext } from '../app'
 import { Tenant } from '../tenants/model'
-import { Buffer } from 'node:buffer'
+
 export function validateId(id: string): boolean {
   return validate(id) && version(id) === 4
 }
@@ -241,19 +240,4 @@ export async function verifyApiSignature(
 export function ensureTrailingSlash(str: string): string {
   if (!str.endsWith('/')) return `${str}/`
   return str
-}
-
-export function encryptDbData(data: string, key: string): string {
-  const iv = randomBytes(32).toString('base64')
-  const cipher = createCipheriv(
-    'aes-256-gcm',
-    Uint8Array.from(Buffer.from(key, 'base64')),
-    iv
-  )
-  let cipherText = cipher.update(data, 'utf8', 'base64')
-  cipherText += cipher.final('base64')
-
-  const tag = cipher.getAuthTag()
-
-  return JSON.stringify({ cipherText, tag, iv })
 }
