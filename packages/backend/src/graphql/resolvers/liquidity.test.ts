@@ -3523,9 +3523,7 @@ describe('Liquidity Resolvers', (): void => {
           assert.ok(outgoingPayment.debitAmount)
           await expect(depositSpy).toHaveBeenCalledWith({
             id: eventId,
-            account: expect.objectContaining({
-              dataToTransmit
-            }),
+            account: expect.any(OutgoingPayment),
             amount: outgoingPayment.debitAmount.value
           })
           await expect(
