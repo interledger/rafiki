@@ -22,6 +22,7 @@ import { AssetService } from '../../../asset/service'
 import { finalizeWebhookRecipients } from '../../../webhook/service'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { IncomingPaymentFilter } from '../../../graphql/generated/graphql'
+import { Redis } from 'ioredis'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -80,8 +81,12 @@ export interface IncomingPaymentService
   ): Promise<IncomingPayment | IncomingPaymentError>
   processPartialPayment(
     id: string,
-    dataToTransmit?: string
-  ): Promise<IncomingPayment | IncomingPaymentError>
+    options?: {
+      dataToTransmit?: string
+      partialIncomingPaymentId?: string
+      expiresAt?: Date
+    }
+  ): Promise<{ incomingPayment: IncomingPayment; decision: string }>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -90,6 +95,7 @@ export interface ServiceDependencies extends BaseService {
   walletAddressService: WalletAddressService
   assetService: AssetService
   config: IAppConfig
+  redis?: Redis
 }
 
 export async function createIncomingPaymentService(
@@ -112,8 +118,8 @@ export async function createIncomingPaymentService(
     processNext: () => processNextIncomingPayment(deps),
     update: (options) => updateIncomingPayment(deps, options),
     getPage: (options) => getPage(deps, options),
-    processPartialPayment: (id, dataToTransmit) =>
-      processPartialPayment(deps, id, dataToTransmit)
+    processPartialPayment: (id, options) =>
+      processPartialPayment(deps, id, options)
   }
 }
 
@@ -558,14 +564,20 @@ async function addReceivedAmount(
 async function processPartialPayment(
   deps: ServiceDependencies,
   id: string,
-  dataToTransmit?: string
-): Promise<IncomingPayment | IncomingPaymentError> {
-  const { config, knex } = deps
+  options?: {
+    dataToTransmit?: string
+    partialIncomingPaymentId?: string
+    expiresAt?: Date
+  }
+): Promise<{ incomingPayment: IncomingPayment; decision: string }> {
+  const { config, knex, redis } = deps
 
   const incomingPayment = await IncomingPayment.query(knex)
     .findById(id)
     .withGraphFetched('asset')
-  if (!incomingPayment) return IncomingPaymentError.UnknownPayment
+  if (!incomingPayment) {
+    throw new Error('Unknown incoming payment')
+  }
 
   await IncomingPaymentEvent.query(knex).insertGraph({
     incomingPaymentId: incomingPayment.id,
@@ -573,9 +585,9 @@ async function processPartialPayment(
     data: {
       ...incomingPayment.toData(0n),
       dataToTransmit:
-        dataToTransmit && config.dbEncryptionSecret
-          ? encryptDbData(dataToTransmit, config.dbEncryptionSecret)
-          : dataToTransmit
+        options?.dataToTransmit && config.dbEncryptionSecret
+          ? encryptDbData(options.dataToTransmit, config.dbEncryptionSecret)
+          : options?.dataToTransmit
     },
     tenantId: incomingPayment.tenantId,
     webhooks: finalizeWebhookRecipients(
@@ -589,7 +601,55 @@ async function processPartialPayment(
     )
   })
 
-  return incomingPayment
+  let decision = 'No response from ASE'
+  if (options?.partialIncomingPaymentId && options?.expiresAt && redis) {
+    const partialIncomingPaymentId = options.partialIncomingPaymentId
+    const cacheKey = `partial_payment_decision:${id}:${partialIncomingPaymentId}`
+
+    // Bounded polling: wait for decision up to (packet expiry - safetyMs) or maxWaitMs
+    const safetyMs = Number.isFinite(config.partialPaymentDecisionSafetyMarginMs)
+      ? config.partialPaymentDecisionSafetyMarginMs
+      : 100
+    const maxWaitMs = Number.isFinite(config.partialPaymentDecisionMaxWaitMs)
+      ? config.partialPaymentDecisionMaxWaitMs
+      : 1500
+
+    const now = Date.now()
+    const timeRemaining = Math.max(
+      0,
+      options.expiresAt.getTime() - now - safetyMs
+    )
+    const timeoutMs = Math.min(timeRemaining, maxWaitMs)
+    const pollingFrequencyMs = 50
+
+    try {
+      decision = await poll({
+        request: async (): Promise<string> => {
+          try {
+            const value = await redis.get(cacheKey)
+            return value ?? ''
+          } catch (e) {
+            deps.logger.warn({ e, incomingPaymentId: id }, 'decision read failed')
+            return ''
+          }
+        },
+        stopWhen: (result: string) => result !== '',
+        pollingFrequencyMs,
+        timeoutMs
+      })
+    } catch (e) {
+      deps.logger.warn(
+        { e, incomingPaymentId: id },
+        'partial payment decision polling timed out or failed'
+      )
+    }
+
+    if (!decision) {
+      decision = 'No response from ASE'
+    }
+  }
+
+  return { incomingPayment, decision }
 }
 
 async function getPage(

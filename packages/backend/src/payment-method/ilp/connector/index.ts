@@ -25,7 +25,7 @@ import {
   createOutgoingValidateFulfillmentMiddleware,
   createStreamAddressMiddleware,
   createStreamController,
-  createKycDecisionMiddleware
+  createPartialPaymentDecisionMiddleware
 } from './core'
 import { TelemetryService } from '../../../telemetry/service'
 import { TenantSettingService } from '../../../tenants/settings/service'
@@ -80,7 +80,7 @@ export async function createConnectorService({
       // Incoming Rules
       createIncomingErrorHandlerMiddleware(ilpAddress),
       createStreamAddressMiddleware(),
-      createKycDecisionMiddleware(),
+      createPartialPaymentDecisionMiddleware(),
       createAccountMiddleware(),
       createIncomingMaxPacketAmountMiddleware(),
       createIncomingRateLimitMiddleware({}),

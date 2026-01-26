@@ -1147,16 +1147,16 @@ describe('Incoming Payment Service', (): void => {
           const dataToTransmit = JSON.stringify({
             data: faker.internet.email()
           })
-          const processedPayment =
-            await incomingPaymentService.processPartialPayment(
-              incomingPayment.id,
-              dataToTransmit
-            )
-          assert.ok(!isIncomingPaymentError(processedPayment))
+          const result = await incomingPaymentService.processPartialPayment(
+            incomingPayment.id,
+            { dataToTransmit }
+          )
+          assert.ok(result)
+          assert.ok(result.incomingPayment)
 
           const webhookEvent = await IncomingPaymentEvent.query(knex)
             .where({
-              incomingPaymentId: processedPayment.id,
+              incomingPaymentId: result.incomingPayment.id,
               type: IncomingPaymentEventType.IncomingPaymentPartialPaymentReceived
             })
             .withGraphFetched('webhooks')
@@ -1203,16 +1203,16 @@ describe('Incoming Payment Service', (): void => {
             data: faker.internet.email()
           })
 
-          const processedPayment =
-            await incomingPaymentService.processPartialPayment(
-              incomingPayment.id,
-              dataToTransmit
-            )
-          assert.ok(!isIncomingPaymentError(processedPayment))
+          const result = await incomingPaymentService.processPartialPayment(
+            incomingPayment.id,
+            { dataToTransmit }
+          )
+          assert.ok(result)
+          assert.ok(result.incomingPayment)
 
           const webhookEvent = await IncomingPaymentEvent.query(knex)
             .where({
-              incomingPaymentId: processedPayment.id,
+              incomingPaymentId: result.incomingPayment.id,
               type: IncomingPaymentEventType.IncomingPaymentPartialPaymentReceived
             })
             .withGraphFetched('webhooks')

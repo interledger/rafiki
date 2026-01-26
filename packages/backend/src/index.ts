@@ -381,7 +381,8 @@ export function initIocContainer(
       accountingService: await deps.use('accountingService'),
       walletAddressService: await deps.use('walletAddressService'),
       assetService: await deps.use('assetService'),
-      config: await deps.use('config')
+      config: await deps.use('config'),
+      redis: await deps.use('redis')
     })
   })
   container.singleton('remoteIncomingPaymentService', async (deps) => {
