@@ -8,7 +8,7 @@ overrides:
   axios@>=0.8.1 <0.28.0: '>=0.28.0'
   json5@<1.0.2: '>=1.0.2'
   katex: '>=0.16.21'
-  jose: '>=4.15.5'
+  jose: '>=6.1.3'
   undici@>=5.0.0: ^5.28.5
   undici@>=6.0.0: ^6.21.2
   tar@<6.2.1: '>=6.2.1'
@@ -5235,7 +5235,7 @@ packages:
       graphql-request: 6.1.0(graphql@16.11.0)
       http-proxy-agent: 7.0.0
       https-proxy-agent: 7.0.2
-      jose: 5.4.0
+      jose: 6.1.3
       js-yaml: 4.1.1
       json-stable-stringify: 1.0.1
       lodash: 4.17.21
@@ -5777,7 +5777,7 @@ packages:
     dependencies:
       http-message-signatures: 1.0.4
       httpbis-digest-headers: 1.0.0
-      jose: 5.4.0
+      jose: 6.1.3
       uuid: 9.0.1
 
   /@interledger/http-signature-utils@2.0.3:
@@ -5785,7 +5785,7 @@ packages:
     dependencies:
       http-message-signatures: 1.0.4
       httpbis-digest-headers: 1.0.0
-      jose: 5.4.0
+      jose: 6.1.3
       uuid: 9.0.1
 
   /@interledger/open-payments@7.0.0:
@@ -16640,8 +16640,8 @@ packages:
     hasBin: true
     dev: true
 
-  /jose@5.4.0:
-    resolution: {integrity: sha512-6rpxTHPAQyWMb9A35BroFl1Sp0ST3DpPcm5EVIxZxdH+e0Hv9fwhyB3XLKFUcHNpdSDnETmBfuPPTTlYz5+USw==}
+  /jose@6.1.3:
+    resolution: {integrity: sha512-0TpaTfihd4QMNwrz/ob2Bp7X04yuxJkjRGi4aKmOqwhov54i6u79oCv7T+C7lo70MKH6BesI3vscD1yb/yzKXQ==}
 
   /joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
