@@ -544,8 +544,8 @@ importers:
         specifier: ^10.16.0
         version: 10.16.0
       tmp:
-        specifier: ^0.2.3
-        version: 0.2.4
+        specifier: ^0.2.5
+        version: 0.2.5
       ts-node-dev:
         specifier: ^2.0.0
         version: 2.0.0(@swc/core@1.15.3)(@types/node@20.14.15)(typescript@5.9.3)
@@ -927,8 +927,8 @@ importers:
         specifier: ^10.16.0
         version: 10.16.0
       tmp:
-        specifier: ^0.2.3
-        version: 0.2.4
+        specifier: ^0.2.5
+        version: 0.2.5
       ts-node-dev:
         specifier: ^2.0.0
         version: 2.0.0(@swc/core@1.15.3)(@types/node@20.14.15)(typescript@5.9.3)
@@ -22677,6 +22677,11 @@ packages:
 
   /tmp@0.2.4:
     resolution: {integrity: sha512-UdiSoX6ypifLmrfQ/XfiawN6hkjSBpCjhKxxZcWlUUmoXLaCKQU0bx4HF/tdDK2uzRuchf1txGvrWBzYREssoQ==}
+    engines: {node: '>=14.14'}
+    dev: true
+
+  /tmp@0.2.5:
+    resolution: {integrity: sha512-voyz6MApa1rQGUxT3E+BK7/ROe8itEx7vD8/HEvt4xwXucvQ5G5oeEiHkmHZJuBO21RpOf+YYm9MOivj709jow==}
     engines: {node: '>=14.14'}
     dev: true
 
