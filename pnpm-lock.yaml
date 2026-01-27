@@ -215,7 +215,7 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0(pg@8.11.3)
       koa:
-        specifier: ^2.15.4
+        specifier: ^2.16.3
         version: 2.16.3
       koa-bodyparser:
         specifier: ^4.4.1
@@ -432,7 +432,7 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0(pg@8.11.3)
       koa:
-        specifier: ^2.15.4
+        specifier: ^2.16.3
         version: 2.16.3
       koa-bodyparser:
         specifier: ^4.4.1
@@ -577,7 +577,7 @@ importers:
         specifier: ^1.0.6
         version: 1.0.6
       koa:
-        specifier: ^2.15.4
+        specifier: ^2.16.3
         version: 2.16.3
       koa-bodyparser:
         specifier: ^4.4.1
@@ -1046,7 +1046,7 @@ importers:
         specifier: ^1.0.6
         version: 1.0.6
       koa:
-        specifier: ^2.15.3
+        specifier: ^2.16.3
         version: 2.16.3
       mock-account-service-lib:
         specifier: workspace:*
@@ -14845,7 +14845,7 @@ packages:
     resolution: {integrity: sha512-NqADB8VjPFLM2V0VvHUewwwsw0ZWBaIdgo+ieHtK3hasLz4qeCRjYcqfB6AQrBggRKppKF8L52/VqdVsO47Dlw==}
     engines: {node: '>= 0.4'}
     dependencies:
-      has-symbols: 1.0.3
+      has-symbols: 1.1.0
 
   /has@1.0.3:
     resolution: {integrity: sha512-f2dvO0VU6Oej7RkWJGrehjbzMAjFp5/VKPp5tTpWIV4JHHZK1/BxbFRtf/siA2SWTe09caDmVtYYzWEIbBS4zw==}

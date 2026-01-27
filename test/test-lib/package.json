@@ -23,7 +23,7 @@
     "axios": "1.8.2",
     "graphql": "^16.11.0",
     "json-canonicalize": "^1.0.6",
-    "koa": "^2.15.3",
+    "koa": "^2.16.3",
     "mock-account-service-lib": "workspace:*",
     "yaml": "^2.7.0"
   }
