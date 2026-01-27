@@ -49,7 +49,7 @@
     "pg": "^8.11.3",
     "pino": "^8.19.0",
     "token-introspection": "workspace:*",
-    "uuid": "^9.0.1"
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@apollo/client": "^3.11.8",
