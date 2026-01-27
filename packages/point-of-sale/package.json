@@ -31,9 +31,7 @@
     "json-canonicalize": "^1.0.6",
     "koa": "^3.0.0",
     "koa-bodyparser": "^4.4.1",
-    "node-dev": "^8.0.0",
     "pino": "^8.19.0",
-    "ts-node": "^10.9.2",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
