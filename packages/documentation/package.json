@@ -22,7 +22,7 @@
     "remark-math": "^6.0.0",
     "starlight-fullview-mode": "^0.2.6",
     "starlight-links-validator": "^0.19.1",
-    "starlight-versions": "^0.5.6"
+    "starlight-versions": "^0.6.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
