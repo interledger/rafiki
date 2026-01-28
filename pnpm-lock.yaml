@@ -10,7 +10,7 @@ overrides:
   katex: '>=0.16.21'
   jose: '>=4.15.5'
   undici@>=5.0.0: ^5.28.5
-  undici@>=6.0.0: ^6.21.2
+  undici@>=6.0.0: ^6.23.0
   tar@<6.2.1: '>=6.2.1'
   braces@<3.0.3: '>=3.0.3'
   dset@<3.1.4: '>=3.1.4'
@@ -7452,7 +7452,7 @@ packages:
       source-map-support: 0.5.21
       stream-slice: 0.1.2
       typescript: 5.4.3
-      undici: 6.22.0
+      undici: 6.23.0
 
   /@remix-run/node@2.16.4(typescript@5.8.3):
     resolution: {integrity: sha512-scZwpc78cJS8dx6LMLemVHqnaAVbPWasx36TxYWUASA63hxPx5XbGbb6pe4cSpT8dWqhBtsPpHZoFTrM1aqx7A==}
@@ -7470,7 +7470,7 @@ packages:
       source-map-support: 0.5.21
       stream-slice: 0.1.2
       typescript: 5.8.3
-      undici: 6.22.0
+      undici: 6.23.0
 
   /@remix-run/node@2.17.4(typescript@5.4.3):
     resolution: {integrity: sha512-9A29JaYiGHDEmaiQuD1IlO/TrQxnnkj98GpytihU+Nz6yTt6RwzzyMMqTAoasRd1dPD4OeSaSqbwkcim/eE76Q==}
@@ -7488,7 +7488,7 @@ packages:
       source-map-support: 0.5.21
       stream-slice: 0.1.2
       typescript: 5.4.3
-      undici: 6.22.0
+      undici: 6.23.0
     dev: false
 
   /@remix-run/node@2.17.4(typescript@5.8.3):
@@ -7507,7 +7507,7 @@ packages:
       source-map-support: 0.5.21
       stream-slice: 0.1.2
       typescript: 5.8.3
-      undici: 6.22.0
+      undici: 6.23.0
     dev: false
 
   /@remix-run/react@2.17.4(react-dom@18.2.0)(react@18.2.0)(typescript@5.4.3):
@@ -23071,8 +23071,8 @@ packages:
       '@fastify/busboy': 2.1.1
     dev: true
 
-  /undici@6.22.0:
-    resolution: {integrity: sha512-hU/10obOIu62MGYjdskASR3CUAiYaFTtC9Pa6vHyf//mAipSvSQg6od2CnJswq7fvzNS3zJhxoRkgNVaHurWKw==}
+  /undici@6.23.0:
+    resolution: {integrity: sha512-VfQPToRA5FZs/qJxLIinmU59u0r7LXqoJkCzinq3ckNJp3vKEh7jTWN589YQ5+aoAC/TGRLyJLCPKcLQbM8r9g==}
     engines: {node: '>=18.17'}
 
   /unicode-canonical-property-names-ecmascript@2.0.1:
