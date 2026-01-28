@@ -657,8 +657,8 @@ importers:
         specifier: ^0.19.1
         version: 0.19.2(@astrojs/starlight@0.36.3)(astro@5.16.0)
       starlight-versions:
-        specifier: ^0.5.6
-        version: 0.5.6(@astrojs/starlight@0.36.3)
+        specifier: ^0.6.0
+        version: 0.6.0(@astrojs/starlight@0.36.3)
     devDependencies:
       '@eslint/js':
         specifier: ^9.39.1
@@ -9752,7 +9752,6 @@ packages:
       acorn: ^6.0.0 || ^7.0.0 || ^8.0.0
     dependencies:
       acorn: 8.15.0
-    dev: true
 
   /acorn-walk@8.3.2:
     resolution: {integrity: sha512-cjkyv4OtNCIeqhHrfS81QWXoCBPExR/J62oyEqepVw8WaQeSqpW2uhuLPh1m9eWhDuOo/jUXVTlifvesOWp/4A==}
@@ -18012,8 +18011,8 @@ packages:
   /micromark-extension-mdxjs@3.0.0:
     resolution: {integrity: sha512-A873fJfhnJ2siZyUrJ31l34Uqwy4xIFmvPY1oj+Ean5PHcPBYzEsvqvWGaWcfEIr11O5Dlw3p2y0tZWpKHDejQ==}
     dependencies:
-      acorn: 8.14.1
-      acorn-jsx: 5.3.2(acorn@8.14.1)
+      acorn: 8.15.0
+      acorn-jsx: 5.3.2(acorn@8.15.0)
       micromark-extension-mdx-expression: 3.0.0
       micromark-extension-mdx-jsx: 3.0.0
       micromark-extension-mdx-md: 2.0.0
@@ -21806,8 +21805,8 @@ packages:
       - supports-color
     dev: false
 
-  /starlight-versions@0.5.6(@astrojs/starlight@0.36.3):
-    resolution: {integrity: sha512-hpQ2okM+93MKSVtmIfcFyL27x33uw0L1Sm2SwlnBNC01MW33II9lLbSf6lQHt1ngtEwI8ZDbyzUFIflgMGKKjw==}
+  /starlight-versions@0.6.0(@astrojs/starlight@0.36.3):
+    resolution: {integrity: sha512-IkLMAI4B0EibN1QAxaBLyFb58UtMd15Lrl4661lpOWK0yA3BgLOGxZPanM8keItoeVLehWjAoGEDsxksl/bHsg==}
     engines: {node: '>=18'}
     peerDependencies:
       '@astrojs/starlight': '>=0.32.0'
