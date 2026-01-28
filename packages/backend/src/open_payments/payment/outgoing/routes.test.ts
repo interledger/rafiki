@@ -383,7 +383,7 @@ describe('Outgoing Payment Routes', (): void => {
       })
     })
 
-    test('returns null for spent amounts when no amounts have been spent', async (): Promise<void> => {
+    test('returns empty object for spent amounts when no amounts have been spent', async (): Promise<void> => {
       const grantId = uuid()
       const ctx = createContext(grantId)
 
@@ -402,10 +402,7 @@ describe('Outgoing Payment Routes', (): void => {
         grantId,
         limits: undefined
       })
-      expect(ctx.body).toEqual({
-        spentDebitAmount: null,
-        spentReceiveAmount: null
-      })
+      expect(ctx.body).toEqual({})
     })
   })
 })
