@@ -115,7 +115,6 @@ services:
       OPERATOR_TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
       CARD_SERVICE_URL: 'http://cloud-nine-wallet-card-service:3007'
       CARD_WEBHOOK_SERVICE_URL: 'http://cloud-nine-wallet-card-service:3007/webhook'
-      DB_ENCRYPTION_SECRET: 'zO9KogehJECHReHgQr+ZWGkmgOD4AYa4ksUxALSwgM8='
     depends_on:
       shared-database:
         condition: service_healthy

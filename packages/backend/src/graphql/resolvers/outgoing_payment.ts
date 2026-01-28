@@ -145,11 +145,10 @@ export const createOutgoingPayment: MutationResolvers<TenantedApolloContext>['cr
           code: errorToCode[outgoingPaymentOrError]
         }
       })
-    } else {
+    } else
       return {
         payment: paymentToGraphql(outgoingPaymentOrError)
       }
-    }
   }
 
 export const createOutgoingPaymentFromIncomingPayment: MutationResolvers<TenantedApolloContext>['createOutgoingPaymentFromIncomingPayment'] =

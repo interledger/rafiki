@@ -1,4 +1,4 @@
-import crypto, { createDecipheriv } from 'node:crypto'
+import crypto from 'node:crypto'
 import { IocContract } from '@adonisjs/fold'
 import { Redis } from 'ioredis'
 import { faker } from '@faker-js/faker'
@@ -11,7 +11,6 @@ import {
   sleep,
   getTenantFromApiSignature,
   ensureTrailingSlash,
-  encryptDbData,
   loadRoutesFromDatabase
 } from './utils'
 import { AppServices, AppContext } from '../app'
@@ -457,25 +456,6 @@ describe('utils', (): void => {
 
     expect(ensureTrailingSlash(path)).toBe(`${path}/`)
     expect(ensureTrailingSlash(`${path}/`)).toBe(`${path}/`)
-  })
-
-  test('can encrypt data with symmetric key', async (): Promise<void> => {
-    const key = crypto.randomBytes(32).toString('base64')
-
-    const plaintext = faker.internet.email()
-
-    const encrypted = JSON.parse(encryptDbData(plaintext, key))
-
-    const decipher = createDecipheriv(
-      'aes-256-gcm',
-      Uint8Array.from(Buffer.from(key, 'base64')),
-      encrypted.iv
-    )
-    decipher.setAuthTag(Uint8Array.from(Buffer.from(encrypted.tag, 'base64')))
-    let decipherText = decipher.update(encrypted.cipherText, 'base64', 'utf8')
-    decipherText += decipher.final('utf8')
-
-    expect(decipherText).toEqual(plaintext)
   })
 
   describe('loadRoutesFromDatabase', (): void => {
