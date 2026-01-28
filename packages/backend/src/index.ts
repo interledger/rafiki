@@ -65,6 +65,7 @@ import { AuthServiceClient } from './auth-service-client/client'
 import { createTenantSettingService } from './tenants/settings/service'
 import { createPaymentMethodProviderService } from './payment-method/provider/service'
 import { createRouterService } from './payment-method/ilp/connector/ilp-routing/service'
+import { loadRoutesFromDatabase } from './shared/utils'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -665,33 +666,6 @@ export const gracefulShutdown = async (
 
   const telemetry = await container.use('telemetry')
   telemetry.shutdown()
-}
-
-const loadRoutesFromDatabase = async (
-  container: IocContract<AppServices>
-): Promise<void> => {
-  const peerService = await container.use('peerService')
-  const routerService = await container.use('routerService')
-  const logger = await container.use('logger')
-
-  const peers = await peerService.getPage()
-  logger.info(
-    { peerCount: peers.length },
-    'loading static routes from database'
-  )
-
-  for (const peer of peers) {
-    // If no routes are set, we use the static address of our peers as the only routes
-    const routes = peer.routes || [peer.staticIlpAddress]
-    for (const route of routes) {
-      await routerService.addStaticRoute(
-        route,
-        peer.id,
-        peer.tenantId,
-        peer.assetId
-      )
-    }
-  }
 }
 
 export const start = async (

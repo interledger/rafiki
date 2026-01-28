@@ -6,7 +6,12 @@ import {
   AssetResolvers
 } from '../generated/graphql'
 import { Asset } from '../../asset/model'
-import { errorToCode, errorToMessage, isAssetError } from '../../asset/errors'
+import {
+  AssetError,
+  errorToCode,
+  errorToMessage,
+  isAssetError
+} from '../../asset/errors'
 import { ForTenantIdContext, TenantedApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
@@ -14,6 +19,7 @@ import { feeToGraphql } from './fee'
 import { Fee, FeeType } from '../../fee/model'
 import { GraphQLError } from 'graphql'
 import { GraphQLErrorCode } from '../errors'
+import { tenantToGraphQl } from './tenant'
 
 export const getAssets: QueryResolvers<TenantedApolloContext>['assets'] =
   async (parent, args, ctx): Promise<ResolversTypes['AssetsConnection']> => {
@@ -185,6 +191,27 @@ export const getFees: AssetResolvers<TenantedApolloContext>['fees'] = async (
   }
 }
 
+export const getAssetTenant: AssetResolvers<TenantedApolloContext>['tenant'] =
+  async (parent, args, ctx): Promise<ResolversTypes['Tenant'] | null> => {
+    if (!parent.id)
+      throw new GraphQLError(
+        '"id" field required in request to resolve "tenant".'
+      )
+    const assetService = await ctx.container.use('assetService')
+    const asset = await assetService.get(parent.id)
+    if (!asset)
+      throw new GraphQLError(errorToCode[AssetError.UnknownAsset], {
+        extensions: {
+          code: errorToCode[AssetError.UnknownAsset]
+        }
+      })
+
+    const tenantService = await ctx.container.use('tenantService')
+    const tenant = await tenantService.get(asset.tenantId)
+    if (!tenant) return null
+    return tenantToGraphQl(tenant)
+  }
+
 export const deleteAsset: MutationResolvers<TenantedApolloContext>['deleteAsset'] =
   async (
     _,
@@ -216,6 +243,5 @@ export const assetToGraphql = (asset: Asset): SchemaAsset => ({
   scale: asset.scale,
   withdrawalThreshold: asset.withdrawalThreshold,
   liquidityThreshold: asset.liquidityThreshold,
-  createdAt: new Date(+asset.createdAt).toISOString(),
-  tenantId: asset.tenantId
+  createdAt: new Date(+asset.createdAt).toISOString()
 })

@@ -8,6 +8,7 @@ import { WalletAddress } from '../../open_payments/wallet_address/model'
 import { Asset } from '../../asset/model'
 import { Peer } from '../../payment-method/ilp/peer/model'
 import { Webhook } from '../model'
+import { Tenant } from '../../tenants/model'
 
 const fieldPrefixes = ['withdrawal']
 
@@ -64,6 +65,14 @@ export class WebhookEvent extends BaseModel {
         from: 'webhookEvents.peerId',
         to: 'peer.id'
       }
+    },
+    tenant: {
+      relation: BaseModel.BelongsToOneRelation,
+      modelClass: join(__dirname, '../../tenant/model'),
+      join: {
+        from: 'webhookEvents.tenantId',
+        to: 'tenants.id'
+      }
     }
   })
 
@@ -71,6 +80,7 @@ export class WebhookEvent extends BaseModel {
   public data!: Record<string, unknown>
   public depositAccountId?: string
   public tenantId!: string
+  public tenant?: Tenant
 
   public readonly outgoingPaymentId?: string
   public readonly incomingPaymentId?: string
