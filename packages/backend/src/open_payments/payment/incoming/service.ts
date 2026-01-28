@@ -80,7 +80,7 @@ export interface IncomingPaymentService
   ): Promise<IncomingPayment | IncomingPaymentError>
   processPartialPayment(
     id: string,
-    dataToTransmit?: string
+    args: ProcessPartialPaymentArgs
   ): Promise<IncomingPayment | IncomingPaymentError>
 }
 
@@ -112,8 +112,7 @@ export async function createIncomingPaymentService(
     processNext: () => processNextIncomingPayment(deps),
     update: (options) => updateIncomingPayment(deps, options),
     getPage: (options) => getPage(deps, options),
-    processPartialPayment: (id, dataToTransmit) =>
-      processPartialPayment(deps, id, dataToTransmit)
+    processPartialPayment: (id, args) => processPartialPayment(deps, id, args)
   }
 }
 
@@ -555,12 +554,19 @@ async function addReceivedAmount(
   return payment
 }
 
+interface ProcessPartialPaymentArgs {
+  partialPaymentId: string
+  value: bigint
+  dataFromSender?: string
+}
+
 async function processPartialPayment(
   deps: ServiceDependencies,
   id: string,
-  dataToTransmit?: string
+  args: ProcessPartialPaymentArgs
 ): Promise<IncomingPayment | IncomingPaymentError> {
   const { config, knex } = deps
+  const { partialPaymentId, value, dataFromSender } = args
 
   const incomingPayment = await IncomingPayment.query(knex)
     .findById(id)
@@ -571,11 +577,19 @@ async function processPartialPayment(
     incomingPaymentId: incomingPayment.id,
     type: IncomingPaymentEventType.IncomingPaymentPartialPaymentReceived,
     data: {
-      ...incomingPayment.toData(0n),
-      dataToTransmit:
-        dataToTransmit && config.dbEncryptionSecret
-          ? encryptDbData(dataToTransmit, config.dbEncryptionSecret)
-          : dataToTransmit
+      ...incomingPayment.toData(value),
+      partialPayment: {
+        id: partialPaymentId,
+        amount: {
+          value,
+          assetCode: incomingPayment.asset.code,
+          assetScale: incomingPayment.asset.scale
+        },
+        dataFromSender:
+          dataFromSender && config.dbEncryptionSecret
+            ? encryptDbData(dataFromSender, config.dbEncryptionSecret)
+            : dataFromSender
+      }
     },
     tenantId: incomingPayment.tenantId,
     webhooks: finalizeWebhookRecipients(
