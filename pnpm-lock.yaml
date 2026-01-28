@@ -688,7 +688,7 @@ importers:
         specifier: 0.14.1
         version: 0.14.1
       spectaql:
-        specifier: ^3.0.5
+        specifier: ^3.0.6
         version: 3.0.6
       typescript-eslint:
         specifier: ^8.48.0
@@ -8763,10 +8763,6 @@ packages:
   /@types/qs@6.14.0:
     resolution: {integrity: sha512-eOunJqu0K1923aExK6y8p6fsihYEn/BYuQ4g0CxAAgFc4b/ZLN4CrsRZ55srTdqoiLzU2B2evC+apEIxprEzkQ==}
 
-  /@types/qs@6.9.14:
-    resolution: {integrity: sha512-5khscbd3SwWMhFqylJBLQ0zIu7c1K6Vz0uBIt915BI3zV0q1nfjRQD3RqSBcPaO6PHEF4ov/t9y89fSiyThlPA==}
-    dev: true
-
   /@types/range-parser@1.2.7:
     resolution: {integrity: sha512-hKormJbkJqzQGhziax5PItDUTMAM9uE2XXQmM37dyd4hVM+5aVl7oVxMVUiVQn2oCQFN/LKCZdvSM0pFRqbSmQ==}
 
@@ -12489,7 +12485,7 @@ packages:
       '@one-ini/wasm': 0.1.1
       commander: 10.0.1
       minimatch: 9.0.1
-      semver: 7.7.2
+      semver: 7.7.3
     dev: true
 
   /ee-first@1.1.1:
@@ -21250,13 +21246,6 @@ packages:
     hasBin: true
     dev: true
 
-  /semver@7.7.2:
-    resolution: {integrity: sha512-RF0Fw+rO5AMf9MAyaRXI4AV0Ulj5lMHqVxxdSgiVbixSCXoEmmX/jk0CuJw4+3SqroYO9VoUh+HcuJivvtJemA==}
-    engines: {node: '>=10'}
-    hasBin: true
-    requiresBuild: true
-    dev: true
-
   /semver@7.7.3:
     resolution: {integrity: sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q==}
     engines: {node: '>=10'}
@@ -22482,7 +22471,7 @@ packages:
       '@types/concat-stream': 1.6.1
       '@types/form-data': 0.0.33
       '@types/node': 8.10.66
-      '@types/qs': 6.9.14
+      '@types/qs': 6.14.0
       caseless: 0.12.0
       concat-stream: 1.6.2
       form-data: 4.0.4
