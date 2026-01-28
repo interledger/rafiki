@@ -234,8 +234,8 @@ importers:
         specifier: ^8.11.3
         version: 8.11.3
       pino:
-        specifier: ^8.19.0
-        version: 8.19.0
+        specifier: ^10.3.0
+        version: 10.3.0
       token-introspection:
         specifier: workspace:*
         version: link:../token-introspection
@@ -457,8 +457,8 @@ importers:
         specifier: ^8.11.3
         version: 8.11.3
       pino:
-        specifier: ^8.19.0
-        version: 8.19.0
+        specifier: ^10.3.0
+        version: 10.3.0
       raw-body:
         specifier: ^2.5.2
         version: 2.5.2
@@ -584,8 +584,8 @@ importers:
         specifier: ^4.4.1
         version: 4.4.1
       pino:
-        specifier: ^8.19.0
-        version: 8.19.0
+        specifier: ^10.3.0
+        version: 10.3.0
       uuid:
         specifier: ^9.0.1
         version: 9.0.1
@@ -736,8 +736,8 @@ importers:
         specifier: ^1.0.6
         version: 1.0.6
       pino:
-        specifier: ^8.19.0
-        version: 8.19.0
+        specifier: ^10.3.0
+        version: 10.3.0
       qs:
         specifier: ^6.14.1
         version: 6.14.1
@@ -815,8 +815,8 @@ importers:
         specifier: ^16.11.0
         version: 16.11.0
       pino:
-        specifier: ^8.19.0
-        version: 8.19.0
+        specifier: ^10.3.0
+        version: 10.3.0
       pino-pretty:
         specifier: ^11.0.0
         version: 11.0.0
@@ -870,8 +870,8 @@ importers:
         specifier: ^4.4.1
         version: 4.4.1
       pino:
-        specifier: ^8.19.0
-        version: 8.19.0
+        specifier: ^10.3.0
+        version: 10.3.0
       uuid:
         specifier: ^9.0.1
         version: 9.0.1
@@ -943,8 +943,8 @@ importers:
         specifier: ^1.12.0
         version: 1.12.0(debug@4.3.2)
       pino:
-        specifier: ^8.19.0
-        version: 8.19.0
+        specifier: ^10.3.0
+        version: 10.3.0
     devDependencies:
       '@types/node':
         specifier: ^18.7.12
@@ -7080,6 +7080,10 @@ packages:
       '@parcel/watcher-win32-x64': 2.5.1
     dev: true
     optional: true
+
+  /@pinojs/redact@0.4.0:
+    resolution: {integrity: sha512-k2ENnmBugE/rzQfEcdWHcCY+/FM3VLzH9cYEsbdsoqrvzAKRhUZeRNhAZvB8OitQJ1TBed3yqWtdjzS6wJKBwg==}
+    dev: false
 
   /@pkgjs/parseargs@0.11.0:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
@@ -19671,6 +19675,12 @@ packages:
       readable-stream: 4.1.0
       split2: 4.1.0
 
+  /pino-abstract-transport@3.0.0:
+    resolution: {integrity: sha512-wlfUczU+n7Hy/Ha5j9a/gZNy7We5+cXp8YL+X+PG8S0KXxw7n/JXA3c46Y0zQznIJ83URJiwy7Lh56WLokNuxg==}
+    dependencies:
+      split2: 4.1.0
+    dev: false
+
   /pino-pretty@11.0.0:
     resolution: {integrity: sha512-YFJZqw59mHIY72wBnBs7XhLGG6qpJMa4pEQTRgEPEbjIYbng2LXEZZF1DoyDg9CfejEy8uZCyzpcBXXG0oOCwQ==}
     hasBin: true
@@ -19692,6 +19702,27 @@ packages:
 
   /pino-std-serializers@6.0.0:
     resolution: {integrity: sha512-mMMOwSKrmyl+Y12Ri2xhH1lbzQxwwpuru9VjyJpgFIH4asSj88F2csdMwN6+M5g1Ll4rmsYghHLQJw81tgZ7LQ==}
+
+  /pino-std-serializers@7.1.0:
+    resolution: {integrity: sha512-BndPH67/JxGExRgiX1dX0w1FvZck5Wa4aal9198SrRhZjH3GxKQUKIBnYJTdj2HDN3UQAS06HlfcSbQj2OHmaw==}
+    dev: false
+
+  /pino@10.3.0:
+    resolution: {integrity: sha512-0GNPNzHXBKw6U/InGe79A3Crzyk9bcSyObF9/Gfo9DLEf5qj5RF50RSjsu0W1rZ6ZqRGdzDFCRBQvi9/rSGPtA==}
+    hasBin: true
+    dependencies:
+      '@pinojs/redact': 0.4.0
+      atomic-sleep: 1.0.0
+      on-exit-leak-free: 2.1.0
+      pino-abstract-transport: 3.0.0
+      pino-std-serializers: 7.1.0
+      process-warning: 5.0.0
+      quick-format-unescaped: 4.0.4
+      real-require: 0.2.0
+      safe-stable-stringify: 2.3.1
+      sonic-boom: 4.2.0
+      thread-stream: 4.0.0
+    dev: false
 
   /pino@8.19.0:
     resolution: {integrity: sha512-oswmokxkav9bADfJ2ifrvfHUwad6MLp73Uat0IkQWY3iAw5xTRoznXbXksZs8oaOUMpmhVWD+PZogNzllWpJaA==}
@@ -20046,6 +20077,10 @@ packages:
 
   /process-warning@3.0.0:
     resolution: {integrity: sha512-mqn0kFRl0EoqhnL0GQ0veqFHyIN1yig9RHh/InzORTUiZHFRAur+aMtRkELNwGs9aNwKS6tg/An4NYBPGwvtzQ==}
+
+  /process-warning@5.0.0:
+    resolution: {integrity: sha512-a39t9ApHNx2L4+HBnQKqxxHNs1r7KF+Intd8Q/g1bUh6q0WIp9voPXJ/x0j+ZL45KF1pJd9+q2jLIRMfvEshkA==}
+    dev: false
 
   /promise-inflight@1.0.1:
     resolution: {integrity: sha512-6zWPyEOFaQBJYcGMHBKTKJ3u6TBsnMFOIZSa6ce1e/ZrrsOlnHRHbabMjLiBYKp+n44X9eUI6VUPaukCXHuG4g==}
@@ -21600,6 +21635,12 @@ packages:
     dependencies:
       atomic-sleep: 1.0.0
 
+  /sonic-boom@4.2.0:
+    resolution: {integrity: sha512-INb7TM37/mAcsGmc9hyyI6+QR3rR1zVRu36B0NeGXKnOOLiZOfER5SA+N7X7k3yUYRzLWafduTDvJAfDswwEww==}
+    dependencies:
+      atomic-sleep: 1.0.0
+    dev: false
+
   /source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
     engines: {node: '>=0.10.0'}
@@ -22509,6 +22550,13 @@ packages:
     resolution: {integrity: sha512-5+Pf2Ya31CsZyIPYYkhINzdTZ3guL+jHq7D8lkBybgGcSQIKDbid3NJku3SpCKeE/gACWAccDA/rH2B6doC5aA==}
     dependencies:
       real-require: 0.2.0
+
+  /thread-stream@4.0.0:
+    resolution: {integrity: sha512-4iMVL6HAINXWf1ZKZjIPcz5wYaOdPhtO8ATvZ+Xqp3BTdaqtAwQkNmKORqcIo5YkQqGXq5cwfswDwMqqQNrpJA==}
+    engines: {node: '>=20'}
+    dependencies:
+      real-require: 0.2.0
+    dev: false
 
   /through2@2.0.5:
     resolution: {integrity: sha512-/mrRod8xqpA+IHSLyGCQ2s8SPHiCDEeQJSep1jqLYeEUClOFG2Qsh+4FU6G9VeqpZnGW/Su8LQGc4YKni5rYSQ==}
