@@ -104,8 +104,8 @@ importers:
         specifier: ^9.0.8
         version: 9.0.8
       axios:
-        specifier: ^1.12.0
-        version: 1.12.0(debug@4.3.2)
+        specifier: ^1.13.4
+        version: 1.13.4(debug@4.3.2)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -198,8 +198,8 @@ importers:
         specifier: ^8.12.0
         version: 8.12.0
       axios:
-        specifier: ^1.12.0
-        version: 1.12.0(debug@4.3.2)
+        specifier: ^1.13.4
+        version: 1.13.4(debug@4.3.2)
       dotenv:
         specifier: ^16.4.7
         version: 16.4.7
@@ -394,8 +394,8 @@ importers:
         specifier: ^8.12.0
         version: 8.12.0
       axios:
-        specifier: ^1.12.0
-        version: 1.12.0(debug@4.3.2)
+        specifier: ^1.13.4
+        version: 1.13.4(debug@4.3.2)
       base64url:
         specifier: ^3.0.1
         version: 3.0.1
@@ -718,8 +718,8 @@ importers:
         specifier: ^2.16.4
         version: 2.16.4(typescript@5.8.3)
       axios:
-        specifier: ^1.12.0
-        version: 1.12.0(debug@4.3.2)
+        specifier: ^1.13.4
+        version: 1.13.4(debug@4.3.2)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -852,8 +852,8 @@ importers:
         specifier: ^12.0.2
         version: 12.0.2
       axios:
-        specifier: 1.12.0
-        version: 1.12.0(debug@4.3.2)
+        specifier: 1.13.4
+        version: 1.13.4(debug@4.3.2)
       dotenv:
         specifier: ^16.4.7
         version: 16.4.7
@@ -940,8 +940,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       axios:
-        specifier: ^1.12.0
-        version: 1.12.0(debug@4.3.2)
+        specifier: ^1.13.4
+        version: 1.13.4(debug@4.3.2)
       pino:
         specifier: ^8.19.0
         version: 8.19.0
@@ -1038,8 +1038,8 @@ importers:
         specifier: ^20.14.15
         version: 20.14.15
       axios:
-        specifier: 1.8.2
-        version: 1.8.2
+        specifier: 1.13.4
+        version: 1.13.4(debug@4.3.2)
       graphql:
         specifier: ^16.11.0
         version: 16.11.0
@@ -6870,7 +6870,7 @@ packages:
   /@ory/client@1.9.0:
     resolution: {integrity: sha512-O4a1ijgJtMNIA+ZmWUmCodxX13ID72hOaCB0b9FQGQBzuFgF2x/Yq5D43nrMYZaDtvDvja8J1XIXhUkjz1TDOw==}
     dependencies:
-      axios: 1.12.0(debug@4.3.2)
+      axios: 1.13.4(debug@4.3.2)
     transitivePeerDependencies:
       - debug
     dev: false
@@ -10343,24 +10343,14 @@ packages:
     engines: {node: '>=4'}
     dev: true
 
-  /axios@1.12.0(debug@4.3.2):
-    resolution: {integrity: sha512-oXTDccv8PcfjZmPGlWsPSwtOJCZ/b6W5jAMCNcfwJbCzDckwG0jrYJFaWH1yvivfCXjVzV/SPDEhMB3Q+DSurg==}
+  /axios@1.13.4(debug@4.3.2):
+    resolution: {integrity: sha512-1wVkUaAO6WyaYtCkcYCOx12ZgpGf9Zif+qXa4n+oYzK558YryKqiL6UWwd5DqiH3VRW0GYhTZQ/vlgJrCoNQlg==}
     dependencies:
       follow-redirects: 1.15.9(debug@4.3.2)
       form-data: 4.0.4
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
       - debug
-
-  /axios@1.8.2:
-    resolution: {integrity: sha512-ls4GYBm5aig9vWx8AWDSGLpnpDQRtWAfrjU+EuytuODrFBkqesN2RkOQCBzrA1RQNHw1SmRMSDDDSwzNAYQ6Rg==}
-    dependencies:
-      follow-redirects: 1.15.9(debug@4.3.2)
-      form-data: 4.0.4
-      proxy-from-env: 1.1.0
-    transitivePeerDependencies:
-      - debug
-    dev: true
 
   /axobject-query@4.1.0:
     resolution: {integrity: sha512-qIj0G9wZbMGNLjLmg1PT6v2mE9AH2zlnADJD/2tC6E00hgmhUOfEB6greHPAfLRSufHqROIUTkw6E+M3lH0PTQ==}
@@ -17013,7 +17003,7 @@ packages:
     engines: {node: '>=8.3.0'}
     hasBin: true
     dependencies:
-      axios: 1.12.0(debug@4.3.2)
+      axios: 1.13.4(debug@4.3.2)
       debug: 4.3.2
       openurl: 1.1.1
       yargs: 17.1.1
@@ -19204,7 +19194,7 @@ packages:
     dependencies:
       '@types/request': 2.48.8
       '@types/superagent': 4.1.15
-      axios: 1.12.0(debug@4.3.2)
+      axios: 1.13.4(debug@4.3.2)
       combos: 0.2.0
       fs-extra: 9.1.0
       js-yaml: 4.1.1
