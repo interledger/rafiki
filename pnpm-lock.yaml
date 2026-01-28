@@ -7,7 +7,7 @@ settings:
 overrides:
   axios@>=0.8.1 <0.28.0: '>=0.28.0'
   json5@<1.0.2: '>=1.0.2'
-  katex: '>=0.16.21'
+  katex: '>=0.16.28'
   jose: '>=4.15.5'
   undici@>=5.0.0: ^5.28.5
   undici@>=6.0.0: ^6.21.2
@@ -16720,8 +16720,8 @@ packages:
       object.values: 1.1.7
     dev: true
 
-  /katex@0.16.21:
-    resolution: {integrity: sha512-XvqR7FgOHtWupfMiigNzmh+MgUVmDGU2kXZm899ZkPfcuoPuFxyHmXsgATDpFZDAXCI8tvinaVcDo8PIIJSo4A==}
+  /katex@0.16.28:
+    resolution: {integrity: sha512-YHzO7721WbmAL6Ov1uzN/l5mY5WWWhJBSW+jq4tkfZfsxmo1hu6frS0EOswvjBUnWE6NtjEs48SFn5CQESRLZg==}
     hasBin: true
     dependencies:
       commander: 8.3.0
@@ -17697,7 +17697,7 @@ packages:
       dagre-d3-es: 7.0.13
       dayjs: 1.11.19
       dompurify: 3.2.5
-      katex: 0.16.21
+      katex: 0.16.28
       khroma: 2.1.0
       lodash-es: 4.17.21
       marked: 16.4.2
@@ -17896,7 +17896,7 @@ packages:
     dependencies:
       '@types/katex': 0.16.2
       devlop: 1.1.0
-      katex: 0.16.21
+      katex: 0.16.28
       micromark-factory-space: 2.0.0
       micromark-util-character: 2.0.1
       micromark-util-symbol: 2.0.0
