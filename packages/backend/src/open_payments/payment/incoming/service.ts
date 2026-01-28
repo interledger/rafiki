@@ -80,9 +80,7 @@ export interface IncomingPaymentService
   ): Promise<IncomingPayment | IncomingPaymentError>
   processPartialPayment(
     id: string,
-    partialPaymentId: string,
-    value: bigint,
-    dataFromSender?: string
+    args: ProcessPartialPaymentArgs
   ): Promise<IncomingPayment | IncomingPaymentError>
 }
 
@@ -114,8 +112,7 @@ export async function createIncomingPaymentService(
     processNext: () => processNextIncomingPayment(deps),
     update: (options) => updateIncomingPayment(deps, options),
     getPage: (options) => getPage(deps, options),
-    processPartialPayment: (id, partialPaymentId, value, dataFromSender) =>
-      processPartialPayment(deps, id, partialPaymentId, value, dataFromSender)
+    processPartialPayment: (id, args) => processPartialPayment(deps, id, args)
   }
 }
 
@@ -557,14 +554,19 @@ async function addReceivedAmount(
   return payment
 }
 
+interface ProcessPartialPaymentArgs {
+  partialPaymentId: string
+  value: bigint
+  dataFromSender?: string
+}
+
 async function processPartialPayment(
   deps: ServiceDependencies,
   id: string,
-  partialPaymentId: string,
-  value: bigint,
-  dataFromSender?: string
+  args: ProcessPartialPaymentArgs
 ): Promise<IncomingPayment | IncomingPaymentError> {
   const { config, knex } = deps
+  const { partialPaymentId, value, dataFromSender } = args
 
   const incomingPayment = await IncomingPayment.query(knex)
     .findById(id)
@@ -577,7 +579,7 @@ async function processPartialPayment(
     data: {
       ...incomingPayment.toData(value),
       partialPayment: {
-        uuid: partialPaymentId,
+        id: partialPaymentId,
         amount: {
           value,
           assetCode: incomingPayment.asset.code,

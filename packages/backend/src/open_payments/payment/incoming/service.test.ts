@@ -1121,7 +1121,7 @@ describe('Incoming Payment Service', (): void => {
 
   describe('processPartialPayment', (): void => {
     interface PartialPayment {
-      uuid: string
+      id: string
       amount: {
         value: string
         assetCode: string
@@ -1161,9 +1161,11 @@ describe('Incoming Payment Service', (): void => {
           const processedPayment =
             await incomingPaymentService.processPartialPayment(
               incomingPayment.id,
-              partialPaymentId,
-              100n,
-              dataFromSender
+              {
+                partialPaymentId,
+                value: 100n,
+                dataFromSender
+              }
             )
           assert.ok(!isIncomingPaymentError(processedPayment))
 
@@ -1203,7 +1205,7 @@ describe('Incoming Payment Service', (): void => {
           expect(decrypted).toEqual(dataFromSender)
 
           expect(
-            (webhookEvent.data.partialPayment as PartialPayment).uuid
+            (webhookEvent.data.partialPayment as PartialPayment).id
           ).toEqual(partialPaymentId)
           expect(
             (webhookEvent.data.partialPayment as PartialPayment).amount.value
@@ -1239,9 +1241,11 @@ describe('Incoming Payment Service', (): void => {
           const processedPayment =
             await incomingPaymentService.processPartialPayment(
               incomingPayment.id,
-              partialPaymentId,
-              100n,
-              dataFromSender
+              {
+                partialPaymentId,
+                value: 100n,
+                dataFromSender
+              }
             )
           assert.ok(!isIncomingPaymentError(processedPayment))
 
@@ -1258,7 +1262,7 @@ describe('Incoming Payment Service', (): void => {
             (webhookEvent.data.partialPayment as PartialPayment).dataFromSender
           ).toEqual(dataFromSender)
           expect(
-            (webhookEvent.data.partialPayment as PartialPayment).uuid
+            (webhookEvent.data.partialPayment as PartialPayment).id
           ).toEqual(partialPaymentId)
           expect(
             (webhookEvent.data.partialPayment as PartialPayment).amount.value
