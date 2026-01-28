@@ -316,6 +316,10 @@ export default defineConfig({
               link: '/apis/graphql/admin-api-overview'
             },
             {
+              label: 'Signing Admin API requests',
+              link: '/apis/graphql/signing-admin-api-requests'
+            },
+            {
               label: 'Backend Admin API',
               link: '/apis/graphql/backend',
               attrs: {
