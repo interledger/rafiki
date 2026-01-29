@@ -29,10 +29,7 @@ export class AppDataController implements StreamController {
     return RequestState.Ready()
   }
 
-  applyRequest({
-    frames,
-    log
-  }: StreamRequest): (reply: StreamReply) => PaymentError | void {
+  applyRequest({ frames, log }: StreamRequest): (reply: StreamReply) => PaymentError | void {
     const streamId = Long.fromNumber(this.streamId, true)
     const hasAppData = frames.some(
       (frame): frame is StreamDataFrame =>
@@ -50,20 +47,10 @@ export class AppDataController implements StreamController {
 
       const { code } = reply.ilpReject
 
-      // Let other controllers handle these errors
-      if (
-        code === IlpError.F08_AMOUNT_TOO_LARGE ||
-        code === IlpError.R01_INSUFFICIENT_SOURCE_AMOUNT ||
-        code[0] === 'T'
-      ) {
+      if (code !== IlpError.F99_APPLICATION_ERROR) {
         return
       }
 
-      // For other errors (including F06, F99), if app data was present, return AppDataRejected
-      log.error(
-        'ending payment: packet carrying application data was rejected: %s',
-        code
-      )
       return PaymentError.AppDataRejected
     }
   }
