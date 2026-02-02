@@ -50,87 +50,87 @@ The `id` in the webhook event payload is unique. Your system can use the ID to d
 :::
 
 <details>
-<summary>Expand for example JSON payloads</summary>
-   <Tabs>
-      <TabItem label='incomingPaymentCompleted'>
-        ```json
-        {
+  <summary>Expand for example JSON payloads</summary>
+  <Tabs>
+    <TabItem label='incomingPaymentCompleted'>
+      ```json
+      {
         "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
         "type": "incoming_payment.created",
         "data": {
-            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-            "walletAddressId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-            "client": "string",
-            "completed": true,
-            "incomingAmount": "string",
-            "receivedAmount": "string",
-            "metadata": {
+          "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "walletAddressId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "client": "string",
+          "completed": true,
+          "incomingAmount": "string",
+          "receivedAmount": "string",
+          "metadata": {
             "additionalProp1": {}
-            },
-            "createdAt": "2024-08-29T08:13:08.966Z",
-            "updatedAt": "2024-08-29T08:13:08.966Z",
-            "expiresAt": "2024-08-29T08:13:08.966Z"
+          },
+          "createdAt": "2024-08-29T08:13:08.966Z",
+          "updatedAt": "2024-08-29T08:13:08.966Z",
+          "expiresAt": "2024-08-29T08:13:08.966Z"
         }
-        }
-        ```
-      </TabItem>
-      <TabItem label='outgoingPaymentCreated'>
-        ```json
-        {
+      }
+      ```
+    </TabItem>
+    <TabItem label='outgoingPaymentCreated'>
+      ```json
+      {
         "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
         "type": "outgoing_payment.created",
         "data": {
-            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-            "walletAddressId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-            "client": "string",
-            "state": "FUNDING",
-            "receiver": "https://example.com/",
-            "debitAmount": "string",
-            "sentAmount": "string",
-            "metadata": {
+          "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "walletAddressId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "client": "string",
+          "state": "FUNDING",
+          "receiver": "https://example.com/",
+          "debitAmount": "string",
+          "sentAmount": "string",
+          "metadata": {
             "additionalProp1": {}
-            },
-            "createdAt": "2024-08-29T11:07:56.090Z",
-            "updatedAt": "2024-08-29T11:07:56.090Z",
-            "expiresAt": "2024-08-29T11:07:56.090Z",
-            "error": "string",
-            "stateAttempts": 0,
-            "balance": "string",
-            "peerId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+          },
+          "createdAt": "2024-08-29T11:07:56.090Z",
+          "updatedAt": "2024-08-29T11:07:56.090Z",
+          "expiresAt": "2024-08-29T11:07:56.090Z",
+          "error": "string",
+          "stateAttempts": 0,
+          "balance": "string",
+          "peerId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
         }
-        }
-        ```
-      </TabItem>
-          <TabItem label='assetLiquidityLow'>
-        ```json
-        {
+      }
+      ```
+    </TabItem>
+    <TabItem label='assetLiquidityLow'>
+      ```json
+      {
         "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
         "type": "asset.liquidity_low",
         "data": {
-            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-            "asset": {
+          "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "asset": {
             "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
             "code": "string",
             "scale": 0
-            },
-            "liquidityThreshold": "string",
-            "balance": "string"
+          },
+          "liquidityThreshold": "string",
+          "balance": "string"
         }
-        }
-        ```
-      </TabItem>
-      <TabItem label='walletAddressNotFound'>
-        ```json
-        {
+      }
+      ```
+    </TabItem>
+    <TabItem label='walletAddressNotFound'>
+      ```json
+      {
         "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
         "type": "wallet_address.not_found",
         "data": {
-            "walletAddressUrl": "string"
+          "walletAddressUrl": "string"
         }
-        }
-        ```
-      </TabItem>
-   </Tabs>
+      }
+      ```
+    </TabItem>
+  </Tabs>
 </details>
 
 We provide an <LinkOut href="https://github.com/interledger/rafiki/blob/main/packages/backend/src/openapi/specs/webhooks.yaml">OpenAPI specification</LinkOut> for the webhook events fired by Rafiki.
@@ -230,7 +230,7 @@ If a non-200 status is returned, indicating an error, or the request times out, 
 #### Incoming payment created
 
 <details>
-<summary>Expand for event sequence</summary>
+  <summary>Expand for event sequence</summary>
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
@@ -251,12 +251,8 @@ The incoming payment either completes or expires.
 #### Incoming payment completed
 
 <details>
-<summary>Expand for event sequences</summary>
-{' '}
-
-<Badge text='Single-phase transfer' variant='tip' size='medium' /> An incoming payment
-of $10 was completed.
-
+  <summary>Expand for event sequences</summary>
+  <Badge text='Single-phase transfer' variant='tip' size='medium' /> An incoming payment of $10 was completed.
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
@@ -270,11 +266,7 @@ of $10 was completed.
 `}
 />
 
-{' '}
-
-<Badge text='Two-phase transfer' variant='tip' size='medium' /> An incoming payment
-of $10 was completed.
-
+  <Badge text='Two-phase transfer' variant='tip' size='medium' /> An incoming payment of $10 was completed.
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
@@ -298,9 +290,8 @@ The `incoming_payment.completed` event indicates the payment completed either au
 #### Incoming payment expired
 
 <details>
-<summary>Expand for event sequence</summary>
+  <summary>Expand for event sequence</summary>
   \$2.55 was received before the payment expired. The recipient is thus credited with \$2.55.
-
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
@@ -339,9 +330,8 @@ In some scenarios, a sender may not have specified an `incomingAmount` when the 
 #### Outgoing payment created
 
 <details>
-<summary>Expand for event sequence</summary>
-An outgoing payment for \$12 was created.
-
+  <summary>Expand for event sequence</summary>
+  An outgoing payment for \$12 was created.
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
@@ -370,12 +360,8 @@ If the sender has insufficient funds or if the payment should otherwise not be f
 #### Outgoing payment completed
 
 <details>
-<summary>Expand for event sequences</summary>
-{' '}
-
-<Badge text='Single-phase transfer' variant='tip' size='medium' /> An outgoing payment
-for \$12 is complete. \$11.50 was sent. You choose to keep \$0.50 as a service fee.
-
+  <summary>Expand for event sequences</summary>
+  <Badge text='Single-phase transfer' variant='tip' size='medium' /> An outgoing payment for \$12 is complete. \$11.50 was sent. You choose to keep \$0.50 as a service fee.
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
@@ -389,8 +375,7 @@ for \$12 is complete. \$11.50 was sent. You choose to keep \$0.50 as a service f
 `}
 />
 
-    <Badge text="Two-phase transfer" variant="tip" size="medium"/> An outgoing payment  for \$12 is complete. \$11.50 was sent. You choose to keep \$0.50 as a service fee.
-
+  <Badge text='Two-phase transfer' variant='tip' size='medium' /> An outgoing payment for \$12 is complete. \$11.50 was sent. You choose to keep \$0.50 as a service fee.
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
@@ -416,9 +401,8 @@ If there is excess liquidity in Rafiki due to differences between the sent and r
 #### Outgoing payment failed
 
 <details>
-<summary>Expand for event sequence</summary>
-An outgoing payment for \$12 failed. \$8 was sent successfully.
-
+  <summary>Expand for event sequence</summary>
+  An outgoing payment for \$12 failed. \$8 was sent successfully.
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
@@ -450,9 +434,8 @@ The `outgoing_payment.failed` event indicates that an outgoing payment has eithe
 #### Wallet address not found
 
 <details>
-<summary>Expand for event sequence</summary>
-The wallet address, `https://wallet.example.com/carla_garcia` was requested but does not exist.
-
+  <summary>Expand for event sequence</summary>
+  The wallet address, `https://wallet.example.com/carla_garcia` was requested but does not exist.
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
@@ -482,9 +465,8 @@ When you receive this event, look up the associated account in your system and c
 #### Wallet address Web Monetization
 
 <details>
-<summary>Expand for event sequence</summary>
-A wallet address received a Web Monetization payment of \$0.33
-
+  <summary>Expand for event sequence</summary>
+  A wallet address received a Web Monetization payment of \$0.33
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
@@ -515,9 +497,8 @@ The `wallet_address.web_monetization` event indicates that a wallet address rece
 #### Asset liquidity low
 
 <details>
-<summary>Expand for event sequence</summary>
-Your asset liquidity for USD (asset scale: 2) drops below \$100.00.
-
+  <summary>Expand for event sequence</summary>
+  Your asset liquidity for USD (asset scale: 2) drops below \$100.00.
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
@@ -547,9 +528,8 @@ The `asset.liquidity_low` event indicates that an asset's liquidity has dropped 
 #### Peer liquidity low
 
 <details>
-<summary>Expand for event sequence</summary>
-The liquidity for your peer, Happy Life Bank, drops below \$100.00 USD.
-
+  <summary>Expand for event sequence</summary>
+  The liquidity for your peer, Happy Life Bank, drops below \$100.00 USD.
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki

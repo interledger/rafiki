@@ -2,6 +2,12 @@
 
 This repo is the code behind [rafiki.dev](https://rafiki.dev), our documentation website for Rafiki.
 
+## Tech Stack
+
+- [Astro](https://astro.build/) 5.17.1
+- [Starlight](https://starlight.astro.build/) 0.37.5
+- [MDX](https://mdxjs.com/) for interactive documentation
+
 ## Contribute
 
 This website is built with [Starlight](https://starlight.astro.build/), a documentation framework based on [Astro](https://astro.build/).
@@ -68,6 +74,36 @@ Edit me...
 
 Refer to the Starlight documentation on [authoring content](https://starlight.astro.build/guides/authoring-content/) for more detailed guidance.
 
+### MDX Syntax Requirements
+
+When using directive blocks (like `:::note`, `:::tip`, `:::warning`, `:::danger`) inside component children (such as `<TabItem>`), **the directive must be at the root level (no indentation)**. This is a requirement for MDX parsing compatibility with Astro 5.17+.
+
+**❌ Incorrect (indented):**
+
+```mdx
+<TabItem label="Example">
+  Some content here
+
+:::note[Important]
+This note is indented and will cause a build error
+:::
+
+</TabItem>
+```
+
+**✅ Correct (no indentation):**
+
+```mdx
+<TabItem label="Example">
+  Some content here
+
+:::note[Important]
+This note is at root level and works correctly
+:::
+
+</TabItem>
+```
+
 ### Docs components
 
 We have extracted some commonly repeated patterns within the documentation pages into custom docs components that can be reused. There are components which are shared across all our Starlight documentation sites and those which are specific to this project only. This will determine what the import path is.
@@ -124,3 +160,38 @@ import Base from '../layouts/Base.astro';
 ```
 
 Refer to the Astro documentation on [pages](https://docs.astro.build/en/core-concepts/astro-pages/) for more detailed guidance.
+
+## Troubleshooting
+
+### Build fails with MDX directive errors
+
+If you see an error like:
+
+```
+Expected the closing tag `</TabItem>` either after the end of `directiveContainer`
+```
+
+This means you have an indented directive block (like `:::note`) inside a component. See the [MDX Syntax Requirements](#mdx-syntax-requirements) section above for the correct syntax.
+
+### Package manager issues
+
+This project uses **pnpm** as its package manager. If you encounter issues:
+
+1. Delete `node_modules` and `package-lock.json` (if present)
+2. Run `pnpm install` from the monorepo root
+3. Run `pnpm build:docs` from the `/packages/documentation` folder
+
+### Cache issues
+
+If builds fail unexpectedly after dependency updates:
+
+```sh
+# Clear Astro's cache
+rm -rf .astro
+
+# Clear build output
+rm -rf build
+
+# Rebuild
+pnpm build:docs
+```
