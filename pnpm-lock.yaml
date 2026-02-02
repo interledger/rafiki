@@ -59,8 +59,8 @@ importers:
         specifier: ^6.2.6
         version: 6.2.6
       prettier:
-        specifier: ^3.2.5
-        version: 3.2.5
+        specifier: ^3.8.1
+        version: 3.8.1
       typescript:
         specifier: ^5.4.3
         version: 5.4.3
@@ -682,8 +682,8 @@ importers:
         specifier: ^16.5.0
         version: 16.5.0
       prettier:
-        specifier: 3.2.5
-        version: 3.2.5
+        specifier: 3.8.1
+        version: 3.8.1
       prettier-plugin-astro:
         specifier: 0.14.1
         version: 0.14.1
@@ -19974,7 +19974,7 @@ packages:
     engines: {node: ^14.15.0 || >=16.0.0}
     dependencies:
       '@astrojs/compiler': 2.13.0
-      prettier: 3.2.5
+      prettier: 3.8.1
       sass-formatter: 0.7.9
     dev: true
 
@@ -19984,8 +19984,8 @@ packages:
     hasBin: true
     dev: true
 
-  /prettier@3.2.5:
-    resolution: {integrity: sha512-3/GWa9aOC0YeD7LUfvOG2NiDyhOWRvt1k+rcKhOuYnMY24iiCphgneUfJDyFXd6rZCAnuLBv6UeAULtrhT/F4A==}
+  /prettier@3.8.1:
+    resolution: {integrity: sha512-UOnG6LftzbdaHZcKoPFtOcCKztrQ57WkHDeRD9t/PTQtmT0NHSeWWepj6pS0z/N7+08BHFDQVUrfmfMRcZwbMg==}
     engines: {node: '>=14'}
     hasBin: true
     dev: true
