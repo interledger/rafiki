@@ -2,12 +2,6 @@
 
 This repo is the code behind [rafiki.dev](https://rafiki.dev), our documentation website for Rafiki.
 
-## Tech Stack
-
-- [Astro](https://astro.build/) 5.17.1
-- [Starlight](https://starlight.astro.build/) 0.37.5
-- [MDX](https://mdxjs.com/) for interactive documentation
-
 ## Contribute
 
 This website is built with [Starlight](https://starlight.astro.build/), a documentation framework based on [Astro](https://astro.build/).
@@ -172,26 +166,3 @@ Expected the closing tag `</TabItem>` either after the end of `directiveContaine
 ```
 
 This means you have an indented directive block (like `:::note`) inside a component. See the [MDX Syntax Requirements](#mdx-syntax-requirements) section above for the correct syntax.
-
-### Package manager issues
-
-This project uses **pnpm** as its package manager. If you encounter issues:
-
-1. Delete `node_modules` and `package-lock.json` (if present)
-2. Run `pnpm install` from the monorepo root
-3. Run `pnpm build:docs` from the `/packages/documentation` folder
-
-### Cache issues
-
-If builds fail unexpectedly after dependency updates:
-
-```sh
-# Clear Astro's cache
-rm -rf .astro
-
-# Clear build output
-rm -rf build
-
-# Rebuild
-pnpm build:docs
-```
