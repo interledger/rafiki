@@ -74,8 +74,8 @@ importers:
   bruno/collections/Rafiki:
     dependencies:
       json-canonicalize:
-        specifier: ^1.0.6
-        version: 1.0.6
+        specifier: ^2.0.0
+        version: 2.0.0
 
   localenv/mock-account-servicing-entity:
     dependencies:
@@ -113,8 +113,8 @@ importers:
         specifier: ^16.11.0
         version: 16.11.0
       json-canonicalize:
-        specifier: ^1.0.6
-        version: 1.0.6
+        specifier: ^2.0.0
+        version: 2.0.0
       mock-account-service-lib:
         specifier: workspace:*
         version: link:../../packages/mock-account-service-lib
@@ -210,8 +210,8 @@ importers:
         specifier: ^5.3.2
         version: 5.3.2
       json-canonicalize:
-        specifier: ^1.0.6
-        version: 1.0.6
+        specifier: ^2.0.0
+        version: 2.0.0
       knex:
         specifier: ^3.1.0
         version: 3.1.0(pg@8.11.3)
@@ -427,8 +427,8 @@ importers:
         specifier: ^5.3.2
         version: 5.3.2
       json-canonicalize:
-        specifier: ^1.0.6
-        version: 1.0.6
+        specifier: ^2.0.0
+        version: 2.0.0
       knex:
         specifier: ^3.1.0
         version: 3.1.0(pg@8.11.3)
@@ -575,8 +575,8 @@ importers:
         specifier: ^5.3.2
         version: 5.3.2
       json-canonicalize:
-        specifier: ^1.0.6
-        version: 1.0.6
+        specifier: ^2.0.0
+        version: 2.0.0
       koa:
         specifier: ^2.15.4
         version: 2.16.3
@@ -733,8 +733,8 @@ importers:
         specifier: ^5.1.23
         version: 5.1.23
       json-canonicalize:
-        specifier: ^1.0.6
-        version: 1.0.6
+        specifier: ^2.0.0
+        version: 2.0.0
       pino:
         specifier: ^8.19.0
         version: 8.19.0
@@ -861,8 +861,8 @@ importers:
         specifier: ^16.11.0
         version: 16.11.0
       json-canonicalize:
-        specifier: ^1.0.6
-        version: 1.0.6
+        specifier: ^2.0.0
+        version: 2.0.0
       koa:
         specifier: ^3.0.0
         version: 3.1.1
@@ -1005,8 +1005,8 @@ importers:
         specifier: ^3.40.0
         version: 3.40.0
       json-canonicalize:
-        specifier: ^1.0.6
-        version: 1.0.6
+        specifier: ^2.0.0
+        version: 2.0.0
       webpack:
         specifier: ^5.97.1
         version: 5.97.1(@swc/core@1.11.29)(webpack-cli@6.0.1)
@@ -1044,8 +1044,8 @@ importers:
         specifier: ^16.11.0
         version: 16.11.0
       json-canonicalize:
-        specifier: ^1.0.6
-        version: 1.0.6
+        specifier: ^2.0.0
+        version: 2.0.0
       koa:
         specifier: ^2.15.3
         version: 2.16.3
@@ -16644,8 +16644,8 @@ packages:
     resolution: {integrity: sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==}
     dev: true
 
-  /json-canonicalize@1.0.6:
-    resolution: {integrity: sha512-kP2iYpOS5SZHYhIaR1t9oG80d4uTY3jPoaBj+nimy3njtJk8+sRsVatN8pyJRDRtk9Su3+6XqA2U8k0dByJBUQ==}
+  /json-canonicalize@2.0.0:
+    resolution: {integrity: sha512-yyrnK/mEm6Na3ChbJUWueXdapueW0p380RUyTW87XGb1ww8l8hU0pRrGC3vSWHe9CxrbPHX2fGUOZpNiHR0IIg==}
 
   /json-parse-even-better-errors@2.3.1:
     resolution: {integrity: sha512-xyFwyhro/JEof6Ghe2iz2NcXoj2sloNsWr/XsERDK/oiPCfaNhl5ONfp+jQdAZRQQ0IJWNzH9zIZF7li91kh2w==}
