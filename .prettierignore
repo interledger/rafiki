@@ -16,3 +16,4 @@ build
 .cache-loader
 .astro
 open-payments-specifications/**
+packages/documentation/**

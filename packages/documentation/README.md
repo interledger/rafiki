@@ -32,7 +32,9 @@ This command generates static content into the build directory and can be served
 
 ### Formatting and Linting
 
-The documentation uses [Prettier](https://prettier.io/) for formatting and [ESLint](https://eslint.org/) for linting. From the root of the repository, you can run:
+The documentation uses [Prettier](https://prettier.io/) for formatting and [ESLint](https://eslint.org/) for linting. This package has its own Prettier configuration (`.prettierrc`) that differs from the root repository configuration, and is excluded from root-level formatting via `.prettierignore`.
+
+From the root of the repository, you can run:
 
 ```sh
 # Format documentation files
@@ -40,6 +42,13 @@ $ pnpm format:docs
 
 # Lint documentation files
 $ pnpm lint:docs
+```
+
+Or from within this package directory:
+
+```sh
+cd packages/documentation
+pnpm prettier --write '**/*.{js,mjs,ts,tsx,json,md,mdx,astro}'
 ```
 
 ## Editing Content
