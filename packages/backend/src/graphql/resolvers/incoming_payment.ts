@@ -347,6 +347,7 @@ export const confirmPartialIncomingPayment: MutationResolvers<TenantedApolloCont
     const cacheKey = `kyc_decision:${input.incomingPaymentId}:${input.partialIncomingPaymentId}`
     try {
       await redis.set(cacheKey, JSON.stringify({ success: true }))
+      return { success: true }
     } catch (e) {
       const logger = await ctx.container.use('logger')
       logger.error(
@@ -359,8 +360,6 @@ export const confirmPartialIncomingPayment: MutationResolvers<TenantedApolloCont
       )
       return { success: false }
     }
-
-    return { success: true }
   }
 
 export function paymentToGraphql(
