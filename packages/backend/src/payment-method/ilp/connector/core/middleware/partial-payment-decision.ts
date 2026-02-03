@@ -1,7 +1,19 @@
-import { Errors } from 'ilp-packet'
 import { v4 as uuid } from 'uuid'
+import { isIlpReply } from 'ilp-packet'
+import { IncomingMoney } from '@interledger/stream-receiver'
 import { ILPContext, ILPMiddleware } from '../rafiki'
 import { StreamState } from './stream-address'
+
+const STREAM_DATA_STREAM_ID = 1
+
+function getAdditionalDataFromReply(reply: IncomingMoney): string | undefined {
+  const frames = reply.dataFrames
+  if (!frames?.length) return undefined
+  const payload =
+    frames.find((f) => Number(f.streamId) === STREAM_DATA_STREAM_ID)?.data ??
+    frames[0].data
+  return payload?.length ? payload.toString('utf8') : undefined
+}
 
 export function createPartialPaymentDecisionMiddleware(): ILPMiddleware {
   return async (
@@ -12,62 +24,43 @@ export function createPartialPaymentDecisionMiddleware(): ILPMiddleware {
       await next()
       return
     }
-
+    //TODO Come back to handle assertion
+    const streamServer = ctx.state.streamServer!
+    const { prepare } = ctx.request
     const incomingPaymentId = ctx.state.streamDestination
-    const partialIncomingPaymentId = uuid()
-    const expiresAt = ctx.request.prepare.expiresAt
 
-    // Extract additional data from frames if available
-    let additionalData: string | undefined
-    if (ctx.state.streamServer && incomingPaymentId) {
-      try {
-        const replyOrMoney = ctx.state.streamServer.createReply(
-          ctx.request.prepare
-        )
-        const frames = (replyOrMoney as any).dataFrames as
-          | Array<{ streamId: number; offset: string; data: Buffer }>
-          | undefined
-        const payload = frames?.length
-          ? frames.find((f) => f.streamId === 1)?.data ?? frames[0].data
-          : undefined
+    const replyOrMoney = streamServer.createReply(prepare)
+    const additionalData = isIlpReply(replyOrMoney)
+      ? undefined
+      : getAdditionalDataFromReply(replyOrMoney)
 
-        if (payload && payload.length > 0) {
-          additionalData = payload.toString('utf8')
-        }
-      } catch (e) {
-        ctx.services.logger.warn({ e }, 'failed to extract additional data')
-      }
-    }
-
-    let result
-    let errorMessage: string | undefined
+    let decision: string
     try {
-      result = await ctx.services.incomingPayments.processPartialPayment(
+      const result = await ctx.services.incomingPayments.processPartialPayment(
         incomingPaymentId,
         {
           dataToTransmit: additionalData,
-          partialIncomingPaymentId,
-          expiresAt
+          partialIncomingPaymentId: uuid(),
+          expiresAt: prepare.expiresAt
         }
       )
-
       if (result.decision === 'Additional data approved') {
         await next()
         return
       }
-
-      errorMessage = result.decision
+      decision = result.decision
     } catch (error) {
       ctx.services.logger.error(
         { error, incomingPaymentId },
         'failed to process partial payment'
       )
-      errorMessage = 'Error processing partial payment'
+      decision = 'Error processing partial payment'
     }
 
-    throw new Errors.FinalApplicationError(
-      'Data failed verification',
-      Buffer.from(errorMessage || 'Unknown error', 'utf8')
-    )
+    if (isIlpReply(replyOrMoney)) {
+      ctx.response.reply = replyOrMoney
+    } else {
+      ctx.response.reply = replyOrMoney.finalDecline(decision)
+    }
   }
 }

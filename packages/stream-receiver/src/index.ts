@@ -63,8 +63,8 @@ export interface IncomingMoney {
   /** Temporarily decline the incoming money: inform STREAM sender to backoff in time (T00 Reject: Temporary Internal Error) */
   temporaryDecline(): IlpReject
 
-  /** Inform the sender to close their connection */
-  finalDecline(): IlpReject
+  /** Inform the sender to close their connection. Optional data is sent in a StreamDataFrame for the sender to interpret (e.g. error message). */
+  finalDecline(applicationData?: Buffer | string): IlpReject
 
   /** Application StreamData frames carried on this Prepare (if any) */
   dataFrames?: StreamDataFrame[]
@@ -336,7 +336,7 @@ export class StreamServer {
     log.trace('STREAM request frames: %o', streamRequest.frames)
 
     const dataFrames = streamRequest.frames.filter(
-      (f): f is StreamDataFrame => f.type === FrameType.StreamData,
+      (f): f is StreamDataFrame => f.type === FrameType.StreamData
     )
 
     reply
@@ -383,17 +383,13 @@ export class StreamServer {
      */
 
     const receivedAmount = Long.fromString(prepare.amount, true)
-    const didReceiveMinimum = receivedAmount.greaterThanOrEqual(streamRequest.prepareAmount)
-    if (!didReceiveMinimum) {
-      return reply.buildReject(IlpError.F99_APPLICATION_ERROR)
-    }
-
     const fulfillmentKey = hmac(sharedSecret, StreamServer.FULFILLMENT_GENERATION_STRING)
     const fulfillment = hmac(fulfillmentKey, prepare.data)
     const isFulfillable = sha256(fulfillment).equals(prepare.executionCondition)
     if (!isFulfillable) {
-      return reply.buildReject(IlpError.F99_APPLICATION_ERROR)
-    } else if (receivedAmount.isZero()) {
+      return reply.buildReject(IlpError.F05_WRONG_CONDITION)
+    }
+    if (receivedAmount.isZero()) {
       /**
        * `ilp-protocol-stream` as a client sometimes handles replies differently if they're sent back in an
        *  ILP Fulfill vs an ILP Reject, so 0 amount packets should be fulfilled.
@@ -406,12 +402,16 @@ export class StreamServer {
        */
       return reply.buildFulfill(fulfillment)
     }
+    const didReceiveMinimum = receivedAmount.greaterThanOrEqual(streamRequest.prepareAmount)
+    if (!didReceiveMinimum) {
+      return reply.buildReject(IlpError.F04_INSUFFICIENT_DESTINATION_AMOUNT)
+    }
 
     return {
       connectionId,
 
       paymentTag,
-      
+
       dataFrames: dataFrames.length > 0 ? dataFrames : undefined,
 
       setTotalReceived: (totalReceived: LongValue) => {
@@ -436,10 +436,17 @@ export class StreamServer {
 
       temporaryDecline: () => reply.buildReject(IlpError.T00_INTERNAL_ERROR),
 
-      finalDecline: () =>
-        reply
-          .addFrames(new ConnectionCloseFrame(ErrorCode.NoError, ''))
-          .buildReject(IlpError.F99_APPLICATION_ERROR),
+      finalDecline: (applicationData?: Buffer | string) => {
+        reply.addFrames(new ConnectionCloseFrame(ErrorCode.NoError, ''))
+        if (applicationData != null && applicationData.length !== 0) {
+          const data =
+            typeof applicationData === 'string'
+              ? Buffer.from(applicationData, 'utf8')
+              : applicationData
+          reply.addFrames(new StreamDataFrame(1, 0, data))
+        }
+        return reply.buildReject(IlpError.F99_APPLICATION_ERROR)
+      },
     }
   }
 }

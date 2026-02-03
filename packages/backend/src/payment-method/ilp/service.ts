@@ -461,5 +461,5 @@ export const retryableIlpErrors: {
   [Pay.PaymentError.RateProbeFailed]: true,
   [Pay.PaymentError.IdleTimeout]: true,
   [Pay.PaymentError.ClosedByReceiver]: true,
-  [Pay.PaymentError.AppDataRejected]: false
+  [Pay.PaymentError.ApplicationError]: false
 }

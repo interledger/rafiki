@@ -1,12 +1,9 @@
-import { PaymentError } from '..'
 import { RequestState, StreamController } from '.'
-import { RequestBuilder, StreamReply, StreamRequest } from '../request'
-import { StreamDataFrame, FrameType } from 'ilp-protocol-stream/dist/src/packet'
-import { IlpError } from 'ilp-packet'
-import Long from 'long'
+import { RequestBuilder } from '../request'
+import { StreamDataFrame } from 'ilp-protocol-stream/dist/src/packet'
 
-// Injects application data on the first STREAM packet and stops the payment if that packet is rejected.
-export class AppDataController implements StreamController {
+// Injects application data on the first STREAM packet
+export class AppController implements StreamController {
   private readonly appData?: Buffer
   private readonly streamId: number
   private hasInjected = false
@@ -27,31 +24,5 @@ export class AppDataController implements StreamController {
     this.hasInjected = true
 
     return RequestState.Ready()
-  }
-
-  applyRequest({ frames, log }: StreamRequest): (reply: StreamReply) => PaymentError | void {
-    const streamId = Long.fromNumber(this.streamId, true)
-    const hasAppData = frames.some(
-      (frame): frame is StreamDataFrame =>
-        frame.type === FrameType.StreamData && frame.streamId.equals(streamId)
-    )
-
-    if (!hasAppData) {
-      return () => undefined
-    }
-
-    return (reply: StreamReply) => {
-      if (!reply.isReject()) {
-        return
-      }
-
-      const { code } = reply.ilpReject
-
-      if (code !== IlpError.F99_APPLICATION_ERROR) {
-        return
-      }
-
-      return PaymentError.AppDataRejected
-    }
   }
 }
