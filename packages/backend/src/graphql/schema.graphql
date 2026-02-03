@@ -372,6 +372,11 @@ type Mutation {
 
   "Delete a tenant."
   deleteTenant(id: String!): DeleteTenantMutationResponse!
+
+  "Confirms a partial incoming payment."
+  confirmPartialIncomingPayment(
+    input: ConfirmPartialIncomingPaymentInput!
+  ): ConfirmPartialIncomingPaymentResponse!
 }
 
 type PageInfo {
@@ -1740,6 +1745,15 @@ type TenantMutationResponse {
 }
 
 type DeleteTenantMutationResponse {
+  success: Boolean!
+}
+
+input ConfirmPartialIncomingPaymentInput {
+  incomingPaymentId: ID!
+  partialIncomingPaymentId: ID!
+}
+
+type ConfirmPartialIncomingPaymentResponse {
   success: Boolean!
 }
 
