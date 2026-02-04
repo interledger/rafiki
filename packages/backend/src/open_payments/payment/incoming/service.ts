@@ -17,7 +17,7 @@ import {
 import { Amount } from '../../amount'
 import { IncomingPaymentError } from './errors'
 import { IAppConfig } from '../../../config/app'
-import { poll } from '../../../shared/utils'
+import { encryptDbData, poll } from '../../../shared/utils'
 import { AssetService } from '../../../asset/service'
 import { finalizeWebhookRecipients } from '../../../webhook/service'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
@@ -78,6 +78,10 @@ export interface IncomingPaymentService
   update(
     options: UpdateOptions
   ): Promise<IncomingPayment | IncomingPaymentError>
+  processPartialPayment(
+    id: string,
+    args: ProcessPartialPaymentArgs
+  ): Promise<IncomingPayment | IncomingPaymentError>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -107,7 +111,8 @@ export async function createIncomingPaymentService(
     getWalletAddressPage: (options) => getWalletAddressPage(deps, options),
     processNext: () => processNextIncomingPayment(deps),
     update: (options) => updateIncomingPayment(deps, options),
-    getPage: (options) => getPage(deps, options)
+    getPage: (options) => getPage(deps, options),
+    processPartialPayment: (id, args) => processPartialPayment(deps, id, args)
   }
 }
 
@@ -547,6 +552,58 @@ async function addReceivedAmount(
   }
 
   return payment
+}
+
+interface ProcessPartialPaymentArgs {
+  partialPaymentId: string
+  value: bigint
+  dataFromSender?: string
+}
+
+async function processPartialPayment(
+  deps: ServiceDependencies,
+  id: string,
+  args: ProcessPartialPaymentArgs
+): Promise<IncomingPayment | IncomingPaymentError> {
+  const { config, knex } = deps
+  const { partialPaymentId, value, dataFromSender } = args
+
+  const incomingPayment = await IncomingPayment.query(knex)
+    .findById(id)
+    .withGraphFetched('asset')
+  if (!incomingPayment) return IncomingPaymentError.UnknownPayment
+
+  await IncomingPaymentEvent.query(knex).insertGraph({
+    incomingPaymentId: incomingPayment.id,
+    type: IncomingPaymentEventType.IncomingPaymentPartialPaymentReceived,
+    data: {
+      ...incomingPayment.toData(value),
+      partialPayment: {
+        id: partialPaymentId,
+        amount: {
+          value,
+          assetCode: incomingPayment.asset.code,
+          assetScale: incomingPayment.asset.scale
+        },
+        dataFromSender:
+          dataFromSender && config.dbEncryptionSecret
+            ? encryptDbData(dataFromSender, config.dbEncryptionSecret)
+            : dataFromSender
+      }
+    },
+    tenantId: incomingPayment.tenantId,
+    webhooks: finalizeWebhookRecipients(
+      {
+        tenantIds: [incomingPayment.tenantId],
+        sendToPosService:
+          incomingPayment.initiatedBy === IncomingPaymentInitiationReason.Card
+      },
+      deps.config,
+      deps.logger
+    )
+  })
+
+  return incomingPayment
 }
 
 async function getPage(

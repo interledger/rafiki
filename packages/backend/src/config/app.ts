@@ -210,6 +210,8 @@ export const Config = {
     'SEND_TENANT_WEBHOOKS_TO_OPERATOR',
     false
   ),
+  /** Optional base64-encoded key for encrypting partial-payment payload fields in webhooks. */
+  dbEncryptionSecret: process.env.DB_ENCRYPTION_SECRET,
   cardServiceUrl: optional(envString, 'CARD_SERVICE_URL'),
   posServiceUrl: optional(envString, 'POS_SERVICE_URL'),
   posWebhookServiceUrl: optional(envString, 'POS_WEBHOOK_SERVICE_URL'),

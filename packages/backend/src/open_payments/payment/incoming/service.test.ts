@@ -1,4 +1,5 @@
 import assert from 'assert'
+import { createDecipheriv, randomBytes } from 'node:crypto'
 import { faker } from '@faker-js/faker'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
@@ -790,15 +791,19 @@ describe('Incoming Payment Service', (): void => {
     })
 
     describe.each`
-      eventType                                            | expiresAt                        | amountReceived
-      ${IncomingPaymentEventType.IncomingPaymentExpired}   | ${new Date(Date.now() + 30_000)} | ${BigInt(1)}
+      eventType                                            | expiresInMs | amountReceived
+      ${IncomingPaymentEventType.IncomingPaymentExpired}   | ${30_000}   | ${BigInt(1)}
       ${IncomingPaymentEventType.IncomingPaymentCompleted} | ${undefined}                     | ${BigInt(123)}
     `(
       'handleDeactivated ($eventType)',
-      ({ eventType, expiresAt, amountReceived }): void => {
+      ({ eventType, expiresInMs, amountReceived }): void => {
         let incomingPayment: IncomingPayment
 
         beforeEach(async (): Promise<void> => {
+          const expiresAt =
+            expiresInMs !== undefined
+              ? new Date(Date.now() + expiresInMs)
+              : undefined
           incomingPayment = await createIncomingPayment(deps, {
             walletAddressId,
             client,
@@ -1116,6 +1121,168 @@ describe('Incoming Payment Service', (): void => {
         state: IncomingPaymentState.Completed
       })
     })
+  })
+
+  describe('processPartialPayment', (): void => {
+    interface PartialPayment {
+      id: string
+      amount: {
+        value: string
+        assetCode: string
+        assetScale: number
+      }
+      dataFromSender: string
+    }
+
+    let incomingPayment: IncomingPayment
+
+    const dbEncryptionOverride: Partial<IAppConfig> = {
+      dbEncryptionSecret: randomBytes(32).toString('base64')
+    }
+
+    beforeEach(async (): Promise<void> => {
+      incomingPayment = await createIncomingPayment(deps, {
+        walletAddressId,
+        tenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
+      })
+    })
+
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    test(
+      'can process partial payment for incoming payment',
+      withConfigOverride(
+        () => config,
+        dbEncryptionOverride,
+        async (): Promise<void> => {
+          const dataFromSender = JSON.stringify({
+            data: faker.internet.email()
+          })
+          const partialPaymentId = uuid()
+          const processedPayment =
+            await incomingPaymentService.processPartialPayment(
+              incomingPayment.id,
+              {
+                partialPaymentId,
+                value: 100n,
+                dataFromSender
+              }
+            )
+          assert.ok(!isIncomingPaymentError(processedPayment))
+
+          const webhookEvent = await IncomingPaymentEvent.query(knex)
+            .where({
+              incomingPaymentId: processedPayment.id,
+              type: IncomingPaymentEventType.IncomingPaymentPartialPaymentReceived
+            })
+            .withGraphFetched('webhooks')
+            .first()
+          assert.ok(webhookEvent)
+          assert.ok(
+            (webhookEvent.data.partialPayment as PartialPayment).dataFromSender
+          )
+
+          const webhookDataToTransmit = JSON.parse(
+            (webhookEvent.data.partialPayment as PartialPayment)
+              .dataFromSender as string
+          )
+          const decipher = createDecipheriv(
+            'aes-256-gcm',
+            Uint8Array.from(
+              Buffer.from(config.dbEncryptionSecret as string, 'base64')
+            ),
+            webhookDataToTransmit.iv
+          )
+          decipher.setAuthTag(
+            Uint8Array.from(Buffer.from(webhookDataToTransmit.tag, 'base64'))
+          )
+          let decrypted = decipher.update(
+            webhookDataToTransmit.cipherText,
+            'base64',
+            'utf8'
+          )
+          decrypted += decipher.final('utf8')
+
+          expect(decrypted).toEqual(dataFromSender)
+
+          expect(
+            (webhookEvent.data.partialPayment as PartialPayment).id
+          ).toEqual(partialPaymentId)
+          expect(
+            (webhookEvent.data.partialPayment as PartialPayment).amount.value
+          ).toEqual('100')
+          expect(
+            (webhookEvent.data.partialPayment as PartialPayment).amount
+              .assetCode
+          ).toEqual(incomingPayment.asset.code)
+          expect(
+            (webhookEvent.data.partialPayment as PartialPayment).amount
+              .assetScale
+          ).toEqual(incomingPayment.asset.scale)
+
+          expect(webhookEvent.webhooks).toHaveLength(1)
+        }
+      )
+    )
+
+    test(
+      'does not encrypt transmitted data without configured encryption secret',
+      withConfigOverride(
+        () => config,
+        {
+          ...dbEncryptionOverride,
+          dbEncryptionSecret: undefined
+        },
+        async (): Promise<void> => {
+          const dataFromSender = JSON.stringify({
+            data: faker.internet.email()
+          })
+
+          const partialPaymentId = uuid()
+          const processedPayment =
+            await incomingPaymentService.processPartialPayment(
+              incomingPayment.id,
+              {
+                partialPaymentId,
+                value: 100n,
+                dataFromSender
+              }
+            )
+          assert.ok(!isIncomingPaymentError(processedPayment))
+
+          const webhookEvent = await IncomingPaymentEvent.query(knex)
+            .where({
+              incomingPaymentId: processedPayment.id,
+              type: IncomingPaymentEventType.IncomingPaymentPartialPaymentReceived
+            })
+            .withGraphFetched('webhooks')
+            .first()
+          assert.ok(webhookEvent)
+
+          expect(
+            (webhookEvent.data.partialPayment as PartialPayment).dataFromSender
+          ).toEqual(dataFromSender)
+          expect(
+            (webhookEvent.data.partialPayment as PartialPayment).id
+          ).toEqual(partialPaymentId)
+          expect(
+            (webhookEvent.data.partialPayment as PartialPayment).amount.value
+          ).toEqual('100')
+          expect(
+            (webhookEvent.data.partialPayment as PartialPayment).amount
+              .assetCode
+          ).toEqual(incomingPayment.asset.code)
+          expect(
+            (webhookEvent.data.partialPayment as PartialPayment).amount
+              .assetScale
+          ).toEqual(incomingPayment.asset.scale)
+          expect(webhookEvent.webhooks).toHaveLength(1)
+        }
+      )
+    )
   })
 
   describe('getPage', (): void => {
