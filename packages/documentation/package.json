@@ -31,7 +31,7 @@
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-astro": "^1.5.0",
-    "globals": "^16.5.0",
+    "globals": "^17.3.0",
     "prettier": "3.2.5",
     "prettier-plugin-astro": "0.14.1",
     "spectaql": "^3.0.5",
