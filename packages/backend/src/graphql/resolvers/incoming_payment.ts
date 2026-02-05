@@ -305,45 +305,7 @@ export const confirmPartialIncomingPayment: MutationResolvers<TenantedApolloCont
     ctx
   ): Promise<ResolversTypes['ConfirmPartialIncomingPaymentResponse']> => {
     const { input } = args
-    const incomingPaymentService = await ctx.container.use(
-      'incomingPaymentService'
-    )
-
-    const getIncomingPaymentInput: {
-      id: string
-      tenantId?: string
-    } = {
-      id: input.incomingPaymentId
-    }
-    if (!ctx.isOperator) {
-      Object.assign(getIncomingPaymentInput, { tenantId: ctx.tenant.id })
-    }
-    const incomingPayment = await incomingPaymentService.get(
-      getIncomingPaymentInput
-    )
-
-    if (!incomingPayment)
-      throw new GraphQLError(
-        errorToMessage[IncomingPaymentError.UnknownPayment],
-        {
-          extensions: {
-            code: errorToCode[IncomingPaymentError.UnknownPayment]
-          }
-        }
-      )
-
-    if (
-      incomingPayment.state === IncomingPaymentState.Completed ||
-      incomingPayment.state === IncomingPaymentState.Expired
-    )
-      throw new GraphQLError(
-        errorToMessage[IncomingPaymentError.InvalidState],
-        {
-          extensions: {
-            code: errorToCode[IncomingPaymentError.InvalidState]
-          }
-        }
-      )
+    await canHandlePartialIncomingPayment(ctx, input.incomingPaymentId)
 
     const redis = await ctx.container.use('redis')
     const cacheKey = `${PARTIAL_PAYMENT_DECISION_PREFIX}:${input.incomingPaymentId}:${input.partialIncomingPaymentId}`
@@ -363,6 +325,77 @@ export const confirmPartialIncomingPayment: MutationResolvers<TenantedApolloCont
       return { success: false }
     }
   }
+
+export const rejectPartialIncomingPayment: MutationResolvers<TenantedApolloContext>['rejectPartialIncomingPayment'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['RejectPartialIncomingPaymentResponse']> => {
+    const { input } = args
+    await canHandlePartialIncomingPayment(ctx, input.incomingPaymentId)
+
+    const redis = await ctx.container.use('redis')
+    const cacheKey = `kyc_decision:${input.incomingPaymentId}:${input.partialIncomingPaymentId}`
+    try {
+      await redis.set(cacheKey, JSON.stringify({ success: false }))
+      return { success: true }
+    } catch (e) {
+      const logger = await ctx.container.use('logger')
+      logger.error(
+        {
+          e,
+          incomingPaymentId: input.incomingPaymentId,
+          partialPaymentId: input.partialIncomingPaymentId
+        },
+        'decision set failed'
+      )
+      return { success: false }
+    }
+  }
+
+async function canHandlePartialIncomingPayment(
+  ctx: TenantedApolloContext,
+  id: string
+): Promise<void> {
+  const incomingPaymentService = await ctx.container.use(
+    'incomingPaymentService'
+  )
+  let options: {
+    id: string
+    tenantId?: string
+  }
+
+  if (!ctx.isOperator) {
+    options = {
+      id,
+      tenantId: ctx.tenant.id
+    }
+  } else options = { id }
+
+  const incomingPayment = await incomingPaymentService.get(options)
+  if (!incomingPayment)
+    throw new GraphQLError(
+      errorToMessage[IncomingPaymentError.UnknownPayment],
+      {
+        extensions: {
+          code: errorToCode[IncomingPaymentError.UnknownPayment]
+        }
+      }
+    )
+
+  if (
+    [IncomingPaymentState.Completed, IncomingPaymentState.Expired].includes(
+      incomingPayment.state
+    )
+  )
+    throw new GraphQLError(errorToMessage[IncomingPaymentError.InvalidState], {
+      extensions: {
+        code: errorToCode[IncomingPaymentError.InvalidState]
+      }
+    })
+  return
+}
 
 export function paymentToGraphql(
   payment: IncomingPayment,
