@@ -1,5 +1,4 @@
 ignore:
-  - vulnerability: GHSA-3xgq-45jj-v275
   - vulnerability: CVE-2026-23950
   - vulnerability: CVE-2026-23745
 
