@@ -296,6 +296,8 @@ export const getIncomingPaymentTenant: IncomingPaymentResolvers<TenantedApolloCo
     return tenantToGraphQl(tenant)
   }
 
+const PARTIAL_PAYMENT_DECISION_PREFIX = 'partial_payment_decision'
+
 export const confirmPartialIncomingPayment: MutationResolvers<TenantedApolloContext>['confirmPartialIncomingPayment'] =
   async (
     parent,
@@ -344,7 +346,7 @@ export const confirmPartialIncomingPayment: MutationResolvers<TenantedApolloCont
       )
 
     const redis = await ctx.container.use('redis')
-    const cacheKey = `kyc_decision:${input.incomingPaymentId}:${input.partialIncomingPaymentId}`
+    const cacheKey = `${PARTIAL_PAYMENT_DECISION_PREFIX}:${input.incomingPaymentId}:${input.partialIncomingPaymentId}`
     try {
       await redis.set(cacheKey, JSON.stringify({ success: true }))
       return { success: true }

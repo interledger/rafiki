@@ -1067,6 +1067,7 @@ describe('Incoming Payment Resolver', (): void => {
   })
 
   describe('Mutation.confirmPartialIncomingPayment', () => {
+    const PARTIAL_PAYMENT_DECISION_PREFIX = 'partial_payment_decision'
     let redis: Redis
     let walletAddress: WalletAddress
 
@@ -1112,7 +1113,7 @@ describe('Incoming Payment Resolver', (): void => {
         )
 
       expect(result.success).toBe(true)
-      const cacheKey = `kyc_decision:${incomingPayment.id}:${partialIncomingPaymentId}`
+      const cacheKey = `${PARTIAL_PAYMENT_DECISION_PREFIX}:${incomingPayment.id}:${partialIncomingPaymentId}`
       expect(redisSpy).toHaveBeenCalledWith(
         cacheKey,
         JSON.stringify({ success: true })
@@ -1257,7 +1258,7 @@ describe('Incoming Payment Resolver', (): void => {
 
       expect(result.success).toBe(false)
       expect(redisSpy).toHaveBeenCalledWith(
-        `kyc_decision:${incomingPayment.id}:${partialIncomingPaymentId}`,
+        `${PARTIAL_PAYMENT_DECISION_PREFIX}:${incomingPayment.id}:${partialIncomingPaymentId}`,
         JSON.stringify({ success: true })
       )
     })
