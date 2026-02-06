@@ -215,7 +215,7 @@ class SubresourceQueryBuilder<
   NumberQueryBuilderType!: SubresourceQueryBuilder<M, number>
   PageQueryBuilderType!: SubresourceQueryBuilder<M, Page<M>>
 
-  get({ id, walletAddressId, client }: GetOptions) {
+  get({ id, walletAddressId, client, tenantId }: GetOptions) {
     if (walletAddressId) {
       this.where(
         `${this.modelClass().tableName}.walletAddressId`,
@@ -224,6 +224,9 @@ class SubresourceQueryBuilder<
     }
     if (client) {
       this.where({ client })
+    }
+    if (tenantId) {
+      this.where({ tenantId })
     }
     return this.findById(id)
   }

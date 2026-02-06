@@ -7,7 +7,10 @@ import {
   IncomingPaymentFilter,
   IncomingPaymentResolvers
 } from '../generated/graphql'
-import { IncomingPayment } from '../../open_payments/payment/incoming/model'
+import {
+  IncomingPayment,
+  IncomingPaymentState
+} from '../../open_payments/payment/incoming/model'
 import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/types'
 import {
   isIncomingPaymentError,
@@ -291,6 +294,74 @@ export const getIncomingPaymentTenant: IncomingPaymentResolvers<TenantedApolloCo
     const tenant = await tenantService.get(incomingPayment.tenantId)
     if (!tenant) return null
     return tenantToGraphQl(tenant)
+  }
+
+const PARTIAL_PAYMENT_DECISION_PREFIX = 'partial_payment_decision'
+
+export const confirmPartialIncomingPayment: MutationResolvers<TenantedApolloContext>['confirmPartialIncomingPayment'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['ConfirmPartialIncomingPaymentResponse']> => {
+    const { input } = args
+    const incomingPaymentService = await ctx.container.use(
+      'incomingPaymentService'
+    )
+
+    const getIncomingPaymentInput: {
+      id: string
+      tenantId?: string
+    } = {
+      id: input.incomingPaymentId
+    }
+    if (!ctx.isOperator) {
+      Object.assign(getIncomingPaymentInput, { tenantId: ctx.tenant.id })
+    }
+    const incomingPayment = await incomingPaymentService.get(
+      getIncomingPaymentInput
+    )
+
+    if (!incomingPayment)
+      throw new GraphQLError(
+        errorToMessage[IncomingPaymentError.UnknownPayment],
+        {
+          extensions: {
+            code: errorToCode[IncomingPaymentError.UnknownPayment]
+          }
+        }
+      )
+
+    if (
+      incomingPayment.state === IncomingPaymentState.Completed ||
+      incomingPayment.state === IncomingPaymentState.Expired
+    )
+      throw new GraphQLError(
+        errorToMessage[IncomingPaymentError.InvalidState],
+        {
+          extensions: {
+            code: errorToCode[IncomingPaymentError.InvalidState]
+          }
+        }
+      )
+
+    const redis = await ctx.container.use('redis')
+    const cacheKey = `${PARTIAL_PAYMENT_DECISION_PREFIX}:${input.incomingPaymentId}:${input.partialIncomingPaymentId}`
+    try {
+      await redis.set(cacheKey, JSON.stringify({ success: true }))
+      return { success: true }
+    } catch (e) {
+      const logger = await ctx.container.use('logger')
+      logger.error(
+        {
+          e,
+          incomingPaymentId: input.incomingPaymentId,
+          partialPaymentId: input.partialIncomingPaymentId
+        },
+        'decision set failed'
+      )
+      return { success: false }
+    }
   }
 
 export function paymentToGraphql(
