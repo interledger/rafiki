@@ -216,6 +216,16 @@ export type CompleteReceiverResponse = {
   receiver?: Maybe<Receiver>;
 };
 
+export type ConfirmPartialIncomingPaymentInput = {
+  incomingPaymentId: Scalars['ID']['input'];
+  partialIncomingPaymentId: Scalars['ID']['input'];
+};
+
+export type ConfirmPartialIncomingPaymentResponse = {
+  __typename?: 'ConfirmPartialIncomingPaymentResponse';
+  success: Scalars['Boolean']['output'];
+};
+
 export type CreateAssetInput = {
   /** Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets). */
   code: Scalars['String']['input'];
@@ -787,6 +797,8 @@ export type Mutation = {
   cancelOutgoingPayment: OutgoingPaymentResponse;
   /** Complete an internal or external Open Payments incoming payment. The receiver has a wallet address on either this or another Open Payments resource server. */
   completeReceiver: CompleteReceiverResponse;
+  /** Confirms a partial incoming payment. */
+  confirmPartialIncomingPayment: ConfirmPartialIncomingPaymentResponse;
   /** Create a new asset. */
   createAsset: AssetMutationResponse;
   /** Withdraw asset liquidity. */
@@ -882,6 +894,11 @@ export type MutationCancelOutgoingPaymentArgs = {
 
 export type MutationCompleteReceiverArgs = {
   input: CompleteReceiverInput;
+};
+
+
+export type MutationConfirmPartialIncomingPaymentArgs = {
+  input: ConfirmPartialIncomingPaymentInput;
 };
 
 
@@ -2009,6 +2026,8 @@ export type ResolversTypes = {
   CardPaymentFailureReason: ResolverTypeWrapper<Partial<CardPaymentFailureReason>>;
   CompleteReceiverInput: ResolverTypeWrapper<Partial<CompleteReceiverInput>>;
   CompleteReceiverResponse: ResolverTypeWrapper<Partial<CompleteReceiverResponse>>;
+  ConfirmPartialIncomingPaymentInput: ResolverTypeWrapper<Partial<ConfirmPartialIncomingPaymentInput>>;
+  ConfirmPartialIncomingPaymentResponse: ResolverTypeWrapper<Partial<ConfirmPartialIncomingPaymentResponse>>;
   CreateAssetInput: ResolverTypeWrapper<Partial<CreateAssetInput>>;
   CreateAssetLiquidityWithdrawalInput: ResolverTypeWrapper<Partial<CreateAssetLiquidityWithdrawalInput>>;
   CreateIncomingPaymentInput: ResolverTypeWrapper<Partial<CreateIncomingPaymentInput>>;
@@ -2158,6 +2177,8 @@ export type ResolversParentTypes = {
   CardDetailsInput: Partial<CardDetailsInput>;
   CompleteReceiverInput: Partial<CompleteReceiverInput>;
   CompleteReceiverResponse: Partial<CompleteReceiverResponse>;
+  ConfirmPartialIncomingPaymentInput: Partial<ConfirmPartialIncomingPaymentInput>;
+  ConfirmPartialIncomingPaymentResponse: Partial<ConfirmPartialIncomingPaymentResponse>;
   CreateAssetInput: Partial<CreateAssetInput>;
   CreateAssetLiquidityWithdrawalInput: Partial<CreateAssetLiquidityWithdrawalInput>;
   CreateIncomingPaymentInput: Partial<CreateIncomingPaymentInput>;
@@ -2362,6 +2383,11 @@ export type CompleteReceiverResponseResolvers<ContextType = any, ParentType exte
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type ConfirmPartialIncomingPaymentResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['ConfirmPartialIncomingPaymentResponse'] = ResolversParentTypes['ConfirmPartialIncomingPaymentResponse']> = {
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type CreateOrUpdatePeerByUrlMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['CreateOrUpdatePeerByUrlMutationResponse'] = ResolversParentTypes['CreateOrUpdatePeerByUrlMutationResponse']> = {
   peer?: Resolver<Maybe<ResolversTypes['Peer']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -2503,6 +2529,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   cancelIncomingPayment?: Resolver<ResolversTypes['CancelIncomingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCancelIncomingPaymentArgs, 'input'>>;
   cancelOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCancelOutgoingPaymentArgs, 'input'>>;
   completeReceiver?: Resolver<ResolversTypes['CompleteReceiverResponse'], ParentType, ContextType, RequireFields<MutationCompleteReceiverArgs, 'input'>>;
+  confirmPartialIncomingPayment?: Resolver<ResolversTypes['ConfirmPartialIncomingPaymentResponse'], ParentType, ContextType, RequireFields<MutationConfirmPartialIncomingPaymentArgs, 'input'>>;
   createAsset?: Resolver<ResolversTypes['AssetMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateAssetArgs, 'input'>>;
   createAssetLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreateAssetLiquidityWithdrawalArgs, 'input'>>;
   createIncomingPayment?: Resolver<ResolversTypes['IncomingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCreateIncomingPaymentArgs, 'input'>>;
@@ -2874,6 +2901,7 @@ export type Resolvers<ContextType = any> = {
   BasePayment?: BasePaymentResolvers<ContextType>;
   CancelIncomingPaymentResponse?: CancelIncomingPaymentResponseResolvers<ContextType>;
   CompleteReceiverResponse?: CompleteReceiverResponseResolvers<ContextType>;
+  ConfirmPartialIncomingPaymentResponse?: ConfirmPartialIncomingPaymentResponseResolvers<ContextType>;
   CreateOrUpdatePeerByUrlMutationResponse?: CreateOrUpdatePeerByUrlMutationResponseResolvers<ContextType>;
   CreatePeerMutationResponse?: CreatePeerMutationResponseResolvers<ContextType>;
   CreateReceiverResponse?: CreateReceiverResponseResolvers<ContextType>;
