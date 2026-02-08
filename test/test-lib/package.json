@@ -19,7 +19,7 @@
     "@koa/bodyparser": "^5.1.1",
     "@types/koa": "2.15.0",
     "@types/koa-bodyparser": "^4.3.12",
-    "@types/node": "^20.14.15",
+    "@types/node": "^20.19.33",
     "axios": "1.8.2",
     "graphql": "^16.11.0",
     "json-canonicalize": "^1.0.6",
