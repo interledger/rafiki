@@ -336,7 +336,7 @@ export const rejectPartialIncomingPayment: MutationResolvers<TenantedApolloConte
     await canHandlePartialIncomingPayment(ctx, input.incomingPaymentId)
 
     const redis = await ctx.container.use('redis')
-    const cacheKey = `partial_payment_decision:${input.incomingPaymentId}:${input.partialIncomingPaymentId}`
+    const cacheKey = `${PARTIAL_PAYMENT_DECISION_PREFIX}:${input.incomingPaymentId}:${input.partialIncomingPaymentId}`
     try {
       await redis.set(cacheKey, JSON.stringify({ success: false }))
       return { success: true }
