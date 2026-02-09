@@ -1116,8 +1116,6 @@ describe('Incoming Payment Resolver', (): void => {
 
         const partialIncomingPaymentId = uuid()
 
-        const redisSpy = jest.spyOn(redis, 'set')
-
         const result = await appContainer.apolloClient
           .mutate({
             mutation,
@@ -1140,11 +1138,6 @@ describe('Incoming Payment Resolver', (): void => {
           )
 
         expect(result.success).toBe(true)
-        const cacheKey = `${PARTIAL_PAYMENT_DECISION_PREFIX}:${incomingPayment.id}:${partialIncomingPaymentId}`
-        expect(redisSpy).toHaveBeenCalledWith(
-          cacheKey,
-          JSON.stringify({ success: action === 'confirm' ? true : false })
-        )
       }
     )
 
@@ -1169,7 +1162,10 @@ describe('Incoming Payment Resolver', (): void => {
           otherTenant.id
         )
 
-        const redisSpy = jest.spyOn(redis, 'set')
+        const incomingPaymentServiceSpy = jest.spyOn(
+          incomingPaymentService,
+          'updatePartialPaymentDecision'
+        )
         expect.assertions(3)
         try {
           await tenantApolloClient.mutate({
@@ -1182,7 +1178,7 @@ describe('Incoming Payment Resolver', (): void => {
             }
           })
         } catch (error) {
-          expect(redisSpy).not.toHaveBeenCalled()
+          expect(incomingPaymentServiceSpy).not.toHaveBeenCalled()
           expect(error).toBeInstanceOf(ApolloError)
           expect((error as ApolloError).graphQLErrors).toContainEqual(
             expect.objectContaining({
@@ -1216,7 +1212,10 @@ describe('Incoming Payment Resolver', (): void => {
           { state }
         )
 
-        const redisSpy = jest.spyOn(redis, 'set')
+        const incomingPaymentServiceSpy = jest.spyOn(
+          incomingPaymentService,
+          'updatePartialPaymentDecision'
+        )
         expect.assertions(3)
         try {
           await appContainer.apolloClient.mutate({
@@ -1229,7 +1228,7 @@ describe('Incoming Payment Resolver', (): void => {
             }
           })
         } catch (error) {
-          expect(redisSpy).not.toHaveBeenCalled()
+          expect(incomingPaymentServiceSpy).not.toHaveBeenCalled()
           expect(error).toBeInstanceOf(ApolloError)
           expect((error as ApolloError).graphQLErrors).toContainEqual(
             expect.objectContaining({

@@ -296,8 +296,6 @@ export const getIncomingPaymentTenant: IncomingPaymentResolvers<TenantedApolloCo
     return tenantToGraphQl(tenant)
   }
 
-const PARTIAL_PAYMENT_DECISION_PREFIX = 'partial_payment_decision'
-
 export const confirmPartialIncomingPayment: MutationResolvers<TenantedApolloContext>['confirmPartialIncomingPayment'] =
   async (
     parent,
@@ -306,23 +304,15 @@ export const confirmPartialIncomingPayment: MutationResolvers<TenantedApolloCont
   ): Promise<ResolversTypes['ConfirmPartialIncomingPaymentResponse']> => {
     const { input } = args
     await canHandlePartialIncomingPayment(ctx, input.incomingPaymentId)
-
-    const redis = await ctx.container.use('redis')
-    const cacheKey = `${PARTIAL_PAYMENT_DECISION_PREFIX}:${input.incomingPaymentId}:${input.partialIncomingPaymentId}`
-    try {
-      await redis.set(cacheKey, JSON.stringify({ success: true }))
-      return { success: true }
-    } catch (e) {
-      const logger = await ctx.container.use('logger')
-      logger.error(
-        {
-          e,
-          incomingPaymentId: input.incomingPaymentId,
-          partialPaymentId: input.partialIncomingPaymentId
-        },
-        'decision set failed'
-      )
-      return { success: false }
+    const incomingPaymentService = await ctx.container.use(
+      'incomingPaymentService'
+    )
+    return {
+      success: await incomingPaymentService.updatePartialPaymentDecision({
+        id: input.incomingPaymentId,
+        partialPaymentId: input.partialIncomingPaymentId,
+        decision: true
+      })
     }
   }
 
@@ -334,23 +324,15 @@ export const rejectPartialIncomingPayment: MutationResolvers<TenantedApolloConte
   ): Promise<ResolversTypes['RejectPartialIncomingPaymentResponse']> => {
     const { input } = args
     await canHandlePartialIncomingPayment(ctx, input.incomingPaymentId)
-
-    const redis = await ctx.container.use('redis')
-    const cacheKey = `${PARTIAL_PAYMENT_DECISION_PREFIX}:${input.incomingPaymentId}:${input.partialIncomingPaymentId}`
-    try {
-      await redis.set(cacheKey, JSON.stringify({ success: false }))
-      return { success: true }
-    } catch (e) {
-      const logger = await ctx.container.use('logger')
-      logger.error(
-        {
-          e,
-          incomingPaymentId: input.incomingPaymentId,
-          partialPaymentId: input.partialIncomingPaymentId
-        },
-        'decision set failed'
-      )
-      return { success: false }
+    const incomingPaymentService = await ctx.container.use(
+      'incomingPaymentService'
+    )
+    return {
+      success: await incomingPaymentService.updatePartialPaymentDecision({
+        id: input.incomingPaymentId,
+        partialPaymentId: input.partialIncomingPaymentId,
+        decision: false
+      })
     }
   }
 
