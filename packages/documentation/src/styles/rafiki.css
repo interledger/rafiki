@@ -165,3 +165,30 @@
   display: flex;
   flex-direction: column;
 }
+
+/* Fix extra vertical spacing in <details> elements */
+/* Hide empty paragraph that appears before summary (from blank lines in MDX) */
+.sl-markdown-content.sl-markdown-content details > p:empty {
+  display: none;
+}
+
+/* Remove margin from first element in details (could be empty p or summary) */
+.sl-markdown-content.sl-markdown-content details > :first-child {
+  margin-block-start: 0;
+}
+
+/* Remove margin from summary element */
+.sl-markdown-content.sl-markdown-content details > summary {
+  margin-block-start: 0;
+  margin-block-end: 0;
+}
+
+/* Remove margin from elements immediately following summary */
+.sl-markdown-content.sl-markdown-content details > summary + * {
+  margin-block-start: 0;
+}
+
+/* Remove margin from summary element */
+.sl-markdown-content.sl-markdown-content details > summary {
+  margin-block-end: 0;
+}
