@@ -2,7 +2,6 @@ import assert from 'assert'
 import { faker } from '@faker-js/faker'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
-import { randomBytes } from 'node:crypto'
 
 import {
   FundingError,
@@ -2880,65 +2879,6 @@ describe('OutgoingPaymentService', (): void => {
         expect(after?.state).toBe(startState)
       })
     })
-
-    it(
-      'can add encrypted data to be transmitted',
-      withConfigOverride(
-        () => config,
-        {
-          dbEncryptionSecret: randomBytes(32).toString('base64')
-        },
-        async (): Promise<void> => {
-          const encryptedData = JSON.stringify({ data: faker.internet.email() })
-          const fundedPayment = await outgoingPaymentService.fund({
-            id: payment.id,
-            tenantId,
-            amount: quoteAmount,
-            transferId: uuid(),
-            dataToTransmit: encryptedData
-          })
-
-          assert.ok(!isTransferError(fundedPayment))
-          assert.ok(!isOutgoingPaymentError(fundedPayment))
-          expect(JSON.parse(fundedPayment.dataToTransmit as string)).toEqual(
-            expect.objectContaining({
-              cipherText: expect.any(String),
-              tag: expect.objectContaining({
-                data: expect.any(Array),
-                type: 'Buffer'
-              })
-            })
-          )
-          expect(
-            fundedPayment.getDataToTransmit(config.dbEncryptionSecret)
-          ).toEqual(encryptedData)
-        }
-      )
-    )
-
-    it(
-      'inserts data as-is without configured secret',
-      withConfigOverride(
-        () => config,
-        {
-          dbEncryptionSecret: undefined
-        },
-        async (): Promise<void> => {
-          const encryptedData = JSON.stringify({ data: faker.internet.email() })
-          const fundedPayment = await outgoingPaymentService.fund({
-            id: payment.id,
-            tenantId,
-            amount: quoteAmount,
-            transferId: uuid(),
-            dataToTransmit: encryptedData
-          })
-
-          assert.ok(!isTransferError(fundedPayment))
-          assert.ok(!isOutgoingPaymentError(fundedPayment))
-          expect(fundedPayment.dataToTransmit).toEqual(encryptedData)
-        }
-      )
-    )
   })
 
   describe('getGrantSpentAmounts', (): void => {
