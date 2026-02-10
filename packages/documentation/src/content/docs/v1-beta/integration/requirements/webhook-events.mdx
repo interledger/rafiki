@@ -309,6 +309,7 @@ The `incoming_payment.completed` event indicates the payment completed either au
 
 <details>
   <summary>Expand for event sequence</summary>
+
   $2.55 was received before the payment expired. The recipient is thus credited with $2.55.
 
   <Mermaid
@@ -350,6 +351,7 @@ In some scenarios, a sender may not have specified an `incomingAmount` when the 
 
 <details>
   <summary>Expand for event sequence</summary>
+
   An outgoing payment for $12 was created.
 
   <Mermaid
@@ -382,23 +384,19 @@ If the sender has insufficient funds or if the payment should otherwise not be f
 <details>
   <summary>Expand for event sequences</summary>
 
-{' '}
-
-{' '}
-
 <Badge text='Single-phase transfer' variant='tip' size='medium' /> An outgoing
 payment for $12 is complete. $11.50 was sent. You choose to keep $0.50 as a
 service fee.
 
-  <Mermaid
-    graph={`sequenceDiagram
-      participant R as Rafiki
-      participant ASE as Account servicing entity
+    <Mermaid
+      graph={`sequenceDiagram
+        participant R as Rafiki
+        participant ASE as Account servicing entity
 
-      R->>ASE: Fires outgoing_payment.completed event to webhook endpoint,<br/>debitAmount: $12, sentAmount: $11.50
-      ASE->>R: Backend Admin API call: createOutgoingPaymentWithdrawal
-      R-->>ASE: success: true
-      ASE->>ASE: Remove hold and deduct $12 from sender's account,<br/>credit your account with $0.50
+        R->>ASE: Fires outgoing_payment.completed event to webhook endpoint,<br/>debitAmount: $12, sentAmount: $11.50
+        ASE->>R: Backend Admin API call: createOutgoingPaymentWithdrawal
+        R-->>ASE: success: true
+        ASE->>ASE: Remove hold and deduct $12 from sender's account,<br/>credit your account with $0.50
 
 `}
 />
@@ -409,18 +407,18 @@ service fee.
 payment for $12 is complete. $11.50 was sent. You choose to keep $0.50 as a
 service fee.
 
-  <Mermaid
-    graph={`sequenceDiagram
-      participant R as Rafiki
-      participant ASE as Account servicing entity
+    <Mermaid
+      graph={`sequenceDiagram
+        participant R as Rafiki
+        participant ASE as Account servicing entity
 
-      R->>ASE: Fires outgoing_payment.completed event to webhook endpoint,<br/>debitAmount: $12, sentAmount: $11.50
-      ASE->>R: Backend Admin API call: createOutgoingPaymentWithdrawal
-      R-->>ASE: success: true
-      ASE->>ASE: Remove hold and deduct $12 from sender's account,<br/>credit your account with $0.50
-      ASE->>R: Backend Admin API call: postLiquidityWithdrawal
-      R-->>ASE: success: true
-      R->>R: Two-phase transfer complete
+        R->>ASE: Fires outgoing_payment.completed event to webhook endpoint,<br/>debitAmount: $12, sentAmount: $11.50
+        ASE->>R: Backend Admin API call: createOutgoingPaymentWithdrawal
+        R-->>ASE: success: true
+        ASE->>ASE: Remove hold and deduct $12 from sender's account,<br/>credit your account with $0.50
+        ASE->>R: Backend Admin API call: postLiquidityWithdrawal
+        R-->>ASE: success: true
+        R->>R: Two-phase transfer complete
 
 `}
 />
@@ -435,7 +433,8 @@ If there is excess liquidity in Rafiki due to differences between the sent and r
 
 <details>
   <summary>Expand for event sequence</summary>
-  An outgoing payment for $12 failed. $8 was sent successfully.
+
+An outgoing payment for $12 failed. $8 was sent successfully.
 
   <Mermaid
     graph={`sequenceDiagram
@@ -469,6 +468,7 @@ The `outgoing_payment.failed` event indicates that an outgoing payment has eithe
 
 <details>
   <summary>Expand for event sequence</summary>
+  
   The wallet address, `https://wallet.example.com/carla_garcia` was requested but does not exist.
 
   <Mermaid
@@ -501,7 +501,8 @@ When you receive this event, look up the associated account in your system and c
 
 <details>
   <summary>Expand for event sequence</summary>
-  A wallet address received a Web Monetization payment of $0.33
+
+A wallet address received a Web Monetization payment of $0.33
 
   <Mermaid
     graph={`sequenceDiagram
@@ -534,7 +535,8 @@ The `wallet_address.web_monetization` event indicates that a wallet address rece
 
 <details>
   <summary>Expand for event sequence</summary>
-  Your asset liquidity for USD (asset scale: 2) drops below $100.00.
+
+Your asset liquidity for USD (asset scale: 2) drops below $100.00.
 
   <Mermaid
     graph={`sequenceDiagram
@@ -566,6 +568,7 @@ The `asset.liquidity_low` event indicates that an asset's liquidity has dropped 
 
 <details>
   <summary>Expand for event sequence</summary>
+  
   The liquidity for your peer, Happy Life Bank, drops below $100.00 USD.
 
   <Mermaid
