@@ -293,7 +293,8 @@ The `incoming_payment.completed` event indicates the payment completed either au
 <details>
   <summary>Expand for event sequence</summary>
 
-  \$2.55 was received before the payment expired. The recipient is thus credited with \$2.55.
+\$2.55 was received before the payment expired. The recipient is thus credited with \$2.55.
+
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
@@ -334,7 +335,8 @@ In some scenarios, a sender may not have specified an `incomingAmount` when the 
 <details>
   <summary>Expand for event sequence</summary>
 
-  An outgoing payment for \$12 was created.
+An outgoing payment for \$12 was created.
+
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
@@ -407,7 +409,8 @@ If there is excess liquidity in Rafiki due to differences between the sent and r
 <details>
   <summary>Expand for event sequence</summary>
 
-  An outgoing payment for \$12 failed. \$8 was sent successfully.
+An outgoing payment for \$12 failed. \$8 was sent successfully.
+
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
@@ -441,7 +444,8 @@ The `outgoing_payment.failed` event indicates that an outgoing payment has eithe
 <details>
   <summary>Expand for event sequence</summary>
 
-  The wallet address, `https://wallet.example.com/carla_garcia` was requested but does not exist.
+The wallet address, `https://wallet.example.com/carla_garcia` was requested but does not exist.
+
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
@@ -473,7 +477,8 @@ When you receive this event, look up the associated account in your system and c
 <details>
   <summary>Expand for event sequence</summary>
 
-  A wallet address received a Web Monetization payment of \$0.33
+A wallet address received a Web Monetization payment of \$0.33
+
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
@@ -506,7 +511,8 @@ The `wallet_address.web_monetization` event indicates that a wallet address rece
 <details>
   <summary>Expand for event sequence</summary>
 
-  Your asset liquidity for USD (asset scale: 2) drops below \$100.00.
+Your asset liquidity for USD (asset scale: 2) drops below \$100.00.
+
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
@@ -538,7 +544,8 @@ The `asset.liquidity_low` event indicates that an asset's liquidity has dropped 
 <details>
   <summary>Expand for event sequence</summary>
 
-  The liquidity for your peer, Happy Life Bank, drops below \$100.00 USD.
+The liquidity for your peer, Happy Life Bank, drops below \$100.00 USD.
+
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
