@@ -187,8 +187,3 @@
 .sl-markdown-content.sl-markdown-content details > summary + * {
   margin-block-start: 0;
 }
-
-/* Remove margin from summary element */
-.sl-markdown-content.sl-markdown-content details > summary {
-  margin-block-end: 0;
-}
