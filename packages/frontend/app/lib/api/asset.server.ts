@@ -48,6 +48,10 @@ export const getAssetInfo = async (request: Request, args: QueryAssetArgs) => {
             fixed
             createdAt
           }
+          tenant {
+            id
+            publicName
+          }
           createdAt
         }
       }

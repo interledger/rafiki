@@ -107,6 +107,12 @@ export default function ViewAssetPage() {
                 <div className='w-full p-4 space-y-3'>
                   <Input type='hidden' name='id' value={asset.id} />
                   <Input label='Asset ID' value={asset.id} disabled readOnly />
+                  <Input
+                    label='Tenant ID'
+                    value={`${asset.tenant?.id} ${asset.tenant?.publicName ? `(${asset.tenant?.publicName})` : ''}`}
+                    disabled
+                    readOnly
+                  />
                   <Input label='Code' value={asset.code} disabled readOnly />
                   <Input label='Scale' value={asset.scale} disabled readOnly />
                   <Input
