@@ -118,7 +118,7 @@ function grantToTokenInfo(grant?: Grant, access?: Access[]): TokenInfo {
     active: true,
     grant: grant.id,
     access: access?.map(toOpenPaymentsAccess) ?? [],
-    client: { walletAddress: grant.client }
+    client: grant.client
   }
 }
 
