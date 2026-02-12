@@ -131,7 +131,7 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body className='h-full text-tealish bg-diagonal'>
+      <body className='h-full text-tealish'>
         <Theme accentColor='orange'>
           <div className='min-h-full relative z-10'>
             {displaySidebar && (
