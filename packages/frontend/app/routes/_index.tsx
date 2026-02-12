@@ -5,7 +5,6 @@ import { useLoaderData } from '@remix-run/react'
 import { Card, Heading, Text } from '@radix-ui/themes'
 import { ApiCredentialsForm } from '~/components/ApiCredentialsForm'
 import { getSession } from '~/lib/session.server'
-import bgUrl from '~/assets/bg.webp'
 
 interface LoaderData {
   hasCredentials: boolean
@@ -43,10 +42,7 @@ export default function Index() {
 
   return (
     <div className='relative min-h-screen overflow-hidden'>
-      <div
-        className='absolute inset-0 bg-cover bg-center'
-        style={{ backgroundImage: `url(${bgUrl})` }}
-      />
+      <div className='absolute inset-0 bg-cover bg-center' />
       <div className='absolute inset-0 bg-black/20' />
       <div className='relative flex min-h-screen items-center justify-center px-6 py-10'>
         <Card className='w-full max-w-xl border border-pearl/80 bg-white/90 shadow-xl'>
