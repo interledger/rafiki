@@ -30,7 +30,7 @@ import {
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { updateWalletAddressSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
-import { capitalize, formatAmount } from '~/shared/utils'
+import { formatAmount } from '~/shared/utils'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 
 type FormFieldProps = {
