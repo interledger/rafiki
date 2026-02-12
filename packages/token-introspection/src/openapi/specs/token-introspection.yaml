@@ -53,7 +53,32 @@ paths:
                             value: '500'
                             assetCode: USD
                             assetScale: 2
-                    client: 'https://webmonize.com/.well-known/pay'
+                    client:
+                      walletAddress: 'https://webmonize.com/.well-known/pay'
+                JWK Token Introspection:
+                  value:
+                    active: true
+                    grant: 1ee48d97-8fa1-4ab4-b89d-95284b665517
+                    access:
+                      - type: outgoing-payment
+                        actions:
+                          - create
+                          - read
+                        identifier: 'https://openpayments.guide/alice'
+                        limits:
+                          interval: 'R12/2019-08-24T14:15:22Z/P1M'
+                          receiver: 'https://openpayments.guide/bob/incoming-payments/48884225-b393-4872-90de-1b737e2491c2'
+                          debitAmount:
+                            value: '500'
+                            assetCode: USD
+                            assetScale: 2
+                    client:
+                      jwk:
+                        kid: 'key-1'
+                        alg: EdDSA
+                        kty: OKP
+                        crv: Ed25519
+                        x: 'test-public-key-base64url'
         '404':
           description: Not Found
       description: Introspect an access token to get grant details.
@@ -93,20 +118,76 @@ components:
           $ref: '#/components/schemas/access'
         client:
           title: client
-          type: string
           description: |-
-            Wallet address of the client instance that is making this request.
+            Client identification for token introspection responses.
 
             When sending a non-continuation request to the AS, the client instance MUST identify itself by including the client field of the request and by signing the request.
 
+            Can be either:
+            - An object with `walletAddress` for wallet-address-based client identification
+            - An object with `jwk` for directed identity
+
+            These are mutually exclusive.
+
+            When using the `walletAddress` property:
             A JSON Web Key Set document, including the public key that the client instance will use to protect this request and any continuation requests at the AS and any user-facing information about the client instance used in interactions, MUST be available at the wallet address + `/jwks.json` url.
 
+            When using the `jwk` property (directed identity approach):
+            The client instance provides its public key directly in the request, eliminating the need for the AS to fetch it from a wallet address. This approach enhances privacy by not requiring the client to expose a persistent wallet address identifier. The `jwk` property can only be used for non-interactive grant requests (i.e.: incoming payments).
+
             If sending a grant initiation request that requires RO interaction, the wallet address MUST serve necessary client display information.
+          oneOf:
+            - type: object
+              required: [walletAddress]
+              properties:
+                walletAddress:
+                  type: string
+                  format: uri
+                  description: Wallet address of the client instance that is making this request.
+              additionalProperties: false
+            - type: object
+              required: [jwk]
+              properties:
+                jwk:
+                  $ref: '#/components/schemas/json-web-key'
+              additionalProperties: false
       required:
         - active
         - grant
         - access
         - client
+    json-web-key:
+      type: object
+      properties:
+        kid:
+          type: string
+        alg:
+          type: string
+          description: 'The cryptographic algorithm family used with the key. The only allowed value is `EdDSA`. '
+          enum:
+            - EdDSA
+        use:
+          type: string
+          enum:
+            - sig
+        kty:
+          type: string
+          enum:
+            - OKP
+        crv:
+          type: string
+          enum:
+            - Ed25519
+        x:
+          type: string
+          pattern: '^[a-zA-Z0-9-_]+$'
+          description: The base64 url-encoded public key.
+      required:
+        - kid
+        - alg
+        - kty
+        - crv
+        - x
     amount:
       title: amount
       type: object
