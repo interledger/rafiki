@@ -12,6 +12,10 @@ import {
 import { Webhook, WebhookEventType } from 'mock-account-service-lib'
 import { TenantOptions } from './types'
 
+function cannotHandleWebhook(tenantId: string) {
+  return process.env.OPERATOR_TENANT_ID && tenantId !== process.env.OPERATOR_TENANT_ID
+}
+
 export interface AmountJSON {
   value: string
   assetCode: string
@@ -42,11 +46,8 @@ export async function handleOutgoingPaymentCompletedFailed(wh: Webhook) {
   const payment = wh.data
   // Don't handle webhook if it is referring to a tenant.
   if (
-    process.env.OPERATOR_TENANT_ID &&
-    wh.tenantId !== process.env.OPERATOR_TENANT_ID
-  ) {
-    return
-  }
+    cannotHandleWebhook(wh.tenantId)
+  ) return
   const wa = payment['walletAddressId'] as string
   const acc = await mockAccounts.getByWalletAddressId(wa)
 
@@ -151,6 +152,7 @@ export async function handleIncomingPaymentCompletedExpired(
     throw new Error('Invalid event type when handling incoming payment webhook')
   }
 
+  if (cannotHandleWebhook(wh.tenantId)) return
   const payment = wh.data
   const wa = payment['walletAddressId'] as string
   const acc = await mockAccounts.getByWalletAddressId(wa)
