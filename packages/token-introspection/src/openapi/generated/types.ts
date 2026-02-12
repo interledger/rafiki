@@ -3,212 +3,226 @@
  * Do not make direct changes to the file.
  */
 
-
-/** OneOf type helpers */
-type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never };
-type XOR<T, U> = (T | U) extends object ? (Without<T, U> & U) | (Without<U, T> & T) : T | U;
-type OneOf<T extends any[]> = T extends [infer Only] ? Only : T extends [infer A, infer B, ...infer Rest] ? OneOf<[XOR<A, B>, ...Rest]> : never;
-
 export type paths = {
-  "/": {
-    /**
-     * Introspect Access Token
-     * @description Introspect an access token to get grant details.
-     */
-    post: operations["post-introspect"];
-  };
-};
-
-export type webhooks = Record<string, never>;
-
-export type components = {
-  schemas: {
-    /** token-info */
-    "token-info": {
-      /** @enum {boolean} */
-      active: true;
-      grant: string;
-      access: components["schemas"]["access"];
-      /**
-       * client
-       * @description Client identification for token introspection responses.
-       *
-       * When sending a non-continuation request to the AS, the client instance MUST identify itself by including the client field of the request and by signing the request.
-       *
-       * Can be either:
-       * - An object with `walletAddress` for wallet-address-based client identification
-       * - An object with `jwk` for directed identity
-       *
-       * These are mutually exclusive.
-       *
-       * When using the `walletAddress` property:
-       * A JSON Web Key Set document, including the public key that the client instance will use to protect this request and any continuation requests at the AS and any user-facing information about the client instance used in interactions, MUST be available at the wallet address + `/jwks.json` url.
-       *
-       * When using the `jwk` property (directed identity approach):
-       * The client instance provides its public key directly in the request, eliminating the need for the AS to fetch it from a wallet address. This approach enhances privacy by not requiring the client to expose a persistent wallet address identifier. The `jwk` property can only be used for non-interactive grant requests (i.e.: incoming payments).
-       *
-       * If sending a grant initiation request that requires RO interaction, the wallet address MUST serve necessary client display information.
-       */
-      client: OneOf<[{
+    "/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
         /**
-         * Format: uri
-         * @description Wallet address of the client instance that is making this request.
+         * Introspect Access Token
+         * @description Introspect an access token to get grant details.
          */
-        walletAddress: string;
-      }, {
-        jwk: components["schemas"]["json-web-key"];
-      }]>;
+        post: operations["post-introspect"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    "json-web-key": {
-      kid: string;
-      /**
-       * @description The cryptographic algorithm family used with the key. The only allowed value is `EdDSA`.
-       * @enum {string}
-       */
-      alg: "EdDSA";
-      /** @enum {string} */
-      use?: "sig";
-      /** @enum {string} */
-      kty: "OKP";
-      /** @enum {string} */
-      crv: "Ed25519";
-      /** @description The base64 url-encoded public key. */
-      x: string;
-    };
-    /** amount */
-    amount: {
-      /**
-       * Format: uint64
-       * @description The value is an unsigned 64-bit integer amount, represented as a string.
-       */
-      value: string;
-      /**
-       * Asset code
-       * @description The assetCode is a code that indicates the underlying asset. An ISO4217 currency code should be used whenever possible. The ISO4217 representation of the US Dollar is USD.
-       */
-      assetCode: string;
-      /**
-       * Asset scale
-       * @description The number of decimal places that defines the scale of the smallest divisible unit for the given asset code. It determines how an integer amount is scaled to derive the actual monetary value. For example, USD has an asset scale of 2 with the smallest unit being 0.01. An integer amount of `1000` with an `assetCode` of `USD` and `assetScale` of `2` translates to $10.00.
-       */
-      assetScale: number;
-    };
-    /**
-     * Receiver
-     * Format: uri
-     * @description The URL of the incoming payment that is being paid.
-     */
-    receiver: string;
-    /**
-     * Interval
-     * @description [ISO8601 repeating interval](https://en.wikipedia.org/wiki/ISO_8601#Repeating_intervals)
-     */
-    interval: string;
-    /**
-     * limits-outgoing
-     * @description Open Payments specific property that defines the limits under which outgoing payments can be created.
-     */
-    "limits-outgoing": {
-      receiver?: components["schemas"]["receiver"];
-      interval?: components["schemas"]["interval"];
-    } | {
-      receiver?: components["schemas"]["receiver"];
-      interval?: components["schemas"]["interval"];
-      /** @description All amounts are maxima, i.e. multiple payments can be created under a grant as long as the total amounts of these payments do not exceed the maximum amount per interval as specified in the grant. */
-      debitAmount: components["schemas"]["amount"];
-    } | {
-      receiver?: components["schemas"]["receiver"];
-      interval?: components["schemas"]["interval"];
-      /** @description All amounts are maxima, i.e. multiple payments can be created under a grant as long as the total amounts of these payments do not exceed the maximum amount per interval as specified in the grant. */
-      receiveAmount: components["schemas"]["amount"];
-    };
-    /** @description A description of the rights associated with this access token. */
-    access: components["schemas"]["access-item"][];
-    /** @description The access associated with the access token is described using objects that each contain multiple dimensions of access. */
-    "access-item": components["schemas"]["access-incoming"] | components["schemas"]["access-outgoing"] | components["schemas"]["access-quote"];
-    /** access-incoming */
-    "access-incoming": {
-      /**
-       * @description The type of resource request as a string.  This field defines which other fields are allowed in the request object.
-       * @enum {string}
-       */
-      type: "incoming-payment";
-      /** @description The types of actions the client instance will take at the RS as an array of strings. */
-      actions: ("create" | "complete" | "read" | "read-all" | "list" | "list-all")[];
-      /**
-       * Format: uri
-       * @description A string identifier indicating a specific resource at the RS.
-       */
-      identifier?: string;
-    };
-    /** access-outgoing */
-    "access-outgoing": {
-      /**
-       * @description The type of resource request as a string.  This field defines which other fields are allowed in the request object.
-       * @enum {string}
-       */
-      type: "outgoing-payment";
-      /** @description The types of actions the client instance will take at the RS as an array of strings. */
-      actions: ("create" | "read" | "read-all" | "list" | "list-all")[];
-      /**
-       * Format: uri
-       * @description A string identifier indicating a specific resource at the RS.
-       */
-      identifier?: string;
-      limits?: components["schemas"]["limits-outgoing"];
-    };
-    /** access-quote */
-    "access-quote": {
-      /**
-       * @description The type of resource request as a string.  This field defines which other fields are allowed in the request object.
-       * @enum {string}
-       */
-      type: "quote";
-      /** @description The types of actions the client instance will take at the RS as an array of strings. */
-      actions: ("create" | "read" | "read-all")[];
-    };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
 };
-
-export type $defs = Record<string, never>;
-
-export type external = Record<string, never>;
-
-export type operations = {
-
-  /**
-   * Introspect Access Token
-   * @description Introspect an access token to get grant details.
-   */
-  "post-introspect": {
-    requestBody: {
-      content: {
-        "application/json": {
-          /** @description The access token value presented to the RS by the client instance. */
-          access_token: string;
-          access?: components["schemas"]["access"];
-        };
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        content: {
-          "application/json": OneOf<[{
+export type webhooks = Record<string, never>;
+export type components = {
+    schemas: {
+        /** token-info */
+        "token-info": {
             /** @enum {boolean} */
-            active: false;
-          }, components["schemas"]["token-info"]]>;
+            active: true;
+            grant: string;
+            access: components["schemas"]["access"];
+            /**
+             * client
+             * @description Client identification for token introspection responses.
+             *
+             *     When sending a non-continuation request to the AS, the client instance MUST identify itself by including the client field of the request and by signing the request.
+             *
+             *     Can be either:
+             *     - An object with `walletAddress` for wallet-address-based client identification
+             *     - An object with `jwk` for directed identity
+             *
+             *     These are mutually exclusive.
+             *
+             *     When using the `walletAddress` property:
+             *     A JSON Web Key Set document, including the public key that the client instance will use to protect this request and any continuation requests at the AS and any user-facing information about the client instance used in interactions, MUST be available at the wallet address + `/jwks.json` url.
+             *
+             *     When using the `jwk` property (directed identity approach):
+             *     The client instance provides its public key directly in the request, eliminating the need for the AS to fetch it from a wallet address. This approach enhances privacy by not requiring the client to expose a persistent wallet address identifier. The `jwk` property can only be used for non-interactive grant requests (i.e.: incoming payments).
+             *
+             *     If sending a grant initiation request that requires RO interaction, the wallet address MUST serve necessary client display information.
+             */
+            client: {
+                /**
+                 * Format: uri
+                 * @description Wallet address of the client instance that is making this request.
+                 */
+                walletAddress: string;
+            } | {
+                jwk: components["schemas"]["json-web-key"];
+            };
         };
-      };
-      /** @description Not Found */
-      404: {
-        content: never;
-      };
+        "json-web-key": {
+            kid: string;
+            /**
+             * @description The cryptographic algorithm family used with the key. The only allowed value is `EdDSA`.
+             * @enum {string}
+             */
+            alg: "EdDSA";
+            /** @enum {string} */
+            use?: "sig";
+            /** @enum {string} */
+            kty: "OKP";
+            /** @enum {string} */
+            crv: "Ed25519";
+            /** @description The base64 url-encoded public key. */
+            x: string;
+        };
+        /** amount */
+        amount: {
+            /**
+             * Format: uint64
+             * @description The value is an unsigned 64-bit integer amount, represented as a string.
+             */
+            value: string;
+            /**
+             * Asset code
+             * @description The assetCode is a code that indicates the underlying asset. An ISO4217 currency code should be used whenever possible. The ISO4217 representation of the US Dollar is USD.
+             */
+            assetCode: string;
+            /**
+             * Asset scale
+             * @description The number of decimal places that defines the scale of the smallest divisible unit for the given asset code. It determines how an integer amount is scaled to derive the actual monetary value. For example, USD has an asset scale of 2 with the smallest unit being 0.01. An integer amount of `1000` with an `assetCode` of `USD` and `assetScale` of `2` translates to $10.00.
+             */
+            assetScale: number;
+        };
+        /**
+         * Receiver
+         * Format: uri
+         * @description The URL of the incoming payment that is being paid.
+         * @example https://ilp.interledger-test.dev/incoming-payments/08394f02-7b7b-45e2-b645-51d04e7c330c
+         * @example http://ilp.interledger-test.dev/incoming-payments/08394f02-7b7b-45e2-b645-51d04e7c330c
+         * @example https://ilp.interledger-test.dev/incoming-payments/1
+         */
+        receiver: string;
+        /**
+         * Interval
+         * @description [ISO8601 repeating interval](https://en.wikipedia.org/wiki/ISO_8601#Repeating_intervals)
+         * @example R11/2022-08-24T14:15:22Z/P1M
+         * @example R/2017-03-01T13:00:00Z/2018-05-11T15:30:00Z
+         * @example R-1/P1Y2M10DT2H30M/2022-05-11T15:30:00Z
+         */
+        interval: string;
+        /**
+         * limits-outgoing
+         * @description Open Payments specific property that defines the limits under which outgoing payments can be created.
+         */
+        "limits-outgoing": {
+            receiver?: components["schemas"]["receiver"];
+            interval?: components["schemas"]["interval"];
+        } | {
+            receiver?: components["schemas"]["receiver"];
+            interval?: components["schemas"]["interval"];
+            /** @description All amounts are maxima, i.e. multiple payments can be created under a grant as long as the total amounts of these payments do not exceed the maximum amount per interval as specified in the grant. */
+            debitAmount: components["schemas"]["amount"];
+        } | {
+            receiver?: components["schemas"]["receiver"];
+            interval?: components["schemas"]["interval"];
+            /** @description All amounts are maxima, i.e. multiple payments can be created under a grant as long as the total amounts of these payments do not exceed the maximum amount per interval as specified in the grant. */
+            receiveAmount: components["schemas"]["amount"];
+        };
+        /** @description A description of the rights associated with this access token. */
+        access: components["schemas"]["access-item"][];
+        /** @description The access associated with the access token is described using objects that each contain multiple dimensions of access. */
+        "access-item": components["schemas"]["access-incoming"] | components["schemas"]["access-outgoing"] | components["schemas"]["access-quote"];
+        /** access-incoming */
+        "access-incoming": {
+            /**
+             * @description The type of resource request as a string.  This field defines which other fields are allowed in the request object.
+             * @enum {string}
+             */
+            type: "incoming-payment";
+            /** @description The types of actions the client instance will take at the RS as an array of strings. */
+            actions: ("create" | "complete" | "read" | "read-all" | "list" | "list-all")[];
+            /**
+             * Format: uri
+             * @description A string identifier indicating a specific resource at the RS.
+             */
+            identifier?: string;
+        };
+        /** access-outgoing */
+        "access-outgoing": {
+            /**
+             * @description The type of resource request as a string.  This field defines which other fields are allowed in the request object.
+             * @enum {string}
+             */
+            type: "outgoing-payment";
+            /** @description The types of actions the client instance will take at the RS as an array of strings. */
+            actions: ("create" | "read" | "read-all" | "list" | "list-all")[];
+            /**
+             * Format: uri
+             * @description A string identifier indicating a specific resource at the RS.
+             */
+            identifier?: string;
+            limits?: components["schemas"]["limits-outgoing"];
+        };
+        /** access-quote */
+        "access-quote": {
+            /**
+             * @description The type of resource request as a string.  This field defines which other fields are allowed in the request object.
+             * @enum {string}
+             */
+            type: "quote";
+            /** @description The types of actions the client instance will take at the RS as an array of strings. */
+            actions: ("create" | "read" | "read-all")[];
+        };
     };
-  };
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 };
+export type $defs = Record<string, never>;
+export interface operations {
+    "post-introspect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description The access token value presented to the RS by the client instance. */
+                    access_token: string;
+                    access?: components["schemas"]["access"];
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        active: false;
+                    } | components["schemas"]["token-info"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+}
