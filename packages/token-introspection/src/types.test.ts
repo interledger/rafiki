@@ -1,5 +1,9 @@
 import { mockJwk, mockTokenInfo } from './test/helpers'
-import { isActiveTokenInfo, isClientWalletAddress, isClientJwk } from './types'
+import {
+  isActiveTokenInfo,
+  isClientWalletAddress,
+  isClientJwk
+} from './types'
 
 describe('types', (): void => {
   describe('isActiveTokenInfo', (): void => {
