@@ -279,7 +279,7 @@ export default function ViewWalletAddressPage() {
               </Flex>
             </Flex>
             <hr />
-in             <Flex direction='column' gap='4'>
+             <Flex direction='column' gap='4'>
               <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
                 Payments
               </Text>
