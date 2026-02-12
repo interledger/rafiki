@@ -31,15 +31,49 @@ export type components = {
       access: components["schemas"]["access"];
       /**
        * client
-       * @description Wallet address of the client instance that is making this request.
+       * @description Client identification for token introspection responses.
        *
        * When sending a non-continuation request to the AS, the client instance MUST identify itself by including the client field of the request and by signing the request.
        *
+       * Can be either:
+       * - An object with `walletAddress` for wallet-address-based client identification
+       * - An object with `jwk` for directed identity
+       *
+       * These are mutually exclusive.
+       *
+       * When using the `walletAddress` property:
        * A JSON Web Key Set document, including the public key that the client instance will use to protect this request and any continuation requests at the AS and any user-facing information about the client instance used in interactions, MUST be available at the wallet address + `/jwks.json` url.
+       *
+       * When using the `jwk` property (directed identity approach):
+       * The client instance provides its public key directly in the request, eliminating the need for the AS to fetch it from a wallet address. This approach enhances privacy by not requiring the client to expose a persistent wallet address identifier. The `jwk` property can only be used for non-interactive grant requests (i.e.: incoming payments).
        *
        * If sending a grant initiation request that requires RO interaction, the wallet address MUST serve necessary client display information.
        */
-      client: string;
+      client: OneOf<[{
+        /**
+         * Format: uri
+         * @description Wallet address of the client instance that is making this request.
+         */
+        walletAddress: string;
+      }, {
+        jwk: components["schemas"]["json-web-key"];
+      }]>;
+    };
+    "json-web-key": {
+      kid: string;
+      /**
+       * @description The cryptographic algorithm family used with the key. The only allowed value is `EdDSA`.
+       * @enum {string}
+       */
+      alg: "EdDSA";
+      /** @enum {string} */
+      use?: "sig";
+      /** @enum {string} */
+      kty: "OKP";
+      /** @enum {string} */
+      crv: "Ed25519";
+      /** @description The base64 url-encoded public key. */
+      x: string;
     };
     /** amount */
     amount: {
@@ -120,7 +154,7 @@ export type components = {
        * Format: uri
        * @description A string identifier indicating a specific resource at the RS.
        */
-      identifier: string;
+      identifier?: string;
       limits?: components["schemas"]["limits-outgoing"];
     };
     /** access-quote */
