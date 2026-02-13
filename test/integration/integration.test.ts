@@ -300,8 +300,8 @@ describe('Integration tests', (): void => {
           senderWalletAddress,
           grantContinue
         )
-        expect(spentAmounts0.spentDebitAmount).toBeUndefined()
-        expect(spentAmounts0.spentReceiveAmount).toBeUndefined()
+        expect(spentAmounts0.spentDebitAmount).toBeNull()
+        expect(spentAmounts0.spentReceiveAmount).toBeNull()
 
         const debitAmount = {
           assetCode: senderWalletAddress.assetCode,
@@ -339,7 +339,7 @@ describe('Integration tests', (): void => {
         expect(spentAmounts1.spentReceiveAmount).toMatchObject({
           assetCode: receiverWalletAddress.assetCode,
           assetScale: receiverWalletAddress.assetScale,
-          value: '50'
+          value: '49'
         })
 
         const outgoingPayment2 = await createOutgoingPayment(
@@ -370,7 +370,7 @@ describe('Integration tests', (): void => {
         expect(spentAmounts2.spentReceiveAmount).toMatchObject({
           assetCode: receiverWalletAddress.assetCode,
           assetScale: receiverWalletAddress.assetScale,
-          value: '100'
+          value: '98'
         })
 
         await getPublicIncomingPayment(incomingPayment.id, '98') // adjusted for ILP slippage

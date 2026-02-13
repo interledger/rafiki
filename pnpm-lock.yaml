@@ -959,8 +959,8 @@ importers:
   test/integration:
     devDependencies:
       '@interledger/open-payments':
-        specifier: 7.2.0
-        version: 7.2.0
+        specifier: 7.3.0
+        version: 7.3.0
       '@types/node':
         specifier: ^20.14.15
         version: 20.14.15
@@ -1023,8 +1023,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/open-payments':
-        specifier: 7.2.0
-        version: 7.2.0
+        specifier: 7.3.0
+        version: 7.3.0
       '@koa/bodyparser':
         specifier: ^5.1.1
         version: 5.1.1(koa@2.15.3)
@@ -6203,8 +6203,8 @@ packages:
       - supports-color
     dev: false
 
-  /@interledger/open-payments@7.2.0:
-    resolution: {integrity: sha512-Gf4USTPEQAgJhX5GhbS1qgkaklb392p9VNbYx9fX5ksgIMiG1NBjwYIxjQ+SoJnjQCkUQsdCoKc/k0SD2qRWMw==}
+  /@interledger/open-payments@7.3.0:
+    resolution: {integrity: sha512-TL85W/YN8GKdYZb255tC2u+ZarDXAuWbIVGZX5o27i2hiNuVbi3GTFlm0ZKjgcAVlf9nCwRhR5XS5N4vQ6oBtA==}
     dependencies:
       '@interledger/http-signature-utils': 2.0.3
       '@interledger/openapi': 2.0.4
