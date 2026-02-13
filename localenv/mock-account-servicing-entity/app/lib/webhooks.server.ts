@@ -40,6 +40,13 @@ export async function handleOutgoingPaymentCompletedFailed(wh: Webhook) {
     throw new Error('Invalid event type when handling outgoing payment webhook')
   }
   const payment = wh.data
+  // Don't handle webhook if it is referring to a tenant.
+  if (
+    process.env.OPERATOR_TENANT_ID &&
+    wh.tenantId !== process.env.OPERATOR_TENANT_ID
+  ) {
+    return
+  }
   const wa = payment['walletAddressId'] as string
   const acc = await mockAccounts.getByWalletAddressId(wa)
 
