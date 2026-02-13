@@ -49,7 +49,6 @@ import { FeeService } from '../../../fee/service'
 import { OutgoingPaymentGrantSpentAmounts } from './model'
 import { v4 as uuid } from 'uuid'
 import { OutgoingPaymentCardDetails } from './card/model'
-import { encryptDbData } from '../../../shared/utils'
 
 const DEFAULT_GRANT_LOCK_TIMEOUT_MS = 5000
 
@@ -962,18 +961,11 @@ export interface FundOutgoingPaymentOptions {
   tenantId: string
   amount: bigint
   transferId: string
-  dataToTransmit?: string
 }
 
 async function fundPayment(
   deps: ServiceDependencies,
-  {
-    id,
-    tenantId,
-    amount,
-    transferId,
-    dataToTransmit
-  }: FundOutgoingPaymentOptions
+  { id, tenantId, amount, transferId }: FundOutgoingPaymentOptions
 ): Promise<OutgoingPayment | FundingError> {
   return await deps.knex.transaction(async (trx) => {
     const payment = await OutgoingPayment.query(trx)
@@ -1019,14 +1011,7 @@ async function fundPayment(
     if (error) {
       return error
     }
-
-    await payment.$query(trx).patch({
-      state: OutgoingPaymentState.Sending,
-      dataToTransmit:
-        deps.config.dbEncryptionSecret && dataToTransmit
-          ? encryptDbData(dataToTransmit, deps.config.dbEncryptionSecret)
-          : dataToTransmit
-    })
+    await payment.$query(trx).patch({ state: OutgoingPaymentState.Sending })
 
     if (payment.initiatedBy === OutgoingPaymentInitiationReason.Card) {
       await sendWebhookEvent(
