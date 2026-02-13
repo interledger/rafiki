@@ -84,17 +84,33 @@ Rafiki reconstructs the same payload internally and validates the digest, timest
 Below is an example in JavaScript to sign an Admin API request:
 
 ```js title="Signing Admin API request example"
+import { createHmac } from 'crypto'
+import { canonicalize } from 'json-canonicalize'
+import { gql } from '@apollo/client'
+import { print } from 'graphql/language/printer'
+
 const timestamp = Date.now()
 const version = process.env.ADMIN_API_SIGNATURE_VERSION
 
-const { query, variables, operationName } = request
-const formattedRequest = {
-  variables,
-  operationName,
-  query: print(query)
+const GET_ASSET = gql`
+  query GetAsset($id: String!) {
+    asset(id: $id) {
+      id
+      code
+      scale
+    }
+  }
+`
+
+const requestBody = {
+  query: print(GET_ASSET),  // converts `DocumentNode` to string
+  variables: { id: 'asset-id-here' },
+  operationName: 'GetAsset'
 }
 
-const payload = `${timestamp}.${canonicalize(formattedRequest)}`
+// Canonicalize ensures both client and server produce identical JSON strings
+// by sorting object keys deterministically and normalizing whitespace.
+const payload = `${timestamp}.${canonicalize(requestBody)}`
 const hmac = createHmac('sha256', process.env.ADMIN_API_SECRET)
 hmac.update(payload)
 const digest = hmac.digest('hex')
