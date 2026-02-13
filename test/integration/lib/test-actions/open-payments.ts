@@ -34,7 +34,9 @@ export interface OpenPaymentsActions {
     accessToken: string,
     opts?: CreateIncomingPaymentOpts
   ): Promise<IncomingPayment>
-  grantRequestQuote(senderWalletAddress: WalletAddress): Promise<GrantWithAccessToken>
+  grantRequestQuote(
+    senderWalletAddress: WalletAddress
+  ): Promise<GrantWithAccessToken>
   createQuote(
     senderWalletAddress: WalletAddress,
     accessToken: string,
@@ -45,7 +47,9 @@ export interface OpenPaymentsActions {
     limits: GrantRequestPaymentLimits,
     finish?: InteractFinish
   ): Promise<PendingGrant>
-  pollGrantContinue(outgoingPaymentGrant: PendingGrant): Promise<GrantWithAccessToken>
+  pollGrantContinue(
+    outgoingPaymentGrant: PendingGrant
+  ): Promise<GrantWithAccessToken>
   grantContinue(
     outgoingPaymentGrant: PendingGrant,
     interact_ref: string
