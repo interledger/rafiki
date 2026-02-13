@@ -13,7 +13,7 @@ This signature authenticates the caller and ensures the request body has not bee
 
 Each request is HMAC‑signed with SHA‑256 using the tenant’s or operator’s API secret. This signature ensures that Rafiki can verify where the request originated and confirm that the payload data matches what was originally signed.
 
-All signed requests include two headers: the `signature` header and the `tenant-Id` header.
+All signed requests include two headers: the `signature` header and the `tenant-id` header.
 
 ### `signature` header
 
@@ -103,7 +103,7 @@ const GET_ASSET = gql`
 `
 
 const requestBody = {
-  query: print(GET_ASSET),  // converts `DocumentNode` to string
+  query: print(GET_ASSET), // converts `DocumentNode` to string
   variables: { id: 'asset-id-here' },
   operationName: 'GetAsset'
 }
