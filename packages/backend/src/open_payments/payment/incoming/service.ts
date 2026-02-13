@@ -22,6 +22,7 @@ import { AssetService } from '../../../asset/service'
 import { finalizeWebhookRecipients } from '../../../webhook/service'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { IncomingPaymentFilter } from '../../../graphql/generated/graphql'
+import Redis from 'ioredis'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -82,9 +83,13 @@ export interface IncomingPaymentService
     id: string,
     args: ProcessPartialPaymentArgs
   ): Promise<IncomingPayment | IncomingPaymentError>
+  updatePartialPaymentDecision(
+    options: PartialPaymentDecisionOptions
+  ): Promise<boolean>
 }
 
 export interface ServiceDependencies extends BaseService {
+  redis: Redis
   knex: TransactionOrKnex
   accountingService: AccountingService
   walletAddressService: WalletAddressService
@@ -112,7 +117,9 @@ export async function createIncomingPaymentService(
     processNext: () => processNextIncomingPayment(deps),
     update: (options) => updateIncomingPayment(deps, options),
     getPage: (options) => getPage(deps, options),
-    processPartialPayment: (id, args) => processPartialPayment(deps, id, args)
+    processPartialPayment: (id, args) => processPartialPayment(deps, id, args),
+    updatePartialPaymentDecision: (options) =>
+      updatePartialPaymentDecision(deps, options)
   }
 }
 
@@ -604,6 +611,33 @@ async function processPartialPayment(
   })
 
   return incomingPayment
+}
+
+const PARTIAL_PAYMENT_DECISION_PREFIX = 'partial_payment_decision'
+
+interface PartialPaymentDecisionOptions {
+  id: string
+  partialPaymentId: string
+  decision: boolean
+}
+
+async function updatePartialPaymentDecision(
+  deps: ServiceDependencies,
+  options: PartialPaymentDecisionOptions
+): Promise<boolean> {
+  const { redis, logger } = deps
+  const cacheKey = `${PARTIAL_PAYMENT_DECISION_PREFIX}:${options.id}:${options.partialPaymentId}`
+  try {
+    await redis.set(cacheKey, JSON.stringify({ success: options.decision }))
+    return true
+  } catch (e) {
+    logger.error({
+      e,
+      incomingPaymentId: options.id,
+      partialPaymentId: options.partialPaymentId
+    })
+    return false
+  }
 }
 
 async function getPage(

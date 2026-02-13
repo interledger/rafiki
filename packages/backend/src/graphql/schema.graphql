@@ -377,6 +377,11 @@ type Mutation {
   confirmPartialIncomingPayment(
     input: ConfirmPartialIncomingPaymentInput!
   ): ConfirmPartialIncomingPaymentResponse!
+
+  "Rejects a partial incoming payment."
+  rejectPartialIncomingPayment(
+    input: RejectPartialIncomingPaymentInput!
+  ): RejectPartialIncomingPaymentResponse!
 }
 
 type PageInfo {
@@ -1754,6 +1759,17 @@ input ConfirmPartialIncomingPaymentInput {
 }
 
 type ConfirmPartialIncomingPaymentResponse {
+  success: Boolean!
+}
+
+input RejectPartialIncomingPaymentInput {
+  incomingPaymentId: ID!
+  partialIncomingPaymentId: ID!
+  "Reason why this incoming payment has been canceled. This value will be publicly visible in the metadata field if this incoming payment is requested through Open Payments."
+  reason: String
+}
+
+type RejectPartialIncomingPaymentResponse {
   success: Boolean!
 }
 

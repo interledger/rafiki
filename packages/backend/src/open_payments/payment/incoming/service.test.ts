@@ -34,6 +34,7 @@ import { withConfigOverride } from '../../../tests/helpers'
 import { poll } from '../../../shared/utils'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { getPageTests } from '../../../shared/baseModel.test'
+import Redis from 'ioredis'
 
 describe('Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -1278,6 +1279,77 @@ describe('Incoming Payment Service', (): void => {
           expect(webhookEvent.webhooks).toHaveLength(1)
         }
       )
+    )
+  })
+
+  describe('updatePartialPaymentDecision', (): void => {
+    const PARTIAL_PAYMENT_DECISION_PREFIX = 'partial_payment_decision'
+    let redis: Redis
+    let incomingPayment: IncomingPayment
+
+    beforeEach(async (): Promise<void> => {
+      redis = await deps.use('redis')
+      const walletAddress = await createWalletAddress(deps)
+      incomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: walletAddress.id,
+        tenantId: walletAddress.tenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
+      })
+    })
+    afterEach(async (): Promise<void> => {
+      jest.clearAllMocks()
+    })
+    test.each`
+      action
+      ${'confirm'}
+      ${'reject'}
+    `(
+      'can successfully $action partial payment',
+      async ({ action }): Promise<void> => {
+        const decision = action === 'confirm'
+        const partialPaymentId = uuid()
+        const redisSpy = jest.spyOn(redis, 'set')
+        await expect(
+          incomingPaymentService.updatePartialPaymentDecision({
+            id: incomingPayment.id,
+            partialPaymentId,
+            decision
+          })
+        ).resolves.toEqual(true)
+
+        const cacheKey = `${PARTIAL_PAYMENT_DECISION_PREFIX}:${incomingPayment.id}:${partialPaymentId}`
+        expect(redisSpy).toHaveBeenCalledWith(
+          cacheKey,
+          JSON.stringify({ success: decision })
+        )
+      }
+    )
+
+    test.each`
+      action
+      ${'confirm'}
+      ${'reject'}
+    `(
+      '$action returns false if cache write fails',
+      async ({ action }): Promise<void> => {
+        const decision = action === 'confirm'
+        const partialPaymentId = uuid()
+        const redisSpy = jest.spyOn(redis, 'set').mockImplementationOnce(() => {
+          throw new Error('unknown error')
+        })
+        await expect(
+          incomingPaymentService.updatePartialPaymentDecision({
+            id: incomingPayment.id,
+            partialPaymentId,
+            decision
+          })
+        ).resolves.toEqual(false)
+        const cacheKey = `${PARTIAL_PAYMENT_DECISION_PREFIX}:${incomingPayment.id}:${partialPaymentId}`
+        expect(redisSpy).toHaveBeenCalledWith(
+          cacheKey,
+          JSON.stringify({ success: decision })
+        )
+      }
     )
   })
 
