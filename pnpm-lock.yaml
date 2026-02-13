@@ -186,8 +186,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/open-payments':
-        specifier: 7.0.0
-        version: 7.0.0
+        specifier: 7.3.0
+        version: 7.3.0
       '@interledger/openapi':
         specifier: 2.0.2
         version: 2.0.2
@@ -340,8 +340,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/open-payments':
-        specifier: 7.0.0
-        version: 7.0.0
+        specifier: 7.3.0
+        version: 7.3.0
       '@interledger/openapi':
         specifier: 2.0.2
         version: 2.0.2
@@ -962,8 +962,8 @@ importers:
   test/integration:
     devDependencies:
       '@interledger/open-payments':
-        specifier: 7.0.0
-        version: 7.0.0
+        specifier: 7.3.0
+        version: 7.3.0
       '@types/node':
         specifier: ^20.14.15
         version: 20.14.15
@@ -1026,8 +1026,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/open-payments':
-        specifier: 7.0.0
-        version: 7.0.0
+        specifier: 7.3.0
+        version: 7.3.0
       '@koa/bodyparser':
         specifier: ^5.1.1
         version: 5.1.1(koa@2.16.3)
@@ -5717,11 +5717,11 @@ packages:
       jose: 5.4.0
       uuid: 9.0.1
 
-  /@interledger/open-payments@7.0.0:
-    resolution: {integrity: sha512-6xPR5d1lStKvOFoQHatchoh5mYSmrbHE2dZotoTq/jhmxU+/Zk56hCJx7VvNcAz4F8Zqkgne/hM8ppcCEDKgtg==}
+  /@interledger/open-payments@7.3.0:
+    resolution: {integrity: sha512-TL85W/YN8GKdYZb255tC2u+ZarDXAuWbIVGZX5o27i2hiNuVbi3GTFlm0ZKjgcAVlf9nCwRhR5XS5N4vQ6oBtA==}
     dependencies:
       '@interledger/http-signature-utils': 2.0.3
-      '@interledger/openapi': 2.0.3
+      '@interledger/openapi': 2.0.4
       base64url: 3.0.1
       http-message-signatures: 0.1.2
       ky: 1.3.0
@@ -5746,8 +5746,8 @@ packages:
       - supports-color
     dev: false
 
-  /@interledger/openapi@2.0.3:
-    resolution: {integrity: sha512-5wGncgpc/WVHd+RNE9oZHzdNdZK8UjaOqLmMnPm6kyNfXBtcZmDOumE00jEYa4BOXbaIm82qB4zD/dLc46AjRA==}
+  /@interledger/openapi@2.0.4:
+    resolution: {integrity: sha512-3V6xCk2dKnpBiS6ppBDtQsItZ4r1r/YO9T93Pag2yMxIIAe0NAwUfq5yWPYJtNTQ8j2br+z/AwlgWwenxKffWg==}
     dependencies:
       '@apidevtools/json-schema-ref-parser': 11.7.2
       ajv: 8.17.1

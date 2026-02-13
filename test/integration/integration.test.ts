@@ -252,7 +252,8 @@ describe('Integration tests', (): void => {
           pollGrantContinue,
           createOutgoingPayment,
           getOutgoingPayment,
-          getPublicIncomingPayment
+          getPublicIncomingPayment,
+          getOutgoingPaymentGrantSpentAmounts
         } = testActions.openPayments
         const { consentInteraction } = testActions
 
@@ -295,6 +296,13 @@ describe('Integration tests', (): void => {
         await consentInteraction(outgoingPaymentGrant, senderWalletAddress)
         const grantContinue = await pollGrantContinue(outgoingPaymentGrant)
 
+        const spentAmounts0 = await getOutgoingPaymentGrantSpentAmounts(
+          senderWalletAddress,
+          grantContinue
+        )
+        expect(spentAmounts0.spentDebitAmount).toBeNull()
+        expect(spentAmounts0.spentReceiveAmount).toBeNull()
+
         const debitAmount = {
           assetCode: senderWalletAddress.assetCode,
           assetScale: senderWalletAddress.assetScale,
@@ -319,6 +327,21 @@ describe('Integration tests', (): void => {
 
         expect(outgoingPayment1.debitAmount).toMatchObject(debitAmount)
 
+        const spentAmounts1 = await getOutgoingPaymentGrantSpentAmounts(
+          senderWalletAddress,
+          grantContinue
+        )
+        expect(spentAmounts1.spentDebitAmount).toMatchObject({
+          assetCode: senderWalletAddress.assetCode,
+          assetScale: senderWalletAddress.assetScale,
+          value: '50'
+        })
+        expect(spentAmounts1.spentReceiveAmount).toMatchObject({
+          assetCode: receiverWalletAddress.assetCode,
+          assetScale: receiverWalletAddress.assetScale,
+          value: '49'
+        })
+
         const outgoingPayment2 = await createOutgoingPayment(
           senderWalletAddress,
           grantContinue,
@@ -334,6 +357,21 @@ describe('Integration tests', (): void => {
           5,
           0.5
         )
+
+        const spentAmounts2 = await getOutgoingPaymentGrantSpentAmounts(
+          senderWalletAddress,
+          grantContinue
+        )
+        expect(spentAmounts2.spentDebitAmount).toMatchObject({
+          assetCode: senderWalletAddress.assetCode,
+          assetScale: senderWalletAddress.assetScale,
+          value: '100'
+        })
+        expect(spentAmounts2.spentReceiveAmount).toMatchObject({
+          assetCode: receiverWalletAddress.assetCode,
+          assetScale: receiverWalletAddress.assetScale,
+          value: '98'
+        })
 
         await getPublicIncomingPayment(incomingPayment.id, '98') // adjusted for ILP slippage
       })

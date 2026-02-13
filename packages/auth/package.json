@@ -16,8 +16,6 @@
     "test:sincemain": "pnpm test -- --changedSince=main",
     "test:sincemain:cov": "pnpm test:sincemain --coverage",
     "prepack": "pnpm build",
-    "postinstall": "pnpm copy-op-schemas",
-    "copy-op-schemas": "cp ./node_modules/@interledger/open-payments/dist/openapi/specs/auth-server.yaml ./node_modules/@interledger/open-payments/dist/openapi/specs/schemas.yaml ./src/openapi/specs/",
     "copy-files": "cp src/graphql/schema.graphql dist/graphql/ && cp -r ./src/openapi ./dist/",
     "dev": "ts-node-dev --inspect=0.0.0.0:9229 --respawn --transpile-only src/index.ts"
   },
@@ -30,7 +28,7 @@
     "@graphql-tools/load": "^8.0.12",
     "@graphql-tools/schema": "^10.0.16",
     "@interledger/http-signature-utils": "2.0.2",
-    "@interledger/open-payments": "7.0.0",
+    "@interledger/open-payments": "7.3.0",
     "@interledger/openapi": "2.0.2",
     "@koa/cors": "^5.0.0",
     "@koa/router": "^12.0.2",

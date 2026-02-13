@@ -14,6 +14,7 @@ import {
   AccessType,
   AccessAction,
   AuthenticatedClient,
+  isFinalizedGrantWithAccessToken,
   mockGrant,
   mockAccessToken,
   mockPendingGrant
@@ -144,6 +145,7 @@ describe('Grant Service', (): void => {
     test('creates new grant when no prior existing grant', async () => {
       const managementId = uuid()
       const newOpenPaymentsGrant = mockGrant()
+      assert(isFinalizedGrantWithAccessToken(newOpenPaymentsGrant))
       newOpenPaymentsGrant.access_token.manage = `${faker.internet.url()}token/${managementId}`
       const openPaymentsGrantRequestSpy = jest
         .spyOn(openPaymentsClient.grant, 'request')
@@ -197,6 +199,7 @@ describe('Grant Service', (): void => {
 
     test('creates new grant with additional subset actions', async () => {
       const newOpenPaymentsGrant = mockGrant()
+      assert(isFinalizedGrantWithAccessToken(newOpenPaymentsGrant))
       const openPaymentsGrantRequestSpy = jest
         .spyOn(openPaymentsClient.grant, 'request')
         .mockResolvedValueOnce({
@@ -266,6 +269,7 @@ describe('Grant Service', (): void => {
 
       const managementId = uuid()
       const newOpenPaymentsGrant = mockGrant()
+      assert(isFinalizedGrantWithAccessToken(newOpenPaymentsGrant))
       newOpenPaymentsGrant.access_token.manage = `${faker.internet.url()}token/${managementId}`
       const openPaymentsGrantRequestSpy = jest
         .spyOn(openPaymentsClient.grant, 'request')
@@ -595,6 +599,7 @@ describe('Grant Service', (): void => {
     test('creates new grant when no prior existing grant', async () => {
       const managementId = uuid()
       const newOpenPaymentsGrant = mockGrant()
+      assert(isFinalizedGrantWithAccessToken(newOpenPaymentsGrant))
       newOpenPaymentsGrant.access_token.manage = `${faker.internet.url()}token/${managementId}`
       const openPaymentsGrantRequestSpy = jest
         .spyOn(openPaymentsClient.grant, 'request')
@@ -648,6 +653,7 @@ describe('Grant Service', (): void => {
 
     test('creates new grant with additional subset actions', async () => {
       const newOpenPaymentsGrant = mockGrant()
+      assert(isFinalizedGrantWithAccessToken(newOpenPaymentsGrant))
       const openPaymentsGrantRequestSpy = jest
         .spyOn(openPaymentsClient.grant, 'request')
         .mockResolvedValueOnce({
@@ -717,6 +723,7 @@ describe('Grant Service', (): void => {
 
       const managementId = uuid()
       const newOpenPaymentsGrant = mockGrant()
+      assert(isFinalizedGrantWithAccessToken(newOpenPaymentsGrant))
       newOpenPaymentsGrant.access_token.manage = `${faker.internet.url()}token/${managementId}`
       const openPaymentsGrantRequestSpy = jest
         .spyOn(openPaymentsClient.grant, 'request')

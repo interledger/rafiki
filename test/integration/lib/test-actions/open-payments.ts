@@ -1,14 +1,15 @@
 import assert from 'assert'
 import {
-  Grant,
   GrantRequest,
+  GrantWithAccessToken,
   IncomingPayment,
   OutgoingPayment,
+  OutgoingPaymentGrantSpentAmounts,
   PendingGrant,
   PublicIncomingPayment,
   Quote,
   WalletAddress,
-  isFinalizedGrant,
+  isFinalizedGrantWithAccessToken,
   isPendingGrant
 } from '@interledger/open-payments'
 import type { MockASE } from 'test-lib'
@@ -27,13 +28,15 @@ export interface OpenPaymentsActionsDeps {
 export interface OpenPaymentsActions {
   grantRequestIncomingPayment(
     receiverWalletAddress: WalletAddress
-  ): Promise<Grant>
+  ): Promise<GrantWithAccessToken>
   createIncomingPayment(
     receiverWalletAddress: WalletAddress,
     accessToken: string,
     opts?: CreateIncomingPaymentOpts
   ): Promise<IncomingPayment>
-  grantRequestQuote(senderWalletAddress: WalletAddress): Promise<Grant>
+  grantRequestQuote(
+    senderWalletAddress: WalletAddress
+  ): Promise<GrantWithAccessToken>
   createQuote(
     senderWalletAddress: WalletAddress,
     accessToken: string,
@@ -44,24 +47,30 @@ export interface OpenPaymentsActions {
     limits: GrantRequestPaymentLimits,
     finish?: InteractFinish
   ): Promise<PendingGrant>
-  pollGrantContinue(outgoingPaymentGrant: PendingGrant): Promise<Grant>
+  pollGrantContinue(
+    outgoingPaymentGrant: PendingGrant
+  ): Promise<GrantWithAccessToken>
   grantContinue(
     outgoingPaymentGrant: PendingGrant,
     interact_ref: string
-  ): Promise<Grant>
+  ): Promise<GrantWithAccessToken>
   createOutgoingPayment(
     senderWalletAddress: WalletAddress,
-    grant: Grant,
+    grant: GrantWithAccessToken,
     createArgs: UnionOmit<CreateOutgoingPaymentArgs, 'walletAddress'>
   ): Promise<OutgoingPayment>
   getOutgoingPayment(
     url: string,
-    grantContinue: Grant
+    grantContinue: GrantWithAccessToken
   ): Promise<OutgoingPayment>
   getPublicIncomingPayment(
     url: string,
     amountValueToSend: string
   ): Promise<PublicIncomingPayment>
+  getOutgoingPaymentGrantSpentAmounts(
+    senderWalletAddress: WalletAddress,
+    grant: GrantWithAccessToken
+  ): Promise<OutgoingPaymentGrantSpentAmounts>
 }
 
 export function createOpenPaymentsActions(
@@ -87,13 +96,15 @@ export function createOpenPaymentsActions(
     getOutgoingPayment: (url, grantContinue) =>
       getOutgoingPayment(deps, url, grantContinue),
     getPublicIncomingPayment: (url, amountValueToSend) =>
-      getPublicIncomingPayment(deps, url, amountValueToSend)
+      getPublicIncomingPayment(deps, url, amountValueToSend),
+    getOutgoingPaymentGrantSpentAmounts: (senderWalletAddress, grant) =>
+      getOutgoingPaymentGrantSpentAmounts(deps, senderWalletAddress, grant)
   }
 }
 async function grantRequestIncomingPayment(
   deps: OpenPaymentsActionsDeps,
   receiverWalletAddress: WalletAddress
-): Promise<Grant> {
+): Promise<GrantWithAccessToken> {
   const { sendingASE } = deps
 
   const grant = await sendingASE.opClient.grant.request(
@@ -111,7 +122,7 @@ async function grantRequestIncomingPayment(
       }
     }
   )
-  assert(!isPendingGrant(grant))
+  assert(isFinalizedGrantWithAccessToken(grant))
   return grant
 }
 
@@ -182,7 +193,7 @@ async function createIncomingPayment(
 async function grantRequestQuote(
   deps: OpenPaymentsActionsDeps,
   senderWalletAddress: WalletAddress
-): Promise<Grant> {
+): Promise<GrantWithAccessToken> {
   const { sendingASE } = deps
   const grant = await sendingASE.opClient.grant.request(
     {
@@ -199,7 +210,7 @@ async function grantRequestQuote(
       }
     }
   )
-  assert(!isPendingGrant(grant))
+  assert(isFinalizedGrantWithAccessToken(grant))
   return grant
 }
 
@@ -271,7 +282,7 @@ async function grantRequestOutgoingPayment(
 async function pollGrantContinue(
   deps: OpenPaymentsActionsDeps,
   outgoingPaymentGrant: PendingGrant
-): Promise<Grant> {
+): Promise<GrantWithAccessToken> {
   const { sendingASE } = deps
   const { access_token, uri } = outgoingPaymentGrant.continue
   const grantContinue = await poll(
@@ -285,7 +296,7 @@ async function pollGrantContinue(
     5
   )
 
-  assert(isFinalizedGrant(grantContinue))
+  assert(isFinalizedGrantWithAccessToken(grantContinue))
   return grantContinue
 }
 
@@ -293,7 +304,7 @@ async function grantContinue(
   deps: OpenPaymentsActionsDeps,
   outgoingPaymentGrant: PendingGrant,
   interact_ref: string
-): Promise<Grant> {
+): Promise<GrantWithAccessToken> {
   const { sendingASE } = deps
   const { access_token, uri } = outgoingPaymentGrant.continue
   const grantContinue = await sendingASE.opClient.grant.continue(
@@ -304,14 +315,14 @@ async function grantContinue(
     { interact_ref }
   )
 
-  assert(isFinalizedGrant(grantContinue))
+  assert(isFinalizedGrantWithAccessToken(grantContinue))
   return grantContinue
 }
 
 async function createOutgoingPayment(
   deps: OpenPaymentsActionsDeps,
   senderWalletAddress: WalletAddress,
-  grantContinue: Grant,
+  grantContinue: GrantWithAccessToken,
   createArgs: UnionOmit<CreateOutgoingPaymentArgs, 'walletAddress'>
 ): Promise<OutgoingPayment> {
   const { sendingASE } = deps
@@ -365,7 +376,7 @@ async function createOutgoingPayment(
 async function getOutgoingPayment(
   deps: OpenPaymentsActionsDeps,
   url: string,
-  grantContinue: Grant
+  grantContinue: GrantWithAccessToken
 ): Promise<OutgoingPayment> {
   const { sendingASE } = deps
   const outgoingPayment = await sendingASE.opClient.outgoingPayment.get({
@@ -392,4 +403,20 @@ async function getPublicIncomingPayment(
   expect(incomingPayment.receivedAmount.value).toBe(expectedReceiveAmount)
 
   return incomingPayment
+}
+
+async function getOutgoingPaymentGrantSpentAmounts(
+  deps: OpenPaymentsActionsDeps,
+  senderWalletAddress: WalletAddress,
+  grant: GrantWithAccessToken
+): Promise<OutgoingPaymentGrantSpentAmounts> {
+  const { sendingASE } = deps
+
+  const spentAmounts =
+    await sendingASE.opClient.outgoingPayment.getGrantSpentAmounts({
+      url: senderWalletAddress.resourceServer,
+      accessToken: grant.access_token.value
+    })
+
+  return spentAmounts
 }
