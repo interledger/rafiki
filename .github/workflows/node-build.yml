@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm checks
       - run: pnpm lint:docs
@@ -27,7 +27,7 @@ jobs:
     needs: prerequisite
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-depth: 0
@@ -46,7 +46,7 @@ jobs:
     needs: prerequisite
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter frontend typecheck
       - run: pnpm --filter frontend build
@@ -56,7 +56,7 @@ jobs:
     needs: prerequisite
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-depth: 0
@@ -75,7 +75,7 @@ jobs:
     needs: prerequisite
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter token-introspection test
       - name: AsyncAPI extension
@@ -90,7 +90,7 @@ jobs:
     needs: prerequisite
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter card-service test:ci
       - run: pnpm --filter card-service build
@@ -106,7 +106,7 @@ jobs:
     needs: prerequisite
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter point-of-sale build
       - run: pnpm --filter point-of-sale test:ci
@@ -116,7 +116,7 @@ jobs:
     needs: prerequisite
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter mock-account-servicing-entity build
       - run: pnpm --filter mock-account-servicing-entity typecheck
@@ -128,7 +128,7 @@ jobs:
       matrix:
         package: [auth, backend]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/workflows/rafiki/env-setup
       - name: generate ${{ matrix.package }} graphql
         run: pnpm --filter ${{ matrix.package }} generate
@@ -159,7 +159,7 @@ jobs:
           - "./.github/codeql/source.yml"
           - "./.github/codeql/tests.yml"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/workflows/rafiki/env-setup
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
@@ -175,7 +175,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-depth: 0
@@ -203,7 +203,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-depth: 0
@@ -357,7 +357,7 @@ jobs:
         integration-test
       ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm build
 
@@ -369,7 +369,7 @@ jobs:
       dockerPush: ${{ steps.version-generator.outputs.PUSH_DOCKER_IMAGE }}
       generateRelease: ${{ steps.version-generator.outputs.GENERATE_RELEASE }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           fetch-tags: true
@@ -457,7 +457,7 @@ jobs:
           - point-of-sale
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
@@ -495,7 +495,7 @@ jobs:
           - card-service
           - point-of-sale
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Fetch docker image from cache
         uses: actions/cache/restore@v4
         with:
@@ -533,7 +533,7 @@ jobs:
           - card-service
           - point-of-sale
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Fetch docker image from cache
         uses: actions/cache/restore@v4
         with:
@@ -567,7 +567,7 @@ jobs:
           - card-service
           - point-of-sale
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/image-push
         with:
           app_name: rafiki
@@ -590,7 +590,7 @@ jobs:
           - card-service
           - point-of-sale
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Push manifest list
         uses: ./.github/actions/manifest-push
         with:
@@ -605,7 +605,7 @@ jobs:
     if: needs.version-generator.outputs.generateRelease == 'true'
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Generate CHANGELOG data
         id: changelog
         uses: requarks/changelog-action@v1
