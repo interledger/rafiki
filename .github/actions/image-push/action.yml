@@ -28,7 +28,7 @@ runs:
       with:
         version: ${{ inputs.version }}
     - name: Fetch docker image from cache
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         path: /tmp/${{ github.sha }}-${{ inputs.package }}-${{ inputs.platform_name }}-${{ inputs.version }}.tar
         key: ${{ github.sha }}-${{ inputs.package }}-${{ inputs.platform_name }}-${{ inputs.version }}
