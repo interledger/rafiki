@@ -131,15 +131,15 @@ importers:
         specifier: ^9.0.1
         version: 9.0.1
       yaml:
-        specifier: ^2.7.0
-        version: 2.7.0
+        specifier: ^2.8.2
+        version: 2.8.2
       zod:
         specifier: ^3.22.4
         version: 3.23.4
     devDependencies:
       '@remix-run/dev':
         specifier: ^2.16.4
-        version: 2.16.4(@remix-run/react@2.17.4)(@remix-run/serve@2.16.4)(@types/node@18.11.9)(typescript@5.4.3)(yaml@2.7.0)
+        version: 2.16.4(@remix-run/react@2.17.4)(@remix-run/serve@2.16.4)(@types/node@18.11.9)(typescript@5.4.3)(yaml@2.8.2)
       '@tailwindcss/forms':
         specifier: ^0.5.10
         version: 0.5.10(tailwindcss@3.4.17)
@@ -754,15 +754,15 @@ importers:
         specifier: ^9.0.1
         version: 9.0.1
       yaml:
-        specifier: ^2.7.0
-        version: 2.7.0
+        specifier: ^2.8.2
+        version: 2.8.2
       zod:
         specifier: ^3.22.4
         version: 3.22.4
     devDependencies:
       '@remix-run/dev':
         specifier: ^2.16.4
-        version: 2.16.4(@remix-run/react@2.17.4)(@remix-run/serve@2.17.4)(@types/node@20.12.7)(typescript@5.8.3)(yaml@2.7.0)
+        version: 2.16.4(@remix-run/react@2.17.4)(@remix-run/serve@2.17.4)(@types/node@20.12.7)(typescript@5.8.3)(yaml@2.8.2)
       '@remix-run/eslint-config':
         specifier: ^2.13.1
         version: 2.13.1(eslint@8.57.1)(jest@29.7.0)(react@18.2.0)(typescript@5.8.3)
@@ -980,8 +980,8 @@ importers:
         specifier: ^9.0.1
         version: 9.0.1
       yaml:
-        specifier: ^2.7.0
-        version: 2.7.0
+        specifier: ^2.8.2
+        version: 2.8.2
 
   test/performance:
     dependencies:
@@ -1056,8 +1056,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/mock-account-service-lib
       yaml:
-        specifier: ^2.7.0
-        version: 2.7.0
+        specifier: ^2.8.2
+        version: 2.8.2
 
 packages:
 
@@ -4618,7 +4618,7 @@ packages:
       string-env-interpolation: 1.0.1
       ts-log: 2.2.5
       tslib: 2.8.1
-      yaml: 2.7.0
+      yaml: 2.8.2
       yargs: 17.7.2
     transitivePeerDependencies:
       - '@babel/core'
@@ -7165,7 +7165,7 @@ packages:
     resolution: {integrity: sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==}
     dev: false
 
-  /@remix-run/dev@2.16.4(@remix-run/react@2.17.4)(@remix-run/serve@2.16.4)(@types/node@18.11.9)(typescript@5.4.3)(yaml@2.7.0):
+  /@remix-run/dev@2.16.4(@remix-run/react@2.17.4)(@remix-run/serve@2.16.4)(@types/node@18.11.9)(typescript@5.4.3)(yaml@2.8.2):
     resolution: {integrity: sha512-MzmcIjeEQkWAamSqWZm0tCdxxcK4HPFzaL8XCqkcRHVfhwJJXOZLp1GN/dHaokekI0cUvNIgCtm/bvHgjHb3Ng==}
     engines: {node: '>=18.0.0'}
     hasBin: true
@@ -7242,7 +7242,7 @@ packages:
       tsconfig-paths: 4.1.0
       typescript: 5.4.3
       valibot: 0.41.0(typescript@5.4.3)
-      vite-node: 3.0.0-beta.2(@types/node@18.11.9)(yaml@2.7.0)
+      vite-node: 3.0.0-beta.2(@types/node@18.11.9)(yaml@2.8.2)
       ws: 7.5.10
     transitivePeerDependencies:
       - '@types/node'
@@ -7263,7 +7263,7 @@ packages:
       - yaml
     dev: true
 
-  /@remix-run/dev@2.16.4(@remix-run/react@2.17.4)(@remix-run/serve@2.17.4)(@types/node@20.12.7)(typescript@5.8.3)(yaml@2.7.0):
+  /@remix-run/dev@2.16.4(@remix-run/react@2.17.4)(@remix-run/serve@2.17.4)(@types/node@20.12.7)(typescript@5.8.3)(yaml@2.8.2):
     resolution: {integrity: sha512-MzmcIjeEQkWAamSqWZm0tCdxxcK4HPFzaL8XCqkcRHVfhwJJXOZLp1GN/dHaokekI0cUvNIgCtm/bvHgjHb3Ng==}
     engines: {node: '>=18.0.0'}
     hasBin: true
@@ -7340,7 +7340,7 @@ packages:
       tsconfig-paths: 4.1.0
       typescript: 5.8.3
       valibot: 0.41.0(typescript@5.8.3)
-      vite-node: 3.0.0-beta.2(@types/node@20.12.7)(yaml@2.7.0)
+      vite-node: 3.0.0-beta.2(@types/node@20.12.7)(yaml@2.8.2)
       ws: 7.5.10
     transitivePeerDependencies:
       - '@types/node'
@@ -10183,7 +10183,7 @@ packages:
       unist-util-visit: 5.0.0
       unstorage: 1.17.4
       vfile: 6.0.3
-      vite: 6.4.1(@types/node@20.12.7)(yaml@2.7.0)
+      vite: 6.4.1(@types/node@20.12.7)(yaml@2.8.2)
       vitefu: 1.1.1(vite@6.4.1)
       xxhash-wasm: 1.1.0
       yargs-parser: 21.1.1
@@ -12326,7 +12326,7 @@ packages:
     resolution: {integrity: sha512-plizRs/Vf15H+GCVxq2EUvyPK7ei9b/cVesHvjnX4xaXjM9spHe2Ytq0BitndFgvTJ3E3NljPNUEl7BAN43iZw==}
     engines: {node: '>= 6.0.0'}
     dependencies:
-      yaml: 2.7.0
+      yaml: 2.8.2
     dev: true
 
   /docker-modem@3.0.6:
@@ -19772,7 +19772,7 @@ packages:
     dependencies:
       lilconfig: 3.1.3
       postcss: 8.5.1
-      yaml: 2.7.0
+      yaml: 2.8.2
     dev: true
 
   /postcss-modules-extract-imports@3.0.0(postcss@8.5.1):
@@ -21770,7 +21770,7 @@ packages:
       remark-mdx: 3.1.1
       unist-util-visit: 5.0.0
       vfile: 6.0.3
-      yaml: 2.7.0
+      yaml: 2.8.2
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -23583,7 +23583,7 @@ packages:
       - terser
     dev: true
 
-  /vite-node@3.0.0-beta.2(@types/node@18.11.9)(yaml@2.7.0):
+  /vite-node@3.0.0-beta.2(@types/node@18.11.9)(yaml@2.8.2):
     resolution: {integrity: sha512-ofTf6cfRdL30Wbl9n/BX81EyIR5s4PReLmSurrxQ+koLaWUNOEo8E0lCM53OJkb8vpa2URM2nSrxZsIFyvY1rg==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
@@ -23592,7 +23592,7 @@ packages:
       debug: 4.4.0
       es-module-lexer: 1.6.0
       pathe: 1.1.2
-      vite: 6.4.1(@types/node@18.11.9)(yaml@2.7.0)
+      vite: 6.4.1(@types/node@18.11.9)(yaml@2.8.2)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -23608,7 +23608,7 @@ packages:
       - yaml
     dev: true
 
-  /vite-node@3.0.0-beta.2(@types/node@20.12.7)(yaml@2.7.0):
+  /vite-node@3.0.0-beta.2(@types/node@20.12.7)(yaml@2.8.2):
     resolution: {integrity: sha512-ofTf6cfRdL30Wbl9n/BX81EyIR5s4PReLmSurrxQ+koLaWUNOEo8E0lCM53OJkb8vpa2URM2nSrxZsIFyvY1rg==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
@@ -23617,7 +23617,7 @@ packages:
       debug: 4.4.3(supports-color@9.4.0)
       es-module-lexer: 1.6.0
       pathe: 1.1.2
-      vite: 6.4.1(@types/node@20.12.7)(yaml@2.7.0)
+      vite: 6.4.1(@types/node@20.12.7)(yaml@2.8.2)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -23705,7 +23705,7 @@ packages:
       fsevents: 2.3.3
     dev: true
 
-  /vite@6.4.1(@types/node@18.11.9)(yaml@2.7.0):
+  /vite@6.4.1(@types/node@18.11.9)(yaml@2.8.2):
     resolution: {integrity: sha512-+Oxm7q9hDoLMyJOYfUYBuHQo+dkAloi33apOPP56pzj+vsdJDzr+j1NISE5pyaAuKL4A3UD34qd0lx5+kfKp2g==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
@@ -23752,12 +23752,12 @@ packages:
       postcss: 8.5.3
       rollup: 4.39.0
       tinyglobby: 0.2.15
-      yaml: 2.7.0
+      yaml: 2.8.2
     optionalDependencies:
       fsevents: 2.3.3
     dev: true
 
-  /vite@6.4.1(@types/node@20.12.7)(yaml@2.7.0):
+  /vite@6.4.1(@types/node@20.12.7)(yaml@2.8.2):
     resolution: {integrity: sha512-+Oxm7q9hDoLMyJOYfUYBuHQo+dkAloi33apOPP56pzj+vsdJDzr+j1NISE5pyaAuKL4A3UD34qd0lx5+kfKp2g==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
@@ -23804,7 +23804,7 @@ packages:
       postcss: 8.5.3
       rollup: 4.39.0
       tinyglobby: 0.2.15
-      yaml: 2.7.0
+      yaml: 2.8.2
     optionalDependencies:
       fsevents: 2.3.3
 
@@ -23816,7 +23816,7 @@ packages:
       vite:
         optional: true
     dependencies:
-      vite: 6.4.1(@types/node@20.12.7)(yaml@2.7.0)
+      vite: 6.4.1(@types/node@20.12.7)(yaml@2.8.2)
     dev: false
 
   /vscode-jsonrpc@8.2.0:
@@ -24244,9 +24244,9 @@ packages:
     resolution: {integrity: sha512-2PTINUwsRqSd+s8XxKaJWQlUuEMHJQyEuh2edBbW8KNJz0SJPwUSD2zRWqezFEdN7IzAgeuYHFUCF7o8zRdZ0A==}
     dev: true
 
-  /yaml@2.7.0:
-    resolution: {integrity: sha512-+hSoy/QHluxmC9kCIJyL/uyFmLmc+e5CFR5Wa+bpIhIj85LVb9ZH2nVnqrHoSvKogwODv0ClqZkmiSSaIH5LTA==}
-    engines: {node: '>= 14'}
+  /yaml@2.8.2:
+    resolution: {integrity: sha512-mplynKqc1C2hTVYxd0PU2xQAc22TI1vShAYGksCCfxbn/dFwnHTNi1bvYsBTkhdUNtGIf5xNOg938rrSSYvS9A==}
+    engines: {node: '>= 14.6'}
     hasBin: true
 
   /yargs-parser@18.1.3:
