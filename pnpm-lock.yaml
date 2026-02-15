@@ -503,8 +503,8 @@ importers:
         specifier: ^12.0.4
         version: 12.0.4
       '@types/lodash':
-        specifier: ^4.17.15
-        version: 4.17.15
+        specifier: ^4.17.23
+        version: 4.17.23
       '@types/luxon':
         specifier: ^3.4.2
         version: 3.4.2
@@ -8626,8 +8626,8 @@ packages:
       '@types/koa': 2.15.0
     dev: true
 
-  /@types/lodash@4.17.15:
-    resolution: {integrity: sha512-w/P33JFeySuhN6JLkysYUK2gEmy9kHHFN7E8ro0tkfmlDOgxBDzWEZ/J8cWA+fHqFevpswDTFZnDx+R9lbL6xw==}
+  /@types/lodash@4.17.23:
+    resolution: {integrity: sha512-RDvF6wTulMPjrNdCoYRC8gNR880JNGT8uB+REUpC2Ns4pRqQJhGz90wh7rgdXDPpCczF3VGktDuFGVnz8zP7HA==}
     dev: true
 
   /@types/long@4.0.2:
