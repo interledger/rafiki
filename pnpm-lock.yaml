@@ -15,7 +15,7 @@ overrides:
   braces@<3.0.3: '>=3.0.3'
   dset@<3.1.4: '>=3.1.4'
   path-to-regexp@>=0.1.7: ^0.1.12
-  path-to-regexp@>=6.3.0: ^6.3.0
+  path-to-regexp@>=6.3.0: ^8.3.0
   next: ^15.5.8
   form-data: ^4.0.4
   sha.js: '>=2.4.12'
@@ -6148,7 +6148,7 @@ packages:
       http-errors: 2.0.0
       koa-compose: 4.1.0
       methods: 1.1.2
-      path-to-regexp: 6.3.0
+      path-to-regexp: 8.3.0
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -19494,8 +19494,8 @@ packages:
   /path-to-regexp@0.1.12:
     resolution: {integrity: sha512-RA1GjUVMnvYFxuqovrEqZoxxW5NUZqbwKtYz/Tt7nXerk0LbLblQmrsgdeOxV5SFHf0UDggjS/bSeOZwt1pmEQ==}
 
-  /path-to-regexp@6.3.0:
-    resolution: {integrity: sha512-Yhpw4T9C6hPpgPeA28us07OJeqZ5EzQTkbfwuhsUg0c237RomFoETJgmp2sa3F/41gfLE6G5cqcYwznmeEeOlQ==}
+  /path-to-regexp@8.3.0:
+    resolution: {integrity: sha512-7jdwVIRtsP8MYpdXSwOS0YdD0Du+qOoF/AEPIt88PcCFrZCzx41oxku1jD88hZBwbNUIEfpqvuhjFaMAqMTWnA==}
     dev: false
 
   /path-type@4.0.0:
