@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^6.3.10",
-    "@astrojs/starlight": "^0.37.5",
+    "@astrojs/starlight": "^0.37.6",
     "@interledger/docs-design-system": "^0.11.0",
     "astro": "^5.17.1",
     "mermaid": "^11.12.2",
