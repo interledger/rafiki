@@ -50,7 +50,7 @@
     "cross-fetch": "^4.1.0",
     "jest-environment-node": "^29.7.0",
     "jest-openapi": "^0.14.2",
-    "nock": "14.0.0-beta.19",
+    "nock": "14.0.11",
     "node-mocks-http": "^1.16.2",
     "testcontainers": "^10.16.0",
     "tmp": "^0.2.3",
