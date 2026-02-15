@@ -84,10 +84,10 @@ importers:
     dependencies:
       '@apollo/client':
         specifier: ^3.11.8
-        version: 3.11.8(@types/react@18.2.73)(graphql@16.11.0)(react-dom@18.2.0)(react@18.2.0)
+        version: 3.11.8(@types/react@18.3.28)(graphql@16.11.0)(react-dom@18.3.1)(react@18.3.1)
       '@headlessui/react':
         specifier: ^1.7.19
-        version: 1.7.19(react-dom@18.2.0)(react@18.2.0)
+        version: 1.7.19(react-dom@18.3.1)(react@18.3.1)
       '@interledger/http-signature-utils':
         specifier: 2.0.2
         version: 2.0.2
@@ -96,7 +96,7 @@ importers:
         version: 2.17.4(typescript@5.4.3)
       '@remix-run/react':
         specifier: ^2.16.4
-        version: 2.17.4(react-dom@18.2.0)(react@18.2.0)(typescript@5.4.3)
+        version: 2.17.4(react-dom@18.3.1)(react@18.3.1)(typescript@5.4.3)
       '@remix-run/serve':
         specifier: ^2.16.4
         version: 2.16.4(typescript@5.4.3)
@@ -122,11 +122,11 @@ importers:
         specifier: workspace:*
         version: link:../../packages/mock-account-service-lib
       react:
-        specifier: ^18.2.0
-        version: 18.2.0
+        specifier: ^18.3.1
+        version: 18.3.1
       react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
       uuid:
         specifier: ^9.0.1
         version: 9.0.1
@@ -144,11 +144,11 @@ importers:
         specifier: ^0.5.10
         version: 0.5.10(tailwindcss@3.4.17)
       '@types/react':
-        specifier: ^18.2.73
-        version: 18.2.73
+        specifier: ^18.3.28
+        version: 18.3.28
       '@types/react-dom':
-        specifier: ^18.2.22
-        version: 18.2.22
+        specifier: ^18.3.7
+        version: 18.3.7(@types/react@18.3.28)
       autoprefixer:
         specifier: ^10.4.20
         version: 10.4.20(postcss@8.5.1)
@@ -248,7 +248,7 @@ importers:
     devDependencies:
       '@apollo/client':
         specifier: ^3.11.8
-        version: 3.11.8(@types/react@18.2.73)(graphql@16.11.0)(react-dom@18.2.0)(react@18.2.0)
+        version: 3.11.8(@types/react@18.3.28)(graphql@16.11.0)(react-dom@18.3.1)(react@18.3.1)
       '@faker-js/faker':
         specifier: ^8.4.1
         version: 8.4.1
@@ -314,7 +314,7 @@ importers:
         version: 8.2.0
       '@apollo/client':
         specifier: ^3.11.8
-        version: 3.11.8(@types/react@18.2.73)(graphql@16.11.0)(react-dom@18.2.0)(react@18.2.0)
+        version: 3.11.8(@types/react@18.3.28)(graphql@16.11.0)(react-dom@18.3.1)(react@18.3.1)
       '@apollo/server':
         specifier: ^4.13.0
         version: 4.13.0(graphql@16.11.0)
@@ -539,8 +539,8 @@ importers:
         specifier: ^12.1.3
         version: 12.1.3
       react:
-        specifier: ~18.2.0
-        version: 18.2.0
+        specifier: ~18.3.1
+        version: 18.3.1
       rosie:
         specifier: ^2.1.1
         version: 2.1.1
@@ -561,7 +561,7 @@ importers:
         version: 8.2.0
       '@apollo/client':
         specifier: ^3.11.8
-        version: 3.11.8(@types/react@18.2.73)(graphql@16.11.0)(react-dom@18.2.0)(react@18.2.0)
+        version: 3.11.8(@types/react@18.3.28)(graphql@16.11.0)(react-dom@18.3.1)(react@18.3.1)
       '@interledger/openapi':
         specifier: 2.0.2
         version: 2.0.2
@@ -701,10 +701,10 @@ importers:
     dependencies:
       '@apollo/client':
         specifier: ^3.11.8
-        version: 3.11.8(@types/react@18.2.73)(graphql@16.11.0)(react-dom@18.2.0)(react@18.2.0)
+        version: 3.11.8(@types/react@18.3.28)(graphql@16.11.0)(react-dom@18.3.1)(react@18.3.1)
       '@headlessui/react':
         specifier: ^1.7.19
-        version: 1.7.19(react-dom@18.2.0)(react@18.2.0)
+        version: 1.7.19(react-dom@18.3.1)(react@18.3.1)
       '@ory/client':
         specifier: ^1.9.0
         version: 1.9.0
@@ -716,7 +716,7 @@ importers:
         version: 2.17.4(typescript@5.8.3)
       '@remix-run/react':
         specifier: ^2.17.4
-        version: 2.17.4(react-dom@18.2.0)(react@18.2.0)(typescript@5.8.3)
+        version: 2.17.4(react-dom@18.3.1)(react@18.3.1)(typescript@5.8.3)
       '@remix-run/serve':
         specifier: ^2.17.4
         version: 2.17.4(typescript@5.8.3)
@@ -745,11 +745,11 @@ importers:
         specifier: ^6.14.1
         version: 6.14.1
       react:
-        specifier: ^18.2.0
-        version: 18.2.0
+        specifier: ^18.3.1
+        version: 18.3.1
       react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
       uuid:
         specifier: ^9.0.1
         version: 9.0.1
@@ -765,7 +765,7 @@ importers:
         version: 2.16.4(@remix-run/react@2.17.4)(@remix-run/serve@2.17.4)(@types/node@20.12.7)(typescript@5.8.3)(yaml@2.7.0)
       '@remix-run/eslint-config':
         specifier: ^2.13.1
-        version: 2.13.1(eslint@8.57.1)(jest@29.7.0)(react@18.2.0)(typescript@5.8.3)
+        version: 2.13.1(eslint@8.57.1)(jest@29.7.0)(react@18.3.1)(typescript@5.8.3)
       '@tailwindcss/forms':
         specifier: ^0.5.10
         version: 0.5.10(tailwindcss@3.4.17)
@@ -776,11 +776,11 @@ importers:
         specifier: ^6.14.0
         version: 6.14.0
       '@types/react':
-        specifier: ^18.2.73
-        version: 18.2.73
+        specifier: ^18.3.28
+        version: 18.3.28
       '@types/react-dom':
-        specifier: ^18.2.22
-        version: 18.2.22
+        specifier: ^18.3.7
+        version: 18.3.7(@types/react@18.3.28)
       '@types/uuid':
         specifier: ^9.0.8
         version: 9.0.8
@@ -810,7 +810,7 @@ importers:
     dependencies:
       '@apollo/client':
         specifier: ^3.11.8
-        version: 3.11.8(@types/react@18.2.73)(graphql@16.11.0)(react-dom@18.2.0)(react@18.2.0)
+        version: 3.11.8(@types/react@18.3.28)(graphql@16.11.0)(react-dom@18.3.1)(react@18.3.1)
       '@interledger/http-signature-utils':
         specifier: 2.0.2
         version: 2.0.2
@@ -841,7 +841,7 @@ importers:
         version: 8.2.0
       '@apollo/client':
         specifier: ^3.11.8
-        version: 3.11.8(@types/react@18.2.73)(graphql@16.11.0)(react-dom@18.2.0)(react@18.2.0)
+        version: 3.11.8(@types/react@18.3.28)(graphql@16.11.0)(react-dom@18.3.1)(react@18.3.1)
       '@apollo/server':
         specifier: ^4.13.0
         version: 4.13.0(graphql@16.11.0)
@@ -1021,7 +1021,7 @@ importers:
     devDependencies:
       '@apollo/client':
         specifier: ^3.11.8
-        version: 3.11.8(@types/react@18.2.73)(graphql@16.11.0)(react-dom@18.2.0)(react@18.2.0)
+        version: 3.11.8(@types/react@18.3.28)(graphql@16.11.0)(react-dom@18.3.1)(react@18.3.1)
       '@interledger/http-signature-utils':
         specifier: 2.0.2
         version: 2.0.2
@@ -1114,7 +1114,7 @@ packages:
       graphql: 16.11.0
     dev: false
 
-  /@apollo/client@3.11.8(@types/react@18.2.73)(graphql@16.11.0)(react-dom@18.2.0)(react@18.2.0):
+  /@apollo/client@3.11.8(@types/react@18.3.28)(graphql@16.11.0)(react-dom@18.3.1)(react@18.3.1):
     resolution: {integrity: sha512-CgG1wbtMjsV2pRGe/eYITmV5B8lXUCYljB2gB/6jWTFQcrvirUVvKg7qtFdjYkQSFbIffU1IDyxgeaN81eTjbA==}
     peerDependencies:
       graphql: ^15.0.0 || ^16.0.0
@@ -1141,9 +1141,9 @@ packages:
       hoist-non-react-statics: 3.3.2
       optimism: 0.18.0
       prop-types: 15.8.1
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-      rehackt: 0.1.0(@types/react@18.2.73)(react@18.2.0)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      rehackt: 0.1.0(@types/react@18.3.28)(react@18.3.1)
       response-iterator: 0.2.6
       symbol-observable: 4.0.0
       ts-invariant: 0.10.3
@@ -5390,17 +5390,17 @@ packages:
       yargs: 17.7.2
     dev: false
 
-  /@headlessui/react@1.7.19(react-dom@18.2.0)(react@18.2.0):
+  /@headlessui/react@1.7.19(react-dom@18.3.1)(react@18.3.1):
     resolution: {integrity: sha512-Ll+8q3OlMJfJbAKM/+/Y2q6PPYbryqNTXDbryx7SXLIDamkF6iQFbriYHga0dY44PvDhvvBWCx1Xj4U5+G4hOw==}
     engines: {node: '>=10'}
     peerDependencies:
       react: ^16 || ^17 || ^18
       react-dom: ^16 || ^17 || ^18
     dependencies:
-      '@tanstack/react-virtual': 3.0.1(react-dom@18.2.0)(react@18.2.0)
+      '@tanstack/react-virtual': 3.0.1(react-dom@18.3.1)(react@18.3.1)
       client-only: 0.0.1
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
     dev: false
 
   /@humanfs/core@0.19.1:
@@ -6874,7 +6874,7 @@ packages:
       '@types/tldjs': 2.3.4
       cookie: 1.0.2
       istextorbinary: 9.5.0
-      next: 15.5.10(@babel/core@7.26.0)(react-dom@18.2.0)(react@18.2.0)
+      next: 15.5.10(@babel/core@7.26.0)(react-dom@18.3.1)(react@18.3.1)
       set-cookie-parser: 2.7.1
       tldjs: 2.3.1
     dev: false
@@ -7196,7 +7196,7 @@ packages:
       '@mdx-js/mdx': 2.3.0
       '@npmcli/package-json': 4.0.1
       '@remix-run/node': 2.16.4(typescript@5.4.3)
-      '@remix-run/react': 2.17.4(react-dom@18.2.0)(react@18.2.0)(typescript@5.4.3)
+      '@remix-run/react': 2.17.4(react-dom@18.3.1)(react@18.3.1)(typescript@5.4.3)
       '@remix-run/router': 1.23.2
       '@remix-run/serve': 2.16.4(typescript@5.4.3)
       '@remix-run/server-runtime': 2.16.4(typescript@5.4.3)
@@ -7294,7 +7294,7 @@ packages:
       '@mdx-js/mdx': 2.3.0
       '@npmcli/package-json': 4.0.1
       '@remix-run/node': 2.16.4(typescript@5.8.3)
-      '@remix-run/react': 2.17.4(react-dom@18.2.0)(react@18.2.0)(typescript@5.8.3)
+      '@remix-run/react': 2.17.4(react-dom@18.3.1)(react@18.3.1)(typescript@5.8.3)
       '@remix-run/router': 1.23.2
       '@remix-run/serve': 2.17.4(typescript@5.8.3)
       '@remix-run/server-runtime': 2.16.4(typescript@5.8.3)
@@ -7361,7 +7361,7 @@ packages:
       - yaml
     dev: true
 
-  /@remix-run/eslint-config@2.13.1(eslint@8.57.1)(jest@29.7.0)(react@18.2.0)(typescript@5.8.3):
+  /@remix-run/eslint-config@2.13.1(eslint@8.57.1)(jest@29.7.0)(react@18.3.1)(typescript@5.8.3):
     resolution: {integrity: sha512-UNWRHYa++pWrO6qxNI9z7KrmD0/wncWjS36TujoPmlnVDQ2pKIhNZwBi6otJQIuI8TdUPBZstJNgRJ0TWYok6A==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
@@ -7389,7 +7389,7 @@ packages:
       eslint-plugin-react: 7.37.4(eslint@8.57.1)
       eslint-plugin-react-hooks: 4.6.0(eslint@8.57.1)
       eslint-plugin-testing-library: 5.11.0(eslint@8.57.1)(typescript@5.8.3)
-      react: 18.2.0
+      react: 18.3.1
       typescript: 5.8.3
     transitivePeerDependencies:
       - eslint-import-resolver-webpack
@@ -7499,7 +7499,7 @@ packages:
       typescript: 5.8.3
       undici: 6.22.0
 
-  /@remix-run/react@2.17.4(react-dom@18.2.0)(react@18.2.0)(typescript@5.4.3):
+  /@remix-run/react@2.17.4(react-dom@18.3.1)(react@18.3.1)(typescript@5.4.3):
     resolution: {integrity: sha512-MeXHacIBoohr9jzec5j/Rmk57xk34korkPDDb0OPHgkdvh20lO5fJoSAcnZfjTIOH+Vsq1ZRQlmvG5PRQ/64Sw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
@@ -7512,14 +7512,14 @@ packages:
     dependencies:
       '@remix-run/router': 1.23.2
       '@remix-run/server-runtime': 2.17.4(typescript@5.4.3)
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-      react-router: 6.30.3(react@18.2.0)
-      react-router-dom: 6.30.3(react-dom@18.2.0)(react@18.2.0)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      react-router: 6.30.3(react@18.3.1)
+      react-router-dom: 6.30.3(react-dom@18.3.1)(react@18.3.1)
       turbo-stream: 2.4.1
       typescript: 5.4.3
 
-  /@remix-run/react@2.17.4(react-dom@18.2.0)(react@18.2.0)(typescript@5.8.3):
+  /@remix-run/react@2.17.4(react-dom@18.3.1)(react@18.3.1)(typescript@5.8.3):
     resolution: {integrity: sha512-MeXHacIBoohr9jzec5j/Rmk57xk34korkPDDb0OPHgkdvh20lO5fJoSAcnZfjTIOH+Vsq1ZRQlmvG5PRQ/64Sw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
@@ -7532,10 +7532,10 @@ packages:
     dependencies:
       '@remix-run/router': 1.23.2
       '@remix-run/server-runtime': 2.17.4(typescript@5.8.3)
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-      react-router: 6.30.3(react@18.2.0)
-      react-router-dom: 6.30.3(react-dom@18.2.0)(react@18.2.0)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      react-router: 6.30.3(react@18.3.1)
+      react-router-dom: 6.30.3(react-dom@18.3.1)(react@18.3.1)
       turbo-stream: 2.4.1
       typescript: 5.8.3
 
@@ -8104,15 +8104,15 @@ packages:
       tailwindcss: 3.4.17
     dev: true
 
-  /@tanstack/react-virtual@3.0.1(react-dom@18.2.0)(react@18.2.0):
+  /@tanstack/react-virtual@3.0.1(react-dom@18.3.1)(react@18.3.1):
     resolution: {integrity: sha512-IFOFuRUTaiM/yibty9qQ9BfycQnYXIDHGP2+cU+0LrFFGNhVxCXSQnaY6wkX8uJVteFEBjUondX0Hmpp7TNcag==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
     dependencies:
       '@tanstack/virtual-core': 3.0.0
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
     dev: false
 
   /@tanstack/virtual-core@3.0.0:
@@ -8745,17 +8745,19 @@ packages:
   /@types/range-parser@1.2.7:
     resolution: {integrity: sha512-hKormJbkJqzQGhziax5PItDUTMAM9uE2XXQmM37dyd4hVM+5aVl7oVxMVUiVQn2oCQFN/LKCZdvSM0pFRqbSmQ==}
 
-  /@types/react-dom@18.2.22:
-    resolution: {integrity: sha512-fHkBXPeNtfvri6gdsMYyW+dW7RXFo6Ad09nLFK0VQWR7yGLai/Cyvyj696gbwYvBnhGtevUG9cET0pmUbMtoPQ==}
+  /@types/react-dom@18.3.7(@types/react@18.3.28):
+    resolution: {integrity: sha512-MEe3UeoENYVFXzoXEWsvcpg6ZvlrFNlOQ7EOsvhI3CfAXwzPfO8Qwuxd40nepsYKqyyVQnTdEfv68q91yLcKrQ==}
+    peerDependencies:
+      '@types/react': ^18.0.0
     dependencies:
-      '@types/react': 18.2.73
+      '@types/react': 18.3.28
     dev: true
 
-  /@types/react@18.2.73:
-    resolution: {integrity: sha512-XcGdod0Jjv84HOC7N5ziY3x+qL0AfmubvKOZ9hJjJ2yd5EE+KYjWhdOjt387e9HPheHkdggF9atTifMRtyAaRA==}
+  /@types/react@18.3.28:
+    resolution: {integrity: sha512-z9VXpC7MWrhfWipitjNdgCauoMLRdIILQsAEV+ZesIzBq/oUlxk0m3ApZuMFCXdnS4U7KrI+l3WRUEGQ8K1QKw==}
     dependencies:
       '@types/prop-types': 15.7.5
-      csstype: 3.1.0
+      csstype: 3.2.3
 
   /@types/request@2.48.8:
     resolution: {integrity: sha512-whjk1EDJPcAR2kYHRbFl/lKeeKYTi05A15K9bnLInCVroNDCtXce57xKdI0/rQaA3K+6q0eFyUBPmqfSndUZdQ==}
@@ -11647,6 +11649,10 @@ packages:
 
   /csstype@3.1.0:
     resolution: {integrity: sha512-uX1KG+x9h5hIJsaKR9xHUeUraxf8IODOwq9JLNPq6BwB04a/xgpq3rcx47l5BZu5zBPlgD342tdke3Hom/nJRA==}
+    dev: true
+
+  /csstype@3.2.3:
+    resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
 
   /cuid@2.1.8:
     resolution: {integrity: sha512-xiEMER6E7TlTPnDxrM4eRiC6TRgjNX9xzEZ5U/Se2YJKr7Mq4pJn/2XEHjl3STcSh96GmkHPcBXLES8M29wyyg==}
@@ -18611,7 +18617,7 @@ packages:
     engines: {node: '>= 10'}
     dev: false
 
-  /next@15.5.10(@babel/core@7.26.0)(react-dom@18.2.0)(react@18.2.0):
+  /next@15.5.10(@babel/core@7.26.0)(react-dom@18.3.1)(react@18.3.1):
     resolution: {integrity: sha512-r0X65PNwyDDyOrWNKpQoZvOatw7BcsTPRKdwEqtc9cj3wv7mbBIk9tKed4klRaFXJdX0rugpuMTHslDrAU1bBg==}
     engines: {node: ^18.18.0 || ^19.8.0 || >= 20.0.0}
     hasBin: true
@@ -18636,9 +18642,9 @@ packages:
       '@swc/helpers': 0.5.15
       caniuse-lite: 1.0.30001720
       postcss: 8.4.31
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-      styled-jsx: 5.1.6(@babel/core@7.26.0)(react@18.2.0)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      styled-jsx: 5.1.6(@babel/core@7.26.0)(react@18.3.1)
     optionalDependencies:
       '@next/swc-darwin-arm64': 15.5.7
       '@next/swc-darwin-x64': 15.5.7
@@ -20215,14 +20221,14 @@ packages:
       iconv-lite: 0.4.24
       unpipe: 1.0.0
 
-  /react-dom@18.2.0(react@18.2.0):
-    resolution: {integrity: sha512-6IMTriUmvsjHUjNtEDudZfuDQUoWXVxKHhlEGSk81n4YFS+r/Kl99wXiwlVXtPBtJenozv2P+hxDsw9eA7Xo6g==}
+  /react-dom@18.3.1(react@18.3.1):
+    resolution: {integrity: sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==}
     peerDependencies:
-      react: ^18.2.0
+      react: ^18.3.1
     dependencies:
       loose-envify: 1.4.0
-      react: 18.2.0
-      scheduler: 0.23.0
+      react: 18.3.1
+      scheduler: 0.23.2
 
   /react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
@@ -20240,7 +20246,7 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
-  /react-router-dom@6.30.3(react-dom@18.2.0)(react@18.2.0):
+  /react-router-dom@6.30.3(react-dom@18.3.1)(react@18.3.1):
     resolution: {integrity: sha512-pxPcv1AczD4vso7G4Z3TKcvlxK7g7TNt3/FNGMhfqyntocvYKj+GCatfigGDjbLozC4baguJ0ReCigoDJXb0ag==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
@@ -20248,21 +20254,21 @@ packages:
       react-dom: '>=16.8'
     dependencies:
       '@remix-run/router': 1.23.2
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-      react-router: 6.30.3(react@18.2.0)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      react-router: 6.30.3(react@18.3.1)
 
-  /react-router@6.30.3(react@18.2.0):
+  /react-router@6.30.3(react@18.3.1):
     resolution: {integrity: sha512-XRnlbKMTmktBkjCLE8/XcZFlnHvr2Ltdr1eJX4idL55/9BbORzyZEaIkBFDhFGCEWBBItsVrDxwx3gnisMitdw==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       react: '>=16.8'
     dependencies:
       '@remix-run/router': 1.23.2
-      react: 18.2.0
+      react: 18.3.1
 
-  /react@18.2.0:
-    resolution: {integrity: sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==}
+  /react@18.3.1:
+    resolution: {integrity: sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==}
     engines: {node: '>=0.10.0'}
     dependencies:
       loose-envify: 1.4.0
@@ -20501,7 +20507,7 @@ packages:
       jsesc: 3.0.2
     dev: true
 
-  /rehackt@0.1.0(@types/react@18.2.73)(react@18.2.0):
+  /rehackt@0.1.0(@types/react@18.3.28)(react@18.3.1):
     resolution: {integrity: sha512-7kRDOuLHB87D/JESKxQoRwv4DzbIdwkAGQ7p6QKGdVlY1IZheUnVhlk/4UZlNUVxdAXpyxikE3URsG067ybVzw==}
     peerDependencies:
       '@types/react': '*'
@@ -20512,8 +20518,8 @@ packages:
       react:
         optional: true
     dependencies:
-      '@types/react': 18.2.73
-      react: 18.2.0
+      '@types/react': 18.3.28
+      react: 18.3.1
 
   /rehype-autolink-headings@7.1.0:
     resolution: {integrity: sha512-rItO/pSdvnvsP4QRB1pmPiNHUskikqtPojZKJPPPAVx9Hj8i8TwMBhofrrAYRhYOOBZH9tgmG5lPqDLuIWPWmw==}
@@ -21150,8 +21156,8 @@ packages:
     resolution: {integrity: sha512-yqYn1JhPczigF94DMS+shiDMjDowYO6y9+wB/4WgO0Y19jWYk0lQ4tuG5KI7kj4FTp1wxPj5IFfcrz/s1c3jjQ==}
     dev: false
 
-  /scheduler@0.23.0:
-    resolution: {integrity: sha512-CtuThmgHNg7zIZWAXi3AsyIzA3n4xx7aNyjwC2VJldO2LMVDhFK+63xGqq6CsJH4rTAt6/M+N4GhZiDYPx9eUw==}
+  /scheduler@0.23.2:
+    resolution: {integrity: sha512-UOShsPwz7NrMUqhR6t0hWjFduvOzbtv7toDH1/hIrfRNIDBnnBWd0CwJTGvTpngVlmwGCdP9/Zl/tVrDqcuYzQ==}
     dependencies:
       loose-envify: 1.4.0
 
@@ -22081,7 +22087,7 @@ packages:
       inline-style-parser: 0.2.3
     dev: false
 
-  /styled-jsx@5.1.6(@babel/core@7.26.0)(react@18.2.0):
+  /styled-jsx@5.1.6(@babel/core@7.26.0)(react@18.3.1):
     resolution: {integrity: sha512-qSVyDTeMotdvQYoHWLNGwRFJHC+i+ZvdBRYosOFgC+Wg1vx4frN2/RG/NA7SYqqvKNLf39P2LSRA2pu6n0XYZA==}
     engines: {node: '>= 12.0.0'}
     peerDependencies:
@@ -22096,7 +22102,7 @@ packages:
     dependencies:
       '@babel/core': 7.26.0
       client-only: 0.0.1
-      react: 18.2.0
+      react: 18.3.1
     dev: false
 
   /stylis@4.3.6:
