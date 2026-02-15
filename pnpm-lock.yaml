@@ -44,8 +44,8 @@ importers:
         specifier: ^7.3.1
         version: 7.5.0(eslint@8.57.1)(typescript@5.4.3)
       dotenv:
-        specifier: ^16.4.7
-        version: 16.4.7
+        specifier: ^17.3.1
+        version: 17.3.1
       eslint:
         specifier: ^8.57.1
         version: 8.57.1
@@ -204,8 +204,8 @@ importers:
         specifier: ^1.13.5
         version: 1.13.5(debug@4.3.2)
       dotenv:
-        specifier: ^16.4.7
-        version: 16.4.7
+        specifier: ^17.3.1
+        version: 17.3.1
       graphql:
         specifier: ^16.11.0
         version: 16.11.0
@@ -403,8 +403,8 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       dotenv:
-        specifier: ^16.4.7
-        version: 16.4.7
+        specifier: ^17.3.1
+        version: 17.3.1
       extensible-error:
         specifier: ^1.0.2
         version: 1.0.2
@@ -858,8 +858,8 @@ importers:
         specifier: ^1.13.5
         version: 1.13.5(debug@4.3.2)
       dotenv:
-        specifier: ^16.4.7
-        version: 16.4.7
+        specifier: ^17.3.1
+        version: 17.3.1
       graphql:
         specifier: ^16.11.0
         version: 16.11.0
@@ -12407,6 +12407,11 @@ packages:
 
   /dotenv@16.4.7:
     resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
+    engines: {node: '>=12'}
+    dev: true
+
+  /dotenv@17.3.1:
+    resolution: {integrity: sha512-IO8C/dzEb6O3F9/twg6ZLXz164a2fhTnEWb95H23Dm4OuN+92NmEAlTrupP9VW6Jm3sO26tQlqyvyi4CsnY9GA==}
     engines: {node: '>=12'}
 
   /dset@3.1.4:
