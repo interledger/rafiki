@@ -30,7 +30,7 @@
     "@types/koa__cors": "^5.0.0",
     "@types/koa__router": "^12.0.4",
     "@types/node": "^20.14.15",
-    "@types/uuid": "^9.0.8",
+    "@types/uuid": "^11.0.0",
     "jest-environment-node": "^29.7.0",
     "nock": "14.0.0-beta.19",
     "node-mocks-http": "^1.16.2",
