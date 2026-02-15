@@ -250,8 +250,8 @@ importers:
         specifier: ^3.11.8
         version: 3.11.8(@types/react@18.2.73)(graphql@16.11.0)(react-dom@18.2.0)(react@18.2.0)
       '@faker-js/faker':
-        specifier: ^8.4.1
-        version: 8.4.1
+        specifier: ^10.3.0
+        version: 10.3.0
       '@graphql-codegen/cli':
         specifier: 5.0.4
         version: 5.0.4(@babel/core@7.27.4)(@types/node@20.14.15)(graphql@16.11.0)
@@ -325,8 +325,8 @@ importers:
         specifier: ^2.4.0
         version: 2.4.0(@apollo/server@4.13.0)
       '@faker-js/faker':
-        specifier: ^8.4.1
-        version: 8.4.1
+        specifier: ^10.3.0
+        version: 10.3.0
       '@graphql-tools/graphql-file-loader':
         specifier: ^8.0.12
         version: 8.0.12(graphql@16.11.0)
@@ -846,8 +846,8 @@ importers:
         specifier: ^4.13.0
         version: 4.13.0(graphql@16.11.0)
       '@faker-js/faker':
-        specifier: ^8.4.1
-        version: 8.4.1
+        specifier: ^10.3.0
+        version: 10.3.0
       '@koa/cors':
         specifier: ^5.0.0
         version: 5.0.0
@@ -4554,9 +4554,9 @@ packages:
       '@expressive-code/core': 0.41.2
     dev: false
 
-  /@faker-js/faker@8.4.1:
-    resolution: {integrity: sha512-XQ3cU+Q8Uqmrbf2e0cIC/QN43sTBSC8KF12u29Mb47tWrt2hAgBXSgpZMj4Ao8Uk0iJcU99QsOCaIL8934obCg==}
-    engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0, npm: '>=6.14.13'}
+  /@faker-js/faker@10.3.0:
+    resolution: {integrity: sha512-It0Sne6P3szg7JIi6CgKbvTZoMjxBZhcv91ZrqrNuaZQfB5WoqYYbzCUOq89YR+VY8juY9M1vDWmDDa2TzfXCw==}
+    engines: {node: ^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0, npm: '>=10'}
 
   /@fastify/busboy@2.1.1:
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
