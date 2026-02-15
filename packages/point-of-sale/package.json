@@ -20,8 +20,8 @@
   "license": "ISC",
   "dependencies": {
     "@adonisjs/fold": "^8.2.0",
-    "@apollo/client": "^3.11.8",
-    "@apollo/server": "^4.11.2",
+    "@apollo/client": "^3.14.0",
+    "@apollo/server": "^4.13.0",
     "@faker-js/faker": "^8.4.1",
     "@koa/cors": "^5.0.0",
     "@koa/router": "^12.0.2",
