@@ -6,7 +6,7 @@ import {
   AccessToken,
   AccessType,
   AuthenticatedClient,
-  isPendingGrant
+  isFinalizedGrantWithAccessToken
 } from '@interledger/open-payments'
 import { GrantError } from './errors'
 
@@ -132,7 +132,7 @@ async function requestNewGrant(
     return GrantError.InvalidGrantRequest
   }
 
-  if (isPendingGrant(openPaymentsGrant)) {
+  if (!isFinalizedGrantWithAccessToken(openPaymentsGrant)) {
     deps.logger.error({ ...options }, 'Requested grant requires interaction')
     return GrantError.GrantRequiresInteraction
   }

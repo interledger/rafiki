@@ -383,7 +383,7 @@ describe('Outgoing Payment Routes', (): void => {
       })
     })
 
-    test('returns null for spent amounts when no amounts have been spent', async (): Promise<void> => {
+    test('returns null spent amounts when no amounts have been spent', async (): Promise<void> => {
       const grantId = uuid()
       const ctx = createContext(grantId)
 

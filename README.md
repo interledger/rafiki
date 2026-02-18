@@ -149,6 +149,12 @@ This command will:
 - Format all files using Prettier
 - Automatically fix ESLint issues where possible
 
+**Note:** The documentation package (`packages/documentation`) has its own Prettier configuration and is excluded from the root formatting. To format documentation files, use:
+
+```sh
+pnpm format:docs
+```
+
 #### Checking Code Quality
 
 Before committing your changes, verify that your code passes all formatting and linting checks:
