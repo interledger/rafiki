@@ -75,6 +75,7 @@ export interface Config {
 }
 export interface Webhook {
   id: string
+  tenantId: string
   type: WebhookEventType
   data: Record<string, unknown>
 }
