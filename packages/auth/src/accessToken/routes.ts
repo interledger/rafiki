@@ -10,9 +10,13 @@ import { AccessToken, toOpenPaymentsAccessToken } from './model'
 import { AccessService } from '../access/service'
 import { TransactionOrKnex } from 'objection'
 import { GrantService } from '../grant/service'
-import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
+import {
+  GNAPErrorCode,
+  GNAPServerRouteError
+} from '../shared/gnapErrors'
 import { generateRouteLogs } from '../shared/utils'
 import { AccessItem } from '@interledger/open-payments'
+import { getGrantClientIdentity, ParsedClientField } from '../grant/utils'
 
 export type TokenHttpSigContext = AppContext & {
   accessToken: AccessToken & {
@@ -110,15 +114,29 @@ async function introspectToken(
 
 function grantToTokenInfo(grant?: Grant, access?: Access[]): TokenInfo {
   if (!grant) {
-    return {
-      active: false
-    }
+    return { active: false }
   }
+
+  let identity: ParsedClientField
+  try {
+    identity = getGrantClientIdentity(grant)
+  } catch {
+    throw new GNAPServerRouteError(
+      500,
+      GNAPErrorCode.RequestDenied,
+      'internal server error'
+    )
+  }
+
+  const client = identity.jwk
+    ? { jwk: identity.jwk }
+    : { walletAddress: identity.client }
+
   return {
     active: true,
     grant: grant.id,
     access: access?.map(toOpenPaymentsAccess) ?? [],
-    client: grant.client
+    client
   }
 }
 

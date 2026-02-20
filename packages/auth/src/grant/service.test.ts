@@ -19,7 +19,7 @@ import {
 import { Access } from '../access/model'
 import { generateNonce, generateToken } from '../shared/utils'
 import { AccessType, AccessAction } from '@interledger/open-payments'
-import { createGrant } from '../tests/grant'
+import { createGrant, generateTestJwk } from '../tests/grant'
 import { AccessToken } from '../accessToken/model'
 import { Interaction, InteractionState } from '../interaction/model'
 import { Pagination, SortOrder } from '../shared/baseModel'
@@ -158,6 +158,73 @@ describe('Grant Service', (): void => {
         ).resolves.toMatchObject({
           type: AccessType.IncomingPayment
         })
+      })
+
+      test('Can create a non-interactive grant with JWK client', async (): Promise<void> => {
+        const testJwk = generateTestJwk()
+        const grantRequest: GrantRequest = {
+          client: { jwk: testJwk },
+          access_token: {
+            access: [
+              {
+                ...BASE_GRANT_ACCESS,
+                type: AccessType.IncomingPayment
+              }
+            ]
+          }
+        }
+
+        const grant = await grantService.create(grantRequest, tenant.id)
+
+        expect(grant).toMatchObject({
+          state: GrantState.Approved,
+          jwk: testJwk,
+          continueId: expect.any(String),
+          continueToken: expect.any(String)
+        })
+        expect(grant.client).toBeUndefined()
+      })
+
+      test('Can create a grant with { walletAddress } client', async (): Promise<void> => {
+        const grantRequest: GrantRequest = {
+          ...BASE_GRANT_REQUEST,
+          client: { walletAddress: CLIENT },
+          access_token: {
+            access: [
+              {
+                ...BASE_GRANT_ACCESS,
+                type: AccessType.IncomingPayment
+              }
+            ]
+          }
+        }
+
+        const grant = await grantService.create(grantRequest, tenant.id)
+
+        expect(grant).toMatchObject({
+          state: GrantState.Approved,
+          client: CLIENT,
+          continueId: expect.any(String),
+          continueToken: expect.any(String)
+        })
+        expect(grant.jwk).toBeUndefined()
+      })
+
+      test('Cannot create a grant with neither client nor jwk', async (): Promise<void> => {
+        const grantRequest = {
+          access_token: {
+            access: [
+              {
+                ...BASE_GRANT_ACCESS,
+                type: AccessType.IncomingPayment
+              }
+            ]
+          }
+        } as unknown as GrantRequest
+
+        await expect(
+          grantService.create(grantRequest, tenant.id)
+        ).rejects.toThrow()
       })
 
       test.each`

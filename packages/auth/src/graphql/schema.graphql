@@ -94,8 +94,8 @@ interface Model {
 type Grant implements Model {
   "Unique identifier of the grant."
   id: ID!
-  "Wallet address of the grantee's account."
-  client: String!
+  "Wallet address of the grantee's account. Null when using JWK-based directed identity."
+  client: String
   "Details of the access provided by the grant."
   access: [Access!]!
   "Details of the subject provided by the grant."

@@ -148,7 +148,7 @@ describe('Signature Service', (): void => {
       await truncateTables(deps)
     })
 
-    test('Validate grant initiation request with middleware', async (): Promise<void> => {
+    test('Validate grant initiation request with middleware (wallet address)', async (): Promise<void> => {
       const scope = nock(CLIENT)
         .get('/jwks.json')
         .reply(200, {
@@ -180,7 +180,33 @@ describe('Signature Service', (): void => {
       scope.done()
     })
 
-    test('Validate grant continuation request with middleware', async (): Promise<void> => {
+    test('Validate grant initiation request with middleware (JWK)', async (): Promise<void> => {
+      const ctx = await createContextWithSigHeaders<CreateContext>(
+        {
+          headers: {
+            Accept: 'application/json'
+          },
+          url: 'http://example.com/',
+          method: 'POST'
+        },
+        {},
+        {
+          client: {
+            jwk: testClientKey
+          }
+        },
+        testKeys.privateKey,
+        testKeys.publicKey.kid,
+        deps
+      )
+
+      await grantInitiationHttpsigMiddleware(ctx, next)
+
+      expect(ctx.response.status).toEqual(200)
+      expect(next).toHaveBeenCalled()
+    })
+
+    test('Validate grant continuation request with middleware (wallet address)', async (): Promise<void> => {
       const scope = nock(CLIENT)
         .get('/jwks.json')
         .reply(200, {
@@ -208,6 +234,43 @@ describe('Signature Service', (): void => {
       expect(next).toHaveBeenCalled()
 
       scope.done()
+    })
+
+    test('Validate grant continuation request with middleware (JWK)', async (): Promise<void> => {
+      const jwkGrant = await Grant.query(trx).insertAndFetch(
+        generateBaseGrant({
+          tenantId: tenant.id,
+          client: undefined,
+          jwk: testClientKey
+        })
+      )
+      await Access.query(trx).insertAndFetch({
+        grantId: jwkGrant.id,
+        ...BASE_ACCESS
+      })
+      const jwkInteraction = await Interaction.query(trx).insertAndFetch(
+        generateBaseInteraction(jwkGrant)
+      )
+
+      const ctx = await createContextWithSigHeaders<ContinueContext>(
+        {
+          headers: {
+            Accept: 'application/json',
+            Authorization: `GNAP ${jwkGrant.continueToken}`
+          },
+          url: 'http://example.com/continue',
+          method: 'POST'
+        },
+        { id: jwkGrant.continueId },
+        { interact_ref: jwkInteraction.ref },
+        testKeys.privateKey,
+        testKeys.publicKey.kid,
+        deps
+      )
+
+      await grantContinueHttpsigMiddleware(ctx, next)
+      expect(ctx.response.status).toEqual(200)
+      expect(next).toHaveBeenCalled()
     })
 
     test('Validate token management request with middleware', async () => {
@@ -405,6 +468,84 @@ describe('Signature Service', (): void => {
         status: 400,
         code: GNAPErrorCode.InvalidClient,
         message: 'could not determine client'
+      })
+    })
+
+    test('grant continuation middleware fails if grant has no client identity', async (): Promise<void> => {
+      const noClientGrant = await Grant.query(trx).insertAndFetch(
+        generateBaseGrant({
+          tenantId: tenant.id,
+          client: undefined
+        })
+      )
+      await Interaction.query(trx).insertAndFetch(
+        generateBaseInteraction(noClientGrant)
+      )
+
+      const ctx = await createContextWithSigHeaders<ContinueContext>(
+        {
+          headers: {
+            Accept: 'application/json',
+            Authorization: `GNAP ${noClientGrant.continueToken}`
+          },
+          url: 'http://example.com/continue',
+          method: 'POST'
+        },
+        { id: noClientGrant.continueId },
+        { interact_ref: interaction.ref },
+        testKeys.privateKey,
+        testKeys.publicKey.kid,
+        deps
+      )
+
+      await expect(
+        grantContinueHttpsigMiddleware(ctx, next)
+      ).rejects.toMatchObject({
+        status: 500,
+        code: GNAPErrorCode.RequestDenied,
+        message: 'internal server error'
+      })
+    })
+
+    test('token management middleware fails if grant has no client identity', async (): Promise<void> => {
+      const noClientGrant = await Grant.query(trx).insertAndFetch(
+        generateBaseGrant({
+          tenantId: tenant.id,
+          client: undefined
+        })
+      )
+      const noClientToken = await AccessToken.query(trx).insertAndFetch({
+        grantId: noClientGrant.id,
+        ...BASE_TOKEN,
+        value: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        managementId: v4()
+      })
+
+      const noClientManagementUrl = `/token/${noClientToken.managementId}`
+
+      const ctx = await createContextWithSigHeaders(
+        {
+          headers: {
+            Accept: 'application/json'
+          },
+          url: 'http://example.com' + noClientManagementUrl,
+          method: 'DELETE'
+        },
+        { id: noClientToken.managementId },
+        {
+          access_token: noClientToken.value,
+          proof: 'httpsig',
+          resource_server: 'test'
+        },
+        testKeys.privateKey,
+        testKeys.publicKey.kid,
+        deps
+      )
+
+      await expect(tokenHttpsigMiddleware(ctx, next)).rejects.toMatchObject({
+        status: 500,
+        code: GNAPErrorCode.RequestDenied,
+        message: 'internal server error'
       })
     })
 

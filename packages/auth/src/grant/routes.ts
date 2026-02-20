@@ -19,7 +19,7 @@ import { AccessTokenService } from '../accessToken/service'
 import { AccessService } from '../access/service'
 import { AccessToken } from '../accessToken/model'
 import { InteractionService } from '../interaction/service'
-import { canSkipInteraction } from './utils'
+import { canSkipInteraction, parseRawClientField } from './utils'
 import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
 import { generateRouteLogs } from '../shared/utils'
 import { SubjectService } from '../subject/service'
@@ -141,6 +141,17 @@ async function createGrant(
     }
     throw e
   }
+
+  const normalizedClient = parseRawClientField(ctx.request.body.client)
+
+  if (!noInteractionRequired && normalizedClient.jwk) {
+    throw new GNAPServerRouteError(
+      400,
+      GNAPErrorCode.InvalidRequest,
+      'JWK client identifier cannot be used for interactive grants'
+    )
+  }
+
   if (noInteractionRequired) {
     await createApprovedGrant(deps, tenantId, ctx)
   } else {
@@ -219,7 +230,12 @@ async function createPendingGrant(
     )
   }
 
-  const client = await deps.clientService.get(body.client)
+  // Interactive grants always have a wallet address client (JWK rejected in createGrant)
+  const { client: walletAddress } = parseRawClientField(body.client) as {
+    client: string
+  }
+
+  const client = await deps.clientService.get(walletAddress)
   if (!client) {
     throw new GNAPServerRouteError(
       400,
