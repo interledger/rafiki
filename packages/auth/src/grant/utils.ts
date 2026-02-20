@@ -9,9 +9,9 @@ import {
 import { AccessAction } from '@interledger/open-payments'
 import { GrantError, GrantErrorCode } from './errors'
 
-export type ParsedClientField =
-  | { client: string; jwk?: never }
-  | { client?: never; jwk: JWK }
+export type WalletAddressClientField = { client: string; jwk?: never }
+export type JwkClientField = { client?: never; jwk: JWK }
+export type ParsedClientField = WalletAddressClientField | JwkClientField
 
 /** Extract client identity from a persisted grant record. */
 export function getGrantClientIdentity(grant: {
