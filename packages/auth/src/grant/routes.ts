@@ -142,9 +142,9 @@ async function createGrant(
     throw e
   }
 
-  const normalizedClient = parseRawClientField(ctx.request.body.client)
+  const parsedClient = parseRawClientField(ctx.request.body.client)
 
-  if (!noInteractionRequired && normalizedClient.jwk) {
+  if (!noInteractionRequired && parsedClient.jwk) {
     throw new GNAPServerRouteError(
       400,
       GNAPErrorCode.InvalidRequest,

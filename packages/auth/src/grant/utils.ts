@@ -28,7 +28,7 @@ export function parseRawClientField(
   rawClient: RawClientField
 ): ParsedClientField {
   if (!rawClient) {
-    throw new Error('Invalid client field')
+    throw new GrantError(GrantErrorCode.InvalidRequest, 'Invalid client field')
   }
   if (typeof rawClient === 'string') {
     return { client: rawClient }
@@ -39,7 +39,7 @@ export function parseRawClientField(
   if ('jwk' in rawClient) {
     return { jwk: rawClient.jwk }
   }
-  throw new Error('Invalid client field')
+  throw new GrantError(GrantErrorCode.InvalidRequest, 'Invalid client field')
 }
 
 export function canSkipInteraction(
