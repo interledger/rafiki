@@ -5,7 +5,14 @@ import {
   useActionData,
   useNavigation
 } from '@remix-run/react'
-import { PageHeader, Button, ErrorPanel, Input, Select } from '~/components'
+import {
+  FormGroup,
+  PageHeader,
+  Button,
+  ErrorPanel,
+  Input,
+  Select
+} from '~/components'
 import { loadAssets } from '~/lib/asset.server'
 import { createAccount } from '~/lib/accounts.server'
 import { createWallet } from '~/lib/wallet.server'
@@ -47,44 +54,39 @@ export default function CreateAccountPage() {
           </div>
 
           <fieldset disabled={isSubmitting}>
-            <div className='grid grid-cols-1 px-0 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-              <div className='col-span-1 pt-3'>
-                <h3 className='text-lg font-medium'>General Information</h3>
+            <FormGroup title='General Information'>
+              <div className='w-full p-4 space-y-3'>
+                <Input
+                  name='name'
+                  label='Account name'
+                  placeholder='Account name'
+                  error={response?.errors?.fieldErrors.name}
+                />
+                <Input
+                  required
+                  addOn={`${options?.walletAddressPrefix ?? getOpenPaymentsUrl()}/accounts/`}
+                  name='path'
+                  label='Wallet address'
+                  placeholder='jdoe'
+                  error={response?.errors?.fieldErrors.path}
+                />
+                <Select
+                  options={assets.map(
+                    (asset: {
+                      node: { id: string; code: string; scale: number }
+                    }) => ({
+                      value: asset.node.id,
+                      label: `${asset.node.code} (Scale: ${asset.node.scale})`
+                    })
+                  )}
+                  error={response?.errors.fieldErrors.assetId}
+                  name='assetId'
+                  placeholder='Select asset...'
+                  label='Asset'
+                  required
+                />
               </div>
-              <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-                <div className='w-full p-4 space-y-3'>
-                  <Input
-                    name='name'
-                    label='Account name'
-                    placeholder='Account name'
-                    error={response?.errors?.fieldErrors.name}
-                  />
-                  <Input
-                    required
-                    addOn={`${options?.walletAddressPrefix ?? getOpenPaymentsUrl()}/accounts/`}
-                    name='path'
-                    label='Wallet address'
-                    placeholder='jdoe'
-                    error={response?.errors?.fieldErrors.path}
-                  />
-                  <Select
-                    options={assets.map(
-                      (asset: {
-                        node: { id: string; code: string; scale: number }
-                      }) => ({
-                        value: asset.node.id,
-                        label: `${asset.node.code} (Scale: ${asset.node.scale})`
-                      })
-                    )}
-                    error={response?.errors.fieldErrors.assetId}
-                    name='assetId'
-                    placeholder='Select asset...'
-                    label='Asset'
-                    required
-                  />
-                </div>
-              </div>
-            </div>
+            </FormGroup>
             <div className='flex justify-end py-3'>
               <Button aria-label='create account' type='submit'>
                 {isSubmitting ? 'Creating account ...' : 'Create'}

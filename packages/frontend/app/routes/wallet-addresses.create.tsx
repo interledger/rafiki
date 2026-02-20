@@ -6,7 +6,7 @@ import {
   useLoaderData,
   useNavigation
 } from '@remix-run/react'
-import { PageHeader } from '~/components'
+import { FormGroup, PageHeader } from '~/components'
 import type { SelectOption } from '~/components/ui'
 import { Button, ErrorPanel, Input, Select } from '~/components/ui'
 import { loadAssets } from '~/lib/api/asset.server'
@@ -101,70 +101,65 @@ export default function CreateWalletAddressPage() {
             <ErrorPanel errors={response?.errors.message} />
           </div>
           <fieldset disabled={isSubmitting}>
-            <div className='grid grid-cols-1 px-0 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-              <div className='col-span-1 pt-3'>
-                <h3 className='text-lg font-medium'>General Information</h3>
-              </div>
-              <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-                <div className='w-full p-4 space-y-3'>
-                  <Input
-                    name='waPrefix'
-                    value={waPrefix ?? getOpenPaymentsUrl()}
-                    type={'hidden'}
-                  />
-                  <Input
+            <FormGroup title='General Information'>
+              <div className='w-full p-4 space-y-3'>
+                <Input
+                  name='waPrefix'
+                  value={waPrefix ?? getOpenPaymentsUrl()}
+                  type={'hidden'}
+                />
+                <Input
+                  required
+                  addOn={waPrefix ?? getOpenPaymentsUrl()}
+                  name='name'
+                  label='Wallet address name'
+                  placeholder='jdoe'
+                  error={response?.errors?.fieldErrors.name}
+                />
+                <Input
+                  name='publicName'
+                  label='Public name'
+                  placeholder='Public name'
+                  error={response?.errors?.fieldErrors.publicName}
+                />
+                {tenants ? (
+                  <Select
+                    options={tenants.map((tenant) => ({
+                      value: tenant.node.id,
+                      label: `${tenant.node.id} ${tenant.node.publicName ? `(${tenant.node.publicName})` : ''}`
+                    }))}
+                    name='tenantId'
+                    placeholder='Select tenant...'
+                    label='Tenant'
                     required
-                    addOn={waPrefix ?? getOpenPaymentsUrl()}
-                    name='name'
-                    label='Wallet address name'
-                    placeholder='jdoe'
-                    error={response?.errors?.fieldErrors.name}
+                    onChange={(value) => setTenantId(value)}
+                    bringForward
                   />
-                  <Input
-                    name='publicName'
-                    label='Public name'
-                    placeholder='Public name'
-                    error={response?.errors?.fieldErrors.publicName}
+                ) : (
+                  <Select
+                    options={assets.map((asset) => ({
+                      value: asset.node.id,
+                      label: `${asset.node.code} (Scale: ${asset.node.scale})`
+                    }))}
+                    error={response?.errors.fieldErrors.asset}
+                    name='asset'
+                    placeholder='Select asset...'
+                    label='Asset'
+                    required
                   />
-                  {tenants ? (
-                    <Select
-                      options={tenants.map((tenant) => ({
-                        value: tenant.node.id,
-                        label: `${tenant.node.id} ${tenant.node.publicName ? `(${tenant.node.publicName})` : ''}`
-                      }))}
-                      name='tenantId'
-                      placeholder='Select tenant...'
-                      label='Tenant'
-                      required
-                      onChange={(value) => setTenantId(value)}
-                      bringForward
-                    />
-                  ) : (
-                    <Select
-                      options={assets.map((asset) => ({
-                        value: asset.node.id,
-                        label: `${asset.node.code} (Scale: ${asset.node.scale})`
-                      }))}
-                      error={response?.errors.fieldErrors.asset}
-                      name='asset'
-                      placeholder='Select asset...'
-                      label='Asset'
-                      required
-                    />
-                  )}
-                  {tenants && tenantId && (
-                    <Select
-                      options={getAssetsOfTenant()}
-                      error={response?.errors.fieldErrors.asset}
-                      name='asset'
-                      placeholder='Select asset...'
-                      label='Asset'
-                      required
-                    />
-                  )}
-                </div>
+                )}
+                {tenants && tenantId && (
+                  <Select
+                    options={getAssetsOfTenant()}
+                    error={response?.errors.fieldErrors.asset}
+                    name='asset'
+                    placeholder='Select asset...'
+                    label='Asset'
+                    required
+                  />
+                )}
               </div>
-            </div>
+            </FormGroup>
             <div className='flex justify-end py-3'>
               <Button aria-label='create wallet address' type='submit'>
                 {isSubmitting ? 'Creating wallet address ...' : 'Create'}

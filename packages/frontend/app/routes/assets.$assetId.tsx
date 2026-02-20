@@ -14,7 +14,7 @@ import {
 } from '@remix-run/react'
 import { type FormEvent, useState, useRef } from 'react'
 import { z } from 'zod'
-import { DangerZone, PageHeader } from '~/components'
+import { DangerZone, FormGroup, PageHeader } from '~/components'
 import { Button, ErrorPanel, Input } from '~/components/ui'
 import {
   ConfirmationDialog,
@@ -93,146 +93,140 @@ export default function ViewAssetPage() {
             Go to assets page
           </Button>
         </PageHeader>
-        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-          <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>General Information</h3>
-            <p className='text-sm'>
-              Created at {new Date(asset.createdAt).toLocaleString()}
-            </p>
-            <ErrorPanel errors={response?.errors.general.message} />
+        <FormGroup
+          title='General Information'
+          subtitle={
+            <>
+              <p className='text-sm'>
+                Created at {new Date(asset.createdAt).toLocaleString()}
+              </p>
+              <ErrorPanel errors={response?.errors.general.message} />
+            </>
+          }
+        >
+          <Form method='post' replace preventScrollReset>
+            <fieldset disabled={currentPageAction}>
+              <div className='w-full p-4 space-y-3'>
+                <Input type='hidden' name='id' value={asset.id} />
+                <Input label='Asset ID' value={asset.id} disabled readOnly />
+                <Input label='Code' value={asset.code} disabled readOnly />
+                <Input label='Scale' value={asset.scale} disabled readOnly />
+                <Input
+                  type='number'
+                  name='withdrawalThreshold'
+                  label='Withdrawal Threshold'
+                  defaultValue={asset.withdrawalThreshold ?? undefined}
+                  error={
+                    response?.errors.general.fieldErrors.withdrawalThreshold
+                  }
+                />
+              </div>
+              <div className='flex justify-end p-4'>
+                <Button
+                  aria-label='save general information'
+                  type='submit'
+                  name='intent'
+                  value='general'
+                >
+                  {currentPageAction ? 'Saving ...' : 'Save'}
+                </Button>
+              </div>
+            </fieldset>
+          </Form>
+        </FormGroup>
+        {/* Asset Liquidity Info */}
+        <FormGroup title='Liquidity Information'>
+          <div className='w-full p-4 flex justify-between items-center'>
+            <div>
+              <p className='font-medium'>Amount</p>
+              <p className='mt-1'>
+                {formatAmount(asset.liquidity ?? '0', asset.scale)} {asset.code}
+              </p>
+            </div>
+            <div className='flex space-x-4'>
+              <Button
+                aria-label='deposit asset liquidity page'
+                preventScrollReset
+                type='button'
+                to={`/assets/${asset.id}/deposit-liquidity`}
+              >
+                Deposit liquidity
+              </Button>
+              <Button
+                aria-label='withdraw asset liquidity page'
+                preventScrollReset
+                type='button'
+                to={`/assets/${asset.id}/withdraw-liquidity`}
+              >
+                Withdraw liquidity
+              </Button>
+            </div>
           </div>
-          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <Form method='post' replace preventScrollReset>
-              <fieldset disabled={currentPageAction}>
-                <div className='w-full p-4 space-y-3'>
-                  <Input type='hidden' name='id' value={asset.id} />
-                  <Input label='Asset ID' value={asset.id} disabled readOnly />
-                  <Input label='Code' value={asset.code} disabled readOnly />
-                  <Input label='Scale' value={asset.scale} disabled readOnly />
-                  <Input
-                    type='number'
-                    name='withdrawalThreshold'
-                    label='Withdrawal Threshold'
-                    defaultValue={asset.withdrawalThreshold ?? undefined}
-                    error={
-                      response?.errors.general.fieldErrors.withdrawalThreshold
-                    }
-                  />
-                </div>
+        </FormGroup>
+        {/* Asset Fee Info */}
+        <FormGroup
+          title='Sending Fee'
+          subtitle={
+            <>
+              {asset.sendingFee ? (
+                <p className='text-sm'>
+                  Created at{' '}
+                  {new Date(asset.sendingFee.createdAt).toLocaleString()}
+                </p>
+              ) : null}
+              <ErrorPanel errors={response?.errors.sendingFee.message} />
+            </>
+          }
+        >
+          <div className='flex justify-end p-4'>
+            <Button
+              aria-label='view asset fees page'
+              type='button'
+              to={`/assets/${asset.id}/fee-history`}
+            >
+              Fee history
+            </Button>
+          </div>
+          <Form method='post' replace preventScrollReset>
+            <fieldset disabled={currentPageAction}>
+              <div className='w-full p-4 space-y-3'>
+                <Input type='hidden' name='assetId' value={asset.id} />
+                <Input
+                  type='number'
+                  name='fixed'
+                  label='Fixed Fee'
+                  defaultValue={asset.sendingFee?.fixed ?? undefined}
+                  error={response?.errors.sendingFee.fieldErrors.fixed}
+                />
+                <Input
+                  type='number'
+                  name='basisPoints'
+                  label='Basis Points'
+                  error={response?.errors.sendingFee.fieldErrors.basisPoints}
+                  value={basisPointsInput}
+                  onChange={(e) =>
+                    setBasisPointsInput(parseFloat(e?.target?.value))
+                  }
+                />
+                <p className='text-gray-500 text-sm mt-2'>
+                  A single basis point is a fee equal to 0.01% of the total
+                  amount. A fee of {basisPointsInput || 1} basis point on $100
+                  is ${((basisPointsInput || 1) * 0.01).toFixed(4)}.
+                </p>
                 <div className='flex justify-end p-4'>
                   <Button
-                    aria-label='save general information'
+                    aria-label='save sending fee information'
                     type='submit'
                     name='intent'
-                    value='general'
+                    value='sending-fees'
                   >
                     {currentPageAction ? 'Saving ...' : 'Save'}
                   </Button>
                 </div>
-              </fieldset>
-            </Form>
-          </div>
-        </div>
-        {/* Asset Liquidity Info */}
-        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-          <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Liquidity Information</h3>
-          </div>
-          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <div className='w-full p-4 flex justify-between items-center'>
-              <div>
-                <p className='font-medium'>Amount</p>
-                <p className='mt-1'>
-                  {formatAmount(asset.liquidity ?? '0', asset.scale)}{' '}
-                  {asset.code}
-                </p>
               </div>
-              <div className='flex space-x-4'>
-                <Button
-                  aria-label='deposit asset liquidity page'
-                  preventScrollReset
-                  type='button'
-                  to={`/assets/${asset.id}/deposit-liquidity`}
-                >
-                  Deposit liquidity
-                </Button>
-                <Button
-                  aria-label='withdraw asset liquidity page'
-                  preventScrollReset
-                  type='button'
-                  to={`/assets/${asset.id}/withdraw-liquidity`}
-                >
-                  Withdraw liquidity
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* Asset Liquidity Info - END */}
-        {/* Asset Fee Info */}
-        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-          <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Sending Fee</h3>
-            {asset.sendingFee ? (
-              <p className='text-sm'>
-                Created at{' '}
-                {new Date(asset.sendingFee.createdAt).toLocaleString()}
-              </p>
-            ) : null}
-            <ErrorPanel errors={response?.errors.sendingFee.message} />
-          </div>
-          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <div className='flex justify-end p-4'>
-              <Button
-                aria-label='view asset fees page'
-                type='button'
-                to={`/assets/${asset.id}/fee-history`}
-              >
-                Fee history
-              </Button>
-            </div>
-            <Form method='post' replace preventScrollReset>
-              <fieldset disabled={currentPageAction}>
-                <div className='w-full p-4 space-y-3'>
-                  <Input type='hidden' name='assetId' value={asset.id} />
-                  <Input
-                    type='number'
-                    name='fixed'
-                    label='Fixed Fee'
-                    defaultValue={asset.sendingFee?.fixed ?? undefined}
-                    error={response?.errors.sendingFee.fieldErrors.fixed}
-                  />
-                  <Input
-                    type='number'
-                    name='basisPoints'
-                    label='Basis Points'
-                    error={response?.errors.sendingFee.fieldErrors.basisPoints}
-                    value={basisPointsInput}
-                    onChange={(e) =>
-                      setBasisPointsInput(parseFloat(e?.target?.value))
-                    }
-                  />
-                  <p className='text-gray-500 text-sm mt-2'>
-                    A single basis point is a fee equal to 0.01% of the total
-                    amount. A fee of {basisPointsInput || 1} basis point on $100
-                    is ${((basisPointsInput || 1) * 0.01).toFixed(4)}.
-                  </p>
-                  <div className='flex justify-end p-4'>
-                    <Button
-                      aria-label='save sending fee information'
-                      type='submit'
-                      name='intent'
-                      value='sending-fees'
-                    >
-                      {currentPageAction ? 'Saving ...' : 'Save'}
-                    </Button>
-                  </div>
-                </div>
-              </fieldset>
-            </Form>
-          </div>
-        </div>
-        {/* Asset Fee Info - END */}
+            </fieldset>
+          </Form>
+        </FormGroup>
 
         {/* DELETE ASSET - Danger zone */}
         <DangerZone title='Delete Asset'>
