@@ -1,7 +1,7 @@
 import { JWK } from 'token-introspection'
 
 import { IAppConfig } from '../config/app'
-import { GrantRequest, RawClientField } from './service'
+import { CreateGrantInput } from './service'
 import {
   isIncomingPaymentAccessRequest,
   isQuoteAccessRequest
@@ -9,6 +9,7 @@ import {
 import { AccessAction } from '@interledger/open-payments'
 import { GrantError, GrantErrorCode } from './errors'
 
+export type RawClientField = string | { walletAddress: string } | { jwk: JWK }
 export type WalletAddressClientField = { client: string; jwk?: never }
 export type JwkClientField = { client?: never; jwk: JWK }
 export type ParsedClientField = WalletAddressClientField | JwkClientField
@@ -44,7 +45,7 @@ export function parseRawClientField(
 
 export function canSkipInteraction(
   config: IAppConfig,
-  body: GrantRequest
+  body: CreateGrantInput
 ): boolean {
   const emptySubject = (body.subject?.sub_ids?.length ?? 0) === 0
   const emptyAccess = (body.access_token?.access?.length ?? 0) === 0

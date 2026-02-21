@@ -8,7 +8,7 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
-import { GrantService, GrantRequest } from '../grant/service'
+import { GrantService, CreateGrantInput } from '../grant/service'
 import {
   Grant,
   StartMethod,
@@ -124,7 +124,7 @@ describe('Grant Service', (): void => {
 
     describe('create', (): void => {
       test('Can initiate a grant', async (): Promise<void> => {
-        const grantRequest: GrantRequest = {
+        const grantRequest: CreateGrantInput = {
           ...BASE_GRANT_REQUEST,
           access_token: {
             access: [
@@ -162,8 +162,8 @@ describe('Grant Service', (): void => {
 
       test('Can create a non-interactive grant with JWK client', async (): Promise<void> => {
         const testJwk = generateTestJwk()
-        const grantRequest: GrantRequest = {
-          client: { jwk: testJwk },
+        const grantRequest: CreateGrantInput = {
+          jwk: testJwk,
           access_token: {
             access: [
               {
@@ -185,10 +185,10 @@ describe('Grant Service', (): void => {
         expect(grant.client).toBeUndefined()
       })
 
-      test('Can create a grant with { walletAddress } client', async (): Promise<void> => {
-        const grantRequest: GrantRequest = {
+      test('Can create a grant with explicit client field', async (): Promise<void> => {
+        const grantRequest: CreateGrantInput = {
           ...BASE_GRANT_REQUEST,
-          client: { walletAddress: CLIENT },
+          client: CLIENT,
           access_token: {
             access: [
               {
@@ -210,23 +210,6 @@ describe('Grant Service', (): void => {
         expect(grant.jwk).toBeUndefined()
       })
 
-      test('Cannot create a grant with neither client nor jwk', async (): Promise<void> => {
-        const grantRequest = {
-          access_token: {
-            access: [
-              {
-                ...BASE_GRANT_ACCESS,
-                type: AccessType.IncomingPayment
-              }
-            ]
-          }
-        } as unknown as GrantRequest
-
-        await expect(
-          grantService.create(grantRequest, tenant.id)
-        ).rejects.toThrow()
-      })
-
       test.each`
         type                          | expectedState          | interact
         ${AccessType.IncomingPayment} | ${GrantState.Approved} | ${undefined}
@@ -235,7 +218,7 @@ describe('Grant Service', (): void => {
       `(
         'Puts $type grant without interaction in $expectedState state',
         async ({ type, expectedState, interact }): Promise<void> => {
-          const grantRequest: GrantRequest = {
+          const grantRequest: CreateGrantInput = {
             ...BASE_GRANT_REQUEST,
             access_token: {
               access: [
@@ -269,7 +252,7 @@ describe('Grant Service', (): void => {
       )
 
       it('create a grant with subject in pending state', async () => {
-        const grantRequest: GrantRequest = {
+        const grantRequest: CreateGrantInput = {
           ...BASE_GRANT_REQUEST,
           subject: {
             sub_ids: [
@@ -353,7 +336,7 @@ describe('Grant Service', (): void => {
       })
 
       test('properly fetches grant by continuation information with multiple existing grants', async (): Promise<void> => {
-        const grantRequest: GrantRequest = {
+        const grantRequest: CreateGrantInput = {
           ...BASE_GRANT_REQUEST,
           access_token: {
             access: [
@@ -403,7 +386,7 @@ describe('Grant Service', (): void => {
 
     describe('getByIdWithAccessAndSubject', (): void => {
       test('Can fetch a grant by id with access', async () => {
-        const grantRequest: GrantRequest = {
+        const grantRequest: CreateGrantInput = {
           ...BASE_GRANT_REQUEST,
           subject: {
             sub_ids: [
@@ -521,7 +504,7 @@ describe('Grant Service', (): void => {
 
     describe('lock', (): void => {
       test('a grant reference can be locked', async (): Promise<void> => {
-        const grantRequest: GrantRequest = {
+        const grantRequest: CreateGrantInput = {
           ...BASE_GRANT_REQUEST,
           access_token: {
             access: [

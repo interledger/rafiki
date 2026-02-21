@@ -18,7 +18,7 @@ import { AccessService } from '../access/service'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { FilterString } from '../shared/filters'
 import { AccessTokenService } from '../accessToken/service'
-import { canSkipInteraction, parseRawClientField } from './utils'
+import { canSkipInteraction } from './utils'
 import { IAppConfig } from '../config/app'
 import { SubjectRequest } from '../subject/types'
 import { SubjectService } from '../subject/service'
@@ -35,7 +35,7 @@ export interface GrantService {
     tenantId?: string
   ): Promise<Grant | undefined>
   create(
-    grantRequest: GrantRequest,
+    input: CreateGrantInput,
     tenantId: string,
     trx?: Transaction
   ): Promise<Grant>
@@ -67,13 +67,12 @@ interface ServiceDependencies extends BaseService {
 }
 
 // datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-2
-export type RawClientField = string | { walletAddress: string } | { jwk: JWK }
-
-export interface GrantRequest {
+export interface CreateGrantInput {
   access_token?: {
     access: AccessRequest[]
   }
-  client: RawClientField
+  client?: string
+  jwk?: JWK
   interact?: {
     start: StartMethod[]
     finish?: {
@@ -139,8 +138,8 @@ export async function createGrantService({
   return {
     getByIdWithAccessAndSubject: (grantId: string, tenantId?: string) =>
       getByIdWithAccessAndSubject(grantId, tenantId),
-    create: (grantRequest: GrantRequest, tenantId: string, trx?: Transaction) =>
-      create(deps, grantRequest, tenantId, trx),
+    create: (input: CreateGrantInput, tenantId: string, trx?: Transaction) =>
+      create(deps, input, tenantId, trx),
     markPending: (grantId: string, trx?: Transaction) =>
       markPending(deps, grantId, trx),
     approve: (grantId: string) => approve(grantId),
@@ -259,19 +258,17 @@ async function revokeGrant(
 
 async function create(
   deps: ServiceDependencies,
-  grantRequest: GrantRequest,
+  input: CreateGrantInput,
   tenantId: string,
   trx?: Transaction
 ): Promise<Grant> {
   const { accessService, subjectService, knex } = deps
-  const { access_token, interact, client: rawClient, subject } = grantRequest
-
-  const { client, jwk } = parseRawClientField(rawClient)
+  const { access_token, interact, client, jwk, subject } = input
 
   const grantTrx = trx || (await Grant.startTransaction(knex))
   try {
     const grantData = {
-      state: canSkipInteraction(deps.config, grantRequest)
+      state: canSkipInteraction(deps.config, input)
         ? GrantState.Approved
         : GrantState.Pending,
       startMethod: interact?.start,

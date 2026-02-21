@@ -1,7 +1,7 @@
 import { ParsedUrlQuery } from 'querystring'
 
 import { AppContext } from '../app'
-import { GrantService, GrantRequest as GrantRequestBody } from './service'
+import { GrantService, CreateGrantInput } from './service'
 import {
   Grant,
   GrantFinalization,
@@ -22,7 +22,7 @@ import { InteractionService } from '../interaction/service'
 import {
   canSkipInteraction,
   parseRawClientField,
-  WalletAddressClientField
+  RawClientField
 } from './utils'
 import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
 import { generateRouteLogs } from '../shared/utils'
@@ -57,7 +57,11 @@ type GrantContext<BodyT = never, QueryT = ParsedUrlQuery> = Exclude<
   request: GrantRequest<BodyT, QueryT>
 }
 
-export type CreateContext = GrantContext<GrantRequestBody>
+type RawGrantRequestBody = Omit<CreateGrantInput, 'client' | 'jwk'> & {
+  client: RawClientField
+}
+
+export type CreateContext = GrantContext<RawGrantRequestBody>
 
 interface GrantContinueBody {
   interact_ref?: string
@@ -132,9 +136,13 @@ async function createGrant(
       'Not Found'
     )
   }
+  let input: CreateGrantInput
   let noInteractionRequired: boolean
   try {
-    noInteractionRequired = canSkipInteraction(deps.config, ctx.request.body)
+    const { client: rawClient, ...rest } = ctx.request.body
+    const parsedClient = parseRawClientField(rawClient)
+    input = { ...rest, ...parsedClient }
+    noInteractionRequired = canSkipInteraction(deps.config, input)
   } catch (e) {
     if (isGrantError(e)) {
       throw new GNAPServerRouteError(
@@ -147,11 +155,10 @@ async function createGrant(
   }
 
   if (noInteractionRequired) {
-    await createApprovedGrant(deps, tenantId, ctx)
+    await createApprovedGrant(deps, tenantId, ctx, input)
   } else {
-    const parsedClient = parseRawClientField(ctx.request.body.client)
-
-    if (parsedClient.jwk) {
+    const { client } = input
+    if (input.jwk || !client) {
       throw new GNAPServerRouteError(
         400,
         GNAPErrorCode.InvalidRequest,
@@ -159,22 +166,22 @@ async function createGrant(
       )
     }
 
-    await createPendingGrant(deps, tenant, ctx, parsedClient)
+    await createPendingGrant(deps, tenant, ctx, { ...input, client })
   }
 }
 
 async function createApprovedGrant(
   deps: ServiceDependencies,
   tenantId: string,
-  ctx: CreateContext
+  ctx: CreateContext,
+  input: CreateGrantInput
 ): Promise<void> {
-  const { body } = ctx.request
   const { grantService, config, logger } = deps
   const trx = await Grant.startTransaction()
   let grant: Grant
   let accessToken: AccessToken
   try {
-    grant = await grantService.create(body, tenantId, trx)
+    grant = await grantService.create(input, tenantId, trx)
     accessToken = await deps.accessTokenService.create(grant.id, trx)
     await trx.commit()
   } catch (err) {
@@ -215,11 +222,10 @@ async function createPendingGrant(
   deps: ServiceDependencies,
   tenant: Tenant,
   ctx: CreateContext,
-  parsedClient: WalletAddressClientField
+  input: CreateGrantInput & { client: string }
 ): Promise<void> {
-  const { body } = ctx.request
   const { grantService, interactionService, config, logger } = deps
-  if (!body.interact) {
+  if (!input.interact) {
     throw new GNAPServerRouteError(
       400,
       GNAPErrorCode.InvalidRequest,
@@ -235,7 +241,7 @@ async function createPendingGrant(
     )
   }
 
-  const client = await deps.clientService.get(parsedClient.client)
+  const client = await deps.clientService.get(input.client)
   if (!client) {
     throw new GNAPServerRouteError(
       400,
@@ -247,7 +253,7 @@ async function createPendingGrant(
   const trx = await Grant.startTransaction()
 
   try {
-    const grant = await grantService.create(body, tenant.id, trx)
+    const grant = await grantService.create(input, tenant.id, trx)
     const interaction = await interactionService.create(grant.id, trx)
     await trx.commit()
 
