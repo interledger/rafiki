@@ -1,7 +1,7 @@
 import { AccessRequest } from '../access/types'
 import { IAppConfig } from '../config/app'
 import { CreateGrantInput } from './service'
-import { canSkipInteraction, parseRawClientField } from './utils'
+import { canSkipInteraction, parseRawClientField, RawClientField } from './utils'
 import { AccessAction } from '@interledger/open-payments'
 import { JWK } from 'token-introspection'
 
@@ -56,6 +56,12 @@ describe('parseRawClientField', () => {
     expect(parseRawClientField({ jwk: testJwk })).toEqual({
       jwk: testJwk
     })
+  })
+
+  it('throws on falsy input', () => {
+    expect(() =>
+      parseRawClientField(undefined as unknown as RawClientField)
+    ).toThrow('Invalid client field')
   })
 })
 

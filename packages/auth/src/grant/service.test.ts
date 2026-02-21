@@ -237,7 +237,7 @@ describe('Grant Service', (): void => {
         const testJwk = generateTestJwk()
         const grantRequest: CreateGrantInput = {
           jwk: testJwk,
-          ...BASE_GRANT_REQUEST,
+          interact: BASE_GRANT_REQUEST.interact,
           access_token: {
             access: [
               {
