@@ -67,10 +67,7 @@ interface ServiceDependencies extends BaseService {
 }
 
 // datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-2
-export type RawClientField =
-  | string
-  | { walletAddress: string }
-  | { jwk: JWK }
+export type RawClientField = string | { walletAddress: string } | { jwk: JWK }
 
 export interface GrantRequest {
   access_token?: {

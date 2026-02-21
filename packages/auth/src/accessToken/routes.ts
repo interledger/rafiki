@@ -10,10 +10,7 @@ import { AccessToken, toOpenPaymentsAccessToken } from './model'
 import { AccessService } from '../access/service'
 import { TransactionOrKnex } from 'objection'
 import { GrantService } from '../grant/service'
-import {
-  GNAPErrorCode,
-  GNAPServerRouteError
-} from '../shared/gnapErrors'
+import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
 import { generateRouteLogs } from '../shared/utils'
 import { AccessItem } from '@interledger/open-payments'
 import { getGrantClientIdentity, ParsedClientField } from '../grant/utils'
