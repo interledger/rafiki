@@ -16,6 +16,7 @@ import {
   GrantState,
   GrantFinalization
 } from '../grant/model'
+import { GrantError, GrantErrorCode } from '../grant/errors'
 import { Access } from '../access/model'
 import { generateNonce, generateToken } from '../shared/utils'
 import { AccessType, AccessAction } from '@interledger/open-payments'
@@ -208,6 +209,55 @@ describe('Grant Service', (): void => {
           continueToken: expect.any(String)
         })
         expect(grant.jwk).toBeUndefined()
+      })
+
+      test('Cannot create a grant with neither client nor jwk', async (): Promise<void> => {
+        const grantRequest: CreateGrantInput = {
+          access_token: {
+            access: [
+              {
+                ...BASE_GRANT_ACCESS,
+                type: AccessType.IncomingPayment
+              }
+            ]
+          }
+        }
+
+        expect.assertions(2)
+        try {
+          await grantService.create(grantRequest, tenant.id)
+        } catch (err) {
+          assert.ok(err instanceof GrantError)
+          expect(err.code).toBe(GrantErrorCode.InvalidRequest)
+          expect(err.message).toBe('client or jwk is required')
+        }
+      })
+
+      test('Cannot create an interactive grant with JWK client', async (): Promise<void> => {
+        const testJwk = generateTestJwk()
+        const grantRequest: CreateGrantInput = {
+          jwk: testJwk,
+          ...BASE_GRANT_REQUEST,
+          access_token: {
+            access: [
+              {
+                ...BASE_GRANT_ACCESS,
+                type: AccessType.OutgoingPayment
+              }
+            ]
+          }
+        }
+
+        expect.assertions(2)
+        try {
+          await grantService.create(grantRequest, tenant.id)
+        } catch (err) {
+          assert.ok(err instanceof GrantError)
+          expect(err.code).toBe(GrantErrorCode.InvalidRequest)
+          expect(err.message).toBe(
+            'JWK client identifier cannot be used for interactive grants'
+          )
+        }
       })
 
       test.each`
