@@ -48,9 +48,7 @@ async function verifySigFromClientIdentity(
   let clientKey: JWK | undefined
 
   if (identity.jwk) {
-    if (identity.jwk.kid === keyId) {
-      clientKey = identity.jwk
-    }
+    clientKey = identity.jwk
   } else if (identity.client) {
     const clientService = await ctx.container.use('clientService')
     clientKey = await clientService.getKey({
