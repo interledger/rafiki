@@ -1,8 +1,9 @@
 import { AccessRequest } from '../access/types'
 import { IAppConfig } from '../config/app'
 import { GrantRequest } from './service'
-import { canSkipInteraction } from './utils'
+import { canSkipInteraction, parseRawClientField } from './utils'
 import { AccessAction } from '@interledger/open-payments'
+import { JWK } from 'token-introspection'
 
 const mockConfig = {
   incomingPaymentInteraction: false,
@@ -27,6 +28,36 @@ const outgoingPaymentAccess: AccessRequest = {
   actions: [AccessAction.Create],
   identifier: 'id'
 }
+
+describe('parseRawClientField', () => {
+  const testJwk: JWK = {
+    kid: 'test-key-1',
+    alg: 'EdDSA',
+    kty: 'OKP',
+    crv: 'Ed25519',
+    x: 'test-x-value'
+  }
+
+  it('normalizes a string client to { client }', () => {
+    expect(parseRawClientField('https://wallet.example')).toEqual({
+      client: 'https://wallet.example'
+    })
+  })
+
+  it('normalizes a { walletAddress } client to { client }', () => {
+    expect(
+      parseRawClientField({ walletAddress: 'https://wallet.example' })
+    ).toEqual({
+      client: 'https://wallet.example'
+    })
+  })
+
+  it('normalizes a { jwk } client to { jwk }', () => {
+    expect(parseRawClientField({ jwk: testJwk })).toEqual({
+      jwk: testJwk
+    })
+  })
+})
 
 describe('canSkipInteraction', () => {
   it('returns false if no access_token and has sub_ids', () => {

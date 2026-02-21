@@ -19,7 +19,11 @@ import { AccessTokenService } from '../accessToken/service'
 import { AccessService } from '../access/service'
 import { AccessToken } from '../accessToken/model'
 import { InteractionService } from '../interaction/service'
-import { canSkipInteraction } from './utils'
+import {
+  canSkipInteraction,
+  parseRawClientField,
+  WalletAddressClientField
+} from './utils'
 import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
 import { generateRouteLogs } from '../shared/utils'
 import { SubjectService } from '../subject/service'
@@ -141,10 +145,21 @@ async function createGrant(
     }
     throw e
   }
+
   if (noInteractionRequired) {
     await createApprovedGrant(deps, tenantId, ctx)
   } else {
-    await createPendingGrant(deps, tenant, ctx)
+    const parsedClient = parseRawClientField(ctx.request.body.client)
+
+    if (parsedClient.jwk) {
+      throw new GNAPServerRouteError(
+        400,
+        GNAPErrorCode.InvalidRequest,
+        'JWK client identifier cannot be used for interactive grants'
+      )
+    }
+
+    await createPendingGrant(deps, tenant, ctx, parsedClient)
   }
 }
 
@@ -199,7 +214,8 @@ async function createApprovedGrant(
 async function createPendingGrant(
   deps: ServiceDependencies,
   tenant: Tenant,
-  ctx: CreateContext
+  ctx: CreateContext,
+  parsedClient: WalletAddressClientField
 ): Promise<void> {
   const { body } = ctx.request
   const { grantService, interactionService, config, logger } = deps
@@ -219,7 +235,7 @@ async function createPendingGrant(
     )
   }
 
-  const client = await deps.clientService.get(body.client)
+  const client = await deps.clientService.get(parsedClient.client)
   if (!client) {
     throw new GNAPServerRouteError(
       400,

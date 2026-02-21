@@ -2,6 +2,8 @@ import { v4 } from 'uuid'
 import { faker } from '@faker-js/faker'
 import { AccessAction, AccessType } from '@interledger/open-payments'
 import { IocContract } from '@adonisjs/fold'
+import { generateTestKeys } from '@interledger/http-signature-utils'
+import { JWK } from 'token-introspection'
 import { AppServices } from '../app'
 import {
   Grant,
@@ -13,6 +15,11 @@ import {
 import { generateNonce, generateToken } from '../shared/utils'
 
 const CLIENT = faker.internet.url({ appendSlash: false })
+
+export function generateTestJwk(): JWK {
+  const keys = generateTestKeys()
+  return keys.publicKey as JWK
+}
 
 export async function createGrant(
   deps: IocContract<AppServices>,
@@ -60,6 +67,7 @@ export interface GenerateBaseGrantOptions {
   state?: GrantState
   finalizationReason?: GrantFinalization
   noFinishMethod?: boolean
+  jwk?: JWK
 }
 
 export const generateBaseGrant = (options: GenerateBaseGrantOptions) => {
@@ -67,7 +75,8 @@ export const generateBaseGrant = (options: GenerateBaseGrantOptions) => {
     tenantId,
     state = GrantState.Processing,
     finalizationReason = undefined,
-    noFinishMethod = false
+    noFinishMethod = false,
+    jwk = undefined
   } = options
   return {
     tenantId,
@@ -79,6 +88,7 @@ export const generateBaseGrant = (options: GenerateBaseGrantOptions) => {
     finishMethod: noFinishMethod ? undefined : FinishMethod.Redirect,
     finishUri: noFinishMethod ? undefined : 'https://example.com',
     clientNonce: generateNonce(),
-    client: CLIENT
+    client: jwk ? undefined : CLIENT,
+    jwk
   }
 }

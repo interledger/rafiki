@@ -12,12 +12,13 @@ import {
   isGrantWithTenant,
   GrantWithTenant
 } from './model'
+import { JWK } from 'token-introspection'
 import { AccessRequest } from '../access/types'
 import { AccessService } from '../access/service'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { FilterString } from '../shared/filters'
 import { AccessTokenService } from '../accessToken/service'
-import { canSkipInteraction } from './utils'
+import { canSkipInteraction, parseRawClientField } from './utils'
 import { IAppConfig } from '../config/app'
 import { SubjectRequest } from '../subject/types'
 import { SubjectService } from '../subject/service'
@@ -66,11 +67,16 @@ interface ServiceDependencies extends BaseService {
 }
 
 // datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-2
+export type RawClientField =
+  | string
+  | { walletAddress: string }
+  | { jwk: JWK }
+
 export interface GrantRequest {
   access_token?: {
     access: AccessRequest[]
   }
-  client: string
+  client: RawClientField
   interact?: {
     start: StartMethod[]
     finish?: {
@@ -261,7 +267,9 @@ async function create(
   trx?: Transaction
 ): Promise<Grant> {
   const { accessService, subjectService, knex } = deps
-  const { access_token, interact, client, subject } = grantRequest
+  const { access_token, interact, client: rawClient, subject } = grantRequest
+
+  const { client, jwk } = parseRawClientField(rawClient)
 
   const grantTrx = trx || (await Grant.startTransaction(knex))
   try {
@@ -274,6 +282,7 @@ async function create(
       finishUri: interact?.finish?.uri,
       clientNonce: interact?.finish?.nonce,
       client,
+      jwk,
       continueId: v4(),
       continueToken: generateToken(),
       tenantId

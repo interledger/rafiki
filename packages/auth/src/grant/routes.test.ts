@@ -38,7 +38,7 @@ import {
   GrantContinuation,
   PendingGrant
 } from '@interledger/open-payments'
-import { generateBaseGrant } from '../tests/grant'
+import { generateBaseGrant, generateTestJwk } from '../tests/grant'
 import { generateBaseInteraction } from '../tests/interaction'
 import { GNAPErrorCode } from '../shared/gnapErrors'
 import { Tenant } from '../tenant/model'
@@ -262,6 +262,77 @@ describe('Grant Routes', (): void => {
               }
             }
           )
+        })
+      })
+
+      test('Can create non-interactive grant with JWK client', async (): Promise<void> => {
+        const testJwk = generateTestJwk()
+        const ctx = createContext<CreateContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            },
+            url,
+            method
+          },
+          {
+            tenantId: tenant.id
+          }
+        )
+        const body = {
+          access_token: {
+            access: [
+              {
+                type: AccessType.IncomingPayment,
+                actions: [AccessAction.Create, AccessAction.Read],
+                identifier: `https://example.com/${v4()}`
+              }
+            ]
+          },
+          client: { jwk: testJwk }
+        }
+        ctx.request.body = body
+
+        await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
+        expect(ctx.status).toBe(200)
+
+        const createdGrant = await Grant.query().findOne({
+          continueId: getGrantContinueId(
+            (ctx.body as GrantContinuation).continue.uri
+          ),
+          continueToken: (ctx.body as GrantContinuation).continue.access_token
+            .value
+        })
+        assert.ok(createdGrant)
+        expect(createdGrant.client).toBeNull()
+        expect(createdGrant.jwk).toMatchObject(testJwk)
+      })
+
+      test('Rejects interactive grant with JWK client', async (): Promise<void> => {
+        const testJwk = generateTestJwk()
+        const ctx = createContext<CreateContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            },
+            url,
+            method
+          },
+          {
+            tenantId: tenant.id
+          }
+        )
+        ctx.request.body = {
+          ...BASE_GRANT_REQUEST,
+          client: { jwk: testJwk }
+        }
+
+        await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
+          status: 400,
+          code: GNAPErrorCode.InvalidRequest,
+          message: 'JWK client identifier cannot be used for interactive grants'
         })
       })
 

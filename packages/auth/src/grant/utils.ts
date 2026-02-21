@@ -1,11 +1,46 @@
+import { JWK } from 'token-introspection'
+
 import { IAppConfig } from '../config/app'
-import { GrantRequest } from './service'
+import { GrantRequest, RawClientField } from './service'
 import {
   isIncomingPaymentAccessRequest,
   isQuoteAccessRequest
 } from '../access/types'
 import { AccessAction } from '@interledger/open-payments'
 import { GrantError, GrantErrorCode } from './errors'
+
+export type WalletAddressClientField = { client: string; jwk?: never }
+export type JwkClientField = { client?: never; jwk: JWK }
+export type ParsedClientField = WalletAddressClientField | JwkClientField
+
+/** Extract client identity from a persisted grant record. */
+export function getGrantClientIdentity(grant: {
+  client?: string
+  jwk?: JWK
+}): ParsedClientField {
+  if (grant.jwk) return { jwk: grant.jwk }
+  if (grant.client) return { client: grant.client }
+  throw new Error('Grant must have either client or jwk')
+}
+
+/** Parse the union client field from an API request body. */
+export function parseRawClientField(
+  rawClient: RawClientField
+): ParsedClientField {
+  if (!rawClient) {
+    throw new GrantError(GrantErrorCode.InvalidRequest, 'Invalid client field')
+  }
+  if (typeof rawClient === 'string') {
+    return { client: rawClient }
+  }
+  if ('walletAddress' in rawClient) {
+    return { client: rawClient.walletAddress }
+  }
+  if ('jwk' in rawClient) {
+    return { jwk: rawClient.jwk }
+  }
+  throw new GrantError(GrantErrorCode.InvalidRequest, 'Invalid client field')
+}
 
 export function canSkipInteraction(
   config: IAppConfig,
