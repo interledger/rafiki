@@ -157,16 +157,7 @@ async function createGrant(
   if (noInteractionRequired) {
     await createApprovedGrant(deps, tenantId, ctx, input)
   } else {
-    const { client } = input
-    if (input.jwk || !client) {
-      throw new GNAPServerRouteError(
-        400,
-        GNAPErrorCode.InvalidRequest,
-        'JWK client identifier cannot be used for interactive grants'
-      )
-    }
-
-    await createPendingGrant(deps, tenant, ctx, { ...input, client })
+    await createPendingGrant(deps, tenant, ctx, input)
   }
 }
 
@@ -222,7 +213,7 @@ async function createPendingGrant(
   deps: ServiceDependencies,
   tenant: Tenant,
   ctx: CreateContext,
-  input: CreateGrantInput & { client: string }
+  input: CreateGrantInput
 ): Promise<void> {
   const { grantService, interactionService, config, logger } = deps
   if (!input.interact) {
@@ -238,6 +229,14 @@ async function createPendingGrant(
       400,
       GNAPErrorCode.InvalidRequest,
       'invalid tenant'
+    )
+  }
+
+  if (!input.client) {
+    throw new GNAPServerRouteError(
+      400,
+      GNAPErrorCode.InvalidClient,
+      "missing required request field 'client'"
     )
   }
 

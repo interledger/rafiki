@@ -331,8 +331,8 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
           status: 400,
-          code: GNAPErrorCode.InvalidRequest,
-          message: 'JWK client identifier cannot be used for interactive grants'
+          code: GNAPErrorCode.InvalidClient,
+          message: "missing required request field 'client'"
         })
       })
 

@@ -23,7 +23,12 @@ import { IAppConfig } from '../config/app'
 import { SubjectRequest } from '../subject/types'
 import { SubjectService } from '../subject/service'
 import { isAccessError } from '../access/errors'
-import { errorToMessage, GrantError, accessErrorToGrantError } from './errors'
+import {
+  errorToMessage,
+  GrantError,
+  GrantErrorCode,
+  accessErrorToGrantError
+} from './errors'
 
 interface GrantFilter {
   identifier?: FilterString
@@ -265,10 +270,26 @@ async function create(
   const { accessService, subjectService, knex } = deps
   const { access_token, interact, client, jwk, subject } = input
 
+  if (!client && !jwk) {
+    throw new GrantError(
+      GrantErrorCode.InvalidRequest,
+      'client or jwk is required'
+    )
+  }
+
+  const noInteractionRequired = canSkipInteraction(deps.config, input)
+
+  if (jwk && !noInteractionRequired) {
+    throw new GrantError(
+      GrantErrorCode.InvalidRequest,
+      'JWK client identifier cannot be used for interactive grants'
+    )
+  }
+
   const grantTrx = trx || (await Grant.startTransaction(knex))
   try {
     const grantData = {
-      state: canSkipInteraction(deps.config, input)
+      state: noInteractionRequired
         ? GrantState.Approved
         : GrantState.Pending,
       startMethod: interact?.start,
