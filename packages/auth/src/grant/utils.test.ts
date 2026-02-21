@@ -1,8 +1,9 @@
 import { AccessRequest } from '../access/types'
 import { IAppConfig } from '../config/app'
-import { GrantRequest } from './service'
-import { canSkipInteraction } from './utils'
+import { CreateGrantInput } from './service'
+import { canSkipInteraction, parseRawClientField, RawClientField } from './utils'
 import { AccessAction } from '@interledger/open-payments'
+import { JWK } from 'token-introspection'
 
 const mockConfig = {
   incomingPaymentInteraction: false,
@@ -28,9 +29,45 @@ const outgoingPaymentAccess: AccessRequest = {
   identifier: 'id'
 }
 
+describe('parseRawClientField', () => {
+  const testJwk: JWK = {
+    kid: 'test-key-1',
+    alg: 'EdDSA',
+    kty: 'OKP',
+    crv: 'Ed25519',
+    x: 'test-x-value'
+  }
+
+  it('normalizes a string client to { client }', () => {
+    expect(parseRawClientField('https://wallet.example')).toEqual({
+      client: 'https://wallet.example'
+    })
+  })
+
+  it('normalizes a { walletAddress } client to { client }', () => {
+    expect(
+      parseRawClientField({ walletAddress: 'https://wallet.example' })
+    ).toEqual({
+      client: 'https://wallet.example'
+    })
+  })
+
+  it('normalizes a { jwk } client to { jwk }', () => {
+    expect(parseRawClientField({ jwk: testJwk })).toEqual({
+      jwk: testJwk
+    })
+  })
+
+  it('throws on falsy input', () => {
+    expect(() =>
+      parseRawClientField(undefined as unknown as RawClientField)
+    ).toThrow('Invalid client field')
+  })
+})
+
 describe('canSkipInteraction', () => {
   it('returns false if no access_token and has sub_ids', () => {
-    const body: GrantRequest = {
+    const body: CreateGrantInput = {
       subject: { sub_ids: [{ id: 'http://wallet.url', format: 'url' }] },
       client: 'foo'
     }
@@ -38,7 +75,7 @@ describe('canSkipInteraction', () => {
   })
 
   it('returns true if all access can be skipped', () => {
-    const body: GrantRequest = {
+    const body: CreateGrantInput = {
       subject: { sub_ids: [] },
       access_token: { access: [incomingPaymentAccess, quoteAccess] },
       client: 'foo'
@@ -47,7 +84,7 @@ describe('canSkipInteraction', () => {
   })
 
   it('returns false if some access cannot be skipped', () => {
-    const body: GrantRequest = {
+    const body: CreateGrantInput = {
       subject: { sub_ids: [] },
       access_token: { access: [incomingPaymentAccess, outgoingPaymentAccess] },
       client: 'foo'
@@ -57,7 +94,7 @@ describe('canSkipInteraction', () => {
 
   it('throws if identifier is missing for non-skippable access', () => {
     const config = { ...mockConfig, incomingPaymentInteraction: true }
-    const body: GrantRequest = {
+    const body: CreateGrantInput = {
       access_token: { access: [{ ...incomingPaymentAccess, identifier: '' }] },
       client: 'foo'
     }
@@ -67,7 +104,7 @@ describe('canSkipInteraction', () => {
   })
 
   it('returns false if subject has sub_ids even if access can be skipped', () => {
-    const body: GrantRequest = {
+    const body: CreateGrantInput = {
       subject: { sub_ids: [{ id: 'http://wallet.url', format: 'url' }] },
       access_token: { access: [incomingPaymentAccess] },
       client: 'foo'
@@ -76,7 +113,7 @@ describe('canSkipInteraction', () => {
   })
 
   it('throws if no access and no subject', () => {
-    const body: GrantRequest = {
+    const body: CreateGrantInput = {
       client: 'foo'
     }
     expect(() => canSkipInteraction(mockConfig, body)).toThrow(

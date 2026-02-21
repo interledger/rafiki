@@ -12,6 +12,7 @@ import {
   isGrantWithTenant,
   GrantWithTenant
 } from './model'
+import { JWK } from 'token-introspection'
 import { AccessRequest } from '../access/types'
 import { AccessService } from '../access/service'
 import { Pagination, SortOrder } from '../shared/baseModel'
@@ -22,7 +23,12 @@ import { IAppConfig } from '../config/app'
 import { SubjectRequest } from '../subject/types'
 import { SubjectService } from '../subject/service'
 import { isAccessError } from '../access/errors'
-import { errorToMessage, GrantError, accessErrorToGrantError } from './errors'
+import {
+  errorToMessage,
+  GrantError,
+  GrantErrorCode,
+  accessErrorToGrantError
+} from './errors'
 
 interface GrantFilter {
   identifier?: FilterString
@@ -34,7 +40,7 @@ export interface GrantService {
     tenantId?: string
   ): Promise<Grant | undefined>
   create(
-    grantRequest: GrantRequest,
+    input: CreateGrantInput,
     tenantId: string,
     trx?: Transaction
   ): Promise<Grant>
@@ -66,11 +72,12 @@ interface ServiceDependencies extends BaseService {
 }
 
 // datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-2
-export interface GrantRequest {
+export interface CreateGrantInput {
   access_token?: {
     access: AccessRequest[]
   }
-  client: string
+  client?: string
+  jwk?: JWK
   interact?: {
     start: StartMethod[]
     finish?: {
@@ -136,8 +143,8 @@ export async function createGrantService({
   return {
     getByIdWithAccessAndSubject: (grantId: string, tenantId?: string) =>
       getByIdWithAccessAndSubject(grantId, tenantId),
-    create: (grantRequest: GrantRequest, tenantId: string, trx?: Transaction) =>
-      create(deps, grantRequest, tenantId, trx),
+    create: (input: CreateGrantInput, tenantId: string, trx?: Transaction) =>
+      create(deps, input, tenantId, trx),
     markPending: (grantId: string, trx?: Transaction) =>
       markPending(deps, grantId, trx),
     approve: (grantId: string) => approve(grantId),
@@ -256,17 +263,33 @@ async function revokeGrant(
 
 async function create(
   deps: ServiceDependencies,
-  grantRequest: GrantRequest,
+  input: CreateGrantInput,
   tenantId: string,
   trx?: Transaction
 ): Promise<Grant> {
   const { accessService, subjectService, knex } = deps
-  const { access_token, interact, client, subject } = grantRequest
+  const { access_token, interact, client, jwk, subject } = input
+
+  if (!client && !jwk) {
+    throw new GrantError(
+      GrantErrorCode.InvalidRequest,
+      'client or jwk is required'
+    )
+  }
+
+  const noInteractionRequired = canSkipInteraction(deps.config, input)
+
+  if (jwk && !noInteractionRequired) {
+    throw new GrantError(
+      GrantErrorCode.InvalidRequest,
+      'JWK client identifier cannot be used for interactive grants'
+    )
+  }
 
   const grantTrx = trx || (await Grant.startTransaction(knex))
   try {
     const grantData = {
-      state: canSkipInteraction(deps.config, grantRequest)
+      state: noInteractionRequired
         ? GrantState.Approved
         : GrantState.Pending,
       startMethod: interact?.start,
@@ -274,6 +297,7 @@ async function create(
       finishUri: interact?.finish?.uri,
       clientNonce: interact?.finish?.nonce,
       client,
+      jwk,
       continueId: v4(),
       continueToken: generateToken(),
       tenantId
