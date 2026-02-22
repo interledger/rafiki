@@ -23,7 +23,7 @@
     "openapi-typescript": "^6.7.6"
   },
   "dependencies": {
-    "@interledger/openapi": "2.0.2",
+    "@interledger/openapi": "2.0.4",
     "axios": "^1.12.0",
     "pino": "^8.19.0"
   }
