@@ -89,8 +89,8 @@ importers:
         specifier: ^1.7.19
         version: 1.7.19(react-dom@18.2.0)(react@18.2.0)
       '@interledger/http-signature-utils':
-        specifier: 2.0.2
-        version: 2.0.2
+        specifier: 2.0.3
+        version: 2.0.3
       '@remix-run/node':
         specifier: ^2.16.4
         version: 2.17.4(typescript@5.4.3)
@@ -183,8 +183,8 @@ importers:
         specifier: ^10.0.16
         version: 10.0.16(graphql@16.11.0)
       '@interledger/http-signature-utils':
-        specifier: 2.0.2
-        version: 2.0.2
+        specifier: 2.0.3
+        version: 2.0.3
       '@interledger/open-payments':
         specifier: 7.3.0
         version: 7.3.0
@@ -337,8 +337,8 @@ importers:
         specifier: ^10.0.16
         version: 10.0.16(graphql@16.11.0)
       '@interledger/http-signature-utils':
-        specifier: 2.0.2
-        version: 2.0.2
+        specifier: 2.0.3
+        version: 2.0.3
       '@interledger/open-payments':
         specifier: 7.3.0
         version: 7.3.0
@@ -812,8 +812,8 @@ importers:
         specifier: ^3.11.8
         version: 3.11.8(@types/react@18.2.73)(graphql@16.11.0)(react-dom@18.2.0)(react@18.2.0)
       '@interledger/http-signature-utils':
-        specifier: 2.0.2
-        version: 2.0.2
+        specifier: 2.0.3
+        version: 2.0.3
       graphql:
         specifier: ^16.11.0
         version: 16.11.0
@@ -1023,8 +1023,8 @@ importers:
         specifier: ^3.11.8
         version: 3.11.8(@types/react@18.2.73)(graphql@16.11.0)(react-dom@18.2.0)(react@18.2.0)
       '@interledger/http-signature-utils':
-        specifier: 2.0.2
-        version: 2.0.2
+        specifier: 2.0.3
+        version: 2.0.3
       '@interledger/open-payments':
         specifier: 7.3.0
         version: 7.3.0
@@ -5700,14 +5700,6 @@ packages:
     dependencies:
       mermaid: 11.12.2
     dev: false
-
-  /@interledger/http-signature-utils@2.0.2:
-    resolution: {integrity: sha512-gTAPFMt7xwG1zv1rbrltcZTAqOw/ZJwkVdnNjQzu5G9JTfvJQzS6pcpiVUej1cblpewotbOzosgdX00f93q9zA==}
-    dependencies:
-      http-message-signatures: 1.0.4
-      httpbis-digest-headers: 1.0.0
-      jose: 5.4.0
-      uuid: 9.0.1
 
   /@interledger/http-signature-utils@2.0.3:
     resolution: {integrity: sha512-/vn6+FxZ3g1A5ZC3vOVivjFns5A6F4lhEmdAGg3W9mD2uADXI575rIBcMdqI3wTOJo7qOXRutPXOG/jXONFs/Q==}
