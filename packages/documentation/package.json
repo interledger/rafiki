@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
-    "@typescript-eslint/parser": "^8.54.0",
+    "@typescript-eslint/parser": "^8.56.0",
     "astro-eslint-parser": "^1.2.2",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
@@ -35,6 +35,6 @@
     "prettier": "^3.8.1",
     "prettier-plugin-astro": "^0.14.1",
     "spectaql": "^3.0.6",
-    "typescript-eslint": "^8.54.0"
+    "typescript-eslint": "^8.56.0"
   }
 }
