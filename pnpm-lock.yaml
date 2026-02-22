@@ -1029,8 +1029,8 @@ importers:
         specifier: 7.3.0
         version: 7.3.0
       '@koa/bodyparser':
-        specifier: ^5.1.1
-        version: 5.1.1(koa@2.16.3)
+        specifier: ^5.1.2
+        version: 5.1.2(koa@2.16.3)
       '@types/koa':
         specifier: 2.15.0
         version: 2.15.0
@@ -6121,8 +6121,8 @@ packages:
     resolution: {integrity: sha512-Lg3PnLp0QXpxwLIAuuJboLeRaIhrgJjeuh797QADg3xz8wGLugQOS5DpsE8A6i6Adgzf+bacllkKZG3J0tGfDw==}
     dev: true
 
-  /@koa/bodyparser@5.1.1(koa@2.16.3):
-    resolution: {integrity: sha512-ZBF49xqNVxnmJ+8iXegq+fXPQm9RSX8giNl/aXS5rW1VpNct92wnFbGR/47vfoRJVLARGQ4HVL4WaQ0u8IJVoA==}
+  /@koa/bodyparser@5.1.2(koa@2.16.3):
+    resolution: {integrity: sha512-eGJm9/66iUX+LUH03Cz0e94unbSKrmSPCick4MO5UorAAomcjC5Kl+SkoZ6CSyPew3neMYjj7n+djnlGYBSJAg==}
     engines: {node: '>= 16'}
     peerDependencies:
       koa: ^2.14.1
