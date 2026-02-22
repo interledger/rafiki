@@ -15,7 +15,7 @@
     "@astrojs/markdown-remark": "^6.3.10",
     "@astrojs/starlight": "^0.37.5",
     "@interledger/docs-design-system": "^0.11.0",
-    "astro": "^5.17.1",
+    "astro": "^5.17.3",
     "mermaid": "^11.12.2",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-mathjax": "^7.1.0",
