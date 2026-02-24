@@ -55,7 +55,7 @@ describe('Auto Peering Service', (): void => {
 
       const args: PeeringRequestArgs = {
         staticIlpAddress: 'test.rafiki-money',
-        ilpConnectorUrl: 'http://peer.rafiki.money',
+        ilpConnectorUrl: 'http://peer.wallet.interledger-test.dev',
         asset: { code: asset.code, scale: asset.scale },
         httpToken: 'someHttpToken',
         name: 'Rafiki Money',
@@ -96,7 +96,7 @@ describe('Auto Peering Service', (): void => {
 
       const args: PeeringRequestArgs = {
         staticIlpAddress: 'test.rafiki-money',
-        ilpConnectorUrl: 'http://peer.rafiki.money',
+        ilpConnectorUrl: 'http://peer.wallet.interledger-test.dev',
         asset: { code: asset.code, scale: asset.scale },
         httpToken: 'someHttpToken',
         name: 'Rafiki Money',
@@ -143,7 +143,7 @@ describe('Auto Peering Service', (): void => {
     test('returns error if unknown asset', async (): Promise<void> => {
       const args: PeeringRequestArgs = {
         staticIlpAddress: 'test.rafiki-money',
-        ilpConnectorUrl: 'http://peer.rafiki.money',
+        ilpConnectorUrl: 'http://peer.wallet.interledger-test.dev',
         asset: { code: 'USD', scale: 2 },
         httpToken: 'someHttpToken',
         tenantId
@@ -175,7 +175,7 @@ describe('Auto Peering Service', (): void => {
 
       const args: PeeringRequestArgs = {
         staticIlpAddress: 'invalid',
-        ilpConnectorUrl: 'http://peer.rafiki.money',
+        ilpConnectorUrl: 'http://peer.wallet.interledger-test.dev',
         asset: { code: asset.code, scale: asset.scale },
         httpToken: 'someHttpToken',
         tenantId
@@ -191,7 +191,7 @@ describe('Auto Peering Service', (): void => {
 
       const args: PeeringRequestArgs = {
         staticIlpAddress: 'test.rafiki-money',
-        ilpConnectorUrl: 'http://peer.rafiki.money',
+        ilpConnectorUrl: 'http://peer.wallet.interledger-test.dev',
         asset: { code: asset.code, scale: asset.scale },
         httpToken: 'someHttpToken',
         tenantId
@@ -213,7 +213,7 @@ describe('Auto Peering Service', (): void => {
   describe('initiatePeeringRequest', () => {
     test('returns error if unknown asset', async (): Promise<void> => {
       const args: InitiatePeeringRequestArgs = {
-        peerUrl: 'http://peer.rafiki.money',
+        peerUrl: 'http://peer.wallet.interledger-test.dev',
         assetId: uuid(),
         tenantId
       }
@@ -227,7 +227,7 @@ describe('Auto Peering Service', (): void => {
       const asset = await createAsset(deps)
 
       const args: InitiatePeeringRequestArgs = {
-        peerUrl: 'http://peer.rafiki.money',
+        peerUrl: 'http://peer.wallet.interledger-test.dev',
         assetId: asset.id,
         maxPacketAmount: 1000n,
         liquidityThreshold: 100n,
@@ -290,7 +290,7 @@ describe('Auto Peering Service', (): void => {
       const asset = await createAsset(deps)
 
       const args: InitiatePeeringRequestArgs = {
-        peerUrl: 'http://peer.rafiki.money',
+        peerUrl: 'http://peer.wallet.interledger-test.dev',
         assetId: asset.id,
         maxPacketAmount: 1000n,
         liquidityThreshold: 100n,
@@ -338,7 +338,7 @@ describe('Auto Peering Service', (): void => {
       const asset = await createAsset(deps)
 
       const args: InitiatePeeringRequestArgs = {
-        peerUrl: 'http://peer.rafiki.money',
+        peerUrl: 'http://peer.wallet.interledger-test.dev',
         assetId: asset.id,
         maxPacketAmount: 1000n,
         liquidityThreshold: 100n,
@@ -381,7 +381,7 @@ describe('Auto Peering Service', (): void => {
       const asset = await createAsset(deps)
 
       const args: InitiatePeeringRequestArgs = {
-        peerUrl: 'http://peer.rafiki.money',
+        peerUrl: 'http://peer.wallet.interledger-test.dev',
         assetId: asset.id,
         maxPacketAmount: 1000n,
         name: 'Overridden Peer Name',
@@ -442,7 +442,7 @@ describe('Auto Peering Service', (): void => {
       const asset = await createAsset(deps)
 
       const args: InitiatePeeringRequestArgs = {
-        peerUrl: 'http://peer.rafiki.money',
+        peerUrl: 'http://peer.wallet.interledger-test.dev',
         assetId: asset.id,
         tenantId
       }
@@ -461,7 +461,7 @@ describe('Auto Peering Service', (): void => {
     test('returns error if peer does not support asset', async (): Promise<void> => {
       const asset = await createAsset(deps)
       const args: InitiatePeeringRequestArgs = {
-        peerUrl: 'http://peer.rafiki.money',
+        peerUrl: 'http://peer.wallet.interledger-test.dev',
         assetId: asset.id,
         tenantId
       }
@@ -479,7 +479,7 @@ describe('Auto Peering Service', (): void => {
     test('returns error if peer URL request error', async (): Promise<void> => {
       const asset = await createAsset(deps)
       const args: InitiatePeeringRequestArgs = {
-        peerUrl: 'http://peer.rafiki.money',
+        peerUrl: 'http://peer.wallet.interledger-test.dev',
         assetId: asset.id,
         tenantId
       }
@@ -495,7 +495,7 @@ describe('Auto Peering Service', (): void => {
       const asset = await createAsset(deps)
 
       const args: InitiatePeeringRequestArgs = {
-        peerUrl: 'http://peer.rafiki.money',
+        peerUrl: 'http://peer.wallet.interledger-test.dev',
         assetId: asset.id,
         tenantId
       }
@@ -520,7 +520,7 @@ describe('Auto Peering Service', (): void => {
       const asset = await createAsset(deps)
 
       const args: InitiatePeeringRequestArgs = {
-        peerUrl: 'http://peer.rafiki.money',
+        peerUrl: 'http://peer.wallet.interledger-test.dev',
         assetId: asset.id,
         tenantId
       }
@@ -545,7 +545,7 @@ describe('Auto Peering Service', (): void => {
       const asset = await createAsset(deps)
 
       const args: InitiatePeeringRequestArgs = {
-        peerUrl: 'http://peer.rafiki.money',
+        peerUrl: 'http://peer.wallet.interledger-test.dev',
         assetId: asset.id,
         tenantId
       }
@@ -602,7 +602,7 @@ describe('Auto Peering Service', (): void => {
       const asset = await createAsset(deps)
 
       const args: InitiatePeeringRequestArgs = {
-        peerUrl: 'http://peer.rafiki.money',
+        peerUrl: 'http://peer.wallet.interledger-test.dev',
         assetId: asset.id,
         liquidityToDeposit: 1000n,
         tenantId
@@ -642,7 +642,7 @@ describe('Auto Peering Service', (): void => {
       const asset = await createAsset(deps)
 
       const args: InitiatePeeringRequestArgs = {
-        peerUrl: 'http://peer.rafiki.money',
+        peerUrl: 'http://peer.wallet.interledger-test.dev',
         assetId: asset.id,
         liquidityToDeposit: 1000n,
         tenantId
@@ -677,7 +677,7 @@ describe('Auto Peering Service', (): void => {
       const asset = await createAsset(deps)
 
       const args: InitiatePeeringRequestArgs = {
-        peerUrl: 'http://peer.rafiki.money',
+        peerUrl: 'http://peer.wallet.interledger-test.dev',
         assetId: asset.id,
         tenantId
       }
