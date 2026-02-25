@@ -1,0 +1,372 @@
+---
+title: Configure variables
+---
+
+This document outlines all variables you must customize for you specific environment when deploying Rafiki with your digital wallet.
+
+## Google Cloud environment variables
+
+These are the primary variables you'll need to define for your deployment:
+
+<div class="overflow-table">
+
+| Variable          | Example Value                  | Description                                             |
+| ----------------- | ------------------------------ | ------------------------------------------------------- |
+| `YOUR_PROJECT_ID` | `my-wallet-project-123`        | Your Google Cloud Project ID                            |
+| `YOUR_DOMAIN`     | `mywallet.com`                 | Your primary domain name                                |
+| `YOUR_COMPANY`    | `MyWallet Inc`                 | Your company/organization name                          |
+| `YOUR_EMAIL`      | `admin@mywallet.com`           | Administrative email for certificates and notifications |
+| `YOUR_REGION`     | `us-central1`                  | Primary GCP region for deployment                       |
+| `YOUR_REGISTRY`   | `gcr.io/my-wallet-project-123` | Container registry for your wallet images               |
+
+</div>
+
+## Terraform variables
+
+_Found in: `terraform/variables.tf` (definitions) and `terraform.tfvars` (values)_
+
+Configure your infrastructure deployment with these variables:
+
+<div class="overflow-table">
+
+| Variable                 | Default Value           | Required | Description                                           |
+| ------------------------ | ----------------------- | -------- | ----------------------------------------------------- |
+| `project_id`             | -                       | Yes      | GCP Project ID where resources will be created        |
+| `domain_name`            | -                       | Yes      | Primary domain for your wallet (e.g., `mywallet.com`) |
+| `region`                 | `us-central1`           | No       | Primary GCP region for cluster and resources          |
+| `cluster_name`           | `rafiki-wallet-cluster` | No       | Name of the GKE cluster                               |
+| `node_pool_machine_type` | `e2-standard-4`         | No       | GCE machine type for Kubernetes nodes                 |
+| `min_node_count`         | `1`                     | No       | Minimum number of nodes in the cluster                |
+| `max_node_count`         | `10`                    | No       | Maximum number of nodes for autoscaling               |
+| `disk_size_gb`           | `100`                   | No       | Boot disk size for each node in GB                    |
+| `enable_network_policy`  | `true`                  | No       | Enable Kubernetes network policies for security       |
+
+</div>
+
+## DNS configuration
+
+_Found in: DNS provider settings and `terraform/dns.tf`_
+
+Set up your domain and subdomains according to the following convention:
+
+<div class="overflow-table">
+
+| Subdomain    | Example FQDN              | Purpose        | Description                       |
+| ------------ | ------------------------- | -------------- | --------------------------------- |
+| `wallet`     | `wallet.mywallet.com`     | User Interface | Main wallet web application       |
+| `api`        | `api.mywallet.com`        | Wallet API     | Wallet backend REST/GraphQL API   |
+| `auth`       | `auth.mywallet.com`       | Rafiki Auth    | Rafiki authentication server      |
+| `backend`    | `backend.mywallet.com`    | Rafiki Backend | Rafiki payment processing backend |
+| `admin`      | `admin.mywallet.com`      | Rafiki Admin   | Rafiki administrative GraphQL API |
+| `argocd`     | `argocd.mywallet.com`     | GitOps         | Argo CD web interface             |
+| `grafana`    | `grafana.mywallet.com`    | Monitoring     | Grafana dashboards                |
+| `prometheus` | `prometheus.mywallet.com` | Metrics        | Prometheus metrics endpoint       |
+
+</div>
+
+## Database configuration
+
+### PostgreSQL variables
+
+<div class="overflow-table">
+
+| Variable            | Example Value        | Description                                |
+| ------------------- | -------------------- | ------------------------------------------ |
+| `POSTGRES_DB`       | `rafiki`             | Primary database name for Rafiki           |
+| `POSTGRES_USER`     | `rafiki`             | Database username for Rafiki services      |
+| `POSTGRES_PASSWORD` | `<generated-secret>` | Database password (use Kubernetes secrets) |
+| `WALLET_DB_NAME`    | `wallet`             | Database name for wallet application       |
+| `WALLET_DB_USER`    | `wallet_user`        | Database username for wallet application   |
+| `DB_HOST`           | `rafiki-postgresql`  | Database service hostname within cluster   |
+| `DB_PORT`           | `5432`               | Database port                              |
+| `DB_SSL_MODE`       | `require`            | SSL mode for database connections          |
+
+</div>
+
+### Redis variables
+
+<div class="overflow-table">
+
+| Variable         | Example Value                      | Description                                |
+| ---------------- | ---------------------------------- | ------------------------------------------ |
+| `REDIS_HOST`     | `rafiki-redis-master`              | Redis service hostname within cluster      |
+| `REDIS_PORT`     | `6379`                             | Redis port                                 |
+| `REDIS_PASSWORD` | `<optional-password>`              | Redis password (if authentication enabled) |
+| `REDIS_DB`       | `0`                                | Redis database number                      |
+| `REDIS_URL`      | `redis://rafiki-redis-master:6379` | Complete Redis connection URL              |
+
+</div>
+
+## Rafiki service configuration
+
+Configure your Rafiki services with these variables:
+
+### Rafiki auth service variables
+
+_Found in: `helm-values/rafiki/values.yaml` under `rafiki-auth.env` section_
+
+<div class="overflow-table">
+
+| Variable             | Example Value                            | Description                            |
+| -------------------- | ---------------------------------------- | -------------------------------------- |
+| `AUTH_DATABASE_URL`  | `postgresql://rafiki:***@host:5432/auth` | Database connection for auth service   |
+| `AUTH_SERVER_URL`    | `https://auth.mywallet.com`              | Public URL for the auth server         |
+| `COOKIE_KEY`         | `<32-byte-secret>`                       | Secret key for cookie encryption       |
+| `REDIS_URL`          | `redis://redis:6379`                     | Redis connection for session storage   |
+| `NODE_ENVIRONMENT`   | `production`                             | Runtime environment                    |
+| `LOG_LEVEL`          | `info`                                   | Logging level                          |
+| `TRUST_PROXY`        | `true`                                   | Enable when behind load balancer/proxy |
+| `ADMIN_PORT`         | `3003`                                   | Port for auth admin API                |
+| `AUTH_PORT`          | `3006`                                   | Port for auth server                   |
+| `INTROSPECTION_PORT` | `3007`                                   | Port for token introspection           |
+| `INTERACTION_PORT`   | `3009`                                   | Port for user interaction flows        |
+
+</div>
+
+### Rafiki backend service variables
+
+_Found in: `helm-values/rafiki/values.yaml` under `rafiki-backend.env` section_
+
+<div class="overflow-table">
+
+| Variable             | Example Value                              | Description                                |
+| -------------------- | ------------------------------------------ | ------------------------------------------ |
+| `DATABASE_URL`       | `postgresql://rafiki:***@host:5432/rafiki` | Main database connection                   |
+| `REDIS_URL`          | `redis://redis:6379`                       | Redis connection for caching               |
+| `WEBHOOK_URL`        | `https://api.mywallet.com/webhooks/rafiki` | Webhook endpoint for payment notifications |
+| `OPEN_PAYMENTS_URL`  | `https://backend.mywallet.com`             | Public URL for Open Payments API           |
+| `ILP_ADDRESS`        | `test.mywallet`                            | ILP address for this instance              |
+| `ILP_CONNECTOR_URL`  | `https://ilp.mywallet.com`                 | ILP connector endpoint                     |
+| `EXCHANGE_RATES_URL` | `https://api.mywallet.com/rates`           | Exchange rates endpoint                    |
+| `PRIVATE_KEY_FILE`   | `/path/to/private.key`                     | Private key file path                      |
+
+</div>
+
+### Worker configuration variables
+
+_Found in: `helm-values/rafiki/values.yaml` under `rafiki-backend.env` section_
+
+<div class="overflow-table">
+
+| Variable                       | Example Value | Description                                 |
+| ------------------------------ | ------------- | ------------------------------------------- |
+| `OUTGOING_PAYMENT_WORKERS`     | `1`           | Number of outgoing payment workers          |
+| `INCOMING_PAYMENT_WORKERS`     | `1`           | Number of incoming payment workers          |
+| `WALLET_ADDRESS_WORKERS`       | `1`           | Number of wallet address processing workers |
+| `WEBHOOK_WORKERS`              | `1`           | Number of webhook processing workers        |
+| `OUTGOING_PAYMENT_WORKER_IDLE` | `200`         | Idle time (ms) for outgoing payment workers |
+| `INCOMING_PAYMENT_WORKER_IDLE` | `200`         | Idle time (ms) for incoming payment workers |
+| `WALLET_ADDRESS_WORKER_IDLE`   | `1000`        | Idle time (ms) for wallet address workers   |
+| `WEBHOOK_WORKER_IDLE`          | `200`         | Idle time (ms) for webhook workers          |
+
+</div>
+
+### Additional Rafiki configuration
+
+_Found in: `helm-values/rafiki/values.yaml` under various sections (global, rafiki-backend.env)_
+
+<div class="overflow-table">
+
+| Variable              | Example Value                                 | Description                         |
+| --------------------- | --------------------------------------------- | ----------------------------------- |
+| `PAYMENT_POINTER_URL` | `https://wallet.mywallet.com/.well-known/pay` | Payment pointer well-known endpoint |
+| `AUTH_SERVER_SECRET`  | `<32-byte-secret>`                            | Secret for auth server JWT signing  |
+| `USE_TIGERBEETLE`     | `false`                                       | Disable TigerBeetle for accounting  |
+
+</div>
+
+## TLS certificate configuration
+
+_Found in: `k8s-manifests/cert-manager/cluster-issuer.yaml`_
+
+<div class="overflow-table">
+
+| Variable              | Example Value                                    | Description                                      |
+| --------------------- | ------------------------------------------------ | ------------------------------------------------ |
+| `CERT_MANAGER_EMAIL`  | `certificates@mywallet.com`                      | Email for Let's Encrypt certificate registration |
+| `CLUSTER_ISSUER_NAME` | `letsencrypt-prod`                               | Name of the cert-manager cluster issuer          |
+| `ACME_SERVER`         | `https://acme-v02.api.letsencrypt.org/directory` | ACME server URL (prod vs staging)                |
+| `CERT_SECRET_NAME`    | `{service}-tls`                                  | Pattern for TLS secret names                     |
+
+</div>
+
+## Container image configuration
+
+_Found in: `helm-values/rafiki/values.yaml` and `helm-values/wallet/values.yaml` under image sections_
+
+<div class="overflow-table">
+
+| Variable               | Example Value                               | Description                        |
+| ---------------------- | ------------------------------------------- | ---------------------------------- |
+| `RAFIKI_AUTH_IMAGE`    | `ghcr.io/interledger/rafiki-auth:latest`    | Rafiki auth server container image |
+| `RAFIKI_BACKEND_IMAGE` | `ghcr.io/interledger/rafiki-backend:latest` | Rafiki backend container image     |
+| `RAFIKI_ADMIN_IMAGE`   | `ghcr.io/interledger/rafiki-admin:latest`   | Rafiki admin API container image   |
+| `WALLET_UI_IMAGE`      | `gcr.io/my-project/wallet-ui:v1.0.0`        | Your wallet UI container image     |
+| `WALLET_API_IMAGE`     | `gcr.io/my-project/wallet-api:v1.0.0`       | Your wallet API container image    |
+| `POSTGRES_IMAGE`       | `postgres:14`                               | PostgreSQL container image version |
+| `REDIS_IMAGE`          | `redis:7-alpine`                            | Redis container image version      |
+
+</div>
+
+## Resource limits
+
+_Found in: `helm-values/rafiki/values.yaml` and `helm-values/wallet/values.yaml` under resources sections_
+
+<div class="overflow-table">
+
+| Resource Type  | CPU Request | CPU Limit | Memory Request | Memory Limit | Description                          |
+| -------------- | ----------- | --------- | -------------- | ------------ | ------------------------------------ |
+| Rafiki Auth    | `100m`      | `500m`    | `128Mi`        | `512Mi`      | Authentication server resources      |
+| Rafiki Backend | `200m`      | `1000m`   | `256Mi`        | `1Gi`        | Payment processing backend resources |
+| Rafiki Admin   | `100m`      | `500m`    | `128Mi`        | `512Mi`      | Admin API resources                  |
+| Wallet API     | `200m`      | `1000m`   | `256Mi`        | `1Gi`        | Wallet backend API resources         |
+| Wallet UI      | `50m`       | `200m`    | `64Mi`         | `256Mi`      | Wallet frontend resources            |
+| PostgreSQL     | `250m`      | `1000m`   | `256Mi`        | `2Gi`        | Database resources                   |
+| Redis          | `100m`      | `500m`    | `128Mi`        | `512Mi`      | Cache resources                      |
+
+</div>
+
+## Storage configuration
+
+_Found in: `helm-values/rafiki/values.yaml` and `helm-values/wallet/values.yaml` under persistence sections_
+
+<div class="overflow-table">
+
+| Storage Type    | Size    | Storage Class | Description                              |
+| --------------- | ------- | ------------- | ---------------------------------------- |
+| Rafiki Database | `20Gi`  | `ssd`         | Persistent storage for Rafiki PostgreSQL |
+| Wallet Database | `50Gi`  | `ssd`         | Persistent storage for wallet PostgreSQL |
+| Redis           | `5Gi`   | `ssd`         | Persistent storage for Redis cache       |
+| Backup Storage  | `100Gi` | `standard`    | Storage for database backups             |
+
+</div>
+
+## Monitoring configuration
+
+_Found in: `k8s-manifests/monitoring/values.yaml`_
+
+<div class="overflow-table">
+
+| Variable                 | Example Value                 | Description                           |
+| ------------------------ | ----------------------------- | ------------------------------------- |
+| `GRAFANA_ADMIN_PASSWORD` | `<secure-password>`           | Grafana admin user password           |
+| `PROMETHEUS_RETENTION`   | `15d`                         | How long to retain Prometheus metrics |
+| `ALERTMANAGER_SLACK_URL` | `https://hooks.slack.com/...` | Slack webhook for alerts              |
+| `GRAFANA_SMTP_HOST`      | `smtp.gmail.com:587`          | SMTP server for Grafana notifications |
+| `GRAFANA_SMTP_USER`      | `notifications@mywallet.com`  | SMTP username for email alerts        |
+
+</div>
+
+## Security configuration
+
+_Found in: `helm-values/rafiki/values.yaml` and `helm-values/wallet/values.yaml` under various security sections_
+
+<div class="overflow-table">
+
+| Variable                 | Example Value | Description                                 |
+| ------------------------ | ------------- | ------------------------------------------- |
+| `NETWORK_POLICY_ENABLED` | `true`        | Enable Kubernetes network policies          |
+| `POD_SECURITY_STANDARD`  | `restricted`  | Pod security standard level                 |
+| `SERVICE_ACCOUNT_NAME`   | `rafiki-sa`   | Kubernetes service account name             |
+| `RBAC_ENABLED`           | `true`        | Enable role-based access control            |
+| `ADMISSION_CONTROLLER`   | `gatekeeper`  | Admission controller for policy enforcement |
+
+</div>
+
+## Backup configuration
+
+_Found in: `k8s-manifests/backup/postgres-backup.yaml`_
+
+<div class="overflow-table">
+
+| Variable                | Example Value           | Description                        |
+| ----------------------- | ----------------------- | ---------------------------------- |
+| `BACKUP_SCHEDULE`       | `0 2 * * *`             | Cron schedule for database backups |
+| `BACKUP_RETENTION_DAYS` | `30`                    | How many days to keep backups      |
+| `BACKUP_STORAGE_BUCKET` | `gs://mywallet-backups` | GCS bucket for storing backups     |
+| `BACKUP_ENCRYPTION_KEY` | `<kms-key-id>`          | KMS key for backup encryption      |
+
+</div>
+
+## Environment-specific overrides
+
+### Development environment
+
+<div class="overflow-table">
+
+| Variable            | Development Value                              | Description                       |
+| ------------------- | ---------------------------------------------- | --------------------------------- |
+| `ACME_SERVER`       | `https://acme-staging-v02.api.letsencrypt.org` | Use Let's Encrypt staging for dev |
+| `LOG_LEVEL`         | `debug`                                        | Enable debug logging              |
+| `REPLICA_COUNT`     | `1`                                            | Single replica for all services   |
+| `RESOURCE_REQUESTS` | `50% of production`                            | Lower resource requests           |
+| `STORAGE_SIZE`      | `10Gi`                                         | Smaller storage volumes           |
+
+</div>
+
+### Staging environment
+
+<div class="overflow-table">
+
+| Variable             | Staging Value       | Description                      |
+| -------------------- | ------------------- | -------------------------------- |
+| `REPLICA_COUNT`      | `2`                 | Moderate replicas for testing    |
+| `RESOURCE_REQUESTS`  | `75% of production` | Higher than dev, lower than prod |
+| `MONITORING_ENABLED` | `true`              | Full monitoring enabled          |
+| `BACKUP_ENABLED`     | `false`             | No backups in staging            |
+
+</div>
+
+### Production environment
+
+<div class="overflow-table">
+
+| Variable                | Production Value  | Description                |
+| ----------------------- | ----------------- | -------------------------- |
+| `REPLICA_COUNT`         | `3-5`             | High availability replicas |
+| `RESOURCE_REQUESTS`     | `Full allocation` | Production resource limits |
+| `MONITORING_ENABLED`    | `true`            | Comprehensive monitoring   |
+| `BACKUP_ENABLED`        | `true`            | Full backup strategy       |
+| `NETWORK_POLICIES`      | `true`            | Enhanced security          |
+| `POD_SECURITY_POLICIES` | `true`            | Strict security policies   |
+
+</div>
+
+## DNS record configuration
+
+Configure these DNS A records pointing to your static IP:
+
+<div class="overflow-table">
+ | Name                         | Value            | TTL |
+ | ---------------------------- | ---------------- | --- |
+ | `wallet.YOUR_DOMAIN.com`     | `YOUR_STATIC_IP` | 300 |
+ | `api.YOUR_DOMAIN.com`        | `YOUR_STATIC_IP` | 300 |
+ | `auth.YOUR_DOMAIN.com`       | `YOUR_STATIC_IP` | 300 |
+ | `backend.YOUR_DOMAIN.com`    | `YOUR_STATIC_IP` | 300 |
+ | `admin.YOUR_DOMAIN.com`      | `YOUR_STATIC_IP` | 300 |
+ | `argocd.YOUR_DOMAIN.com`     | `YOUR_STATIC_IP` | 300 |
+ | `grafana.YOUR_DOMAIN.com`    | `YOUR_STATIC_IP` | 300 |
+ | `prometheus.YOUR_DOMAIN.com` | `YOUR_STATIC_IP` | 300 |
+
+</div>
+
+## Note about placeholders
+
+All configuration files use these placeholder patterns that you must replace:
+
+- `YOUR_DOMAIN.com` - Replace with your actual domain
+- `YOUR_PROJECT_ID` - Replace with your GCP project ID
+- `YOUR_REGISTRY` - Replace with your container registry
+- `YOUR_EMAIL` - Replace with your administrative email
+- `<generated-secret>` - Generate using `openssl rand -base64 32` (refer to the [Secrets Management](/integration/deploy-to-prod/03-secrets-management) guide)
+- `<secure-password>` - Generate strong passwords for admin accounts
+
+Ensure you systematically replace all placeholder values before deployment to avoid configuration errors.
+
+## Next steps
+
+Now that you understand all the configuration variables, proceed to:
+
+1. **[Secrets management](/integration/deploy-to-prod/03-secrets-management)**: Generate and securely store all required secrets before infrastructure deployment
+2. **[Infrastructure setup](/integration/deploy-to-prod/04-infrastructure-setup)**: Deploy GCP infrastructure using Terraform
+3. **[Services deployment](/integration/deploy-to-prod/05-services-deployment)**: Install and configure Rafiki and wallet services
