@@ -34,7 +34,6 @@ import { withConfigOverride } from '../../../tests/helpers'
 import { poll } from '../../../shared/utils'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { getPageTests } from '../../../shared/baseModel.test'
-import Redis from 'ioredis'
 
 describe('Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -1121,16 +1120,6 @@ describe('Incoming Payment Service', (): void => {
   })
 
   describe('processPartialPayment', (): void => {
-    interface PartialPayment {
-      id: string
-      amount: {
-        value: string
-        assetCode: string
-        assetScale: number
-      }
-      dataFromSender: string
-    }
-
     let incomingPayment: IncomingPayment
 
     const dbEncryptionOverride: Partial<IAppConfig> = {
@@ -1155,36 +1144,28 @@ describe('Incoming Payment Service', (): void => {
         () => config,
         dbEncryptionOverride,
         async (): Promise<void> => {
-          const dataFromSender = JSON.stringify({
+          const dataToTransmit = JSON.stringify({
             data: faker.internet.email()
           })
-          const partialPaymentId = uuid()
-          const processedPayment =
-            await incomingPaymentService.processPartialPayment(
-              incomingPayment.id,
-              {
-                partialPaymentId,
-                value: 100n,
-                dataFromSender
-              }
-            )
-          assert.ok(!isIncomingPaymentError(processedPayment))
+          const result = await incomingPaymentService.processPartialPayment(
+            incomingPayment.id,
+            { dataToTransmit }
+          )
+          assert.ok(result)
+          assert.ok(result.incomingPayment)
 
           const webhookEvent = await IncomingPaymentEvent.query(knex)
             .where({
-              incomingPaymentId: processedPayment.id,
+              incomingPaymentId: result.incomingPayment.id,
               type: IncomingPaymentEventType.IncomingPaymentPartialPaymentReceived
             })
             .withGraphFetched('webhooks')
             .first()
           assert.ok(webhookEvent)
-          assert.ok(
-            (webhookEvent.data.partialPayment as PartialPayment).dataFromSender
-          )
+          assert.ok(webhookEvent.data.dataToTransmit)
 
           const webhookDataToTransmit = JSON.parse(
-            (webhookEvent.data.partialPayment as PartialPayment)
-              .dataFromSender as string
+            webhookEvent.data.dataToTransmit as string
           )
           const decipher = createDecipheriv(
             'aes-256-gcm',
@@ -1203,23 +1184,7 @@ describe('Incoming Payment Service', (): void => {
           )
           decrypted += decipher.final('utf8')
 
-          expect(decrypted).toEqual(dataFromSender)
-
-          expect(
-            (webhookEvent.data.partialPayment as PartialPayment).id
-          ).toEqual(partialPaymentId)
-          expect(
-            (webhookEvent.data.partialPayment as PartialPayment).amount.value
-          ).toEqual('100')
-          expect(
-            (webhookEvent.data.partialPayment as PartialPayment).amount
-              .assetCode
-          ).toEqual(incomingPayment.asset.code)
-          expect(
-            (webhookEvent.data.partialPayment as PartialPayment).amount
-              .assetScale
-          ).toEqual(incomingPayment.asset.scale)
-
+          expect(decrypted).toEqual(dataToTransmit)
           expect(webhookEvent.webhooks).toHaveLength(1)
         }
       )
@@ -1234,122 +1199,30 @@ describe('Incoming Payment Service', (): void => {
           dbEncryptionSecret: undefined
         },
         async (): Promise<void> => {
-          const dataFromSender = JSON.stringify({
+          const dataToTransmit = JSON.stringify({
             data: faker.internet.email()
           })
 
-          const partialPaymentId = uuid()
-          const processedPayment =
-            await incomingPaymentService.processPartialPayment(
-              incomingPayment.id,
-              {
-                partialPaymentId,
-                value: 100n,
-                dataFromSender
-              }
-            )
-          assert.ok(!isIncomingPaymentError(processedPayment))
+          const result = await incomingPaymentService.processPartialPayment(
+            incomingPayment.id,
+            { dataToTransmit }
+          )
+          assert.ok(result)
+          assert.ok(result.incomingPayment)
 
           const webhookEvent = await IncomingPaymentEvent.query(knex)
             .where({
-              incomingPaymentId: processedPayment.id,
+              incomingPaymentId: result.incomingPayment.id,
               type: IncomingPaymentEventType.IncomingPaymentPartialPaymentReceived
             })
             .withGraphFetched('webhooks')
             .first()
           assert.ok(webhookEvent)
 
-          expect(
-            (webhookEvent.data.partialPayment as PartialPayment).dataFromSender
-          ).toEqual(dataFromSender)
-          expect(
-            (webhookEvent.data.partialPayment as PartialPayment).id
-          ).toEqual(partialPaymentId)
-          expect(
-            (webhookEvent.data.partialPayment as PartialPayment).amount.value
-          ).toEqual('100')
-          expect(
-            (webhookEvent.data.partialPayment as PartialPayment).amount
-              .assetCode
-          ).toEqual(incomingPayment.asset.code)
-          expect(
-            (webhookEvent.data.partialPayment as PartialPayment).amount
-              .assetScale
-          ).toEqual(incomingPayment.asset.scale)
+          expect(webhookEvent.data.dataToTransmit).toEqual(dataToTransmit)
           expect(webhookEvent.webhooks).toHaveLength(1)
         }
       )
-    )
-  })
-
-  describe('updatePartialPaymentDecision', (): void => {
-    const PARTIAL_PAYMENT_DECISION_PREFIX = 'partial_payment_decision'
-    let redis: Redis
-    let incomingPayment: IncomingPayment
-
-    beforeEach(async (): Promise<void> => {
-      redis = await deps.use('redis')
-      const walletAddress = await createWalletAddress(deps)
-      incomingPayment = await createIncomingPayment(deps, {
-        walletAddressId: walletAddress.id,
-        tenantId: walletAddress.tenantId,
-        initiationReason: IncomingPaymentInitiationReason.Admin
-      })
-    })
-    afterEach(async (): Promise<void> => {
-      jest.clearAllMocks()
-    })
-    test.each`
-      action
-      ${'confirm'}
-      ${'reject'}
-    `(
-      'can successfully $action partial payment',
-      async ({ action }): Promise<void> => {
-        const decision = action === 'confirm'
-        const partialPaymentId = uuid()
-        const redisSpy = jest.spyOn(redis, 'set')
-        await expect(
-          incomingPaymentService.updatePartialPaymentDecision({
-            id: incomingPayment.id,
-            partialPaymentId,
-            decision
-          })
-        ).resolves.toEqual(true)
-
-        const cacheKey = `${PARTIAL_PAYMENT_DECISION_PREFIX}:${incomingPayment.id}:${partialPaymentId}`
-        expect(redisSpy).toHaveBeenCalledWith(
-          cacheKey,
-          JSON.stringify({ success: decision })
-        )
-      }
-    )
-
-    test.each`
-      action
-      ${'confirm'}
-      ${'reject'}
-    `(
-      '$action returns false if cache write fails',
-      async ({ action }): Promise<void> => {
-        const decision = action === 'confirm'
-        const partialPaymentId = uuid()
-        const redisSpy = jest.spyOn(redis, 'set').mockImplementationOnce(() => {
-          throw new Error('unknown error')
-        })
-        await expect(
-          incomingPaymentService.updatePartialPaymentDecision({
-            id: incomingPayment.id,
-            partialPaymentId,
-            decision
-          })
-        ).resolves.toEqual(false)
-        const cacheKey = `${PARTIAL_PAYMENT_DECISION_PREFIX}:${incomingPayment.id}:${partialPaymentId}`
-        expect(redisSpy).toHaveBeenCalledWith(
-          cacheKey,
-          JSON.stringify({ success: decision })
-        )
-      }
     )
   })
 
