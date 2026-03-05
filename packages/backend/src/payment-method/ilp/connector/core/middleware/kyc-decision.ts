@@ -1,4 +1,4 @@
-import { Errors } from 'ilp-packet'
+import { Errors, IlpErrorCode } from 'ilp-packet'
 import { ILPContext, ILPMiddleware } from '../rafiki'
 import { StreamState } from './stream-address'
 
@@ -10,10 +10,12 @@ export function createKycDecisionMiddleware(): ILPMiddleware {
     const { config, logger, redis } = ctx.services
 
     // TODO This might not be needed? We should be able to just check the state.hasAdditionalData
-    if (!config.enableKycAseDecision) {
-      await next()
-      return
-    }
+    // if (!config.enableKycAseDecision) {
+    //   await next()
+    //   return
+    // }
+
+    logger.info('KYC Decision Middleware, has additional data: ' + ctx.state.hasAdditionalData)
 
     if (!ctx.state.streamDestination || !ctx.state.hasAdditionalData) {
       await next()
@@ -54,34 +56,19 @@ export function createKycDecisionMiddleware(): ILPMiddleware {
       decision = await readDecision()
     }
 
-    // TODO Maybe we should return reject instead?
     if (!decision) {
+      decision = 'No response from ASE'
+    }
+
+    if (decision === 'KYC allowed') {
       await next()
       return
     }
 
-    if (decision === 'allow') {
-      await next()
-      return
-    }
-
-    let reason = 'rejected'
-    try {
-      const parsed = JSON.parse(decision)
-      reason = parsed?.reason || reason
-    } catch (_e) {
-      reason = decision
-    }
-
-    ctx.response.reject = {
-      code: Errors.codes.F99_APPLICATION_ERROR,
-      triggeredBy: ctx.services.config.ilpAddress,
-      message: reason,
-      data: Buffer.from(
-        JSON.stringify({ reason, incomingPaymentId }),
-        'utf8'
-      )
-    }
+    throw new Errors.RelativeApplicationError(
+      IlpErrorCode.R99_APPLICATION_ERROR,
+      Buffer.from(decision, 'utf8')
+    )
   }
 }
 
