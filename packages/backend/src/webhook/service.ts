@@ -206,6 +206,7 @@ async function sendWebhook(
     const body = {
       id: webhook.event.id,
       type: webhook.event.type,
+      tenantId: webhook.event.tenantId,
       data: webhook.event.data
     }
 
