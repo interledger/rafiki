@@ -1,4 +1,4 @@
-import { Errors, IlpErrorCode } from 'ilp-packet'
+import { Errors } from 'ilp-packet'
 import { ILPContext, ILPMiddleware } from '../rafiki'
 import { StreamState } from './stream-address'
 
@@ -9,22 +9,14 @@ export function createKycDecisionMiddleware(): ILPMiddleware {
   ): Promise<void> => {
     const { config, logger, redis } = ctx.services
 
-    // TODO This might not be needed? We should be able to just check the state.hasAdditionalData
-    // if (!config.enableKycAseDecision) {
-    //   await next()
-    //   return
-    // }
-
-    logger.info('KYC Decision Middleware, has additional data: ' + ctx.state.hasAdditionalData)
-
     if (!ctx.state.streamDestination || !ctx.state.hasAdditionalData) {
       await next()
       return
     }
 
     const incomingPaymentId = ctx.state.streamDestination
-    // TODO Maybe we should have a more `unique` key? Think of packet/stream id!!!
-    const cacheKey = `kyc_decision:${incomingPaymentId}`
+    const connectionId = ctx.state.connectionId ?? 'unknown'
+    const cacheKey = `kyc_decision:${incomingPaymentId}:${connectionId}`
 
     // Bounded polling: wait for decision up to (packet expiry - safetyMs) or maxWaitMs
     const safetyMs = Number.isFinite(config.kycDecisionSafetyMarginMs)
@@ -71,5 +63,3 @@ export function createKycDecisionMiddleware(): ILPMiddleware {
     )
   }
 }
-
-

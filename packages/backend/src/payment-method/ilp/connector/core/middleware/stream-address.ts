@@ -7,6 +7,7 @@ export interface StreamState {
   streamDestination?: string
   streamServer?: StreamServer
   hasAdditionalData?: boolean
+  connectionId?: string
 }
 
 export function createStreamAddressMiddleware(): ILPMiddleware {
@@ -47,7 +48,7 @@ export function createStreamAddressMiddleware(): ILPMiddleware {
         const payload = frames?.length
           ? frames.find((f) => f.streamId === 1)?.data ?? frames[0].data
           : undefined
-        
+
         if (payload && payload.length > 0) {
           ctx.services.logger.info(
             { payload: payload.toString('utf8') },
@@ -56,6 +57,9 @@ export function createStreamAddressMiddleware(): ILPMiddleware {
         }
 
         ctx.state.hasAdditionalData = !!payload?.length
+        if (typeof (replyOrMoney as any).connectionId === 'string') {
+          ctx.state.connectionId = (replyOrMoney as any).connectionId
+        }
         //TODO Here we should store STREAM data payload i.e. db call in webhook events table
       }
     } finally {
