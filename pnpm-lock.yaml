@@ -11,11 +11,15 @@ overrides:
   jose: '>=4.15.5'
   undici@>=5.0.0: ^5.28.5
   undici@>=6.0.0: ^6.21.2
-  tar: '>=7.5.4'
+  tar: '>=7.5.10'
   braces@<3.0.3: '>=3.0.3'
   dset@<3.1.4: '>=3.1.4'
   path-to-regexp@>=0.1.7: ^0.1.12
   path-to-regexp@>=6.3.0: ^6.3.0
+  koa@>=2.0.0: ^2.16.4
+  koa@>=3.0.0: ^3.1.2
+  minmatch@>=3.0.0: ^3.1.3
+  minmatch@>=9.0.0: ^9.0.7
   next: ^15.5.8
   form-data: ^4.0.4
   sha.js: '>=2.4.12'
@@ -169,7 +173,7 @@ importers:
         version: 4.13.0(graphql@16.11.0)
       '@as-integrations/koa':
         specifier: ^1.1.1
-        version: 1.1.1(@apollo/server@4.13.0)(koa@2.16.3)
+        version: 1.1.1(@apollo/server@4.13.0)(koa@2.16.4)
       '@escape.tech/graphql-armor':
         specifier: ^2.4.0
         version: 2.4.0(@apollo/server@4.13.0)
@@ -219,8 +223,8 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0(pg@8.11.3)
       koa:
-        specifier: ^2.15.4
-        version: 2.16.3
+        specifier: ^2.16.4
+        version: 2.16.4
       koa-bodyparser:
         specifier: ^4.4.1
         version: 4.4.1
@@ -320,7 +324,7 @@ importers:
         version: 4.13.0(graphql@16.11.0)
       '@as-integrations/koa':
         specifier: ^1.1.1
-        version: 1.1.1(@apollo/server@4.13.0)(koa@2.16.3)
+        version: 1.1.1(@apollo/server@4.13.0)(koa@2.16.4)
       '@escape.tech/graphql-armor':
         specifier: ^2.4.0
         version: 2.4.0(@apollo/server@4.13.0)
@@ -436,8 +440,8 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0(pg@8.11.3)
       koa:
-        specifier: ^2.15.4
-        version: 2.16.3
+        specifier: ^2.16.4
+        version: 2.16.4
       koa-bodyparser:
         specifier: ^4.4.1
         version: 4.4.1
@@ -581,8 +585,8 @@ importers:
         specifier: ^1.0.6
         version: 1.0.6
       koa:
-        specifier: ^2.15.4
-        version: 2.16.3
+        specifier: ^2.16.4
+        version: 2.16.4
       koa-bodyparser:
         specifier: ^4.4.1
         version: 4.4.1
@@ -867,8 +871,8 @@ importers:
         specifier: ^1.0.6
         version: 1.0.6
       koa:
-        specifier: ^3.0.0
-        version: 3.1.1
+        specifier: ^3.1.2
+        version: 3.1.2
       koa-bodyparser:
         specifier: ^4.4.1
         version: 4.4.1
@@ -1034,7 +1038,7 @@ importers:
         version: 7.3.0
       '@koa/bodyparser':
         specifier: ^5.1.1
-        version: 5.1.1(koa@2.16.3)
+        version: 5.1.1(koa@2.16.4)
       '@types/koa':
         specifier: 2.15.0
         version: 2.15.0
@@ -1054,8 +1058,8 @@ importers:
         specifier: ^1.0.6
         version: 1.0.6
       koa:
-        specifier: ^2.15.3
-        version: 2.16.3
+        specifier: ^2.16.4
+        version: 2.16.4
       yaml:
         specifier: ^2.7.0
         version: 2.7.0
@@ -1364,15 +1368,15 @@ packages:
       - encoding
     dev: true
 
-  /@as-integrations/koa@1.1.1(@apollo/server@4.13.0)(koa@2.16.3):
+  /@as-integrations/koa@1.1.1(@apollo/server@4.13.0)(koa@2.16.4):
     resolution: {integrity: sha512-v84cVhkLUxAH9l19pajbWp/Z9ZYTzO7jkAOiY1xndTclfpXZstiWDKejZYq7xpkBtUSSAKzNyM66uox8MP9qVg==}
     engines: {node: '>=16.0'}
     peerDependencies:
       '@apollo/server': ^4.13.0
-      koa: ^2.0.0
+      koa: ^2.16.4
     dependencies:
       '@apollo/server': 4.13.0(graphql@16.11.0)
-      koa: 2.16.3
+      koa: 2.16.4
     dev: false
 
   /@astrojs/compiler@2.13.0:
@@ -5737,7 +5741,7 @@ packages:
       '@apidevtools/json-schema-ref-parser': 11.7.2
       ajv: 8.17.1
       ajv-formats: 2.1.1(ajv@8.17.1)
-      koa: 2.16.3
+      koa: 2.16.4
       openapi-default-setter: 12.1.3
       openapi-request-coercer: 12.1.3
       openapi-request-validator: 12.1.3
@@ -5753,7 +5757,7 @@ packages:
       '@apidevtools/json-schema-ref-parser': 11.7.2
       ajv: 8.17.1
       ajv-formats: 2.1.1(ajv@8.17.1)
-      koa: 2.16.3
+      koa: 2.16.4
       openapi-default-setter: 12.1.3
       openapi-request-coercer: 12.1.3
       openapi-request-validator: 12.1.3
@@ -6122,14 +6126,14 @@ packages:
     resolution: {integrity: sha512-Lg3PnLp0QXpxwLIAuuJboLeRaIhrgJjeuh797QADg3xz8wGLugQOS5DpsE8A6i6Adgzf+bacllkKZG3J0tGfDw==}
     dev: true
 
-  /@koa/bodyparser@5.1.1(koa@2.16.3):
+  /@koa/bodyparser@5.1.1(koa@2.16.4):
     resolution: {integrity: sha512-ZBF49xqNVxnmJ+8iXegq+fXPQm9RSX8giNl/aXS5rW1VpNct92wnFbGR/47vfoRJVLARGQ4HVL4WaQ0u8IJVoA==}
     engines: {node: '>= 16'}
     peerDependencies:
-      koa: ^2.14.1
+      koa: ^2.16.4
     dependencies:
       co-body: 6.1.0
-      koa: 2.16.3
+      koa: 2.16.4
       lodash.merge: 4.6.2
       type-is: 1.6.18
     dev: true
@@ -10774,7 +10778,7 @@ packages:
       minipass-pipeline: 1.2.4
       p-map: 4.0.0
       ssri: 10.0.5
-      tar: 7.5.6
+      tar: 7.5.10
       unique-filename: 3.0.0
     dev: true
 
@@ -11356,6 +11360,11 @@ packages:
     engines: {node: '>= 0.6'}
     dependencies:
       safe-buffer: 5.2.1
+
+  /content-disposition@1.0.1:
+    resolution: {integrity: sha512-oIXISMynqSqm241k6kcQ5UwttDILMK4BiurCfGEREw6+X9jkkpEe5T9FZaApyLGGOnFuyMWZpdolTXMtvEJ08Q==}
+    engines: {node: '>=18'}
+    dev: false
 
   /content-type@1.0.5:
     resolution: {integrity: sha512-nTjqfcBFEipKdXCv4YDQWCfmcLZKm81ldF0pAopTvyrFGVbcR6P/VAAd5G7N+0tTr8QqiU0tFadD6FK4NtJwOA==}
@@ -16643,7 +16652,6 @@ packages:
   /keygrip@1.1.0:
     resolution: {integrity: sha512-iYSchDJ+liQ8iwbSI2QqsQOvqv58eJCEanyJPJi+Khyu8smkcKSFUCbPwzFcL7YVtZ6eONjqRX/38caJ7QjRAQ==}
     engines: {node: '>= 0.6'}
-    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
     dependencies:
       tsscmp: 1.0.6
 
@@ -16752,8 +16760,8 @@ packages:
       - supports-color
     dev: false
 
-  /koa@2.16.3:
-    resolution: {integrity: sha512-zPPuIt+ku1iCpFBRwseMcPYQ1cJL8l60rSmKeOuGfOXyE6YnTBmf2aEFNL2HQGrD0cPcLO/t+v9RTgC+fwEh/g==}
+  /koa@2.16.4:
+    resolution: {integrity: sha512-3An0GCLDSR34tsCO4H8Tef8Pp2ngtaZDAZnsWJYelqXUK5wyiHvGItgK/xcSkmHLSTn1Jcho1mRQs2ehRzvKKw==}
     engines: {node: ^4.8.4 || ^6.10.1 || ^7.10.1 || >= 8.1.4}
     dependencies:
       accepts: 1.3.8
@@ -16782,12 +16790,12 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /koa@3.1.1:
-    resolution: {integrity: sha512-KDDuvpfqSK0ZKEO2gCPedNjl5wYpfj+HNiuVRlbhd1A88S3M0ySkdf2V/EJ4NWt5dwh5PXCdcenrKK2IQJAxsg==}
+  /koa@3.1.2:
+    resolution: {integrity: sha512-2LOQnFKu3m0VxpE+5sb5+BRTSKrXmNxGgxVRiKwD9s5KQB1zID/FRXhtzeV7RT1L2GVpdEEAfVuclFOMGl1ikA==}
     engines: {node: '>= 18'}
     dependencies:
       accepts: 1.3.8
-      content-disposition: 0.5.4
+      content-disposition: 1.0.1
       content-type: 1.0.5
       cookies: 0.9.1
       delegates: 1.0.0
@@ -22273,8 +22281,8 @@ packages:
       - bare-abort-controller
     dev: true
 
-  /tar@7.5.6:
-    resolution: {integrity: sha512-xqUeu2JAIJpXyvskvU3uvQW8PAmHrtXp2KDuMJwQqW8Sqq0CaZBAQ+dKS3RBXVhU4wC5NjAdKrmh84241gO9cA==}
+  /tar@7.5.10:
+    resolution: {integrity: sha512-8mOPs1//5q/rlkNSPcCegA6hiHJYDmSLEI8aMH/CdSQJNWztHC9WHNam5zdQlfpTwB9Xp7IBEsHfV5LKMJGVAw==}
     engines: {node: '>=18'}
     dependencies:
       '@isaacs/fs-minipass': 4.0.1
