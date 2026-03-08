@@ -1,0 +1,59 @@
+meta {
+  name: 01 - Create Incoming Payment (Coop-B)
+  type: graphql
+  seq: 1
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CreateIncomingPayment($input: CreateIncomingPaymentInput!) {
+    createIncomingPayment(input: $input) {
+      payment {
+        id
+        state
+      }
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "walletAddressId": "{{coopBWalletAddressId}}",
+      "incomingAmount": {
+        "value": "1000",
+        "assetCode": "NPR",
+        "assetScale": 2
+      },
+      "expiresAt": null
+    }
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  const tenantId = bru.getEnvVar('coopBTenantId');
+  const secret = bru.getEnvVar('coopBSecret');
+  
+  // Set what scripts.js expects
+  bru.setEnvVar('backendApiSignatureSecret', secret);
+  bru.setEnvVar('senderTenantId', tenantId);
+  
+  scripts.addApiSignatureHeader();
+}
+
+script:post-response {
+  const body = res.getBody();
+  if (body?.data?.createIncomingPayment?.payment) {
+    const paymentId = body.data.createIncomingPayment.payment.id;
+    const waUrl = bru.getEnvVar('coopBWalletAddress');
+    bru.setEnvVar("incomingPaymentUrl", waUrl + "/incoming-payments/" + paymentId);
+    console.log("Saved incomingPaymentUrl: " + bru.getEnvVar("incomingPaymentUrl"));
+  }
+}

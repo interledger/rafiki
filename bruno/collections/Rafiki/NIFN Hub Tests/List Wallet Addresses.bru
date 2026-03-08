@@ -1,0 +1,35 @@
+meta {
+  name: List Wallet Addresses
+  type: graphql
+  seq: 3
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query GetWalletAddresses {
+    walletAddresses {
+      edges {
+        node {
+          id
+          address
+          publicName
+        }
+      }
+    }
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  // We can list wallet addresses as any tenant, but let's use Operator for consistency
+  bru.setEnvVar('backendApiSignatureSecret', bru.getEnvVar('operatorSecret'));
+  bru.setEnvVar('senderTenantId', bru.getEnvVar('operatorTenantId'));
+  
+  scripts.addApiSignatureHeader();
+}

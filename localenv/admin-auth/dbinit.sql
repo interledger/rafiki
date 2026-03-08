@@ -21,3 +21,11 @@ ALTER DATABASE happy_life_kratos OWNER TO happy_life_kratos;
 CREATE USER cloud_nine_kratos WITH PASSWORD 'kratos_password';
 CREATE DATABASE cloud_nine_kratos;
 ALTER DATABASE cloud_nine_kratos OWNER TO cloud_nine_kratos;
+
+CREATE USER global_bank_backend WITH PASSWORD 'global_bank_backend';
+CREATE DATABASE global_bank_backend;
+ALTER DATABASE global_bank_backend OWNER TO global_bank_backend;
+
+CREATE USER global_bank_auth WITH PASSWORD 'global_bank_auth';
+CREATE DATABASE global_bank_auth;
+ALTER DATABASE global_bank_auth OWNER TO global_bank_auth;

@@ -1,0 +1,55 @@
+meta {
+  name: 03 - Create Outgoing Payment (Coop-A)
+  type: graphql
+  seq: 3
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CreateOutgoingPayment($input: CreateOutgoingPaymentInput!) {
+    createOutgoingPayment(input: $input) {
+      payment {
+        id
+        state
+      }
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "walletAddressId": "{{coopAWalletAddressId}}",
+      "quoteId": "{{quoteId}}"
+    }
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  const tenantId = bru.getEnvVar('coopATenantId');
+  const secret = bru.getEnvVar('coopASecret');
+  
+  console.log("Creating Outgoing Payment for: " + tenantId);
+  
+  bru.setEnvVar('backendApiSignatureSecret', secret);
+  bru.setEnvVar('senderTenantId', tenantId);
+  
+  scripts.addApiSignatureHeader();
+  
+  console.log("Outgoing Sig: " + req.getHeader('signature'));
+  console.log("Outgoing Tenant Header: " + req.getHeader('tenant-id'));
+}
+
+script:post-response {
+  const body = res.getBody();
+  if (body?.data?.createOutgoingPayment?.payment) {
+    bru.setEnvVar("outgoingPaymentId", body.data.createOutgoingPayment.payment.id);
+  }
+}

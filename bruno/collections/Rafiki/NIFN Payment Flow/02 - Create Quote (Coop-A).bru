@@ -1,0 +1,51 @@
+meta {
+  name: 02 - Create Quote (Coop-A)
+  type: graphql
+  seq: 2
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CreateQuote($input: CreateQuoteInput!) {
+    createQuote(input: $input) {
+      quote {
+        id
+      }
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "walletAddressId": "{{coopAWalletAddressId}}",
+      "receiver": "{{incomingPaymentUrl}}"
+    }
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  const tenantId = bru.getEnvVar('coopATenantId');
+  const secret = bru.getEnvVar('coopASecret');
+  
+  console.log("Creating Quote for: " + tenantId);
+  
+  bru.setEnvVar('backendApiSignatureSecret', secret);
+  bru.setEnvVar('senderTenantId', tenantId);
+  
+  scripts.addApiSignatureHeader();
+}
+
+script:post-response {
+  const body = res.getBody();
+  if (body?.data?.createQuote?.quote) {
+    bru.setEnvVar("quoteId", body.data.createQuote.quote.id);
+  }
+}

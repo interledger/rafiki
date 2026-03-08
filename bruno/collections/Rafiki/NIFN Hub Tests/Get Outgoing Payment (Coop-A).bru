@@ -1,0 +1,37 @@
+meta {
+  name: Get Outgoing Payment (Coop-A)
+  type: graphql
+  seq: 2
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query GetOutgoingPayment($id: String!) {
+    outgoingPayment(id: $id) {
+      id
+      state
+      sentAmount {
+        value
+        assetCode
+      }
+      error
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "id": "4263846a-b965-40db-8186-66f18167e9b1"
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
+}

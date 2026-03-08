@@ -1,0 +1,43 @@
+meta {
+  name: 05 - Check Payment State (Coop-A)
+  type: graphql
+  seq: 5
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query GetOutgoingPayment($id: String!) {
+    outgoingPayment(id: $id) {
+      id
+      state
+      sentAmount {
+        value
+        assetCode
+      }
+      error
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "id": "{{outgoingPaymentId}}"
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  const tenantId = bru.getEnvVar('coopATenantId');
+  const secret = bru.getEnvVar('coopASecret');
+  
+  bru.setEnvVar('backendApiSignatureSecret', secret);
+  bru.setEnvVar('senderTenantId', tenantId);
+  
+  scripts.addApiSignatureHeader();
+}

@@ -1,0 +1,45 @@
+meta {
+  name: 04 - Deposit Liquidity (Coop-A)
+  type: graphql
+  seq: 4
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation DepositOutgoingPaymentLiquidity($input: DepositOutgoingPaymentLiquidityInput!) {
+    depositOutgoingPaymentLiquidity(input: $input) {
+      success
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "outgoingPaymentId": "{{outgoingPaymentId}}",
+      "idempotencyKey": "{{idempotencyKey}}"
+    }
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  const tenantId = bru.getEnvVar('coopATenantId');
+  const secret = bru.getEnvVar('coopASecret');
+  
+  console.log("Depositing Liquidity for: " + tenantId);
+  
+  bru.setEnvVar('backendApiSignatureSecret', secret);
+  bru.setEnvVar('senderTenantId', tenantId);
+  
+  // Generate a fresh idempotency key for this request
+  bru.setVar('idempotencyKey', require('crypto').randomUUID());
+  
+  scripts.addApiSignatureHeader();
+}
