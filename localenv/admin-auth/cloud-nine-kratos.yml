@@ -42,7 +42,9 @@ selfservice:
         - hook: revoke_active_sessions
 
     verification:
-      enabled: false
+      enabled: true
+      ui_url: http://localhost:3010/auth/verification
+      use: link
 
     logout:
       after:
@@ -53,7 +55,11 @@ selfservice:
       lifespan: 10m
 
     registration:
-      enabled: false
+      enabled: true
+      ui_url: http://localhost:3010/auth/registration
+      after:
+        hooks:
+          - hook: verify
 
 log:
   level: debug
