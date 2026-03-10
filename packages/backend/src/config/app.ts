@@ -125,6 +125,9 @@ export const Config = {
 
   authServerGrantUrl: envString('AUTH_SERVER_GRANT_URL'),
   authServerIntrospectionUrl: envString('AUTH_SERVER_INTROSPECTION_URL'),
+  authAdminApiUrl: envString('AUTH_ADMIN_API_URL'),
+  authAdminApiSecret: envString('AUTH_ADMIN_API_SECRET'),
+  authAdminApiSignatureVersion: envInt('AUTH_ADMIN_API_SIGNATURE_VERSION', 1),
   authServiceApiUrl: envString('AUTH_SERVICE_API_URL'),
 
   outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 1),
@@ -159,8 +162,8 @@ export const Config = {
   signatureSecret: process.env.SIGNATURE_SECRET, // optional
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
 
-  adminApiSecret: envString('ADMIN_API_SECRET'),
-  adminApiSignatureVersion: envInt('ADMIN_API_SIGNATURE_VERSION', 1),
+  adminApiSecret: envString('API_SECRET'),
+  adminApiSignatureVersion: envInt('API_SIGNATURE_VERSION', 1),
   adminApiSignatureTtlSeconds: envInt('ADMIN_API_SIGNATURE_TTL_SECONDS', 30),
 
   keyId: envString('KEY_ID'),
@@ -205,11 +208,24 @@ export const Config = {
     'SEND_TENANT_WEBHOOKS_TO_OPERATOR',
     false
   ),
+  partialPaymentDecisionMaxWaitMs: envInt(
+    'PARTIAL_PAYMENT_DECISION_MAX_WAIT_MS',
+    1500
+  ),
+  partialPaymentDecisionSafetyMarginMs: envInt(
+    'PARTIAL_PAYMENT_DECISION_SAFETY_MARGIN_MS',
+    100
+  ),
   cardServiceUrl: optional(envString, 'CARD_SERVICE_URL'),
   posServiceUrl: optional(envString, 'POS_SERVICE_URL'),
   posWebhookServiceUrl: optional(envString, 'POS_WEBHOOK_SERVICE_URL'),
   cardWebhookUrl: optional(envString, 'CARD_WEBHOOK_SERVICE_URL'),
-  dbEncryptionSecret: optional(envString, 'DB_ENCRYPTION_SECRET')
+  dbEncryptionSecret: optional(envString, 'DB_ENCRYPTION_SECRET'),
+  // TODO Maybe rename?
+  enableKycAseDecision: envBool('ENABLE_KYC_ASE_DECISION', false),
+  kycAseDecisionUrl: process.env.KYC_ASE_DECISION_URL,
+  kycDecisionMaxWaitMs: envInt('KYC_DECISION_MAX_WAIT_MS', 1500),
+  kycDecisionSafetyMarginMs: envInt('KYC_DECISION_SAFETY_MARGIN_MS', 100)
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

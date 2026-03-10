@@ -347,7 +347,12 @@ async function pay(
     }
   )
   try {
-    const receipt = await Pay.pay({ plugin, destination, quote })
+    const receipt = await Pay.pay({
+      plugin,
+      destination,
+      quote,
+      appData: Buffer.from('hello kyc')
+    })
 
     if (receipt.error) {
       throw receipt.error
@@ -455,5 +460,6 @@ export const retryableIlpErrors: {
   [Pay.PaymentError.InsufficientExchangeRate]: true,
   [Pay.PaymentError.RateProbeFailed]: true,
   [Pay.PaymentError.IdleTimeout]: true,
-  [Pay.PaymentError.ClosedByReceiver]: true
+  [Pay.PaymentError.ClosedByReceiver]: true,
+  [Pay.PaymentError.ApplicationError]: false
 }

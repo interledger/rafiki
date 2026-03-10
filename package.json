@@ -77,6 +77,8 @@
       "path-to-regexp@>=6.3.0": "^6.3.0",
       "next": "^15.2.3",
       "form-data": "^4.0.4",
+      "@interledger/stream-receiver": "0.3.3-alpha.4",
+      "@interledger/pay": "0.4.0-alpha.10",
       "sha.js": ">=2.4.12"
     }
   }
