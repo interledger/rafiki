@@ -9,6 +9,7 @@ import { AmountJSON, parseAmount } from '../amount'
 import { Quote as OpenPaymentsQuote } from '@interledger/open-payments'
 import { WalletAddress } from '../wallet_address/model'
 import { OpenPaymentsServerRouteError } from '../route-errors'
+import { parseClientWalletAddress } from '../../shared/utils'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -38,7 +39,10 @@ async function getQuote(
 ): Promise<void> {
   const quote = await deps.quoteService.get({
     id: ctx.params.id,
-    client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
+    client:
+      ctx.accessAction === AccessAction.Read
+        ? parseClientWalletAddress(ctx.client)
+        : undefined,
     tenantId: ctx.params.tenantId
   })
 
@@ -79,7 +83,7 @@ async function createQuote(
     tenantId,
     walletAddressId: ctx.walletAddress.id,
     receiver: body.receiver,
-    client: ctx.client,
+    client: parseClientWalletAddress(ctx.client),
     method: body.method
   }
 
