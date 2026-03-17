@@ -289,9 +289,7 @@ async function create(
   const grantTrx = trx || (await Grant.startTransaction(knex))
   try {
     const grantData = {
-      state: noInteractionRequired
-        ? GrantState.Approved
-        : GrantState.Pending,
+      state: noInteractionRequired ? GrantState.Approved : GrantState.Pending,
       startMethod: interact?.start,
       finishMethod: interact?.finish?.method,
       finishUri: interact?.finish?.uri,

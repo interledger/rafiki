@@ -7,6 +7,7 @@ import { AppContext, AppServices } from '../app'
 import { Tenant } from '../tenants/model'
 
 import { IocContract } from '@adonisjs/fold'
+import { TokenInfoClient } from 'token-introspection'
 export function validateId(id: string): boolean {
   return validate(id) && version(id) === 4
 }
@@ -110,6 +111,9 @@ export async function poll<T>(args: PollArgs<T>): Promise<T> {
 export type UnionOmit<T, K extends keyof any> = T extends any
   ? Omit<T, K>
   : never
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type UnionInclude<T, K> = T extends any ? T & K : never
 
 function getSignatureParts(signature: string) {
   const signatureParts = signature.split(', ')
@@ -269,4 +273,12 @@ export const loadRoutesFromDatabase = async (
       )
     }
   }
+}
+
+export const parseClientWalletAddress = (
+  client: TokenInfoClient | undefined
+): string | undefined => {
+  if (typeof client === 'string') return client
+  else if (client?.walletAddress) return client.walletAddress
+  return undefined
 }
