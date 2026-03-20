@@ -14,7 +14,12 @@ function envString(name: string, defaultValue?: string): string {
 
 function envStringArray(name: string, value: string[]): string[] {
   const envValue = process.env[name]
-  return envValue == null ? value : envValue.split(',').map((s) => s.trim())
+  return envValue == null
+    ? value
+    : envValue
+        .split(',')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0)
 }
 
 function envInt(name: string, value: number): number {
