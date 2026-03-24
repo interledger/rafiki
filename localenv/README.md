@@ -135,18 +135,6 @@ git clone --recurse-submodules https://github.com/interledger/rafiki.git
 
 > \*Note: In the Local Playground, Kratos and Mail Slurper are disabled by default.
 
-## Exploring Accounts on Mock Account Servicing Entity
-
-Navigate to `localhost:3030` to view the accounts on the Cloud Nine Wallet mock ASE.
-
-![Mock Account Servicing Entity Accounts](../packages/documentation/public/img/map-accounts.png)
-
-The accounts of the Happy Life Bank mock ASE can be found on `localhost:3031`.
-
-Select an Account Name to view account information, available balance, and a list of transactions.
-
-![Mock Account Servicing Entity Transactions](../packages/documentation/public/img/map-transactions.png)
-
 # Debugging
 
 Debuggers are exposed on the following ports:
