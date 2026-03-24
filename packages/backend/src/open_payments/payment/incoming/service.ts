@@ -86,7 +86,10 @@ export interface IncomingPaymentService
       partialIncomingPaymentId?: string
       expiresAt?: Date
     }
-  ): Promise<{ incomingPayment: IncomingPayment; decision: string }>
+  ): Promise<PartialPaymentDecision>
+  updatePartialPaymentDecision(
+    options: PartialPaymentDecisionOptions
+  ): Promise<boolean>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -119,7 +122,9 @@ export async function createIncomingPaymentService(
     update: (options) => updateIncomingPayment(deps, options),
     getPage: (options) => getPage(deps, options),
     processPartialPayment: (id, options) =>
-      processPartialPayment(deps, id, options)
+      processPartialPayment(deps, id, options),
+    updatePartialPaymentDecision: (options) =>
+      updatePartialPaymentDecision(deps, options)
   }
 }
 
@@ -569,7 +574,7 @@ async function processPartialPayment(
     partialIncomingPaymentId?: string
     expiresAt?: Date
   }
-): Promise<{ incomingPayment: IncomingPayment; decision: string }> {
+): Promise<PartialPaymentDecision> {
   const { config, knex, redis } = deps
 
   const incomingPayment = await IncomingPayment.query(knex)
@@ -584,6 +589,7 @@ async function processPartialPayment(
     type: IncomingPaymentEventType.IncomingPaymentPartialPaymentReceived,
     data: {
       ...incomingPayment.toData(0n),
+      partialIncomingPaymentId: options?.partialIncomingPaymentId,
       dataToTransmit:
         options?.dataToTransmit && config.dbEncryptionSecret
           ? encryptDbData(options.dataToTransmit, config.dbEncryptionSecret)
@@ -601,7 +607,7 @@ async function processPartialPayment(
     )
   })
 
-  let decision = 'No response from ASE'
+  let decision: PartialPaymentDecision = {}
   if (options?.partialIncomingPaymentId && options?.expiresAt && redis) {
     const partialIncomingPaymentId = options.partialIncomingPaymentId
     const cacheKey = `partial_payment_decision:${id}:${partialIncomingPaymentId}`
@@ -625,23 +631,48 @@ async function processPartialPayment(
     const pollingFrequencyMs = 50
 
     try {
-      decision = await poll({
-        request: async (): Promise<string> => {
+      const polledDecision = await poll({
+        request: async (): Promise<PartialPaymentDecision | null> => {
           try {
             const value = await redis.get(cacheKey)
-            return value ?? ''
+            if (!value) return null
+
+            try {
+              const parsed = JSON.parse(value) as PartialPaymentDecision
+              return parsed
+            } catch (parseError) {
+              deps.logger.warn(
+                { parseError, incomingPaymentId: id, cacheKey },
+                'invalid partial payment decision format in cache'
+              )
+            }
+
+            return null
           } catch (e) {
             deps.logger.warn(
               { e, incomingPaymentId: id },
               'decision read failed'
             )
-            return ''
+            return null
           }
         },
-        stopWhen: (result: string) => result !== '',
+        stopWhen: (result: PartialPaymentDecision | null) =>
+          result !== null,
         pollingFrequencyMs,
         timeoutMs
       })
+      if (polledDecision) {
+        decision = {
+          ...decision,
+          ...polledDecision
+        }
+
+        if (!decision.message && typeof decision.success === 'boolean') {
+          decision.message = decision.success
+            ? 'Additional data approved'
+            : 'Additional data rejected'
+        }
+      }
     } catch (e) {
       deps.logger.warn(
         { e, incomingPaymentId: id },
@@ -649,12 +680,57 @@ async function processPartialPayment(
       )
     }
 
-    if (!decision) {
-      decision = 'No response from ASE'
+    if (!decision.message) {
+      decision.message = 'No response from ASE'
     }
   }
 
-  return { incomingPayment, decision }
+  return decision
+}
+
+const PARTIAL_PAYMENT_DECISION_PREFIX = 'partial_payment_decision'
+
+interface PartialPaymentDecision {
+  success?: boolean
+  message?: string
+}
+
+interface PartialPaymentDecisionOptions {
+  id: string
+  partialPaymentId: string
+  decision: boolean
+}
+
+async function updatePartialPaymentDecision(
+  deps: ServiceDependencies,
+  options: PartialPaymentDecisionOptions
+): Promise<boolean> {
+  const { redis, logger } = deps
+  if (!redis) {
+    logger.warn(
+      {
+        incomingPaymentId: options.id,
+        partialPaymentId: options.partialPaymentId
+      },
+      'redis not configured; cannot update partial payment decision'
+    )
+    return false
+  }
+  const cacheKey = `${PARTIAL_PAYMENT_DECISION_PREFIX}:${options.id}:${options.partialPaymentId}`
+  try {
+    await redis.set(cacheKey, JSON.stringify({ success: options.decision }))
+    return true
+  } catch (e) {
+    logger.error(
+      {
+        e,
+        incomingPaymentId: options.id,
+        partialPaymentId: options.partialPaymentId
+      },
+      'failed to update partial payment decision'
+    )
+    return false
+  }
 }
 
 async function getPage(

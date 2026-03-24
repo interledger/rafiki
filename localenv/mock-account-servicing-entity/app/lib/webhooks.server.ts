@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client'
+import { createDecipheriv } from 'node:crypto'
 import type { LiquidityMutationResponse } from 'generated/graphql'
 import type { Amount } from './transactions.server'
 import { mockAccounts } from './accounts.server'
@@ -179,6 +180,128 @@ export async function handleIncomingPaymentCompletedExpired(
     .then((query): LiquidityMutationResponse => {
       if (query.data) {
         return query.data.createIncomingPaymentWithdrawal
+      } else {
+        throw new Error('Data was empty')
+      }
+    })
+
+  return
+}
+
+export async function handleIncomingPartialPaymentReceived(
+  wh: Webhook,
+  options?: TenantOptions
+) {
+  if (
+    wh.type !== WebhookEventType.IncomingPaymentPartialPaymentReceived
+  ) {
+    throw new Error(
+      'Invalid event type when handling incoming partial payment webhook'
+    )
+  }
+
+  const incomingPaymentId = wh.data['id'] as string | undefined
+  if (!incomingPaymentId) {
+    throw new Error('No incomingPaymentId found on webhook data')
+  }
+
+  const explicitPartialIncomingPaymentId = wh.data[
+    'partialIncomingPaymentId'
+  ] as string | undefined
+  if (explicitPartialIncomingPaymentId) {
+    await generateApolloClient(options)
+      .mutate({
+        mutation: gql`
+          mutation ConfirmPartialIncomingPayment(
+            $input: ConfirmPartialIncomingPaymentInput!
+          ) {
+            confirmPartialIncomingPayment(input: $input) {
+              success
+            }
+          }
+        `,
+        variables: {
+          input: {
+            incomingPaymentId,
+            partialIncomingPaymentId: explicitPartialIncomingPaymentId
+          }
+        }
+      })
+      .then((query): LiquidityMutationResponse => {
+        if (query.data) {
+          return query.data.confirmPartialIncomingPayment
+        } else {
+          throw new Error('Data was empty')
+        }
+      })
+    return
+  }
+
+  const rawDataToTransmit = wh.data['dataToTransmit'] as string | undefined
+  if (!rawDataToTransmit) {
+    throw new Error('No dataToTransmit found on webhook data')
+  }
+
+  let decryptedDataToTransmit = rawDataToTransmit
+  const dbEncryptionSecret = process.env.DB_ENCRYPTION_SECRET
+
+  if (dbEncryptionSecret) {
+    try {
+      const { cipherText, tag, iv } = JSON.parse(rawDataToTransmit) as {
+        cipherText: string
+        tag: string
+        iv: string
+      }
+
+      const decipher = createDecipheriv(
+        'aes-256-gcm',
+        Uint8Array.from(Buffer.from(dbEncryptionSecret, 'base64')),
+        iv
+      )
+      decipher.setAuthTag(Uint8Array.from(Buffer.from(tag, 'base64')))
+      let decrypted = decipher.update(cipherText, 'base64', 'utf8')
+      decrypted += decipher.final('utf8')
+      decryptedDataToTransmit = decrypted
+    } catch (e) {
+      throw new Error('Failed to decrypt partial payment additional data')
+    }
+  }
+
+  let partialIncomingPaymentId: string | undefined
+  try {
+    const parsed = JSON.parse(decryptedDataToTransmit) as {
+      partialIncomingPaymentId?: string
+    }
+    partialIncomingPaymentId = parsed.partialIncomingPaymentId
+  } catch {
+    partialIncomingPaymentId = decryptedDataToTransmit
+  }
+
+  if (!partialIncomingPaymentId) {
+    throw new Error('No partialIncomingPaymentId found in additional data')
+  }
+
+  await generateApolloClient(options)
+    .mutate({
+      mutation: gql`
+        mutation ConfirmPartialIncomingPayment(
+          $input: ConfirmPartialIncomingPaymentInput!
+        ) {
+          confirmPartialIncomingPayment(input: $input) {
+            success
+          }
+        }
+      `,
+      variables: {
+        input: {
+          incomingPaymentId,
+          partialIncomingPaymentId
+        }
+      }
+    })
+    .then((query): LiquidityMutationResponse => {
+      if (query.data) {
+        return query.data.confirmPartialIncomingPayment
       } else {
         throw new Error('Data was empty')
       }

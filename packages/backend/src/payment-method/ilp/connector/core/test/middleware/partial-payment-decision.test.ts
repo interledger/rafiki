@@ -1,13 +1,9 @@
-import { Errors } from 'ilp-packet'
 import { ZeroCopyIlpPrepare } from '../..'
 import { createILPContext } from '../../utils'
 import { IlpPrepareFactory, RafikiServicesFactory } from '../../factories'
 import { createPartialPaymentDecisionMiddleware } from '../../middleware/partial-payment-decision'
 import { StreamState } from '../../middleware/stream-address'
 import { StreamServer } from '@interledger/stream-receiver'
-import { IncomingPayment } from '../../../../../../open_payments/payment/incoming/model'
-
-const { FinalApplicationError } = Errors
 
 describe('Partial Payment Decision Middleware', function () {
   const services = RafikiServicesFactory.build()
@@ -25,7 +21,7 @@ describe('Partial Payment Decision Middleware', function () {
       services,
       state: {
         streamDestination: 'test-payment-id',
-        hasAdditionalData: true,
+        additionalData: 'test-data',
         streamServer: new StreamServer({
           serverAddress: services.config.ilpAddress,
           serverSecret: services.config.streamSecret
@@ -41,6 +37,31 @@ describe('Partial Payment Decision Middleware', function () {
     mockProcessPartialPayment.mockClear()
   })
 
+  function mockIncomingMoneyReply(ctx: ReturnType<typeof makeContext>) {
+    if (!ctx.state.streamServer) {
+      throw new Error('streamServer should be defined in this test')
+    }
+    jest
+      .spyOn(ctx.state.streamServer, 'createReply')
+      .mockReturnValue({ packet: Buffer.from('mock-packet') } as any)
+  }
+
+  function mockIncomingMoneyReplyWithDecline(
+    ctx: ReturnType<typeof makeContext>
+  ) {
+    if (!ctx.state.streamServer) {
+      throw new Error('streamServer should be defined in this test')
+    }
+    jest
+      .spyOn(ctx.state.streamServer, 'createReply')
+      .mockReturnValue({
+        packet: Buffer.from('mock-packet'),
+        finalDecline: jest
+          .fn()
+          .mockReturnValue(Buffer.from('declined', 'utf8'))
+      } as any)
+  }
+
   test('skips when streamDestination is not set', async () => {
     const ctx = makeContext({ streamDestination: undefined })
     const prepare = IlpPrepareFactory.build()
@@ -53,8 +74,8 @@ describe('Partial Payment Decision Middleware', function () {
     expect(mockProcessPartialPayment).not.toHaveBeenCalled()
   })
 
-  test('skips when hasAdditionalData is false', async () => {
-    const ctx = makeContext({ hasAdditionalData: false })
+  test('skips when additionalData is missing', async () => {
+    const ctx = makeContext({ additionalData: undefined })
     const prepare = IlpPrepareFactory.build()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
     const next = jest.fn()
@@ -74,14 +95,11 @@ describe('Partial Payment Decision Middleware', function () {
     const expiresAt = new Date(Date.now() + 30000)
     prepare.expiresAt = expiresAt
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
-
-    const mockIncomingPayment = {
-      id: incomingPaymentId
-    } as IncomingPayment
+    mockIncomingMoneyReply(ctx)
 
     mockProcessPartialPayment.mockResolvedValue({
-      incomingPayment: mockIncomingPayment,
-      decision: 'Additional data approved'
+      message: 'Additional data approved',
+      success: true
     })
 
     const next = jest.fn()
@@ -91,7 +109,7 @@ describe('Partial Payment Decision Middleware', function () {
     expect(mockProcessPartialPayment).toHaveBeenCalledWith(
       incomingPaymentId,
       expect.objectContaining({
-        dataToTransmit: undefined,
+        dataToTransmit: 'test-data',
         expiresAt
       })
     )
@@ -102,7 +120,8 @@ describe('Partial Payment Decision Middleware', function () {
     const incomingPaymentId = 'test-payment-id'
     const additionalData = 'test-data'
     const ctx = makeContext({
-      streamDestination: incomingPaymentId
+      streamDestination: incomingPaymentId,
+      additionalData
     })
 
     const streamServer = ctx.state.streamServer
@@ -119,16 +138,8 @@ describe('Partial Payment Decision Middleware', function () {
     })
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
 
-    // Mock the streamServer.createReply to return frames with data
-    const mockReply = {
-      dataFrames: [
-        {
-          streamId: 1,
-          offset: '0',
-          data: Buffer.from(additionalData, 'utf8')
-        }
-      ]
-    }
+    // Mock the streamServer.createReply to return incoming money
+    const mockReply = { packet: Buffer.from('mock-packet') }
     if (!ctx.state.streamServer) {
       throw new Error('streamServer should be defined in this test')
     }
@@ -136,13 +147,9 @@ describe('Partial Payment Decision Middleware', function () {
       .spyOn(ctx.state.streamServer, 'createReply')
       .mockReturnValue(mockReply as any)
 
-    const mockIncomingPayment = {
-      id: incomingPaymentId
-    } as IncomingPayment
-
     mockProcessPartialPayment.mockResolvedValue({
-      incomingPayment: mockIncomingPayment,
-      decision: 'Additional data approved'
+      message: 'Additional data approved',
+      success: true
     })
 
     const next = jest.fn()
@@ -164,14 +171,11 @@ describe('Partial Payment Decision Middleware', function () {
       expiresAt: new Date(Date.now() + 30000)
     })
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
-
-    const mockIncomingPayment = {
-      id: 'test-payment-id'
-    } as IncomingPayment
+    mockIncomingMoneyReply(ctx)
 
     mockProcessPartialPayment.mockResolvedValue({
-      incomingPayment: mockIncomingPayment,
-      decision: 'Additional data approved'
+      message: 'Additional data approved',
+      success: true
     })
 
     const next = jest.fn()
@@ -181,110 +185,86 @@ describe('Partial Payment Decision Middleware', function () {
     expect(next).toHaveBeenCalledTimes(1)
   })
 
-  test('throws FinalApplicationError when decision is not approved', async () => {
+  test('declines payment when decision is not approved', async () => {
     const ctx = makeContext()
     const prepare = IlpPrepareFactory.build({
       expiresAt: new Date(Date.now() + 30000)
     })
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
-
-    const mockIncomingPayment = {
-      id: 'test-payment-id'
-    } as IncomingPayment
+    mockIncomingMoneyReplyWithDecline(ctx)
 
     const rejectionReason = 'Data validation failed'
     mockProcessPartialPayment.mockResolvedValue({
-      incomingPayment: mockIncomingPayment,
-      decision: rejectionReason
+      message: rejectionReason,
+      success: false
     })
 
     const next = jest.fn()
 
-    await expect(middleware(ctx, next)).rejects.toBeInstanceOf(
-      FinalApplicationError
-    )
-
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(ctx.response.reply).toBeDefined()
     expect(next).not.toHaveBeenCalled()
   })
 
-  test('throws FinalApplicationError with correct message when decision is not approved', async () => {
+  test('decline reply includes rejection reason when decision is not approved', async () => {
     const ctx = makeContext()
     const prepare = IlpPrepareFactory.build({
       expiresAt: new Date(Date.now() + 30000)
     })
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
-
-    const mockIncomingPayment = {
-      id: 'test-payment-id'
-    } as IncomingPayment
+    mockIncomingMoneyReplyWithDecline(ctx)
 
     const rejectionReason = 'Data validation failed'
     mockProcessPartialPayment.mockResolvedValue({
-      incomingPayment: mockIncomingPayment,
-      decision: rejectionReason
+      message: rejectionReason,
+      success: false
     })
 
     const next = jest.fn()
 
-    try {
-      await middleware(ctx, next)
-      fail('Expected FinalApplicationError to be thrown')
-    } catch (error) {
-      expect(error).toBeInstanceOf(FinalApplicationError)
-      if (error instanceof FinalApplicationError) {
-        expect(error.message).toBe('Data failed verification')
-        expect(error.ilpErrorData.toString('utf8')).toBe(rejectionReason)
-      }
-    }
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(ctx.response.reply).toBeDefined()
+    expect(next).not.toHaveBeenCalled()
   })
 
-  test('handles errors from processPartialPayment', async () => {
+  test('handles errors from processPartialPayment by declining packet', async () => {
     const ctx = makeContext()
     const prepare = IlpPrepareFactory.build({
       expiresAt: new Date(Date.now() + 30000)
     })
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
+    mockIncomingMoneyReplyWithDecline(ctx)
 
     const error = new Error('Unknown incoming payment')
     mockProcessPartialPayment.mockRejectedValue(error)
 
     const next = jest.fn()
 
-    await expect(middleware(ctx, next)).rejects.toBeInstanceOf(
-      FinalApplicationError
-    )
-
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
     expect(services.logger.error).toHaveBeenCalledWith(
       { error, incomingPaymentId: 'test-payment-id' },
       'failed to process partial payment'
     )
+    expect(ctx.response.reply).toBeDefined()
     expect(next).not.toHaveBeenCalled()
   })
 
-  test('throws FinalApplicationError with generic message on service error', async () => {
+  test('uses generic decline message on service error', async () => {
     const ctx = makeContext()
     const prepare = IlpPrepareFactory.build({
       expiresAt: new Date(Date.now() + 30000)
     })
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
+    mockIncomingMoneyReplyWithDecline(ctx)
 
     const error = new Error('Database error')
     mockProcessPartialPayment.mockRejectedValue(error)
 
     const next = jest.fn()
 
-    try {
-      await middleware(ctx, next)
-      fail('Expected FinalApplicationError to be thrown')
-    } catch (err) {
-      expect(err).toBeInstanceOf(FinalApplicationError)
-      if (err instanceof FinalApplicationError) {
-        expect(err.message).toBe('Data failed verification')
-        expect(err.ilpErrorData.toString('utf8')).toBe(
-          'Error processing partial payment'
-        )
-      }
-    }
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(ctx.response.reply).toBeDefined()
+    expect(next).not.toHaveBeenCalled()
   })
 
   test('handles missing streamServer gracefully when extracting data', async () => {
@@ -294,24 +274,16 @@ describe('Partial Payment Decision Middleware', function () {
     })
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
 
-    const mockIncomingPayment = {
-      id: 'test-payment-id'
-    } as IncomingPayment
-
     mockProcessPartialPayment.mockResolvedValue({
-      incomingPayment: mockIncomingPayment,
-      decision: 'Additional data approved'
+      message: 'Additional data approved',
+      success: true
     })
 
     const next = jest.fn()
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 
-    expect(mockProcessPartialPayment).toHaveBeenCalledWith(
-      'test-payment-id',
-      expect.objectContaining({
-        dataToTransmit: undefined
-      })
-    )
+    expect(mockProcessPartialPayment).not.toHaveBeenCalled()
+    expect(next).toHaveBeenCalledTimes(1)
   })
 })

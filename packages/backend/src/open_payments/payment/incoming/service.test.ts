@@ -34,6 +34,7 @@ import { withConfigOverride } from '../../../tests/helpers'
 import { poll } from '../../../shared/utils'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { getPageTests } from '../../../shared/baseModel.test'
+import Redis from 'ioredis'
 
 describe('Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -46,6 +47,7 @@ describe('Incoming Payment Service', (): void => {
   let asset: Asset
   let config: IAppConfig
   let tenantId: string
+  let redis: Redis
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
@@ -58,6 +60,7 @@ describe('Incoming Payment Service', (): void => {
     incomingPaymentService = await deps.use('incomingPaymentService')
     config = await deps.use('config')
     tenantId = Config.operatorTenantId
+    redis = await deps.use('redis')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -1147,16 +1150,13 @@ describe('Incoming Payment Service', (): void => {
           const dataToTransmit = JSON.stringify({
             data: faker.internet.email()
           })
-          const result = await incomingPaymentService.processPartialPayment(
+          await incomingPaymentService.processPartialPayment(
             incomingPayment.id,
             { dataToTransmit }
           )
-          assert.ok(result)
-          assert.ok(result.incomingPayment)
-
           const webhookEvent = await IncomingPaymentEvent.query(knex)
             .where({
-              incomingPaymentId: result.incomingPayment.id,
+              incomingPaymentId: incomingPayment.id,
               type: IncomingPaymentEventType.IncomingPaymentPartialPaymentReceived
             })
             .withGraphFetched('webhooks')
@@ -1203,16 +1203,13 @@ describe('Incoming Payment Service', (): void => {
             data: faker.internet.email()
           })
 
-          const result = await incomingPaymentService.processPartialPayment(
+          await incomingPaymentService.processPartialPayment(
             incomingPayment.id,
             { dataToTransmit }
           )
-          assert.ok(result)
-          assert.ok(result.incomingPayment)
-
           const webhookEvent = await IncomingPaymentEvent.query(knex)
             .where({
-              incomingPaymentId: result.incomingPayment.id,
+              incomingPaymentId: incomingPayment.id,
               type: IncomingPaymentEventType.IncomingPaymentPartialPaymentReceived
             })
             .withGraphFetched('webhooks')
@@ -1221,6 +1218,94 @@ describe('Incoming Payment Service', (): void => {
 
           expect(webhookEvent.data.dataToTransmit).toEqual(dataToTransmit)
           expect(webhookEvent.webhooks).toHaveLength(1)
+        }
+      )
+    )
+
+    test(
+      'reads approval decision from redis JSON success flag',
+      withConfigOverride(
+        () => config,
+        {
+          partialPaymentDecisionMaxWaitMs: 1_000,
+          partialPaymentDecisionSafetyMarginMs: 0
+        },
+        async (): Promise<void> => {
+          const partialIncomingPaymentId = uuid()
+          const expiresAt = new Date(Date.now() + 5_000)
+          const cacheKey = `partial_payment_decision:${incomingPayment.id}:${partialIncomingPaymentId}`
+
+          const redisGetSpy = jest
+            .spyOn(redis, 'get')
+            .mockImplementation(async (key: string) => {
+              if (key === cacheKey) {
+                return JSON.stringify({ success: true })
+              }
+              return null
+            })
+
+          const decision =
+            await incomingPaymentService.processPartialPayment(
+            incomingPayment.id,
+            {
+              partialIncomingPaymentId,
+              expiresAt
+            }
+          )
+
+          expect(decision.message).toBe('Additional data approved')
+          expect(decision.success).toBe(true)
+          expect(redisGetSpy).toHaveBeenCalledWith(cacheKey)
+
+          const webhookEvent = await IncomingPaymentEvent.query(knex)
+            .where({
+              incomingPaymentId: incomingPayment.id,
+              type: IncomingPaymentEventType.IncomingPaymentPartialPaymentReceived
+            })
+            .orderBy('createdAt', 'desc')
+            .first()
+          assert.ok(webhookEvent)
+          expect(webhookEvent.data.partialIncomingPaymentId).toBe(
+            partialIncomingPaymentId
+          )
+        }
+      )
+    )
+
+    test(
+      'reads rejection decision from redis JSON success flag',
+      withConfigOverride(
+        () => config,
+        {
+          partialPaymentDecisionMaxWaitMs: 1_000,
+          partialPaymentDecisionSafetyMarginMs: 0
+        },
+        async (): Promise<void> => {
+          const partialIncomingPaymentId = uuid()
+          const expiresAt = new Date(Date.now() + 5_000)
+          const cacheKey = `partial_payment_decision:${incomingPayment.id}:${partialIncomingPaymentId}`
+
+          const redisGetSpy = jest
+            .spyOn(redis, 'get')
+            .mockImplementation(async (key: string) => {
+              if (key === cacheKey) {
+                return JSON.stringify({ success: false })
+              }
+              return null
+            })
+
+          const decision =
+            await incomingPaymentService.processPartialPayment(
+            incomingPayment.id,
+            {
+              partialIncomingPaymentId,
+              expiresAt
+            }
+          )
+
+          expect(decision.message).toBe('Additional data rejected')
+          expect(decision.success).toBe(false)
+          expect(redisGetSpy).toHaveBeenCalledWith(cacheKey)
         }
       )
     )

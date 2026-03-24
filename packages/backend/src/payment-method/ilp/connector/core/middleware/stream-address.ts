@@ -1,12 +1,23 @@
-import { StreamServer } from '@interledger/stream-receiver'
+import { StreamServer, IncomingMoney } from '@interledger/stream-receiver'
 import { ILPMiddleware, ILPContext } from '../rafiki'
 import { TenantSettingKeys } from '../../../../../tenants/settings/model'
 import { AuthState } from './auth'
+import { isIlpReply } from 'ilp-packet'
 
+const STREAM_DATA_STREAM_ID = 1
+
+function getAdditionalDataFromReply(reply: IncomingMoney): string | undefined {
+  const frames = reply.dataFrames
+  if (!frames?.length) return undefined
+  const payload =
+    frames.find((f) => Number(f.streamId) === STREAM_DATA_STREAM_ID)?.data ??
+    frames[0].data
+  return payload?.length ? payload.toString('utf8') : undefined
+}
 export interface StreamState {
   streamDestination?: string
   streamServer?: StreamServer
-  hasAdditionalData?: boolean
+  additionalData?: string
   connectionId?: string
 }
 
@@ -42,25 +53,12 @@ export function createStreamAddressMiddleware(): ILPMiddleware {
         const replyOrMoney = ctx.state.streamServer.createReply(
           ctx.request.prepare
         )
-        const frames = (replyOrMoney as any).dataFrames as
-          | Array<{ streamId: number; offset: string; data: Buffer }>
-          | undefined
-        const payload = frames?.length
-          ? frames.find((f) => f.streamId === 1)?.data ?? frames[0].data
-          : undefined
-
-        if (payload && payload.length > 0) {
-          ctx.services.logger.info(
-            { payload: payload.toString('utf8') },
-            'STREAM additional data received'
-          )
+        let payload: string | undefined
+        if (!isIlpReply(replyOrMoney)) {
+          payload = getAdditionalDataFromReply(replyOrMoney)
         }
 
-        ctx.state.hasAdditionalData = !!payload?.length
-        if (typeof (replyOrMoney as any).connectionId === 'string') {
-          ctx.state.connectionId = (replyOrMoney as any).connectionId
-        }
-        //TODO Here we should store STREAM data payload i.e. db call in webhook events table
+        ctx.state.additionalData = payload
       }
     } finally {
       stopTimer()

@@ -351,7 +351,9 @@ async function pay(
       plugin,
       destination,
       quote,
-      appData: Buffer.from('hello kyc')
+      appData: outgoingPayment.dataToTransmit
+        ? Buffer.from(outgoingPayment.dataToTransmit, 'utf8')
+        : undefined
     })
 
     if (receipt.error) {
