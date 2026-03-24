@@ -39,11 +39,9 @@ describe('Partial Payment Decision Middleware', function () {
     if (!ctx.state.streamServer) {
       throw new Error('streamServer should be defined in this test')
     }
-    jest
-      .spyOn(ctx.state.streamServer, 'createReply')
-      .mockReturnValue({
-        packet: Buffer.from('mock-packet')
-      } as unknown as ReturnType<StreamServer['createReply']>)
+    jest.spyOn(ctx.state.streamServer, 'createReply').mockReturnValue({
+      packet: Buffer.from('mock-packet')
+    } as unknown as ReturnType<StreamServer['createReply']>)
   }
 
   function mockIncomingMoneyReplyWithDecline(
