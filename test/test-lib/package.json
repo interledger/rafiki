@@ -6,12 +6,15 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build:deps": "pnpm --filter mock-account-service-lib build",
-    "build": "pnpm clean && tsc --build tsconfig.json",
+    "build": "pnpm build:deps && pnpm clean && tsc --build tsconfig.json",
     "clean": "rm -fr dist/"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "mock-account-service-lib": "workspace:*"
+  },
   "devDependencies": {
     "@apollo/client": "^3.11.8",
     "@interledger/http-signature-utils": "2.0.2",
@@ -19,12 +22,11 @@
     "@koa/bodyparser": "^5.1.1",
     "@types/koa": "2.15.0",
     "@types/koa-bodyparser": "^4.3.12",
-    "@types/node": "^20.14.15",
+    "@types/node": "^24.0.0",
     "axios": "1.8.2",
     "graphql": "^16.11.0",
     "json-canonicalize": "^1.0.6",
     "koa": "^2.15.3",
-    "mock-account-service-lib": "workspace:*",
     "yaml": "^2.7.0"
   }
 }
