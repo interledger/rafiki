@@ -9,12 +9,10 @@ describe('Partial Payment Decision Middleware', function () {
   const services = RafikiServicesFactory.build()
   const middleware = createPartialPaymentDecisionMiddleware()
 
-  // Mock the incomingPayments service
-  const mockProcessPartialPayment = jest.fn()
-  services.incomingPayments = {
-    ...services.incomingPayments,
-    processPartialPayment: mockProcessPartialPayment
-  } as any
+  const mockProcessPartialPayment = jest.spyOn(
+    services.incomingPayments,
+    'processPartialPayment'
+  )
 
   function makeContext(streamState?: Partial<StreamState>) {
     const ctx = createILPContext<StreamState>({
@@ -43,7 +41,9 @@ describe('Partial Payment Decision Middleware', function () {
     }
     jest
       .spyOn(ctx.state.streamServer, 'createReply')
-      .mockReturnValue({ packet: Buffer.from('mock-packet') } as any)
+      .mockReturnValue({
+        packet: Buffer.from('mock-packet')
+      } as unknown as ReturnType<StreamServer['createReply']>)
   }
 
   function mockIncomingMoneyReplyWithDecline(
@@ -52,14 +52,10 @@ describe('Partial Payment Decision Middleware', function () {
     if (!ctx.state.streamServer) {
       throw new Error('streamServer should be defined in this test')
     }
-    jest
-      .spyOn(ctx.state.streamServer, 'createReply')
-      .mockReturnValue({
-        packet: Buffer.from('mock-packet'),
-        finalDecline: jest
-          .fn()
-          .mockReturnValue(Buffer.from('declined', 'utf8'))
-      } as any)
+    jest.spyOn(ctx.state.streamServer, 'createReply').mockReturnValue({
+      packet: Buffer.from('mock-packet'),
+      finalDecline: jest.fn().mockReturnValue(Buffer.from('declined', 'utf8'))
+    } as unknown as ReturnType<StreamServer['createReply']>)
   }
 
   test('skips when streamDestination is not set', async () => {
@@ -145,7 +141,9 @@ describe('Partial Payment Decision Middleware', function () {
     }
     jest
       .spyOn(ctx.state.streamServer, 'createReply')
-      .mockReturnValue(mockReply as any)
+      .mockReturnValue(
+        mockReply as unknown as ReturnType<StreamServer['createReply']>
+      )
 
     mockProcessPartialPayment.mockResolvedValue({
       message: 'Additional data approved',

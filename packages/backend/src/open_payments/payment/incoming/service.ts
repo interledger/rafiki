@@ -656,8 +656,7 @@ async function processPartialPayment(
             return null
           }
         },
-        stopWhen: (result: PartialPaymentDecision | null) =>
-          result !== null,
+        stopWhen: (result: PartialPaymentDecision | null) => result !== null,
         pollingFrequencyMs,
         timeoutMs
       })

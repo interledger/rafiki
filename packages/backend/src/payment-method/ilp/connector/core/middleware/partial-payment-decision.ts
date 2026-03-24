@@ -16,9 +16,9 @@ export function createPartialPaymentDecisionMiddleware(): ILPMiddleware {
     if (!ctx.state.streamDestination || !ctx.state.additionalData) {
       await next()
       return
-    } 
+    }
     const { prepare } = ctx.request
-    const incomingPaymentId = ctx.state.streamDestination    
+    const incomingPaymentId = ctx.state.streamDestination
     const additionalData = ctx.state.additionalData
     const streamServer = ctx.state.streamServer
     if (!streamServer) {
@@ -35,15 +35,14 @@ export function createPartialPaymentDecisionMiddleware(): ILPMiddleware {
     let message: string | undefined
 
     try {
-      decision =
-        (await ctx.services.incomingPayments.processPartialPayment(
-          incomingPaymentId,
-          {
-            dataToTransmit: additionalData,
-            partialIncomingPaymentId: uuid(),
-            expiresAt: prepare.expiresAt
-          }
-        )) as PartialPaymentDecision
+      decision = (await ctx.services.incomingPayments.processPartialPayment(
+        incomingPaymentId,
+        {
+          dataToTransmit: additionalData,
+          partialIncomingPaymentId: uuid(),
+          expiresAt: prepare.expiresAt
+        }
+      )) as PartialPaymentDecision
 
       if (decision?.success) {
         await next()

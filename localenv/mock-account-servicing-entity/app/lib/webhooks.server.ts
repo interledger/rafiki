@@ -192,9 +192,7 @@ export async function handleIncomingPartialPaymentReceived(
   wh: Webhook,
   options?: TenantOptions
 ) {
-  if (
-    wh.type !== WebhookEventType.IncomingPaymentPartialPaymentReceived
-  ) {
+  if (wh.type !== WebhookEventType.IncomingPaymentPartialPaymentReceived) {
     throw new Error(
       'Invalid event type when handling incoming partial payment webhook'
     )

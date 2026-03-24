@@ -1244,8 +1244,7 @@ describe('Incoming Payment Service', (): void => {
               return null
             })
 
-          const decision =
-            await incomingPaymentService.processPartialPayment(
+          const decision = await incomingPaymentService.processPartialPayment(
             incomingPayment.id,
             {
               partialIncomingPaymentId,
@@ -1294,8 +1293,7 @@ describe('Incoming Payment Service', (): void => {
               return null
             })
 
-          const decision =
-            await incomingPaymentService.processPartialPayment(
+          const decision = await incomingPaymentService.processPartialPayment(
             incomingPayment.id,
             {
               partialIncomingPaymentId,
