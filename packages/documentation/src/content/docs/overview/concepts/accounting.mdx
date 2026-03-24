@@ -15,7 +15,7 @@ Rafiki uses <LinkOut href="https://en.wikipedia.org/wiki/Double-entry_bookkeepin
 
 Transactions in Rafiki represent Interledger packet interactions, denominated in a given [asset](#assets). Packet interactions can be successful, fail, or be rejected. Rafiki's accounting layer processes the interactions and converts the activities into financial records, which are then written to your [accounting database](#accounting-databases).
 
-Accounts within Rafiki are your internal [liquidity](#liquidity-accounts) and [settlement](#settlement-accounts) accounts used to fund payments, not the accounts that you service for your customers. This distinction is crucial for understanding how Rafiki handles transactions and settlements.
+Accounts in Rafiki are your internal [liquidity](#liquidity-accounts) and [settlement](#settlement-accounts) accounts used to fund payments, not the accounts that you service for your customers. This distinction is crucial for understanding how Rafiki handles transactions and settlements.
 
 ## Assets
 
@@ -45,13 +45,13 @@ $\frac{10000}{10^2} =\$100.00 USD
 
 ## Accounts
 
-Rafiki uses a combination of liquidity and settlement accounts to track the amounts available to fund transactions. Rafiki does not physically hold funds in each account. Instead, it uses <LinkOut href="https://en.wikipedia.org/wiki/Double-entry_bookkeeping">double-entry accounting</LinkOut> to record the transactions. The actual settlement of amounts owed, in which funds are physically exchanged, occurs outside of both Rafiki and the Interledger Protocol.
+Rafiki uses a combination of liquidity and settlement accounts to track the amounts available to fund transactions. Rafiki doesn't physically hold funds in each account. Instead, it uses <LinkOut href="https://en.wikipedia.org/wiki/Double-entry_bookkeeping">double-entry accounting</LinkOut> to record the transactions. The actual settlement of amounts owed, in which funds are physically exchanged, occurs outside of both Rafiki and the Interledger Protocol.
 
 ### Liquidity accounts
 
 Liquidity accounts track deposits, withdrawals, and transfers that occur during the course of a transaction. Rafiki provides liquidity accounts for assets, peers, and payments.
 
-Liquidity accounts hold either a zero or a positive balance. Rafiki ensures that the total debits to a liquidity account will not exceed the account's total credits.
+Liquidity accounts hold either a zero or a positive balance. Rafiki ensures that the total debits to a liquidity account won't exceed the account's total credits.
 
 <div class="overflow-table" style="border-bottom: 1px solid var(--sl-color-gray-6);">
 
@@ -124,10 +124,10 @@ Peer liquidity is the credit line you've extended to a peer. A peer liquidity ac
 The amount of credit that you extend to a peer, the asset that you transact in, and the mechanism you use to settle are just a few items that should be defined in your respective peering agreements.
 
 :::note
-A peering agreement is a legal contract between the parties involved in a peering relationship. It defines terms such as the assets involved and other operational details. It is not configured or managed within Rafiki but is necessary for establishing the terms under which assets are exchanged.
+A peering agreement is a legal contract between the parties involved in a peering relationship. It defines terms such as the assets involved and other operational details. It's not configured or managed in Rafiki but is necessary for establishing the terms under which assets are exchanged.
 :::
 
-If a peer’s liquidity is insufficient (for example, they’ve used up their allotted credit line), payments will not be processed. Your peer should settle with you so that you can reset their liquidity.
+If a peer's liquidity is insufficient (for example, they've used up their allotted credit line), payments won't be processed. Your peer should settle with you so that you can reset their liquidity.
 
 You can add a liquidity threshold for each peer liquidity account via the [`updatePeer`](https://rafiki.dev/apis/graphql/backend/mutations/#updatepeer) mutation's `liquidityThreshold` input argument.
 
@@ -188,7 +188,7 @@ A settlement account represents the total funds, denominated in a single asset, 
 
 Settlement accounts hold either a zero or a negative balance. A negative balance on a settlement account means you've deposited more funds into Rafiki than you've withdrawn. The closer a settlement account's balance is to 0, the more likely it is you need to settle with your peer for the amount owed and then deposit the amount back into Rafiki.
 
-Rafiki ensures that the total credits to a settlement account do not exceed its total debits.
+Rafiki ensures that the total credits to a settlement account don't exceed its total debits.
 
 <details>
   <summary>Settlement account example</summary>
@@ -795,7 +795,7 @@ A withdrawal is the act of debiting the liquidity account and crediting the sett
 
 ### Interledger transfer examples
 
-In these examples, the sender and receiver do not have wallet addresses at the same Rafiki instance.
+In these examples, the sender and receiver don't have wallet addresses at the same Rafiki instance.
 
 Remember that a settlement account will always have a zero or negative balance and a liquidity account will always have a zero or positive balance.
 

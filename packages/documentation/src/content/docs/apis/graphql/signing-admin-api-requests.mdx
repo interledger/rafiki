@@ -7,11 +7,11 @@ import { LinkOut, Badge } from '@interledger/docs-design-system'
 
 Rafiki requires every request to the Backend Admin API to include a valid cryptographic signature.
 
-This signature authenticates the caller and ensures the request body has not been altered in transit.
+This signature authenticates the caller and ensures the request body wasn't altered in transit.
 
 ## Signature overview
 
-Each request is HMAC‑signed with SHA‑256 using the tenant’s or operator’s API secret. This signature ensures that Rafiki can verify where the request originated and confirm that the payload data matches what was originally signed.
+Each request is HMAC-signed with SHA-256 using the tenant's or operator's API secret. This signature ensures that Rafiki can verify where the request originated and confirm that the payload data matches what was originally signed.
 
 All signed requests include two headers: the `signature` header and the `tenant-id` header.
 
@@ -138,7 +138,7 @@ When Rafiki receives a signed Admin API request, it automatically rebuilds the s
 The request is accepted only if the following conditions are met:
 
 - The signature digest matches
-- The timestamp is within the allowed TTL window
+- The timestamp is in the allowed TTL window
 - The tenant ID is recognized
 
 If any check fails, Rafiki rejects the request before executing any GraphQL operation.

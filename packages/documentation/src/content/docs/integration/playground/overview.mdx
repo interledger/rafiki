@@ -38,7 +38,7 @@ This environment will set up a playground where you can use the GraphQL Admin AP
 
 :::note
 
-The Mock ASE provided in this repository is intended solely for internal use and demonstration purposes. It is not designed to serve as a reference architecture. If you are looking for a reference implementation of an ASE, please refer to the <LinkOut href='https://wallet.interledger-test.dev/'>Test Wallet</LinkOut>.
+The Mock ASE provided in this repository is intended solely for internal use and demonstration purposes. It's not designed to serve as a reference architecture. If you are looking for a reference implementation of an ASE, please refer to the <LinkOut href='https://wallet.interledger-test.dev/'>Test Wallet</LinkOut>.
 :::
 
 ## Running the local environment
@@ -55,7 +55,7 @@ The local environment can be set up using either TigerBeetle or Postgres as the 
 
 #### Using TigerBeetle
 
-This option enables the primary instance (Cloud Nine Wallet) to utilize TigerBeetle for its accounting database. The secondary instance (Happy Life Bank) will always run Postgres as its accounting database.
+This option enables the primary instance (Cloud Nine Wallet) to use TigerBeetle for its accounting database. The secondary instance (Happy Life Bank) will always run Postgres as its accounting database.
 
 To run the local environment with TigerBeetle, execute the following command from the root of the project:
 
@@ -83,7 +83,7 @@ pnpm localenv:compose:multitenancy up
 
 ### Environment components
 
-The local environment consists of a primary and secondary Rafiki instance, each with its docker-compose file (<LinkOut href='https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml'>Cloud Nine Wallet</LinkOut>, <LinkOut href='https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml'>Happy Life Bank</LinkOut>). The primary Cloud Nine Wallet docker-compose file (`./cloud-nine-wallet/docker-compose.yml`) includes the primary Rafiki `backend` and `auth` services, as well as the required data stores, which include TigerBeetle (if enabled), Redis, and Postgres. The primary instance contains all of the necessary components so that it can run independently.
+The local environment consists of a primary and secondary Rafiki instance, each with its docker-compose file (<LinkOut href='https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml'>Cloud Nine Wallet</LinkOut>, <LinkOut href='https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml'>Happy Life Bank</LinkOut>). The primary Cloud Nine Wallet docker-compose file (`./cloud-nine-wallet/docker-compose.yml`) includes the primary Rafiki `backend` and `auth` services, and the required data stores, which include TigerBeetle (if enabled), Redis, and Postgres. The primary instance contains all the necessary components so that it can run independently.
 
 The secondary Happy Life Bank docker-compose file (`./happy-life-bank/docker-compose.yml`) includes only the Rafiki services, not the data stores. It uses the data stores created by the primary Rafiki instance, so it can’t be run independently. The `pnpm localenv:compose up` command starts both the primary and secondary instances.
 
@@ -115,7 +115,7 @@ The following components are made available via the Local Playground:
 | m     | Rafiki Admin UI                    | `http://localhost:4010`         |
 | n     | Kratos API - _disabled by default_ | `http://localhost:4432`         |
 
-#### Mail Slurper
+#### MailSlurper
 
 | Label | Component                       | URL                     |
 | ----- | ------------------------------- | ----------------------- |
@@ -129,12 +129,12 @@ The following components are made available via the Local Playground:
 
 ### Rafiki Admin
 
-Manage and view information about the Rafiki instance(s) through the [Rafiki Admin](/admin/admin-user-guide/) application. Rafiki Admin is a Remix app for querying info and executing mutations against the Rafiki [Backend Admin API](https://rafiki.dev/integration/playground/overview#admin-apis).
+Manage and view information about the Rafiki instances through the [Rafiki Admin](/admin/admin-user-guide/) app. Rafiki Admin is a Remix app for querying info and executing mutations against the Rafiki [Backend Admin API](https://rafiki.dev/integration/playground/overview#admin-apis).
 
 - Cloud Nine Wallet - `http://localhost:3010`
 - Happy Life Bank - `http://localhost:4010`
 
-We have secured access to Rafiki Admin using <LinkOut href='https://www.ory.sh/docs/kratos/ory-kratos-intro'>Ory Kratos</LinkOut>; however, in our local playground setup we've chosen to disable user authentication for easier development and testing interactions.
+We've secured access to Rafiki Admin using <LinkOut href='https://www.ory.sh/docs/kratos/ory-kratos-intro'>Ory Kratos</LinkOut>; however, in our local playground setup we've chosen to disable user authentication for easier development and testing interactions.
 
 :::note[Enabling Rafiki Admin authentication locally]
 If you'd like to enable authentication locally you can run `pnpm localenv:compose:adminauth up`
@@ -149,7 +149,7 @@ Follow these steps to reset a user's Rafiki Admin password.
 2. Open [Mail Slurper](http://localhost:4436/) to access the recovery link for the account.
    :::
 
-### Exploring Accounts on Cloud Nine Wallet
+### Exploring accounts on Cloud Nine Wallet
 
 Navigate to `localhost:3030` to view the accounts on Cloud Nine Wallet.
 
@@ -179,7 +179,7 @@ Debuggers for the services are exposed on the following ports:
 3. Start the docker containers
 4. Select **Inspect** on the service you want to debug to open the Chromium debugger.
 
-You can either trigger the debugger by adding `debugger` statements in the code and restarting the Docker containers or by adding breakpoints directly to the Chromium debugger after starting the Docker containers.
+You can trigger the debugger by adding `debugger` statements in the code and restarting the Docker containers or by adding breakpoints directly to the Chromium debugger after starting the Docker containers.
 
 #### Debugging with VS Code:
 
@@ -244,7 +244,7 @@ When enabled, TigerBeetle is only used by the primary instance (Cloud Nine Walle
 
 :::
 
-### Interacting with the Local Playground
+### Interacting with the local playground
 
 #### Bruno & Open Payments APIs
 
@@ -361,7 +361,6 @@ Keep-Alive:timeout=5
 
 {
   "destination_account": "test.rafiki.viXmy1OVHgvmQakNjX1C6kQM",
-  "receipts_enabled": false,
   "shared_secret": "Rz_vudcg13EPs8ehL2drvZFJS1LJ4Y3EltOI60-lQ78"
 }
 ```

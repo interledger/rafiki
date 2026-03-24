@@ -29,7 +29,7 @@ Rafiki assigns each of your customers' accounts with a payment pointer. This pay
 
 ## Wallet addresses
 
-A wallet address is a secure, unique URL for a payment account that supports Open Payments. It acts as an entry point into the Open Payments APIs, facilitating interactions like sending and receiving payments.
+A wallet address is a secure, unique URL of a payment account that supports Open Payments. It acts as an entry point into the Open Payments APIs, facilitating interactions like sending and receiving payments.
 
 You can determine whether a URL is a wallet address by sending a `GET` request to the URL with an `accept: application/json` header.
 
@@ -52,6 +52,6 @@ A valid response means the URL is a wallet address.
 }
 ```
 
-The `authServer` and `resourceServer` URLs include the tenant ID (UUID v4) as a path segment to ensure that Open Payments requests are properly routed to the correct tenant.
+The `authServer` and `resourceServer` URLs include the tenant ID (UUID v4) as a path segment to ensure that Open Payments requests are routed to the correct tenant.
 
 Rafiki assigns each of your customers' accounts with a wallet address. This wallet address is also a payment pointer because Rafiki supports Open Payments and Interledger. See the integration requirements for [wallet addresses](/integration/requirements/wallet-addresses) for more information.
