@@ -1237,7 +1237,7 @@ describe('Incoming Payment Service', (): void => {
 
           const redisGetSpy = jest
             .spyOn(redis, 'get')
-            .mockImplementation(async (key: string) => {
+            .mockImplementation(async (key) => {
               if (key === cacheKey) {
                 return JSON.stringify({ success: true })
               }
@@ -1287,7 +1287,7 @@ describe('Incoming Payment Service', (): void => {
 
           const redisGetSpy = jest
             .spyOn(redis, 'get')
-            .mockImplementation(async (key: string) => {
+            .mockImplementation(async (key) => {
               if (key === cacheKey) {
                 return JSON.stringify({ success: false })
               }
