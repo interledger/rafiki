@@ -5,7 +5,7 @@ title: Auth service
 import { LinkOut } from '@interledger/docs-design-system'
 import Auth from '/src/content/docs/partials/_auth-variables.mdx'
 
-Rafiki’s <LinkOut href="https://github.com/interledger/rafiki/tree/main/packages/auth">`auth`</LinkOut> service provides you with a reference implementation of an Open Payments authorization server and allows you to manage authentication and authorization on a per-tenant basis. You can use the `auth` service as an alternative to developing your own in-house service for grant authorization and authentication.
+Rafiki's <LinkOut href="https://github.com/interledger/rafiki/tree/main/packages/auth">`auth`</LinkOut> service provides you with a reference implementation of an Open Payments authorization server and allows you to manage authentication and authorization on a per-tenant basis. You can use the `auth` service as an alternative to developing your own in-house service for grant authorization and authentication.
 
 The authorization server:
 
@@ -20,7 +20,7 @@ You must have the following when using the `auth` service.
 - A Redis database for storing session data
 - A Postgres database, separate from the `backend` service’s database, to store auth-related resources (grants, access tokens, and interactions)
   :::note
-  You can use the same Postgres database instance for both the `backend` and `auth` services, but separate database schemas are required within that instance to maintain a boundary between the objects those services manage.
+  You can use the same Postgres database instance for both the `backend` and `auth` services, but separate database schemas are required in that instance to maintain a boundary between the objects those services manage.
   :::
 - Integration with an [identity provider](#identity-provider-idp)
 
@@ -28,9 +28,9 @@ You must also set the environment variables for the `auth` service.
 
 ## Incoming client auth requests
 
-When a request comes from a client with an account known to your local instance of Rafiki, the `auth` service uses data stored in the `auth` service’s Postgres database.
+When a request comes from a client with an account known to your local instance of Rafiki, the `auth` service uses data stored in the `auth` service's Postgres database.
 
-When a request comes from a client registered with another instance of Rafiki, the `auth` service resolves the client's key endpoint (for example, `https://wallet.example.com/alice/jwks.json`) to retrieve the client's public keys, then filters out the correct key using the key id (`kid`) in the client's signature.
+When a request comes from a client registered with another instance of Rafiki, the `auth` service resolves the client's key endpoint (for example, `https://wallet.example.com/alice/jwks.json`) to retrieve the client's public keys. Then, the `auth` service filters out the correct key using the key id (`kid`) in the client's signature.
 
 Review the <LinkOut href="https://openpayments.dev/identity/client-keys/">Open Payments documentation</LinkOut> for more information about client keys.
 
@@ -41,7 +41,7 @@ An identity provider (IdP) is a system or service that manages user authenticati
 You must integrate with an [IdP](/integration/requirements/open-payments/idp) when using Rafiki's `auth` service because the Open Payments standard requires interactive outgoing payment _grant_ requests. In an interactive request, there must be explicit interaction by an individual (for example, a client's end-user) to approve or deny the grant. In this case, the grant must be explicitly approved before an outgoing payment is created.
 
 :::note
-Rafiki’s [`frontend`](/integration/deployment/services/frontend-service) service requires an IdP for authentication and user management of your [Rafiki Admin](/admin/admin-user-guide) users. Out of the box, Rafiki uses Ory Kratos, a cloud-based user management system. Kratos is for internal use only and **cannot** be used as your customer-facing Open Payments authorization server.
+Rafiki's [`frontend`](/integration/deployment/services/frontend-service) service requires an IdP for authentication and user management of your [Rafiki Admin](/admin/admin-user-guide) users. Out of the box, Rafiki uses Ory Kratos, a cloud-based user management system. Kratos is for internal use only and **cannot** be used as your customer-facing Open Payments authorization server.
 :::
 
 For more information about interactive grants and how they work with identity providers, review the [Identity Provider](/integration/requirements/open-payments/idp) page and the <LinkOut href="https://openpayments.dev/identity/grants/">Grant negotiation and authorization</LinkOut> page in the Open Payments docs.
@@ -63,4 +63,4 @@ When a client makes a request to a resource server, the resource server communic
 
 This process is called token introspection.
 
-The `token-introspection` <LinkOut href='https://github.com/interledger/rafiki/tree/main/packages'>package</LinkOut> is a client library for making <LinkOut href='https://datatracker.ietf.org/doc/draft-ietf-gnap-core-protocol/'>GNAP</LinkOut> token introspection requests to an authorization server. It describes how the Rafiki `backend` and `auth` services communicate to validate access tokens. If you’re using Rafiki’s `auth` service, there’s nothing you need to do with this package. Rafiki automatically runs the package internally. If you’re writing your own auth service, you may find the files within the package to be helpful.
+The `token-introspection` <LinkOut href='https://github.com/interledger/rafiki/tree/main/packages'>package</LinkOut> is a client library for making <LinkOut href='https://datatracker.ietf.org/doc/draft-ietf-gnap-core-protocol/'>GNAP</LinkOut> token introspection requests to an authorization server. It describes how the Rafiki `backend` and `auth` services communicate to validate access tokens. If you're using Rafiki's `auth` service, there's nothing you need to do with this package. Rafiki automatically runs the package internally. If you're writing your own auth service, you may find the files in the package to be helpful.

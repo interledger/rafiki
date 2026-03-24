@@ -5,7 +5,7 @@ import { LinkOut } from '@interledger/docs-design-system'
 
 | Helm value name                          | Default     | Description                                  |
 | ---------------------------------------- | ----------- | -------------------------------------------- |
-| `frontend.serviceUrls.GRAPHQL_URL`       | _undefined_ | URL for Rafiki's GraphQL Auth Admin API      |
+| `frontend.serviceUrls.GRAPHQL_URL`       | _undefined_ | URL of Rafiki's GraphQL Auth Admin API       |
 | `frontend.serviceUrls.OPEN_PAYMENTS_URL` | _undefined_ | Your Open Payments API endpoint              |
 | `frontend.port`                          | _undefined_ | Port from which to host the Rafiki Remix app |
 
@@ -13,11 +13,11 @@ import { LinkOut } from '@interledger/docs-design-system'
 
 The following values are required only when `frontend.authEnabled` is set to `true`.
 
-| Helm value name                      | Default     | Description                                                                                                                                                                                                          |
-| ------------------------------------ | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `frontend.kratos.adminUrl`           | _undefined_ | The admin endpoint/container address for Kratos                                                                                                                                                                      |
-| `frontend.kratos.containerPublicUrl` | _undefined_ | The URL for you to access the Kratos Docker container from within the Docker network. This is used for backend calls to Kratos.                                                                                      |
-| `frontend.kratos.browserPublicUrl`   | _undefined_ | The URL for you to access the Kratos Docker container from a browser outside of the Docker network. This is used for calls from a browser (what you see in the Rafiki Admin UI) to the Kratos server on the backend. |
+| Helm value name                      | Default     | Description                                                                                                                                                                                                       |
+| ------------------------------------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `frontend.kratos.adminUrl`           | _undefined_ | The admin endpoint/container address for Kratos                                                                                                                                                                   |
+| `frontend.kratos.containerPublicUrl` | _undefined_ | The URL for you to access the Kratos Docker container from within the Docker network. This is used for backend calls to Kratos.                                                                                   |
+| `frontend.kratos.browserPublicUrl`   | _undefined_ | The URL for you to access the Kratos Docker container from a browser outside the Docker network. This is used for calls from a browser (what you see in the Rafiki Admin UI) to the Kratos server on the backend. |
 
 #### Optional values
 

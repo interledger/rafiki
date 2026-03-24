@@ -38,11 +38,11 @@ GET https://cloud-nine-wallet/rates
 
 <div class="overflow-table">
 
-| Variable             | Type   | Description                                                                                                                        | Required |
-| -------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `base`               | String | The asset code represented as an <LinkOut href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217</LinkOut> currency code, e.g. USD | Y        |
-| `rates`              | Object | Object containing `<asset_code : exchange_rate>` pairs, e.g. `{EUR: 0.8930}`                                                       | Y        |
-| `rates.<asset_code>` | Number | The exchange rate given `base` and `<asset_code>`                                                                                  | Y        |
+| Variable             | Type   | Description                                                                                                                               | Required |
+| -------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `base`               | String | The asset code represented as an <LinkOut href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217</LinkOut> currency code, for example USD | Y        |
+| `rates`              | Object | Object containing `<asset_code : exchange_rate>` pairs, for example `{EUR: 0.8930}`                                                       | Y        |
+| `rates.<asset_code>` | Number | The exchange rate given `base` and `<asset_code>`                                                                                         | Y        |
 
 </div>
 
@@ -50,7 +50,7 @@ GET https://cloud-nine-wallet/rates
 
 Specify how long your Rafiki instance will cache exchange rates via the `backend` service's `EXCHANGE_RATES_LIFETIME` variable or use the default setting of `15_000` ms (15 seconds).
 
-Caching improves performance as Rafiki will not need to request the rates from your endpoint for every payment.
+Caching improves performance as Rafiki won't need to request the rates from your endpoint for every payment.
 
 ## Specify slippage (optional)
 

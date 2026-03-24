@@ -303,14 +303,14 @@ If you plan to run your Rafiki instance behind a proxy, you must set the `trustP
 <details>
 <summary>Backend service</summary>
 
-The Rafiki `backend` service handles the core Open Payments functionality and business logic. It exposes the Open Payments resource server APIs for wallet addresses, incoming payments, outgoing payments, and quotes. The backend also includes an ILP connector for sending and receiving Interledger packets. It connects to PostgreSQL for storing Open Payments resources, Redis for caching, and optionally TigerBeetle for high-performance accounting.
+The Rafiki `backend` service handles the core Open Payments capabilities and business logic. It exposes the Open Payments resource server APIs for wallet addresses, incoming payments, outgoing payments, and quotes. The backend also includes an ILP connector for sending and receiving Interledger packets. It connects to PostgreSQL for storing Open Payments resources, Redis for caching, and optionally TigerBeetle for high-performance accounting.
 
 **Ports exposed:**
 
 - `3000` (openPayments) - Open Payments resource server API
 - `3001` (admin) - Backend Admin API and GraphQL endpoint
 - `3002` (connector) - ILP connector for sending and receiving packets
-- `3005` (autoPeering) - Auto-peering service (when enabled)
+- `3005` (autoPeering) - Autopeering service (when enabled)
 
 :::note[TigerBeetle vs PostgreSQL for accounting]
 TigerBeetle is strongly recommended for production deployments due to its high-performance accounting capabilities. If you prefer to use PostgreSQL as the accounting database, set `useTigerbeetle` to `false`.
@@ -473,7 +473,7 @@ helm uninstall rafiki-tigerbeetle
 ```
 
 :::caution[Persistent data]
-Uninstalling will not delete Persistent Volume Claims (PVCs) by default. To delete all data:
+Uninstalling doesn't delete Persistent Volume Claims (PVCs) by default. To delete all data:
 
 ```bash
 kubectl delete pvc -l app.kubernetes.io/instance=rafiki-postgresql
@@ -560,7 +560,7 @@ kubectl get events --sort-by=.metadata.creationTimestamp
    kubectl logs -l app.kubernetes.io/name=rafiki-auth
    ```
 
-2. **Verify secrets are properly mounted:**
+2. **Verify secrets are correctly mounted:**
 
    ```bash
    kubectl describe pod -l app.kubernetes.io/name=rafiki-auth
