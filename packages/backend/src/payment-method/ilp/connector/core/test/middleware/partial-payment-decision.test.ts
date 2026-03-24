@@ -100,9 +100,12 @@ describe('Partial Payment Decision Middleware', function () {
   test('calls processPartialPayment with correct parameters', async () => {
     const { services, mockProcessPartialPayment } = makeServices()
     const incomingPaymentId = 'test-payment-id'
-    const ctx = makeContext({
-      streamDestination: incomingPaymentId
-    }, services)
+    const ctx = makeContext(
+      {
+        streamDestination: incomingPaymentId
+      },
+      services
+    )
     const prepare = IlpPrepareFactory.build()
     const expiresAt = new Date(Date.now() + 30000)
     prepare.expiresAt = expiresAt
@@ -132,10 +135,13 @@ describe('Partial Payment Decision Middleware', function () {
     const { services, mockProcessPartialPayment } = makeServices()
     const incomingPaymentId = 'test-payment-id'
     const additionalData = 'test-data'
-    const ctx = makeContext({
-      streamDestination: incomingPaymentId,
-      additionalData
-    }, services)
+    const ctx = makeContext(
+      {
+        streamDestination: incomingPaymentId,
+        additionalData
+      },
+      services
+    )
 
     const streamServer = ctx.state.streamServer
     if (!streamServer) {
