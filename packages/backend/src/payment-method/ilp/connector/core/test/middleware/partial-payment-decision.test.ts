@@ -6,15 +6,12 @@ import { StreamState } from '../../middleware/stream-address'
 import { StreamServer } from '@interledger/stream-receiver'
 
 describe('Partial Payment Decision Middleware', function () {
-  const services = RafikiServicesFactory.build()
   const middleware = createPartialPaymentDecisionMiddleware()
 
-  const mockProcessPartialPayment = jest.spyOn(
-    services.incomingPayments,
-    'processPartialPayment'
-  )
-
-  function makeContext(streamState?: Partial<StreamState>) {
+  function makeContext(
+    streamState?: Partial<StreamState>,
+    services = makeServices().services
+  ) {
     const ctx = createILPContext<StreamState>({
       services,
       state: {
@@ -30,9 +27,27 @@ describe('Partial Payment Decision Middleware', function () {
     return ctx
   }
 
+  function makeServices() {
+    const services = RafikiServicesFactory.build()
+    const mockProcessPartialPayment = jest.fn<
+      Promise<unknown>,
+      [
+        string,
+        {
+          dataToTransmit?: string
+          partialIncomingPaymentId?: string
+          expiresAt?: Date
+        }?
+      ]
+    >()
+    Object.assign(services.incomingPayments, {
+      processPartialPayment: mockProcessPartialPayment
+    })
+    return { services, mockProcessPartialPayment }
+  }
+
   beforeEach(() => {
     jest.clearAllMocks()
-    mockProcessPartialPayment.mockClear()
   })
 
   function mockIncomingMoneyReply(ctx: ReturnType<typeof makeContext>) {
@@ -57,7 +72,8 @@ describe('Partial Payment Decision Middleware', function () {
   }
 
   test('skips when streamDestination is not set', async () => {
-    const ctx = makeContext({ streamDestination: undefined })
+    const { services, mockProcessPartialPayment } = makeServices()
+    const ctx = makeContext({ streamDestination: undefined }, services)
     const prepare = IlpPrepareFactory.build()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
     const next = jest.fn()
@@ -69,7 +85,8 @@ describe('Partial Payment Decision Middleware', function () {
   })
 
   test('skips when additionalData is missing', async () => {
-    const ctx = makeContext({ additionalData: undefined })
+    const { services, mockProcessPartialPayment } = makeServices()
+    const ctx = makeContext({ additionalData: undefined }, services)
     const prepare = IlpPrepareFactory.build()
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
     const next = jest.fn()
@@ -81,10 +98,11 @@ describe('Partial Payment Decision Middleware', function () {
   })
 
   test('calls processPartialPayment with correct parameters', async () => {
+    const { services, mockProcessPartialPayment } = makeServices()
     const incomingPaymentId = 'test-payment-id'
     const ctx = makeContext({
       streamDestination: incomingPaymentId
-    })
+    }, services)
     const prepare = IlpPrepareFactory.build()
     const expiresAt = new Date(Date.now() + 30000)
     prepare.expiresAt = expiresAt
@@ -111,12 +129,13 @@ describe('Partial Payment Decision Middleware', function () {
   })
 
   test('extracts additional data from STREAM frames', async () => {
+    const { services, mockProcessPartialPayment } = makeServices()
     const incomingPaymentId = 'test-payment-id'
     const additionalData = 'test-data'
     const ctx = makeContext({
       streamDestination: incomingPaymentId,
       additionalData
-    })
+    }, services)
 
     const streamServer = ctx.state.streamServer
     if (!streamServer) {
@@ -162,7 +181,8 @@ describe('Partial Payment Decision Middleware', function () {
   })
 
   test('allows when decision is "Additional data approved"', async () => {
-    const ctx = makeContext()
+    const { services, mockProcessPartialPayment } = makeServices()
+    const ctx = makeContext(undefined, services)
     const prepare = IlpPrepareFactory.build({
       expiresAt: new Date(Date.now() + 30000)
     })
@@ -182,7 +202,8 @@ describe('Partial Payment Decision Middleware', function () {
   })
 
   test('declines payment when decision is not approved', async () => {
-    const ctx = makeContext()
+    const { services, mockProcessPartialPayment } = makeServices()
+    const ctx = makeContext(undefined, services)
     const prepare = IlpPrepareFactory.build({
       expiresAt: new Date(Date.now() + 30000)
     })
@@ -203,7 +224,8 @@ describe('Partial Payment Decision Middleware', function () {
   })
 
   test('decline reply includes rejection reason when decision is not approved', async () => {
-    const ctx = makeContext()
+    const { services, mockProcessPartialPayment } = makeServices()
+    const ctx = makeContext(undefined, services)
     const prepare = IlpPrepareFactory.build({
       expiresAt: new Date(Date.now() + 30000)
     })
@@ -224,7 +246,8 @@ describe('Partial Payment Decision Middleware', function () {
   })
 
   test('handles errors from processPartialPayment by declining packet', async () => {
-    const ctx = makeContext()
+    const { services, mockProcessPartialPayment } = makeServices()
+    const ctx = makeContext(undefined, services)
     const prepare = IlpPrepareFactory.build({
       expiresAt: new Date(Date.now() + 30000)
     })
@@ -246,7 +269,8 @@ describe('Partial Payment Decision Middleware', function () {
   })
 
   test('uses generic decline message on service error', async () => {
-    const ctx = makeContext()
+    const { services, mockProcessPartialPayment } = makeServices()
+    const ctx = makeContext(undefined, services)
     const prepare = IlpPrepareFactory.build({
       expiresAt: new Date(Date.now() + 30000)
     })
@@ -264,7 +288,8 @@ describe('Partial Payment Decision Middleware', function () {
   })
 
   test('handles missing streamServer gracefully when extracting data', async () => {
-    const ctx = makeContext({ streamServer: undefined })
+    const { services, mockProcessPartialPayment } = makeServices()
+    const ctx = makeContext({ streamServer: undefined }, services)
     const prepare = IlpPrepareFactory.build({
       expiresAt: new Date(Date.now() + 30000)
     })
