@@ -347,13 +347,15 @@ async function pay(
     }
   )
   try {
+    const dataToTransmit = outgoingPayment.getDataToTransmit(
+      deps.config.dbEncryptionSecret
+    )
+
     const receipt = await Pay.pay({
       plugin,
       destination,
       quote,
-      appData: outgoingPayment.dataToTransmit
-        ? Buffer.from(outgoingPayment.dataToTransmit, 'utf8')
-        : undefined
+      appData: dataToTransmit ? Buffer.from(dataToTransmit, 'utf8') : undefined
     })
 
     if (receipt.error) {

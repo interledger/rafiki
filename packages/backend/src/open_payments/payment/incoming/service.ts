@@ -610,7 +610,10 @@ async function processPartialPayment(
   let decision: PartialPaymentDecision = {}
   if (options?.partialIncomingPaymentId && options?.expiresAt && redis) {
     const partialIncomingPaymentId = options.partialIncomingPaymentId
-    const cacheKey = `partial_payment_decision:${id}:${partialIncomingPaymentId}`
+    const cacheKey = getPartialPaymentDecisionCacheKey(
+      id,
+      partialIncomingPaymentId
+    )
 
     // Bounded polling: wait for decision up to (packet expiry - safetyMs) or maxWaitMs
     const safetyMs = Number.isFinite(
@@ -689,6 +692,13 @@ async function processPartialPayment(
 
 const PARTIAL_PAYMENT_DECISION_PREFIX = 'partial_payment_decision'
 
+function getPartialPaymentDecisionCacheKey(
+  incomingPaymentId: string,
+  partialIncomingPaymentId: string
+): string {
+  return `${PARTIAL_PAYMENT_DECISION_PREFIX}:${incomingPaymentId}:${partialIncomingPaymentId}`
+}
+
 interface PartialPaymentDecision {
   success?: boolean
   message?: string
@@ -715,7 +725,10 @@ async function updatePartialPaymentDecision(
     )
     return false
   }
-  const cacheKey = `${PARTIAL_PAYMENT_DECISION_PREFIX}:${options.id}:${options.partialPaymentId}`
+  const cacheKey = getPartialPaymentDecisionCacheKey(
+    options.id,
+    options.partialPaymentId
+  )
   try {
     await redis.set(cacheKey, JSON.stringify({ success: options.decision }))
     return true

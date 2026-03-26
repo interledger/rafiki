@@ -18,8 +18,6 @@ overrides:
   path-to-regexp@>=6.3.0: ^6.3.0
   next: ^15.2.3
   form-data: ^4.0.4
-  '@interledger/stream-receiver': 0.3.3-alpha.4
-  '@interledger/pay': 0.4.0-alpha.10
   sha.js: '>=2.4.12'
 
 importers:
@@ -5309,8 +5307,8 @@ packages:
     peerDependencies:
       graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
     dependencies:
-      '@graphql-codegen/plugin-helpers': 5.1.0(graphql@16.12.0)
-      '@graphql-codegen/visitor-plugin-common': 5.6.1(graphql@16.12.0)
+      '@graphql-codegen/plugin-helpers': 5.0.3(graphql@16.12.0)
+      '@graphql-codegen/visitor-plugin-common': 5.1.0(graphql@16.12.0)
       graphql: 16.12.0
       tslib: 2.6.2
     transitivePeerDependencies:
@@ -5550,6 +5548,27 @@ packages:
       dependency-graph: 0.11.0
       graphql: 16.11.0
       graphql-tag: 2.12.6(graphql@16.11.0)
+      parse-filepath: 1.0.2
+      tslib: 2.6.2
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+    dev: true
+
+  /@graphql-codegen/visitor-plugin-common@5.1.0(graphql@16.12.0):
+    resolution: {integrity: sha512-eamQxtA9bjJqI2lU5eYoA1GbdMIRT2X8m8vhWYsVQVWD3qM7sx/IqJU0kx0J3Vd4/CSd36BzL6RKwksibytDIg==}
+    peerDependencies:
+      graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
+    dependencies:
+      '@graphql-codegen/plugin-helpers': 5.0.3(graphql@16.12.0)
+      '@graphql-tools/optimize': 2.0.0(graphql@16.12.0)
+      '@graphql-tools/relay-operation-optimizer': 7.0.0(graphql@16.12.0)
+      '@graphql-tools/utils': 10.1.3(graphql@16.12.0)
+      auto-bind: 4.0.0
+      change-case-all: 1.0.15
+      dependency-graph: 0.11.0
+      graphql: 16.12.0
+      graphql-tag: 2.12.6(graphql@16.12.0)
       parse-filepath: 1.0.2
       tslib: 2.6.2
     transitivePeerDependencies:

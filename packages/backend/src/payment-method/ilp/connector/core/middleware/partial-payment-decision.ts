@@ -13,6 +13,10 @@ export function createPartialPaymentDecisionMiddleware(): ILPMiddleware {
     ctx: ILPContext<StreamState>,
     next: () => Promise<void>
   ): Promise<void> => {
+    if (!ctx.services.config.enablePartialPaymentDecision) {
+      await next()
+      return
+    }
     if (!ctx.state.streamDestination || !ctx.state.additionalData) {
       await next()
       return
@@ -50,6 +54,9 @@ export function createPartialPaymentDecisionMiddleware(): ILPMiddleware {
       }
       message = decision?.message
     } catch (error) {
+      // We intentionally *decline* instead of throwing: throwing would be
+      // converted to an ILP Reject by `createIncomingErrorHandlerMiddleware`,
+      // losing the human-readable partial decision reason that we pass here.
       ctx.services.logger.error(
         { error, incomingPaymentId },
         'failed to process partial payment'

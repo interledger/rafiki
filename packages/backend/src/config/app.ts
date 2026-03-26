@@ -205,6 +205,10 @@ export const Config = {
     'SEND_TENANT_WEBHOOKS_TO_OPERATOR',
     false
   ),
+  enablePartialPaymentDecision: envBool(
+    'ENABLE_PARTIAL_PAYMENT_DECISION',
+    false
+  ),
   partialPaymentDecisionMaxWaitMs: envInt(
     'PARTIAL_PAYMENT_DECISION_MAX_WAIT_MS',
     1500

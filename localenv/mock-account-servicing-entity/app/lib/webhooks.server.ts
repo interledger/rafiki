@@ -203,36 +203,11 @@ export async function handleIncomingPartialPaymentReceived(
     throw new Error('No incomingPaymentId found on webhook data')
   }
 
-  const explicitPartialIncomingPaymentId = wh.data[
-    'partialIncomingPaymentId'
-  ] as string | undefined
-  if (explicitPartialIncomingPaymentId) {
-    await generateApolloClient(options)
-      .mutate({
-        mutation: gql`
-          mutation ConfirmPartialIncomingPayment(
-            $input: ConfirmPartialIncomingPaymentInput!
-          ) {
-            confirmPartialIncomingPayment(input: $input) {
-              success
-            }
-          }
-        `,
-        variables: {
-          input: {
-            incomingPaymentId,
-            partialIncomingPaymentId: explicitPartialIncomingPaymentId
-          }
-        }
-      })
-      .then((query): LiquidityMutationResponse => {
-        if (query.data) {
-          return query.data.confirmPartialIncomingPayment
-        } else {
-          throw new Error('Data was empty')
-        }
-      })
-    return
+  const partialIncomingPaymentId = wh.data['partialIncomingPaymentId'] as
+    | string
+    | undefined
+  if (!partialIncomingPaymentId) {
+    throw new Error('No partialIncomingPaymentId found on webhook data')
   }
 
   const rawDataToTransmit = wh.data['dataToTransmit'] as string | undefined
@@ -240,9 +215,7 @@ export async function handleIncomingPartialPaymentReceived(
     throw new Error('No dataToTransmit found on webhook data')
   }
 
-  let decryptedDataToTransmit = rawDataToTransmit
   const dbEncryptionSecret = process.env.DB_ENCRYPTION_SECRET
-
   if (dbEncryptionSecret) {
     try {
       const { cipherText, tag, iv } = JSON.parse(rawDataToTransmit) as {
@@ -257,26 +230,11 @@ export async function handleIncomingPartialPaymentReceived(
         iv
       )
       decipher.setAuthTag(Uint8Array.from(Buffer.from(tag, 'base64')))
-      let decrypted = decipher.update(cipherText, 'base64', 'utf8')
-      decrypted += decipher.final('utf8')
-      decryptedDataToTransmit = decrypted
+      decipher.update(cipherText, 'base64', 'utf8')
+      decipher.final('utf8')
     } catch (e) {
       throw new Error('Failed to decrypt partial payment additional data')
     }
-  }
-
-  let partialIncomingPaymentId: string | undefined
-  try {
-    const parsed = JSON.parse(decryptedDataToTransmit) as {
-      partialIncomingPaymentId?: string
-    }
-    partialIncomingPaymentId = parsed.partialIncomingPaymentId
-  } catch {
-    partialIncomingPaymentId = decryptedDataToTransmit
-  }
-
-  if (!partialIncomingPaymentId) {
-    throw new Error('No partialIncomingPaymentId found in additional data')
   }
 
   await generateApolloClient(options)

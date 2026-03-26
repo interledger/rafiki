@@ -4,6 +4,7 @@ import { IlpPrepareFactory, RafikiServicesFactory } from '../../factories'
 import { createPartialPaymentDecisionMiddleware } from '../../middleware/partial-payment-decision'
 import { StreamState } from '../../middleware/stream-address'
 import { StreamServer } from '@interledger/stream-receiver'
+import { Config } from '../../../../../../config/app'
 
 describe('Partial Payment Decision Middleware', function () {
   const middleware = createPartialPaymentDecisionMiddleware()
@@ -28,7 +29,9 @@ describe('Partial Payment Decision Middleware', function () {
   }
 
   function makeServices() {
-    const services = RafikiServicesFactory.build()
+    const services = RafikiServicesFactory.build({
+      config: { ...Config, enablePartialPaymentDecision: true }
+    })
     const mockProcessPartialPayment = jest.fn<
       Promise<unknown>,
       [

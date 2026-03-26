@@ -1147,12 +1147,13 @@ describe('Incoming Payment Service', (): void => {
         () => config,
         dbEncryptionOverride,
         async (): Promise<void> => {
+          const partialIncomingPaymentId = uuid()
           const dataToTransmit = JSON.stringify({
             data: faker.internet.email()
           })
           await incomingPaymentService.processPartialPayment(
             incomingPayment.id,
-            { dataToTransmit }
+            { dataToTransmit, partialIncomingPaymentId }
           )
           const webhookEvent = await IncomingPaymentEvent.query(knex)
             .where({
@@ -1163,6 +1164,9 @@ describe('Incoming Payment Service', (): void => {
             .first()
           assert.ok(webhookEvent)
           assert.ok(webhookEvent.data.dataToTransmit)
+          expect(webhookEvent.data.partialIncomingPaymentId).toBe(
+            partialIncomingPaymentId
+          )
 
           const webhookDataToTransmit = JSON.parse(
             webhookEvent.data.dataToTransmit as string
@@ -1199,13 +1203,14 @@ describe('Incoming Payment Service', (): void => {
           dbEncryptionSecret: undefined
         },
         async (): Promise<void> => {
+          const partialIncomingPaymentId = uuid()
           const dataToTransmit = JSON.stringify({
             data: faker.internet.email()
           })
 
           await incomingPaymentService.processPartialPayment(
             incomingPayment.id,
-            { dataToTransmit }
+            { dataToTransmit, partialIncomingPaymentId }
           )
           const webhookEvent = await IncomingPaymentEvent.query(knex)
             .where({
@@ -1217,6 +1222,9 @@ describe('Incoming Payment Service', (): void => {
           assert.ok(webhookEvent)
 
           expect(webhookEvent.data.dataToTransmit).toEqual(dataToTransmit)
+          expect(webhookEvent.data.partialIncomingPaymentId).toBe(
+            partialIncomingPaymentId
+          )
           expect(webhookEvent.webhooks).toHaveLength(1)
         }
       )
