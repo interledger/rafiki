@@ -12,6 +12,7 @@ import {
 } from '@remix-run/react'
 import { ChangeEvent, useEffect, useState } from 'react'
 import {
+  FormGroup,
   PageHeader,
   Table,
   Button,
@@ -100,128 +101,109 @@ export default function EditAccount() {
             </div>
 
             <fieldset disabled={isSubmitting}>
-              <div className='grid grid-cols-1 px-0 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-                <div className='col-span-1 pt-3'>
-                  <h3 className='text-lg font-medium'>General Information</h3>
+              <FormGroup title='General Information'>
+                <div className='w-full p-4 space-y-3'>
+                  <input type='hidden' name='id' value={account.id} />
+                  <Input
+                    name='name'
+                    label='Account name'
+                    placeholder='Account name'
+                    defaultValue={account?.name}
+                    error={response?.errors.general.fieldErrors.name}
+                  />
+                  <Input
+                    disabled
+                    name='path'
+                    label='Wallet address'
+                    placeholder='jdoe'
+                    value={`${getOpenPaymentsUrl()}/${account?.path}`}
+                  />
+                  <Select
+                    options={assets.map(
+                      (asset: {
+                        node: { id: string; code: string; scale: number }
+                      }) => ({
+                        value: asset.node.id,
+                        label: `${asset.node.code} (Scale: ${asset.node.scale})`
+                      })
+                    )}
+                    name='assetId'
+                    placeholder='Select asset...'
+                    label='Asset'
+                    selectedValue={account?.assetId}
+                    disabled
+                  />
                 </div>
-                <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-                  <div className='w-full p-4 space-y-3'>
-                    <input type='hidden' name='id' value={account.id} />
-                    <Input
-                      name='name'
-                      label='Account name'
-                      placeholder='Account name'
-                      defaultValue={account?.name}
-                      error={response?.errors.general.fieldErrors.name}
-                    />
-                    <Input
-                      disabled
-                      name='path'
-                      label='Wallet address'
-                      placeholder='jdoe'
-                      value={`${getOpenPaymentsUrl()}/${account?.path}`}
-                    />
-                    <Select
-                      options={assets.map(
-                        (asset: {
-                          node: { id: string; code: string; scale: number }
-                        }) => ({
-                          value: asset.node.id,
-                          label: `${asset.node.code} (Scale: ${asset.node.scale})`
-                        })
-                      )}
-                      name='assetId'
-                      placeholder='Select asset...'
-                      label='Asset'
-                      selectedValue={account?.assetId}
-                      disabled
-                    />
-                  </div>
-                  <div className='flex justify-end py-3 px-4'>
-                    <Button
-                      aria-label='update account'
-                      name='intent'
-                      value='general'
-                      type='submit'
-                    >
-                      {isSubmitting ? 'Updating account ...' : 'Update'}
-                    </Button>
-                  </div>
+                <div className='flex justify-end py-3 px-4'>
+                  <Button
+                    aria-label='update account'
+                    name='intent'
+                    value='general'
+                    type='submit'
+                  >
+                    {isSubmitting ? 'Updating account ...' : 'Update'}
+                  </Button>
                 </div>
-              </div>
+              </FormGroup>
             </fieldset>
           </Form>
           {/* Update Account form - END */}
           <fieldset key={`liquidity_${key}`} disabled={isSubmitting}>
-            <div className='grid grid-cols-1 px-0 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-              <div className='col-span-1 pt-3'>
-                <h3 className='text-lg font-medium'>Balance</h3>
+            <FormGroup title='Balance'>
+              <div className='w-full p-4 space-y-3'>
+                <p className='font-medium'>Available</p>
+                <p className='mt-1'>{`${(Number(account.balance) / 100).toFixed(
+                  account.assetScale
+                )} ${account.assetCode}`}</p>
               </div>
-              <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-                <div className='w-full p-4 space-y-3'>
-                  <p className='font-medium'>Available</p>
-                  <p className='mt-1'>{`${(
-                    Number(account.balance) / 100
-                  ).toFixed(account.assetScale)} ${account.assetCode}`}</p>
-                </div>
-                <div className='w-full p-4 space-y-3'>
-                  <Input
-                    type='number'
-                    name='balance'
-                    label='Amount to add'
-                    placeholder='0'
-                    min={1}
-                    error={response?.errors.addLiquidity.fieldErrors.amount}
-                    onChange={onAmountChange}
-                  />
-                  <div className='flex justify-end'>
-                    <Button
-                      aria-label='add liquidity'
-                      type='button'
-                      disabled={amountToAdd <= 0}
-                      onClick={() => setLiquidityModalOpen(true)}
-                    >
-                      Add
-                    </Button>
-                  </div>
+              <div className='w-full p-4 space-y-3'>
+                <Input
+                  type='number'
+                  name='balance'
+                  label='Amount to add'
+                  placeholder='0'
+                  min={1}
+                  error={response?.errors.addLiquidity.fieldErrors.amount}
+                  onChange={onAmountChange}
+                />
+                <div className='flex justify-end'>
+                  <Button
+                    aria-label='add liquidity'
+                    type='button'
+                    disabled={amountToAdd <= 0}
+                    onClick={() => setLiquidityModalOpen(true)}
+                  >
+                    Add
+                  </Button>
                 </div>
               </div>
-            </div>
+            </FormGroup>
           </fieldset>
           {/* Transsactions */}
-          <div className='grid grid-cols-1 px-0 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-            <div className='col-span-1 pt-3'>
-              <h3 className='text-lg font-medium'>Transactions</h3>
-            </div>
-            <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-              <div className='w-full p-4 space-y-3'>
-                <Table>
-                  <Table.Head
-                    columns={['Date', 'Type', 'Metadata', 'Amount']}
-                  />
+          <FormGroup title='Transactions'>
+            <div className='w-full p-4 space-y-3'>
+              <Table>
+                <Table.Head columns={['Date', 'Type', 'Metadata', 'Amount']} />
 
-                  {transactions.map((trx) => (
-                    <Table.Row key={trx.id}>
-                      <Table.Cell>{trx.createdAt}</Table.Cell>
-                      <Table.Cell>{trx.type}</Table.Cell>
-                      <Table.Cell>
-                        <code>{JSON.stringify(trx.metadata)}</code>
-                      </Table.Cell>
-                      <Table.Cell>
-                        {(Number(trx.amountValue) / 100).toFixed(
-                          trx.assetScale
-                        )}{' '}
-                        {trx.assetCode}
-                      </Table.Cell>
-                    </Table.Row>
-                  ))}
-                </Table>
-                <div className='flex items-center justify-between p-5'>
-                  &nbsp;
-                </div>
+                {transactions.map((trx) => (
+                  <Table.Row key={trx.id}>
+                    <Table.Cell>{trx.createdAt}</Table.Cell>
+                    <Table.Cell>{trx.type}</Table.Cell>
+                    <Table.Cell>
+                      <code>{JSON.stringify(trx.metadata)}</code>
+                    </Table.Cell>
+                    <Table.Cell>
+                      {(Number(trx.amountValue) / 100).toFixed(trx.assetScale)}{' '}
+                      {trx.assetCode}
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table>
+              <div className='flex items-center justify-between p-5'>
+                &nbsp;
               </div>
             </div>
-          </div>
+          </FormGroup>
           {/* Transsactions - END */}
         </div>
       </div>
