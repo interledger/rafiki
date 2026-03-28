@@ -1,5 +1,7 @@
 # Rafiki
 
+AAYO KI NAI
+
 ![Rafiki](https://github.com/interledger/rafiki/assets/20246798/528b1978-0e02-4bc4-a6b4-e8e81d2f3c3a)
 
 ## What is Rafiki?
