@@ -1,7 +1,11 @@
 import { AccessRequest } from '../access/types'
 import { IAppConfig } from '../config/app'
 import { CreateGrantInput } from './service'
-import { canSkipInteraction, parseRawClientField, RawClientField } from './utils'
+import {
+  canSkipInteraction,
+  parseRawClientField,
+  RawClientField
+} from './utils'
 import { AccessAction } from '@interledger/open-payments'
 import { JWK } from 'token-introspection'
 

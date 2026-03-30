@@ -11,7 +11,10 @@ import {
 } from '../../shared/pagination'
 import { OpenPaymentsServerRouteError } from '../route-errors'
 import { IAppConfig } from '../../config/app'
-import { ensureTrailingSlash } from '../../shared/utils'
+import {
+  ensureTrailingSlash,
+  parseClientWalletAddress
+} from '../../shared/utils'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -94,7 +97,10 @@ export const listSubresource = async <M extends WalletAddressSubresource>({
     }
   }
   const pagination = parsePaginationQueryParameters(ctx.request.query)
-  const client = ctx.accessAction === AccessAction.List ? ctx.client : undefined
+  const client =
+    ctx.accessAction === AccessAction.List
+      ? parseClientWalletAddress(ctx.client)
+      : undefined
   const page = await getWalletAddressPage({
     walletAddressId: ctx.walletAddress.id,
     pagination,

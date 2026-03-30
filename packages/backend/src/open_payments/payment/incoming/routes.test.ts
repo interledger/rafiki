@@ -235,9 +235,9 @@ describe('Incoming Payment Routes', (): void => {
     )
 
     test.each`
-      client                                        | incomingAmount | expiresAt                                      | metadata
-      ${faker.internet.url({ appendSlash: false })} | ${true}        | ${new Date(Date.now() + 30_000).toISOString()} | ${{ description: 'text', externalRef: '#123' }}
-      ${undefined}                                  | ${false}       | ${undefined}                                   | ${undefined}
+      client                                                           | incomingAmount | expiresAt                                      | metadata
+      ${{ walletAddress: faker.internet.url({ appendSlash: false }) }} | ${true}        | ${new Date(Date.now() + 30_000).toISOString()} | ${{ description: 'text', externalRef: '#123' }}
+      ${undefined}                                                     | ${false}       | ${undefined}                                   | ${undefined}
     `(
       'returns the incoming payment on success',
       async ({
@@ -273,7 +273,7 @@ describe('Incoming Payment Routes', (): void => {
           incomingAmount: incomingAmount ? parseAmount(amount) : undefined,
           metadata,
           expiresAt: expiresAt ? new Date(expiresAt) : undefined,
-          client,
+          client: client?.walletAddress ?? client,
           tenantId,
           initiationReason: IncomingPaymentInitiationReason.OpenPayments
         })
