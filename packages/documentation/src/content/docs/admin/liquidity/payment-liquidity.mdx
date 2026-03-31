@@ -6,7 +6,7 @@ tableOfContents:
 
 import { Tabs, TabItem } from '@astrojs/starlight/components'
 import { LinkOut } from '@interledger/docs-design-system'
-import IdempotencyNote from '/src/partials/liquidity-idempotency.mdx'
+import IdempotencyNote from '/src/content/docs/partials/_liquidity-idempotency.mdx'
 
 Payment liquidity represents:
 
@@ -18,17 +18,14 @@ Because Rafiki doesn't hold funds, anything you receive in an incoming payment m
 Any excess liquidity that remains after an outgoing payment completes must be withdrawn. You may also find that you must deposit liquidity into Rafiki to fund an outgoing payment. Listen for Rafiki's [outgoing payments](/integration/requirements/webhook-events#outgoing-payments) webhook events to know when action is required on your part.
 
 :::note[Rafiki Admin]
-The Rafiki Admin does not allow you to manage payment liquidity, but you can view details about incoming and outgoing payments through the application's [Payments](/admin/admin-user-guide#payments) screen.
+The Rafiki Admin doesn't allow you to manage payment liquidity, but you can view details about incoming and outgoing payments through the app's [Payments](/admin/admin-user-guide#payments) screen.
 :::
 
 For more information about how Rafiki handles liquidity, see the [Accounting](/overview/concepts/accounting) concepts page.
 
 ## Manage payment liquidity using the Backend Admin API
 
-:::note[Idempotency key]
-
 <IdempotencyNote />
-:::
 
 ### Withdraw incoming payment liquidity
 
