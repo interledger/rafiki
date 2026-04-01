@@ -1,5 +1,4 @@
 import { gql } from '@apollo/client'
-import { createDecipheriv } from 'node:crypto'
 import type { LiquidityMutationResponse } from 'generated/graphql'
 import type { Amount } from './transactions.server'
 import { mockAccounts } from './accounts.server'
@@ -213,28 +212,6 @@ export async function handleIncomingPartialPaymentReceived(
   const rawDataToTransmit = wh.data['dataToTransmit'] as string | undefined
   if (!rawDataToTransmit) {
     throw new Error('No dataToTransmit found on webhook data')
-  }
-
-  const dbEncryptionSecret = process.env.DB_ENCRYPTION_SECRET
-  if (dbEncryptionSecret) {
-    try {
-      const { cipherText, tag, iv } = JSON.parse(rawDataToTransmit) as {
-        cipherText: string
-        tag: string
-        iv: string
-      }
-
-      const decipher = createDecipheriv(
-        'aes-256-gcm',
-        Uint8Array.from(Buffer.from(dbEncryptionSecret, 'base64')),
-        iv
-      )
-      decipher.setAuthTag(Uint8Array.from(Buffer.from(tag, 'base64')))
-      decipher.update(cipherText, 'base64', 'utf8')
-      decipher.final('utf8')
-    } catch (e) {
-      throw new Error('Failed to decrypt partial payment additional data')
-    }
   }
 
   await generateApolloClient(options)

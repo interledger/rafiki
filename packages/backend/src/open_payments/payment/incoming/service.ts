@@ -98,7 +98,7 @@ export interface ServiceDependencies extends BaseService {
   walletAddressService: WalletAddressService
   assetService: AssetService
   config: IAppConfig
-  redis?: Redis
+  redis: Redis
 }
 
 export async function createIncomingPaymentService(
@@ -608,7 +608,7 @@ async function processPartialPayment(
   })
 
   let decision: PartialPaymentDecision = {}
-  if (options?.partialIncomingPaymentId && options?.expiresAt && redis) {
+  if (options?.partialIncomingPaymentId && options?.expiresAt) {
     const partialIncomingPaymentId = options.partialIncomingPaymentId
     const cacheKey = getPartialPaymentDecisionCacheKey(
       id,
@@ -715,16 +715,6 @@ async function updatePartialPaymentDecision(
   options: PartialPaymentDecisionOptions
 ): Promise<boolean> {
   const { redis, logger } = deps
-  if (!redis) {
-    logger.warn(
-      {
-        incomingPaymentId: options.id,
-        partialPaymentId: options.partialPaymentId
-      },
-      'redis not configured; cannot update partial payment decision'
-    )
-    return false
-  }
   const cacheKey = getPartialPaymentDecisionCacheKey(
     options.id,
     options.partialPaymentId
