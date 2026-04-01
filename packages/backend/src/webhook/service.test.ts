@@ -460,6 +460,16 @@ describe('Webhook Service', (): void => {
           dbEncryptionSecret: Buffer.from('a'.repeat(32)).toString('base64')
         },
         async (): Promise<void> => {
+          const walletAddress = await createWalletAddress(deps, {
+            tenantId: Config.operatorTenantId
+          })
+          const incomingPayment = await createIncomingPayment(deps, {
+            walletAddressId: walletAddress.id,
+            tenantId: Config.operatorTenantId,
+            initiationReason: IncomingPaymentInitiationReason.OpenPayments
+          })
+          const partialIncomingPaymentId = uuid()
+
           const partialData = JSON.stringify({ accountName: 'alice' })
           const partialPaymentEvent = await WebhookEvent.query(
             knex
@@ -467,13 +477,14 @@ describe('Webhook Service', (): void => {
             id: uuid(),
             type: IncomingPaymentEventType.IncomingPaymentPartialPaymentReceived,
             data: {
-              id: uuid(),
-              partialIncomingPaymentId: uuid(),
+              id: incomingPayment.id,
+              partialIncomingPaymentId,
               dataToTransmit: encryptDbData(
                 partialData,
                 config.dbEncryptionSecret as string
               )
             },
+            incomingPaymentId: incomingPayment.id,
             tenantId: Config.operatorTenantId
           })
 
