@@ -377,13 +377,13 @@ export function initIocContainer(
 
   container.singleton('incomingPaymentService', async (deps) => {
     return await createIncomingPaymentService({
-      redis: await deps.use('redis'),
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       accountingService: await deps.use('accountingService'),
       walletAddressService: await deps.use('walletAddressService'),
       assetService: await deps.use('assetService'),
-      config: await deps.use('config')
+      config: await deps.use('config'),
+      redis: await deps.use('redis')
     })
   })
   container.singleton('remoteIncomingPaymentService', async (deps) => {

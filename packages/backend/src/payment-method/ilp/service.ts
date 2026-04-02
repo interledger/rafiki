@@ -347,7 +347,16 @@ async function pay(
     }
   )
   try {
-    const receipt = await Pay.pay({ plugin, destination, quote })
+    const dataToTransmit = outgoingPayment.getDataToTransmit(
+      deps.config.dbEncryptionSecret
+    )
+
+    const receipt = await Pay.pay({
+      plugin,
+      destination,
+      quote,
+      appData: dataToTransmit ? Buffer.from(dataToTransmit, 'utf8') : undefined
+    })
 
     if (receipt.error) {
       throw receipt.error
@@ -455,5 +464,6 @@ export const retryableIlpErrors: {
   [Pay.PaymentError.InsufficientExchangeRate]: true,
   [Pay.PaymentError.RateProbeFailed]: true,
   [Pay.PaymentError.IdleTimeout]: true,
-  [Pay.PaymentError.ClosedByReceiver]: true
+  [Pay.PaymentError.ClosedByReceiver]: true,
+  [Pay.PaymentError.ApplicationError]: false
 }
