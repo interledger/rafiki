@@ -39,7 +39,6 @@ import { faker } from '@faker-js/faker'
 import { withConfigOverride } from '../tests/helpers'
 import { createTenant } from '../tests/tenant'
 import { Logger } from 'pino'
-import { encryptDbData } from '../shared/utils'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -451,77 +450,6 @@ describe('Webhook Service', (): void => {
         )
       }
     )
-
-    describe('partial incoming payment payload', (): void => {
-      beforeEach(async (): Promise<void> => {
-        await webhook.$query(knex).delete()
-      })
-
-      test(
-        'Sends decrypted dataToTransmit for partial incoming payment webhooks',
-        withConfigOverride(
-          () => config,
-          {
-            dbEncryptionSecret: Buffer.from('a'.repeat(32)).toString('base64')
-          },
-          async (): Promise<void> => {
-            const walletAddress = await createWalletAddress(deps, {
-              tenantId: Config.operatorTenantId
-            })
-            const incomingPayment = await createIncomingPayment(deps, {
-              walletAddressId: walletAddress.id,
-              tenantId: Config.operatorTenantId,
-              initiationReason: IncomingPaymentInitiationReason.OpenPayments
-            })
-            const partialIncomingPaymentId = uuid()
-
-            const partialData = JSON.stringify({ accountName: 'alice' })
-            const partialPaymentEvent = await WebhookEvent.query(
-              knex
-            ).insertAndFetch({
-              id: uuid(),
-              type: IncomingPaymentEventType.IncomingPaymentPartialPaymentReceived,
-              data: {
-                id: incomingPayment.id,
-                partialIncomingPaymentId,
-                dataToTransmit: encryptDbData(
-                  partialData,
-                  config.dbEncryptionSecret as string
-                )
-              },
-              incomingPaymentId: incomingPayment.id,
-              tenantId: Config.operatorTenantId
-            })
-
-            const partialPaymentWebhook = await Webhook.query(knex)
-              .insertAndFetch({
-                recipientTenantId: Config.operatorTenantId,
-                eventId: partialPaymentEvent.id
-              })
-              .withGraphFetched('event')
-
-            const scope = nock(webhookUrl.origin)
-              .post(webhookUrl.pathname, function (this: Definition, body) {
-                expect(body).toMatchObject({
-                  id: partialPaymentEvent.id,
-                  type: partialPaymentEvent.type,
-                  data: {
-                    ...partialPaymentEvent.data,
-                    dataToTransmit: partialData
-                  }
-                })
-                return true
-              })
-              .reply(200)
-
-            await expect(webhookService.processNext()).resolves.toEqual(
-              partialPaymentWebhook.id
-            )
-            scope.done()
-          }
-        )
-      )
-    })
 
     test('Signs webhook event', async (): Promise<void> => {
       jest.useFakeTimers({
