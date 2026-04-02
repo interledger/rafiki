@@ -16,7 +16,6 @@ import {
 } from '../tenants/settings/model'
 import { TenantSettingService } from '../tenants/settings/service'
 import { Logger } from 'pino'
-import { IncomingPaymentEventType } from '../open_payments/payment/incoming/model'
 
 // First retry waits 10 seconds
 // Second retry waits 20 (more) seconds
@@ -208,8 +207,7 @@ async function sendWebhook(
       id: webhook.event.id,
       type: webhook.event.type,
       data:
-        webhook.event.type ===
-          IncomingPaymentEventType.IncomingPaymentPartialPaymentReceived &&
+        webhook.event.type === 'incoming_payment.partial_payment_received' &&
         deps.config.dbEncryptionSecret
           ? decryptPartialPaymentWebhookData(webhook, deps)
           : webhook.event.data
