@@ -75,47 +75,53 @@ Before deploying Rafiki to a production environment and joining the Interledger 
     <td>&#x2705;</td>
     <td>
       **Integrate with an identity provider (IdP)**
-      <br />
-      If you plan to use the authorization server provided through Rafiki's Auth
-      service, and/or support Open Payments outgoing payments, you **must**
-      [integrate with an IdP](/integration/requirements/open-payments/idp). An
-      IdP is a system or service that stores and manages user identity
-      information, authentication, and consent. Examples of IdPs include OpenID
-      Connect and Okta.
+      <p>
+        If you plan to use the authorization server provided through Rafiki's
+        Auth service, and/or support Open Payments outgoing payments, you
+        **must** [integrate with an
+        IdP](/integration/requirements/open-payments/idp). An IdP is a system or
+        service that stores and manages user identity information,
+        authentication, and consent. Examples of IdPs include OpenID Connect and
+        Okta.
+      </p>
     </td>
   </tr>
   <tr>
     <td>&#x2705;</td>
     <td>
       **Add a peer**
-      <br />A peer is another ASE that you connect with via Interledger who is
-      likely running their own Rafiki instance. If you are using Rafiki solely
-      for transfers between accounts on your own ledger, peers aren't required.
-      Otherwise, you must [add at least one
-      peer](/integration/requirements/peers) to enable Interledger payments on
-      your accounts.
+      <p>
+        A peer is another ASE that you connect with via Interledger who is
+        likely running their own Rafiki instance. If you are using Rafiki solely
+        for transfers between accounts on your own ledger, peers aren't
+        required. Otherwise, you must [add at least one
+        peer](/integration/requirements/peers) to enable Interledger payments on
+        your accounts.
+      </p>
     </td>
   </tr>
   <tr>
     <td>&#x2705;</td>
     <td>
       **Set up your exchange rates endpoint**
-      <br />
-      If you plan to support cross-currency transactions, you must [specify the
-      endpoint](/integration/requirements/exchange-rates) from where your Rafiki
-      instance will fetch current exchange rates. Exchange rates are calculated
-      as part of a payment's quote, which estimates the full cost of
-      transferring value over the network.
+      <p>
+        If you plan to support cross-currency transactions, you must [specify
+        the endpoint](/integration/requirements/exchange-rates) from where your
+        Rafiki instance will fetch current exchange rates. Exchange rates are
+        calculated as part of a payment's quote, which estimates the full cost
+        of transferring value over the network.
+      </p>
     </td>
   </tr>
   <tr>
     <td>&#x2705;</td>
     <td>
       **Define your sending fee**
-      <br />
-      You can [charge a sending fee](/integration/requirements/sending-fees), on
-      top of any estimated network fees, for facilitating transfers. Each asset
-      you support can have a different fee structure.
+      <p>
+        You can [charge a sending fee](/integration/requirements/sending-fees),
+        on top of any estimated network fees, for facilitating transfers. Each
+        asset you support can have a different fee structure.
+      </p>
     </td>
   </tr>
 </table>
