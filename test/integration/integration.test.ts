@@ -68,313 +68,351 @@ describe('Integration tests', (): void => {
   describe('Flows', () => {
     describe('Remote', () => {
       let testActions: TestActions
-
       beforeAll(async () => {
         testActions = createTestActions({ sendingASE: c9, receivingASE: hlb })
       })
 
-      test('Open Payments with Continuation via Polling', async (): Promise<void> => {
-        const {
-          grantRequestIncomingPayment,
-          createIncomingPayment,
-          grantRequestQuote,
-          createQuote,
-          grantRequestOutgoingPayment,
-          pollGrantContinue,
-          createOutgoingPayment,
-          getOutgoingPayment,
-          getPublicIncomingPayment
-        } = testActions.openPayments
-        const { consentInteraction } = testActions
+      test.each`
+        useDirectedIdentity | description
+        ${false}            | ${'without directed identity'}
+        ${true}             | ${'with directed identity'}
+      `(
+        'Open Payments with Continuation via Polling $description',
+        async ({ useDirectedIdentity }): Promise<void> => {
+          const {
+            grantRequestIncomingPayment,
+            createIncomingPayment,
+            grantRequestQuote,
+            createQuote,
+            grantRequestOutgoingPayment,
+            pollGrantContinue,
+            createOutgoingPayment,
+            getOutgoingPayment,
+            getPublicIncomingPayment
+          } = testActions.openPayments
+          const { consentInteraction } = testActions
 
-        const receiverWalletAddressUrl =
-          'https://happy-life-bank-test-backend:4100/accounts/pfry'
-        const senderWalletAddressUrl =
-          'https://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
-        const amountValueToSend = '100'
+          const receiverWalletAddressUrl =
+            'https://happy-life-bank-test-backend:4100/accounts/pfry'
+          const senderWalletAddressUrl =
+            'https://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
+          const amountValueToSend = '100'
 
-        const receiverWalletAddress = await c9.opClient.walletAddress.get({
-          url: receiverWalletAddressUrl
-        })
-        expect(receiverWalletAddress.id).toBe(receiverWalletAddressUrl)
+          const receiverWalletAddress = await c9.opClient.walletAddress.get({
+            url: receiverWalletAddressUrl
+          })
+          expect(receiverWalletAddress.id).toBe(receiverWalletAddressUrl)
 
-        const senderWalletAddress = await c9.opClient.walletAddress.get({
-          url: senderWalletAddressUrl
-        })
-        expect(senderWalletAddress.id).toBe(senderWalletAddressUrl)
+          const senderWalletAddress = await c9.opClient.walletAddress.get({
+            url: senderWalletAddressUrl
+          })
+          expect(senderWalletAddress.id).toBe(senderWalletAddressUrl)
 
-        let incomingPaymentGrant
-        try {
-          incomingPaymentGrant = await grantRequestIncomingPayment(
-            receiverWalletAddress
+          let incomingPaymentGrant
+          try {
+            incomingPaymentGrant = await grantRequestIncomingPayment(
+              receiverWalletAddress,
+              useDirectedIdentity ? c9.publicKey : undefined
+            )
+          } catch (err) {
+            console.log('ERROR: ', err)
+            throw err
+          }
+
+          const incomingPayment = await createIncomingPayment(
+            receiverWalletAddress,
+            incomingPaymentGrant.access_token.value,
+            { amountValueToSend, tenantId: hlb.config.operatorTenantId },
+            useDirectedIdentity
           )
-        } catch (err) {
-          console.log('ERROR: ', err)
-          throw err
-        }
+          const quoteGrant = await grantRequestQuote(
+            senderWalletAddress,
+            useDirectedIdentity ? c9.publicKey : undefined
+          )
+          const quote = await createQuote(
+            senderWalletAddress,
+            quoteGrant.access_token.value,
+            incomingPayment,
+            useDirectedIdentity
+          )
 
-        const incomingPayment = await createIncomingPayment(
-          receiverWalletAddress,
-          incomingPaymentGrant.access_token.value,
-          { amountValueToSend, tenantId: hlb.config.operatorTenantId }
-        )
-        const quoteGrant = await grantRequestQuote(senderWalletAddress)
-        const quote = await createQuote(
-          senderWalletAddress,
-          quoteGrant.access_token.value,
-          incomingPayment
-        )
-        const outgoingPaymentGrant = await grantRequestOutgoingPayment(
-          senderWalletAddress,
-          {
-            receiveAmount: quote.receiveAmount
-          }
-        )
-        await consentInteraction(outgoingPaymentGrant, senderWalletAddress)
-        const grantContinue = await pollGrantContinue(outgoingPaymentGrant)
-        const outgoingPayment = await createOutgoingPayment(
-          senderWalletAddress,
-          grantContinue,
-          {
-            metadata: {},
-            quoteId: quote.id
-          }
-        )
-        const outgoingPayment_ = await getOutgoingPayment(
-          outgoingPayment.id,
-          grantContinue
-        )
-
-        expect(outgoingPayment_.receiveAmount.value).toBe(amountValueToSend)
-        expect(outgoingPayment_.sentAmount.value).toBe(amountValueToSend)
-
-        await getPublicIncomingPayment(incomingPayment.id, amountValueToSend)
-
-        const incomingPayment_ = await hlb.opClient.incomingPayment.getPublic({
-          url: incomingPayment.id
-        })
-        assert(incomingPayment_.receivedAmount)
-        expect(incomingPayment_.receivedAmount.value).toBe(amountValueToSend)
-      })
-      test('Open Payments with Continuation via finish method', async (): Promise<void> => {
-        const {
-          grantRequestIncomingPayment,
-          createIncomingPayment,
-          grantRequestQuote,
-          createQuote,
-          grantRequestOutgoingPayment,
-          grantContinue,
-          createOutgoingPayment,
-          getOutgoingPayment,
-          getPublicIncomingPayment
-        } = testActions.openPayments
-        const { consentInteractionWithInteractRef } = testActions
-
-        const receiverWalletAddressUrl =
-          'https://happy-life-bank-test-backend:4100/accounts/pfry'
-        const senderWalletAddressUrl =
-          'https://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
-        const amountValueToSend = '100'
-
-        const receiverWalletAddress = await c9.opClient.walletAddress.get({
-          url: receiverWalletAddressUrl
-        })
-        expect(receiverWalletAddress.id).toBe(receiverWalletAddressUrl)
-
-        const senderWalletAddress = await c9.opClient.walletAddress.get({
-          url: senderWalletAddressUrl
-        })
-        expect(senderWalletAddress.id).toBe(senderWalletAddressUrl)
-
-        const incomingPaymentGrant = await grantRequestIncomingPayment(
-          receiverWalletAddress
-        )
-        const incomingPayment = await createIncomingPayment(
-          receiverWalletAddress,
-          incomingPaymentGrant.access_token.value,
-          { amountValueToSend, tenantId: hlb.config.operatorTenantId }
-        )
-        const quoteGrant = await grantRequestQuote(senderWalletAddress)
-        const quote = await createQuote(
-          senderWalletAddress,
-          quoteGrant.access_token.value,
-          incomingPayment
-        )
-
-        const clientNonce = crypto.randomUUID()
-        const finishUri = 'https://example.com'
-
-        const outgoingPaymentGrant = await grantRequestOutgoingPayment(
-          senderWalletAddress,
-          { receiveAmount: quote.receiveAmount },
-          {
-            method: 'redirect',
-            uri: finishUri,
-            nonce: clientNonce
-          }
-        )
-        const interactRef = await consentInteractionWithInteractRef(
-          outgoingPaymentGrant,
-          senderWalletAddress,
-          {
-            clientNonce,
-            finishUri,
-            initialGrantUrl: senderWalletAddress.authServer
-          }
-        )
-        const finalizedGrant = await grantContinue(
-          outgoingPaymentGrant,
-          interactRef
-        )
-        const outgoingPayment = await createOutgoingPayment(
-          senderWalletAddress,
-          finalizedGrant,
-          {
-            metadata: {},
-            quoteId: quote.id
-          }
-        )
-        const outgoingPayment_ = await getOutgoingPayment(
-          outgoingPayment.id,
-          finalizedGrant
-        )
-
-        expect(outgoingPayment_.receiveAmount.value).toBe(amountValueToSend)
-        expect(outgoingPayment_.sentAmount.value).toBe(amountValueToSend)
-
-        await getPublicIncomingPayment(incomingPayment.id, amountValueToSend)
-      })
-      test('Open Payments Multiple Outgoing Payments into Incoming Payment', async (): Promise<void> => {
-        const {
-          grantRequestIncomingPayment,
-          createIncomingPayment,
-          grantRequestOutgoingPayment,
-          pollGrantContinue,
-          createOutgoingPayment,
-          getOutgoingPayment,
-          getPublicIncomingPayment,
-          getOutgoingPaymentGrantSpentAmounts
-        } = testActions.openPayments
-        const { consentInteraction } = testActions
-
-        const receiverWalletAddressUrl =
-          'https://happy-life-bank-test-backend:4100/accounts/pfry'
-        const senderWalletAddressUrl =
-          'https://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
-
-        const receiverWalletAddress = await c9.opClient.walletAddress.get({
-          url: receiverWalletAddressUrl
-        })
-        expect(receiverWalletAddress.id).toBe(receiverWalletAddressUrl)
-
-        const senderWalletAddress = await c9.opClient.walletAddress.get({
-          url: senderWalletAddressUrl
-        })
-        expect(senderWalletAddress.id).toBe(senderWalletAddressUrl)
-
-        const grantValue = 100n
-
-        const incomingPaymentGrant = await grantRequestIncomingPayment(
-          receiverWalletAddress
-        )
-        const incomingPayment = await createIncomingPayment(
-          receiverWalletAddress,
-          incomingPaymentGrant.access_token.value,
-          { tenantId: hlb.config.operatorTenantId }
-        )
-
-        const outgoingPaymentGrant = await grantRequestOutgoingPayment(
-          senderWalletAddress,
-          {
-            debitAmount: {
-              assetCode: senderWalletAddress.assetCode,
-              assetScale: senderWalletAddress.assetScale,
-              value: String(grantValue)
+          const outgoingPaymentGrant = await grantRequestOutgoingPayment(
+            senderWalletAddress,
+            {
+              receiveAmount: quote.receiveAmount
+            },
+            undefined
+          )
+          await consentInteraction(outgoingPaymentGrant, senderWalletAddress)
+          const grantContinue = await pollGrantContinue(outgoingPaymentGrant)
+          const outgoingPayment = await createOutgoingPayment(
+            senderWalletAddress,
+            grantContinue,
+            {
+              metadata: {},
+              quoteId: quote.id
             }
-          }
-        )
-        await consentInteraction(outgoingPaymentGrant, senderWalletAddress)
-        const grantContinue = await pollGrantContinue(outgoingPaymentGrant)
+          )
+          const outgoingPayment_ = await getOutgoingPayment(
+            outgoingPayment.id,
+            grantContinue
+          )
 
-        const spentAmounts0 = await getOutgoingPaymentGrantSpentAmounts(
-          senderWalletAddress,
-          grantContinue
-        )
-        expect(spentAmounts0.spentDebitAmount).toBeNull()
-        expect(spentAmounts0.spentReceiveAmount).toBeNull()
+          expect(outgoingPayment_.receiveAmount.value).toBe(amountValueToSend)
+          expect(outgoingPayment_.sentAmount.value).toBe(amountValueToSend)
 
-        const debitAmount = {
-          assetCode: senderWalletAddress.assetCode,
-          assetScale: senderWalletAddress.assetScale,
-          value: '50'
+          await getPublicIncomingPayment(incomingPayment.id, amountValueToSend)
+
+          const incomingPayment_ = await hlb.opClient.incomingPayment.getPublic(
+            {
+              url: incomingPayment.id
+            }
+          )
+          assert(incomingPayment_.receivedAmount)
+          expect(incomingPayment_.receivedAmount.value).toBe(amountValueToSend)
         }
+      )
+      test.each`
+        useDirectedIdentity | description
+        ${false}            | ${'without directed identity'}
+        ${true}             | ${'with directed identity'}
+      `(
+        'Open Payments with Continuation via finish method $description',
+        async ({ useDirectedIdentity }): Promise<void> => {
+          const {
+            grantRequestIncomingPayment,
+            createIncomingPayment,
+            grantRequestQuote,
+            createQuote,
+            grantRequestOutgoingPayment,
+            grantContinue,
+            createOutgoingPayment,
+            getOutgoingPayment,
+            getPublicIncomingPayment
+          } = testActions.openPayments
+          const { consentInteractionWithInteractRef } = testActions
 
-        const outgoingPayment1 = await createOutgoingPayment(
-          senderWalletAddress,
-          grantContinue,
-          {
-            incomingPayment: incomingPayment.id,
-            debitAmount
+          const receiverWalletAddressUrl =
+            'https://happy-life-bank-test-backend:4100/accounts/pfry'
+          const senderWalletAddressUrl =
+            'https://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
+          const amountValueToSend = '100'
+
+          const receiverWalletAddress = await c9.opClient.walletAddress.get({
+            url: receiverWalletAddressUrl
+          })
+          expect(receiverWalletAddress.id).toBe(receiverWalletAddressUrl)
+
+          const senderWalletAddress = await c9.opClient.walletAddress.get({
+            url: senderWalletAddressUrl
+          })
+          expect(senderWalletAddress.id).toBe(senderWalletAddressUrl)
+
+          const incomingPaymentGrant = await grantRequestIncomingPayment(
+            receiverWalletAddress,
+            useDirectedIdentity ? c9.publicKey : undefined
+          )
+          const incomingPayment = await createIncomingPayment(
+            receiverWalletAddress,
+            incomingPaymentGrant.access_token.value,
+            { amountValueToSend, tenantId: hlb.config.operatorTenantId },
+            useDirectedIdentity
+          )
+          const quoteGrant = await grantRequestQuote(
+            senderWalletAddress,
+            useDirectedIdentity ? c9.publicKey : undefined
+          )
+          const quote = await createQuote(
+            senderWalletAddress,
+            quoteGrant.access_token.value,
+            incomingPayment,
+            useDirectedIdentity
+          )
+
+          const clientNonce = crypto.randomUUID()
+          const finishUri = 'https://example.com'
+
+          const outgoingPaymentGrant = await grantRequestOutgoingPayment(
+            senderWalletAddress,
+            { receiveAmount: quote.receiveAmount },
+            {
+              method: 'redirect',
+              uri: finishUri,
+              nonce: clientNonce
+            }
+          )
+          const interactRef = await consentInteractionWithInteractRef(
+            outgoingPaymentGrant,
+            senderWalletAddress,
+            {
+              clientNonce,
+              finishUri,
+              initialGrantUrl: senderWalletAddress.authServer
+            }
+          )
+          const finalizedGrant = await grantContinue(
+            outgoingPaymentGrant,
+            interactRef
+          )
+          const outgoingPayment = await createOutgoingPayment(
+            senderWalletAddress,
+            finalizedGrant,
+            {
+              metadata: {},
+              quoteId: quote.id
+            }
+          )
+          const outgoingPayment_ = await getOutgoingPayment(
+            outgoingPayment.id,
+            finalizedGrant
+          )
+
+          expect(outgoingPayment_.receiveAmount.value).toBe(amountValueToSend)
+          expect(outgoingPayment_.sentAmount.value).toBe(amountValueToSend)
+
+          await getPublicIncomingPayment(incomingPayment.id, amountValueToSend)
+        }
+      )
+      test.each`
+        useDirectedIdentity | description
+        ${false}            | ${'without directed identity'}
+        ${true}             | ${'with directed identity'}
+      `(
+        'Open Payments Multiple Outgoing Payments into Incoming Payment $description',
+        async ({ useDirectedIdentity }): Promise<void> => {
+          const {
+            grantRequestIncomingPayment,
+            createIncomingPayment,
+            grantRequestOutgoingPayment,
+            pollGrantContinue,
+            createOutgoingPayment,
+            getOutgoingPayment,
+            getPublicIncomingPayment,
+            getOutgoingPaymentGrantSpentAmounts
+          } = testActions.openPayments
+          const { consentInteraction } = testActions
+
+          const receiverWalletAddressUrl =
+            'https://happy-life-bank-test-backend:4100/accounts/pfry'
+          const senderWalletAddressUrl =
+            'https://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
+
+          const receiverWalletAddress = await c9.opClient.walletAddress.get({
+            url: receiverWalletAddressUrl
+          })
+          expect(receiverWalletAddress.id).toBe(receiverWalletAddressUrl)
+
+          const senderWalletAddress = await c9.opClient.walletAddress.get({
+            url: senderWalletAddressUrl
+          })
+          expect(senderWalletAddress.id).toBe(senderWalletAddressUrl)
+
+          const grantValue = 100n
+
+          const incomingPaymentGrant = await grantRequestIncomingPayment(
+            receiverWalletAddress,
+            useDirectedIdentity ? c9.publicKey : undefined
+          )
+          const incomingPayment = await createIncomingPayment(
+            receiverWalletAddress,
+            incomingPaymentGrant.access_token.value,
+            { tenantId: hlb.config.operatorTenantId },
+            useDirectedIdentity
+          )
+
+          const outgoingPaymentGrant = await grantRequestOutgoingPayment(
+            senderWalletAddress,
+            {
+              debitAmount: {
+                assetCode: senderWalletAddress.assetCode,
+                assetScale: senderWalletAddress.assetScale,
+                value: String(grantValue)
+              }
+            }
+          )
+          await consentInteraction(outgoingPaymentGrant, senderWalletAddress)
+          const grantContinue = await pollGrantContinue(outgoingPaymentGrant)
+
+          const spentAmounts0 = await getOutgoingPaymentGrantSpentAmounts(
+            senderWalletAddress,
+            grantContinue
+          )
+          expect(spentAmounts0.spentDebitAmount).toBeNull()
+          expect(spentAmounts0.spentReceiveAmount).toBeNull()
+
+          const debitAmount = {
+            assetCode: senderWalletAddress.assetCode,
+            assetScale: senderWalletAddress.assetScale,
+            value: '50'
           }
-        )
 
-        await poll(
-          async () => getOutgoingPayment(outgoingPayment1.id, grantContinue),
-          (responseData) => BigInt(responseData.sentAmount.value) > 0n,
-          5,
-          0.5
-        )
+          const outgoingPayment1 = await createOutgoingPayment(
+            senderWalletAddress,
+            grantContinue,
+            {
+              incomingPayment: incomingPayment.id,
+              debitAmount
+            }
+          )
 
-        expect(outgoingPayment1.debitAmount).toMatchObject(debitAmount)
+          await poll(
+            async () => getOutgoingPayment(outgoingPayment1.id, grantContinue),
+            (responseData) => BigInt(responseData.sentAmount.value) > 0n,
+            5,
+            0.5
+          )
 
-        const spentAmounts1 = await getOutgoingPaymentGrantSpentAmounts(
-          senderWalletAddress,
-          grantContinue
-        )
-        expect(spentAmounts1.spentDebitAmount).toMatchObject({
-          assetCode: senderWalletAddress.assetCode,
-          assetScale: senderWalletAddress.assetScale,
-          value: '50'
-        })
-        expect(spentAmounts1.spentReceiveAmount).toMatchObject({
-          assetCode: receiverWalletAddress.assetCode,
-          assetScale: receiverWalletAddress.assetScale,
-          value: '49'
-        })
+          expect(outgoingPayment1.debitAmount).toMatchObject(debitAmount)
 
-        const outgoingPayment2 = await createOutgoingPayment(
-          senderWalletAddress,
-          grantContinue,
-          {
-            incomingPayment: incomingPayment.id,
-            debitAmount
-          }
-        )
+          const spentAmounts1 = await getOutgoingPaymentGrantSpentAmounts(
+            senderWalletAddress,
+            grantContinue
+          )
+          expect(spentAmounts1.spentDebitAmount).toMatchObject({
+            assetCode: senderWalletAddress.assetCode,
+            assetScale: senderWalletAddress.assetScale,
+            value: '50'
+          })
+          expect(spentAmounts1.spentReceiveAmount).toMatchObject({
+            assetCode: receiverWalletAddress.assetCode,
+            assetScale: receiverWalletAddress.assetScale,
+            value: '49'
+          })
 
-        await poll(
-          async () => getOutgoingPayment(outgoingPayment2.id, grantContinue),
-          (responseData) => BigInt(responseData.sentAmount.value) > 0n,
-          5,
-          0.5
-        )
+          const outgoingPayment2 = await createOutgoingPayment(
+            senderWalletAddress,
+            grantContinue,
+            {
+              incomingPayment: incomingPayment.id,
+              debitAmount
+            }
+          )
 
-        const spentAmounts2 = await getOutgoingPaymentGrantSpentAmounts(
-          senderWalletAddress,
-          grantContinue
-        )
-        expect(spentAmounts2.spentDebitAmount).toMatchObject({
-          assetCode: senderWalletAddress.assetCode,
-          assetScale: senderWalletAddress.assetScale,
-          value: '100'
-        })
-        expect(spentAmounts2.spentReceiveAmount).toMatchObject({
-          assetCode: receiverWalletAddress.assetCode,
-          assetScale: receiverWalletAddress.assetScale,
-          value: '98'
-        })
+          await poll(
+            async () => getOutgoingPayment(outgoingPayment2.id, grantContinue),
+            (responseData) => BigInt(responseData.sentAmount.value) > 0n,
+            5,
+            0.5
+          )
 
-        await getPublicIncomingPayment(incomingPayment.id, '98') // adjusted for ILP slippage
-      })
+          const spentAmounts2 = await getOutgoingPaymentGrantSpentAmounts(
+            senderWalletAddress,
+            grantContinue
+          )
+          expect(spentAmounts2.spentDebitAmount).toMatchObject({
+            assetCode: senderWalletAddress.assetCode,
+            assetScale: senderWalletAddress.assetScale,
+            value: '100'
+          })
+          expect(spentAmounts2.spentReceiveAmount).toMatchObject({
+            assetCode: receiverWalletAddress.assetCode,
+            assetScale: receiverWalletAddress.assetScale,
+            value: '98'
+          })
+
+          await getPublicIncomingPayment(incomingPayment.id, '98') // adjusted for ILP slippage
+        }
+      )
       test('Peer to Peer', async (): Promise<void> => {
         const {
           createReceiver,
