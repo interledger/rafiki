@@ -51,25 +51,34 @@ body:graphql:vars {
 
 script:pre-request {
   // Create an additional wallet address to represent the account that will be sending money
-  
+
   const fetch = require('node-fetch');
   const scripts = require('./scripts');
-  
+
   const randomInt = Math.floor(Math.random() * (1001));
-  
-  const initialRequest = bru.getEnvVar("initialWalletAddressRequest");
-  const postRequestBody = {
-      query: initialRequest.body.query,
-      variables: {
-        "input": {
-          "assetId": bru.getEnvVar("assetId"),
-          "url": "https://" + bru.getEnvVar("OpenPaymentsHost") + "/simon/" + randomInt,
-          "publicName": "Simon"
-      }
+
+  const createWalletAddressQuery = `
+    mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
+      createWalletAddress(input: $input) {
+        walletAddress {
+          id
+        }
       }
     }
-  
-  const signature = scripts.generateBackendApiSignature(postRequestBody)
+  `;
+
+  const postRequestBody = {
+    query: createWalletAddressQuery,
+    variables: {
+      input: {
+        assetId: bru.getEnvVar("assetId"),
+        url: "https://" + bru.getEnvVar("OpenPaymentsHost") + "/simon/" + randomInt,
+        publicName: "Simon"
+      }
+    }
+  };
+
+  const signature = scripts.generateBackendApiSignature(postRequestBody);
   const postRequest = {
     method: 'post',
     headers: {
@@ -79,11 +88,12 @@ script:pre-request {
     },
     body: JSON.stringify(postRequestBody)
   };
-  
-  const response = await fetch(`${initialRequest.url}`, postRequest);
+
+  const graphqlUrl = bru.getEnvVar("RafikiGraphqlHost") + "/graphql";
+  const response = await fetch(graphqlUrl, postRequest);
   const body = await response.json();
   bru.setEnvVar("secondWalletAddressId", body.data.createWalletAddress.walletAddress.id);
-  
+
   scripts.addApiSignatureHeader();
 }
 
