@@ -1153,7 +1153,11 @@ describe('Incoming Payment Service', (): void => {
           })
           await incomingPaymentService.processPartialPayment(
             incomingPayment.id,
-            { dataToTransmit, partialIncomingPaymentId }
+            {
+              dataToTransmit,
+              partialIncomingPaymentId,
+              expiresAt: new Date(Date.now() - 60_000)
+            }
           )
           const webhookEvent = await IncomingPaymentEvent.query(knex)
             .where({
@@ -1210,7 +1214,11 @@ describe('Incoming Payment Service', (): void => {
 
           await incomingPaymentService.processPartialPayment(
             incomingPayment.id,
-            { dataToTransmit, partialIncomingPaymentId }
+            {
+              dataToTransmit,
+              partialIncomingPaymentId,
+              expiresAt: new Date(Date.now() - 60_000)
+            }
           )
           const webhookEvent = await IncomingPaymentEvent.query(knex)
             .where({
@@ -1255,6 +1263,7 @@ describe('Incoming Payment Service', (): void => {
           const decision = await incomingPaymentService.processPartialPayment(
             incomingPayment.id,
             {
+              dataToTransmit: '{}',
               partialIncomingPaymentId,
               expiresAt
             }
@@ -1304,6 +1313,7 @@ describe('Incoming Payment Service', (): void => {
           const decision = await incomingPaymentService.processPartialPayment(
             incomingPayment.id,
             {
+              dataToTransmit: '{}',
               partialIncomingPaymentId,
               expiresAt
             }

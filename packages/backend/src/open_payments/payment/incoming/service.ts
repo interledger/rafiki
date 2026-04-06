@@ -81,10 +81,10 @@ export interface IncomingPaymentService
   ): Promise<IncomingPayment | IncomingPaymentError>
   processPartialPayment(
     id: string,
-    options?: {
-      dataToTransmit?: string
-      partialIncomingPaymentId?: string
-      expiresAt?: Date
+    options: {
+      dataToTransmit: string
+      partialIncomingPaymentId: string
+      expiresAt: Date
     }
   ): Promise<PartialPaymentDecision>
   updatePartialPaymentDecision(
@@ -569,10 +569,10 @@ async function addReceivedAmount(
 async function processPartialPayment(
   deps: ServiceDependencies,
   id: string,
-  options?: {
-    dataToTransmit?: string
-    partialIncomingPaymentId?: string
-    expiresAt?: Date
+  options: {
+    dataToTransmit: string
+    partialIncomingPaymentId: string
+    expiresAt: Date
   }
 ): Promise<PartialPaymentDecision> {
   const { config, knex, redis } = deps
@@ -589,11 +589,11 @@ async function processPartialPayment(
     type: IncomingPaymentEventType.IncomingPaymentPartialPaymentReceived,
     data: {
       ...incomingPayment.toData(0n),
-      partialIncomingPaymentId: options?.partialIncomingPaymentId,
+      partialIncomingPaymentId: options.partialIncomingPaymentId,
       dataToTransmit:
-        options?.dataToTransmit && config.dbEncryptionSecret
+        options.dataToTransmit && config.dbEncryptionSecret
           ? encryptDbData(options.dataToTransmit, config.dbEncryptionSecret)
-          : options?.dataToTransmit
+          : options.dataToTransmit
     },
     tenantId: incomingPayment.tenantId,
     webhooks: finalizeWebhookRecipients(
@@ -608,83 +608,76 @@ async function processPartialPayment(
   })
 
   let decision: PartialPaymentDecision = {}
-  if (options?.partialIncomingPaymentId && options?.expiresAt) {
-    const partialIncomingPaymentId = options.partialIncomingPaymentId
-    const cacheKey = getPartialPaymentDecisionCacheKey(
-      id,
-      partialIncomingPaymentId
-    )
+  const partialIncomingPaymentId = options.partialIncomingPaymentId
+  const cacheKey = getPartialPaymentDecisionCacheKey(
+    id,
+    partialIncomingPaymentId
+  )
 
-    // Bounded polling: wait for decision up to (packet expiry - safetyMs) or maxWaitMs
-    const safetyMs = Number.isFinite(
-      config.partialPaymentDecisionSafetyMarginMs
-    )
-      ? config.partialPaymentDecisionSafetyMarginMs
-      : 100
-    const maxWaitMs = Number.isFinite(config.partialPaymentDecisionMaxWaitMs)
-      ? config.partialPaymentDecisionMaxWaitMs
-      : 1500
+  // Bounded polling: wait for decision up to (packet expiry - safetyMs) or maxWaitMs
+  const safetyMs = Number.isFinite(config.partialPaymentDecisionSafetyMarginMs)
+    ? config.partialPaymentDecisionSafetyMarginMs
+    : 100
+  const maxWaitMs = Number.isFinite(config.partialPaymentDecisionMaxWaitMs)
+    ? config.partialPaymentDecisionMaxWaitMs
+    : 1500
 
-    const now = Date.now()
-    const timeRemaining = Math.max(
-      0,
-      options.expiresAt.getTime() - now - safetyMs
-    )
-    const timeoutMs = Math.min(timeRemaining, maxWaitMs)
-    const pollingFrequencyMs = 50
+  const now = Date.now()
+  const timeRemaining = Math.max(
+    0,
+    options.expiresAt.getTime() - now - safetyMs
+  )
+  const timeoutMs = Math.min(timeRemaining, maxWaitMs)
+  const pollingFrequencyMs = 50
 
-    try {
-      const polledDecision = await poll({
-        request: async (): Promise<PartialPaymentDecision | null> => {
+  try {
+    const polledDecision = await poll({
+      request: async (): Promise<PartialPaymentDecision | null> => {
+        try {
+          const value = await redis.get(cacheKey)
+          if (!value) return null
+
           try {
-            const value = await redis.get(cacheKey)
-            if (!value) return null
-
-            try {
-              const parsed = JSON.parse(value) as PartialPaymentDecision
-              return parsed
-            } catch (parseError) {
-              deps.logger.warn(
-                { parseError, incomingPaymentId: id, cacheKey },
-                'invalid partial payment decision format in cache'
-              )
-            }
-
-            return null
-          } catch (e) {
+            const parsed = JSON.parse(value) as PartialPaymentDecision
+            return parsed
+          } catch (parseError) {
             deps.logger.warn(
-              { e, incomingPaymentId: id },
-              'decision read failed'
+              { parseError, incomingPaymentId: id, cacheKey },
+              'invalid partial payment decision format in cache'
             )
-            return null
           }
-        },
-        stopWhen: (result: PartialPaymentDecision | null) => result !== null,
-        pollingFrequencyMs,
-        timeoutMs
-      })
-      if (polledDecision) {
-        decision = {
-          ...decision,
-          ...polledDecision
-        }
 
-        if (!decision.message && typeof decision.success === 'boolean') {
-          decision.message = decision.success
-            ? 'Additional data approved'
-            : 'Additional data rejected'
+          return null
+        } catch (e) {
+          deps.logger.warn({ e, incomingPaymentId: id }, 'decision read failed')
+          return null
         }
+      },
+      stopWhen: (result: PartialPaymentDecision | null) => result !== null,
+      pollingFrequencyMs,
+      timeoutMs
+    })
+    if (polledDecision) {
+      decision = {
+        ...decision,
+        ...polledDecision
       }
-    } catch (e) {
-      deps.logger.warn(
-        { e, incomingPaymentId: id },
-        'partial payment decision polling timed out or failed'
-      )
-    }
 
-    if (!decision.message) {
-      decision.message = 'No response from ASE'
+      if (!decision.message && typeof decision.success === 'boolean') {
+        decision.message = decision.success
+          ? 'Additional data approved'
+          : 'Additional data rejected'
+      }
     }
+  } catch (e) {
+    deps.logger.warn(
+      { e, incomingPaymentId: id },
+      'partial payment decision polling timed out or failed'
+    )
+  }
+
+  if (!decision.message) {
+    decision.message = 'No response from ASE'
   }
 
   return decision

@@ -39,14 +39,14 @@ export function createPartialPaymentDecisionMiddleware(): ILPMiddleware {
     let message: string | undefined
 
     try {
-      decision = (await ctx.services.incomingPayments.processPartialPayment(
+      decision = await ctx.services.incomingPayments.processPartialPayment(
         incomingPaymentId,
         {
           dataToTransmit: additionalData,
           partialIncomingPaymentId: uuid(),
           expiresAt: prepare.expiresAt
         }
-      )) as PartialPaymentDecision
+      )
 
       if (decision?.success) {
         await next()

@@ -37,10 +37,10 @@ describe('Partial Payment Decision Middleware', function () {
       [
         string,
         {
-          dataToTransmit?: string
-          partialIncomingPaymentId?: string
-          expiresAt?: Date
-        }?
+          dataToTransmit: string
+          partialIncomingPaymentId: string
+          expiresAt: Date
+        }
       ]
     >()
     Object.assign(services.incomingPayments, {
