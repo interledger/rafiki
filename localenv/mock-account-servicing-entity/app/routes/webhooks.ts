@@ -3,12 +3,11 @@ import { json } from '@remix-run/node'
 import {
   handleLowLiquidity,
   handleWalletAddressNotFound,
-  handleWalletAddressWebMonetization
-} from '~/lib/webhooks.server'
-import {
+  handleWalletAddressWebMonetization,
   handleOutgoingPaymentCreated,
   handleOutgoingPaymentCompletedFailed,
-  handleIncomingPaymentCompletedExpired
+  handleIncomingPaymentCompletedExpired,
+  handleIncomingPartialPaymentReceived
 } from '~/lib/webhooks.server'
 import { WebhookEventType, Webhook } from 'mock-account-service-lib'
 import { getTenantCredentials } from '~/lib/utils'
@@ -35,6 +34,9 @@ export async function action({ request }: ActionFunctionArgs) {
         await handleOutgoingPaymentCompletedFailed(wh)
         break
       case WebhookEventType.IncomingPaymentCreated:
+        break
+      case WebhookEventType.IncomingPaymentPartialPaymentReceived:
+        await handleIncomingPartialPaymentReceived(wh, tenantOptions)
         break
       case WebhookEventType.IncomingPaymentCompleted:
       case WebhookEventType.IncomingPaymentExpired:

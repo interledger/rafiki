@@ -186,6 +186,62 @@ export async function handleIncomingPaymentCompletedExpired(
   return
 }
 
+export async function handleIncomingPartialPaymentReceived(
+  wh: Webhook,
+  options?: TenantOptions
+) {
+  if (wh.type !== WebhookEventType.IncomingPaymentPartialPaymentReceived) {
+    throw new Error(
+      'Invalid event type when handling incoming partial payment webhook'
+    )
+  }
+
+  const incomingPaymentId = wh.data['id'] as string | undefined
+  if (!incomingPaymentId) {
+    throw new Error('No incomingPaymentId found on webhook data')
+  }
+
+  const partialIncomingPaymentId = wh.data['partialIncomingPaymentId'] as
+    | string
+    | undefined
+  if (!partialIncomingPaymentId) {
+    throw new Error('No partialIncomingPaymentId found on webhook data')
+  }
+
+  const rawDataToTransmit = wh.data['dataToTransmit'] as string | undefined
+  if (!rawDataToTransmit) {
+    throw new Error('No dataToTransmit found on webhook data')
+  }
+
+  await generateApolloClient(options)
+    .mutate({
+      mutation: gql`
+        mutation ConfirmPartialIncomingPayment(
+          $input: ConfirmPartialIncomingPaymentInput!
+        ) {
+          confirmPartialIncomingPayment(input: $input) {
+            success
+          }
+        }
+      `,
+      variables: {
+        input: {
+          incomingPaymentId,
+          partialIncomingPaymentId
+        }
+      }
+    })
+    .then((query): LiquidityMutationResponse => {
+      if (query.data) {
+        return query.data.confirmPartialIncomingPayment
+      } else {
+        throw new Error('Data was empty')
+      }
+    })
+
+  return
+}
+
 export async function handleWalletAddressWebMonetization(
   wh: Webhook,
   options?: TenantOptions

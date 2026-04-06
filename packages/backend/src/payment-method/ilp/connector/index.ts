@@ -24,7 +24,8 @@ import {
   createOutgoingThroughputMiddleware,
   createOutgoingValidateFulfillmentMiddleware,
   createStreamAddressMiddleware,
-  createStreamController
+  createStreamController,
+  createPartialPaymentDecisionMiddleware
 } from './core'
 import { TelemetryService } from '../../../telemetry/service'
 import { TenantSettingService } from '../../../tenants/settings/service'
@@ -79,7 +80,6 @@ export async function createConnectorService({
       // Incoming Rules
       createIncomingErrorHandlerMiddleware(ilpAddress),
       createStreamAddressMiddleware(),
-
       createAccountMiddleware(),
       createIncomingMaxPacketAmountMiddleware(),
       createIncomingRateLimitMiddleware({}),
@@ -88,6 +88,10 @@ export async function createConnectorService({
 
       // Local pay
       createBalanceMiddleware(),
+
+      // Partial payment decision (publishes webhook + polls) should happen
+      // after `createBalanceMiddleware` so we don't start decision flow before checking liquidity
+      createPartialPaymentDecisionMiddleware(),
 
       // Outgoing Rules
       createStreamController(),
