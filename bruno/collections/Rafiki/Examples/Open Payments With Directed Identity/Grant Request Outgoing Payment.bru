@@ -1,0 +1,58 @@
+meta {
+  name: Grant Request Outgoing Payment
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{senderOpenPaymentsAuthHost}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "access_token": {
+          "access": [
+              {
+                  "type": "outgoing-payment",
+                  "actions": [
+                      "create", "read", "list"
+                  ],
+                  "identifier": "{{senderWalletAddress}}",
+                  "limits": {
+                      "debitAmount": {{quoteDebitAmount}}
+                  }
+              }
+          ]
+      },
+      "client": "{{clientWalletAddress}}",
+      "interact": {
+          "start": [
+              "redirect"
+          ]
+      }
+  }
+  
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  await scripts.addSignatureHeaders();
+}
+
+script:post-response {
+  const scripts = require('./scripts');
+  
+  scripts.storeTokenDetails();
+  
+  const body = res.getBody()
+  bru.setEnvVar("senderOpenPaymentsContinuationUri", body?.continue.uri)
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

@@ -1,4 +1,4 @@
-const { createHmac } = require('crypto')
+const { createHmac, generateKeyPairSync, createPublicKey } = require('crypto')
 const { canonicalize } = require('json-canonicalize')
 const fetch = require('node-fetch')
 const url = require('url')
@@ -44,13 +44,23 @@ const scripts = {
     )
   },
 
-  requestSigHeaders: async function (url, method, headers, body) {
+  requestSigHeaders: async function (
+    url,
+    method,
+    headers,
+    body,
+    useDirectedIdentity
+  ) {
     const response = await fetch(bru.getEnvVar('signatureUrl'), {
       method: 'post',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        keyId: bru.getEnvVar('clientKeyId'),
-        base64Key: bru.getEnvVar('clientPrivateKey'),
+        keyId: useDirectedIdentity
+          ? JSON.parse(bru.getEnvVar('directedIdentityPublicKey')).kid
+          : bru.getEnvVar('clientKeyId'),
+        base64Key: useDirectedIdentity
+          ? bru.getEnvVar('directedIdentityPrivateKey')
+          : bru.getEnvVar('clientPrivateKey'),
         request: {
           url,
           method,
@@ -77,7 +87,23 @@ const scripts = {
       url,
       req.getMethod(),
       headers,
-      body
+      body,
+      false
+    )
+    this.setHeaders(signatureHeaders)
+  },
+
+  addDirectedIdentitySignatureHeaders: async function () {
+    const url = this.sanitizeUrl()
+    const headers = this.sanitizeHeaders()
+    const body = this.sanitizeBody()
+    req.setBody(body)
+    const signatureHeaders = await this.requestSigHeaders(
+      url,
+      req.getMethod(),
+      headers,
+      body,
+      true
     )
     this.setHeaders(signatureHeaders)
   },
@@ -219,6 +245,33 @@ const scripts = {
           bru.setEnvVar(varName, wa.id)
         }
       })
+  },
+
+  generateDirectedIdentityKeys: function () {
+    const keys = generateKeyPairSync('ed25519', {
+      privateKeyEncoding: { type: 'pkcs8', format: 'der' },
+      publicKeyEncoding: { type: 'spki', format: 'jwk' }
+    })
+    const { privateKey, publicKey } = keys
+
+    const privateKeyString =
+      '-----BEGIN PRIVATE KEY-----\n' +
+      `${privateKey.toString('base64')}\n` +
+      '-----END PRIVATE KEY-----\n'
+
+    const jwk = {
+      alg: 'EdDSA',
+      kid: 'bruno-directed-identity',
+      kty: publicKey.kty,
+      crv: publicKey.crv,
+      x: publicKey.x
+    }
+
+    bru.setEnvVar(
+      'directedIdentityPrivateKey',
+      Buffer.from(privateKeyString, 'utf-8').toString('base64')
+    )
+    bru.setEnvVar('directedIdentityPublicKey', JSON.stringify(jwk))
   }
 }
 
