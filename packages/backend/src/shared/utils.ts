@@ -5,7 +5,7 @@ import { canonicalize } from 'json-canonicalize'
 import { IAppConfig } from '../config/app'
 import { AppContext, AppServices } from '../app'
 import { Tenant } from '../tenants/model'
-
+import { Buffer } from 'node:buffer'
 import { IocContract } from '@adonisjs/fold'
 export function validateId(id: string): boolean {
   return validate(id) && version(id) === 4
