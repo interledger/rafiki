@@ -213,7 +213,7 @@ export class OutgoingPayment
     const decipher = createDecipheriv(
       'aes-256-gcm',
       Uint8Array.from(Buffer.from(key, 'base64')),
-      Uint8Array.from(Buffer.from(iv, 'base64'))
+      iv
     )
     decipher.setAuthTag(Uint8Array.from(Buffer.from(tag, 'base64')))
     let decryptedDataToTransmit = decipher.update(cipherText, 'base64', 'utf8')
