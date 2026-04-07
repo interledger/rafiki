@@ -794,9 +794,9 @@ describe('Incoming Payment Service', (): void => {
     })
 
     describe.each`
-      eventType                                            | expiresInMs | amountReceived
-      ${IncomingPaymentEventType.IncomingPaymentExpired}   | ${30_000}   | ${BigInt(1)}
-      ${IncomingPaymentEventType.IncomingPaymentCompleted} | ${undefined}                     | ${BigInt(123)}
+      eventType                                            | expiresInMs  | amountReceived
+      ${IncomingPaymentEventType.IncomingPaymentExpired}   | ${30_000}    | ${BigInt(1)}
+      ${IncomingPaymentEventType.IncomingPaymentCompleted} | ${undefined} | ${BigInt(123)}
     `(
       'handleDeactivated ($eventType)',
       ({ eventType, expiresInMs, amountReceived }): void => {
