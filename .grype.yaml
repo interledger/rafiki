@@ -1,6 +1,15 @@
 ignore:
   - vulnerability: CVE-2026-27903
+  - vulnerability: GHSA-7r86-cg39-jmmj
+
   - vulnerability: CVE-2026-27904
+  - vulnerability: GHSA-23c5-xmqv-rm74
+
   - vulnerability: CVE-2026-33671
+  - vulnerability: GHSA-c2c7-rcm5-vvqj
+
   - vulnerability: CVE-2026-29786
+  - vulnerability: GHSA-qffp-2rhf-9h96
+
   - vulnerability: CVE-2026-31802
+  - vulnerability: GHSA-9ppj-qmqm-q256
