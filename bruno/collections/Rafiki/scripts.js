@@ -1,4 +1,4 @@
-const { createHmac, generateKeyPairSync, createPublicKey } = require('crypto')
+const { createHmac, generateKeyPairSync } = require('crypto')
 const { canonicalize } = require('json-canonicalize')
 const fetch = require('node-fetch')
 const url = require('url')

@@ -257,7 +257,7 @@ export const throwIfSignatureInvalid = async (ctx: HttpSigContext) => {
         {
           client: ctx.client,
           keyIdInSignature: keyId,
-          requestedRoute: `${ctx.client}/jwks.json`,
+          requestedRoute: `${ctx.client.walletAddress}/jwks.json`,
           validationErrorsInRequest:
             err instanceof OpenPaymentsClientError
               ? err.validationErrors

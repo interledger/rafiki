@@ -233,6 +233,13 @@ async function createPendingGrant(
   }
 
   if (!input.client) {
+    if (input.jwk) {
+      throw new GNAPServerRouteError(
+        400,
+        GNAPErrorCode.InvalidClient,
+        'JWK client identifier cannot be used for interactive grants'
+      )
+    }
     throw new GNAPServerRouteError(
       400,
       GNAPErrorCode.InvalidClient,
