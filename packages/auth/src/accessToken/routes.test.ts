@@ -11,6 +11,7 @@ import { initIocContainer } from '..'
 import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
 import { FinishMethod, Grant, GrantState, StartMethod } from '../grant/model'
+import { generateTestJwk } from '../tests/grant'
 import { AccessToken } from './model'
 import { Access } from '../access/model'
 import { AccessTokenRoutes, IntrospectContext } from './routes'
@@ -168,7 +169,7 @@ describe('Access Token Routes', (): void => {
         active: true,
         grant: grant.id,
         access: [],
-        client: CLIENT
+        client: { walletAddress: CLIENT }
       })
     })
 
@@ -239,7 +240,7 @@ describe('Access Token Routes', (): void => {
             identifier: access.identifier
           }
         ],
-        client: CLIENT
+        client: { walletAddress: CLIENT }
       })
     })
 
@@ -283,7 +284,7 @@ describe('Access Token Routes', (): void => {
             identifier: access.identifier
           }
         ],
-        client: CLIENT
+        client: { walletAddress: CLIENT }
       })
     })
 
@@ -329,7 +330,7 @@ describe('Access Token Routes', (): void => {
             actions: secondAccess.actions
           }
         ],
-        client: CLIENT
+        client: { walletAddress: CLIENT }
       })
     })
 
@@ -366,8 +367,97 @@ describe('Access Token Routes', (): void => {
       expect(ctx.body).toMatchObject({
         active: true,
         access: [],
-        client: grant.client,
+        client: { walletAddress: grant.client },
         grant: grant.id
+      })
+    })
+
+    test('Throws 500 error when introspecting token for grant with no client identity', async (): Promise<void> => {
+      const tenant = await Tenant.query().insertAndFetch(generateTenant())
+      const noClientGrant = await Grant.query(trx).insertAndFetch({
+        ...BASE_GRANT,
+        client: undefined,
+        tenantId: tenant.id,
+        continueToken: generateToken(),
+        continueId: v4()
+      })
+      const noClientToken = await AccessToken.query(trx).insertAndFetch({
+        grantId: noClientGrant.id,
+        ...BASE_TOKEN,
+        value: generateToken(),
+        managementId: v4()
+      })
+
+      const ctx = createContext<IntrospectContext>(
+        {
+          headers: { Accept: 'application/json' },
+          url: '/',
+          method: 'POST'
+        },
+        {}
+      )
+
+      ctx.request.body = {
+        access_token: noClientToken.value
+      }
+
+      await expect(accessTokenRoutes.introspect(ctx)).rejects.toMatchObject({
+        status: 500,
+        code: GNAPErrorCode.RequestDenied,
+        message: 'internal server error'
+      })
+    })
+
+    test('Successfully introspects token for JWK-based grant', async (): Promise<void> => {
+      const testJwk = generateTestJwk()
+      const tenant = await Tenant.query().insertAndFetch(generateTenant())
+      const jwkGrant = await Grant.query(trx).insertAndFetch({
+        ...BASE_GRANT,
+        client: undefined,
+        jwk: testJwk,
+        tenantId: tenant.id,
+        continueToken: generateToken(),
+        continueId: v4()
+      })
+      const jwkAccess = await Access.query(trx).insertAndFetch({
+        grantId: jwkGrant.id,
+        ...BASE_ACCESS
+      })
+      const jwkToken = await AccessToken.query(trx).insertAndFetch({
+        grantId: jwkGrant.id,
+        ...BASE_TOKEN,
+        value: generateToken(),
+        managementId: v4()
+      })
+
+      const ctx = createContext<IntrospectContext>(
+        {
+          headers: { Accept: 'application/json' },
+          url: '/',
+          method: 'POST'
+        },
+        {}
+      )
+
+      ctx.request.body = {
+        access_token: jwkToken.value,
+        access: [BASE_ACCESS as AccessItem]
+      }
+
+      await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(200)
+      expect(ctx.body).toEqual({
+        active: true,
+        grant: jwkGrant.id,
+        access: [
+          {
+            type: jwkAccess.type,
+            actions: jwkAccess.actions,
+            limits: jwkAccess.limits,
+            identifier: jwkAccess.identifier
+          }
+        ],
+        client: { jwk: testJwk }
       })
     })
   })

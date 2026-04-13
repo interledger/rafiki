@@ -66,7 +66,10 @@ import {
 } from '@interledger/open-payments'
 import { RemoteIncomingPaymentService } from './open_payments/payment/incoming_remote/service'
 import { ReceiverService } from './open_payments/receiver/service'
-import { Client as TokenIntrospectionClient } from 'token-introspection'
+import {
+  Client as TokenIntrospectionClient,
+  TokenInfoClient
+} from 'token-introspection'
 import { applyMiddleware } from 'graphql-middleware'
 import { Redis } from 'ioredis'
 import {
@@ -137,7 +140,7 @@ export type AppRequest<ParamsT extends string = string> = Omit<
 
 export interface IntrospectionContext extends AppContext {
   grant?: Grant
-  client?: string
+  client?: TokenInfoClient
   accessAction?: AccessAction
 }
 
@@ -158,7 +161,7 @@ type HttpSigRequest = Omit<AppContext['request'], 'headers'> & {
 export type HttpSigContext = AppContext & {
   request: HttpSigRequest
   headers: HttpSigHeaders
-  client: string
+  client: TokenInfoClient
 }
 
 export type HttpSigWithAuthenticatedStatusContext = HttpSigContext &

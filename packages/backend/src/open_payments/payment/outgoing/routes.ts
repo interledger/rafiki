@@ -26,6 +26,7 @@ import { WalletAddress } from '../../wallet_address/model'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
 import { AmountJSON, parseAmount, serializeAmount } from '../../amount'
 import { Limits } from './limits'
+import { parseClientWalletAddress } from '../../../shared/utils'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -64,7 +65,10 @@ async function getOutgoingPayment(
   const outgoingPayment = await deps.outgoingPaymentService.get({
     id: ctx.params.id,
     tenantId: ctx.params.tenantId,
-    client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
+    client:
+      ctx.accessAction === AccessAction.Read
+        ? parseClientWalletAddress(ctx.client)
+        : undefined
   })
 
   if (!outgoingPayment) {
@@ -134,7 +138,7 @@ async function createOutgoingPayment(
     tenantId: ctx.params.tenantId,
     walletAddressId: ctx.walletAddress.id,
     metadata: body.metadata,
-    client: ctx.client,
+    client: parseClientWalletAddress(ctx.client),
     grant: ctx.grant
   }
   let options: CreateOutgoingPaymentOptions
@@ -183,11 +187,11 @@ async function listOutgoingPayments(
 ): Promise<void> {
   await listSubresource({
     ctx,
-    getWalletAddressPage: async ({ walletAddressId, pagination, client }) =>
+    getWalletAddressPage: async ({ walletAddressId, pagination }) =>
       deps.outgoingPaymentService.getWalletAddressPage({
         walletAddressId,
         pagination,
-        client,
+        client: parseClientWalletAddress(ctx.client),
         tenantId: ctx.params.tenantId
       }),
     toBody: (payment) => outgoingPaymentToBody(deps, ctx.walletAddress, payment)
