@@ -1,6 +1,7 @@
+import crypto from 'crypto'
 import createLogger from 'pino'
 import { createAxiosInstance } from '../client'
-import { TokenInfo } from '../types'
+import { JWK, TokenInfo } from '../types'
 import { ResponseValidator } from '@interledger/openapi'
 
 export const silentLogger = createLogger({
@@ -24,6 +25,8 @@ export const mockOpenApiResponseValidators = () => ({
 
 export const mockTokenInfo = (overrides?: Partial<TokenInfo>): TokenInfo => ({
   active: true,
+  grant: crypto.randomUUID(),
+  client: { walletAddress: 'https://example.com/.well-known/pay' },
   access: [
     {
       type: 'incoming-payment',
@@ -31,4 +34,12 @@ export const mockTokenInfo = (overrides?: Partial<TokenInfo>): TokenInfo => ({
     }
   ],
   ...overrides
+})
+
+export const mockJwk = (): JWK => ({
+  kid: crypto.randomUUID(),
+  alg: 'EdDSA',
+  kty: 'OKP',
+  crv: 'Ed25519',
+  x: 'test-public-key-base64url'
 })

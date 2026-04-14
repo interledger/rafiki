@@ -12,7 +12,8 @@ import {
   getTenantFromApiSignature,
   ensureTrailingSlash,
   loadRoutesFromDatabase,
-  encryptDbData
+  encryptDbData,
+  parseClientWalletAddress
 } from './utils'
 import { AppServices, AppContext } from '../app'
 import { TestContainer, createTestApp } from '../tests/app'
@@ -23,6 +24,7 @@ import { Config, IAppConfig } from '../config/app'
 import { createContext } from '../tests/context'
 import { Tenant } from '../tenants/model'
 import { truncateTables } from '../tests/tableManager'
+import { generateTestKeys } from '@interledger/http-signature-utils'
 
 describe('utils', (): void => {
   describe('isValidHttpUrl', (): void => {
@@ -584,5 +586,21 @@ describe('utils', (): void => {
     decipherText += decipher.final('utf8')
 
     expect(decipherText).toEqual(plaintext)
+  })
+
+  describe('parseClientWalletAddress', (): void => {
+    test('returns walletaddress if client has it', () => {
+      const walletAddress = faker.internet.url()
+      expect(parseClientWalletAddress({ walletAddress })).toEqual(walletAddress)
+    })
+
+    test('returns undefined if client is undefined', () => {
+      expect(parseClientWalletAddress(undefined)).toBeUndefined()
+    })
+
+    test('returns undefined if client is using JWK', () => {
+      const jwk = generateTestKeys().publicKey
+      expect(parseClientWalletAddress({ jwk })).toBeUndefined()
+    })
   })
 })

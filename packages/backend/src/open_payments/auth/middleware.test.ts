@@ -144,25 +144,34 @@ describe('Auth Middleware', (): void => {
       expect(next).not.toHaveBeenCalled()
     })
 
-    test('proceeds with validation when authorization header exists, even with canSkipAuthValidation true', async (): Promise<void> => {
-      const middleware = createTokenIntrospectionMiddleware({
-        requestType: type,
-        requestAction: action,
-        canSkipAuthValidation: true
-      })
-      ctx.request.headers.authorization = 'GNAP valid_token'
-      jest.spyOn(tokenIntrospectionClient, 'introspect').mockResolvedValueOnce({
-        active: true,
-        access: [{ type: type, actions: [action] }],
-        client: 'test-client'
-      } as TokenInfo)
+    test.each`
+      clientType         | client
+      ${'walletAddress'} | ${{ walletAddress: 'test-client' }}
+      ${'jwk'}           | ${{ jwk: generateJwk({ keyId: uuid(), privateKey: generateKeyPairSync('ed25519').privateKey }) }}
+    `(
+      'using $clientType, proceeds with validation when authorization header exists, even with canSkipAuthValidation true',
+      async ({ client }): Promise<void> => {
+        const middleware = createTokenIntrospectionMiddleware({
+          requestType: type,
+          requestAction: action,
+          canSkipAuthValidation: true
+        })
+        ctx.request.headers.authorization = 'GNAP valid_token'
+        jest
+          .spyOn(tokenIntrospectionClient, 'introspect')
+          .mockResolvedValueOnce({
+            active: true,
+            access: [{ type: type, actions: [action] }],
+            client
+          } as TokenInfo)
 
-      await middleware(ctx, next)
+        await middleware(ctx, next)
 
-      expect(tokenIntrospectionClient.introspect).toHaveBeenCalled()
-      expect(ctx.client).toBe('test-client')
-      expect(next).toHaveBeenCalled()
-    })
+        expect(tokenIntrospectionClient.introspect).toHaveBeenCalled()
+        expect(ctx.client).toEqual(client)
+        expect(next).toHaveBeenCalled()
+      }
+    )
 
     test('throws OpenPaymentsServerRouteError for invalid token with skipAuthValidation true', async (): Promise<void> => {
       const middleware = createTokenIntrospectionMiddleware({
@@ -286,46 +295,29 @@ describe('Auth Middleware', (): void => {
     expect(next).not.toHaveBeenCalled()
   })
 
-  test('rejects with 403 for token with insufficient access', async (): Promise<void> => {
-    const introspectSpy = jest
-      .spyOn(tokenIntrospectionClient, 'introspect')
-      .mockResolvedValueOnce({
-        active: true,
-        grant: uuid(),
-        client: faker.internet.url({ appendSlash: false }),
-        access: []
+  test.each`
+    clientType         | client
+    ${'walletAddress'} | ${{ walletAddress: faker.internet.url({ appendSlash: false }) }}
+    ${'jwk'}           | ${{ jwk: generateJwk({ keyId: uuid(), privateKey: generateKeyPairSync('ed25519').privateKey }) }}
+  `(
+    'using $clientType, rejects with 403 for token with insufficient access',
+    async ({ client }): Promise<void> => {
+      const introspectSpy = jest
+        .spyOn(tokenIntrospectionClient, 'introspect')
+        .mockResolvedValueOnce({
+          active: true,
+          grant: uuid(),
+          client,
+          access: []
+        })
+
+      await expect(middleware(ctx, next)).rejects.toMatchObject({
+        status: 403,
+        message: 'Insufficient Grant'
       })
-
-    await expect(middleware(ctx, next)).rejects.toMatchObject({
-      status: 403,
-      message: 'Insufficient Grant'
-    })
-    expect(introspectSpy).toHaveBeenCalledWith({
-      access_token: token,
-      access: [
-        {
-          type: type,
-          actions: [action],
-          identifier: ctx.walletAddressUrl
-        }
-      ]
-    })
-    expect(next).not.toHaveBeenCalled()
-  })
-
-  test('rejects with 500 for token with access.length > 1', async (): Promise<void> => {
-    const introspectSpy = jest
-      .spyOn(tokenIntrospectionClient, 'introspect')
-      .mockResolvedValueOnce({
-        active: true,
-        grant: uuid(),
-        client: faker.internet.url({ appendSlash: false }),
+      expect(introspectSpy).toHaveBeenCalledWith({
+        access_token: token,
         access: [
-          {
-            type: type,
-            actions: [action],
-            identifier: ctx.walletAddressUrl
-          },
           {
             type: type,
             actions: [action],
@@ -333,23 +325,54 @@ describe('Auth Middleware', (): void => {
           }
         ]
       })
+      expect(next).not.toHaveBeenCalled()
+    }
+  )
 
-    await expect(middleware(ctx, next)).rejects.toMatchObject({
-      status: 500,
-      message: 'Unexpected number of access items'
-    })
-    expect(introspectSpy).toHaveBeenCalledWith({
-      access_token: token,
-      access: [
-        {
-          type: type,
-          actions: [action],
-          identifier: ctx.walletAddressUrl
-        }
-      ]
-    })
-    expect(next).not.toHaveBeenCalled()
-  })
+  test.each`
+    clientType         | client
+    ${'walletAddress'} | ${{ walletAddress: faker.internet.url({ appendSlash: false }) }}
+    ${'jwk'}           | ${{ jwk: generateJwk({ keyId: uuid(), privateKey: generateKeyPairSync('ed25519').privateKey }) }}
+  `(
+    'using $clientType, rejects with 500 for token with access.length > 1',
+    async ({ client }): Promise<void> => {
+      const introspectSpy = jest
+        .spyOn(tokenIntrospectionClient, 'introspect')
+        .mockResolvedValueOnce({
+          active: true,
+          grant: uuid(),
+          client,
+          access: [
+            {
+              type: type,
+              actions: [action],
+              identifier: ctx.walletAddressUrl
+            },
+            {
+              type: type,
+              actions: [action],
+              identifier: ctx.walletAddressUrl
+            }
+          ]
+        })
+
+      await expect(middleware(ctx, next)).rejects.toMatchObject({
+        status: 500,
+        message: 'Unexpected number of access items'
+      })
+      expect(introspectSpy).toHaveBeenCalledWith({
+        access_token: token,
+        access: [
+          {
+            type: type,
+            actions: [action],
+            identifier: ctx.walletAddressUrl
+          }
+        ]
+      })
+      expect(next).not.toHaveBeenCalled()
+    }
+  )
 
   enum IdentifierOption {
     Matching = 'matching',
@@ -358,112 +381,80 @@ describe('Auth Middleware', (): void => {
   }
 
   describe.each`
-    identifierOption
-    ${IdentifierOption.Matching}
-    ${IdentifierOption.Conflicting}
-    ${IdentifierOption.None}
-  `(
-    '$identifierOption token access identifier',
-    ({ identifierOption }): void => {
-      let identifier: string | undefined
+    clientType         | client
+    ${'walletAddress'} | ${{ walletAddress: faker.internet.url({ appendSlash: false }) }}
+    ${'jwk'}           | ${{ jwk: generateJwk({ keyId: uuid(), privateKey: generateKeyPairSync('ed25519').privateKey }) }}
+  `('using $clientType', ({ client }): void => {
+    describe.each`
+      identifierOption
+      ${IdentifierOption.Matching}
+      ${IdentifierOption.Conflicting}
+      ${IdentifierOption.None}
+    `(
+      '$identifierOption token access identifier',
+      ({ identifierOption }): void => {
+        let identifier: string | undefined
 
-      beforeEach(async (): Promise<void> => {
-        if (identifierOption === IdentifierOption.Matching) {
-          identifier = ctx.walletAddressUrl
-        } else if (identifierOption === IdentifierOption.Conflicting) {
-          identifier = faker.internet.url({ appendSlash: false })
-        }
-      })
-
-      const createTokenInfo = (
-        access?: ActiveTokenInfo['access']
-      ): ActiveTokenInfo => ({
-        active: true,
-        grant: uuid(),
-        client: faker.internet.url({ appendSlash: false }),
-        access: access ?? [
-          {
-            type: 'incoming-payment',
-            actions: [action],
-            identifier
+        beforeEach(async (): Promise<void> => {
+          if (identifierOption === IdentifierOption.Matching) {
+            identifier = ctx.walletAddressUrl
+          } else if (identifierOption === IdentifierOption.Conflicting) {
+            identifier = faker.internet.url({ appendSlash: false })
           }
-        ]
-      })
-
-      test.each`
-        type                          | action                   | description
-        ${AccessType.OutgoingPayment} | ${action}                | ${'type'}
-        ${type}                       | ${AccessAction.Complete} | ${'action'}
-      `(
-        'returns 403 for unauthorized request (conflicting $description)',
-        async ({ type, action }): Promise<void> => {
-          const middleware = createTokenIntrospectionMiddleware({
-            requestType: type,
-            requestAction: action
-          })
-          const introspectSpy = jest
-            .spyOn(tokenIntrospectionClient, 'introspect')
-            .mockResolvedValueOnce({ active: false })
-          await expect(middleware(ctx, next)).rejects.toMatchObject({
-            status: 403,
-            message: 'Inactive Token'
-          })
-          const expectedCallObject: IntrospectionCallObject = {
-            access_token: token,
-            access: [
-              {
-                type,
-                actions: [action],
-                identifier: ctx.walletAddressUrl
-              }
-            ]
-          }
-
-          expect(introspectSpy).toHaveBeenCalledWith(expectedCallObject)
-          expect(next).not.toHaveBeenCalled()
-        }
-      )
-
-      if (identifierOption !== IdentifierOption.Conflicting) {
-        test('sets the context client info and calls next', async (): Promise<void> => {
-          const tokenInfo = createTokenInfo()
-          const introspectSpy = jest
-            .spyOn(tokenIntrospectionClient, 'introspect')
-            .mockResolvedValueOnce(tokenInfo)
-
-          await expect(middleware(ctx, next)).resolves.toBeUndefined()
-          expect(introspectSpy).toHaveBeenCalledWith({
-            access_token: token,
-            access: [
-              {
-                type,
-                actions: [action],
-                identifier: ctx.walletAddressUrl
-              }
-            ]
-          })
-          expect(next).toHaveBeenCalled()
-          expect(ctx.client).toEqual(tokenInfo.client)
-          expect(ctx.grant).toBeUndefined()
         })
 
-        describe.each`
-          superAction             | subAction
-          ${AccessAction.ReadAll} | ${AccessAction.Read}
-          ${AccessAction.ListAll} | ${AccessAction.List}
-        `('$subAction/$superAction', ({ superAction, subAction }): void => {
-          test("calls next (but doesn't designate client filtering) for sub-action request", async (): Promise<void> => {
+        const createTokenInfo = (
+          access?: ActiveTokenInfo['access']
+        ): ActiveTokenInfo => ({
+          active: true,
+          grant: uuid(),
+          client,
+          access: access ?? [
+            {
+              type: 'incoming-payment',
+              actions: [action],
+              identifier
+            }
+          ]
+        })
+
+        test.each`
+          type                          | action                   | description
+          ${AccessType.OutgoingPayment} | ${action}                | ${'type'}
+          ${type}                       | ${AccessAction.Complete} | ${'action'}
+        `(
+          'returns 403 for unauthorized request (conflicting $description)',
+          async ({ type, action }): Promise<void> => {
             const middleware = createTokenIntrospectionMiddleware({
               requestType: type,
-              requestAction: subAction
+              requestAction: action
             })
-            const tokenInfo = createTokenInfo([
-              {
-                type,
-                actions: [superAction],
-                identifier: identifier as string
-              }
-            ])
+            const introspectSpy = jest
+              .spyOn(tokenIntrospectionClient, 'introspect')
+              .mockResolvedValueOnce({ active: false })
+            await expect(middleware(ctx, next)).rejects.toMatchObject({
+              status: 403,
+              message: 'Inactive Token'
+            })
+            const expectedCallObject: IntrospectionCallObject = {
+              access_token: token,
+              access: [
+                {
+                  type,
+                  actions: [action],
+                  identifier: ctx.walletAddressUrl
+                }
+              ]
+            }
+
+            expect(introspectSpy).toHaveBeenCalledWith(expectedCallObject)
+            expect(next).not.toHaveBeenCalled()
+          }
+        )
+
+        if (identifierOption !== IdentifierOption.Conflicting) {
+          test('sets the context client info and calls next', async (): Promise<void> => {
+            const tokenInfo = createTokenInfo()
             const introspectSpy = jest
               .spyOn(tokenIntrospectionClient, 'introspect')
               .mockResolvedValueOnce(tokenInfo)
@@ -474,22 +465,155 @@ describe('Auth Middleware', (): void => {
               access: [
                 {
                   type,
-                  actions: [subAction],
+                  actions: [action],
                   identifier: ctx.walletAddressUrl
                 }
               ]
             })
             expect(next).toHaveBeenCalled()
             expect(ctx.client).toEqual(tokenInfo.client)
-            expect(ctx.accessAction).toBe(superAction)
             expect(ctx.grant).toBeUndefined()
           })
 
-          test('returns 403 for super-action request', async (): Promise<void> => {
-            const middleware = createTokenIntrospectionMiddleware({
-              requestType: type,
-              requestAction: superAction
+          describe.each`
+            superAction             | subAction
+            ${AccessAction.ReadAll} | ${AccessAction.Read}
+            ${AccessAction.ListAll} | ${AccessAction.List}
+          `('$subAction/$superAction', ({ superAction, subAction }): void => {
+            test("calls next (but doesn't designate client filtering) for sub-action request", async (): Promise<void> => {
+              const middleware = createTokenIntrospectionMiddleware({
+                requestType: type,
+                requestAction: subAction
+              })
+              const tokenInfo = createTokenInfo([
+                {
+                  type,
+                  actions: [superAction],
+                  identifier: identifier as string
+                }
+              ])
+              const introspectSpy = jest
+                .spyOn(tokenIntrospectionClient, 'introspect')
+                .mockResolvedValueOnce(tokenInfo)
+
+              await expect(middleware(ctx, next)).resolves.toBeUndefined()
+              expect(introspectSpy).toHaveBeenCalledWith({
+                access_token: token,
+                access: [
+                  {
+                    type,
+                    actions: [subAction],
+                    identifier: ctx.walletAddressUrl
+                  }
+                ]
+              })
+              expect(next).toHaveBeenCalled()
+              expect(ctx.client).toEqual(tokenInfo.client)
+              expect(ctx.accessAction).toBe(superAction)
+              expect(ctx.grant).toBeUndefined()
             })
+
+            test('returns 403 for super-action request', async (): Promise<void> => {
+              const middleware = createTokenIntrospectionMiddleware({
+                requestType: type,
+                requestAction: superAction
+              })
+              const introspectSpy = jest
+                .spyOn(tokenIntrospectionClient, 'introspect')
+                .mockResolvedValueOnce({ active: false })
+              await expect(middleware(ctx, next)).rejects.toMatchObject({
+                status: 403,
+                message: 'Inactive Token'
+              })
+              expect(introspectSpy).toHaveBeenCalledWith({
+                access_token: token,
+                access: [
+                  {
+                    type,
+                    actions: [superAction],
+                    identifier: ctx.walletAddressUrl
+                  }
+                ]
+              })
+              expect(next).not.toHaveBeenCalled()
+            })
+
+            const limits = {
+              receiveAmount: {
+                value: '500',
+                assetCode: 'EUR',
+                assetScale: 2
+              },
+              debitAmount: {
+                value: '811',
+                assetCode: 'USD',
+                assetScale: 2
+              },
+              receiver:
+                'https://wallet2.example/bob/incoming-payments/aa9da466-12ba-4760-9aa0-8c06061f333b',
+              interval: 'R/2022-03-01T13:00:00Z/P1M'
+            }
+
+            test.each`
+              type                          | action                 | limits       | ctxGrant | ctxLimits
+              ${AccessType.IncomingPayment} | ${AccessAction.Create} | ${undefined} | ${false} | ${false}
+              ${AccessType.OutgoingPayment} | ${AccessAction.Read}   | ${limits}    | ${false} | ${false}
+              ${AccessType.OutgoingPayment} | ${AccessAction.Create} | ${undefined} | ${true}  | ${false}
+              ${AccessType.OutgoingPayment} | ${AccessAction.Create} | ${limits}    | ${true}  | ${limits}
+            `(
+              'sets the context grant limits and calls next (limitAccount: $limitAccount)',
+              async ({
+                type,
+                action,
+                limits,
+                ctxGrant,
+                ctxLimits
+              }): Promise<void> => {
+                const middleware = createTokenIntrospectionMiddleware({
+                  requestType: type,
+                  requestAction: action
+                })
+                const tokenInfo = createTokenInfo([
+                  {
+                    type,
+                    actions: [action],
+                    identifier,
+                    limits
+                  }
+                ])
+                const introspectSpy = jest
+                  .spyOn(tokenIntrospectionClient, 'introspect')
+                  .mockResolvedValueOnce(tokenInfo)
+
+                await expect(middleware(ctx, next)).resolves.toBeUndefined()
+                const expectedCallObject: IntrospectionCallObject = {
+                  access_token: token,
+                  access: [
+                    {
+                      type,
+                      actions: [action],
+                      identifier: ctx.walletAddressUrl
+                    }
+                  ]
+                }
+
+                expect(introspectSpy).toHaveBeenCalledWith(expectedCallObject)
+                expect(next).toHaveBeenCalled()
+                expect(ctx.client).toEqual(tokenInfo.client)
+                expect(ctx.accessAction).toBe(action)
+                expect(ctx.grant).toEqual(
+                  ctxGrant
+                    ? {
+                        id: tokenInfo.grant,
+                        limits: ctxLimits ? parseLimits(limits) : undefined
+                      }
+                    : undefined
+                )
+              }
+            )
+          })
+        } else {
+          test('returns 403 for super-action request', async (): Promise<void> => {
             const introspectSpy = jest
               .spyOn(tokenIntrospectionClient, 'introspect')
               .mockResolvedValueOnce({ active: false })
@@ -502,112 +626,17 @@ describe('Auth Middleware', (): void => {
               access: [
                 {
                   type,
-                  actions: [superAction],
+                  actions: [action],
                   identifier: ctx.walletAddressUrl
                 }
               ]
             })
             expect(next).not.toHaveBeenCalled()
           })
-
-          const limits = {
-            receiveAmount: {
-              value: '500',
-              assetCode: 'EUR',
-              assetScale: 2
-            },
-            debitAmount: {
-              value: '811',
-              assetCode: 'USD',
-              assetScale: 2
-            },
-            receiver:
-              'https://wallet2.example/bob/incoming-payments/aa9da466-12ba-4760-9aa0-8c06061f333b',
-            interval: 'R/2022-03-01T13:00:00Z/P1M'
-          }
-
-          test.each`
-            type                          | action                 | limits       | ctxGrant | ctxLimits
-            ${AccessType.IncomingPayment} | ${AccessAction.Create} | ${undefined} | ${false} | ${false}
-            ${AccessType.OutgoingPayment} | ${AccessAction.Read}   | ${limits}    | ${false} | ${false}
-            ${AccessType.OutgoingPayment} | ${AccessAction.Create} | ${undefined} | ${true}  | ${false}
-            ${AccessType.OutgoingPayment} | ${AccessAction.Create} | ${limits}    | ${true}  | ${limits}
-          `(
-            'sets the context grant limits and calls next (limitAccount: $limitAccount)',
-            async ({
-              type,
-              action,
-              limits,
-              ctxGrant,
-              ctxLimits
-            }): Promise<void> => {
-              const middleware = createTokenIntrospectionMiddleware({
-                requestType: type,
-                requestAction: action
-              })
-              const tokenInfo = createTokenInfo([
-                {
-                  type,
-                  actions: [action],
-                  identifier,
-                  limits
-                }
-              ])
-              const introspectSpy = jest
-                .spyOn(tokenIntrospectionClient, 'introspect')
-                .mockResolvedValueOnce(tokenInfo)
-
-              await expect(middleware(ctx, next)).resolves.toBeUndefined()
-              const expectedCallObject: IntrospectionCallObject = {
-                access_token: token,
-                access: [
-                  {
-                    type,
-                    actions: [action],
-                    identifier: ctx.walletAddressUrl
-                  }
-                ]
-              }
-
-              expect(introspectSpy).toHaveBeenCalledWith(expectedCallObject)
-              expect(next).toHaveBeenCalled()
-              expect(ctx.client).toEqual(tokenInfo.client)
-              expect(ctx.accessAction).toBe(action)
-              expect(ctx.grant).toEqual(
-                ctxGrant
-                  ? {
-                      id: tokenInfo.grant,
-                      limits: ctxLimits ? parseLimits(limits) : undefined
-                    }
-                  : undefined
-              )
-            }
-          )
-        })
-      } else {
-        test('returns 403 for super-action request', async (): Promise<void> => {
-          const introspectSpy = jest
-            .spyOn(tokenIntrospectionClient, 'introspect')
-            .mockResolvedValueOnce({ active: false })
-          await expect(middleware(ctx, next)).rejects.toMatchObject({
-            status: 403,
-            message: 'Inactive Token'
-          })
-          expect(introspectSpy).toHaveBeenCalledWith({
-            access_token: token,
-            access: [
-              {
-                type,
-                actions: [action],
-                identifier: ctx.walletAddressUrl
-              }
-            ]
-          })
-          expect(next).not.toHaveBeenCalled()
-        })
+        }
       }
-    }
-  )
+    )
+  })
 })
 
 describe('authenticatedStatusMiddleware', (): void => {
@@ -646,53 +675,66 @@ describe('authenticatedStatusMiddleware', (): void => {
     expect(ctx.authenticated).toBe(false)
   })
 
-  test('sets ctx.authenticated to true if http signature is valid', async (): Promise<void> => {
-    const keyId = uuid()
-    const privateKey = generateKeyPairSync('ed25519').privateKey
-    const method = 'GET'
-    const url = faker.internet.url({ appendSlash: false })
-    const request = {
-      method,
-      url,
-      headers: {
-        Accept: 'application/json',
-        Authorization: `GNAP ${token}`
+  test.each`
+    clientType
+    ${'walletAddress'}
+    ${'jwk'}
+  `(
+    'sets ctx.authenticated to true if http signature is valid',
+    async ({ clientType }): Promise<void> => {
+      const keyId = uuid()
+      const privateKey = generateKeyPairSync('ed25519').privateKey
+      const method = 'GET'
+      const url = faker.internet.url({ appendSlash: false })
+      const request = {
+        method,
+        url,
+        headers: {
+          Accept: 'application/json',
+          Authorization: `GNAP ${token}`
+        }
       }
-    }
-    const ctx = createContext<HttpSigWithAuthenticatedStatusContext>({
-      headers: {
-        Accept: 'application/json',
-        Authorization: `GNAP ${token}`,
-        ...(await createHeaders({
-          request,
-          privateKey,
-          keyId
-        }))
-      },
-      method,
-      url
-    })
-    ctx.container = deps
-    ctx.client = faker.internet.url({ appendSlash: false })
-    const key = generateJwk({
-      keyId,
-      privateKey
-    })
-
-    const scope = nock(ctx.client)
-      .get('/jwks.json')
-      .reply(200, {
-        keys: [key]
+      const ctx = createContext<HttpSigWithAuthenticatedStatusContext>({
+        headers: {
+          Accept: 'application/json',
+          Authorization: `GNAP ${token}`,
+          ...(await createHeaders({
+            request,
+            privateKey,
+            keyId
+          }))
+        },
+        method,
+        url
       })
+      ctx.container = deps
+      const key = generateJwk({
+        keyId,
+        privateKey
+      })
+      ctx.client =
+        clientType === 'walletAddress'
+          ? { walletAddress: faker.internet.url({ appendSlash: false }) }
+          : { jwk: key }
 
-    await expect(
-      authenticatedStatusMiddleware(ctx, next)
-    ).resolves.toBeUndefined()
-    expect(next).toHaveBeenCalled()
-    expect(ctx.authenticated).toBe(true)
+      const scope =
+        clientType === 'walletAddress'
+          ? nock(ctx.client.walletAddress as string)
+              .get('/jwks.json')
+              .reply(200, {
+                keys: [key]
+              })
+          : null
 
-    scope.done()
-  })
+      await expect(
+        authenticatedStatusMiddleware(ctx, next)
+      ).resolves.toBeUndefined()
+      expect(next).toHaveBeenCalled()
+      expect(ctx.authenticated).toBe(true)
+
+      if (scope) scope.done()
+    }
+  )
 })
 
 describe('HTTP Signature Middleware', (): void => {
@@ -711,147 +753,111 @@ describe('HTTP Signature Middleware', (): void => {
   })
 
   describe.each`
-    body              | description
-    ${undefined}      | ${'without body'}
-    ${{ id: uuid() }} | ${'with body'}
-  `('$description', ({ body }): void => {
-    beforeEach(async (): Promise<void> => {
-      const method = body ? 'POST' : 'GET'
-      const url = faker.internet.url({ appendSlash: false })
-      const keyId = uuid()
-      const privateKey = generateKeyPairSync('ed25519').privateKey
-      const request = {
-        url,
-        method,
-        headers: {
-          Accept: 'application/json',
-          Authorization: `GNAP ${token}`
-        },
-        body: JSON.stringify(body)
-      }
-      const requestSignatureHeaders = await createHeaders({
-        request,
-        privateKey,
-        keyId
-      })
-
-      ctx = createContext<HttpSigContext>({
-        headers: {
-          Accept: 'application/json',
-          Authorization: `GNAP ${token}`,
-          ...requestSignatureHeaders
-        },
-        method,
-        body,
-        url
-      })
-      ctx.container = deps
-      ctx.client = faker.internet.url({ appendSlash: false })
-      key = generateJwk({
-        keyId,
-        privateKey
-      })
-    })
-
-    test('calls next with valid http signature', async (): Promise<void> => {
-      const scope = nock(ctx.client)
-        .get('/jwks.json')
-        .reply(200, {
-          keys: [key]
-        })
-      await expect(httpsigMiddleware(ctx, next)).resolves.toBeUndefined()
-      expect(next).toHaveBeenCalled()
-      scope.done()
-    })
-
-    test('returns 401 for missing keyid', async (): Promise<void> => {
-      ctx.request.headers['signature-input'] = 'aaaaaaaaaa'
-      expect.assertions(3)
-
-      try {
-        await httpsigMiddleware(ctx, next)
-      } catch (err) {
-        assert(err instanceof OpenPaymentsServerRouteError)
-        expect(err.message).toBe(
-          'Signature validation error: missing keyId in signature input'
-        )
-        expect(err.status).toBe(401)
-      }
-
-      expect(next).not.toHaveBeenCalled()
-    })
-
-    test('returns 401 for failed client key request', async (): Promise<void> => {
-      expect.assertions(3)
-
-      try {
-        await httpsigMiddleware(ctx, next)
-      } catch (err) {
-        assert(err instanceof OpenPaymentsServerRouteError)
-        expect(err.message).toBe(
-          'Signature validation error: could not retrieve client keys'
-        )
-        expect(err.status).toBe(401)
-      }
-      expect(next).not.toHaveBeenCalled()
-    })
-
-    test('returns 401 for invalid http signature', async (): Promise<void> => {
-      const scope = nock(ctx.client)
-        .get('/jwks.json')
-        .reply(200, {
-          keys: [key]
-        })
-      ctx.request.headers['signature'] = 'aaaaaaaaaa='
-
-      expect.assertions(3)
-
-      try {
-        await httpsigMiddleware(ctx, next)
-      } catch (err) {
-        assert(err instanceof OpenPaymentsServerRouteError)
-        expect(err.message).toBe(
-          'Signature validation error: provided signature is invalid'
-        )
-        expect(err.status).toBe(401)
-      }
-
-      expect(next).not.toHaveBeenCalled()
-      scope.done()
-    })
-
-    test('returns 401 for invalid key type', async (): Promise<void> => {
-      key.kty = 'EC' as 'OKP'
-      const scope = nock(ctx.client)
-        .get('/jwks.json')
-        .reply(200, {
-          keys: [key]
+    clientType
+    ${'walletAddress'}
+    ${'jwk'}
+  `('using $clientType', ({ clientType }): void => {
+    describe.each`
+      body              | description
+      ${undefined}      | ${'without body'}
+      ${{ id: uuid() }} | ${'with body'}
+    `('$description', ({ body }): void => {
+      beforeEach(async (): Promise<void> => {
+        const method = body ? 'POST' : 'GET'
+        const url = faker.internet.url({ appendSlash: false })
+        const keyId = uuid()
+        const privateKey = generateKeyPairSync('ed25519').privateKey
+        const request = {
+          url,
+          method,
+          headers: {
+            Accept: 'application/json',
+            Authorization: `GNAP ${token}`
+          },
+          body: JSON.stringify(body)
+        }
+        const requestSignatureHeaders = await createHeaders({
+          request,
+          privateKey,
+          keyId
         })
 
-      expect.assertions(3)
+        ctx = createContext<HttpSigContext>({
+          headers: {
+            Accept: 'application/json',
+            Authorization: `GNAP ${token}`,
+            ...requestSignatureHeaders
+          },
+          method,
+          body,
+          url
+        })
+        ctx.container = deps
+        ctx.client =
+          clientType === 'walletAddress'
+            ? { walletAddress: faker.internet.url({ appendSlash: false }) }
+            : { jwk: generateJwk({ keyId, privateKey }) }
+        key = generateJwk({
+          keyId,
+          privateKey
+        })
+      })
 
-      try {
-        await httpsigMiddleware(ctx, next)
-      } catch (err) {
-        assert(err instanceof OpenPaymentsServerRouteError)
-        expect(err.message).toBe(
-          'Signature validation error: could not retrieve client keys'
-        )
-        expect(err.status).toBe(401)
-      }
-      expect(next).not.toHaveBeenCalled()
+      test('calls next with valid http signature', async (): Promise<void> => {
+        const scope = ctx.client.walletAddress
+          ? nock(ctx.client.walletAddress as string)
+              .get('/jwks.json')
+              .reply(200, {
+                keys: [key]
+              })
+          : null
+        await expect(httpsigMiddleware(ctx, next)).resolves.toBeUndefined()
+        expect(next).toHaveBeenCalled()
+        if (scope) scope.done()
+      })
 
-      scope.done()
-    })
+      test('returns 401 for missing keyid', async (): Promise<void> => {
+        ctx.request.headers['signature-input'] = 'aaaaaaaaaa'
+        expect.assertions(3)
 
-    if (body) {
-      test('returns 401 if content-digest does not match the body', async (): Promise<void> => {
-        const scope = nock(ctx.client)
-          .get('/jwks.json')
-          .reply(200, {
-            keys: [key]
-          })
-        ctx.request.headers['content-digest'] = 'aaaaaaaaaa='
+        try {
+          await httpsigMiddleware(ctx, next)
+        } catch (err) {
+          assert(err instanceof OpenPaymentsServerRouteError)
+          expect(err.message).toBe(
+            'Signature validation error: missing keyId in signature input'
+          )
+          expect(err.status).toBe(401)
+        }
+
+        expect(next).not.toHaveBeenCalled()
+      })
+
+      if (clientType === 'walletAddress')
+        test('returns 401 for failed client key request', async (): Promise<void> => {
+          expect.assertions(3)
+
+          try {
+            await httpsigMiddleware(ctx, next)
+          } catch (err) {
+            assert(err instanceof OpenPaymentsServerRouteError)
+            expect(err.message).toBe(
+              'Signature validation error: could not retrieve client keys'
+            )
+            expect(err.status).toBe(401)
+          }
+          expect(next).not.toHaveBeenCalled()
+        })
+
+      test('returns 401 for invalid http signature', async (): Promise<void> => {
+        const scope = ctx.client.walletAddress
+          ? nock(ctx.client.walletAddress as string)
+              .get('/jwks.json')
+              .reply(200, {
+                keys: [key]
+              })
+          : null
+        ctx.request.headers['signature'] = 'aaaaaaaaaa='
 
         expect.assertions(3)
 
@@ -864,11 +870,64 @@ describe('HTTP Signature Middleware', (): void => {
           )
           expect(err.status).toBe(401)
         }
-        expect(next).not.toHaveBeenCalled()
 
-        scope.done()
+        expect(next).not.toHaveBeenCalled()
+        if (scope) scope.done()
       })
-    }
+
+      if (clientType === 'walletAddress')
+        test('returns 401 for invalid key type', async (): Promise<void> => {
+          key.kty = 'EC' as 'OKP'
+          const scope = nock(ctx.client.walletAddress as string)
+            .get('/jwks.json')
+            .reply(200, {
+              keys: [key]
+            })
+
+          expect.assertions(3)
+
+          try {
+            await httpsigMiddleware(ctx, next)
+          } catch (err) {
+            assert(err instanceof OpenPaymentsServerRouteError)
+            expect(err.message).toBe(
+              'Signature validation error: could not retrieve client keys'
+            )
+            expect(err.status).toBe(401)
+          }
+          expect(next).not.toHaveBeenCalled()
+
+          scope.done()
+        })
+
+      if (body) {
+        test('returns 401 if content-digest does not match the body', async (): Promise<void> => {
+          const scope = ctx.client.walletAddress
+            ? nock(ctx.client.walletAddress as string)
+                .get('/jwks.json')
+                .reply(200, {
+                  keys: [key]
+                })
+            : null
+          ctx.request.headers['content-digest'] = 'aaaaaaaaaa='
+
+          expect.assertions(3)
+
+          try {
+            await httpsigMiddleware(ctx, next)
+          } catch (err) {
+            assert(err instanceof OpenPaymentsServerRouteError)
+            expect(err.message).toBe(
+              'Signature validation error: provided signature is invalid'
+            )
+            expect(err.status).toBe(401)
+          }
+          expect(next).not.toHaveBeenCalled()
+
+          if (scope) scope.done()
+        })
+      }
+    })
   })
 })
 
@@ -1024,102 +1083,123 @@ describe('introspect', () => {
       expect(next).not.toHaveBeenCalled()
     })
 
-    it('should throw 403 if token has no access items', async () => {
-      const tokenInfoNoAccess: TokenInfo = {
-        active: true,
-        grant: 'grant-123',
-        client: 'https://client.example.com',
-        access: []
+    it.each`
+      clientType         | client
+      ${'walletAddress'} | ${{ walletAddress: 'https://client.example.com' }}
+      ${'jwk'}           | ${{ jwk: generateJwk({ keyId: uuid(), privateKey: generateKeyPairSync('ed25519').privateKey }) }}
+    `(
+      'should throw 403 if token has no access items using $clientType',
+      async ({ client }) => {
+        const tokenInfoNoAccess: TokenInfo = {
+          active: true,
+          grant: 'grant-123',
+          client,
+          access: []
+        }
+        mockTokenIntrospectionClient.introspect.mockResolvedValue(
+          tokenInfoNoAccess
+        )
+
+        const middleware =
+          createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+        const next = jest.fn()
+
+        await expect(middleware(ctx, next)).rejects.toThrow(
+          OpenPaymentsServerRouteError
+        )
+        await expect(middleware(ctx, next)).rejects.toMatchObject({
+          status: 403,
+          message: 'Insufficient Grant'
+        })
+        expect(next).not.toHaveBeenCalled()
       }
-      mockTokenIntrospectionClient.introspect.mockResolvedValue(
-        tokenInfoNoAccess
-      )
+    )
 
-      const middleware =
-        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
-      const next = jest.fn()
+    it.each`
+      clientType         | client
+      ${'walletAddress'} | ${{ walletAddress: 'https://client.example.com' }}
+      ${'jwk'}           | ${{ jwk: generateJwk({ keyId: uuid(), privateKey: generateKeyPairSync('ed25519').privateKey }) }}
+    `(
+      'should throw 500 if token has more than one access item using $clientType',
+      async ({ client }) => {
+        const tokenInfoMultipleAccess: TokenInfo = {
+          active: true,
+          grant: 'grant-123',
+          client,
+          access: [
+            {
+              type: 'outgoing-payment',
+              actions: ['create'],
+              identifier: 'https://wallet.example.com/alice'
+            },
+            {
+              type: 'incoming-payment',
+              actions: ['read'],
+              identifier: 'https://wallet.example.com/alice'
+            }
+          ]
+        }
+        mockTokenIntrospectionClient.introspect.mockResolvedValue(
+          tokenInfoMultipleAccess
+        )
 
-      await expect(middleware(ctx, next)).rejects.toThrow(
-        OpenPaymentsServerRouteError
-      )
-      await expect(middleware(ctx, next)).rejects.toMatchObject({
-        status: 403,
-        message: 'Insufficient Grant'
-      })
-      expect(next).not.toHaveBeenCalled()
-    })
+        const middleware =
+          createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+        const next = jest.fn()
 
-    it('should throw 500 if token has more than one access item', async () => {
-      const tokenInfoMultipleAccess: TokenInfo = {
-        active: true,
-        grant: 'grant-123',
-        client: 'https://client.example.com',
-        access: [
-          {
-            type: 'outgoing-payment',
-            actions: ['create'],
-            identifier: 'https://wallet.example.com/alice'
-          },
-          {
-            type: 'incoming-payment',
-            actions: ['read'],
-            identifier: 'https://wallet.example.com/alice'
-          }
-        ]
+        await expect(middleware(ctx, next)).rejects.toThrow(
+          OpenPaymentsServerRouteError
+        )
+        await expect(middleware(ctx, next)).rejects.toMatchObject({
+          status: 500,
+          message: 'Unexpected number of access items'
+        })
+        expect(next).not.toHaveBeenCalled()
       }
-      mockTokenIntrospectionClient.introspect.mockResolvedValue(
-        tokenInfoMultipleAccess
-      )
-
-      const middleware =
-        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
-      const next = jest.fn()
-
-      await expect(middleware(ctx, next)).rejects.toThrow(
-        OpenPaymentsServerRouteError
-      )
-      await expect(middleware(ctx, next)).rejects.toMatchObject({
-        status: 500,
-        message: 'Unexpected number of access items'
-      })
-      expect(next).not.toHaveBeenCalled()
-    })
+    )
   })
 
   describe('successful introspection', () => {
-    it('should call introspect with correct access item parameters', async () => {
-      const tokenInfo: TokenInfo = {
-        active: true,
-        grant: 'grant-123',
-        client: 'https://client.example.com',
-        access: [
-          {
-            type: 'outgoing-payment',
-            actions: ['create'],
-            identifier: 'https://wallet.example.com/alice'
-          }
-        ]
+    it.each`
+      clientType         | client
+      ${'walletAddress'} | ${{ walletAddress: 'https://client.example.com' }}
+      ${'jwk'}           | ${{ jwk: generateJwk({ keyId: uuid(), privateKey: generateKeyPairSync('ed25519').privateKey }) }}
+    `(
+      'should call introspect with correct access item parameters using $clientType',
+      async ({ client }) => {
+        const tokenInfo: TokenInfo = {
+          active: true,
+          grant: 'grant-123',
+          client,
+          access: [
+            {
+              type: 'outgoing-payment',
+              actions: ['create'],
+              identifier: 'https://wallet.example.com/alice'
+            }
+          ]
+        }
+        mockTokenIntrospectionClient.introspect.mockResolvedValue(tokenInfo)
+
+        const middleware =
+          createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+        const next = jest.fn()
+
+        await middleware(ctx, next)
+
+        expect(mockTokenIntrospectionClient.introspect).toHaveBeenCalledWith({
+          access_token: 'test-token-123',
+          access: [
+            {
+              type: AccessType.OutgoingPayment,
+              actions: [AccessAction.Create],
+              identifier: undefined
+            }
+          ]
+        })
+        expect(next).toHaveBeenCalled()
       }
-      mockTokenIntrospectionClient.introspect.mockResolvedValue(tokenInfo)
-
-      const middleware =
-        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
-      const next = jest.fn()
-
-      await middleware(ctx, next)
-
-      expect(mockTokenIntrospectionClient.introspect).toHaveBeenCalledWith({
-        access_token: 'test-token-123',
-        access: [
-          {
-            type: AccessType.OutgoingPayment,
-            actions: [AccessAction.Create],
-            identifier: undefined
-          }
-        ]
-      })
-      expect(next).toHaveBeenCalled()
-    })
+    )
   })
 })
 
@@ -1162,12 +1242,16 @@ describe('createOutgoingPaymentGrantTokenIntrospectionMiddleware', () => {
     } as unknown as IntrospectionContext
   })
 
-  describe('context population', () => {
-    it('should set grant on context with id and no limits when access has no limits', async () => {
+  describe.each`
+    clientType         | client
+    ${'walletAddress'} | ${{ walletAddress: 'https://client.example.com' }}
+    ${'jwk'}           | ${{ jwk: generateJwk({ keyId: uuid(), privateKey: generateKeyPairSync('ed25519').privateKey }) }}
+  `('context population using $clientType', ({ client }) => {
+    it('should set grant on context with id and no limits when access has no limits using $clientType', async () => {
       const tokenInfo: TokenInfo = {
         active: true,
         grant: 'grant-123',
-        client: 'https://client.example.com',
+        client,
         access: [
           {
             type: 'outgoing-payment',
@@ -1203,7 +1287,7 @@ describe('createOutgoingPaymentGrantTokenIntrospectionMiddleware', () => {
       const tokenInfo: TokenInfo = {
         active: true,
         grant: 'grant-456',
-        client: 'https://client.example.com',
+        client,
         access: [
           {
             type: 'outgoing-payment',
@@ -1288,30 +1372,37 @@ describe('createOutgoingPaymentGrantTokenIntrospectionMiddleware', () => {
       )
     })
 
-    it('should set WWW-Authenticate header on insufficient grant error', async () => {
-      const tokenInfoNoAccess: TokenInfo = {
-        active: true,
-        grant: 'grant-123',
-        client: 'https://client.example.com',
-        access: []
+    it.each`
+      clientType         | client
+      ${'walletAddress'} | ${{ walletAddress: 'https://client.example.com' }}
+      ${'jwk'}           | ${{ jwk: generateJwk({ keyId: uuid(), privateKey: generateKeyPairSync('ed25519').privateKey }) }}
+    `(
+      'should set WWW-Authenticate header on insufficient grant error when using $clientType',
+      async ({ client }) => {
+        const tokenInfoNoAccess: TokenInfo = {
+          active: true,
+          grant: 'grant-123',
+          client,
+          access: []
+        }
+        mockTokenIntrospectionClient.introspect.mockResolvedValue(
+          tokenInfoNoAccess
+        )
+
+        const middleware =
+          createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+        const next = jest.fn()
+
+        await expect(middleware(ctx, next)).rejects.toThrow(
+          OpenPaymentsServerRouteError
+        )
+
+        expect(ctx.set).toHaveBeenCalledWith(
+          'WWW-Authenticate',
+          'GNAP as_uri=https://auth.example.com'
+        )
       }
-      mockTokenIntrospectionClient.introspect.mockResolvedValue(
-        tokenInfoNoAccess
-      )
-
-      const middleware =
-        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
-      const next = jest.fn()
-
-      await expect(middleware(ctx, next)).rejects.toThrow(
-        OpenPaymentsServerRouteError
-      )
-
-      expect(ctx.set).toHaveBeenCalledWith(
-        'WWW-Authenticate',
-        'GNAP as_uri=https://auth.example.com'
-      )
-    })
+    )
   })
 
   describe('error propagation', () => {
@@ -1330,29 +1421,36 @@ describe('createOutgoingPaymentGrantTokenIntrospectionMiddleware', () => {
   })
 
   describe('next() invocation', () => {
-    it('should call next() on successful introspection', async () => {
-      const tokenInfo: TokenInfo = {
-        active: true,
-        grant: 'grant-123',
-        client: 'https://client.example.com',
-        access: [
-          {
-            type: 'outgoing-payment',
-            actions: ['create'],
-            identifier: 'https://wallet.example.com/alice'
-          }
-        ]
+    it.each`
+      clientType         | client
+      ${'walletAddress'} | ${{ walletAddress: 'https://client.example.com' }}
+      ${'jwk'}           | ${{ jwk: generateJwk({ keyId: uuid(), privateKey: generateKeyPairSync('ed25519').privateKey }) }}
+    `(
+      'should call next() on successful introspection when using $clientType',
+      async ({ client }) => {
+        const tokenInfo: TokenInfo = {
+          active: true,
+          grant: 'grant-123',
+          client,
+          access: [
+            {
+              type: 'outgoing-payment',
+              actions: ['create'],
+              identifier: 'https://wallet.example.com/alice'
+            }
+          ]
+        }
+        mockTokenIntrospectionClient.introspect.mockResolvedValue(tokenInfo)
+
+        const middleware =
+          createOutgoingPaymentGrantTokenIntrospectionMiddleware()
+        const next = jest.fn()
+
+        await middleware(ctx, next)
+
+        expect(next).toHaveBeenCalledTimes(1)
       }
-      mockTokenIntrospectionClient.introspect.mockResolvedValue(tokenInfo)
-
-      const middleware =
-        createOutgoingPaymentGrantTokenIntrospectionMiddleware()
-      const next = jest.fn()
-
-      await middleware(ctx, next)
-
-      expect(next).toHaveBeenCalledTimes(1)
-    })
+    )
 
     it('should not call next() when introspection fails', async () => {
       ctx.request.headers.authorization = undefined

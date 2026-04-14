@@ -17,7 +17,8 @@ import { UnionOmit, poll, pollCondition, wait } from '../utils'
 import { WebhookEventType } from 'mock-account-service-lib'
 import {
   CreateOutgoingPaymentArgs,
-  CreateIncomingPaymentArgs
+  CreateIncomingPaymentArgs,
+  JWK
 } from '@interledger/open-payments/dist/types'
 
 export interface OpenPaymentsActionsDeps {
@@ -27,20 +28,24 @@ export interface OpenPaymentsActionsDeps {
 
 export interface OpenPaymentsActions {
   grantRequestIncomingPayment(
-    receiverWalletAddress: WalletAddress
+    receiverWalletAddress: WalletAddress,
+    clientOverride?: JWK
   ): Promise<GrantWithAccessToken>
   createIncomingPayment(
     receiverWalletAddress: WalletAddress,
     accessToken: string,
-    opts?: CreateIncomingPaymentOpts
+    opts?: CreateIncomingPaymentOpts,
+    useDirectedIdentity?: boolean
   ): Promise<IncomingPayment>
   grantRequestQuote(
-    senderWalletAddress: WalletAddress
+    senderWalletAddress: WalletAddress,
+    clientOverride?: JWK
   ): Promise<GrantWithAccessToken>
   createQuote(
     senderWalletAddress: WalletAddress,
     accessToken: string,
-    incomingPayment: IncomingPayment
+    incomingPayment: IncomingPayment,
+    useDirectedIdentity?: boolean
   ): Promise<Quote>
   grantRequestOutgoingPayment(
     senderWalletAddress: WalletAddress,
@@ -77,14 +82,36 @@ export function createOpenPaymentsActions(
   deps: OpenPaymentsActionsDeps
 ): OpenPaymentsActions {
   return {
-    grantRequestIncomingPayment: (receiverWalletAddress) =>
-      grantRequestIncomingPayment(deps, receiverWalletAddress),
-    createIncomingPayment: (receiverWalletAddress, accessToken, opts) =>
-      createIncomingPayment(deps, receiverWalletAddress, accessToken, opts),
-    grantRequestQuote: (senderWalletAddress) =>
-      grantRequestQuote(deps, senderWalletAddress),
-    createQuote: (senderWalletAddress, accessToken, incomingPayment) =>
-      createQuote(deps, senderWalletAddress, accessToken, incomingPayment),
+    grantRequestIncomingPayment: (receiverWalletAddress, clientOverride) =>
+      grantRequestIncomingPayment(deps, receiverWalletAddress, clientOverride),
+    createIncomingPayment: (
+      receiverWalletAddress,
+      accessToken,
+      opts,
+      useDirectedIdentity
+    ) =>
+      createIncomingPayment(
+        deps,
+        receiverWalletAddress,
+        accessToken,
+        opts,
+        useDirectedIdentity
+      ),
+    grantRequestQuote: (senderWalletAddress, clientOverride) =>
+      grantRequestQuote(deps, senderWalletAddress, clientOverride),
+    createQuote: (
+      senderWalletAddress,
+      accessToken,
+      incomingPayment,
+      useDirectedIdentity
+    ) =>
+      createQuote(
+        deps,
+        senderWalletAddress,
+        accessToken,
+        incomingPayment,
+        useDirectedIdentity
+      ),
     grantRequestOutgoingPayment: (senderWalletAddress, limits, finish) =>
       grantRequestOutgoingPayment(deps, senderWalletAddress, limits, finish),
     pollGrantContinue: (outgoingPaymentGrant) =>
@@ -103,11 +130,16 @@ export function createOpenPaymentsActions(
 }
 async function grantRequestIncomingPayment(
   deps: OpenPaymentsActionsDeps,
-  receiverWalletAddress: WalletAddress
+  receiverWalletAddress: WalletAddress,
+  clientOverride?: JWK
 ): Promise<GrantWithAccessToken> {
   const { sendingASE } = deps
 
-  const grant = await sendingASE.opClient.grant.request(
+  const opClient = clientOverride
+    ? sendingASE.directedIdentityOpClient
+    : sendingASE.opClient
+
+  const grant = await opClient.grant.request(
     {
       url: receiverWalletAddress.authServer
     },
@@ -120,7 +152,8 @@ async function grantRequestIncomingPayment(
           }
         ]
       }
-    }
+    },
+    clientOverride && { jwk: clientOverride }
   )
   assert(isFinalizedGrantWithAccessToken(grant))
   return grant
@@ -135,7 +168,8 @@ async function createIncomingPayment(
   deps: OpenPaymentsActionsDeps,
   receiverWalletAddress: WalletAddress,
   accessToken: string,
-  opts?: CreateIncomingPaymentOpts
+  opts?: CreateIncomingPaymentOpts,
+  useDirectedIdentity?: boolean
 ) {
   const { sendingASE, receivingASE } = deps
   const { amountValueToSend } = opts ?? {}
@@ -162,7 +196,10 @@ async function createIncomingPayment(
     }
   }
 
-  const incomingPayment = await sendingASE.opClient.incomingPayment.create(
+  const opClient = useDirectedIdentity
+    ? sendingASE.directedIdentityOpClient
+    : sendingASE.opClient
+  const incomingPayment = await opClient.incomingPayment.create(
     {
       url: receiverWalletAddress.resourceServer,
       accessToken
@@ -192,10 +229,14 @@ async function createIncomingPayment(
 
 async function grantRequestQuote(
   deps: OpenPaymentsActionsDeps,
-  senderWalletAddress: WalletAddress
+  senderWalletAddress: WalletAddress,
+  clientOverride?: JWK
 ): Promise<GrantWithAccessToken> {
   const { sendingASE } = deps
-  const grant = await sendingASE.opClient.grant.request(
+  const opClient = clientOverride
+    ? sendingASE.directedIdentityOpClient
+    : sendingASE.opClient
+  const grant = await opClient.grant.request(
     {
       url: senderWalletAddress.authServer
     },
@@ -208,7 +249,8 @@ async function grantRequestQuote(
           }
         ]
       }
-    }
+    },
+    clientOverride && { jwk: clientOverride }
   )
   assert(isFinalizedGrantWithAccessToken(grant))
   return grant
@@ -218,10 +260,14 @@ async function createQuote(
   deps: OpenPaymentsActionsDeps,
   senderWalletAddress: WalletAddress,
   accessToken: string,
-  incomingPayment: IncomingPayment
+  incomingPayment: IncomingPayment,
+  useDirectedIdentity?: boolean
 ): Promise<Quote> {
   const { sendingASE } = deps
-  return await sendingASE.opClient.quote.create(
+  const opClient = useDirectedIdentity
+    ? sendingASE.directedIdentityOpClient
+    : sendingASE.opClient
+  return await opClient.quote.create(
     {
       url: senderWalletAddress.resourceServer,
       accessToken

@@ -2,6 +2,7 @@ import { createIntrospectionRoutes, introspectToken } from './introspection'
 import { OpenAPI, HttpMethod } from '@interledger/openapi'
 import {
   defaultAxiosInstance,
+  mockJwk,
   mockOpenApiResponseValidators,
   mockTokenInfo,
   silentLogger
@@ -44,6 +45,23 @@ describe('introspection', (): void => {
 
     test('returns token info if passes validation', async (): Promise<void> => {
       const tokenInfo = mockTokenInfo()
+      const scope = nock(baseUrl).post('/', body).reply(200, tokenInfo)
+
+      await expect(
+        introspectToken(
+          {
+            axiosInstance,
+            logger
+          },
+          body,
+          openApiValidators.successfulValidator
+        )
+      ).resolves.toStrictEqual(tokenInfo)
+      scope.done()
+    })
+
+    test('returns JWK-based token info successfully', async (): Promise<void> => {
+      const tokenInfo = mockTokenInfo({ client: { jwk: mockJwk() } })
       const scope = nock(baseUrl).post('/', body).reply(200, tokenInfo)
 
       await expect(
