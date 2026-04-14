@@ -3,7 +3,7 @@ name: Create Monthly Sync discussion
 # First Wednesday of every month at 12AM UTC
 on:
     schedule:
-        - cron: "0 0 1-7 * 3"
+        - cron: "0 0 * * 3"
 
 jobs:
     create-discussion:
