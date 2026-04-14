@@ -65,7 +65,6 @@ script:post-response {
   if (body?.data) {
     bru.setEnvVar("walletAddressId", body.data.createWalletAddress.walletAddress.id);
     bru.setEnvVar("walletAddressUrl", body.data.createWalletAddress.walletAddress.url);
-    bru.setEnvVar('initialWalletAddressRequest',req)
   }
 }
 
