@@ -115,6 +115,13 @@ export default function ViewPeerPage() {
                     readOnly
                   />
                   <Input
+                    label='Tenant ID'
+                    value={`${peer.tenant?.id} ${peer.tenant?.publicName ? `(${peer.tenant?.publicName})` : ''}`}
+                    placeholder='Tenant ID'
+                    disabled
+                    readOnly
+                  />
+                  <Input
                     name='name'
                     label='Name'
                     defaultValue={peer.name ?? ''}
