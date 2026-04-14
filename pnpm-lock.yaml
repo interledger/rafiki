@@ -8,7 +8,7 @@ overrides:
   axios: ^1.13.5
   json5@<1.0.2: '>=1.0.2'
   katex: '>=0.16.21'
-  jose: '>=4.15.5'
+  jose: '>=5.4.0 <6'
   undici@>=5.0.0: ^5.28.5
   undici@>=6.0.0: ^6.21.2
   tar: '>=7.5.4'
@@ -4735,7 +4735,7 @@ packages:
       graphql-request: 6.1.0(graphql@16.13.2)
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.6(supports-color@10.2.2)
-      jose: 6.2.2
+      jose: 5.10.0
       js-yaml: 4.1.1
       lodash: 4.18.1
       scuid: 1.1.0
@@ -5291,7 +5291,7 @@ packages:
     dependencies:
       http-message-signatures: 1.0.4
       httpbis-digest-headers: 1.0.0
-      jose: 6.2.2
+      jose: 5.10.0
       uuid: 9.0.1
 
   /@interledger/http-signature-utils@2.0.3:
@@ -5299,7 +5299,7 @@ packages:
     dependencies:
       http-message-signatures: 1.0.4
       httpbis-digest-headers: 1.0.0
-      jose: 6.2.2
+      jose: 5.10.0
       uuid: 9.0.1
 
   /@interledger/open-payments@7.4.0:
@@ -10044,8 +10044,8 @@ packages:
     resolution: {integrity: sha512-ir1UPr3dkwexU7FdV8qBBbNDRUhMmIekYMFZfi+C/sLNnRESKPl23nB9b2pltqfOQNnGzsDdId90AEtG5tCx4A==}
     engines: {node: '>=6.0.0'}
 
-  /baseline-browser-mapping@2.10.18:
-    resolution: {integrity: sha512-VSnGQAOLtP5mib/DPyg2/t+Tlv65NTBz83BJBJvmLVHHuKJVaDOBvJJykiT5TR++em5nfAySPccDZDa4oSrn8A==}
+  /baseline-browser-mapping@2.10.19:
+    resolution: {integrity: sha512-qCkNLi2sfBOn8XhZQ0FXsT1Ki/Yo5P90hrkRamVFRS7/KV9hpfA4HkoWNU152+8w0zPjnxo5psx5NL3PSGgv5g==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
@@ -10178,7 +10178,7 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
     dependencies:
-      baseline-browser-mapping: 2.10.18
+      baseline-browser-mapping: 2.10.19
       caniuse-lite: 1.0.30001788
       electron-to-chromium: 1.5.336
       node-releases: 2.0.37
@@ -12904,6 +12904,11 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
+  /exit-x@0.2.2:
+    resolution: {integrity: sha512-+I6B/IkJc1o/2tiURyz/ivu/O0nKNEArIUB5O7zBrlDVJr22SCLH3xTeEry428LvFhRzIA1g8izguxJ/gbNcVQ==}
+    engines: {node: '>= 0.8.0'}
+    dev: true
+
   /exit@0.1.2:
     resolution: {integrity: sha512-Zk/eNKV2zbjpKzrsQ+n1G6poVbErQxJ0LBOJXaKZ1EViLzH+hrLu9cdXI4zw9dBQJslwBEpbQ2P1oS7nDxs6jQ==}
     engines: {node: '>= 0.8.0'}
@@ -13820,8 +13825,8 @@ packages:
       chalk: 4.1.2
     dev: true
 
-  /grunt-legacy-log@3.0.0:
-    resolution: {integrity: sha512-GHZQzZmhyq0u3hr7aHW4qUH0xDzwp2YXldLPZTCjlOeGscAOWWPftZG3XioW8MasGp+OBRIu39LFx14SLjXRcA==}
+  /grunt-legacy-log@3.0.1:
+    resolution: {integrity: sha512-vytI3IUC8qUK9TcvvpHpGJzDojua/sfJV4TdLB4FtCFzospqduzBuL3+dEfpvO+tGECv7/273+33hjjMXSa92g==}
     engines: {node: '>= 0.10.0'}
     dependencies:
       colors: 1.1.2
@@ -13830,12 +13835,12 @@ packages:
       lodash: 4.18.1
     dev: true
 
-  /grunt-legacy-util@2.0.1:
-    resolution: {integrity: sha512-2bQiD4fzXqX8rhNdXkAywCadeqiPiay0oQny77wA2F3WF4grPJXCvAcyoWUJV+po/b15glGkxuSiQCK299UC2w==}
+  /grunt-legacy-util@2.0.2:
+    resolution: {integrity: sha512-0xoDILyR4BVJel5uJwnhjdWN9evOQ8A0uXbQUIJ0hgVthIA6kloXHSoqATQPj6BRrHrHkcQtCeGVb0ixFoHyEQ==}
     engines: {node: '>=10'}
     dependencies:
       async: 3.2.6
-      exit: 0.1.2
+      exit-x: 0.2.2
       getobject: 1.0.2
       hooker: 0.2.3
       lodash: 4.18.1
@@ -13864,8 +13869,8 @@ packages:
       glob: 7.1.7
       grunt-cli: 1.4.3
       grunt-known-options: 2.0.0
-      grunt-legacy-log: 3.0.0
-      grunt-legacy-util: 2.0.1
+      grunt-legacy-log: 3.0.1
+      grunt-legacy-util: 2.0.2
       iconv-lite: 0.4.24
       js-yaml: 3.14.2
       minimatch: 3.0.8
@@ -15651,8 +15656,8 @@ packages:
     hasBin: true
     dev: true
 
-  /jose@6.2.2:
-    resolution: {integrity: sha512-d7kPDd34KO/YnzaDOlikGpOurfF0ByC2sEV4cANCtdqLlTfBlw2p14O/5d/zv40gJPbIQxfES3nSx1/oYNyuZQ==}
+  /jose@5.10.0:
+    resolution: {integrity: sha512-s+3Al/p9g32Iq+oqXxkW//7jk2Vig6FF1CFqzVXoTUXt2qz89YWbL+OwS17NFYEvxC35n0FKeGO2LGYSxeM2Gg==}
 
   /joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
