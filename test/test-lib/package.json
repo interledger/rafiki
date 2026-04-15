@@ -24,7 +24,7 @@
     "@types/koa-bodyparser": "^4.3.12",
     "@types/node": "^24.0.0",
     "axios": "1.8.2",
-    "graphql": "^16.11.0",
+    "graphql": "^16.13.2",
     "json-canonicalize": "^1.0.6",
     "koa": "^2.15.3",
     "yaml": "^2.7.0"
