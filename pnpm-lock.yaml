@@ -521,8 +521,8 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       ilp-protocol-stream:
-        specifier: ^2.7.2-alpha.2
-        version: 2.7.2-alpha.2
+        specifier: ^2.7.2-alpha.3
+        version: 2.7.2-alpha.3
       jest-environment-node:
         specifier: ^29.7.0
         version: 29.7.0
@@ -6151,7 +6151,7 @@ packages:
       abort-controller: 3.0.0
       ilp-logger: 1.4.5-alpha.2
       ilp-packet: 3.1.4-alpha.2
-      ilp-protocol-stream: 2.7.2-alpha.2
+      ilp-protocol-stream: 2.7.2-alpha.3
       long: 4.0.0
       node-fetch: 2.6.7
     transitivePeerDependencies:
@@ -6165,7 +6165,7 @@ packages:
       '@types/long': 4.0.2
       ilp-logger: 1.4.5-alpha.2
       ilp-packet: 3.1.4-alpha.2
-      ilp-protocol-stream: 2.7.2-alpha.2
+      ilp-protocol-stream: 2.7.2-alpha.3
       long: 4.0.0
       oer-utils: 5.1.3-alpha.2
     transitivePeerDependencies:
@@ -12439,18 +12439,6 @@ packages:
     dependencies:
       ms: 2.1.3
 
-  /debug@4.4.0(supports-color@7.2.0):
-    resolution: {integrity: sha512-6WTZ/IxCY/T6BALoZHaE4ctp9xm+Z5kY/pzYaCHRFeyVhojxlrm+46y68HA6hr0TcwEssoxNiDEUJQjfPZ/RYA==}
-    engines: {node: '>=6.0'}
-    peerDependencies:
-      supports-color: '*'
-    peerDependenciesMeta:
-      supports-color:
-        optional: true
-    dependencies:
-      ms: 2.1.3
-      supports-color: 7.2.0
-
   /debug@4.4.0(supports-color@9.4.0):
     resolution: {integrity: sha512-6WTZ/IxCY/T6BALoZHaE4ctp9xm+Z5kY/pzYaCHRFeyVhojxlrm+46y68HA6hr0TcwEssoxNiDEUJQjfPZ/RYA==}
     engines: {node: '>=6.0'}
@@ -15665,20 +15653,12 @@ packages:
     engines: {node: '>= 4'}
     dev: true
 
-  /ilp-logger@1.4.4:
-    resolution: {integrity: sha512-R7F+SH6Aiipuqoq63gtzy6/HVIfcCK1rEmq8bE8NLSufXJPRoXszNs6RpypQi9HJcZvTcIUPFE15bS/HI+T+/A==}
-    dependencies:
-      '@types/debug': 4.1.7
-      debug: 4.4.0(supports-color@7.2.0)
-      supports-color: 7.2.0
-
   /ilp-logger@1.4.5-alpha.2:
     resolution: {integrity: sha512-WtbscdjUUPVseRkDpRlfb/YUpsq4zfoOz6PlJSkx+aqJot1P5N+YGd4YKW1g9wm6O8muo5e/xBotyJqCQs0g+Q==}
     dependencies:
       '@types/debug': 4.1.7
       debug: 4.4.0(supports-color@9.4.0)
       supports-color: 9.4.0
-    dev: false
 
   /ilp-packet@3.1.4-alpha.2:
     resolution: {integrity: sha512-0a75sI7o/1NG9qgJlObg9M264pnezcPEse1+UQV8gkgQAuKesj5b6qyPw7WbkvjIDXAtIQ61Qg48wRpkaddbQw==}
@@ -15701,10 +15681,10 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /ilp-protocol-stream@2.7.2-alpha.2:
-    resolution: {integrity: sha512-dr9TgdNpFn0yoU4X7M+l/yHkTH3/hPEtMaF0LhfTHr4m0sfnbGLEREazctmTTj6461WL2OuDneiAcboevmFw+w==}
+  /ilp-protocol-stream@2.7.2-alpha.3:
+    resolution: {integrity: sha512-4HQFVL9Wfmv6nLB5tSp68LZYcd4KRg9kBMVVVHDiqRfqYVQoyPI7EcOAIh7cA01MVzmMrqhbDzIPu6T2SQV4TA==}
     dependencies:
-      ilp-logger: 1.4.4
+      ilp-logger: 1.4.5-alpha.2
       ilp-packet: 3.1.4-alpha.2
       ilp-protocol-ildcp: 2.2.4-alpha.2
       long: 4.0.0
