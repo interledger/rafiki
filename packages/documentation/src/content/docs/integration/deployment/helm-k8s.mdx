@@ -11,9 +11,9 @@ This guide explains how to deploy Rafiki using Helm charts on a Kubernetes clust
 
 Rafiki uses the following key infrastructure components:
 
-- **PostgreSQL**: Used for storing application data, grants, and Open Payments resources
-- **Redis**: Used for caching and session management
-- **TigerBeetle** (recommended): High-performance accounting database for financial transaction processing and ledger management
+- <LinkOut href='https://www.postgresql.org/'>PostgreSQL</LinkOut>: Used for storing application data, grants, and Open Payments resources
+- <LinkOut href='https://redis.io/'>Redis</LinkOut>: Used for caching and session management
+- <LinkOut href='https://tigerbeetle.com/'>TigerBeetle</LinkOut> (recommended): High-performance accounting database for financial transaction processing and ledger management
 
 ## Prerequisites
 
@@ -28,6 +28,13 @@ Before you begin, ensure you have the following:
   installed and configured to access your cluster
 - <LinkOut href='https://helm.sh/docs/intro/install/'>Helm</LinkOut> installed
 
+### Deploy PostgreSQL and Redis dependencies
+
+Before installing Rafiki, ensure your target Kubernetes cluster already has Redis and PostgreSQL deployed.
+
+- PostgreSQL must be initialized with two databases: one for the backend service and one for the auth service
+- Each service must be configured with a connection URL that points to its corresponding database
+
 ## Install Rafiki using Helm
 
 ### Add the Interledger Helm repository
@@ -35,7 +42,7 @@ Before you begin, ensure you have the following:
 Add the official Interledger Helm repository which contains the Rafiki charts:
 
 ```bash
-helm repo add interledger https://interledger.github.io/charts/interledger
+helm repo add interledger-helm https://interledger.github.io/charts/interledger
 helm repo update
 ```
 
@@ -44,207 +51,63 @@ helm repo update
 You can list the available Rafiki charts:
 
 ```bash
-helm search repo interledger/rafiki
+helm search repo interledger-helm/rafiki
 ```
 
-This will show you the available chart versions for the different Rafiki components:
+This returns available chart versions, including the main `interledger-helm/rafiki` chart.
 
-- `interledger/rafiki-auth`
-- `interledger/rafiki-backend`
-- `interledger/rafiki-frontend`
+### Create values file
 
-### Create values files
+Create a single `values.yaml` file to customize your Rafiki deployment.
 
-Create separate values files for each Rafiki service to customize your deployment. You can start with minimal configurations and add more settings as needed.
+Configure the following required values:
 
-#### Basic auth service configuration
+- `config.auth.redisUrl.value`
+- `config.auth.databaseUrl.value`
+- `config.backend.redisUrl.value`
+- `config.backend.databaseUrl.value`
+- `config.auth.tenancy.tenantId`
+- `config.backend.tenancy.tenantId`
+- `config.auth.identityServer.serverSecret.value`
+- `config.backend.ilp.streamSecret.value`
+- `config.backend.webhookSignatureSecret.value`
+- `config.frontend.kratos.enabled`
 
-Create `auth-values.yaml`:
+::::note[Base values file]
+For full configuration details, refer to the base `values.yaml` file on GitHub: <LinkOut href='https://github.com/interledger/charts/blob/main/charts/rafiki/values.yaml'>interledger/charts `charts/interledger/rafiki/values.yaml`</LinkOut>.
+::::
+
+### Configure chart-managed secrets
+
+When using `--set config.auth.shouldCreateSecrets=true` and `--set config.backend.shouldCreateSecrets=true`, Helm creates and manages the auth and backend Kubernetes secrets as part of the chart installation.
+
+In this mode, include the required secret values in `values.yaml` so the chart can populate those generated secrets during install/upgrade:
+
 
 ```yaml
-# Minimal auth service configuration
-nodeEnv: production
-logLevel: info
-
-# Database configuration (update with your credentials)
-databaseUrl:
-  secretKeyRef:
-    name: rafiki-secrets
-    key: DATABASE_URL
-
-# Redis configuration
-redisUrl:
-  secretKeyRef:
-    name: rafiki-secrets
-    key: REDIS_URL
-
-# Identity server configuration
-identityServer:
-  domain: 'https://your-domain.com/idp'
-  serverSecret:
-    secretKeyRef:
-      name: rafiki-secrets
-      key: IDENTITY_SERVER_SECRET
-
-# Cookie signing key
-cookieKey:
-  secretKeyRef:
-    name: rafiki-secrets
-    key: COOKIE_KEY
-
-# Service configuration
-service:
-  - name: service
-    type: ClusterIP
-    ports:
-      - port: 3006
-        targetPort: 3006
-        protocol: TCP
-        name: auth
-      - port: 3003
-        targetPort: 3003
-        protocol: TCP
-        name: admin
-      - port: 3007
-        targetPort: 3007
-        protocol: TCP
-        name: introspection
-      - port: 3009
-        targetPort: 3009
-        protocol: TCP
-        name: interaction
+config:
+  auth:
+    identityServer:
+      serverSecret:
+        value: your-identity-server-secret
+  backend:
+    ilp:
+      streamSecret:
+        value: your-stream-secret
+    webhookSignatureSecret:
+      value: your-webhook-signature-secret
 ```
 
-#### Basic backend service configuration
+If you prefer to pre-create Kubernetes secrets manually, set both `config.auth.shouldCreateSecrets` and `config.backend.shouldCreateSecrets` to `false` and configure `secretKeyRef` values in `values.yaml`.
 
-Create `backend-values.yaml`:
+### Install the service
 
-```yaml
-# Minimal backend service configuration
-nodeEnv: production
-logLevel: info
-instanceName: 'your-rafiki-instance'
-
-# Database configuration
-databaseUrl:
-  secretKeyRef:
-    name: rafiki-secrets
-    key: DATABASE_URL
-
-# Redis configuration
-redisUrl:
-  secretKeyRef:
-    name: rafiki-secrets
-    key: REDIS_URL
-
-# Auth service URLs
-auth:
-  grantUrl: http://rafiki-auth-service.default:3006
-  introspectionUrl: http://rafiki-auth-service.default:3007
-
-# ILP configuration
-ilp:
-  host: 'https://your-domain.com'
-  address: test.your-instance
-  connector: 'http://rafiki-backend-service.default:3002'
-  streamSecret:
-    secretKeyRef:
-      name: rafiki-secrets
-      key: STREAM_SECRET
-
-# Webhook configuration
-webhook:
-  url: https://your-wallet.com/webhooks/rafiki
-
-# Key configuration
-key:
-  id: your-unique-key-id
-  pvk: '' # Will auto-generate if empty
-
-# Webhook signature secret
-webhookSignatureSecret:
-  secretKeyRef:
-    name: rafiki-secrets
-    key: SIGNATURE_SECRET
-
-# Service configuration
-service:
-  - name: service
-    type: ClusterIP
-    ports:
-      - port: 3000
-        targetPort: 3000
-        protocol: TCP
-        name: open-payments
-      - port: 3001
-        targetPort: 3001
-        protocol: TCP
-        name: admin
-      - port: 3002
-        targetPort: 3002
-        protocol: TCP
-        name: connector
-```
-
-#### Basic frontend service configuration
-
-Create `frontend-values.yaml`:
-
-```yaml
-# Minimal frontend service configuration
-nodeEnv: production
-logLevel: info
-
-# Service URLs
-serviceUrls:
-  GRAPHQL_URL: http://rafiki-backend-service.default:3001/graphql
-  OPEN_PAYMENTS_URL: https://your-domain.com/
-
-# Port configuration
-port: 3010
-
-# Service configuration
-service:
-  - name: service
-    type: ClusterIP
-    ports:
-      - port: 3010
-        targetPort: 3010
-        protocol: TCP
-        name: http
-
-# Kratos configuration (if using authentication)
-kratos:
-  enabled: false
-```
-
-### Create Kubernetes secrets
-
-Before installing the services, create the required secrets:
+Install Rafiki using the following command:
 
 ```bash
-kubectl create secret generic rafiki-secrets \
-  --from-literal=DATABASE_URL="postgresql://username:password@rafiki-postgresql:5432/rafiki" \
-  --from-literal=REDIS_URL="redis://rafiki-redis:6379" \
-  --from-literal=IDENTITY_SERVER_SECRET="your-identity-server-secret" \
-  --from-literal=COOKIE_KEY="your-cookie-signing-key" \
-  --from-literal=STREAM_SECRET="your-stream-secret" \
-  --from-literal=SIGNATURE_SECRET="your-webhook-signature-secret"
-```
-
-### Install the services
-
-Install each Rafiki service using the appropriate values file:
-
-```bash
-# Install auth service
-helm install rafiki-auth interledger/rafiki-auth -f auth-values.yaml
-
-# Install backend service
-helm install rafiki-backend interledger/rafiki-backend -f backend-values.yaml
-
-# Install frontend service
-helm install rafiki-frontend interledger/rafiki-frontend -f frontend-values.yaml
+helm install rafiki interledger-helm/rafiki -f values.yaml \
+  --set config.auth.shouldCreateSecrets=true \
+  --set config.backend.shouldCreateSecrets=true
 ```
 
 If you want to install to a specific namespace:
@@ -252,10 +115,13 @@ If you want to install to a specific namespace:
 ```bash
 kubectl create namespace rafiki
 
-helm install rafiki-auth interledger/rafiki-auth -f auth-values.yaml -n rafiki
-helm install rafiki-backend interledger/rafiki-backend -f backend-values.yaml -n rafiki
-helm install rafiki-frontend interledger/rafiki-frontend -f frontend-values.yaml -n rafiki
+helm install rafiki interledger-helm/rafiki -f values.yaml \
+  --set config.auth.shouldCreateSecrets=true \
+  --set config.backend.shouldCreateSecrets=true \
+  -n rafiki
 ```
+
+The namespace used for Rafiki must match the namespace used by your Redis and PostgreSQL services.
 
 ### Verify the deployment
 
@@ -353,44 +219,43 @@ helm install nginx-ingress ingress-nginx/ingress-nginx \
   --set controller.publishService.enabled=true
 ```
 
-### Configure ingress in your values files
+### Configure ingress in your values file
 
-Add ingress configuration to your service values files:
+Add ingress configuration to your `values.yaml` file:
 
 ```yaml
-# In backend-values.yaml
+# In values.yaml
 ingress:
-  enabled: true
-  className: nginx
-  hosts:
-    - host: rafiki-backend.your-domain.com
-      paths:
-        - path: /
-          pathType: Prefix
-          service:
-            name: rafiki-backend-service
-            port: 3000
-  tls:
-    - secretName: rafiki-backend-tls
-      hosts:
-        - rafiki-backend.your-domain.com
-
-# In auth-values.yaml
-ingress:
-  enabled: true
-  className: nginx
-  hosts:
-    - host: rafiki-auth.your-domain.com
-      paths:
-        - path: /
-          pathType: Prefix
-          service:
-            name: rafiki-auth-service
-            port: 3006
-  tls:
-    - secretName: rafiki-auth-tls
-      hosts:
-        - rafiki-auth.your-domain.com
+  backend:
+    enabled: true
+    className: nginx
+    hosts:
+      - host: rafiki-backend.your-domain.com
+        paths:
+          - path: /
+            pathType: Prefix
+            service:
+              name: rafiki-backend-service
+              port: 3000
+    tls:
+      - secretName: rafiki-backend-tls
+        hosts:
+          - rafiki-backend.your-domain.com
+  auth:
+    enabled: true
+    className: nginx
+    hosts:
+      - host: rafiki-auth.your-domain.com
+        paths:
+          - path: /
+            pathType: Prefix
+            service:
+              name: rafiki-auth-service
+              port: 3006
+    tls:
+      - secretName: rafiki-auth-tls
+        hosts:
+          - rafiki-auth.your-domain.com
 ```
 
 ### Configure DNS
@@ -411,11 +276,17 @@ You can use an external PostgreSQL instance or deploy one using Helm:
 # Add Bitnami repository
 helm repo add bitnami https://charts.bitnami.com/bitnami
 
-# Install PostgreSQL
-helm install rafiki-postgresql bitnami/postgresql \
+# Install PostgreSQL for the backend database
+helm install rafiki-postgres bitnami/postgresql \
   --set auth.postgresPassword=your-secure-password \
-  --set auth.database=rafiki \
+  --set auth.database=rafiki_backend \
   --set primary.persistence.size=20Gi
+```
+
+Then create the auth database:
+
+```bash
+kubectl exec -it rafiki-postgres-postgresql-0 -- psql -U postgres -d postgres -c "CREATE DATABASE rafiki_auth;"
 ```
 
 ### Redis
@@ -448,13 +319,8 @@ helm install rafiki-tigerbeetle tigerbeetle/tigerbeetle \
 To upgrade your Rafiki services to newer versions:
 
 ```bash
-# Update the Helm repository
 helm repo update
-
-# Upgrade each service
-helm upgrade rafiki-auth interledger/rafiki-auth -f auth-values.yaml
-helm upgrade rafiki-backend interledger/rafiki-backend -f backend-values.yaml
-helm upgrade rafiki-frontend interledger/rafiki-frontend -f frontend-values.yaml
+helm upgrade rafiki interledger-helm/rafiki -f values.yaml
 ```
 
 ## Uninstall Rafiki
@@ -462,21 +328,18 @@ helm upgrade rafiki-frontend interledger/rafiki-frontend -f frontend-values.yaml
 To uninstall Rafiki services:
 
 ```bash
-helm uninstall rafiki-auth
-helm uninstall rafiki-backend
-helm uninstall rafiki-frontend
+helm uninstall rafiki
 
 # Optionally uninstall dependencies
-helm uninstall rafiki-postgresql
+helm uninstall rafiki-postgres
 helm uninstall rafiki-redis
-helm uninstall rafiki-tigerbeetle
 ```
 
 :::caution[Persistent data]
 Uninstalling doesn't delete Persistent Volume Claims (PVCs) by default. To delete all data:
 
 ```bash
-kubectl delete pvc -l app.kubernetes.io/instance=rafiki-postgresql
+kubectl delete pvc -l app.kubernetes.io/instance=rafiki-postgres
 kubectl delete pvc -l app.kubernetes.io/instance=rafiki-redis
 kubectl delete pvc -l app.kubernetes.io/instance=rafiki-tigerbeetle
 ```
@@ -521,7 +384,7 @@ kubectl get events --sort-by=.metadata.creationTimestamp
 
 3. **Test database connection:**
    ```bash
-   kubectl run -it --rm debug --image=postgres:14 -- psql postgresql://username:password@rafiki-postgresql:5432/rafiki
+   kubectl run -it --rm debug --image=postgres:14 -- psql postgresql://username:password@rafiki-postgres-postgresql:5432/rafiki_backend
    ```
 
 #### Redis connection issues
@@ -612,7 +475,7 @@ kubectl get events --sort-by=.metadata.creationTimestamp
 3. **Scale services if needed:**
    ```bash
    # Update replicaCount in values.yaml and upgrade
-   helm upgrade rafiki-backend interledger/rafiki-backend -f backend-values.yaml
+   helm upgrade rafiki interledger-helm/rafiki -f values.yaml
    ```
 
 ## Production considerations
@@ -654,7 +517,7 @@ kubectl get events --sort-by=.metadata.creationTimestamp
 kubectl create job --from=cronjob/postgres-backup manual-backup-$(date +%Y%m%d-%H%M%S)
 
 # Manual backup
-kubectl exec -it rafiki-postgresql-0 -- pg_dump -U postgres rafiki > backup.sql
+kubectl exec -it rafiki-postgres-postgresql-0 -- pg_dump -U postgres rafiki_backend > backup.sql
 ```
 
 **TigerBeetle backup:**
