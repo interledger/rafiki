@@ -11,9 +11,13 @@ This guide explains how to deploy Rafiki using Helm charts on a Kubernetes clust
 
 Rafiki uses the following key infrastructure components:
 
-- <LinkOut href='https://www.postgresql.org/'>PostgreSQL</LinkOut>: Used for storing application data, grants, and Open Payments resources
-- <LinkOut href='https://redis.io/'>Redis</LinkOut>: Used for caching and session management
-- <LinkOut href='https://tigerbeetle.com/'>TigerBeetle</LinkOut> (recommended): High-performance accounting database for financial transaction processing and ledger management
+- <LinkOut href='https://www.postgresql.org/'>PostgreSQL</LinkOut>: Used for
+  storing application data, grants, and Open Payments resources
+- <LinkOut href='https://redis.io/'>Redis</LinkOut>: Used for caching and
+  session management
+- <LinkOut href='https://tigerbeetle.com/'>TigerBeetle</LinkOut> (recommended):
+  High-performance accounting database for financial transaction processing and
+  ledger management
 
 ## Prerequisites
 
@@ -82,7 +86,6 @@ For full configuration details, refer to the base `values.yaml` file on GitHub: 
 When using `--set config.auth.shouldCreateSecrets=true` and `--set config.backend.shouldCreateSecrets=true`, Helm creates and manages the auth and backend Kubernetes secrets as part of the chart installation.
 
 In this mode, include the required secret values in `values.yaml` so the chart can populate those generated secrets during install/upgrade:
-
 
 ```yaml
 config:
