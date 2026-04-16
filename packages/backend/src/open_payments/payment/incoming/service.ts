@@ -662,8 +662,8 @@ async function processPartialPayment(
         ...polledDecision
       }
 
-      if (!decision.message && typeof decision.success === 'boolean') {
-        decision.message = decision.success
+      if (!decision.reason && typeof decision.success === 'boolean') {
+        decision.reason = decision.success
           ? 'Additional data approved'
           : 'Additional data rejected'
       }
@@ -675,8 +675,8 @@ async function processPartialPayment(
     )
   }
 
-  if (!decision.message) {
-    decision.message = 'No response from ASE'
+  if (!decision.reason) {
+    decision.reason = 'No response from ASE'
   }
 
   return decision
@@ -693,13 +693,14 @@ function getPartialPaymentDecisionCacheKey(
 
 interface PartialPaymentDecision {
   success?: boolean
-  message?: string
+  reason?: string
 }
 
 interface PartialPaymentDecisionOptions {
   id: string
   partialPaymentId: string
-  decision: boolean
+  success: boolean
+  reason?: string
 }
 
 async function updatePartialPaymentDecision(
@@ -711,8 +712,14 @@ async function updatePartialPaymentDecision(
     options.id,
     options.partialPaymentId
   )
+  const decisionPayload: PartialPaymentDecision = {
+    success: options.success
+  }
+  if (typeof options.reason === 'string') {
+    decisionPayload.reason = options.reason
+  }
   try {
-    await redis.set(cacheKey, JSON.stringify({ success: options.decision }))
+    await redis.set(cacheKey, JSON.stringify(decisionPayload))
     return true
   } catch (e) {
     logger.error(

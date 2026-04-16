@@ -1273,7 +1273,7 @@ describe('Incoming Payment Service', (): void => {
             }
           )
 
-          expect(decision.message).toBe('Additional data approved')
+          expect(decision.reason).toBe('Additional data approved')
           expect(decision.success).toBe(true)
           expect(redisGetSpy).toHaveBeenCalledWith(cacheKey)
 
@@ -1323,7 +1323,7 @@ describe('Incoming Payment Service', (): void => {
             }
           )
 
-          expect(decision.message).toBe('Additional data rejected')
+          expect(decision.reason).toBe('Additional data rejected')
           expect(decision.success).toBe(false)
           expect(redisGetSpy).toHaveBeenCalledWith(cacheKey)
         }

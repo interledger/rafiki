@@ -201,20 +201,13 @@ components:
             expiresAt:
               type: string
               format: date-time
-            partialPayment:
-              type: object
-              required:
-                - uuid
-                - amount
-              properties:
-                uuid:
-                  type: string
-                  format: uuid
-                amount:
-                  $ref: '#/components/schemas/amount'
-                dataFromSender:
-                  type: object
-                  additionalProperties: true
+            partialIncomingPaymentId:
+              type: string
+              format: uuid
+              description: Identifier for the partial payment fragment associated with this webhook event.
+            dataToTransmit:
+              type: string
+              description: Data received from the sender that is forwarded to the account servicing entity.
       additionalProperties: false
     outgoingPaymentEvent:
       required:

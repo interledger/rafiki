@@ -311,7 +311,7 @@ export const confirmPartialIncomingPayment: MutationResolvers<TenantedApolloCont
       success: await incomingPaymentService.updatePartialPaymentDecision({
         id: input.incomingPaymentId,
         partialPaymentId: input.partialIncomingPaymentId,
-        decision: true
+        success: true
       })
     }
   }
@@ -331,7 +331,8 @@ export const rejectPartialIncomingPayment: MutationResolvers<TenantedApolloConte
       success: await incomingPaymentService.updatePartialPaymentDecision({
         id: input.incomingPaymentId,
         partialPaymentId: input.partialIncomingPaymentId,
-        decision: false
+        success: false,
+        reason: input.reason ?? undefined
       })
     }
   }

@@ -1141,6 +1141,39 @@ describe('Incoming Payment Resolver', (): void => {
       }
     )
 
+    test('uses rejection reason when rejecting partial incoming payment', async (): Promise<void> => {
+      const incomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: walletAddress.id,
+        tenantId: walletAddress.tenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
+      })
+      const partialIncomingPaymentId = uuid()
+      const reason = 'Incorrect data provided'
+      const redisSpy = jest.spyOn(redis, 'set')
+
+      const result = await appContainer.apolloClient
+        .mutate({
+          mutation: rejectPartialIncomingPaymentMutation,
+          variables: {
+            input: {
+              incomingPaymentId: incomingPayment.id,
+              partialIncomingPaymentId,
+              reason
+            }
+          }
+        })
+        .then(
+          (mutation): RejectPartialIncomingPaymentResponse =>
+            mutation.data?.rejectPartialIncomingPayment
+        )
+
+      expect(result.success).toBe(true)
+      expect(redisSpy).toHaveBeenCalledWith(
+        `${PARTIAL_PAYMENT_DECISION_PREFIX}:${incomingPayment.id}:${partialIncomingPaymentId}`,
+        JSON.stringify({ success: false, reason })
+      )
+    })
+
     test.each`
       action       | mutation
       ${'confirm'} | ${confirmPartialIncomingPaymentMutation}

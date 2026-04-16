@@ -5,7 +5,7 @@ import { isIlpReply } from 'ilp-packet'
 
 type PartialPaymentDecision = {
   success?: boolean
-  message?: string
+  reason?: string
 }
 
 export function createPartialPaymentDecisionMiddleware(): ILPMiddleware {
@@ -36,7 +36,7 @@ export function createPartialPaymentDecisionMiddleware(): ILPMiddleware {
     }
 
     let decision: PartialPaymentDecision | undefined
-    let message: string | undefined
+    let reason: string | undefined
 
     try {
       decision = await ctx.services.incomingPayments.processPartialPayment(
@@ -48,11 +48,11 @@ export function createPartialPaymentDecisionMiddleware(): ILPMiddleware {
         }
       )
 
-      if (decision?.success) {
+      if (decision?.success !== false) {
         await next()
         return
       }
-      message = decision?.message
+      reason = decision?.reason
     } catch (error) {
       // We intentionally *decline* instead of throwing: throwing would be
       // converted to an ILP Reject by `createIncomingErrorHandlerMiddleware`,
@@ -61,10 +61,10 @@ export function createPartialPaymentDecisionMiddleware(): ILPMiddleware {
         { error, incomingPaymentId },
         'failed to process partial payment'
       )
-      message = 'Error processing partial payment'
+      reason = 'Error processing partial payment'
     }
     const errorData = Buffer.from(
-      message ?? 'Error processing partial payment',
+      reason ?? 'Error processing partial payment',
       'utf8'
     )
     ctx.response.reply = replyOrMoney.finalDecline(errorData)

@@ -116,7 +116,7 @@ describe('Partial Payment Decision Middleware', function () {
     mockIncomingMoneyReply(ctx)
 
     mockProcessPartialPayment.mockResolvedValue({
-      message: 'Additional data approved',
+      reason: 'Additional data approved',
       success: true
     })
 
@@ -172,7 +172,7 @@ describe('Partial Payment Decision Middleware', function () {
       )
 
     mockProcessPartialPayment.mockResolvedValue({
-      message: 'Additional data approved',
+      reason: 'Additional data approved',
       success: true
     })
 
@@ -199,7 +199,7 @@ describe('Partial Payment Decision Middleware', function () {
     mockIncomingMoneyReply(ctx)
 
     mockProcessPartialPayment.mockResolvedValue({
-      message: 'Additional data approved',
+      reason: 'Additional data approved',
       success: true
     })
 
@@ -209,6 +209,37 @@ describe('Partial Payment Decision Middleware', function () {
 
     expect(next).toHaveBeenCalledTimes(1)
   })
+
+  test.each([
+    ['no success field (timeout)', { reason: 'No response from ASE' }],
+    [
+      'explicit success: undefined',
+      { success: undefined, reason: 'No response from ASE' }
+    ]
+  ])(
+    'allows payment when ASE does not respond (%s)',
+    async (
+      _: string,
+      decisionResult: { success?: boolean; reason: string }
+    ) => {
+      const { services, mockProcessPartialPayment } = makeServices()
+      const ctx = makeContext(undefined, services)
+      const prepare = IlpPrepareFactory.build({
+        expiresAt: new Date(Date.now() + 30000)
+      })
+      ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
+      mockIncomingMoneyReply(ctx)
+
+      mockProcessPartialPayment.mockResolvedValue(decisionResult)
+
+      const next = jest.fn()
+
+      await expect(middleware(ctx, next)).resolves.toBeUndefined()
+
+      expect(next).toHaveBeenCalledTimes(1)
+      expect(ctx.response.reply).toBeUndefined()
+    }
+  )
 
   test('declines payment when decision is not approved', async () => {
     const { services, mockProcessPartialPayment } = makeServices()
@@ -221,7 +252,7 @@ describe('Partial Payment Decision Middleware', function () {
 
     const rejectionReason = 'Data validation failed'
     mockProcessPartialPayment.mockResolvedValue({
-      message: rejectionReason,
+      reason: rejectionReason,
       success: false
     })
 
@@ -243,7 +274,7 @@ describe('Partial Payment Decision Middleware', function () {
 
     const rejectionReason = 'Data validation failed'
     mockProcessPartialPayment.mockResolvedValue({
-      message: rejectionReason,
+      reason: rejectionReason,
       success: false
     })
 
@@ -305,7 +336,7 @@ describe('Partial Payment Decision Middleware', function () {
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
 
     mockProcessPartialPayment.mockResolvedValue({
-      message: 'Additional data approved',
+      reason: 'Additional data approved',
       success: true
     })
 
