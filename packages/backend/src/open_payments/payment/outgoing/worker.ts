@@ -116,7 +116,14 @@ async function onLifecycleError(
   payment: OutgoingPayment,
   err: Error | PaymentError
 ): Promise<void> {
-  const error = typeof err === 'string' ? err : err.message
+  let error: string
+  if (err instanceof PaymentMethodHandlerError) {
+    error = err.description
+  } else if (typeof err === 'string') {
+    error = err
+  } else {
+    error = err.message
+  }
   const stateAttempts = payment.stateAttempts + 1
 
   const errorDescription =

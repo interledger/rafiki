@@ -51,6 +51,7 @@ import {
 import { GraphQLErrorCode } from '../errors'
 import { Tenant } from '../../tenants/model'
 import { createTenant } from '../../tests/tenant'
+import { faker } from '@faker-js/faker'
 
 describe('Liquidity Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -3493,6 +3494,9 @@ describe('Liquidity Resolvers', (): void => {
 
         test('Can deposit account liquidity', async (): Promise<void> => {
           const depositSpy = jest.spyOn(accountingService, 'createDeposit')
+          const dataToTransmit = JSON.stringify({
+            data: faker.internet.email()
+          })
           const response = await appContainer.apolloClient
             .mutate({
               mutation: gql`
@@ -3507,7 +3511,8 @@ describe('Liquidity Resolvers', (): void => {
               variables: {
                 input: {
                   outgoingPaymentId: outgoingPayment.id,
-                  idempotencyKey: uuid()
+                  idempotencyKey: uuid(),
+                  dataToTransmit
                 }
               }
             })
@@ -3529,6 +3534,13 @@ describe('Liquidity Resolvers', (): void => {
           await expect(
             accountingService.getBalance(outgoingPayment.id)
           ).resolves.toEqual(outgoingPayment.debitAmount.value)
+          await expect(
+            OutgoingPayment.query(knex).findById(outgoingPayment.id)
+          ).resolves.toEqual(
+            expect.objectContaining({
+              dataToTransmit
+            })
+          )
         })
 
         test("Can't deposit for non-existent outgoing payment id", async (): Promise<void> => {

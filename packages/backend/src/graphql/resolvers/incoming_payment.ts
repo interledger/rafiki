@@ -7,7 +7,10 @@ import {
   IncomingPaymentFilter,
   IncomingPaymentResolvers
 } from '../generated/graphql'
-import { IncomingPayment } from '../../open_payments/payment/incoming/model'
+import {
+  IncomingPayment,
+  IncomingPaymentState
+} from '../../open_payments/payment/incoming/model'
 import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/types'
 import {
   isIncomingPaymentError,
@@ -292,6 +295,90 @@ export const getIncomingPaymentTenant: IncomingPaymentResolvers<TenantedApolloCo
     if (!tenant) return null
     return tenantToGraphQl(tenant)
   }
+
+export const confirmPartialIncomingPayment: MutationResolvers<TenantedApolloContext>['confirmPartialIncomingPayment'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['ConfirmPartialIncomingPaymentResponse']> => {
+    const { input } = args
+    await canHandlePartialIncomingPayment(ctx, input.incomingPaymentId)
+    const incomingPaymentService = await ctx.container.use(
+      'incomingPaymentService'
+    )
+    return {
+      success: await incomingPaymentService.updatePartialPaymentDecision({
+        id: input.incomingPaymentId,
+        partialPaymentId: input.partialIncomingPaymentId,
+        success: true
+      })
+    }
+  }
+
+export const rejectPartialIncomingPayment: MutationResolvers<TenantedApolloContext>['rejectPartialIncomingPayment'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['RejectPartialIncomingPaymentResponse']> => {
+    const { input } = args
+    await canHandlePartialIncomingPayment(ctx, input.incomingPaymentId)
+    const incomingPaymentService = await ctx.container.use(
+      'incomingPaymentService'
+    )
+    return {
+      success: await incomingPaymentService.updatePartialPaymentDecision({
+        id: input.incomingPaymentId,
+        partialPaymentId: input.partialIncomingPaymentId,
+        success: false,
+        reason: input.reason ?? undefined
+      })
+    }
+  }
+
+async function canHandlePartialIncomingPayment(
+  ctx: TenantedApolloContext,
+  id: string
+): Promise<void> {
+  const incomingPaymentService = await ctx.container.use(
+    'incomingPaymentService'
+  )
+  let options: {
+    id: string
+    tenantId?: string
+  }
+
+  if (!ctx.isOperator) {
+    options = {
+      id,
+      tenantId: ctx.tenant.id
+    }
+  } else options = { id }
+
+  const incomingPayment = await incomingPaymentService.get(options)
+  if (!incomingPayment)
+    throw new GraphQLError(
+      errorToMessage[IncomingPaymentError.UnknownPayment],
+      {
+        extensions: {
+          code: errorToCode[IncomingPaymentError.UnknownPayment]
+        }
+      }
+    )
+
+  if (
+    [IncomingPaymentState.Completed, IncomingPaymentState.Expired].includes(
+      incomingPayment.state
+    )
+  )
+    throw new GraphQLError(errorToMessage[IncomingPaymentError.InvalidState], {
+      extensions: {
+        code: errorToCode[IncomingPaymentError.InvalidState]
+      }
+    })
+  return
+}
 
 export function paymentToGraphql(
   payment: IncomingPayment,

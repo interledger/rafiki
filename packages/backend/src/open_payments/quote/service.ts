@@ -252,7 +252,7 @@ async function createQuote(
     // This is done after retrieving the payment quote because we
     // don't know the peer's exchange rate in advance.
     const fixedReceiveFee = !options.debitAmount
-      ? sendingFee?.calculate(quote.debitAmount.value) ?? 0n
+      ? (sendingFee?.calculate(quote.debitAmount.value) ?? 0n)
       : 0n
 
     const unfinalizedQuote: UnfinalizedQuote = {

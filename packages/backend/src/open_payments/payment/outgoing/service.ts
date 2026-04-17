@@ -49,6 +49,7 @@ import { FeeService } from '../../../fee/service'
 import { OutgoingPaymentGrantSpentAmounts } from './model'
 import { v4 as uuid } from 'uuid'
 import { OutgoingPaymentCardDetails } from './card/model'
+import { encryptDbData } from '../../../shared/utils'
 
 const DEFAULT_GRANT_LOCK_TIMEOUT_MS = 5000
 
@@ -57,8 +58,7 @@ export interface GrantSpentAmounts {
   spentReceiveAmount: Amount | null
 }
 
-export interface OutgoingPaymentService
-  extends WalletAddressSubresourceService<OutgoingPayment> {
+export interface OutgoingPaymentService extends WalletAddressSubresourceService<OutgoingPayment> {
   getPage(options?: GetPageOptions): Promise<OutgoingPayment[]>
   create(
     options: CreateOutgoingPaymentOptions
@@ -873,11 +873,11 @@ async function validateGrantAndAddSpentAmountsToPayment(
       outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue =
         isInIntervalAndFirstPayment
           ? 0n
-          : latestSpentAmounts?.intervalDebitAmountValue ?? 0n
+          : (latestSpentAmounts?.intervalDebitAmountValue ?? 0n)
       outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue =
         isInIntervalAndFirstPayment
           ? 0n
-          : latestSpentAmounts?.intervalReceiveAmountValue ?? 0n
+          : (latestSpentAmounts?.intervalReceiveAmountValue ?? 0n)
     }
   }
 
@@ -961,11 +961,18 @@ export interface FundOutgoingPaymentOptions {
   tenantId: string
   amount: bigint
   transferId: string
+  dataToTransmit?: string
 }
 
 async function fundPayment(
   deps: ServiceDependencies,
-  { id, tenantId, amount, transferId }: FundOutgoingPaymentOptions
+  {
+    id,
+    tenantId,
+    amount,
+    transferId,
+    dataToTransmit
+  }: FundOutgoingPaymentOptions
 ): Promise<OutgoingPayment | FundingError> {
   return await deps.knex.transaction(async (trx) => {
     const payment = await OutgoingPayment.query(trx)
@@ -1011,7 +1018,14 @@ async function fundPayment(
     if (error) {
       return error
     }
-    await payment.$query(trx).patch({ state: OutgoingPaymentState.Sending })
+
+    await payment.$query(trx).patch({
+      state: OutgoingPaymentState.Sending,
+      dataToTransmit:
+        deps.config.dbEncryptionSecret && dataToTransmit
+          ? encryptDbData(dataToTransmit, deps.config.dbEncryptionSecret)
+          : dataToTransmit
+    })
 
     if (payment.initiatedBy === OutgoingPaymentInitiationReason.Card) {
       await sendWebhookEvent(
@@ -1428,14 +1442,14 @@ async function getGrantSpentAmounts(
   return {
     spentDebitAmount: {
       value: currentInterval
-        ? legacy.intervalDebitAmountValue ?? BigInt(0)
+        ? (legacy.intervalDebitAmountValue ?? BigInt(0))
         : legacy.grantTotalDebitAmountValue,
       assetCode: legacy.latestPayment.debitAmountCode,
       assetScale: legacy.latestPayment.debitAmountScale
     },
     spentReceiveAmount: {
       value: currentInterval
-        ? legacy.intervalReceiveAmountValue ?? BigInt(0)
+        ? (legacy.intervalReceiveAmountValue ?? BigInt(0))
         : legacy.grantTotalReceiveAmountValue,
       assetCode: legacy.latestPayment.receiveAmountCode,
       assetScale: legacy.latestPayment.receiveAmountScale

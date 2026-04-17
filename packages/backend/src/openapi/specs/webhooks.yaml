@@ -41,6 +41,14 @@ webhooks:
       responses:
         '200':
           description: Data was received successfully
+  incomingPaymentPartialPaymentReceived:
+    post:
+      requestBody:
+        description: Notifies the account servicing entity that an incoming payment has received partial payment. May contain data that the ASE should handle before accepting the rest of the payment.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/incomingPaymentEvent'
   outgoingPaymentCreated:
     post:
       requestBody:
@@ -158,6 +166,7 @@ components:
             - incoming_payment.created
             - incoming_payment.completed
             - incoming_payment.expired
+            - incoming_payment.partial_payment_received
         data:
           type: object
           required:
@@ -192,6 +201,13 @@ components:
             expiresAt:
               type: string
               format: date-time
+            partialIncomingPaymentId:
+              type: string
+              format: uuid
+              description: Identifier for the partial payment fragment associated with this webhook event.
+            dataToTransmit:
+              type: string
+              description: Data received from the sender that is forwarded to the account servicing entity.
       additionalProperties: false
     outgoingPaymentEvent:
       required:

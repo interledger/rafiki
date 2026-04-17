@@ -346,10 +346,35 @@ async function pay(
       callName: 'Pay:pay'
     }
   )
+  const errorMessage = 'Received error during ILP pay'
   try {
-    const receipt = await Pay.pay({ plugin, destination, quote })
+    const dataToTransmit = outgoingPayment.getDataToTransmit(
+      deps.config.dbEncryptionSecret
+    )
+    const hasAdditionalData = !!dataToTransmit
+
+    const receipt = await Pay.pay({
+      plugin,
+      destination,
+      quote,
+      appData: dataToTransmit ? Buffer.from(dataToTransmit, 'utf8') : undefined
+    })
 
     if (receipt.error) {
+      if (
+        hasAdditionalData &&
+        receipt.error === Pay.PaymentError.ApplicationError
+      ) {
+        const finalDeclineReason = receipt.applicationData
+          ?.toString('utf8')
+          .trim()
+        if (finalDeclineReason) {
+          throw new PaymentMethodHandlerError(errorMessage, {
+            description: finalDeclineReason,
+            retryable: canRetryError(receipt.error)
+          })
+        }
+      }
       throw receipt.error
     }
 
@@ -366,14 +391,23 @@ async function pay(
     )
     return receipt.amountDelivered
   } catch (err) {
-    const errorMessage = 'Received error during ILP pay'
+    let errorDescription = 'Unknown error'
+    if (err instanceof PaymentMethodHandlerError) {
+      errorDescription = err.description
+    } else if (Pay.isPaymentError(err)) {
+      errorDescription = err
+    }
     deps.logger.error(
-      { err, destination: destination.destinationAddress },
+      { err, destination: destination.destinationAddress, errorDescription },
       errorMessage
     )
 
+    if (err instanceof PaymentMethodHandlerError) {
+      throw err
+    }
+
     throw new PaymentMethodHandlerError(errorMessage, {
-      description: Pay.isPaymentError(err) ? err : 'Unknown error',
+      description: errorDescription,
       retryable: canRetryError(err as Error | Pay.PaymentError)
     })
   } finally {
@@ -455,5 +489,6 @@ export const retryableIlpErrors: {
   [Pay.PaymentError.InsufficientExchangeRate]: true,
   [Pay.PaymentError.RateProbeFailed]: true,
   [Pay.PaymentError.IdleTimeout]: true,
-  [Pay.PaymentError.ClosedByReceiver]: true
+  [Pay.PaymentError.ClosedByReceiver]: true,
+  [Pay.PaymentError.ApplicationError]: false
 }
