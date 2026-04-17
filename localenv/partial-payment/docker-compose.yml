@@ -1,0 +1,5 @@
+services:
+  happy-life-backend:
+    environment:
+      ENABLE_PARTIAL_PAYMENT_DECISION: 'true'
+      PARTIAL_PAYMENT_DECISION_MAX_WAIT_MS: '30000'
