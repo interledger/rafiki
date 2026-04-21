@@ -23,7 +23,7 @@ jobs:
       - run: pnpm lint:docs
 
   backend:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: prerequisite
     timeout-minutes: 25
     steps:
@@ -34,6 +34,9 @@ jobs:
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter backend build:deps
       - run: NODE_OPTIONS="--max-old-space-size=4096" pnpm --filter backend test:ci
+        env:
+          DOCKER_HOST: unix:///var/run/docker.sock
+          TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: /var/run/docker.sock
       - name: AsyncAPI extension
         run: |
           echo "{\"extends\":[\"spectral:oas\",\"spectral:asyncapi\"]}" >> .spectral.json
