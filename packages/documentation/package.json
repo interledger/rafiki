@@ -12,17 +12,17 @@
     "lint": "prettier --check '**/*.{js,mjs,ts,tsx,json,md,mdx,astro}' && eslint --max-warnings=0 ."
   },
   "dependencies": {
-    "@astrojs/markdown-remark": "^6.3.10",
-    "@astrojs/starlight": "^0.37.5",
-    "@interledger/docs-design-system": "^0.11.0",
-    "astro": "^5.17.1",
-    "mermaid": "^11.12.2",
+    "@astrojs/markdown-remark": "^7.1.0",
+    "@astrojs/starlight": "^0.38.3",
+    "@interledger/docs-design-system": "^0.12.0",
+    "astro": "^6.1.8",
+    "mermaid": "^11.14.0",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-mathjax": "^7.1.0",
     "remark-math": "^6.0.0",
     "starlight-fullview-mode": "^0.2.6",
-    "starlight-links-validator": "^0.19.2",
-    "starlight-versions": "^0.6.0"
+    "starlight-links-validator": "^0.23.0",
+    "starlight-versions": "^0.8.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",

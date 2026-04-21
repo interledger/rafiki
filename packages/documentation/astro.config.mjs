@@ -388,7 +388,10 @@ export default defineConfig({
           errorOnFallbackPages: false,
           errorOnInvalidHashes: false
         }),
-        starlightFullViewMode()
+        starlightFullViewMode({
+          leftSidebarEnabled: true,
+          rightSidebarEnabled: true
+        })
       ]
     })
   ],
