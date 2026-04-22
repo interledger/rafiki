@@ -29,8 +29,9 @@ import {
 } from '../../wallet_address/model.test'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createWalletAddress } from '../../../tests/walletAddress'
-import { UnionOmit } from '../../../shared/utils'
+import { UnionInclude, UnionOmit } from '../../../shared/utils'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
+import { TokenInfoClient } from 'token-introspection'
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -137,9 +138,9 @@ describe('Outgoing Payment Routes', (): void => {
     })
   })
 
-  type SetupContextOptions = UnionOmit<
-    CreateOutgoingPaymentOptions,
-    'walletAddressId' | 'tenantId'
+  type SetupContextOptions = UnionInclude<
+    UnionOmit<CreateOutgoingPaymentOptions, 'walletAddressId' | 'client'>,
+    { client?: TokenInfoClient }
   >
 
   describe('create', (): void => {
@@ -186,12 +187,9 @@ describe('Outgoing Payment Routes', (): void => {
             grant,
             metadata
           })
-          let options: Omit<
-            CreateOutgoingPaymentBaseOptions,
-            'walletAddressId'
-          > = {
+          let options: Partial<SetupContextOptions> = {
             tenantId,
-            client,
+            client: { walletAddress: client },
             grant,
             metadata
           }
@@ -199,7 +197,7 @@ describe('Outgoing Payment Routes', (): void => {
             options = {
               ...options,
               quoteId: `${baseUrl}/${payment.quote.tenantId}/quotes/${payment.quote.id}`
-            } as CreateFromQuote
+            } as Omit<CreateFromQuote, 'client'> & { client?: TokenInfoClient }
           } else {
             assert(createFrom === CreateFrom.IncomingPayment)
             options = {
@@ -210,7 +208,7 @@ describe('Outgoing Payment Routes', (): void => {
                 assetCode: walletAddress.asset.code,
                 assetScale: walletAddress.asset.scale
               }
-            } as CreateFromIncomingPayment
+            } as Omit<CreateFromIncomingPayment, 'client'>
           }
           const ctx = setup(options as SetupContextOptions)
           const createSpy = jest
@@ -293,7 +291,7 @@ describe('Outgoing Payment Routes', (): void => {
         const tenantId = Config.operatorTenantId
         const ctx = setup({
           quoteId: `${baseUrl}/${tenantId}/quotes/${quoteId}`
-        })
+        } as Omit<CreateFromQuote, 'client'>)
         const createSpy = jest
           .spyOn(outgoingPaymentService, 'create')
           .mockResolvedValueOnce(error)

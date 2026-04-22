@@ -8,7 +8,7 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
-import { GrantService, GrantRequest } from '../grant/service'
+import { GrantService, CreateGrantInput } from '../grant/service'
 import {
   Grant,
   StartMethod,
@@ -16,10 +16,11 @@ import {
   GrantState,
   GrantFinalization
 } from '../grant/model'
+import { GrantError, GrantErrorCode } from '../grant/errors'
 import { Access } from '../access/model'
 import { generateNonce, generateToken } from '../shared/utils'
 import { AccessType, AccessAction } from '@interledger/open-payments'
-import { createGrant } from '../tests/grant'
+import { createGrant, generateTestJwk } from '../tests/grant'
 import { AccessToken } from '../accessToken/model'
 import { Interaction, InteractionState } from '../interaction/model'
 import { Pagination, SortOrder } from '../shared/baseModel'
@@ -124,7 +125,7 @@ describe('Grant Service', (): void => {
 
     describe('create', (): void => {
       test('Can initiate a grant', async (): Promise<void> => {
-        const grantRequest: GrantRequest = {
+        const grantRequest: CreateGrantInput = {
           ...BASE_GRANT_REQUEST,
           access_token: {
             access: [
@@ -160,6 +161,105 @@ describe('Grant Service', (): void => {
         })
       })
 
+      test('Can create a non-interactive grant with JWK client', async (): Promise<void> => {
+        const testJwk = generateTestJwk()
+        const grantRequest: CreateGrantInput = {
+          jwk: testJwk,
+          access_token: {
+            access: [
+              {
+                ...BASE_GRANT_ACCESS,
+                type: AccessType.IncomingPayment
+              }
+            ]
+          }
+        }
+
+        const grant = await grantService.create(grantRequest, tenant.id)
+
+        expect(grant).toMatchObject({
+          state: GrantState.Approved,
+          jwk: testJwk,
+          continueId: expect.any(String),
+          continueToken: expect.any(String)
+        })
+        expect(grant.client).toBeUndefined()
+      })
+
+      test('Can create a grant with explicit client field', async (): Promise<void> => {
+        const grantRequest: CreateGrantInput = {
+          ...BASE_GRANT_REQUEST,
+          client: CLIENT,
+          access_token: {
+            access: [
+              {
+                ...BASE_GRANT_ACCESS,
+                type: AccessType.IncomingPayment
+              }
+            ]
+          }
+        }
+
+        const grant = await grantService.create(grantRequest, tenant.id)
+
+        expect(grant).toMatchObject({
+          state: GrantState.Approved,
+          client: CLIENT,
+          continueId: expect.any(String),
+          continueToken: expect.any(String)
+        })
+        expect(grant.jwk).toBeUndefined()
+      })
+
+      test('Cannot create a grant with neither client nor jwk', async (): Promise<void> => {
+        const grantRequest: CreateGrantInput = {
+          access_token: {
+            access: [
+              {
+                ...BASE_GRANT_ACCESS,
+                type: AccessType.IncomingPayment
+              }
+            ]
+          }
+        }
+
+        expect.assertions(2)
+        try {
+          await grantService.create(grantRequest, tenant.id)
+        } catch (err) {
+          assert.ok(err instanceof GrantError)
+          expect(err.code).toBe(GrantErrorCode.InvalidRequest)
+          expect(err.message).toBe('client or jwk is required')
+        }
+      })
+
+      test('Cannot create an interactive grant with JWK client', async (): Promise<void> => {
+        const testJwk = generateTestJwk()
+        const grantRequest: CreateGrantInput = {
+          jwk: testJwk,
+          interact: BASE_GRANT_REQUEST.interact,
+          access_token: {
+            access: [
+              {
+                ...BASE_GRANT_ACCESS,
+                type: AccessType.OutgoingPayment
+              }
+            ]
+          }
+        }
+
+        expect.assertions(2)
+        try {
+          await grantService.create(grantRequest, tenant.id)
+        } catch (err) {
+          assert.ok(err instanceof GrantError)
+          expect(err.code).toBe(GrantErrorCode.InvalidRequest)
+          expect(err.message).toBe(
+            'JWK client identifier cannot be used for interactive grants'
+          )
+        }
+      })
+
       test.each`
         type                          | expectedState          | interact
         ${AccessType.IncomingPayment} | ${GrantState.Approved} | ${undefined}
@@ -168,7 +268,7 @@ describe('Grant Service', (): void => {
       `(
         'Puts $type grant without interaction in $expectedState state',
         async ({ type, expectedState, interact }): Promise<void> => {
-          const grantRequest: GrantRequest = {
+          const grantRequest: CreateGrantInput = {
             ...BASE_GRANT_REQUEST,
             access_token: {
               access: [
@@ -202,7 +302,7 @@ describe('Grant Service', (): void => {
       )
 
       it('create a grant with subject in pending state', async () => {
-        const grantRequest: GrantRequest = {
+        const grantRequest: CreateGrantInput = {
           ...BASE_GRANT_REQUEST,
           subject: {
             sub_ids: [
@@ -286,7 +386,7 @@ describe('Grant Service', (): void => {
       })
 
       test('properly fetches grant by continuation information with multiple existing grants', async (): Promise<void> => {
-        const grantRequest: GrantRequest = {
+        const grantRequest: CreateGrantInput = {
           ...BASE_GRANT_REQUEST,
           access_token: {
             access: [
@@ -336,7 +436,7 @@ describe('Grant Service', (): void => {
 
     describe('getByIdWithAccessAndSubject', (): void => {
       test('Can fetch a grant by id with access', async () => {
-        const grantRequest: GrantRequest = {
+        const grantRequest: CreateGrantInput = {
           ...BASE_GRANT_REQUEST,
           subject: {
             sub_ids: [
@@ -454,7 +554,7 @@ describe('Grant Service', (): void => {
 
     describe('lock', (): void => {
       test('a grant reference can be locked', async (): Promise<void> => {
-        const grantRequest: GrantRequest = {
+        const grantRequest: CreateGrantInput = {
           ...BASE_GRANT_REQUEST,
           access_token: {
             access: [

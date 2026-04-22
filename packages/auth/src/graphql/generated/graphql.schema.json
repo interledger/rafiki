@@ -299,16 +299,12 @@
           },
           {
             "name": "client",
-            "description": "Wallet address of the grantee's account.",
+            "description": "Wallet address of the grantee's account. Null when using JWK-based directed identity.",
             "args": [],
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
