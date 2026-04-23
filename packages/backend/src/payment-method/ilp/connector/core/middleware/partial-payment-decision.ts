@@ -35,7 +35,7 @@ export function createPartialPaymentDecisionMiddleware(): ILPMiddleware {
       return
     }
 
-    let decision: PartialPaymentDecision | undefined
+    let decision: PartialPaymentDecision
     let reason: string | undefined
 
     try {
@@ -48,7 +48,7 @@ export function createPartialPaymentDecisionMiddleware(): ILPMiddleware {
         }
       )
 
-      if (decision?.success !== false) {
+      if (decision.success) {
         await next()
         return
       }
