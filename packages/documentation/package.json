@@ -12,10 +12,10 @@
     "lint": "prettier --check '**/*.{js,mjs,ts,tsx,json,md,mdx,astro}' && eslint --max-warnings=0 ."
   },
   "dependencies": {
-    "@astrojs/markdown-remark": "^7.1.0",
+    "@astrojs/markdown-remark": "^7.1.1",
     "@astrojs/starlight": "^0.38.3",
     "@interledger/docs-design-system": "^0.12.0",
-    "astro": "^6.1.8",
+    "astro": "^6.1.9",
     "mermaid": "^11.14.0",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-mathjax": "^7.1.0",
@@ -25,16 +25,16 @@
     "starlight-versions": "^0.8.1"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.2",
-    "@typescript-eslint/parser": "^8.54.0",
-    "astro-eslint-parser": "^1.2.2",
-    "eslint": "^9.39.2",
+    "@eslint/js": "^10.0.1",
+    "@typescript-eslint/parser": "^8.59.0",
+    "astro-eslint-parser": "^1.4.0",
+    "eslint": "^10.2.1",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-astro": "^1.5.0",
-    "globals": "^17.3.0",
-    "prettier": "^3.8.1",
+    "eslint-plugin-astro": "^1.7.0",
+    "globals": "^17.5.0",
+    "prettier": "^3.8.3",
     "prettier-plugin-astro": "^0.14.1",
-    "spectaql": "^3.0.6",
-    "typescript-eslint": "^8.54.0"
+    "spectaql": "^3.0.9",
+    "typescript-eslint": "^8.59.0"
   }
 }
