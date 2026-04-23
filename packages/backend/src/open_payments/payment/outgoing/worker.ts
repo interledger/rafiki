@@ -118,7 +118,7 @@ async function onLifecycleError(
 ): Promise<void> {
   let error: string
   if (err instanceof PaymentMethodHandlerError) {
-    error = err.description
+    error = err.description || err.message
   } else if (typeof err === 'string') {
     error = err
   } else {
