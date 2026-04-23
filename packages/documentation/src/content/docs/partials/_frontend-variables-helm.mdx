@@ -3,31 +3,31 @@ import { LinkOut } from '@interledger/docs-design-system'
 <div class="overflow-table">
 #### Required Values
 
-| Helm value name                          | Default     | Description                                  |
-| ---------------------------------------- | ----------- | -------------------------------------------- |
-| `frontend.serviceUrls.GRAPHQL_URL`       | _undefined_ | URL of Rafiki's GraphQL Auth Admin API       |
-| `frontend.serviceUrls.OPEN_PAYMENTS_URL` | _undefined_ | Your Open Payments API endpoint              |
-| `frontend.port`                          | _undefined_ | Port from which to host the Rafiki Remix app |
+| Helm value name                                 | Default                                             | Description                                  |
+| ----------------------------------------------- | --------------------------------------------------- | -------------------------------------------- |
+| `config.frontend.serviceUrls.GRAPHQL_URL`       | `http://rafiki-backend-service.rafiki:3001/graphql` | URL of Rafiki's GraphQL Admin API            |
+| `config.frontend.serviceUrls.OPEN_PAYMENTS_URL` | `https://rafiki-backend-service/`                   | Your Open Payments API endpoint              |
+| `config.frontend.port`                          | `3010`                                              | Port from which to host the Rafiki Remix app |
 
 #### Conditionally required values
 
-The following values are required only when `frontend.authEnabled` is set to `true`.
+The following values are required only when `config.frontend.kratos.enabled` is set to `true`.
 
-| Helm value name                      | Default     | Description                                                                                                                                                                                                       |
-| ------------------------------------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `frontend.kratos.adminUrl`           | _undefined_ | The admin endpoint/container address for Kratos                                                                                                                                                                   |
-| `frontend.kratos.containerPublicUrl` | _undefined_ | The URL for you to access the Kratos Docker container from within the Docker network. This is used for backend calls to Kratos.                                                                                   |
-| `frontend.kratos.browserPublicUrl`   | _undefined_ | The URL for you to access the Kratos Docker container from a browser outside the Docker network. This is used for calls from a browser (what you see in the Rafiki Admin UI) to the Kratos server on the backend. |
+{/* vale off */}
+| Helm value name | Default | Description |
+| ------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config.frontend.kratos.enabled` | `true` | Enables Kratos-backed authentication for the frontend. |
+| `config.frontend.kratos.adminUrl` | _undefined_ | The admin endpoint/container address for Kratos. |
+| `config.frontend.kratos.containerPublicUrl` | _undefined_ | The URL for internal backend calls to the Kratos container from within the cluster network. |
+| `config.frontend.kratos.browserPublicUrl` | _undefined_ | The browser-facing URL for Kratos, used by the Rafiki Admin UI to complete auth flows. |
+{/* vale on */}
 
 #### Optional values
 
-| Helm value name                        | Default      | Description                                                                                                                                                            |
-| -------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `frontend.authEnabled`                 | `true`       | When `true`, only authenticated users can be granted access to Rafiki Admin by an administrator                                                                        |
-| `frontend.quoteSignatureSecret`        | _undefined_  | The signature secret used to authenticate requests to the Backend Admin API.                                                                                           |
-| `frontend.signatureVersion`            | `1`          | The signature version number used to authenticate requests to the Backend Admin API.                                                                                   |
-| `frontend.enableInsecureMessageCookie` | `true`       | When set to `true`, `t`, or `1`, cookie will be transmitted over insecure HTTP connection. Insecure message cookies are required for flash messages to work over HTTP. |
-| `frontend.nodeEnv`                     | `production` | The type of node environment: `development`, `test`, or `production`.                                                                                                  |
-| `frontend.logLevel`                    | `info`       | Pino log level                                                                                                                                                         |
+| Helm value name                    | Default      | Description                                                                              |
+| ---------------------------------- | ------------ | ---------------------------------------------------------------------------------------- |
+| `config.frontend.signatureVersion` | `1`          | The signature version number used for outgoing HTTP signatures to the Backend Admin API. |
+| `config.frontend.nodeEnv`          | `production` | The type of node environment: `development`, `test`, or `production`.                    |
+| `config.frontend.logLevel`         | `info`       | Pino log level.                                                                          |
 
 </div>
