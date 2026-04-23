@@ -5,6 +5,7 @@ This package contains a script that will determine the performance of Rafiki by 
 ## Prerequisites
 
 - [Grafana k6](https://grafana.com/docs/k6/latest/set-up/install-k6/) (required if not running with Docker)
+
   - [Grafana k6](https://grafana.com/docs/k6/latest/) is used to run performance test scripts against Rafiki.
 
 - **Environment**

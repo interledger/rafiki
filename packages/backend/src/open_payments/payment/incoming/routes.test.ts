@@ -132,7 +132,7 @@ describe('Incoming Payment Routes', (): void => {
   })
 
   describe('get', (): void => {
-    ;(test.each([IncomingPaymentState.Completed, IncomingPaymentState.Expired])(
+    test.each([IncomingPaymentState.Completed, IncomingPaymentState.Expired])(
       'returns incoming payment with empty methods if payment state is %s',
       async (paymentState): Promise<void> => {
         const walletAddress = await createWalletAddress(deps, {
@@ -195,7 +195,7 @@ describe('Incoming Payment Routes', (): void => {
         expect(ctx.body).toMatchObject({
           id: `${baseUrl}/${tenantId}/incoming-payments/${incomingPayment.id}`
         })
-      }))
+      })
   })
 
   describe('create', (): void => {

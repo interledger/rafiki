@@ -56,7 +56,8 @@ interface GetPageOptions {
   client?: string
 }
 
-export interface IncomingPaymentService extends WalletAddressSubresourceService<IncomingPayment> {
+export interface IncomingPaymentService
+  extends WalletAddressSubresourceService<IncomingPayment> {
   getPage(options?: GetPageOptions): Promise<IncomingPayment[]>
   create(
     options: CreateIncomingPaymentOptions,

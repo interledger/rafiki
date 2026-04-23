@@ -23,9 +23,7 @@ export const ErrorPanel = ({ errors }: ErrorPanelProps) => {
           <h3 className='font-medium'>{errorMessage}</h3>
           <div className='mt-2 text-sm'>
             <ul className='list-disc space-y-1 pl-5'>
-              {errors?.map((error) => (
-                <li key={error}>{error}</li>
-              ))}
+              {errors?.map((error) => <li key={error}>{error}</li>)}
             </ul>
           </div>
         </div>

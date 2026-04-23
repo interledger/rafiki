@@ -58,7 +58,8 @@ export interface GrantSpentAmounts {
   spentReceiveAmount: Amount | null
 }
 
-export interface OutgoingPaymentService extends WalletAddressSubresourceService<OutgoingPayment> {
+export interface OutgoingPaymentService
+  extends WalletAddressSubresourceService<OutgoingPayment> {
   getPage(options?: GetPageOptions): Promise<OutgoingPayment[]>
   create(
     options: CreateOutgoingPaymentOptions
@@ -873,11 +874,11 @@ async function validateGrantAndAddSpentAmountsToPayment(
       outgoingPaymentGrantSpentAmounts.intervalDebitAmountValue =
         isInIntervalAndFirstPayment
           ? 0n
-          : (latestSpentAmounts?.intervalDebitAmountValue ?? 0n)
+          : latestSpentAmounts?.intervalDebitAmountValue ?? 0n
       outgoingPaymentGrantSpentAmounts.intervalReceiveAmountValue =
         isInIntervalAndFirstPayment
           ? 0n
-          : (latestSpentAmounts?.intervalReceiveAmountValue ?? 0n)
+          : latestSpentAmounts?.intervalReceiveAmountValue ?? 0n
     }
   }
 
@@ -1442,14 +1443,14 @@ async function getGrantSpentAmounts(
   return {
     spentDebitAmount: {
       value: currentInterval
-        ? (legacy.intervalDebitAmountValue ?? BigInt(0))
+        ? legacy.intervalDebitAmountValue ?? BigInt(0)
         : legacy.grantTotalDebitAmountValue,
       assetCode: legacy.latestPayment.debitAmountCode,
       assetScale: legacy.latestPayment.debitAmountScale
     },
     spentReceiveAmount: {
       value: currentInterval
-        ? (legacy.intervalReceiveAmountValue ?? BigInt(0))
+        ? legacy.intervalReceiveAmountValue ?? BigInt(0)
         : legacy.grantTotalReceiveAmountValue,
       assetCode: legacy.latestPayment.receiveAmountCode,
       assetScale: legacy.latestPayment.receiveAmountScale

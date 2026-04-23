@@ -67,8 +67,7 @@ export default function ViewIncomingPaymentPage() {
           <div className='col-span-1 pt-3'>
             <h3 className='text-lg font-medium'>General Information</h3>
             <p className='text-sm'>
-              Created at{' '}
-              {new Date(incomingPayment.createdAt).toLocaleString()}{' '}
+              Created at {new Date(incomingPayment.createdAt).toLocaleString()}{' '}
             </p>
             {new Date(expiresAtLocale) > new Date() && (
               <p className='text-sm mb-2'>Expires at {expiresAtLocale} </p>
