@@ -698,7 +698,7 @@ interface PartialPaymentDecision {
 }
 
 interface PartialPaymentDecisionOptions {
-  id: string
+  incomingPaymentId: string
   partialPaymentId: string
   success: boolean
   reason?: string
@@ -710,7 +710,7 @@ async function updatePartialPaymentDecision(
 ): Promise<boolean> {
   const { redis, logger } = deps
   const cacheKey = getPartialPaymentDecisionCacheKey(
-    options.id,
+    options.incomingPaymentId,
     options.partialPaymentId
   )
   const decisionPayload: PartialPaymentDecision = {
@@ -726,7 +726,7 @@ async function updatePartialPaymentDecision(
     logger.error(
       {
         e,
-        incomingPaymentId: options.id,
+        incomingPaymentId: options.incomingPaymentId,
         partialPaymentId: options.partialPaymentId
       },
       'failed to update partial payment decision'
