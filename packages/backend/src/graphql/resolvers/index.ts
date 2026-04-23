@@ -28,7 +28,9 @@ import {
   approveIncomingPayment,
   cancelIncomingPayment,
   getIncomingPayments,
-  getIncomingPaymentTenant
+  getIncomingPaymentTenant,
+  confirmPartialIncomingPayment,
+  rejectPartialIncomingPayment
 } from './incoming_payment'
 import { getQuote, createQuote, getWalletAddressQuotes } from './quote'
 import {
@@ -174,6 +176,8 @@ export const resolvers: Resolvers = {
     createIncomingPayment,
     approveIncomingPayment,
     cancelIncomingPayment,
+    confirmPartialIncomingPayment,
+    rejectPartialIncomingPayment,
     createReceiver,
     completeReceiver,
     createPeer: createPeer,

@@ -19,7 +19,8 @@ import { IncomingPaymentInitiationReason } from './types'
 export enum IncomingPaymentEventType {
   IncomingPaymentCreated = 'incoming_payment.created',
   IncomingPaymentExpired = 'incoming_payment.expired',
-  IncomingPaymentCompleted = 'incoming_payment.completed'
+  IncomingPaymentCompleted = 'incoming_payment.completed',
+  IncomingPaymentPartialPaymentReceived = 'incoming_payment.partial_payment_received'
 }
 
 export enum IncomingPaymentState {

@@ -1,5 +1,5 @@
 import axios, { isAxiosError } from 'axios'
-import { createHmac } from 'crypto'
+import { createDecipheriv, createHmac } from 'crypto'
 import { canonicalize } from 'json-canonicalize'
 
 import { isWebhookWithEvent, Webhook, WebhookWithEvent } from './model'
@@ -206,7 +206,11 @@ async function sendWebhook(
     const body = {
       id: webhook.event.id,
       type: webhook.event.type,
-      data: webhook.event.data
+      data:
+        webhook.event.type === 'incoming_payment.partial_payment_received' &&
+        deps.config.dbEncryptionSecret
+          ? decryptPartialPaymentWebhookData(webhook, deps)
+          : webhook.event.data
     }
 
     if (deps.config.signatureSecret) {
@@ -253,6 +257,47 @@ async function sendWebhook(
       deps.logger.warn({ error: err }, 'error not type AxiosError')
       throw err
     }
+  }
+}
+
+type EncryptedDbData = {
+  cipherText: string
+  tag: string
+  iv: string
+}
+
+function decryptPartialPaymentWebhookData(
+  webhook: WebhookWithEvent,
+  deps: ServiceDependencies
+): WebhookEvent['data'] {
+  if (!deps.config.dbEncryptionSecret) {
+    throw new Error('Missing dbEncryptionSecret for partial payment webhook')
+  }
+
+  const rawDataToTransmit = webhook.event.data['dataToTransmit']
+  if (typeof rawDataToTransmit !== 'string') {
+    throw new Error('Missing dataToTransmit on partial payment webhook event')
+  }
+
+  try {
+    const { tag, cipherText, iv } = JSON.parse(
+      rawDataToTransmit
+    ) as EncryptedDbData
+    const decipher = createDecipheriv(
+      'aes-256-gcm',
+      Uint8Array.from(Buffer.from(deps.config.dbEncryptionSecret, 'base64')),
+      iv
+    )
+    decipher.setAuthTag(Uint8Array.from(Buffer.from(tag, 'base64')))
+    let decrypted = decipher.update(cipherText, 'base64', 'utf8')
+    decrypted += decipher.final('utf8')
+
+    return {
+      ...webhook.event.data,
+      dataToTransmit: decrypted
+    }
+  } catch {
+    throw new Error('dataToTransmit is not valid JSON')
   }
 }
 

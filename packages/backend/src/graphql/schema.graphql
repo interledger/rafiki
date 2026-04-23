@@ -372,6 +372,16 @@ type Mutation {
 
   "Delete a tenant."
   deleteTenant(id: String!): DeleteTenantMutationResponse!
+
+  "Confirms a partial incoming payment."
+  confirmPartialIncomingPayment(
+    input: ConfirmPartialIncomingPaymentInput!
+  ): ConfirmPartialIncomingPaymentResponse!
+
+  "Rejects a partial incoming payment."
+  rejectPartialIncomingPayment(
+    input: RejectPartialIncomingPaymentInput!
+  ): RejectPartialIncomingPaymentResponse!
 }
 
 type PageInfo {
@@ -604,6 +614,8 @@ input DepositOutgoingPaymentLiquidityInput {
   outgoingPaymentId: String!
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String!
+  "Data to be encrypted and sent to the receiver."
+  dataToTransmit: String
 }
 
 input CreateIncomingPaymentWithdrawalInput {
@@ -1738,6 +1750,26 @@ type TenantMutationResponse {
 }
 
 type DeleteTenantMutationResponse {
+  success: Boolean!
+}
+
+input ConfirmPartialIncomingPaymentInput {
+  incomingPaymentId: ID!
+  partialIncomingPaymentId: ID!
+}
+
+type ConfirmPartialIncomingPaymentResponse {
+  success: Boolean!
+}
+
+input RejectPartialIncomingPaymentInput {
+  incomingPaymentId: ID!
+  partialIncomingPaymentId: ID!
+  "Reason why this incoming payment has been canceled. This value will be publicly visible in the metadata field if this incoming payment is requested through Open Payments."
+  reason: String
+}
+
+type RejectPartialIncomingPaymentResponse {
   success: Boolean!
 }
 
