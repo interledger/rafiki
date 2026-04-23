@@ -8,7 +8,7 @@ USER rafiki
 RUN mkdir -p /home/rafiki/.local/bin
 ENV PATH="/home/rafiki/.local/bin:$PATH"
 RUN corepack enable --install-directory ~/.local/bin
-RUN corepack prepare pnpm@8.7.4 --activate
+RUN corepack prepare pnpm@10.33.0 --activate
 COPY pnpm-lock.yaml package.json pnpm-workspace.yaml .npmrc tsconfig.json tsconfig.build.json ./
 
 # Fetch the pnpm dependencies, but use a local cache.
