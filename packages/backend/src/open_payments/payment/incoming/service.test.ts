@@ -1329,6 +1329,63 @@ describe('Incoming Payment Service', (): void => {
         }
       )
     )
+
+    test(
+      'rejects partial payment if request times out',
+      withConfigOverride(
+        () => config,
+        {
+          partialPaymentDecisionMaxWaitMs: 1,
+          partialPaymentDecisionSafetyMarginMs: 0
+        },
+        async (): Promise<void> => {
+          const partialIncomingPaymentId = uuid()
+          const expiresAt = new Date(Date.now() + 5_000)
+          const cacheKey = `partial_payment_decision:${incomingPayment.id}:${partialIncomingPaymentId}`
+
+          const redisGetSpy = jest.spyOn(redis, 'get').mockImplementation()
+
+          const decision = await incomingPaymentService.processPartialPayment(
+            incomingPayment.id,
+            {
+              dataFromSender: '{}',
+              partialIncomingPaymentId,
+              expiresAt
+            }
+          )
+
+          expect(decision.reason).toBe('No response from receiving ASE')
+          expect(decision.success).toBe(false)
+          expect(redisGetSpy).toHaveBeenCalledWith(cacheKey)
+        }
+      )
+    )
+  })
+
+  describe('updatePartialPaymentDecision', (): void => {
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    test('sets partial payments decision in redis', async (): Promise<void> => {
+      const partialPaymentId = uuid()
+      const incomingPaymentId = uuid()
+      const cacheKey = `partial_payment_decision:${incomingPaymentId}:${partialPaymentId}`
+
+      const redisSetSpy = jest.spyOn(redis, 'set').mockImplementation()
+
+      await incomingPaymentService.updatePartialPaymentDecision({
+        incomingPaymentId,
+        partialPaymentId: partialPaymentId,
+        success: false,
+        reason: 'rejected'
+      })
+
+      expect(redisSetSpy).toHaveBeenCalledWith(
+        cacheKey,
+        JSON.stringify({ success: false, reason: 'rejected' })
+      )
+    })
   })
 
   describe('getPage', (): void => {
