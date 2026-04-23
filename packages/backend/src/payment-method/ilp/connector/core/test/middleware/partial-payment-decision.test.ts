@@ -37,7 +37,7 @@ describe('Partial Payment Decision Middleware', function () {
       [
         string,
         {
-          dataToTransmit: string
+          dataFromSender: string
           partialIncomingPaymentId: string
           expiresAt: Date
         }
@@ -127,7 +127,7 @@ describe('Partial Payment Decision Middleware', function () {
     expect(mockProcessPartialPayment).toHaveBeenCalledWith(
       incomingPaymentId,
       expect.objectContaining({
-        dataToTransmit: 'test-data',
+        dataFromSender: 'test-data',
         expiresAt
       })
     )
@@ -183,7 +183,7 @@ describe('Partial Payment Decision Middleware', function () {
     expect(mockProcessPartialPayment).toHaveBeenCalledWith(
       incomingPaymentId,
       expect.objectContaining({
-        dataToTransmit: additionalData,
+        dataFromSender: additionalData,
         expiresAt: prepare.expiresAt
       })
     )
