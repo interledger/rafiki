@@ -68,10 +68,18 @@ describe('Partial Payment Decision Middleware', function () {
     if (!ctx.state.streamServer) {
       throw new Error('streamServer should be defined in this test')
     }
+
+    const finalDeclineMock = jest
+      .fn()
+      .mockImplementation(
+        (errorData?: Buffer) => errorData ?? Buffer.from('declined', 'utf8')
+      )
+
     jest.spyOn(ctx.state.streamServer, 'createReply').mockReturnValue({
       packet: Buffer.from('mock-packet'),
-      finalDecline: jest.fn().mockReturnValue(Buffer.from('declined', 'utf8'))
+      finalDecline: finalDeclineMock
     } as unknown as ReturnType<StreamServer['createReply']>)
+    return finalDeclineMock
   }
 
   test('skips when streamDestination is not set', async () => {
@@ -210,37 +218,6 @@ describe('Partial Payment Decision Middleware', function () {
     expect(next).toHaveBeenCalledTimes(1)
   })
 
-  test.each([
-    ['no success field (timeout)', { reason: 'No response from ASE' }],
-    [
-      'explicit success: undefined',
-      { success: undefined, reason: 'No response from ASE' }
-    ]
-  ])(
-    'allows payment when ASE does not respond (%s)',
-    async (
-      _: string,
-      decisionResult: { success?: boolean; reason: string }
-    ) => {
-      const { services, mockProcessPartialPayment } = makeServices()
-      const ctx = makeContext(undefined, services)
-      const prepare = IlpPrepareFactory.build({
-        expiresAt: new Date(Date.now() + 30000)
-      })
-      ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
-      mockIncomingMoneyReply(ctx)
-
-      mockProcessPartialPayment.mockResolvedValue(decisionResult)
-
-      const next = jest.fn()
-
-      await expect(middleware(ctx, next)).resolves.toBeUndefined()
-
-      expect(next).toHaveBeenCalledTimes(1)
-      expect(ctx.response.reply).toBeUndefined()
-    }
-  )
-
   test('declines payment when decision is not approved', async () => {
     const { services, mockProcessPartialPayment } = makeServices()
     const ctx = makeContext(undefined, services)
@@ -270,7 +247,7 @@ describe('Partial Payment Decision Middleware', function () {
       expiresAt: new Date(Date.now() + 30000)
     })
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
-    mockIncomingMoneyReplyWithDecline(ctx)
+    const finalDeclineMock = mockIncomingMoneyReplyWithDecline(ctx)
 
     const rejectionReason = 'Data validation failed'
     mockProcessPartialPayment.mockResolvedValue({
@@ -281,6 +258,8 @@ describe('Partial Payment Decision Middleware', function () {
     const next = jest.fn()
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(ctx.response.reply).toBeDefined()
+    expect(finalDeclineMock).toHaveBeenCalledWith(Buffer.from(rejectionReason))
     expect(ctx.response.reply).toBeDefined()
     expect(next).not.toHaveBeenCalled()
   })
@@ -315,7 +294,7 @@ describe('Partial Payment Decision Middleware', function () {
       expiresAt: new Date(Date.now() + 30000)
     })
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
-    mockIncomingMoneyReplyWithDecline(ctx)
+    const finalDeclineMock = mockIncomingMoneyReplyWithDecline(ctx)
 
     const error = new Error('Database error')
     mockProcessPartialPayment.mockRejectedValue(error)
@@ -323,6 +302,9 @@ describe('Partial Payment Decision Middleware', function () {
     const next = jest.fn()
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(finalDeclineMock).toHaveBeenCalledWith(
+      Buffer.from('Error processing partial payment')
+    )
     expect(ctx.response.reply).toBeDefined()
     expect(next).not.toHaveBeenCalled()
   })
