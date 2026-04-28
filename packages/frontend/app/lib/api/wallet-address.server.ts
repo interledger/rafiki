@@ -40,6 +40,10 @@ export const getWalletAddress = async (
             scale
             withdrawalThreshold
           }
+          tenant {
+            id
+            publicName
+          }
         }
       }
     `,
