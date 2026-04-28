@@ -5,7 +5,7 @@
   "scripts": {
     "start": "astro dev",
     "build:docs": "astro build",
-    "build:docs:graphql": "spectaql config-auth.yml && spectaql config-backend.yml",
+    "build:docs:graphql": "spectaql ./spectaql/config-auth.yml && spectaql ./spectaql/config-auth-es.yml && spectaql ./spectaql/config-backend.yml && spectaql ./spectaql/config-backend-es.yml",
     "preview": "astro preview",
     "astro": "astro",
     "format": "prettier --write '**/*.{js,mjs,ts,tsx,json,md,mdx,astro}' && eslint --max-warnings=0 --fix .",
