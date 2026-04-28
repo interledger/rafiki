@@ -1,0 +1,38 @@
+meta {
+  name: 3: Customer ASE - Generate Card Keypair
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{hsmEmulatorHost}}/hsm/ase-customer/generate-card-key
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "tr31ZmkUnderLmk": "{{zmk_tr31_lmk_ilf}}"
+  }
+}
+
+script:post-response {
+  const body = res.getBody();
+  
+  if (body?.tr31CardKeyUnderLmk) bru.setEnvVar("cardkey_tr31_lmk_ilf", body.tr31CardKeyUnderLmk);
+  if (body?.tr31CardKeyUnderZmk) bru.setEnvVar("cardkey_tr31_zmk", body.tr31CardKeyUnderZmk);
+  if (body?.publicKey) bru.setEnvVar("cardkey_public", body.publicKey);
+  if (body?.kcv) bru.setEnvVar("cardkey_kcv", body.kcv);
+  
+  
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
