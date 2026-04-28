@@ -11,7 +11,7 @@ services:
       - rafiki 
     ports: 
       - '4008:4008' 
-      - '9233:9229'
+      - '9235:9229'
     environment: 
       NODE_ENV: ${NODE_ENV:-development} 
       INSTANCE_NAME: HAPPY-LIFE 

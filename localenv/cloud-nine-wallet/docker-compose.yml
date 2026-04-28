@@ -10,7 +10,7 @@ services:
     networks:
       - rafiki
     ports:
-      - '9234:9229'
+      - '9236:9229'
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       INSTANCE_NAME: CLOUD-NINE
