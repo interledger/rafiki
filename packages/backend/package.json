@@ -57,7 +57,7 @@
     "@interledger/http-signature-utils": "2.0.2",
     "@interledger/open-payments": "7.4.0",
     "@interledger/openapi": "2.0.2",
-    "@interledger/pay": "0.4.0-alpha.10",
+    "@interledger/pay": "0.4.0-alpha.11",
     "@interledger/stream-receiver": "0.3.3-alpha.4",
     "@koa/cors": "^5.0.0",
     "@koa/router": "^12.0.2",

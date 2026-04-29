@@ -4,7 +4,7 @@ import { StreamState } from './stream-address'
 import { isIlpReply } from 'ilp-packet'
 
 type PartialPaymentDecision = {
-  success?: boolean
+  success: boolean
   reason?: string
 }
 
@@ -35,20 +35,20 @@ export function createPartialPaymentDecisionMiddleware(): ILPMiddleware {
       return
     }
 
-    let decision: PartialPaymentDecision | undefined
+    let decision: PartialPaymentDecision
     let reason: string | undefined
 
     try {
       decision = await ctx.services.incomingPayments.processPartialPayment(
         incomingPaymentId,
         {
-          dataToTransmit: additionalData,
+          dataFromSender: additionalData,
           partialIncomingPaymentId: uuid(),
           expiresAt: prepare.expiresAt
         }
       )
 
-      if (decision?.success !== false) {
+      if (decision.success) {
         await next()
         return
       }

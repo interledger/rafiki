@@ -204,10 +204,10 @@ components:
             partialIncomingPaymentId:
               type: string
               format: uuid
-              description: Identifier for the partial payment fragment associated with this webhook event.
-            dataToTransmit:
+              description: Identifier for the partial payment associated with this webhook event.
+            dataFromSender:
               type: string
-              description: Data received from the sender that is forwarded to the account servicing entity.
+              description: Data transmitted by the sending Account Servicing Entity during this partial payment.
       additionalProperties: false
     outgoingPaymentEvent:
       required:
