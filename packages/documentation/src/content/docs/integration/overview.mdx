@@ -25,6 +25,7 @@ For testing purposes, you can set up a [mock account servicing entity](/integrat
 ## Integration steps
 
 <CardGrid>
+  <Card title="Integration checklist" icon="approve-check"> Review the integration checklist for more required and optional steps.<p></p><p>[Review the checklist >](/integration/requirements/overview)</p></Card>
 
   <Card title="Tenants"><Badge text="Required" variant="danger" /> A tenant represents an isolated environment for an ASE. You must create a tenant even if you don't intend to share your Rafiki instance across ASEs.<p></p><p>[Create a tenant >](/integration/requirements/tenants)</p></Card>
 
@@ -32,13 +33,13 @@ For testing purposes, you can set up a [mock account servicing entity](/integrat
 
   <Card title="Wallet addresses"><Badge text="Required" variant="danger" /> Each payment account in the ASE's system must be linked to a wallet address. You must have at least one asset in Rafiki before creating wallet addresses.<p></p><p>[Create a wallet address >](/integration/requirements/wallet-addresses)</p></Card>
 
-  <Card title="Webhook endpoint"><Badge text="Required" variant="danger" /> You must expose a webhook endpoint that listens for events dispatched by Rafiki, then react accordingly. For example, deposit or withdraw liquidity.<p></p><p>[Specify a webhook endpoint >](/integration/requirements/webhook-events)</p></Card>
-
-  <Card title="Integration checklist"> Review the integration checklist for more required and optional steps.<p></p><p>[Review the checklist >](/integration/requirements/overview)</p></Card>
+  <Card title="Webhook endpoint"><Badge text="Required" variant="danger" /> You must expose a webhook endpoint that listens for events dispatched by Rafiki, then react accordingly by calling/interfacing with the Backend Admin API. For example, deposit or withdraw liquidity.<p></p><p>[Specify a webhook endpoint >](/integration/requirements/webhook-events)</p></Card>
 
 </CardGrid>
 
 ## Payments
+
+The following steps illustrate how to make a basic payment between two wallet addresses on the same Rafiki instance.
 
 <CardGrid>
 
