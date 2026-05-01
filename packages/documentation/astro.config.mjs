@@ -182,11 +182,15 @@ export default defineConfig({
           collapsed: true,
           items: [
             {
+              label: 'Overview',
+              link: '/integration/overview'
+            },
+            {
               label: 'Requirements',
               collapsed: true,
               items: [
                 {
-                  label: 'Overview and checklist',
+                  label: 'Integration checklist',
                   link: '/integration/requirements/overview'
                 },
                 {
