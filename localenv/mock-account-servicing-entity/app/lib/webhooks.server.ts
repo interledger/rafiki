@@ -209,9 +209,9 @@ export async function handleIncomingPartialPaymentReceived(
     throw new Error('No partialIncomingPaymentId found on webhook data')
   }
 
-  const rawDataToTransmit = wh.data['dataToTransmit'] as string | undefined
-  if (!rawDataToTransmit) {
-    throw new Error('No dataToTransmit found on webhook data')
+  const dataFromSender = wh.data['dataFromSender'] as string | undefined
+  if (!dataFromSender) {
+    throw new Error('No dataFromSender found on webhook data')
   }
 
   await generateApolloClient(options)
