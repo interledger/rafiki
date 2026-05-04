@@ -353,8 +353,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/pay':
-        specifier: 0.4.0-alpha.11
-        version: 0.4.0-alpha.11
+        specifier: 0.4.0-alpha.12
+        version: 0.4.0-alpha.12
       '@interledger/stream-receiver':
         specifier: 0.3.3-alpha.4
         version: 0.3.3-alpha.4
@@ -3137,8 +3137,8 @@ packages:
   '@interledger/openapi@2.0.4':
     resolution: {integrity: sha512-3V6xCk2dKnpBiS6ppBDtQsItZ4r1r/YO9T93Pag2yMxIIAe0NAwUfq5yWPYJtNTQ8j2br+z/AwlgWwenxKffWg==}
 
-  '@interledger/pay@0.4.0-alpha.11':
-    resolution: {integrity: sha512-maTSkQ3Ty3MdZbgLMOIeRJHb837YzqVrB5PgG5lerJDCClzZHWaNqOfLoKTEE69U6U/igc05JVqtM/CW64zGiA==}
+  '@interledger/pay@0.4.0-alpha.12':
+    resolution: {integrity: sha512-lINwWoQgrBln5hmPeC1IIkxi/nWwrIYiqkv90nXih9k+5zdZaiNTYE6KYuh71vsgeliHPOmwQLym3LvlsO7F1g==}
 
   '@interledger/stream-receiver@0.3.3-alpha.4':
     resolution: {integrity: sha512-wg/agXfAaSe8AorvIKCA5nMQ8HT8JjODzX4WVfoqOjZ5w0wcwEzuy95YZF/sTPLP5ttDR+NN0MTer/CTZ0p1Jw==}
@@ -14975,7 +14975,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@interledger/pay@0.4.0-alpha.11':
+  '@interledger/pay@0.4.0-alpha.12':
     dependencies:
       abort-controller: 3.0.0
       ilp-logger: 1.4.5-alpha.2
