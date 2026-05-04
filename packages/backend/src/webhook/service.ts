@@ -274,14 +274,14 @@ function decryptPartialPaymentWebhookData(
     throw new Error('Missing dbEncryptionSecret for partial payment webhook')
   }
 
-  const rawDataToTransmit = webhook.event.data['dataToTransmit']
-  if (typeof rawDataToTransmit !== 'string') {
-    throw new Error('Missing dataToTransmit on partial payment webhook event')
+  const rawDataFromSender = webhook.event.data['dataFromSender']
+  if (typeof rawDataFromSender !== 'string') {
+    throw new Error('Missing dataFromSender on partial payment webhook event')
   }
 
   try {
     const { tag, cipherText, iv } = JSON.parse(
-      rawDataToTransmit
+      rawDataFromSender
     ) as EncryptedDbData
     const decipher = createDecipheriv(
       'aes-256-gcm',
@@ -294,10 +294,10 @@ function decryptPartialPaymentWebhookData(
 
     return {
       ...webhook.event.data,
-      dataToTransmit: decrypted
+      dataFromSender: decrypted
     }
   } catch {
-    throw new Error('dataToTransmit is not valid JSON')
+    throw new Error('dataFromSender is not valid encrypted payload')
   }
 }
 
