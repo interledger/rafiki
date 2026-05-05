@@ -6,7 +6,8 @@ import {
   ResolversTypes,
   WalletAddress as SchemaWalletAddress,
   MutationResolvers,
-  WalletAddressStatus
+  WalletAddressStatus,
+  WalletAddressResolvers
 } from '../generated/graphql'
 import { ForTenantIdContext, TenantedApolloContext } from '../../app'
 import {
@@ -24,6 +25,7 @@ import {
   UpdateOptions
 } from '../../open_payments/wallet_address/service'
 import { GraphQLErrorCode } from '../errors'
+import { tenantToGraphQl } from './tenant'
 
 export const getWalletAddresses: QueryResolvers<TenantedApolloContext>['walletAddresses'] =
   async (
@@ -203,6 +205,29 @@ export const triggerWalletAddressEvents: MutationResolvers<TenantedApolloContext
     }
   }
 
+export const getWalletAddressTenant: WalletAddressResolvers<TenantedApolloContext>['tenant'] =
+  async (parent, args, ctx): Promise<ResolversTypes['Tenant'] | null> => {
+    if (!parent.id)
+      throw new GraphQLError('"id" required in request to resolve "tenant".')
+    const walletAddressService = await ctx.container.use('walletAddressService')
+    const walletAddress = await walletAddressService.get(parent.id)
+    if (!walletAddress)
+      throw new GraphQLError(
+        errorToMessage[WalletAddressError.UnknownWalletAddress],
+        {
+          extensions: {
+            code: errorToCode[WalletAddressError.UnknownWalletAddress]
+          }
+        }
+      )
+
+    const tenantService = await ctx.container.use('tenantService')
+    const tenant = await tenantService.get(walletAddress.tenantId)
+    if (!tenant) return null
+
+    return tenantToGraphQl(tenant)
+  }
+
 export function walletAddressToGraphql(
   walletAddress: WalletAddress
 ): SchemaWalletAddress {
@@ -214,7 +239,6 @@ export function walletAddressToGraphql(
     createdAt: new Date(+walletAddress.createdAt).toISOString(),
     status: walletAddress.isActive
       ? WalletAddressStatus.Active
-      : WalletAddressStatus.Inactive,
-    tenantId: walletAddress.tenantId
+      : WalletAddressStatus.Inactive
   }
 }

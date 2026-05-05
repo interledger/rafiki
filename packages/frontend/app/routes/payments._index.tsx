@@ -249,6 +249,7 @@ export default function PaymentsPage() {
                 <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
                 <Table.ColumnHeaderCell>State</Table.ColumnHeaderCell>
                 <Table.ColumnHeaderCell>Date</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Tenant</Table.ColumnHeaderCell>
               </Table.Row>
               </Table.Header>
               <Table.Body>
@@ -282,11 +283,21 @@ export default function PaymentsPage() {
                     <Table.Cell>
                       <Text>{new Date(payment.node.createdAt).toLocaleString()}</Text>
                     </Table.Cell>
+                    <Table.Cell>
+                      <Flex direction='column' gap='1'>
+                        {payment.node.tenant?.publicName ? (
+                          <Text weight='medium'>{payment.node.tenant.publicName}</Text>
+                        ) : (
+                          <Text color='gray'>No public name</Text>
+                        )}
+                        <Text size='1' color='gray'>(ID: {payment.node.tenant?.id})</Text>
+                      </Flex>
+                    </Table.Cell>
                   </Table.Row>
                 ))
               ) : (
                 <Table.Row>
-                  <Table.Cell colSpan={4} align='center'>
+                  <Table.Cell colSpan={5} align='center'>
                     <Text>No payments found.</Text>
                   </Table.Cell>
                 </Table.Row>

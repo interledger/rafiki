@@ -280,6 +280,9 @@ describe('Peer Resolvers', (): void => {
                   liquidity
                   name
                   liquidityThreshold
+                  tenant {
+                    id
+                  }
                 }
               }
             `,
@@ -302,6 +305,10 @@ describe('Peer Resolvers', (): void => {
           __typename: 'Asset',
           code: peer.asset.code,
           scale: peer.asset.scale
+        },
+        tenant: {
+          __typename: 'Tenant',
+          id: peer.tenantId
         },
         http: {
           __typename: 'Http',
@@ -330,6 +337,10 @@ describe('Peer Resolvers', (): void => {
           __typename: 'Asset',
           code: peer.asset.code,
           scale: peer.asset.scale
+        },
+        tenant: {
+          __typename: 'Tenant',
+          id: peer.tenantId
         },
         http: {
           __typename: 'Http',

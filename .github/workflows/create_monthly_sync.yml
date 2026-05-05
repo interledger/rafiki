@@ -3,7 +3,7 @@ name: Create Monthly Sync discussion
 # First Wednesday of every month at 12AM UTC
 on:
     schedule:
-        - cron: "0 0 1-7 * 3"
+        - cron: "0 0 * * 3"
 
 jobs:
     create-discussion:
@@ -11,6 +11,15 @@ jobs:
             discussions: write
         runs-on: ubuntu-22.04
         steps:
+            - name: Check if first Wednesday
+              id: check
+              run: |
+                DOM=$(date +%d)
+                if [ "$DOM" -gt 7 ]; then
+                  echo "Not the first Wednesday of the month, skipping"
+                  exit 0
+                fi
+
             - name: Get repository information
               id: get-repository-info
               uses: octokit/graphql-action@v2.x

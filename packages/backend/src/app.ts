@@ -30,7 +30,8 @@ import {
   httpsigMiddleware,
   Grant,
   RequestAction,
-  authenticatedStatusMiddleware
+  authenticatedStatusMiddleware,
+  createOutgoingPaymentGrantTokenIntrospectionMiddleware
 } from './open_payments/auth/middleware'
 import { RatesService } from './rates/service'
 import { createSpspMiddleware } from './payment-method/ilp/spsp/middleware'
@@ -65,7 +66,10 @@ import {
 } from '@interledger/open-payments'
 import { RemoteIncomingPaymentService } from './open_payments/payment/incoming_remote/service'
 import { ReceiverService } from './open_payments/receiver/service'
-import { Client as TokenIntrospectionClient } from 'token-introspection'
+import {
+  Client as TokenIntrospectionClient,
+  TokenInfoClient
+} from 'token-introspection'
 import { applyMiddleware } from 'graphql-middleware'
 import { Redis } from 'ioredis'
 import {
@@ -134,11 +138,14 @@ export type AppRequest<ParamsT extends string = string> = Omit<
   params: Record<ParamsT, string>
 }
 
-export interface WalletAddressUrlContext extends AppContext {
-  walletAddressUrl: string
+export interface IntrospectionContext extends AppContext {
   grant?: Grant
-  client?: string
+  client?: TokenInfoClient
   accessAction?: AccessAction
+}
+
+export interface WalletAddressUrlContext extends IntrospectionContext {
+  walletAddressUrl: string
 }
 
 export interface WalletAddressContext extends WalletAddressUrlContext {
@@ -154,7 +161,7 @@ type HttpSigRequest = Omit<AppContext['request'], 'headers'> & {
 export type HttpSigContext = AppContext & {
   request: HttpSigRequest
   headers: HttpSigHeaders
-  client: string
+  client: TokenInfoClient
 }
 
 export type HttpSigWithAuthenticatedStatusContext = HttpSigContext &
@@ -713,6 +720,16 @@ export class App {
       httpsigMiddleware,
       getWalletAddressForSubresource,
       outgoingPaymentRoutes.get
+    )
+
+    // GET /outgoing-payment-grant
+    // Get grant spent amounts (scoped to interval, if any) from grant
+    // with outgoing payment create access
+    router.get(
+      '/:tenantId/outgoing-payment-grant',
+      // Expects token used for outgoing payment payment creation
+      createOutgoingPaymentGrantTokenIntrospectionMiddleware(),
+      outgoingPaymentRoutes.getGrantSpentAmounts
     )
 
     // GET /quotes/{id}

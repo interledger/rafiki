@@ -1,6 +1,5 @@
 import { Model, ModelOptions, QueryContext } from 'objection'
 import { DbErrors } from 'objection-db-errors'
-import { createDecipheriv } from 'node:crypto'
 
 import { LiquidityAccount } from '../../../accounting/service'
 import { Asset } from '../../../asset/model'
@@ -16,6 +15,7 @@ import {
   OutgoingPayment as OpenPaymentsOutgoingPayment,
   OutgoingPaymentWithSpentAmounts
 } from '@interledger/open-payments'
+import { BaseModel } from '../../../shared/baseModel'
 import { Tenant } from '../../../tenants/model'
 import {
   OutgoingPaymentCardDetails,
@@ -28,6 +28,75 @@ export class OutgoingPaymentGrant extends DbErrors(Model) {
   }
   public static readonly tableName = 'outgoingPaymentGrants'
   public id!: string
+  public interval?: string
+}
+
+export type OutgoingPaymentGrantSpentAmountsInput = {
+  id?: string
+  grantId: string
+  outgoingPaymentId: string
+  receiveAmountScale: number
+  receiveAmountCode: string
+  paymentReceiveAmountValue: number | string | bigint
+  intervalReceiveAmountValue?: number | string | bigint | null
+  grantTotalReceiveAmountValue: number | string | bigint
+  debitAmountScale: number
+  debitAmountCode: string
+  paymentDebitAmountValue: number | string | bigint
+  intervalDebitAmountValue?: number | string | bigint | null
+  grantTotalDebitAmountValue: number | string | bigint
+  paymentState: string
+  intervalStart?: Date | string | null
+  intervalEnd?: Date | string | null
+  createdAt?: Date | string
+}
+
+export class OutgoingPaymentGrantSpentAmounts extends BaseModel {
+  public static get modelPaths(): string[] {
+    return [__dirname]
+  }
+  public static readonly tableName = 'outgoingPaymentGrantSpentAmounts'
+
+  public id!: string
+  public grantId!: string
+  public outgoingPaymentId!: string
+  public receiveAmountScale!: number
+  public receiveAmountCode!: string
+  public paymentReceiveAmountValue!: bigint
+  public intervalReceiveAmountValue!: bigint | null
+  public grantTotalReceiveAmountValue!: bigint
+  public debitAmountScale!: number
+  public debitAmountCode!: string
+  public paymentDebitAmountValue!: bigint
+  public intervalDebitAmountValue!: bigint | null
+  public grantTotalDebitAmountValue!: bigint
+  public paymentState!: string
+  public intervalStart!: Date | null
+  public intervalEnd!: Date | null
+  public createdAt!: Date
+
+  public static create(
+    data: OutgoingPaymentGrantSpentAmountsInput
+  ): OutgoingPaymentGrantSpentAmounts {
+    return this.fromJson({
+      ...data,
+      paymentReceiveAmountValue: BigInt(data.paymentReceiveAmountValue),
+      intervalReceiveAmountValue:
+        data.intervalReceiveAmountValue != null
+          ? BigInt(data.intervalReceiveAmountValue)
+          : null,
+      grantTotalReceiveAmountValue: BigInt(data.grantTotalReceiveAmountValue),
+      paymentDebitAmountValue: BigInt(data.paymentDebitAmountValue),
+      intervalDebitAmountValue:
+        data.intervalDebitAmountValue != null
+          ? BigInt(data.intervalDebitAmountValue)
+          : null,
+      grantTotalDebitAmountValue: BigInt(data.grantTotalDebitAmountValue),
+      intervalStart: data.intervalStart ? new Date(data.intervalStart) : null,
+      intervalEnd: data.intervalEnd ? new Date(data.intervalEnd) : null,
+      createdAt: data.createdAt ? new Date(data.createdAt) : new Date()
+    })
+  }
 }
 
 export class OutgoingPayment
@@ -133,24 +202,6 @@ export class OutgoingPayment
   }
 
   public tenantId!: string
-
-  public dataToTransmit?: string
-  public getDataToTransmit(key?: string): string | null {
-    if (!this.dataToTransmit) return null
-    if (!key) return this.dataToTransmit
-    const { tag, cipherText, iv } = JSON.parse(this.dataToTransmit)
-
-    const decipher = createDecipheriv(
-      'aes-256-gcm',
-      Uint8Array.from(Buffer.from(key, 'base64')),
-      iv
-    )
-    decipher.setAuthTag(Uint8Array.from(Buffer.from(tag, 'base64')))
-    let decryptedDataToTransmit = decipher.update(cipherText, 'base64', 'utf8')
-    decryptedDataToTransmit += decipher.final('utf8')
-
-    return decryptedDataToTransmit
-  }
 
   static get relationMappings() {
     return {

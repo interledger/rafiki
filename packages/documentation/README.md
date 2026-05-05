@@ -30,6 +30,27 @@ $ pnpm build:docs
 
 This command generates static content into the build directory and can be served using any static contents hosting service.
 
+### Formatting and Linting
+
+The documentation uses [Prettier](https://prettier.io/) for formatting and [ESLint](https://eslint.org/) for linting. This package has its own Prettier configuration (`.prettierrc`) that differs from the root repository configuration, and is excluded from root-level formatting via `.prettierignore`.
+
+From the root of the repository, you can run:
+
+```sh
+# Format documentation files
+$ pnpm format:docs
+
+# Lint documentation files
+$ pnpm lint:docs
+```
+
+Or from within this package directory:
+
+```sh
+cd packages/documentation
+pnpm prettier --write '**/*.{js,mjs,ts,tsx,json,md,mdx,astro}'
+```
+
 ## Editing Content
 
 Starlight looks for `.md` or `.mdx` files in the `src/content/docs/` directory. Each file is exposed as a route based on its file name. Due to the nature of how Starlight deals with content and their generated URLs, all docs content lives in `/src/content/docs/`. For example, the home page of the documentation lives within the `/src/content/docs/` folder and is rendered at rafiki.dev, not rafiki.dev/docs.
@@ -55,6 +76,36 @@ Edit me...
 ```
 
 Refer to the Starlight documentation on [authoring content](https://starlight.astro.build/guides/authoring-content/) for more detailed guidance.
+
+### MDX Syntax Requirements
+
+When using directive blocks (like `:::note`, `:::tip`, `:::warning`, `:::danger`) inside component children (such as `<TabItem>`), **the directive must be at the root level (no indentation)**. This is a requirement for MDX parsing compatibility with Astro 5.17+.
+
+**❌ Incorrect (indented):**
+
+```mdx
+<TabItem label="Example">
+  Some content here
+
+:::note[Important]
+This note is indented and will cause a build error
+:::
+
+</TabItem>
+```
+
+**✅ Correct (no indentation):**
+
+```mdx
+<TabItem label="Example">
+  Some content here
+
+:::note[Important]
+This note is at root level and works correctly
+:::
+
+</TabItem>
+```
 
 ### Docs components
 
@@ -112,3 +163,15 @@ import Base from '../layouts/Base.astro';
 ```
 
 Refer to the Astro documentation on [pages](https://docs.astro.build/en/core-concepts/astro-pages/) for more detailed guidance.
+
+## Troubleshooting
+
+### Build fails with MDX directive errors
+
+If you see an error like:
+
+```
+Expected the closing tag `</TabItem>` either after the end of `directiveContainer`
+```
+
+This means you have an indented directive block (like `:::note`) inside a component. See the [MDX Syntax Requirements](#mdx-syntax-requirements) section above for the correct syntax.

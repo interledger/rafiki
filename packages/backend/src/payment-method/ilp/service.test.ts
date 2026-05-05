@@ -824,7 +824,7 @@ describe('IlpPaymentService', (): void => {
           finalDebitAmount: 100n,
           finalReceiveAmount: 100n
         })
-      ).resolves.toBeUndefined()
+      ).resolves.toBe(100n)
 
       await validateBalances(outgoingPayment, incomingPayment, {
         amountSent: 100n,
@@ -875,7 +875,7 @@ describe('IlpPaymentService', (): void => {
           finalDebitAmount: 100n - 5n,
           finalReceiveAmount: 100n - 5n
         })
-      ).resolves.toBeUndefined()
+      ).resolves.toBe(95n)
 
       await validateBalances(outgoingPayment, incomingPayment, {
         amountSent: 100n,

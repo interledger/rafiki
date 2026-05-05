@@ -29,8 +29,11 @@ export const listAssets = async (
               id
               scale
               withdrawalThreshold
-              tenantId
               createdAt
+              tenant {
+                id
+                publicName
+              }
             }
           }
           pageInfo {
@@ -55,7 +58,10 @@ export const loadAssets = async (tenantOptions?: TenantOptions) => {
       id: string
       scale: number
       withdrawalThreshold?: bigint | null
-      tenantId: string
+      tenant: {
+        id: string
+        publicName?: string | null
+      } | null
       createdAt: string
     }
   }[] = []

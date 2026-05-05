@@ -1,5 +1,5 @@
-import { mockTokenInfo } from './test/helpers'
-import { isActiveTokenInfo } from './types'
+import { mockJwk, mockTokenInfo } from './test/helpers'
+import { isActiveTokenInfo, isClientWalletAddress, isClientJwk } from './types'
 
 describe('types', (): void => {
   describe('isActiveTokenInfo', (): void => {
@@ -12,6 +12,32 @@ describe('types', (): void => {
           active: false
         })
       ).toBe(false)
+    })
+  })
+
+  describe('isClientWalletAddress', (): void => {
+    test('returns true when client has walletAddress', (): void => {
+      const tokenInfo = mockTokenInfo()
+      if (!isActiveTokenInfo(tokenInfo)) throw new Error('expected active')
+      expect(isClientWalletAddress(tokenInfo)).toBe(true)
+    })
+    test('returns false when client has jwk', (): void => {
+      const tokenInfo = mockTokenInfo({ client: { jwk: mockJwk() } })
+      if (!isActiveTokenInfo(tokenInfo)) throw new Error('expected active')
+      expect(isClientWalletAddress(tokenInfo)).toBe(false)
+    })
+  })
+
+  describe('isClientJwk', (): void => {
+    test('returns true when client has jwk', (): void => {
+      const tokenInfo = mockTokenInfo({ client: { jwk: mockJwk() } })
+      if (!isActiveTokenInfo(tokenInfo)) throw new Error('expected active')
+      expect(isClientJwk(tokenInfo)).toBe(true)
+    })
+    test('returns false when client has walletAddress', (): void => {
+      const tokenInfo = mockTokenInfo()
+      if (!isActiveTokenInfo(tokenInfo)) throw new Error('expected active')
+      expect(isClientJwk(tokenInfo)).toBe(false)
     })
   })
 })

@@ -59,8 +59,8 @@ export type Grant = Model & {
   __typename?: 'Grant';
   /** Details of the access provided by the grant. */
   access: Array<Access>;
-  /** Wallet address of the grantee's account. */
-  client: Scalars['String']['output'];
+  /** Wallet address of the grantee's account. Null when using JWK-based directed identity. */
+  client?: Maybe<Scalars['String']['output']>;
   /** The date and time when the grant was created. */
   createdAt: Scalars['String']['output'];
   /** Specific outcome of a finalized grant, indicating whether the grant was issued, revoked, or rejected. */
@@ -375,7 +375,7 @@ export type AccessResolvers<ContextType = any, ParentType extends ResolversParen
 
 export type GrantResolvers<ContextType = any, ParentType extends ResolversParentTypes['Grant'] = ResolversParentTypes['Grant']> = {
   access?: Resolver<Array<ResolversTypes['Access']>, ParentType, ContextType>;
-  client?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  client?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   finalizationReason?: Resolver<Maybe<ResolversTypes['GrantFinalization']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;

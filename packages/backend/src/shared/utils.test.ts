@@ -1,4 +1,4 @@
-import crypto, { createDecipheriv } from 'node:crypto'
+import crypto from 'node:crypto'
 import { IocContract } from '@adonisjs/fold'
 import { Redis } from 'ioredis'
 import { faker } from '@faker-js/faker'
@@ -11,7 +11,8 @@ import {
   sleep,
   getTenantFromApiSignature,
   ensureTrailingSlash,
-  encryptDbData
+  loadRoutesFromDatabase,
+  parseClientWalletAddress
 } from './utils'
 import { AppServices, AppContext } from '../app'
 import { TestContainer, createTestApp } from '../tests/app'
@@ -22,6 +23,7 @@ import { Config, IAppConfig } from '../config/app'
 import { createContext } from '../tests/context'
 import { Tenant } from '../tenants/model'
 import { truncateTables } from '../tests/tableManager'
+import { generateTestKeys } from '@interledger/http-signature-utils'
 
 describe('utils', (): void => {
   describe('isValidHttpUrl', (): void => {
@@ -458,22 +460,127 @@ describe('utils', (): void => {
     expect(ensureTrailingSlash(`${path}/`)).toBe(`${path}/`)
   })
 
-  test('can encrypt data with symmetric key', async (): Promise<void> => {
-    const key = crypto.randomBytes(32).toString('base64')
+  describe('loadRoutesFromDatabase', (): void => {
+    test('loads routes from peers', async (): Promise<void> => {
+      const mockPeers = [
+        {
+          id: v4(),
+          tenantId: v4(),
+          assetId: v4(),
+          staticIlpAddress: 'test.peer1',
+          routes: ['test.peer1.route1', 'test.peer1.route2']
+        },
+        {
+          id: v4(),
+          tenantId: v4(),
+          assetId: v4(),
+          staticIlpAddress: 'test.peer2',
+          routes: ['test.peer2.route1']
+        }
+      ]
 
-    const plaintext = faker.internet.email()
+      const mockAddStaticRoute = jest.fn()
+      const mockContainer = {
+        use: jest.fn((service: string) => {
+          if (service === 'peerService') {
+            return { getPage: jest.fn().mockResolvedValue(mockPeers) }
+          }
+          if (service === 'routerService') {
+            return { addStaticRoute: mockAddStaticRoute }
+          }
+          if (service === 'logger') {
+            return { info: jest.fn() }
+          }
+        })
+      } as unknown as IocContract<AppServices>
 
-    const encrypted = JSON.parse(encryptDbData(plaintext, key))
+      await loadRoutesFromDatabase(mockContainer)
 
-    const decipher = createDecipheriv(
-      'aes-256-gcm',
-      Uint8Array.from(Buffer.from(key, 'base64')),
-      encrypted.iv
-    )
-    decipher.setAuthTag(Uint8Array.from(Buffer.from(encrypted.tag, 'base64')))
-    let decipherText = decipher.update(encrypted.cipherText, 'base64', 'utf8')
-    decipherText += decipher.final('utf8')
+      expect(mockAddStaticRoute).toHaveBeenCalledTimes(3)
+      expect(mockAddStaticRoute).toHaveBeenCalledWith(
+        'test.peer1.route1',
+        mockPeers[0].id,
+        mockPeers[0].tenantId,
+        mockPeers[0].assetId
+      )
+      expect(mockAddStaticRoute).toHaveBeenCalledWith(
+        'test.peer1.route2',
+        mockPeers[0].id,
+        mockPeers[0].tenantId,
+        mockPeers[0].assetId
+      )
+      expect(mockAddStaticRoute).toHaveBeenCalledWith(
+        'test.peer2.route1',
+        mockPeers[1].id,
+        mockPeers[1].tenantId,
+        mockPeers[1].assetId
+      )
+    })
 
-    expect(decipherText).toEqual(plaintext)
+    test('falls back to staticIlpAddress when peer has no routes', async (): Promise<void> => {
+      const mockPeers = [
+        {
+          id: v4(),
+          tenantId: v4(),
+          assetId: v4(),
+          staticIlpAddress: 'test.peer1',
+          routes: []
+        },
+        {
+          id: v4(),
+          tenantId: v4(),
+          assetId: v4(),
+          staticIlpAddress: 'test.peer2',
+          routes: undefined
+        }
+      ]
+
+      const mockAddStaticRoute = jest.fn()
+      const mockContainer = {
+        use: jest.fn((service: string) => {
+          if (service === 'peerService') {
+            return { getPage: jest.fn().mockResolvedValue(mockPeers) }
+          }
+          if (service === 'routerService') {
+            return { addStaticRoute: mockAddStaticRoute }
+          }
+          if (service === 'logger') {
+            return { info: jest.fn() }
+          }
+        })
+      } as unknown as IocContract<AppServices>
+
+      await loadRoutesFromDatabase(mockContainer)
+
+      expect(mockAddStaticRoute).toHaveBeenCalledTimes(2)
+      expect(mockAddStaticRoute).toHaveBeenCalledWith(
+        'test.peer1',
+        mockPeers[0].id,
+        mockPeers[0].tenantId,
+        mockPeers[0].assetId
+      )
+      expect(mockAddStaticRoute).toHaveBeenCalledWith(
+        'test.peer2',
+        mockPeers[1].id,
+        mockPeers[1].tenantId,
+        mockPeers[1].assetId
+      )
+    })
+  })
+
+  describe('parseClientWalletAddress', (): void => {
+    test('returns walletaddress if client has it', () => {
+      const walletAddress = faker.internet.url()
+      expect(parseClientWalletAddress({ walletAddress })).toEqual(walletAddress)
+    })
+
+    test('returns undefined if client is undefined', () => {
+      expect(parseClientWalletAddress(undefined)).toBeUndefined()
+    })
+
+    test('returns undefined if client is using JWK', () => {
+      const jwk = generateTestKeys().publicKey
+      expect(parseClientWalletAddress({ jwk })).toBeUndefined()
+    })
   })
 })

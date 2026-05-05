@@ -1,6 +1,6 @@
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData, useNavigate } from '@remix-run/react'
-import { Box, Button, Flex, Heading, Table, Badge, Text } from '@radix-ui/themes'
+import { Badge, Box, Button, Flex, Heading, Table, Text } from '@radix-ui/themes'
 import { listWalletAddresses } from '~/lib/api/wallet-address.server'
 import { paginationSchema } from '~/lib/validate.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
@@ -64,6 +64,7 @@ export default function WalletAddressesPage() {
                 <Table.ColumnHeaderCell>Wallet address</Table.ColumnHeaderCell>
                 <Table.ColumnHeaderCell>Public name</Table.ColumnHeaderCell>
                 <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Tenant</Table.ColumnHeaderCell>
               </Table.Row>
               </Table.Header>
               <Table.Body>
@@ -87,11 +88,21 @@ export default function WalletAddressesPage() {
                         {wa.node.status}
                       </Badge>
                     </Table.Cell>
+                    <Table.Cell>
+                      <Flex direction='column' gap='1'>
+                        {wa.node.tenant?.publicName ? (
+                          <Text weight='medium'>{wa.node.tenant.publicName}</Text>
+                        ) : (
+                          <Text color='gray'>No public name</Text>
+                        )}
+                        <Text size='1' color='gray'>(ID: {wa.node.tenant?.id})</Text>
+                      </Flex>
+                    </Table.Cell>
                   </Table.Row>
                 ))
               ) : (
                 <Table.Row>
-                  <Table.Cell colSpan={3} align='center'>
+                  <Table.Cell colSpan={4} align='center'>
                     <Text>No wallet addresses found.</Text>
                   </Table.Cell>
                 </Table.Row>

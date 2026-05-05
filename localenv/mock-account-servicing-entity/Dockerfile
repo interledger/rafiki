@@ -1,4 +1,4 @@
-FROM node:20-alpine3.21 AS base
+FROM node:24-alpine3.23 AS base
 
 WORKDIR /home/rafiki
 
@@ -6,7 +6,7 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 
 RUN corepack enable
-RUN corepack prepare pnpm@8.7.4 --activate
+RUN corepack prepare pnpm@10.33.0 --activate
 
 COPY pnpm-lock.yaml ./
 
@@ -42,7 +42,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     --frozen-lockfile
 RUN pnpm --filter mock-account-servicing-entity build
 
-FROM node:20-alpine3.21 AS runner
+FROM node:24-alpine3.23 AS runner
 
 WORKDIR /home/rafiki
 

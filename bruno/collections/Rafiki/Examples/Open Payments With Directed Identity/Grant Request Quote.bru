@@ -1,0 +1,50 @@
+meta {
+  name: Grant Request Quote
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{senderOpenPaymentsAuthHost}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "access_token": {
+          "access": [
+              {
+                  "type": "quote",
+                  "actions": [
+                      "create", "read"
+                  ]
+              }
+          ]
+      },
+      "client": {
+        "jwk": {{directedIdentityPublicKey}}
+      }
+  }
+  
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.generateDirectedIdentityKeys();
+  
+  await scripts.addDirectedIdentitySignatureHeaders();
+}
+
+script:post-response {
+  const scripts = require('./scripts');
+  
+  scripts.storeTokenDetails();
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

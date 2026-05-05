@@ -6,7 +6,7 @@ import { LinkOut } from '@interledger/docs-design-system'
 
 ## Account servicing entity (ASE)
 
-An entity that provides and maintains a payment account for a payer and/or payee. An ASE is a regulated entity within the country or countries it operates. Examples include digital wallets, banks, and mobile money providers. Non-regulated entities should not use Rafiki in production environments due to the potential legal and compliance risks involved.
+An entity that provides and maintains a payment account for a payer and/or payee. An ASE is a regulated entity in the country or countries it operates. Examples include digital wallets, banks, and mobile money providers. Non-regulated entities shouldn't use Rafiki in production environments due to the potential legal and compliance risks involved.
 
 ## Auth service
 
@@ -16,7 +16,7 @@ A reference implementation of an Open Payments authorization server in Rafiki. T
 
 A server that grants delegated authorization and privileges, via [GNAP](#grant-negotiation-and-authorization-protocol-gnap), to a particular instance of client software in the form of access tokens, allowing the client to call the Open Payments APIs.
 
-We’ve provided an opinionated version of a GNAP authorization server via the `auth` service, meaning that we’ve made certain decisions regarding the implementation and configuration of the server that may limit customization but ensure consistency and adherence to preferred practices.
+We've provided an opinionated version of a GNAP authorization server via the `auth` service. This means that we've made certain decisions regarding the implementation and configuration of the server that may limit customization but ensure consistency and adherence to preferred practices.
 
 ## Backend service
 
@@ -28,15 +28,15 @@ An application or service, such as a mobile or web app, that interacts with the 
 
 ## Frontend service
 
-An optional internal interface in Rafiki, known as the Rafiki Admin, used to manage your Rafiki instance. The `frontend` service communicates with the Backend Admin API through a Remix web app, facilitating administrative tasks within the Rafiki environment.
+An optional internal interface in Rafiki, known as the Rafiki Admin, used to manage your Rafiki instance. The `frontend` service communicates with the Backend Admin API through a Remix web app, facilitating administrative tasks in the Rafiki environment.
 
 ## Grant Negotiation and Authorization Protocol (GNAP)
 
-The Grant Negotiation Authorization Protocol (GNAP) defines a mechanism for delegating authorization to a piece of software (client), and conveying the results and artifacts of that delegation to the software. This delegation can include access to a set of APIs as well as subject information passed directly to the software. For more information, refer to the <LinkOut href="https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol-12">GNAP specification</LinkOut>.
+The Grant Negotiation Authorization Protocol (GNAP) defines a mechanism for delegating authorization to a piece of software (client), and conveying the results and artifacts of that delegation to the software. This delegation can include access to a set of APIs and subject information passed directly to the software. For more information, refer to the <LinkOut href="https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol-12">GNAP specification</LinkOut>.
 
 ## Grant
 
-A delegation of authorization from a resource owner to a client, allowing the client to access protected resources or perform actions on the owner’s behalf. In Rafiki, this process is managed by the authorization server, which issues grants as access tokens. These grants permit clients to interact with Open Payments APIs to, for example, create payments and retrieve account information, based on the permissions granted by the resource owner.
+A delegation of authorization from a resource owner to a client, allowing the client to access protected resources or perform actions on the owner's behalf. In Rafiki, this process is managed by the authorization server, which issues grants as access tokens. These grants permit clients to interact with Open Payments APIs to, for example, create payments and retrieve account information, based on the permissions granted by the resource owner.
 
 ## Identity provider (IdP)
 
@@ -44,11 +44,11 @@ A system or service that stores and manages user identity information, authentic
 
 ## Incoming payment
 
-An object created by the recipient’s ASE, on their resource server, that represents a payment being received. The object contains information about the incoming payment, such as the amount, currency, receiver’s wallet address, and payment status. The object is used to track and manage payments that are expected to be or have been received.
+An object created by the recipient's ASE, on their resource server, that represents a payment being received. The object contains information about the incoming payment, such as the amount, currency, receiver’s wallet address, and payment status. The object is used to track and manage payments that are expected to be or have been received.
 
 ## Interledger Protocol (ILP)
 
-An open protocol stack designed to facilitate the transfer of value across different currencies, platforms, and payment networks. Rafiki is a reference implementation of the Interledger stack, allowing you to join the Interledger network and quickly enable Interledger capabilities on your users’ accounts. For more information, refer to the <LinkOut href="https://interledger.org/developers/get-started/">Interledger specification</LinkOut>.
+An open protocol stack designed to facilitate the transfer of value across different currencies, platforms, and payment networks. Rafiki is a reference implementation of the Interledger stack, allowing you to join the Interledger network and enable Interledger capabilities on your users' accounts. For more information, refer to the <LinkOut href="https://interledger.org/developers/get-started/">Interledger specification</LinkOut>.
 
 ## ILP packet
 
@@ -56,15 +56,15 @@ A unit of data that carries payment information through the Interledger network.
 
 ## Open Payments
 
-An API standard and a set of APIs that allows clients to securely retrieve account information and initiate payments from your customers’ accounts with their consent. By adhering to this standard, Rafiki enables integration with external applications and supports the secure and uniform management of payments, quotes, and account data through the Open Payments APIs. For more information, visit the <LinkOut href="https://openpayments.dev">Open Payments documentation</LinkOut>.
+An API standard and a set of APIs that allows clients to securely retrieve account information and initiate payments from your customers' accounts with their consent. By adhering to this standard, Rafiki enables integration with external applications and supports the secure and uniform management of payments, quotes, and account data through the Open Payments APIs. For more information, visit the <LinkOut href="https://openpayments.dev">Open Payments documentation</LinkOut>.
 
 ## Operator
 
-The account servicing entity (ASE) responsible for managing the Rafiki instance and its resources, including tenants, peering relationships, assets, and liquidity. Operators typically have administrative privileges and can perform actions that tenants cannot, such as creating and deleting tenants.
+The account servicing entity (ASE) responsible for managing the Rafiki instance and its resources, including tenants, peering relationships, assets, and liquidity. Operators typically have administrative privileges and can perform actions that tenants can't, such as creating and deleting tenants.
 
 ## Outgoing payment
 
-An object created by the sender’s ASE, on their resource server, that represents a payment being sent. This object contains information about the outgoing payment, such as the amount, currency, receiver’s wallet address, and payment status.
+An object created by the sender's ASE, on their resource server, that represents a payment being sent. This object contains information about the outgoing payment, such as the amount, currency, receiver's wallet address, and payment status.
 
 ## Payment pointer
 
@@ -76,7 +76,7 @@ A counterparty with whom you transact with over the Interledger network. Your Ra
 
 ## Quote
 
-An object created by the sender’s ASE, on their resource server, that represents the total cost for the sender to send a payment. When a quote is created, it serves as a commitment from the sender's ASE to deliver the amount to the recipient's ASE and is only valid for a limited time.
+An object created by the sender's ASE, on their resource server, that represents the total cost for the sender to send a payment. When a quote is created, it serves as a commitment from the sender's ASE to deliver the amount to the recipient's ASE. Quotes are only valid for a limited time.
 
 ## Resource server
 
@@ -94,7 +94,7 @@ An Interledger transport layer protocol for sending and receiving authenticated 
 
 ## Tenant
 
-An account servicing entity (ASE) that uses the shared Rafiki instance to manage its payment accounts and interact with the Interledger network. Tenants have their own isolated set of resources and are managed by an operator. Tenants have limited customization capabilities and cannot manage other tenants.
+An account servicing entity (ASE) that uses the shared Rafiki instance to manage its payment accounts and interact with the Interledger network. Tenants have their own isolated set of resources and are managed by an operator. Tenants have limited customization capabilities and can't manage other tenants.
 
 ## Wallet address
 

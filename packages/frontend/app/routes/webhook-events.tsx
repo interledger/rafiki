@@ -130,6 +130,7 @@ export default function WebhookEventsPage() {
                   <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
                   <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
                   <Table.ColumnHeaderCell>Date</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Tenant</Table.ColumnHeaderCell>
                   <Table.ColumnHeaderCell>Data</Table.ColumnHeaderCell>
                 </Table.Row>
                 </Table.Header>
@@ -147,6 +148,16 @@ export default function WebhookEventsPage() {
                         <Text>{new Date(webhook.node.createdAt).toLocaleString()}</Text>
                       </Table.Cell>
                       <Table.Cell>
+                        <Flex direction='column' gap='1'>
+                          {webhook.node.tenant?.publicName ? (
+                            <Text weight='medium'>{webhook.node.tenant.publicName}</Text>
+                          ) : (
+                            <Text color='gray'>No public name</Text>
+                          )}
+                          <Text size='1' color='gray'>(ID: {webhook.node.tenant?.id})</Text>
+                        </Flex>
+                      </Table.Cell>
+                      <Table.Cell>
                         <Button
                           variant='soft'
                           onClick={() => {
@@ -156,7 +167,7 @@ export default function WebhookEventsPage() {
                               state: {
                                 data: {
                                   ...webhook.node.data,
-                                  tenantId: webhook.node.tenantId
+                                  tenantId: webhook.node.tenant?.id
                                 }
                               }
                             })
@@ -169,7 +180,7 @@ export default function WebhookEventsPage() {
                   ))
                 ) : (
                   <Table.Row>
-                    <Table.Cell colSpan={4} align='center'>
+                    <Table.Cell colSpan={5} align='center'>
                       <Text>No webhook events found.</Text>
                     </Table.Cell>
                   </Table.Row>

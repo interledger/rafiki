@@ -19,8 +19,8 @@ import {
 } from './service'
 import { errorToHTTPCode, errorToMessage, OutgoingPaymentError } from './errors'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
-import { OutgoingPaymentRoutes, CreateBody } from './routes'
-import { serializeAmount } from '../../amount'
+import { OutgoingPaymentRoutes, CreateBody, GrantContext } from './routes'
+import { Amount, serializeAmount } from '../../amount'
 import { Grant } from '../../auth/middleware'
 import { WalletAddress } from '../../wallet_address/model'
 import {
@@ -29,8 +29,9 @@ import {
 } from '../../wallet_address/model.test'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createWalletAddress } from '../../../tests/walletAddress'
-import { UnionOmit } from '../../../shared/utils'
+import { UnionInclude, UnionOmit } from '../../../shared/utils'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
+import { TokenInfoClient } from 'token-introspection'
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -137,9 +138,9 @@ describe('Outgoing Payment Routes', (): void => {
     })
   })
 
-  type SetupContextOptions = UnionOmit<
-    CreateOutgoingPaymentOptions,
-    'walletAddressId' | 'tenantId'
+  type SetupContextOptions = UnionInclude<
+    UnionOmit<CreateOutgoingPaymentOptions, 'walletAddressId' | 'client'>,
+    { client?: TokenInfoClient }
   >
 
   describe('create', (): void => {
@@ -186,12 +187,9 @@ describe('Outgoing Payment Routes', (): void => {
             grant,
             metadata
           })
-          let options: Omit<
-            CreateOutgoingPaymentBaseOptions,
-            'walletAddressId'
-          > = {
+          let options: Partial<SetupContextOptions> = {
             tenantId,
-            client,
+            client: { walletAddress: client },
             grant,
             metadata
           }
@@ -199,7 +197,7 @@ describe('Outgoing Payment Routes', (): void => {
             options = {
               ...options,
               quoteId: `${baseUrl}/${payment.quote.tenantId}/quotes/${payment.quote.id}`
-            } as CreateFromQuote
+            } as Omit<CreateFromQuote, 'client'> & { client?: TokenInfoClient }
           } else {
             assert(createFrom === CreateFrom.IncomingPayment)
             options = {
@@ -210,7 +208,7 @@ describe('Outgoing Payment Routes', (): void => {
                 assetCode: walletAddress.asset.code,
                 assetScale: walletAddress.asset.scale
               }
-            } as CreateFromIncomingPayment
+            } as Omit<CreateFromIncomingPayment, 'client'>
           }
           const ctx = setup(options as SetupContextOptions)
           const createSpy = jest
@@ -293,7 +291,7 @@ describe('Outgoing Payment Routes', (): void => {
         const tenantId = Config.operatorTenantId
         const ctx = setup({
           quoteId: `${baseUrl}/${tenantId}/quotes/${quoteId}`
-        })
+        } as Omit<CreateFromQuote, 'client'>)
         const createSpy = jest
           .spyOn(outgoingPaymentService, 'create')
           .mockResolvedValueOnce(error)
@@ -315,5 +313,97 @@ describe('Outgoing Payment Routes', (): void => {
         })
       }
     )
+  })
+  describe('getGrantSpentAmounts', (): void => {
+    const createContext = (
+      grantId?: string,
+      limits?: { debitAmount: Amount; receiveAmount: Amount }
+    ): GrantContext => {
+      return {
+        grant: {
+          id: grantId,
+          limits
+        },
+        body: undefined
+      } as GrantContext
+    }
+
+    test('returns spent amounts when grant has debit and receive amounts', async (): Promise<void> => {
+      const grantId = uuid()
+      const limits = {
+        debitAmount: {
+          value: BigInt(1000),
+          assetCode: walletAddress.asset.code,
+          assetScale: walletAddress.asset.scale
+        },
+        receiveAmount: {
+          value: BigInt(900),
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      }
+      const ctx = createContext(grantId, limits)
+
+      const mockSpentAmounts = {
+        spentDebitAmount: {
+          value: BigInt(500),
+          assetCode: walletAddress.asset.code,
+          assetScale: walletAddress.asset.scale
+        },
+        spentReceiveAmount: {
+          value: BigInt(450),
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      }
+
+      const getGrantSpentAmountsSpy = jest
+        .spyOn(outgoingPaymentService, 'getGrantSpentAmounts')
+        .mockResolvedValueOnce(mockSpentAmounts)
+
+      await outgoingPaymentRoutes.getGrantSpentAmounts(ctx)
+
+      expect(getGrantSpentAmountsSpy).toHaveBeenCalledWith({
+        grantId,
+        limits
+      })
+      expect(ctx.body).toEqual({
+        spentDebitAmount: {
+          value: '500',
+          assetCode: walletAddress.asset.code,
+          assetScale: walletAddress.asset.scale
+        },
+        spentReceiveAmount: {
+          value: '450',
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      })
+    })
+
+    test('returns null spent amounts when no amounts have been spent', async (): Promise<void> => {
+      const grantId = uuid()
+      const ctx = createContext(grantId)
+
+      const mockSpentAmounts = {
+        spentDebitAmount: null,
+        spentReceiveAmount: null
+      }
+
+      const getGrantSpentAmountsSpy = jest
+        .spyOn(outgoingPaymentService, 'getGrantSpentAmounts')
+        .mockResolvedValueOnce(mockSpentAmounts)
+
+      await outgoingPaymentRoutes.getGrantSpentAmounts(ctx)
+
+      expect(getGrantSpentAmountsSpy).toHaveBeenCalledWith({
+        grantId,
+        limits: undefined
+      })
+      expect(ctx.body).toEqual({
+        spentDebitAmount: null,
+        spentReceiveAmount: null
+      })
+    })
   })
 })

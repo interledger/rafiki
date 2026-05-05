@@ -7,6 +7,7 @@ import {
   Grant as OpenPaymentsGrant,
   GrantContinuation as OpenPaymentsGrantContinuation
 } from '@interledger/open-payments'
+import { JWK } from 'token-introspection'
 import { AccessToken, toOpenPaymentsAccessToken } from '../accessToken/model'
 import { Interaction } from '../interaction/model'
 import { Subject, toOpenPaymentsSubject } from '../subject/model'
@@ -93,7 +94,8 @@ export class Grant extends BaseModel {
 
   public finishMethod?: FinishMethod
   public finishUri?: string
-  public client!: string
+  public client?: string
+  public jwk?: JWK
   public clientNonce?: string // client-generated nonce for post-interaction hash
 
   public lastContinuedAt!: Date

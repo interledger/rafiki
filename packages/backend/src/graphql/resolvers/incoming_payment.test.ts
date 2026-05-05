@@ -551,6 +551,35 @@ describe('Incoming Payment Resolver', (): void => {
           __typename: 'IncomingPayment'
         })
       })
+
+      test('with tenant', async (): Promise<void> => {
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              query IncomingPayment($paymentId: String!) {
+                incomingPayment(id: $paymentId) {
+                  id
+                  tenant {
+                    id
+                  }
+                }
+              }
+            `,
+            variables: {
+              paymentId: payment.id
+            }
+          })
+          .then((query): IncomingPayment => query.data?.incomingPayment)
+
+        expect(query).toEqual({
+          id: payment.id,
+          tenant: {
+            __typename: 'Tenant',
+            id: payment.tenantId
+          },
+          __typename: 'IncomingPayment'
+        })
+      })
     })
 
     test('not found', async (): Promise<void> => {

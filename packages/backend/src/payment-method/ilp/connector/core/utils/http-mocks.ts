@@ -27,8 +27,10 @@ export class MockIncomingMessage extends Transform {
   complete = false
   connection!: Socket
   headers: IncomingHttpHeaders
+  headersDistinct: IncomingMessage['headersDistinct']
   rawHeaders: string[]
   trailers: { [key: string]: string | undefined } = {}
+  trailersDistinct: IncomingMessage['trailersDistinct'] = {}
   rawTrailers: string[] = []
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -74,12 +76,15 @@ export class MockIncomingMessage extends Transform {
 
     // Set header names
     this.headers = {}
+    this.headersDistinct = {}
     this.rawHeaders = []
     if (options.headers) {
       Object.keys(options.headers).forEach((key) => {
         const header = options.headers![key]
         if (header !== undefined) {
           this.headers[key.toLowerCase()] = header
+          this.headersDistinct[key.toLowerCase()] =
+            typeof header === 'string' ? [header] : header
           this.rawHeaders.push(key)
           this.rawHeaders.push(
             typeof header !== 'string' ? header.join(' ') : header

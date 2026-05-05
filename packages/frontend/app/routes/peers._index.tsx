@@ -59,6 +59,7 @@ export default function PeersPage() {
                 <Table.ColumnHeaderCell>ILP Address</Table.ColumnHeaderCell>
                 <Table.ColumnHeaderCell>Asset</Table.ColumnHeaderCell>
                 <Table.ColumnHeaderCell>Outgoing HTTP Endpoint</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Tenant</Table.ColumnHeaderCell>
               </Table.Row>
               </Table.Header>
               <Table.Body>
@@ -90,11 +91,21 @@ export default function PeersPage() {
                     <Table.Cell>
                       <Text>{peer.node.http.outgoing.endpoint}</Text>
                     </Table.Cell>
+                    <Table.Cell>
+                      <Flex direction='column' gap='1'>
+                        {peer.node.tenant?.publicName ? (
+                          <Text weight='medium'>{peer.node.tenant.publicName}</Text>
+                        ) : (
+                          <Text color='gray'>No public name</Text>
+                        )}
+                        <Text size='1' color='gray'>(ID: {peer.node.tenant?.id})</Text>
+                      </Flex>
+                    </Table.Cell>
                   </Table.Row>
                 ))
               ) : (
                 <Table.Row>
-                  <Table.Cell colSpan={4} align='center'>
+                  <Table.Cell colSpan={5} align='center'>
                     <Text>No peers found.</Text>
                   </Table.Cell>
                 </Table.Row>

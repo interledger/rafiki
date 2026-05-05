@@ -1,21 +1,25 @@
 ---
-import { getRelativeLocaleUrl } from 'astro:i18n';
-import ThemeSelect from "@astrojs/starlight/components/ThemeSelect.astro";
-import LanguageSelect from '@astrojs/starlight/components/LanguageSelect.astro';
-import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
-import RafikiLogo from "../components/RafikiLogo.astro";
+import { getRelativeLocaleUrl } from 'astro:i18n'
+import ThemeSelect from '@astrojs/starlight/components/ThemeSelect.astro'
+import LanguageSelect from '@astrojs/starlight/components/LanguageSelect.astro'
+import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro'
+import RafikiLogo from '../components/RafikiLogo.astro'
 import VersionSelect from 'starlight-versions/components/VersionSelect.astro'
 import VersionSearch from 'starlight-versions/components/VersionSearch.astro'
 ---
-<div class="header sl-flex">
-  <a href={getRelativeLocaleUrl(Astro.currentLocale ?? 'en', '/')} class="site-logo">
+
+<div class='header sl-flex'>
+  <a
+    href={getRelativeLocaleUrl(Astro.currentLocale ?? 'en', '/')}
+    class='site-logo'
+  >
     <RafikiLogo />
   </a>
-  <div class="secondary-wrap">
+  <div class='secondary-wrap'>
     <VersionSearch />
     <SocialIcons />
-    <div class="sl-hidden md:sl-flex">
-      <VersionSelect/>
+    <div class='sl-hidden md:sl-flex'>
+      <VersionSelect />
       <ThemeSelect />
     </div>
     <LanguageSelect />
@@ -23,7 +27,7 @@ import VersionSearch from 'starlight-versions/components/VersionSearch.astro'
 </div>
 
 <style>
-  .header { 
+  .header {
     gap: var(--sl-nav-gap);
     align-items: center;
     height: 100%;

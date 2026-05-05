@@ -142,7 +142,7 @@ describe('Quote Routes', (): void => {
           tenantId
         },
         walletAddress,
-        client
+        client: client ? { walletAddress: client } : undefined
       })
 
     test('returns error on invalid debitAmount asset', async (): Promise<void> => {

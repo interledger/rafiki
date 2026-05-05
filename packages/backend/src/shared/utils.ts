@@ -1,12 +1,13 @@
 import { validate, version } from 'uuid'
 import { URL, type URL as URLType } from 'url'
 import { createHmac } from 'crypto'
-import { createCipheriv, randomBytes } from 'node:crypto'
 import { canonicalize } from 'json-canonicalize'
 import { IAppConfig } from '../config/app'
-import { AppContext } from '../app'
+import { AppContext, AppServices } from '../app'
 import { Tenant } from '../tenants/model'
-import { Buffer } from 'node:buffer'
+
+import { IocContract } from '@adonisjs/fold'
+import { TokenInfoClient } from 'token-introspection'
 export function validateId(id: string): boolean {
   return validate(id) && version(id) === 4
 }
@@ -110,6 +111,9 @@ export async function poll<T>(args: PollArgs<T>): Promise<T> {
 export type UnionOmit<T, K extends keyof any> = T extends any
   ? Omit<T, K>
   : never
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type UnionInclude<T, K> = T extends any ? T & K : never
 
 function getSignatureParts(signature: string) {
   const signatureParts = signature.split(', ')
@@ -243,17 +247,38 @@ export function ensureTrailingSlash(str: string): string {
   return str
 }
 
-export function encryptDbData(data: string, key: string): string {
-  const iv = randomBytes(32).toString('base64')
-  const cipher = createCipheriv(
-    'aes-256-gcm',
-    Uint8Array.from(Buffer.from(key, 'base64')),
-    iv
+export const loadRoutesFromDatabase = async (
+  container: IocContract<AppServices>
+): Promise<void> => {
+  const peerService = await container.use('peerService')
+  const routerService = await container.use('routerService')
+  const logger = await container.use('logger')
+
+  const peers = await peerService.getPage()
+  logger.info(
+    { peerCount: peers.length },
+    'loading static routes from database'
   )
-  let cipherText = cipher.update(data, 'utf8', 'base64')
-  cipherText += cipher.final('base64')
 
-  const tag = cipher.getAuthTag()
+  for (const peer of peers) {
+    // If no routes are set, we use the static address of our peers as the only routes
+    const routes =
+      peer.routes && peer.routes.length ? peer.routes : [peer.staticIlpAddress]
+    for (const route of routes) {
+      await routerService.addStaticRoute(
+        route,
+        peer.id,
+        peer.tenantId,
+        peer.assetId
+      )
+    }
+  }
+}
 
-  return JSON.stringify({ cipherText, tag, iv })
+export const parseClientWalletAddress = (
+  client: TokenInfoClient | undefined
+): string | undefined => {
+  if (typeof client === 'string') return client
+  else if (client?.walletAddress) return client.walletAddress
+  return undefined
 }

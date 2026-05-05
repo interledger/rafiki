@@ -1,5 +1,10 @@
 import { Logger } from 'pino'
-import { ReadContext, CreateContext, ListContext } from '../../../app'
+import {
+  ReadContext,
+  CreateContext,
+  ListContext,
+  IntrospectionContext
+} from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import {
   CreateOutgoingPaymentOptions,
@@ -19,7 +24,9 @@ import {
 } from '@interledger/open-payments'
 import { WalletAddress } from '../../wallet_address/model'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
-import { AmountJSON, parseAmount } from '../../amount'
+import { AmountJSON, parseAmount, serializeAmount } from '../../amount'
+import { Limits } from './limits'
+import { parseClientWalletAddress } from '../../../shared/utils'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -29,6 +36,7 @@ interface ServiceDependencies {
 
 export interface OutgoingPaymentRoutes {
   get(ctx: ReadContext): Promise<void>
+  getGrantSpentAmounts(ctx: GrantContext): Promise<void>
   create(ctx: CreateContext<CreateBody>): Promise<void>
   list(ctx: ListContext): Promise<void>
 }
@@ -42,6 +50,8 @@ export function createOutgoingPaymentRoutes(
   const deps = { ...deps_, logger }
   return {
     get: (ctx: ReadContext) => getOutgoingPayment(deps, ctx),
+    getGrantSpentAmounts: (ctx: GrantContext) =>
+      getOutgoingPaymentGrantSpentAmounts(deps, ctx),
     create: (ctx: CreateContext<CreateBody>) =>
       createOutgoingPayment(deps, ctx),
     list: (ctx: ListContext) => listOutgoingPayments(deps, ctx)
@@ -55,7 +65,10 @@ async function getOutgoingPayment(
   const outgoingPayment = await deps.outgoingPaymentService.get({
     id: ctx.params.id,
     tenantId: ctx.params.tenantId,
-    client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
+    client:
+      ctx.accessAction === AccessAction.Read
+        ? parseClientWalletAddress(ctx.client)
+        : undefined
   })
 
   if (!outgoingPayment) {
@@ -69,6 +82,29 @@ async function getOutgoingPayment(
   }
 
   ctx.body = outgoingPaymentToBody(deps, ctx.walletAddress, outgoingPayment)
+}
+
+export interface GrantContext extends IntrospectionContext {
+  grant: { id: string; limits?: Limits }
+}
+
+async function getOutgoingPaymentGrantSpentAmounts(
+  deps: ServiceDependencies,
+  ctx: GrantContext
+): Promise<void> {
+  const spentAmounts = await deps.outgoingPaymentService.getGrantSpentAmounts({
+    grantId: ctx.grant.id,
+    limits: ctx.grant.limits
+  })
+
+  ctx.body = {
+    spentDebitAmount: spentAmounts.spentDebitAmount
+      ? serializeAmount(spentAmounts.spentDebitAmount)
+      : null,
+    spentReceiveAmount: spentAmounts.spentReceiveAmount
+      ? serializeAmount(spentAmounts.spentReceiveAmount)
+      : null
+  }
 }
 
 type CreateBodyBase = {
@@ -102,7 +138,7 @@ async function createOutgoingPayment(
     tenantId: ctx.params.tenantId,
     walletAddressId: ctx.walletAddress.id,
     metadata: body.metadata,
-    client: ctx.client,
+    client: parseClientWalletAddress(ctx.client),
     grant: ctx.grant
   }
   let options: CreateOutgoingPaymentOptions
@@ -151,11 +187,11 @@ async function listOutgoingPayments(
 ): Promise<void> {
   await listSubresource({
     ctx,
-    getWalletAddressPage: async ({ walletAddressId, pagination, client }) =>
+    getWalletAddressPage: async ({ walletAddressId, pagination }) =>
       deps.outgoingPaymentService.getWalletAddressPage({
         walletAddressId,
         pagination,
-        client,
+        client: parseClientWalletAddress(ctx.client),
         tenantId: ctx.params.tenantId
       }),
     toBody: (payment) => outgoingPaymentToBody(deps, ctx.walletAddress, payment)

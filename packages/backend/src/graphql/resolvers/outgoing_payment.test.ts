@@ -717,6 +717,35 @@ describe('OutgoingPayment Resolvers', (): void => {
           __typename: 'OutgoingPayment'
         })
       })
+
+      test('with tenant', async (): Promise<void> => {
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              query OutgoingPayment($paymentId: String!) {
+                outgoingPayment(id: $paymentId) {
+                  id
+                  tenant {
+                    id
+                  }
+                }
+              }
+            `,
+            variables: {
+              paymentId: payment.id
+            }
+          })
+          .then((query): OutgoingPayment => query.data?.outgoingPayment)
+
+        expect(query).toEqual({
+          id: payment.id,
+          tenant: {
+            __typename: 'Tenant',
+            id: payment.tenantId
+          },
+          __typename: 'OutgoingPayment'
+        })
+      })
     })
 
     test('not found', async (): Promise<void> => {

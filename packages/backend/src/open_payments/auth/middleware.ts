@@ -7,6 +7,7 @@ import { Limits, parseLimits } from '../payment/outgoing/limits'
 import {
   HttpSigContext,
   HttpSigWithAuthenticatedStatusContext,
+  IntrospectionContext,
   WalletAddressUrlContext
 } from '../../app'
 import {
@@ -16,7 +17,7 @@ import {
   JWKS,
   OpenPaymentsClientError
 } from '@interledger/open-payments'
-import { TokenInfo, isActiveTokenInfo } from 'token-introspection'
+import { TokenInfo, isActiveTokenInfo, JWK } from 'token-introspection'
 import { Config } from '../../config/app'
 import { OpenPaymentsServerRouteError } from '../route-errors'
 
@@ -84,46 +85,11 @@ export function createTokenIntrospectionMiddleware({
         return
       }
 
-      const authSplit = ctx.request.headers.authorization?.split(' ')
-      if (authSplit?.length !== 2 || authSplit[0] !== 'GNAP') {
-        throw new OpenPaymentsServerRouteError(
-          401,
-          'Missing or invalid authorization header value'
-        )
-      }
-      const token = authSplit[1]
-      const tokenIntrospectionClient = await ctx.container.use(
-        'tokenIntrospectionClient'
-      )
-      let tokenInfo: TokenInfo
-      try {
-        tokenInfo = await tokenIntrospectionClient.introspect({
-          access_token: token,
-          access: [
-            toOpenPaymentsAccess(
-              requestType,
-              requestAction,
-              ctx.walletAddressUrl
-            )
-          ]
-        })
-      } catch (err) {
-        throw new OpenPaymentsServerRouteError(401, 'Invalid Token')
-      }
-      if (!isActiveTokenInfo(tokenInfo)) {
-        throw new OpenPaymentsServerRouteError(403, 'Inactive Token')
-      }
-
-      if (tokenInfo.access.length === 0) {
-        throw new OpenPaymentsServerRouteError(403, 'Insufficient Grant')
-      }
-
-      if (tokenInfo.access.length !== 1) {
-        throw new OpenPaymentsServerRouteError(
-          500,
-          'Unexpected number of access items'
-        )
-      }
+      const tokenInfo = await introspect(ctx, {
+        type: requestType,
+        action: requestAction,
+        identifier: ctx.walletAddressUrl
+      })
 
       const access = tokenInfo.access[0]
 
@@ -166,6 +132,87 @@ export function createTokenIntrospectionMiddleware({
   }
 }
 
+export function createOutgoingPaymentGrantTokenIntrospectionMiddleware() {
+  return async (
+    ctx: IntrospectionContext,
+    next: () => Promise<void>
+  ): Promise<void> => {
+    const config = await ctx.container.use('config')
+
+    try {
+      const tokenInfo = await introspect(ctx, {
+        type: AccessType.OutgoingPayment,
+        action: AccessAction.Create as RequestAction
+      })
+
+      const access = tokenInfo.access[0]
+
+      ctx.grant = {
+        id: tokenInfo.grant,
+        limits:
+          'limits' in access && access.limits
+            ? parseLimits(access.limits)
+            : undefined
+      }
+    } catch (err) {
+      if (err instanceof OpenPaymentsServerRouteError) {
+        ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
+      }
+      throw err
+    }
+
+    await next()
+  }
+}
+
+async function introspect(
+  ctx: IntrospectionContext,
+  accessItem: { type: AccessType; action: RequestAction; identifier?: string }
+) {
+  const authSplit = ctx.request.headers.authorization?.split(' ')
+  if (authSplit?.length !== 2 || authSplit[0] !== 'GNAP') {
+    throw new OpenPaymentsServerRouteError(
+      401,
+      'Missing or invalid authorization header value'
+    )
+  }
+  const token = authSplit[1]
+  const tokenIntrospectionClient = await ctx.container.use(
+    'tokenIntrospectionClient'
+  )
+  let tokenInfo: TokenInfo
+  try {
+    tokenInfo = await tokenIntrospectionClient.introspect({
+      access_token: token,
+      access: [
+        toOpenPaymentsAccess(
+          accessItem.type,
+          accessItem.action,
+          accessItem.identifier
+        )
+      ]
+    })
+  } catch (err) {
+    throw new OpenPaymentsServerRouteError(401, 'Invalid Token')
+  }
+  if (!isActiveTokenInfo(tokenInfo)) {
+    throw new OpenPaymentsServerRouteError(403, 'Inactive Token')
+  }
+
+  if (tokenInfo.access.length === 0) {
+    throw new OpenPaymentsServerRouteError(403, 'Insufficient Grant')
+  }
+
+  if (tokenInfo.access.length !== 1) {
+    throw new OpenPaymentsServerRouteError(
+      500,
+      'Unexpected number of access items'
+    )
+  }
+
+  return tokenInfo
+}
+
 export const authenticatedStatusMiddleware = async (
   ctx: HttpSigWithAuthenticatedStatusContext,
   next: () => Promise<unknown>
@@ -195,36 +242,57 @@ export const throwIfSignatureInvalid = async (ctx: HttpSigContext) => {
   }
   // TODO
   // cache client key(s)
-  let jwks: JWKS
-  try {
-    const openPaymentsClient = await ctx.container.use('openPaymentsClient')
-    jwks = await openPaymentsClient.walletAddress.getKeys({
-      url: ctx.client
-    })
-  } catch (err) {
+  let key: JWK
+  if (ctx.client.walletAddress) {
+    let jwks: JWKS
+    try {
+      const openPaymentsClient = await ctx.container.use('openPaymentsClient')
+      jwks = await openPaymentsClient.walletAddress.getKeys({
+        url: ctx.client.walletAddress
+      })
+    } catch (err) {
+      throw new OpenPaymentsServerRouteError(
+        401,
+        'Signature validation error: could not retrieve client keys',
+        {
+          client: ctx.client,
+          keyIdInSignature: keyId,
+          requestedRoute: `${ctx.client.walletAddress}/jwks.json`,
+          validationErrorsInRequest:
+            err instanceof OpenPaymentsClientError
+              ? err.validationErrors
+              : undefined
+        }
+      )
+    }
+    const foundKey = jwks.keys.find((key) => key.kid === keyId)
+    if (!foundKey) {
+      throw new OpenPaymentsServerRouteError(
+        401,
+        'Signature validation error: could not find key in list of client keys',
+        {
+          client: ctx.client,
+          keyIdInSignature: keyId,
+          clientKeys: jwks.keys
+        }
+      )
+    } else {
+      key = foundKey
+    }
+  } else if (ctx.client.jwk) {
+    if (ctx.client.jwk.kid !== keyId)
+      throw new OpenPaymentsServerRouteError(
+        401,
+        'Signature validation error: invalid key id'
+      )
+    key = ctx.client.jwk
+  } else {
     throw new OpenPaymentsServerRouteError(
       401,
-      'Signature validation error: could not retrieve client keys',
+      'Signature validation error: missing client info',
       {
         client: ctx.client,
-        keyIdInSignature: keyId,
-        requestedRoute: `${ctx.client}/jwks.json`,
-        validationErrorsInRequest:
-          err instanceof OpenPaymentsClientError
-            ? err.validationErrors
-            : undefined
-      }
-    )
-  }
-  const key = jwks.keys.find((key) => key.kid === keyId)
-  if (!key) {
-    throw new OpenPaymentsServerRouteError(
-      401,
-      'Signature validation error: could not find key in list of client keys',
-      {
-        client: ctx.client,
-        keyIdInSignature: keyId,
-        clientKeys: jwks.keys
+        keyIdInSignature: keyId
       }
     )
   }

@@ -19,6 +19,7 @@ import { AccessAction } from '@interledger/open-payments'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
 import { PaymentMethodProviderService } from '../../../payment-method/provider/service'
 import { IncomingPaymentInitiationReason } from './types'
+import { parseClientWalletAddress } from '../../../shared/utils'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -71,7 +72,10 @@ async function getIncomingPaymentPublic(
 ) {
   const incomingPayment = await deps.incomingPaymentService.get({
     id: ctx.params.id,
-    client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
+    client:
+      ctx.accessAction === AccessAction.Read
+        ? parseClientWalletAddress(ctx.client)
+        : undefined,
     tenantId: ctx.params.tenantId
   })
 
@@ -96,7 +100,10 @@ async function getIncomingPaymentPrivate(
 ): Promise<void> {
   const incomingPayment = await deps.incomingPaymentService.get({
     id: ctx.params.id,
-    client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
+    client:
+      ctx.accessAction === AccessAction.Read
+        ? parseClientWalletAddress(ctx.client)
+        : undefined,
     tenantId: ctx.params.tenantId
   })
 
@@ -141,7 +148,7 @@ async function createIncomingPayment(
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
     walletAddressId: ctx.walletAddress.id,
-    client: ctx.client,
+    client: parseClientWalletAddress(ctx.client),
     metadata: body.metadata,
     expiresAt,
     incomingAmount: body.incomingAmount && parseAmount(body.incomingAmount),

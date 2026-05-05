@@ -6,11 +6,17 @@ import {
   validateSignatureHeaders,
   RequestLike
 } from '@interledger/http-signature-utils'
+import { JWK } from 'token-introspection'
 
 import { AppContext } from '../app'
 import { ContinueContext, CreateContext, RevokeContext } from '../grant/routes'
 import { Config } from '../config/app'
 import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
+import {
+  parseRawClientField,
+  getGrantClientIdentity,
+  ParsedClientField
+} from '../grant/utils'
 
 function contextToRequestLike(ctx: AppContext): RequestLike {
   const url =
@@ -25,8 +31,8 @@ function contextToRequestLike(ctx: AppContext): RequestLike {
   }
 }
 
-async function verifySigFromClient(
-  client: string,
+async function verifySigFromClientIdentity(
+  identity: ParsedClientField,
   ctx: AppContext
 ): Promise<boolean> {
   const sigInput = ctx.headers['signature-input'] as string
@@ -39,11 +45,17 @@ async function verifySigFromClient(
     )
   }
 
-  const clientService = await ctx.container.use('clientService')
-  const clientKey = await clientService.getKey({
-    client,
-    keyId
-  })
+  let clientKey: JWK | undefined
+
+  if (identity.jwk) {
+    clientKey = identity.jwk
+  } else if (identity.client) {
+    const clientService = await ctx.container.use('clientService')
+    clientKey = await clientService.getKey({
+      client: identity.client,
+      keyId
+    })
+  }
 
   if (!clientKey) {
     throw new GNAPServerRouteError(
@@ -100,7 +112,18 @@ export async function grantContinueHttpsigMiddleware(
     )
   }
 
-  const sigVerified = await verifySigFromClient(grant.client, ctx)
+  let identity: ParsedClientField
+  try {
+    identity = getGrantClientIdentity(grant)
+  } catch {
+    throw new GNAPServerRouteError(
+      500,
+      GNAPErrorCode.RequestDenied,
+      'internal server error'
+    )
+  }
+
+  const sigVerified = await verifySigFromClientIdentity(identity, ctx)
   if (!sigVerified) {
     throw new GNAPServerRouteError(
       401,
@@ -124,8 +147,9 @@ export async function grantInitiationHttpsigMiddleware(
   }
 
   const { body } = ctx.request
+  const identity = parseRawClientField(body.client)
 
-  const sigVerified = await verifySigFromClient(body.client, ctx)
+  const sigVerified = await verifySigFromClientIdentity(identity, ctx)
   if (!sigVerified) {
     throw new GNAPServerRouteError(
       401,
@@ -172,7 +196,18 @@ export async function tokenHttpsigMiddleware(
     )
   }
 
-  const sigVerified = await verifySigFromClient(accessToken.grant.client, ctx)
+  let identity: ParsedClientField
+  try {
+    identity = getGrantClientIdentity(accessToken.grant)
+  } catch {
+    throw new GNAPServerRouteError(
+      500,
+      GNAPErrorCode.RequestDenied,
+      'internal server error'
+    )
+  }
+
+  const sigVerified = await verifySigFromClientIdentity(identity, ctx)
   if (!sigVerified) {
     throw new GNAPServerRouteError(
       401,

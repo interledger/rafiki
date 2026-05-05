@@ -11,7 +11,7 @@ describe('Outgoing Payment limits', (): void => {
     `('$description', ({ interval }): void => {
       it.each`
         target                    | expected                      | time
-        ${'2022-07-01T12:59:59'}  | ${undefined}                  | ${'before start'}
+        ${'2022-07-01T12:59:59Z'} | ${undefined}                  | ${'before start'}
         ${'2022-07-01T13:00:00Z'} | ${'2022-07-01T13:00:00Z/P1M'} | ${'at start'}
         ${'2022-07-10T13:00:00Z'} | ${'2022-07-01T13:00:00Z/P1M'} | ${'during first interval'}
         ${'2022-08-10T13:00:00Z'} | ${'2022-08-01T13:00:00Z/P1M'} | ${'during second interval'}
@@ -26,7 +26,7 @@ describe('Outgoing Payment limits', (): void => {
     })
     it.each`
       target                    | expected                       | time
-      ${'2022-07-01T12:59:59'}  | ${undefined}                   | ${'before start'}
+      ${'2022-07-01T12:59:59Z'} | ${undefined}                   | ${'before start'}
       ${'2022-07-01T13:00:00Z'} | ${'2022-07-01T13:00:00Z/P31D'} | ${'at start'}
       ${'2022-07-10T13:00:00Z'} | ${'2022-07-01T13:00:00Z/P31D'} | ${'during first interval'}
       ${'2022-08-10T13:00:00Z'} | ${'2022-08-01T13:00:00Z/P31D'} | ${'during second interval'}
@@ -56,7 +56,7 @@ describe('Outgoing Payment limits', (): void => {
       ({ interval }): void => {
         it.each`
           target                    | expected                      | time
-          ${'2022-07-01T12:59:59'}  | ${undefined}                  | ${'before start'}
+          ${'2022-07-01T12:59:59Z'} | ${undefined}                  | ${'before start'}
           ${'2022-07-01T13:00:00Z'} | ${'2022-07-01T13:00:00Z/P1M'} | ${'at start'}
           ${'2022-07-10T13:00:00Z'} | ${'2022-07-01T13:00:00Z/P1M'} | ${'during first interval'}
           ${'2022-08-10T13:00:00Z'} | ${'2022-08-01T13:00:00Z/P1M'} | ${'during second interval'}

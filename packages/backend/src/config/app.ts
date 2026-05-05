@@ -14,7 +14,12 @@ function envString(name: string, defaultValue?: string): string {
 
 function envStringArray(name: string, value: string[]): string[] {
   const envValue = process.env[name]
-  return envValue == null ? value : envValue.split(',').map((s) => s.trim())
+  return envValue == null
+    ? value
+    : envValue
+        .split(',')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0)
 }
 
 function envInt(name: string, value: number): number {
@@ -208,8 +213,7 @@ export const Config = {
   cardServiceUrl: optional(envString, 'CARD_SERVICE_URL'),
   posServiceUrl: optional(envString, 'POS_SERVICE_URL'),
   posWebhookServiceUrl: optional(envString, 'POS_WEBHOOK_SERVICE_URL'),
-  cardWebhookUrl: optional(envString, 'CARD_WEBHOOK_SERVICE_URL'),
-  dbEncryptionSecret: optional(envString, 'DB_ENCRYPTION_SECRET')
+  cardWebhookUrl: optional(envString, 'CARD_WEBHOOK_SERVICE_URL')
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

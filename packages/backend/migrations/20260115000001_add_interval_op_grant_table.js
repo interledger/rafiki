@@ -3,8 +3,8 @@
  * @returns { Promise<void> }
  */
 exports.up = function (knex) {
-  return knex.schema.alterTable('outgoingPayments', function (table) {
-    table.string('dataToTransmit').nullable()
+  return knex.schema.alterTable('outgoingPaymentGrants', function (table) {
+    table.string('interval').nullable()
   })
 }
 
@@ -13,7 +13,7 @@ exports.up = function (knex) {
  * @returns { Promise<void> }
  */
 exports.down = function (knex) {
-  return knex.schema.alterTable('outgoingPayments', function (table) {
-    table.dropColumn('dataToTransmit')
+  return knex.schema.alterTable('outgoingPaymentGrants', function (table) {
+    table.dropColumn('interval')
   })
 }

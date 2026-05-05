@@ -1,7 +1,8 @@
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 import {
   AuthenticatedClient,
-  createAuthenticatedClient
+  createAuthenticatedClient,
+  JWK
 } from '@interledger/open-payments'
 import { AccountProvider, setupFromSeed } from 'mock-account-service-lib'
 import { generateApolloClientFactory } from './apollo-client'
@@ -9,6 +10,7 @@ import { AdminClient } from './admin-client'
 import { IntegrationServer } from './integration-server'
 import { TestConfig } from './config'
 import { PosService } from './pos-service'
+import { generateTestKeys } from '@interledger/http-signature-utils'
 
 /** Mock Account Servicing Entity */
 export class MockASE {
@@ -18,8 +20,10 @@ export class MockASE {
   public adminClient: AdminClient
   public accounts: AccountProvider
   public opClient!: AuthenticatedClient
+  public directedIdentityOpClient!: AuthenticatedClient
   public integrationServer: IntegrationServer
   public posService: PosService
+  public publicKey!: JWK
 
   // Use .create factory because async construction
   public static async create(config: TestConfig): Promise<MockASE> {
@@ -58,6 +62,15 @@ export class MockASE {
       walletAddressUrl: this.config.walletAddressUrl,
       useHttp: true
     })
+    const keys = generateTestKeys()
+    this.directedIdentityOpClient = await createAuthenticatedClient({
+      privateKey: keys.privateKey,
+      keyId: keys.publicKey.kid,
+      walletAddressUrl: this.config.walletAddressUrl,
+      useHttp: true
+    })
+
+    this.publicKey = keys.publicKey
   }
 
   public async shutdown() {

@@ -1,12 +1,28 @@
 import {
   ResolversTypes,
   QueryResolvers,
-  Payment as SchemaPayment
+  Payment as SchemaPayment,
+  PaymentResolvers,
+  PaymentType
 } from '../generated/graphql'
 import { TenantedApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { CombinedPayment } from '../../open_payments/payment/combined/model'
+import { tenantToGraphQl } from './tenant'
+import { IncomingPayment } from '../../open_payments/payment/incoming/model'
+import { OutgoingPayment } from '../../open_payments/payment/outgoing/model'
+import { GraphQLError } from 'graphql'
+import {
+  errorToCode as incomingPaymentErrorToCode,
+  errorToMessage as incomingPaymentErrorToMessage,
+  IncomingPaymentError
+} from '../../open_payments/payment/incoming/errors'
+import {
+  errorToCode as outgoingPaymentErrorToCode,
+  errorToMessage as outgoingPaymentErrorToMessage,
+  OutgoingPaymentError
+} from '../../open_payments/payment/outgoing/errors'
 
 export const getCombinedPayments: QueryResolvers<TenantedApolloContext>['payments'] =
   async (parent, args, ctx): Promise<ResolversTypes['PaymentConnection']> => {
@@ -41,6 +57,60 @@ export const getCombinedPayments: QueryResolvers<TenantedApolloContext>['payment
         }
       })
     }
+  }
+
+export const getPaymentTenant: PaymentResolvers<TenantedApolloContext>['tenant'] =
+  async (parent, args, ctx): Promise<ResolversTypes['Tenant'] | null> => {
+    if (!parent.id || !parent.type)
+      throw new GraphQLError(
+        '"id" and "type" fields required in request to resolve "tenant".'
+      )
+
+    let payment: IncomingPayment | OutgoingPayment
+    if (parent.type === PaymentType.Incoming) {
+      const incomingPaymentService = await ctx.container.use(
+        'incomingPaymentService'
+      )
+      const incomingPayment = await incomingPaymentService.get({
+        id: parent.id
+      })
+      if (!incomingPayment)
+        throw new GraphQLError(
+          incomingPaymentErrorToMessage[IncomingPaymentError.UnknownPayment],
+          {
+            extensions: {
+              code: incomingPaymentErrorToCode[
+                IncomingPaymentError.UnknownPayment
+              ]
+            }
+          }
+        )
+      payment = incomingPayment
+    } else {
+      const outgoingPaymentService = await ctx.container.use(
+        'outgoingPaymentService'
+      )
+      const outgoingPayment = await outgoingPaymentService.get({
+        id: parent.id
+      })
+      if (!outgoingPayment)
+        throw new GraphQLError(
+          outgoingPaymentErrorToMessage[OutgoingPaymentError.UnknownPayment],
+          {
+            extensions: {
+              code: outgoingPaymentErrorToCode[
+                OutgoingPaymentError.UnknownPayment
+              ]
+            }
+          }
+        )
+      payment = outgoingPayment
+    }
+
+    const tenantService = await ctx.container.use('tenantService')
+    const tenant = await tenantService.get(payment.tenantId)
+    if (!tenant) return null
+    return tenantToGraphQl(tenant)
   }
 
 function paymentToGraphql(payment: CombinedPayment): SchemaPayment {

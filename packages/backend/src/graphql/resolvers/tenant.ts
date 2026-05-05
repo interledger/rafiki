@@ -10,7 +10,6 @@ import { GraphQLErrorCode } from '../errors'
 import { Tenant } from '../../tenants/model'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { getPageInfo } from '../../shared/pagination'
-import { tenantSettingsToGraphql } from './tenant_settings'
 import { errorToMessage, isTenantError } from '../../tenants/errors'
 
 export const whoami: QueryResolvers<TenantedApolloContext>['whoami'] = async (
@@ -55,7 +54,11 @@ export const getTenant: QueryResolvers<TenantedApolloContext>['tenant'] =
   }
 
 export const getTenants: QueryResolvers<TenantedApolloContext>['tenants'] =
-  async (parent, args, ctx): Promise<ResolversTypes['TenantsConnection']> => {
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<Omit<ResolversTypes['TenantsConnection'], 'settings'>> => {
     const { isOperator } = ctx
     if (!isOperator) {
       throw new GraphQLError('cannot get tenants page', {
@@ -91,7 +94,7 @@ export const createTenant: MutationResolvers<TenantedApolloContext>['createTenan
     parent,
     args,
     ctx
-  ): Promise<ResolversTypes['TenantMutationResponse']> => {
+  ): Promise<Omit<ResolversTypes['TenantMutationResponse'], 'settings'>> => {
     // createTenant is an operator-only resolver
     const { isOperator } = ctx
     if (!isOperator) {
@@ -120,7 +123,7 @@ export const updateTenant: MutationResolvers<TenantedApolloContext>['updateTenan
     parent,
     args,
     ctx
-  ): Promise<ResolversTypes['TenantMutationResponse']> => {
+  ): Promise<Omit<ResolversTypes['TenantMutationResponse'], 'settings'>> => {
     const { tenant: contextTenant, isOperator } = ctx
     // TODO: make this a util
     if (args.input.id !== contextTenant.id && !isOperator) {
@@ -160,7 +163,9 @@ export const deleteTenant: MutationResolvers<TenantedApolloContext>['deleteTenan
     parent,
     args,
     ctx
-  ): Promise<ResolversTypes['DeleteTenantMutationResponse']> => {
+  ): Promise<
+    Omit<ResolversTypes['DeleteTenantMutationResponse'], 'settings'>
+  > => {
     const { isOperator } = ctx
     if (!isOperator) {
       throw new GraphQLError('permission denied', {
@@ -183,7 +188,9 @@ export const deleteTenant: MutationResolvers<TenantedApolloContext>['deleteTenan
     }
   }
 
-export function tenantToGraphQl(tenant: Tenant): SchemaTenant {
+export function tenantToGraphQl(
+  tenant: Tenant
+): Omit<SchemaTenant, 'settings'> {
   return {
     id: tenant.id,
     email: tenant.email,
@@ -191,7 +198,6 @@ export function tenantToGraphQl(tenant: Tenant): SchemaTenant {
     idpConsentUrl: tenant.idpConsentUrl,
     idpSecret: tenant.idpSecret,
     publicName: tenant.publicName,
-    settings: tenantSettingsToGraphql(tenant.settings),
     createdAt: new Date(+tenant.createdAt).toISOString(),
     deletedAt: tenant.deletedAt
       ? new Date(+tenant.deletedAt).toISOString()

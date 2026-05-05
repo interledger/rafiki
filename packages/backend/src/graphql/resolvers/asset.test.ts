@@ -296,6 +296,9 @@ describe('Asset Resolvers', (): void => {
                   withdrawalThreshold
                   liquidityThreshold
                   createdAt
+                  tenant {
+                    id
+                  }
                 }
               }
             `,
@@ -319,7 +322,11 @@ describe('Asset Resolvers', (): void => {
         liquidity: '0',
         withdrawalThreshold: asset.withdrawalThreshold.toString(),
         liquidityThreshold: asset.liquidityThreshold?.toString(),
-        createdAt: new Date(+asset.createdAt).toISOString()
+        createdAt: new Date(+asset.createdAt).toISOString(),
+        tenant: {
+          __typename: 'Tenant',
+          id: asset.tenantId
+        }
       })
 
       await accountingService.createDeposit({
@@ -336,7 +343,11 @@ describe('Asset Resolvers', (): void => {
         liquidity: '100',
         withdrawalThreshold: asset.withdrawalThreshold.toString(),
         liquidityThreshold: asset.liquidityThreshold?.toString(),
-        createdAt: new Date(+asset.createdAt).toISOString()
+        createdAt: new Date(+asset.createdAt).toISOString(),
+        tenant: {
+          __typename: 'Tenant',
+          id: asset.tenantId
+        }
       })
     })
 

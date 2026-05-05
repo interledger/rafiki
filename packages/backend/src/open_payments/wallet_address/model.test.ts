@@ -32,13 +32,14 @@ import assert from 'assert'
 import { ReadContextWithAuthenticatedStatus } from '../payment/incoming/routes'
 import { Knex } from 'knex'
 import { OpenPaymentsServerRouteError } from '../route-errors'
+import { TokenInfoClient } from 'token-introspection'
 
 export interface SetupOptions {
   reqOpts: httpMocks.RequestOptions
   params?: Record<string, string>
   walletAddress: WalletAddress
   grant?: Grant
-  client?: string
+  client?: TokenInfoClient
   accessAction?: AccessAction
 }
 
@@ -223,7 +224,7 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
         url: urlPath
       },
       walletAddress,
-      client,
+      client: client ? { walletAddress: client } : undefined,
       accessAction: client ? AccessAction.List : AccessAction.ListAll
     })
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -258,7 +259,7 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
           id
         },
         walletAddress,
-        client,
+        client: client ? { walletAddress: client } : undefined,
         accessAction: client ? AccessAction.Read : AccessAction.ReadAll
       })
       if (expectedMatch) {

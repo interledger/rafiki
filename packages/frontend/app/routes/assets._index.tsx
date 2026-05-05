@@ -60,6 +60,7 @@ export default function AssetsPage() {
                   <Table.ColumnHeaderCell>Code</Table.ColumnHeaderCell>
                   <Table.ColumnHeaderCell>Scale</Table.ColumnHeaderCell>
                   <Table.ColumnHeaderCell>Withdrawal threshold</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Tenant</Table.ColumnHeaderCell>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
@@ -86,11 +87,21 @@ export default function AssetsPage() {
                         <Text color='gray'>No withdrawal threshold</Text>
                       )}
                     </Table.Cell>
+                    <Table.Cell>
+                      <Flex direction='column' gap='1'>
+                        {asset.node.tenant?.publicName ? (
+                          <Text weight='medium'>{asset.node.tenant.publicName}</Text>
+                        ) : (
+                          <Text color='gray'>No public name</Text>
+                        )}
+                        <Text size='1' color='gray'>(ID: {asset.node.tenant?.id})</Text>
+                      </Flex>
+                    </Table.Cell>
                   </Table.Row>
                 ))
               ) : (
                 <Table.Row>
-                  <Table.Cell colSpan={4} align='center'>
+                  <Table.Cell colSpan={5} align='center'>
                     <Text>No assets found.</Text>
                   </Table.Cell>
                 </Table.Row>

@@ -1,18 +1,18 @@
 ---
-import Default from '@astrojs/starlight/components/PageSidebar.astro';
+import Default from '@astrojs/starlight/components/PageSidebar.astro'
 
 const removeOverview = [
- 'resources/glossary',
- 'overview/concepts/payment-pointers',
- 'overview/concepts/clearing-settlement',
+  'resources/glossary',
+  'overview/concepts/payment-pointers',
+  'overview/concepts/clearing-settlement'
 ]
-const { id, toc } = Astro.locals.starlightRoute;
-const noOverview = removeOverview.includes(id);
+const { id, toc } = Astro.locals.starlightRoute
+const noOverview = removeOverview.includes(id)
 if (noOverview && toc) {
-	Astro.locals.starlightRoute.toc = {
-		...toc,
-		items: toc.items.slice(1),
-	};
+  Astro.locals.starlightRoute.toc = {
+    ...toc,
+    items: toc.items.slice(1)
+  }
 }
 ---
 

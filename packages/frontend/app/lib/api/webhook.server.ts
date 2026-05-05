@@ -34,10 +34,13 @@ export const listWebhooks = async (
             cursor
             node {
               id
-              tenantId
               data
               type
               createdAt
+              tenant {
+                id
+                publicName
+              }
             }
           }
           pageInfo {
