@@ -92,9 +92,10 @@ export default function WebhookEventsPage() {
                 label={
                   type.length
                     ? `Events: ${type
-                        .map((value) =>
-                          value.charAt(0).toUpperCase() +
-                          value.slice(1).replace(/[_.]/g, ' ')
+                        .map(
+                          (value) =>
+                            value.charAt(0).toUpperCase() +
+                            value.slice(1).replace(/[_.]/g, ' ')
                         )
                         .join(', ')}`
                     : 'All Events'
@@ -126,65 +127,74 @@ export default function WebhookEventsPage() {
             <Box className='overflow-hidden rounded-md border border-pearl bg-white'>
               <Table.Root>
                 <Table.Header className='bg-pearl/40'>
-                <Table.Row>
-                  <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Date</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Tenant</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Data</Table.ColumnHeaderCell>
-                </Table.Row>
+                  <Table.Row>
+                    <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>Date</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>Tenant</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>Data</Table.ColumnHeaderCell>
+                  </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                {webhooks.edges.length ? (
-                  webhooks.edges.map((webhook) => (
-                    <Table.Row key={webhook.node.id}>
-                      <Table.Cell>
-                        <Text>{webhook.node.id}</Text>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Text weight='medium'>{webhook.node.type}</Text>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Text>{new Date(webhook.node.createdAt).toLocaleString()}</Text>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Flex direction='column' gap='1'>
-                          {webhook.node.tenant?.publicName ? (
-                            <Text weight='medium'>{webhook.node.tenant.publicName}</Text>
-                          ) : (
-                            <Text color='gray'>No public name</Text>
-                          )}
-                          <Text size='1' color='gray'>(ID: {webhook.node.tenant?.id})</Text>
-                        </Flex>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Button
-                          variant='soft'
-                          onClick={() => {
-                            navigate(`/webhook-events/data${
-                              searchParams ? `?${searchParams}` : ''
-                            }`, {
-                              state: {
-                                data: {
-                                  ...webhook.node.data,
-                                  tenantId: webhook.node.tenant?.id
+                  {webhooks.edges.length ? (
+                    webhooks.edges.map((webhook) => (
+                      <Table.Row key={webhook.node.id}>
+                        <Table.Cell>
+                          <Text>{webhook.node.id}</Text>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Text weight='medium'>{webhook.node.type}</Text>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Text>
+                            {new Date(webhook.node.createdAt).toLocaleString()}
+                          </Text>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Flex direction='column' gap='1'>
+                            {webhook.node.tenant?.publicName ? (
+                              <Text weight='medium'>
+                                {webhook.node.tenant.publicName}
+                              </Text>
+                            ) : (
+                              <Text color='gray'>No public name</Text>
+                            )}
+                            <Text size='1' color='gray'>
+                              (ID: {webhook.node.tenant?.id})
+                            </Text>
+                          </Flex>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Button
+                            variant='soft'
+                            onClick={() => {
+                              navigate(
+                                `/webhook-events/data${
+                                  searchParams ? `?${searchParams}` : ''
+                                }`,
+                                {
+                                  state: {
+                                    data: {
+                                      ...webhook.node.data,
+                                      tenantId: webhook.node.tenant?.id
+                                    }
+                                  }
                                 }
-                              }
-                            })
-                          }}
-                        >
-                          View data
-                        </Button>
+                              )
+                            }}
+                          >
+                            View data
+                          </Button>
+                        </Table.Cell>
+                      </Table.Row>
+                    ))
+                  ) : (
+                    <Table.Row>
+                      <Table.Cell colSpan={5} align='center'>
+                        <Text>No webhook events found.</Text>
                       </Table.Cell>
                     </Table.Row>
-                  ))
-                ) : (
-                  <Table.Row>
-                    <Table.Cell colSpan={5} align='center'>
-                      <Text>No webhook events found.</Text>
-                    </Table.Cell>
-                  </Table.Row>
-                )}
+                  )}
                 </Table.Body>
               </Table.Root>
             </Box>

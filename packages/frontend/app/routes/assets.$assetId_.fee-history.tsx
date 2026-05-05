@@ -94,7 +94,9 @@ export default function AssetFeesPage() {
                         <Text>{fee.node.basisPoints}</Text>
                       </Table.Cell>
                       <Table.Cell>
-                        <Text>{new Date(fee.node.createdAt).toLocaleString()}</Text>
+                        <Text>
+                          {new Date(fee.node.createdAt).toLocaleString()}
+                        </Text>
                       </Table.Cell>
                     </Table.Row>
                   ))

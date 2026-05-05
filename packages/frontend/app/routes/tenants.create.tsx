@@ -1,6 +1,19 @@
 import { json, type ActionFunctionArgs, redirect } from '@remix-run/node'
-import { Form, useActionData, useLoaderData, useNavigation } from '@remix-run/react'
-import { Box, Button, Card, Flex, Heading, Text, TextField } from '@radix-ui/themes'
+import {
+  Form,
+  useActionData,
+  useLoaderData,
+  useNavigation
+} from '@remix-run/react'
+import {
+  Box,
+  Button,
+  Card,
+  Flex,
+  Heading,
+  Text,
+  TextField
+} from '@radix-ui/themes'
 import { renderErrorPanel, renderFieldError } from '~/lib/form-errors'
 import { createTenant, whoAmI } from '~/lib/api/tenant.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
@@ -28,7 +41,12 @@ const FormField = ({
   required
 }: FormFieldProps) => (
   <Flex direction='column' gap='2'>
-    <Text asChild size='2' weight='medium' className='tracking-wide text-gray-700'>
+    <Text
+      asChild
+      size='2'
+      weight='medium'
+      className='tracking-wide text-gray-700'
+    >
       <label htmlFor={name}>
         {label}
         {required ? <span className='text-vermillion'> *</span> : null}

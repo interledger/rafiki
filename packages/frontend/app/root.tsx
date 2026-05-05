@@ -123,10 +123,7 @@ export default function App() {
   }, [message])
 
   return (
-    <html
-      lang='en'
-      className='h-full'
-    >
+    <html lang='en' className='h-full'>
       <head>
         <Meta />
         <Links />
@@ -144,13 +141,9 @@ export default function App() {
             <div
               className={`pt-20 md:pt-0 flex ${displaySidebar ? 'md:pl-60' : ''} flex-1 flex-col`}
             >
-            <main
-              className={
-                isIndex ? 'flex-1' : 'flex-1 pb-8 px-4 md:pt-3'
-              }
-            >
-              <Outlet />
-            </main>
+              <main className={isIndex ? 'flex-1' : 'flex-1 pb-8 px-4 md:pt-3'}>
+                <Outlet />
+              </main>
             </div>
           </div>
           <Snackbar
@@ -175,10 +168,7 @@ export function ErrorBoundary() {
 
   const ErrorPage = ({ children }: { children: ReactNode }) => {
     return (
-      <html
-        lang='en'
-        className='h-full'
-      >
+      <html lang='en' className='h-full'>
         <head>
           <Meta />
           <Links />

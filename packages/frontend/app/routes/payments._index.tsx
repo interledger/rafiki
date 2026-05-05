@@ -130,12 +130,17 @@ export default function PaymentsPage() {
   return (
     <Box p='4'>
       <Flex direction='column' gap='4'>
-          <Flex align='start' justify='between' gap='3' wrap='wrap'>
-            <Heading size='5'>Payments</Heading>
+        <Flex align='start' justify='between' gap='3' wrap='wrap'>
+          <Heading size='5'>Payments</Heading>
           <Flex align='center' gap='2' className='flex-wrap md:flex-nowrap'>
             <DropdownMenu.Root>
               <DropdownMenu.Trigger className='inline-flex min-w-[220px] items-center justify-between gap-2 rounded-md border border-pearl bg-white px-3 py-2 text-sm text-tealish shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F37F64]'>
-                <Flex align='center' justify='between' gap='2' className='w-full'>
+                <Flex
+                  align='center'
+                  justify='between'
+                  gap='2'
+                  className='w-full'
+                >
                   <span className='truncate'>
                     {type.length
                       ? `Payments: ${type.map((value) => capitalize(value)).join(', ')}`
@@ -244,64 +249,74 @@ export default function PaymentsPage() {
           <Box className='overflow-hidden rounded-md border border-pearl bg-white'>
             <Table.Root>
               <Table.Header className='bg-pearl/40'>
-              <Table.Row>
-                <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>State</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>Date</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>Tenant</Table.ColumnHeaderCell>
-              </Table.Row>
+                <Table.Row>
+                  <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>State</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Date</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Tenant</Table.ColumnHeaderCell>
+                </Table.Row>
               </Table.Header>
               <Table.Body>
-              {payments.edges.length ? (
-                payments.edges.map((payment) => (
-                  <Table.Row
-                    key={payment.node.id}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => {
-                      const subpath = paymentSubpathByType[payment.node.type]
-                      return navigate(`/payments/${subpath}/${payment.node.id}`)
-                    }}
-                  >
-                    <Table.Cell>
-                      <Text>{payment.node.id}</Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text weight='medium'>{capitalize(payment.node.type)}</Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Badge
-                        color={
-                          badgeColorByPaymentState[
-                            payment.node.state as CombinedPaymentState
-                          ]
-                        }
-                      >
-                        {payment.node.state}
-                      </Badge>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text>{new Date(payment.node.createdAt).toLocaleString()}</Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Flex direction='column' gap='1'>
-                        {payment.node.tenant?.publicName ? (
-                          <Text weight='medium'>{payment.node.tenant.publicName}</Text>
-                        ) : (
-                          <Text color='gray'>No public name</Text>
-                        )}
-                        <Text size='1' color='gray'>(ID: {payment.node.tenant?.id})</Text>
-                      </Flex>
+                {payments.edges.length ? (
+                  payments.edges.map((payment) => (
+                    <Table.Row
+                      key={payment.node.id}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => {
+                        const subpath = paymentSubpathByType[payment.node.type]
+                        return navigate(
+                          `/payments/${subpath}/${payment.node.id}`
+                        )
+                      }}
+                    >
+                      <Table.Cell>
+                        <Text>{payment.node.id}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Text weight='medium'>
+                          {capitalize(payment.node.type)}
+                        </Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge
+                          color={
+                            badgeColorByPaymentState[
+                              payment.node.state as CombinedPaymentState
+                            ]
+                          }
+                        >
+                          {payment.node.state}
+                        </Badge>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Text>
+                          {new Date(payment.node.createdAt).toLocaleString()}
+                        </Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Flex direction='column' gap='1'>
+                          {payment.node.tenant?.publicName ? (
+                            <Text weight='medium'>
+                              {payment.node.tenant.publicName}
+                            </Text>
+                          ) : (
+                            <Text color='gray'>No public name</Text>
+                          )}
+                          <Text size='1' color='gray'>
+                            (ID: {payment.node.tenant?.id})
+                          </Text>
+                        </Flex>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))
+                ) : (
+                  <Table.Row>
+                    <Table.Cell colSpan={5} align='center'>
+                      <Text>No payments found.</Text>
                     </Table.Cell>
                   </Table.Row>
-                ))
-              ) : (
-                <Table.Row>
-                  <Table.Cell colSpan={5} align='center'>
-                    <Text>No payments found.</Text>
-                  </Table.Cell>
-                </Table.Row>
-              )}
+                )}
               </Table.Body>
             </Table.Root>
           </Box>

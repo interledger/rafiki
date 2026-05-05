@@ -78,7 +78,11 @@ export const ApiCredentialsForm = ({
               weight='medium'
               className='block tracking-wide text-gray-700 mb-1'
             >
-              Tenant ID<Text as='span' color='red'> *</Text>
+              Tenant ID
+              <Text as='span' color='red'>
+                {' '}
+                *
+              </Text>
             </Text>
             <TextField.Root
               id='tenant-id'
@@ -107,7 +111,11 @@ export const ApiCredentialsForm = ({
               weight='medium'
               className='block tracking-wide text-gray-700 mb-1'
             >
-              API Secret<Text as='span' color='red'> *</Text>
+              API Secret
+              <Text as='span' color='red'>
+                {' '}
+                *
+              </Text>
             </Text>
             <TextField.Root
               id='api-secret'

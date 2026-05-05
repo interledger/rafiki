@@ -13,9 +13,22 @@ import {
   useSubmit,
   Link
 } from '@remix-run/react'
-import { type ChangeEventHandler, type FormEvent, useRef, useState } from 'react'
+import {
+  type ChangeEventHandler,
+  type FormEvent,
+  useRef,
+  useState
+} from 'react'
 import { z } from 'zod'
-import { Box, Button, Card, Flex, Heading, Text, TextField } from '@radix-ui/themes'
+import {
+  Box,
+  Button,
+  Card,
+  Flex,
+  Heading,
+  Text,
+  TextField
+} from '@radix-ui/themes'
 import { renderErrorPanel, renderFieldError } from '~/lib/form-errors'
 import {
   ConfirmationDialog,
@@ -66,7 +79,12 @@ const FormField = ({
   onChange
 }: FormFieldProps) => (
   <Flex direction='column' gap='2'>
-    <Text asChild size='2' weight='medium' className='tracking-wide text-gray-700'>
+    <Text
+      asChild
+      size='2'
+      weight='medium'
+      className='tracking-wide text-gray-700'
+    >
       <label htmlFor={name}>
         {label}
         {required ? <span className='text-vermillion'> *</span> : null}
@@ -159,10 +177,22 @@ export default function ViewAssetPage() {
                 <fieldset disabled={currentPageAction}>
                   <Flex direction='column' gap='4'>
                     <input type='hidden' name='id' value={asset.id} />
-                    <FormField label='Asset ID' name='assetId' value={asset.id} disabled readOnly />
+                    <FormField
+                      label='Asset ID'
+                      name='assetId'
+                      value={asset.id}
+                      disabled
+                      readOnly
+                    />
                     <Flex gap='3' className='flex-1'>
                       <Box className='flex-1'>
-                        <FormField label='Code' name='code' value={asset.code} disabled readOnly />
+                        <FormField
+                          label='Code'
+                          name='code'
+                          value={asset.code}
+                          disabled
+                          readOnly
+                        />
                       </Box>
                       <Box className='flex-1'>
                         <FormField
@@ -179,7 +209,10 @@ export default function ViewAssetPage() {
                           name='withdrawalThreshold'
                           label='Withdrawal Threshold'
                           defaultValue={asset.withdrawalThreshold ?? undefined}
-                          error={response?.errors.general.fieldErrors.withdrawalThreshold}
+                          error={
+                            response?.errors.general.fieldErrors
+                              .withdrawalThreshold
+                          }
                         />
                       </Box>
                     </Flex>
@@ -197,7 +230,7 @@ export default function ViewAssetPage() {
                 </fieldset>
               </Form>
             </Flex>
-            <hr/>
+            <hr />
             <Flex direction='column' gap='4' pt='6' pb='6'>
               <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
                 Liquidity Information
@@ -206,7 +239,8 @@ export default function ViewAssetPage() {
                 <Flex direction='column' gap='1'>
                   <Text weight='medium'>Amount</Text>
                   <Text size='2' color='gray'>
-                    {formatAmount(asset.liquidity ?? '0', asset.scale)} {asset.code}
+                    {formatAmount(asset.liquidity ?? '0', asset.scale)}{' '}
+                    {asset.code}
                   </Text>
                 </Flex>
                 <Flex gap='3'>
@@ -231,7 +265,7 @@ export default function ViewAssetPage() {
                 </Flex>
               </Flex>
             </Flex>
-            <hr/>
+            <hr />
             <Flex direction='column' gap='4' pt='6'>
               <Flex direction='column' gap='2'>
                 <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
@@ -239,7 +273,8 @@ export default function ViewAssetPage() {
                 </Text>
                 {asset.sendingFee ? (
                   <Text size='2' color='gray'>
-                    Created at {new Date(asset.sendingFee.createdAt).toLocaleString()}
+                    Created at{' '}
+                    {new Date(asset.sendingFee.createdAt).toLocaleString()}
                   </Text>
                 ) : null}
               </Flex>
@@ -273,7 +308,9 @@ export default function ViewAssetPage() {
                           type='number'
                           name='basisPoints'
                           label='Basis Points'
-                          error={response?.errors.sendingFee.fieldErrors.basisPoints}
+                          error={
+                            response?.errors.sendingFee.fieldErrors.basisPoints
+                          }
                           value={basisPointsInput}
                           onChange={(e) =>
                             setBasisPointsInput(parseFloat(e?.target?.value))
@@ -282,9 +319,9 @@ export default function ViewAssetPage() {
                       </Box>
                     </Flex>
                     <Text size='2' color='gray'>
-                      A single basis point is a fee equal to 0.01% of the total amount.
-                      A fee of {basisPointsInput || 1} basis point on $100 is $
-                      {((basisPointsInput || 1) * 0.01).toFixed(4)}.
+                      A single basis point is a fee equal to 0.01% of the total
+                      amount. A fee of {basisPointsInput || 1} basis point on
+                      $100 is ${((basisPointsInput || 1) * 0.01).toFixed(4)}.
                     </Text>
                   </Flex>
                   <Flex justify='end' mt='4'>

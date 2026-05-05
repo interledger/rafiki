@@ -61,7 +61,11 @@ export const LiquidityDialog = ({
         <Flex direction='column' gap='4' mt='4'>
           <Flex direction='column' gap='2'>
             <Flex align='center' gap='2'>
-              <Text size='2' weight='medium' className='tracking-wide text-gray-700 min-w-[70px]'>
+              <Text
+                size='2'
+                weight='medium'
+                className='tracking-wide text-gray-700 min-w-[70px]'
+              >
                 Amount
               </Text>
               <Text size='2' weight='medium' className='min-w-[50px]'>
@@ -79,7 +83,7 @@ export const LiquidityDialog = ({
                 className='flex-1'
               />
             </Flex>
-                  {renderFieldError(errorMessage)}
+            {renderFieldError(errorMessage)}
           </Flex>
 
           <Form method='post' replace preventScrollReset>

@@ -46,9 +46,7 @@ export default function AssetsPage() {
       <Flex direction='column' gap='4'>
         <Flex justify='between' align='start'>
           <Heading size='5'>Assets</Heading>
-          <Button onClick={() => navigate('/assets/create')}>
-            Add asset
-          </Button>
+          <Button onClick={() => navigate('/assets/create')}>Add asset</Button>
         </Flex>
 
         <Flex direction='column' gap='4'>
@@ -59,53 +57,59 @@ export default function AssetsPage() {
                   <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
                   <Table.ColumnHeaderCell>Code</Table.ColumnHeaderCell>
                   <Table.ColumnHeaderCell>Scale</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Withdrawal threshold</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>
+                    Withdrawal threshold
+                  </Table.ColumnHeaderCell>
                   <Table.ColumnHeaderCell>Tenant</Table.ColumnHeaderCell>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-              {assets.edges.length ? (
-                assets.edges.map((asset) => (
-                  <Table.Row
-                    key={asset.node.id}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => navigate(`/assets/${asset.node.id}`)}
-                  >
-                    <Table.Cell>
-                      <Text size='2'>{asset.node.id}</Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text weight='medium'>{asset.node.code}</Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text>{asset.node.scale}</Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      {asset.node.withdrawalThreshold ? (
-                        <Text>{asset.node.withdrawalThreshold}</Text>
-                      ) : (
-                        <Text color='gray'>No withdrawal threshold</Text>
-                      )}
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Flex direction='column' gap='1'>
-                        {asset.node.tenant?.publicName ? (
-                          <Text weight='medium'>{asset.node.tenant.publicName}</Text>
+                {assets.edges.length ? (
+                  assets.edges.map((asset) => (
+                    <Table.Row
+                      key={asset.node.id}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => navigate(`/assets/${asset.node.id}`)}
+                    >
+                      <Table.Cell>
+                        <Text size='2'>{asset.node.id}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Text weight='medium'>{asset.node.code}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Text>{asset.node.scale}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        {asset.node.withdrawalThreshold ? (
+                          <Text>{asset.node.withdrawalThreshold}</Text>
                         ) : (
-                          <Text color='gray'>No public name</Text>
+                          <Text color='gray'>No withdrawal threshold</Text>
                         )}
-                        <Text size='1' color='gray'>(ID: {asset.node.tenant?.id})</Text>
-                      </Flex>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Flex direction='column' gap='1'>
+                          {asset.node.tenant?.publicName ? (
+                            <Text weight='medium'>
+                              {asset.node.tenant.publicName}
+                            </Text>
+                          ) : (
+                            <Text color='gray'>No public name</Text>
+                          )}
+                          <Text size='1' color='gray'>
+                            (ID: {asset.node.tenant?.id})
+                          </Text>
+                        </Flex>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))
+                ) : (
+                  <Table.Row>
+                    <Table.Cell colSpan={5} align='center'>
+                      <Text>No assets found.</Text>
                     </Table.Cell>
                   </Table.Row>
-                ))
-              ) : (
-                <Table.Row>
-                  <Table.Cell colSpan={5} align='center'>
-                    <Text>No assets found.</Text>
-                  </Table.Cell>
-                </Table.Row>
-              )}
+                )}
               </Table.Body>
             </Table.Root>
           </Box>

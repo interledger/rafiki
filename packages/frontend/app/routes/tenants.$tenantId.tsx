@@ -14,7 +14,15 @@ import {
 import { type FormEvent, useRef, useState } from 'react'
 import type { ZodSchema } from 'zod'
 import { z } from 'zod'
-import { Box, Button, Card, Flex, Heading, Text, TextField } from '@radix-ui/themes'
+import {
+  Box,
+  Button,
+  Card,
+  Flex,
+  Heading,
+  Text,
+  TextField
+} from '@radix-ui/themes'
 import { renderErrorPanel, renderFieldError } from '~/lib/form-errors'
 import {
   ConfirmationDialog,
@@ -59,7 +67,12 @@ const FormField = ({
   readOnly
 }: FormFieldProps) => (
   <Flex direction='column' gap='2'>
-    <Text asChild size='2' weight='medium' className='tracking-wide text-gray-700'>
+    <Text
+      asChild
+      size='2'
+      weight='medium'
+      className='tracking-wide text-gray-700'
+    >
       <label htmlFor={name}>
         {label}
         {required ? <span className='text-vermillion'> *</span> : null}
@@ -160,7 +173,9 @@ export default function ViewTenantPage() {
                           name='publicName'
                           disabled={tenantDeleted}
                           defaultValue={tenant.publicName ?? undefined}
-                          error={response?.errors?.general.fieldErrors.publicName}
+                          error={
+                            response?.errors?.general.fieldErrors.publicName
+                          }
                         />
                       </Box>
                       <Box className='flex-1'>

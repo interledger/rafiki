@@ -64,7 +64,8 @@ export default function WebhookEventData() {
                   </button>
                 </div>
                 <div className='overflow-auto flex-1 text-xs break-words whitespace-pre'>
-                  <pre className='text-xs'
+                  <pre
+                    className='text-xs'
                     dangerouslySetInnerHTML={{
                       __html: prettify(state && state.data ? state.data : {})
                     }}

@@ -71,7 +71,8 @@ export default function ViewOutgoingPaymentPage() {
                 General Information
               </Text>
               <Text size='2' color='gray'>
-                Created at {new Date(outgoingPayment.createdAt).toLocaleString()}
+                Created at{' '}
+                {new Date(outgoingPayment.createdAt).toLocaleString()}
               </Text>
             </Flex>
 
@@ -103,7 +104,9 @@ export default function ViewOutgoingPaymentPage() {
                     State
                   </Text>
                   <Box>
-                    <Badge color={badgeColorByPaymentState[outgoingPayment.state]}>
+                    <Badge
+                      color={badgeColorByPaymentState[outgoingPayment.state]}
+                    >
                       {outgoingPayment.state}
                     </Badge>
                   </Box>
@@ -114,13 +117,20 @@ export default function ViewOutgoingPaymentPage() {
                 <Text size='2' weight='medium' className='text-gray-700'>
                   Receiver
                 </Text>
-                <Link className='default-link text-sm' to={outgoingPayment.receiver}>
+                <Link
+                  className='default-link text-sm'
+                  to={outgoingPayment.receiver}
+                >
                   {outgoingPayment.receiver}
                 </Link>
               </Flex>
 
               <Flex gap='6' wrap='wrap' className='w-full'>
-                <Flex direction='column' gap='1' className='flex-1 min-w-[150px]'>
+                <Flex
+                  direction='column'
+                  gap='1'
+                  className='flex-1 min-w-[150px]'
+                >
                   <Text size='2' weight='medium' className='text-gray-700'>
                     Receive Amount
                   </Text>
@@ -133,7 +143,11 @@ export default function ViewOutgoingPaymentPage() {
                   </Text>
                 </Flex>
 
-                <Flex direction='column' gap='1' className='flex-1 min-w-[150px]'>
+                <Flex
+                  direction='column'
+                  gap='1'
+                  className='flex-1 min-w-[150px]'
+                >
                   <Text size='2' weight='medium' className='text-gray-700'>
                     Debit Amount
                   </Text>
@@ -146,7 +160,11 @@ export default function ViewOutgoingPaymentPage() {
                   </Text>
                 </Flex>
 
-                <Flex direction='column' gap='1' className='flex-1 min-w-[150px]'>
+                <Flex
+                  direction='column'
+                  gap='1'
+                  className='flex-1 min-w-[150px]'
+                >
                   <Text size='2' weight='medium' className='text-gray-700'>
                     Sent Amount
                   </Text>
@@ -159,7 +177,11 @@ export default function ViewOutgoingPaymentPage() {
                   </Text>
                 </Flex>
 
-                <Flex direction='column' gap='1' className='flex-1 min-w-[150px]'>
+                <Flex
+                  direction='column'
+                  gap='1'
+                  className='flex-1 min-w-[150px]'
+                >
                   <Text size='2' weight='medium' className='text-gray-700'>
                     Error
                   </Text>
@@ -174,7 +196,11 @@ export default function ViewOutgoingPaymentPage() {
                   )}
                 </Flex>
 
-                <Flex direction='column' gap='1' className='flex-1 min-w-[150px]'>
+                <Flex
+                  direction='column'
+                  gap='1'
+                  className='flex-1 min-w-[150px]'
+                >
                   {outgoingPayment.metadata ? (
                     <details>
                       <summary className='cursor-pointer font-medium text-sm text-gray-700'>

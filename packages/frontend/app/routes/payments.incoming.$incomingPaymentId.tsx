@@ -65,7 +65,8 @@ export default function ViewIncomingPaymentPage() {
               </Text>
               <Flex direction='column' gap='1' align='end'>
                 <Text size='2' color='gray'>
-                  Created at {new Date(incomingPayment.createdAt).toLocaleString()}
+                  Created at{' '}
+                  {new Date(incomingPayment.createdAt).toLocaleString()}
                 </Text>
                 {new Date(expiresAtLocale) > new Date() && (
                   <Text size='2' color='gray'>
@@ -103,7 +104,9 @@ export default function ViewIncomingPaymentPage() {
                     State
                   </Text>
                   <Box>
-                    <Badge color={badgeColorByPaymentState[incomingPayment.state]}>
+                    <Badge
+                      color={badgeColorByPaymentState[incomingPayment.state]}
+                    >
                       {incomingPayment.state}
                     </Badge>
                   </Box>
@@ -111,7 +114,11 @@ export default function ViewIncomingPaymentPage() {
               </Flex>
 
               <Flex gap='6' wrap='wrap' className='w-full'>
-                <Flex direction='column' gap='1' className='flex-1 min-w-[150px]'>
+                <Flex
+                  direction='column'
+                  gap='1'
+                  className='flex-1 min-w-[150px]'
+                >
                   <Text size='2' weight='medium' className='text-gray-700'>
                     Incoming Amount
                   </Text>
@@ -130,7 +137,11 @@ export default function ViewIncomingPaymentPage() {
                   )}
                 </Flex>
 
-                <Flex direction='column' gap='1' className='flex-1 min-w-[150px]'>
+                <Flex
+                  direction='column'
+                  gap='1'
+                  className='flex-1 min-w-[150px]'
+                >
                   <Text size='2' weight='medium' className='text-gray-700'>
                     Received Amount
                   </Text>

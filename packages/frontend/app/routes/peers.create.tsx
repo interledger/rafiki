@@ -9,7 +9,16 @@ import {
   useLoaderData,
   useNavigation
 } from '@remix-run/react'
-import { Box, Button, Card, Flex, Heading, Select, Text, TextField } from '@radix-ui/themes'
+import {
+  Box,
+  Button,
+  Card,
+  Flex,
+  Heading,
+  Select,
+  Text,
+  TextField
+} from '@radix-ui/themes'
 import { renderErrorPanel, renderFieldError } from '~/lib/form-errors'
 import { loadAssets } from '~/lib/api/asset.server'
 import { createPeer } from '~/lib/api/peer.server'
@@ -48,7 +57,12 @@ const FormField = ({
   description
 }: FormFieldProps) => (
   <Flex direction='column' gap='1'>
-    <Text asChild size='2' weight='medium' className='tracking-wide text-gray-700'>
+    <Text
+      asChild
+      size='2'
+      weight='medium'
+      className='tracking-wide text-gray-700'
+    >
       <label htmlFor={name}>
         {label}
         {required ? <span className='text-vermillion'> *</span> : null}
@@ -97,13 +111,16 @@ const SelectField = ({
   onChange,
   bringForward
 }: SelectFieldProps) => {
-  const [selectedValue, setSelectedValue] = useState(
-    defaultValue?.value ?? ''
-  )
+  const [selectedValue, setSelectedValue] = useState(defaultValue?.value ?? '')
 
   return (
     <Flex direction='column' gap='1'>
-      <Text asChild size='2' weight='medium' className='tracking-wide text-gray-700'>
+      <Text
+        asChild
+        size='2'
+        weight='medium'
+        className='tracking-wide text-gray-700'
+      >
         <label htmlFor={`${name}-select`}>
           {label}
           {required ? <span className='text-vermillion'> *</span> : null}
@@ -229,7 +246,9 @@ export default function CreatePeerPage() {
                           label='Static ILP Address'
                           placeholder='ILP Address'
                           required
-                          error={response?.errors?.fieldErrors?.staticIlpAddress}
+                          error={
+                            response?.errors?.fieldErrors?.staticIlpAddress
+                          }
                           description={
                             <>
                               {"The peer's "}
@@ -271,7 +290,9 @@ export default function CreatePeerPage() {
                           name='incomingAuthTokens'
                           label='Incoming Auth Tokens'
                           placeholder='Accepts a comma separated list of tokens'
-                          error={response?.errors?.fieldErrors?.incomingAuthTokens}
+                          error={
+                            response?.errors?.fieldErrors?.incomingAuthTokens
+                          }
                           description={
                             <>
                               List of valid tokens to accept when receiving
@@ -291,7 +312,9 @@ export default function CreatePeerPage() {
                           label='Outgoing Auth Token'
                           placeholder='Outgoing HTTP Auth Token'
                           required
-                          error={response?.errors?.fieldErrors?.outgoingAuthToken}
+                          error={
+                            response?.errors?.fieldErrors?.outgoingAuthToken
+                          }
                           description={
                             <>
                               Valid auth token to present when sending outgoing{' '}
@@ -310,7 +333,9 @@ export default function CreatePeerPage() {
                           label='Outgoing Endpoint'
                           placeholder='Outgoing HTTP Endpoint'
                           required
-                          error={response?.errors?.fieldErrors?.outgoingEndpoint}
+                          error={
+                            response?.errors?.fieldErrors?.outgoingEndpoint
+                          }
                           description={
                             <>
                               Endpoint on the peer to which outgoing ILP packets

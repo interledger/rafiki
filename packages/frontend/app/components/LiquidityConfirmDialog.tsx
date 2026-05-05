@@ -39,7 +39,10 @@ export const LiquidityConfirmDialog = ({
                 Cancel
               </Button>
             </Dialog.Close>
-            <Button aria-label={`${type.toLowerCase()} liquidity`} type='submit'>
+            <Button
+              aria-label={`${type.toLowerCase()} liquidity`}
+              type='submit'
+            >
               {type}
             </Button>
           </Flex>

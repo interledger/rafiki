@@ -343,7 +343,11 @@ export default function ViewPeerPage() {
                 Asset Information
               </Text>
               <Flex gap='6' wrap='wrap' className='w-full'>
-                <Flex direction='column' gap='1' className='flex-1 min-w-[160px]'>
+                <Flex
+                  direction='column'
+                  gap='1'
+                  className='flex-1 min-w-[160px]'
+                >
                   <Text size='2' weight='medium' className='text-gray-700'>
                     Code
                   </Text>
@@ -351,7 +355,11 @@ export default function ViewPeerPage() {
                     {peer.asset.code}
                   </Text>
                 </Flex>
-                <Flex direction='column' gap='1' className='flex-1 min-w-[160px]'>
+                <Flex
+                  direction='column'
+                  gap='1'
+                  className='flex-1 min-w-[160px]'
+                >
                   <Text size='2' weight='medium' className='text-gray-700'>
                     Scale
                   </Text>
@@ -359,7 +367,11 @@ export default function ViewPeerPage() {
                     {peer.asset.scale}
                   </Text>
                 </Flex>
-                <Flex direction='column' gap='1' className='flex-1 min-w-[200px]'>
+                <Flex
+                  direction='column'
+                  gap='1'
+                  className='flex-1 min-w-[200px]'
+                >
                   <Text size='2' weight='medium' className='text-gray-700'>
                     Withdrawal threshold
                   </Text>

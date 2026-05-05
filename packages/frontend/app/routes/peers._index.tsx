@@ -37,7 +37,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 }
 
 export default function PeersPage() {
-  const { peers, previousPageUrl, nextPageUrl} = useLoaderData<typeof loader>()
+  const { peers, previousPageUrl, nextPageUrl } = useLoaderData<typeof loader>()
   const navigate = useNavigate()
 
   return (
@@ -45,71 +45,76 @@ export default function PeersPage() {
       <Flex direction='column' gap='4'>
         <Flex justify='between' align='start'>
           <Heading size='5'>Peers</Heading>
-          <Button onClick={() => navigate('/peers/create')}>
-            Create peer
-          </Button>
+          <Button onClick={() => navigate('/peers/create')}>Create peer</Button>
         </Flex>
 
         <Flex direction='column' gap='4'>
           <Box className='overflow-hidden rounded-md border border-pearl bg-white'>
             <Table.Root>
               <Table.Header className='bg-pearl/40'>
-              <Table.Row>
-                <Table.ColumnHeaderCell>Name</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>ILP Address</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>Asset</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>Outgoing HTTP Endpoint</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>Tenant</Table.ColumnHeaderCell>
-              </Table.Row>
+                <Table.Row>
+                  <Table.ColumnHeaderCell>Name</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>ILP Address</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Asset</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>
+                    Outgoing HTTP Endpoint
+                  </Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Tenant</Table.ColumnHeaderCell>
+                </Table.Row>
               </Table.Header>
               <Table.Body>
-              {peers.edges.length ? (
-                peers.edges.map((peer) => (
-                  <Table.Row
-                    key={peer.node.id}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => navigate(`/peers/${peer.node.id}`)}
-                  >
-                    <Table.Cell>
-                      <Flex direction='column' gap='1'>
-                        <Text weight='medium'>
-                          {peer.node.name || 'No peer name'}
+                {peers.edges.length ? (
+                  peers.edges.map((peer) => (
+                    <Table.Row
+                      key={peer.node.id}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => navigate(`/peers/${peer.node.id}`)}
+                    >
+                      <Table.Cell>
+                        <Flex direction='column' gap='1'>
+                          <Text weight='medium'>
+                            {peer.node.name || 'No peer name'}
+                          </Text>
+                          <Text size='1' color='gray'>
+                            (ID: {peer.node.id})
+                          </Text>
+                        </Flex>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Text>{peer.node.staticIlpAddress}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Text>
+                          {peer.node.asset.code} (Scale: {peer.node.asset.scale}
+                          )
                         </Text>
-                        <Text size='1' color='gray'>
-                          (ID: {peer.node.id})
-                        </Text>
-                      </Flex>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text>{peer.node.staticIlpAddress}</Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text>
-                        {peer.node.asset.code} (Scale: {peer.node.asset.scale})
-                      </Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text>{peer.node.http.outgoing.endpoint}</Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Flex direction='column' gap='1'>
-                        {peer.node.tenant?.publicName ? (
-                          <Text weight='medium'>{peer.node.tenant.publicName}</Text>
-                        ) : (
-                          <Text color='gray'>No public name</Text>
-                        )}
-                        <Text size='1' color='gray'>(ID: {peer.node.tenant?.id})</Text>
-                      </Flex>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Text>{peer.node.http.outgoing.endpoint}</Text>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Flex direction='column' gap='1'>
+                          {peer.node.tenant?.publicName ? (
+                            <Text weight='medium'>
+                              {peer.node.tenant.publicName}
+                            </Text>
+                          ) : (
+                            <Text color='gray'>No public name</Text>
+                          )}
+                          <Text size='1' color='gray'>
+                            (ID: {peer.node.tenant?.id})
+                          </Text>
+                        </Flex>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))
+                ) : (
+                  <Table.Row>
+                    <Table.Cell colSpan={5} align='center'>
+                      <Text>No peers found.</Text>
                     </Table.Cell>
                   </Table.Row>
-                ))
-              ) : (
-                <Table.Row>
-                  <Table.Cell colSpan={5} align='center'>
-                    <Text>No peers found.</Text>
-                  </Table.Cell>
-                </Table.Row>
-              )}
+                )}
               </Table.Body>
             </Table.Root>
           </Box>

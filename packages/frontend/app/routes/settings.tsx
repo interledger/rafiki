@@ -143,7 +143,10 @@ export default function Settings() {
                               >
                                 {label}
                                 {attributes.required ? (
-                                  <Text as='span' color='red'> *</Text>
+                                  <Text as='span' color='red'>
+                                    {' '}
+                                    *
+                                  </Text>
                                 ) : null}
                               </Text>
                               <TextField.Root
@@ -235,7 +238,10 @@ export default function Settings() {
                               >
                                 {label}
                                 {attributes.required ? (
-                                  <Text as='span' color='red'> *</Text>
+                                  <Text as='span' color='red'>
+                                    {' '}
+                                    *
+                                  </Text>
                                 ) : null}
                               </Text>
                               <TextField.Root

@@ -120,9 +120,9 @@ export const Sidebar: FC<SidebarProps> = ({
                           to='/settings'
                           className={({ isActive }) =>
                             cx(
-                            isActive
-                              ? 'bg-[#F37F64]/10 text-[#F37F64]'
-                              : 'text-tealish/70 hover:bg-[#F37F64]/5',
+                              isActive
+                                ? 'bg-[#F37F64]/10 text-[#F37F64]'
+                                : 'text-tealish/70 hover:bg-[#F37F64]/5',
                               'flex px-3 py-2 font-medium rounded-md'
                             )
                           }
@@ -148,7 +148,10 @@ export const Sidebar: FC<SidebarProps> = ({
           {/* Logo */}
           <Flex align='center' gap='2' className='flex-shrink-0'>
             <img className='w-8' src='/logo.svg' alt='Logo' />
-            <Heading size='6' className='hidden md:inline-block whitespace-nowrap'>
+            <Heading
+              size='6'
+              className='hidden md:inline-block whitespace-nowrap'
+            >
               Rafiki Admin
             </Heading>
           </Flex>
@@ -178,9 +181,9 @@ export const Sidebar: FC<SidebarProps> = ({
                   to='/settings'
                   className={({ isActive }) =>
                     cx(
-                          isActive
-                            ? 'bg-[#F37F64]/10 text-[#F37F64]'
-                            : 'text-tealish/70 hover:bg-[#F37F64]/5',
+                      isActive
+                        ? 'bg-[#F37F64]/10 text-[#F37F64]'
+                        : 'text-tealish/70 hover:bg-[#F37F64]/5',
                       'flex px-3 py-2 font-medium rounded-md'
                     )
                   }

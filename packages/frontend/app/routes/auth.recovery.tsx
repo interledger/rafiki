@@ -109,45 +109,46 @@ export default function Recovery() {
                         isUiNodeInputAttributes(attributes) &&
                         attributes.type !== 'submit'
                       ) {
-                        return (
-                          attributes.type === 'hidden' ? (
-                            <input
-                              key={index}
-                              type='hidden'
+                        return attributes.type === 'hidden' ? (
+                          <input
+                            key={index}
+                            type='hidden'
+                            name={attributes.name}
+                            value={attributes.value}
+                          />
+                        ) : (
+                          <div key={index}>
+                            <Text
+                              as='label'
+                              htmlFor={attributes.name}
+                              size='2'
+                              weight='medium'
+                              className='block'
+                            >
+                              {label}
+                              {attributes.required ? (
+                                <Text as='span' color='red'>
+                                  {' '}
+                                  *
+                                </Text>
+                              ) : null}
+                            </Text>
+                            <TextField.Root
+                              id={attributes.name}
+                              type={normalizeType(attributes.type)}
                               name={attributes.name}
-                              value={attributes.value}
+                              required={attributes.required}
+                              disabled={attributes.disabled}
+                              defaultValue={attributes.value}
+                              size='3'
+                              className='w-full'
                             />
-                          ) : (
-                            <div key={index}>
-                              <Text
-                                as='label'
-                                htmlFor={attributes.name}
-                                size='2'
-                                weight='medium'
-                                className='block'
-                              >
-                                {label}
-                                {attributes.required ? (
-                                  <Text as='span' color='red'> *</Text>
-                                ) : null}
-                              </Text>
-                              <TextField.Root
-                                id={attributes.name}
-                                type={normalizeType(attributes.type)}
-                                name={attributes.name}
-                                required={attributes.required}
-                                disabled={attributes.disabled}
-                                defaultValue={attributes.value}
-                                size='3'
-                                className='w-full'
-                              />
-                              {renderFieldError(
-                                field.messages
-                                  .map((message) => message.text)
-                                  .join('; ')
-                              )}
-                            </div>
-                          )
+                            {renderFieldError(
+                              field.messages
+                                .map((message) => message.text)
+                                .join('; ')
+                            )}
+                          </div>
                         )
                       }
                       return null

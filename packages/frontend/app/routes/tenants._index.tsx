@@ -1,6 +1,14 @@
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData, useNavigate } from '@remix-run/react'
-import { Box, Button, Flex, Heading, Table, Badge, Text } from '@radix-ui/themes'
+import {
+  Box,
+  Button,
+  Flex,
+  Heading,
+  Table,
+  Badge,
+  Text
+} from '@radix-ui/themes'
 import { getTenantInfo, listTenants, whoAmI } from '~/lib/api/tenant.server'
 import { paginationSchema } from '~/lib/validate.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
