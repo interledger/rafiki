@@ -1,11 +1,10 @@
 import { type ReactNode } from 'react'
 
 type DangerZoneProps = {
-  title: string
   children: ReactNode
 }
 
-export const DangerZone = ({ title, children }: DangerZoneProps) => {
+export const DangerZone = ({ children }: DangerZoneProps) => {
   return (
     <div className='flex flex-col items-start md:flex-row md:items-center justify-between p-4 border border-red-500 rounded-md my-4'>
       {children}

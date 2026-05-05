@@ -1,13 +1,6 @@
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react'
-import { ExclamationTriangle, XIcon } from './icons'
-import {
-  Button,
-  TextField,
-  Dialog,
-  Flex,
-  Text,
-  IconButton
-} from '@radix-ui/themes'
+import { ExclamationTriangle } from './icons'
+import { Button, TextField, Dialog, Flex, Text } from '@radix-ui/themes'
 
 export type ConfirmationDialogRef = {
   display: () => void
