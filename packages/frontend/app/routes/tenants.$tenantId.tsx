@@ -144,9 +144,14 @@ export default function ViewTenantPage() {
           <Flex direction='column' gap='5'>
             <Flex direction='column' gap='4'>
               <Flex align='center' justify='between' gap='3' wrap='wrap'>
-                <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                <Heading
+                  as='h2'
+                  size='2'
+                  weight='medium'
+                  className='uppercase tracking-wide text-gray-600'
+                >
                   General Information
-                </Text>
+                </Heading>
                 <Text size='2' color='gray'>
                   {`Created at ${new Date(tenant.createdAt).toLocaleString()}`}
                   {tenantDeleted && tenant.deletedAt
@@ -207,9 +212,14 @@ export default function ViewTenantPage() {
             </Flex>
 
             <Flex direction='column' gap='4'>
-              <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+              <Heading
+                as='h2'
+                size='2'
+                weight='medium'
+                className='uppercase tracking-wide text-gray-600'
+              >
                 Identity Provider Information
-              </Text>
+              </Heading>
               {renderErrorPanel(response?.errors?.idp.message)}
               <Form method='post' replace preventScrollReset>
                 <fieldset disabled={isSubmitting}>
@@ -249,9 +259,14 @@ export default function ViewTenantPage() {
 
             {me.isOperator && (
               <Flex direction='column' gap='4'>
-                <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                <Heading
+                  as='h2'
+                  size='2'
+                  weight='medium'
+                  className='uppercase tracking-wide text-gray-600'
+                >
                   Sensitive Information
-                </Text>
+                </Heading>
                 {renderErrorPanel(response?.errors?.sensitive.message)}
                 <Form method='post' replace preventScrollReset>
                   <fieldset disabled={isSubmitting}>

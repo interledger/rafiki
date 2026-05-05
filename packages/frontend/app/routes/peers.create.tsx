@@ -220,9 +220,14 @@ export default function CreatePeerPage() {
                   <Box>
                     <Flex direction='column' gap='5'>
                       <Flex direction='column' gap='4'>
-                        <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                        <Heading
+                          as='h2'
+                          size='2'
+                          weight='medium'
+                          className='uppercase tracking-wide text-gray-600'
+                        >
                           General Information
-                        </Text>
+                        </Heading>
                         <FormField
                           name='name'
                           label='Name'
@@ -283,9 +288,14 @@ export default function CreatePeerPage() {
                       </Flex>
 
                       <Flex direction='column' gap='4'>
-                        <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                        <Heading
+                          as='h2'
+                          size='2'
+                          weight='medium'
+                          className='uppercase tracking-wide text-gray-600'
+                        >
                           HTTP Information
-                        </Text>
+                        </Heading>
                         <FormField
                           name='incomingAuthTokens'
                           label='Incoming Auth Tokens'
@@ -346,9 +356,14 @@ export default function CreatePeerPage() {
                       </Flex>
 
                       <Flex direction='column' gap='4'>
-                        <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                        <Heading
+                          as='h2'
+                          size='2'
+                          weight='medium'
+                          className='uppercase tracking-wide text-gray-600'
+                        >
                           Asset Information
-                        </Text>
+                        </Heading>
                         {tenants ? (
                           <SelectField
                             options={tenants.map((tenant) => ({

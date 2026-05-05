@@ -155,9 +155,14 @@ export default function CreateTenantPage() {
                 <Box>
                   <Flex direction='column' gap='6'>
                     <Flex direction='column' gap='4'>
-                      <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                      <Heading
+                        as='h2'
+                        size='2'
+                        weight='medium'
+                        className='uppercase tracking-wide text-gray-600'
+                      >
                         General Information
-                      </Text>
+                      </Heading>
                       <div className='grid gap-4 md:grid-cols-2'>
                         <FormField
                           name='publicName'
@@ -176,9 +181,14 @@ export default function CreateTenantPage() {
                     </Flex>
 
                     <Flex direction='column' gap='4'>
-                      <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                      <Heading
+                        as='h2'
+                        size='2'
+                        weight='medium'
+                        className='uppercase tracking-wide text-gray-600'
+                      >
                         Sensitive Information
-                      </Text>
+                      </Heading>
                       <FormField
                         name='apiSecret'
                         label='API Secret'
@@ -190,9 +200,14 @@ export default function CreateTenantPage() {
                     </Flex>
 
                     <Flex direction='column' gap='4'>
-                      <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                      <Heading
+                        as='h2'
+                        size='2'
+                        weight='medium'
+                        className='uppercase tracking-wide text-gray-600'
+                      >
                         Identity Provider Information
-                      </Text>
+                      </Heading>
                       <FormField
                         name='idpConsentUrl'
                         label='Consent URL'
@@ -209,9 +224,14 @@ export default function CreateTenantPage() {
                     </Flex>
 
                     <Flex direction='column' gap='4'>
-                      <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                      <Heading
+                        as='h2'
+                        size='2'
+                        weight='medium'
+                        className='uppercase tracking-wide text-gray-600'
+                      >
                         Tenant Settings
-                      </Text>
+                      </Heading>
                       <FormField
                         name='exchangeRatesUrl'
                         label='Exchange Rates Url'

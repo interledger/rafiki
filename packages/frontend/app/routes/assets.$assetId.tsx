@@ -165,9 +165,14 @@ export default function ViewAssetPage() {
           <Flex direction='column'>
             <Flex direction='column' gap='4' pb='6'>
               <Flex align='center' justify='between' gap='3' wrap='wrap'>
-                <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                <Heading
+                  as='h2'
+                  size='2'
+                  weight='medium'
+                  className='uppercase tracking-wide text-gray-600'
+                >
                   General Information
-                </Text>
+                </Heading>
                 <Text size='2' color='gray'>
                   Created at {new Date(asset.createdAt).toLocaleString()}
                 </Text>
@@ -232,9 +237,14 @@ export default function ViewAssetPage() {
             </Flex>
             <hr />
             <Flex direction='column' gap='4' pt='6' pb='6'>
-              <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+              <Heading
+                as='h2'
+                size='2'
+                weight='medium'
+                className='uppercase tracking-wide text-gray-600'
+              >
                 Liquidity Information
-              </Text>
+              </Heading>
               <Flex justify='between' align='center'>
                 <Flex direction='column' gap='1'>
                   <Text weight='medium'>Amount</Text>
@@ -268,9 +278,14 @@ export default function ViewAssetPage() {
             <hr />
             <Flex direction='column' gap='4' pt='6'>
               <Flex direction='column' gap='2'>
-                <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                <Heading
+                  as='h2'
+                  size='2'
+                  weight='medium'
+                  className='uppercase tracking-wide text-gray-600'
+                >
                   Sending Fee
-                </Text>
+                </Heading>
                 {asset.sendingFee ? (
                   <Text size='2' color='gray'>
                     Created at{' '}

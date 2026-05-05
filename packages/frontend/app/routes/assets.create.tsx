@@ -167,9 +167,14 @@ export default function CreateAssetPage() {
                 <Box>
                   <Flex direction='column' gap='5'>
                     <Flex direction='column' gap='4'>
-                      <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                      <Heading
+                        as='h2'
+                        size='2'
+                        weight='medium'
+                        className='uppercase tracking-wide text-gray-600'
+                      >
                         General Information
-                      </Text>
+                      </Heading>
                       <div className='grid gap-4 md:grid-cols-2'>
                         <FormField
                           name='code'

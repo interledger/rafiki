@@ -158,9 +158,14 @@ export default function ViewPeerPage() {
           <Flex direction='column' gap='5'>
             <Flex direction='column' gap='4'>
               <Flex align='center' justify='between' gap='3' wrap='wrap'>
-                <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+                <Heading
+                  as='h2'
+                  size='2'
+                  weight='medium'
+                  className='uppercase tracking-wide text-gray-600'
+                >
                   General Information
-                </Text>
+                </Heading>
                 <Text size='2' color='gray'>
                   Created at {new Date(peer.createdAt).toLocaleString()}
                 </Text>
@@ -258,9 +263,14 @@ export default function ViewPeerPage() {
             </Flex>
             <hr />
             <Flex direction='column' gap='4'>
-              <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+              <Heading
+                as='h2'
+                size='2'
+                weight='medium'
+                className='uppercase tracking-wide text-gray-600'
+              >
                 HTTP Information
-              </Text>
+              </Heading>
               {renderErrorPanel(response?.errors.http.message)}
               <Form method='post' replace preventScrollReset>
                 <fieldset disabled={currentPageAction}>
@@ -339,9 +349,14 @@ export default function ViewPeerPage() {
             </Flex>
             <hr />
             <Flex direction='column' gap='4'>
-              <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+              <Heading
+                as='h2'
+                size='2'
+                weight='medium'
+                className='uppercase tracking-wide text-gray-600'
+              >
                 Asset Information
-              </Text>
+              </Heading>
               <Flex gap='6' wrap='wrap' className='w-full'>
                 <Flex
                   direction='column'
@@ -394,9 +409,14 @@ export default function ViewPeerPage() {
             </Flex>
             <hr />
             <Flex direction='column' gap='4'>
-              <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+              <Heading
+                as='h2'
+                size='2'
+                weight='medium'
+                className='uppercase tracking-wide text-gray-600'
+              >
                 Liquidity Information
-              </Text>
+              </Heading>
               <Flex justify='between' align='center'>
                 <Flex direction='column' gap='1'>
                   <Text weight='medium'>Amount</Text>

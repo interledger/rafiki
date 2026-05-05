@@ -67,9 +67,14 @@ export default function ViewOutgoingPaymentPage() {
         <Card className='max-w-3xl'>
           <Flex direction='column' gap='4'>
             <Flex align='center' justify='between' gap='3' wrap='wrap'>
-              <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+              <Heading
+                as='h2'
+                size='2'
+                weight='medium'
+                className='uppercase tracking-wide text-gray-600'
+              >
                 General Information
-              </Text>
+              </Heading>
               <Text size='2' color='gray'>
                 Created at{' '}
                 {new Date(outgoingPayment.createdAt).toLocaleString()}
@@ -231,9 +236,14 @@ export default function ViewOutgoingPaymentPage() {
 
         <Card className='max-w-3xl'>
           <Flex direction='column' gap='4'>
-            <Text className='rt-Text rt-r-size-2 rt-r-weight-medium uppercase tracking-wide text-gray-600 font-semibold'>
+            <Heading
+              as='h2'
+              size='2'
+              weight='medium'
+              className='uppercase tracking-wide text-gray-600'
+            >
               Liquidity Information
-            </Text>
+            </Heading>
             <Flex justify='between' align='center'>
               <Flex direction='column' gap='1'>
                 <Text weight='medium'>Amount</Text>
