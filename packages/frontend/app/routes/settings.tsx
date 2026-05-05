@@ -11,7 +11,7 @@ import {
 import type { UiContainer } from '@ory/client'
 import { useLoaderData } from '@remix-run/react'
 import { PageHeader } from '~/components'
-import { Button, Text, TextField } from '@radix-ui/themes'
+import { Button, Heading, Text, TextField } from '@radix-ui/themes'
 import { renderFieldError } from '../lib/form-errors'
 import variables from '../lib/envConfig.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
@@ -102,7 +102,9 @@ export default function Settings() {
       <div className='flex flex-col rounded-md bg-offwhite px-6'>
         <PageHeader>
           <div className='flex-1'>
-            <h3 className='text-2xl'>Account Settings</h3>
+            <Heading as='h3' size='5'>
+              Account Settings
+            </Heading>
             {uiContainer.messages?.map((message) => {
               return <p key={message.id}>{message.text}</p>
             })}
@@ -111,7 +113,9 @@ export default function Settings() {
         {/* Profile Settings */}
         <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
           <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Profile</h3>
+            <Heading as='h3' size='4' weight='medium'>
+              Profile
+            </Heading>
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
             <form method='post' action={actionUrl}>
@@ -206,7 +210,9 @@ export default function Settings() {
         {/* Password Settings */}
         <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
           <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Password</h3>
+            <Heading as='h3' size='4' weight='medium'>
+              Password
+            </Heading>
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
             <form method='post' action={actionUrl}>

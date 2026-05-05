@@ -7,7 +7,7 @@ import { uuidSchema } from '~/lib/validate.server'
 import { isUiNodeInputAttributes } from '@ory/integrations/ui'
 import type { UiContainer } from '@ory/client'
 import { useLoaderData } from '@remix-run/react'
-import { Button, Text, TextField } from '@radix-ui/themes'
+import { Button, Heading, Text, TextField } from '@radix-ui/themes'
 import { renderFieldError } from '../lib/form-errors'
 import variables from '../lib/envConfig.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
@@ -89,7 +89,9 @@ export default function Recovery() {
     <div className='pt-4 flex flex-col'>
       <div className='flex flex-col rounded-md bg-offwhite px-6 text-center min-h-[calc(100vh-3rem)]'>
         <div className='p-10 space-y-16'>
-          <h3 className='text-2xl pt-16'>Recover Rafiki Admin Account</h3>
+          <Heading as='h3' size='6' className='pt-16'>
+            Recover Rafiki Admin Account
+          </Heading>
           <div className='space-y-8'>
             {uiContainer.messages?.map((message) => {
               return <p key={message.id}>{message.text}</p>

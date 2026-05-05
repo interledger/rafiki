@@ -1,6 +1,6 @@
 import { redirect, type LoaderFunctionArgs } from '@remix-run/node'
 import { Form } from '@remix-run/react'
-import { Button } from '@radix-ui/themes'
+import { Button, Heading } from '@radix-ui/themes'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -14,7 +14,9 @@ export default function Logout() {
     <div className='pt-4 flex flex-col'>
       <div className='flex flex-col rounded-md bg-offwhite px-6 text-center min-h-[calc(100vh-3rem)]'>
         <div className='p-10 space-y-16'>
-          <h3 className='text-2xl pt-16'>Log out of Rafiki Admin</h3>
+          <Heading as='h3' size='6' className='pt-16'>
+            Log out of Rafiki Admin
+          </Heading>
           <div className='space-y-8'>
             <p>Failed to retrieve the logout URL from Kratos</p>
             <p>

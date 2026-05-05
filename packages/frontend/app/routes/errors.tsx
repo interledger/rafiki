@@ -1,6 +1,7 @@
 // This page handles User-facing errors in the browser for Kratos
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
+import { Heading } from '@radix-ui/themes'
 import variables from '../lib/envConfig.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 
@@ -46,7 +47,9 @@ export default function Errors() {
     <div className='pt-4 flex flex-col'>
       <div className='flex flex-col rounded-md bg-offwhite px-6 text-center min-h-[calc(100vh-3rem)]'>
         <div className='p-10 space-y-16'>
-          <h3 className='text-2xl pt-16'>Oops something went wrong</h3>
+          <Heading as='h3' size='6' className='pt-16'>
+            Oops something went wrong
+          </Heading>
           <div className='space-y-8'>
             <p>
               {error.code}: {error.status}

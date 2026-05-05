@@ -15,7 +15,7 @@ import {
 } from '@remix-run/react'
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
-import { Button, Theme } from '@radix-ui/themes'
+import { Button, Heading, Theme } from '@radix-ui/themes'
 import logo from '../public/logo.svg'
 import { XCircle } from './components/icons'
 import { Sidebar } from './components/Sidebar'
@@ -193,10 +193,16 @@ export function ErrorBoundary() {
     return (
       <ErrorPage>
         <div className='flex items-center justify-center flex-col bg-offwhite p-10 rounded-md shadow-md space-y-2'>
-          <h4 className='font-semibold text-xl -tracking-widest text-[#F37F64]'>
+          <Heading
+            as='h4'
+            size='5'
+            className='font-semibold -tracking-widest text-[#F37F64]'
+          >
             {error.status}
-          </h4>
-          <h2 className='text-xl'>{error.statusText}</h2>
+          </Heading>
+          <Heading as='h2' size='5'>
+            {error.statusText}
+          </Heading>
           <Button asChild>
             <Link to='/' aria-label='go to homepage'>
               Go to homepage
