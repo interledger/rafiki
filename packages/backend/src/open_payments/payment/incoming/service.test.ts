@@ -1,4 +1,5 @@
 import assert from 'assert'
+import { createDecipheriv, randomBytes } from 'node:crypto'
 import { faker } from '@faker-js/faker'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
@@ -33,6 +34,7 @@ import { withConfigOverride } from '../../../tests/helpers'
 import { poll } from '../../../shared/utils'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { getPageTests } from '../../../shared/baseModel.test'
+import Redis from 'ioredis'
 
 describe('Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -45,6 +47,7 @@ describe('Incoming Payment Service', (): void => {
   let asset: Asset
   let config: IAppConfig
   let tenantId: string
+  let redis: Redis
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
@@ -57,6 +60,7 @@ describe('Incoming Payment Service', (): void => {
     incomingPaymentService = await deps.use('incomingPaymentService')
     config = await deps.use('config')
     tenantId = Config.operatorTenantId
+    redis = await deps.use('redis')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -790,15 +794,19 @@ describe('Incoming Payment Service', (): void => {
     })
 
     describe.each`
-      eventType                                            | expiresAt                        | amountReceived
-      ${IncomingPaymentEventType.IncomingPaymentExpired}   | ${new Date(Date.now() + 30_000)} | ${BigInt(1)}
-      ${IncomingPaymentEventType.IncomingPaymentCompleted} | ${undefined}                     | ${BigInt(123)}
+      eventType                                            | expiresInMs  | amountReceived
+      ${IncomingPaymentEventType.IncomingPaymentExpired}   | ${30_000}    | ${BigInt(1)}
+      ${IncomingPaymentEventType.IncomingPaymentCompleted} | ${undefined} | ${BigInt(123)}
     `(
       'handleDeactivated ($eventType)',
-      ({ eventType, expiresAt, amountReceived }): void => {
+      ({ eventType, expiresInMs, amountReceived }): void => {
         let incomingPayment: IncomingPayment
 
         beforeEach(async (): Promise<void> => {
+          const expiresAt =
+            expiresInMs !== undefined
+              ? new Date(Date.now() + expiresInMs)
+              : undefined
           incomingPayment = await createIncomingPayment(deps, {
             walletAddressId,
             client,
@@ -1115,6 +1123,268 @@ describe('Incoming Payment Service', (): void => {
       ).resolves.toMatchObject({
         state: IncomingPaymentState.Completed
       })
+    })
+  })
+
+  describe('processPartialPayment', (): void => {
+    let incomingPayment: IncomingPayment
+
+    const dbEncryptionOverride: Partial<IAppConfig> = {
+      dbEncryptionSecret: randomBytes(32).toString('base64')
+    }
+
+    beforeEach(async (): Promise<void> => {
+      incomingPayment = await createIncomingPayment(deps, {
+        walletAddressId,
+        tenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
+      })
+    })
+
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    test(
+      'can process partial payment for incoming payment',
+      withConfigOverride(
+        () => config,
+        dbEncryptionOverride,
+        async (): Promise<void> => {
+          const partialIncomingPaymentId = uuid()
+          const dataFromSender = JSON.stringify({
+            data: faker.internet.email()
+          })
+          await incomingPaymentService.processPartialPayment(
+            incomingPayment.id,
+            {
+              dataFromSender,
+              partialIncomingPaymentId,
+              expiresAt: new Date(Date.now() - 60_000)
+            }
+          )
+          const webhookEvent = await IncomingPaymentEvent.query(knex)
+            .where({
+              incomingPaymentId: incomingPayment.id,
+              type: IncomingPaymentEventType.IncomingPaymentPartialPaymentReceived
+            })
+            .withGraphFetched('webhooks')
+            .first()
+          assert.ok(webhookEvent)
+          assert.ok(webhookEvent.data.dataFromSender)
+          expect(webhookEvent.data.partialIncomingPaymentId).toBe(
+            partialIncomingPaymentId
+          )
+
+          const webhookDataFromSender = JSON.parse(
+            webhookEvent.data.dataFromSender as string
+          )
+          const decipher = createDecipheriv(
+            'aes-256-gcm',
+            Uint8Array.from(
+              Buffer.from(config.dbEncryptionSecret as string, 'base64')
+            ),
+            webhookDataFromSender.iv
+          )
+          decipher.setAuthTag(
+            Uint8Array.from(Buffer.from(webhookDataFromSender.tag, 'base64'))
+          )
+          let decrypted = decipher.update(
+            webhookDataFromSender.cipherText,
+            'base64',
+            'utf8'
+          )
+          decrypted += decipher.final('utf8')
+
+          expect(decrypted).toEqual(dataFromSender)
+          expect(webhookEvent.webhooks).toHaveLength(1)
+        }
+      )
+    )
+
+    test(
+      'does not encrypt transmitted data without configured encryption secret',
+      withConfigOverride(
+        () => config,
+        {
+          ...dbEncryptionOverride,
+          dbEncryptionSecret: undefined
+        },
+        async (): Promise<void> => {
+          const partialIncomingPaymentId = uuid()
+          const dataFromSender = JSON.stringify({
+            data: faker.internet.email()
+          })
+
+          await incomingPaymentService.processPartialPayment(
+            incomingPayment.id,
+            {
+              dataFromSender,
+              partialIncomingPaymentId,
+              expiresAt: new Date(Date.now() - 60_000)
+            }
+          )
+          const webhookEvent = await IncomingPaymentEvent.query(knex)
+            .where({
+              incomingPaymentId: incomingPayment.id,
+              type: IncomingPaymentEventType.IncomingPaymentPartialPaymentReceived
+            })
+            .withGraphFetched('webhooks')
+            .first()
+          assert.ok(webhookEvent)
+
+          expect(webhookEvent.data.dataFromSender).toEqual(dataFromSender)
+          expect(webhookEvent.data.partialIncomingPaymentId).toBe(
+            partialIncomingPaymentId
+          )
+          expect(webhookEvent.webhooks).toHaveLength(1)
+        }
+      )
+    )
+
+    test(
+      'reads approval decision from redis JSON success flag',
+      withConfigOverride(
+        () => config,
+        {
+          partialPaymentDecisionMaxWaitMs: 1_000,
+          partialPaymentDecisionSafetyMarginMs: 0
+        },
+        async (): Promise<void> => {
+          const partialIncomingPaymentId = uuid()
+          const expiresAt = new Date(Date.now() + 5_000)
+          const cacheKey = `partial_payment_decision:${incomingPayment.id}:${partialIncomingPaymentId}`
+
+          const redisGetSpy = jest
+            .spyOn(redis, 'get')
+            .mockImplementation(async (key) => {
+              if (key === cacheKey) {
+                return JSON.stringify({ success: true })
+              }
+              return null
+            })
+
+          const decision = await incomingPaymentService.processPartialPayment(
+            incomingPayment.id,
+            {
+              dataFromSender: '{}',
+              partialIncomingPaymentId,
+              expiresAt
+            }
+          )
+
+          expect(decision.reason).toBe('Additional data approved')
+          expect(decision.success).toBe(true)
+          expect(redisGetSpy).toHaveBeenCalledWith(cacheKey)
+
+          const webhookEvent = await IncomingPaymentEvent.query(knex)
+            .where({
+              incomingPaymentId: incomingPayment.id,
+              type: IncomingPaymentEventType.IncomingPaymentPartialPaymentReceived
+            })
+            .orderBy('createdAt', 'desc')
+            .first()
+          assert.ok(webhookEvent)
+          expect(webhookEvent.data.partialIncomingPaymentId).toBe(
+            partialIncomingPaymentId
+          )
+        }
+      )
+    )
+
+    test(
+      'reads rejection decision from redis JSON success flag',
+      withConfigOverride(
+        () => config,
+        {
+          partialPaymentDecisionMaxWaitMs: 1_000,
+          partialPaymentDecisionSafetyMarginMs: 0
+        },
+        async (): Promise<void> => {
+          const partialIncomingPaymentId = uuid()
+          const expiresAt = new Date(Date.now() + 5_000)
+          const cacheKey = `partial_payment_decision:${incomingPayment.id}:${partialIncomingPaymentId}`
+
+          const redisGetSpy = jest
+            .spyOn(redis, 'get')
+            .mockImplementation(async (key) => {
+              if (key === cacheKey) {
+                return JSON.stringify({ success: false })
+              }
+              return null
+            })
+
+          const decision = await incomingPaymentService.processPartialPayment(
+            incomingPayment.id,
+            {
+              dataFromSender: '{}',
+              partialIncomingPaymentId,
+              expiresAt
+            }
+          )
+
+          expect(decision.reason).toBe('Additional data rejected')
+          expect(decision.success).toBe(false)
+          expect(redisGetSpy).toHaveBeenCalledWith(cacheKey)
+        }
+      )
+    )
+
+    test(
+      'rejects partial payment if request times out',
+      withConfigOverride(
+        () => config,
+        {
+          partialPaymentDecisionMaxWaitMs: 1,
+          partialPaymentDecisionSafetyMarginMs: 0
+        },
+        async (): Promise<void> => {
+          const partialIncomingPaymentId = uuid()
+          const expiresAt = new Date(Date.now() + 5_000)
+          const cacheKey = `partial_payment_decision:${incomingPayment.id}:${partialIncomingPaymentId}`
+
+          const redisGetSpy = jest.spyOn(redis, 'get').mockImplementation()
+
+          const decision = await incomingPaymentService.processPartialPayment(
+            incomingPayment.id,
+            {
+              dataFromSender: '{}',
+              partialIncomingPaymentId,
+              expiresAt
+            }
+          )
+
+          expect(decision.reason).toBe('No response from receiving ASE')
+          expect(decision.success).toBe(false)
+          expect(redisGetSpy).toHaveBeenCalledWith(cacheKey)
+        }
+      )
+    )
+  })
+
+  describe('updatePartialPaymentDecision', (): void => {
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    test('sets partial payments decision in redis', async (): Promise<void> => {
+      const partialPaymentId = uuid()
+      const incomingPaymentId = uuid()
+      const cacheKey = `partial_payment_decision:${incomingPaymentId}:${partialPaymentId}`
+
+      const redisSetSpy = jest.spyOn(redis, 'set').mockImplementation()
+
+      await incomingPaymentService.updatePartialPaymentDecision({
+        incomingPaymentId,
+        partialPaymentId: partialPaymentId,
+        success: false,
+        reason: 'rejected'
+      })
+
+      expect(redisSetSpy).toHaveBeenCalledWith(
+        cacheKey,
+        JSON.stringify({ success: false, reason: 'rejected' })
+      )
     })
   })
 

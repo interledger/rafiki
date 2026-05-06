@@ -353,11 +353,11 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/pay':
-        specifier: 0.4.0-alpha.9
-        version: 0.4.0-alpha.9
+        specifier: 0.4.0-alpha.12
+        version: 0.4.0-alpha.12
       '@interledger/stream-receiver':
-        specifier: ^0.3.3-alpha.3
-        version: 0.3.3-alpha.3
+        specifier: 0.3.3-alpha.4
+        version: 0.3.3-alpha.4
       '@koa/cors':
         specifier: ^5.0.0
         version: 5.0.0
@@ -528,8 +528,8 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       ilp-protocol-stream:
-        specifier: ^2.7.2-alpha.2
-        version: 2.7.2-alpha.2
+        specifier: 2.7.2-alpha.3
+        version: 2.7.2-alpha.3
       jest-environment-node:
         specifier: ^29.7.0
         version: 29.7.0
@@ -3276,11 +3276,11 @@ packages:
   '@interledger/openapi@2.0.4':
     resolution: {integrity: sha512-3V6xCk2dKnpBiS6ppBDtQsItZ4r1r/YO9T93Pag2yMxIIAe0NAwUfq5yWPYJtNTQ8j2br+z/AwlgWwenxKffWg==}
 
-  '@interledger/pay@0.4.0-alpha.9':
-    resolution: {integrity: sha512-ScT+hsAFBjpSy68VncSa6wW+VidgviKQE9W9lyiOBCrXfnrwrTdycEXWOG9ShoAYXpA3/FG/dYO9eImAPO5Pzg==}
+  '@interledger/pay@0.4.0-alpha.12':
+    resolution: {integrity: sha512-lINwWoQgrBln5hmPeC1IIkxi/nWwrIYiqkv90nXih9k+5zdZaiNTYE6KYuh71vsgeliHPOmwQLym3LvlsO7F1g==}
 
-  '@interledger/stream-receiver@0.3.3-alpha.3':
-    resolution: {integrity: sha512-4h3zIY9OGT+4BgzIsidt+8u89/+8fXzkptz/cKp4Bs5QBNsM0zecktJ8irp0audPNxvUYVjK6r/IGclvuejn4Q==}
+  '@interledger/stream-receiver@0.3.3-alpha.4':
+    resolution: {integrity: sha512-wg/agXfAaSe8AorvIKCA5nMQ8HT8JjODzX4WVfoqOjZ5w0wcwEzuy95YZF/sTPLP5ttDR+NN0MTer/CTZ0p1Jw==}
 
   '@ioredis/commands@1.2.0':
     resolution: {integrity: sha512-Sx1pU8EM64o2BrqNpEO1CNLtKQwyhuXuqyfH7oGKCk+1a33d2r5saW8zNwm3j6BTExtjrv2BxTgzzkMwts6vGg==}
@@ -3428,6 +3428,7 @@ packages:
   '@koa/router@12.0.2':
     resolution: {integrity: sha512-sYcHglGKTxGF+hQ6x67xDfkE9o+NhVlRHBqq6gLywaMc6CojK/5vFZByphdonKinYlMLkEkacm+HEse9HzwgTA==}
     engines: {node: '>= 12'}
+    deprecated: Please upgrade to v15 or higher. All reported bugs in this version are fixed in newer releases, dependencies have been updated, and security has been improved.
 
   '@ljharb/through@2.3.13':
     resolution: {integrity: sha512-/gKJun8NNiWGZJkGzI/Ragc53cOdcLNdzjLaIa+GEjguQs0ulsurx8WN0jijdK9yPqDvziX995sMRLyLt1uZMQ==}
@@ -4662,9 +4663,6 @@ packages:
   '@types/debug@4.1.12':
     resolution: {integrity: sha512-vIChWdVG3LG1SMxEvI/AK+FWJthlrqlTu7fbrlywTkkaONwk/UAGaULXRlf8vkzFBLVm0zkMdCquhL5aOjhXPQ==}
 
-  '@types/debug@4.1.7':
-    resolution: {integrity: sha512-9AonUzyTjXXhEOa0DnqpzZi6VHlqKMswga9EXjpXnnqxwLtdvPPtlO8evrI5D9S6asFRCQ6v+wpiUKbw+vKqyg==}
-
   '@types/docker-modem@3.0.6':
     resolution: {integrity: sha512-yKpAGEuKRSS8wwx0joknWxsmLha78wNMe9R2S3UNsVOkZded8UqOrV8KoeDXoXsjndxwyF3eIhyClGbO1SEhEg==}
 
@@ -4805,9 +4803,6 @@ packages:
 
   '@types/mime@3.0.4':
     resolution: {integrity: sha512-iJt33IQnVRkqeqC7PzBHPTC6fDlRNRW8vjrgqtScAhrmMwe8c4Eo7+fUGTa+XdWrpEgpyKWMYmi2dIwMAYRzPw==}
-
-  '@types/ms@0.7.31':
-    resolution: {integrity: sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==}
 
   '@types/ms@0.7.34':
     resolution: {integrity: sha512-nG96G3Wp6acyAgJqGasjODb+acrI7KltPiRxzHPXnP3NgI28bpQDRv53olbqGXbfcgF5aiiHmO3xpwEpS5Ld9g==}
@@ -6313,6 +6308,7 @@ packages:
 
   cuid@2.1.8:
     resolution: {integrity: sha512-xiEMER6E7TlTPnDxrM4eRiC6TRgjNX9xzEZ5U/Se2YJKr7Mq4pJn/2XEHjl3STcSh96GmkHPcBXLES8M29wyyg==}
+    deprecated: Cuid and other k-sortable and non-cryptographic ids (Ulid, ObjectId, KSUID, all UUIDs) are all insecure. Use @paralleldrive/cuid2 instead.
 
   cytoscape-cose-bilkent@4.1.0:
     resolution: {integrity: sha512-wgQlVIUJF13Quxiv5e1gstZ08rnZj2XaLHGoFMYXz7SkNfCDOOteKBE6SYRfA9WxxI/iBc3ajfDoc6hb/MRAHQ==}
@@ -8090,9 +8086,6 @@ packages:
     resolution: {integrity: sha512-Hs59xBNfUIunMFgWAbGX5cq6893IbWg4KnrjbYwX3tx0ztorVgTDA6B2sxf8ejHJ4wz8BqGUMYlnzNBer5NvGg==}
     engines: {node: '>= 4'}
 
-  ilp-logger@1.4.4:
-    resolution: {integrity: sha512-R7F+SH6Aiipuqoq63gtzy6/HVIfcCK1rEmq8bE8NLSufXJPRoXszNs6RpypQi9HJcZvTcIUPFE15bS/HI+T+/A==}
-
   ilp-logger@1.4.5-alpha.2:
     resolution: {integrity: sha512-WtbscdjUUPVseRkDpRlfb/YUpsq4zfoOz6PlJSkx+aqJot1P5N+YGd4YKW1g9wm6O8muo5e/xBotyJqCQs0g+Q==}
 
@@ -8105,8 +8098,8 @@ packages:
   ilp-protocol-ildcp@2.2.4-alpha.2:
     resolution: {integrity: sha512-pMBHAXwTnOA1E9TzJAXxbVxrCpqqcYEPJ5w+9kj/gTr3Lmu8M5U/h0W7bGx/pgfGQ2jHXKdO8IJurojDjfoURA==}
 
-  ilp-protocol-stream@2.7.2-alpha.2:
-    resolution: {integrity: sha512-dr9TgdNpFn0yoU4X7M+l/yHkTH3/hPEtMaF0LhfTHr4m0sfnbGLEREazctmTTj6461WL2OuDneiAcboevmFw+w==}
+  ilp-protocol-stream@2.7.2-alpha.3:
+    resolution: {integrity: sha512-4HQFVL9Wfmv6nLB5tSp68LZYcd4KRg9kBMVVVHDiqRfqYVQoyPI7EcOAIh7cA01MVzmMrqhbDzIPu6T2SQV4TA==}
 
   immutable@3.8.3:
     resolution: {integrity: sha512-AUY/VyX0E5XlibOmWt10uabJzam1zlYjwiEgQSDc5+UIkFNaF9WM0JxXKaNMGf+F/ffUF+7kRKXM9A7C0xXqMg==}
@@ -9109,6 +9102,7 @@ packages:
 
   mathjax-full@3.2.2:
     resolution: {integrity: sha512-+LfG9Fik+OuI8SLwsiR02IVdjcnRCy5MufYLi0C3TdMT56L/pjB0alMVGgoWJF8pN9Rc7FESycZB9BMNWIid5w==}
+    deprecated: Version 4 replaces this package with the scoped package @mathjax/src
 
   maxmin@3.0.0:
     resolution: {integrity: sha512-wcahMInmGtg/7c6a75fr21Ch/Ks1Tb+Jtoan5Ft4bAI0ZvJqyOw8kkM7e7p8hDSzY805vmxwHT50KcjGwKyJ0g==}
@@ -9691,15 +9685,6 @@ packages:
 
   node-fetch-native@1.6.7:
     resolution: {integrity: sha512-g9yhqoedzIUm0nTnTqAQvueMPVOuIY16bqgAJJC8XOOubYFNwz6IER9qs0Gq2Xd0+CecCKFjtdDTMA4u4xG06Q==}
-
-  node-fetch@2.6.7:
-    resolution: {integrity: sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==}
-    engines: {node: 4.x || >=6.0.0}
-    peerDependencies:
-      encoding: ^0.1.0
-    peerDependenciesMeta:
-      encoding:
-        optional: true
 
   node-fetch@2.7.0:
     resolution: {integrity: sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==}
@@ -15363,24 +15348,26 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@interledger/pay@0.4.0-alpha.9':
+  '@interledger/pay@0.4.0-alpha.12':
     dependencies:
       abort-controller: 3.0.0
       ilp-logger: 1.4.5-alpha.2
       ilp-packet: 3.1.4-alpha.2
-      ilp-protocol-stream: 2.7.2-alpha.2
+      ilp-protocol-stream: 2.7.2-alpha.3
       long: 4.0.0
-      node-fetch: 2.6.7
+      node-fetch: 2.7.0
+      oer-utils: 5.1.3-alpha.2
     transitivePeerDependencies:
       - encoding
       - supports-color
 
-  '@interledger/stream-receiver@0.3.3-alpha.3':
+  '@interledger/stream-receiver@0.3.3-alpha.4':
     dependencies:
       '@types/long': 4.0.2
       ilp-logger: 1.4.5-alpha.2
       ilp-packet: 3.1.4-alpha.2
-      ilp-protocol-stream: 2.7.2-alpha.2
+      ilp-protocol-ildcp: 2.2.4-alpha.2
+      ilp-protocol-stream: 2.7.2-alpha.3
       long: 4.0.0
       oer-utils: 5.1.3-alpha.2
     transitivePeerDependencies:
@@ -17086,10 +17073,6 @@ snapshots:
     dependencies:
       '@types/ms': 0.7.34
 
-  '@types/debug@4.1.7':
-    dependencies:
-      '@types/ms': 0.7.31
-
   '@types/docker-modem@3.0.6':
     dependencies:
       '@types/node': 24.11.0
@@ -17251,8 +17234,6 @@ snapshots:
   '@types/mime@1.3.5': {}
 
   '@types/mime@3.0.4': {}
-
-  '@types/ms@0.7.31': {}
 
   '@types/ms@0.7.34': {}
 
@@ -19423,12 +19404,6 @@ snapshots:
     optionalDependencies:
       supports-color: 10.2.2
 
-  debug@4.4.3(supports-color@7.2.0):
-    dependencies:
-      ms: 2.1.3
-    optionalDependencies:
-      supports-color: 7.2.0
-
   debug@4.4.3(supports-color@9.4.0):
     dependencies:
       ms: 2.1.3
@@ -21563,15 +21538,9 @@ snapshots:
 
   ignore@7.0.5: {}
 
-  ilp-logger@1.4.4:
-    dependencies:
-      '@types/debug': 4.1.7
-      debug: 4.4.3(supports-color@7.2.0)
-      supports-color: 7.2.0
-
   ilp-logger@1.4.5-alpha.2:
     dependencies:
-      '@types/debug': 4.1.7
+      '@types/debug': 4.1.12
       debug: 4.4.3(supports-color@9.4.0)
       supports-color: 9.4.0
 
@@ -21592,9 +21561,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ilp-protocol-stream@2.7.2-alpha.2:
+  ilp-protocol-stream@2.7.2-alpha.3:
     dependencies:
-      ilp-logger: 1.4.4
+      ilp-logger: 1.4.5-alpha.2
       ilp-packet: 3.1.4-alpha.2
       ilp-protocol-ildcp: 2.2.4-alpha.2
       long: 4.0.0
@@ -23901,10 +23870,6 @@ snapshots:
   node-domexception@1.0.0: {}
 
   node-fetch-native@1.6.7: {}
-
-  node-fetch@2.6.7:
-    dependencies:
-      whatwg-url: 5.0.0
 
   node-fetch@2.7.0:
     dependencies:

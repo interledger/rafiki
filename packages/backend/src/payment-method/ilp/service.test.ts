@@ -765,7 +765,8 @@ describe('IlpPaymentService', (): void => {
   describe('pay', (): void => {
     function mockIlpPay(
       overrideQuote: Partial<Pay.Quote>,
-      error?: Pay.PaymentError
+      error?: Pay.PaymentError,
+      applicationData?: Buffer
     ): jest.SpyInstance<
       Promise<Pay.PaymentProgress>,
       [options: Pay.PayOptions]
@@ -778,6 +779,7 @@ describe('IlpPaymentService', (): void => {
             quote: { ...opts.quote, ...overrideQuote }
           })
           if (error) res.error = error
+          if (applicationData) res.applicationData = applicationData
           return res
         })
     }
@@ -1080,6 +1082,115 @@ describe('IlpPaymentService', (): void => {
         )
         expect((error as PaymentMethodHandlerError).retryable).toBe(false)
       }
+    })
+
+    test('uses applicationData for partial payment application error description', async (): Promise<void> => {
+      const { receiver, outgoingPayment } =
+        await createOutgoingPaymentWithReceiver(deps, {
+          sendingWalletAddress: walletAddressMap['USD'],
+          receivingWalletAddress: walletAddressMap['USD'],
+          method: 'ilp',
+          quoteOptions: {
+            tenantId,
+            debitAmount: {
+              value: 100n,
+              assetScale: walletAddressMap['USD'].asset.scale,
+              assetCode: walletAddressMap['USD'].asset.code
+            }
+          }
+        })
+
+      outgoingPayment.dataToTransmit = 'sample kyc data'
+
+      const rejectReason = 'Rejected by mock ASE for partial payment'
+      mockIlpPay(
+        {},
+        Pay.PaymentError.ApplicationError,
+        Buffer.from(rejectReason, 'utf8')
+      )
+
+      await expect(
+        ilpPaymentService.pay({
+          receiver,
+          outgoingPayment,
+          finalDebitAmount: 50n,
+          finalReceiveAmount: 50n
+        })
+      ).rejects.toMatchObject({
+        message: 'Received error during ILP pay',
+        description: rejectReason,
+        retryable: false
+      })
+    })
+
+    test('keeps generic application error without partial payment context', async (): Promise<void> => {
+      const { receiver, outgoingPayment } =
+        await createOutgoingPaymentWithReceiver(deps, {
+          sendingWalletAddress: walletAddressMap['USD'],
+          receivingWalletAddress: walletAddressMap['USD'],
+          method: 'ilp',
+          quoteOptions: {
+            tenantId,
+            debitAmount: {
+              value: 100n,
+              assetScale: walletAddressMap['USD'].asset.scale,
+              assetCode: walletAddressMap['USD'].asset.code
+            }
+          }
+        })
+
+      mockIlpPay(
+        {},
+        Pay.PaymentError.ApplicationError,
+        Buffer.from('Rejected by mock ASE', 'utf8')
+      )
+
+      await expect(
+        ilpPaymentService.pay({
+          receiver,
+          outgoingPayment,
+          finalDebitAmount: 50n,
+          finalReceiveAmount: 50n
+        })
+      ).rejects.toMatchObject({
+        message: 'Received error during ILP pay',
+        description: Pay.PaymentError.ApplicationError,
+        retryable: false
+      })
+    })
+
+    test('keeps generic application error when partial context has empty applicationData', async (): Promise<void> => {
+      const { receiver, outgoingPayment } =
+        await createOutgoingPaymentWithReceiver(deps, {
+          sendingWalletAddress: walletAddressMap['USD'],
+          receivingWalletAddress: walletAddressMap['USD'],
+          method: 'ilp',
+          quoteOptions: {
+            tenantId,
+            debitAmount: {
+              value: 100n,
+              assetScale: walletAddressMap['USD'].asset.scale,
+              assetCode: walletAddressMap['USD'].asset.code
+            }
+          }
+        })
+
+      outgoingPayment.dataToTransmit = 'sample kyc data'
+
+      mockIlpPay({}, Pay.PaymentError.ApplicationError, Buffer.from('', 'utf8'))
+
+      await expect(
+        ilpPaymentService.pay({
+          receiver,
+          outgoingPayment,
+          finalDebitAmount: 50n,
+          finalReceiveAmount: 50n
+        })
+      ).rejects.toMatchObject({
+        message: 'Received error during ILP pay',
+        description: Pay.PaymentError.ApplicationError,
+        retryable: false
+      })
     })
   })
 
