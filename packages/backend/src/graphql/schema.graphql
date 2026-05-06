@@ -1765,7 +1765,7 @@ type ConfirmPartialIncomingPaymentResponse {
 input RejectPartialIncomingPaymentInput {
   incomingPaymentId: ID!
   partialIncomingPaymentId: ID!
-  "Reason why this incoming payment has been canceled. This value will be publicly visible in the metadata field if this incoming payment is requested through Open Payments."
+  "Reason why this incoming payment has been canceled. This value will be sent to the sender."
   reason: String
 }
 
