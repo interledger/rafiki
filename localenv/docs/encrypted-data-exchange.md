@@ -16,7 +16,7 @@ pnpm localenv:compose:partial-payment up
 
 In the `happy-life-bank-mock-ase` logs:
 
-- `incoming_payment.partial_payment_received` webhook was received, with `partialIncomingPaymentId` and the `dataToTransmit` defined in the payload
+- `incoming_payment.partial_payment_received` webhook was received, with `partialIncomingPaymentId` and the `dataFromSender` defined in the payload
 - `confirmPartialIncomingPayment` was called
 
 In Bruno:
