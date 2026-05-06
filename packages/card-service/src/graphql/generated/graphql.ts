@@ -1535,7 +1535,7 @@ export type Receiver = {
 export type RejectPartialIncomingPaymentInput = {
   incomingPaymentId: Scalars['ID']['input'];
   partialIncomingPaymentId: Scalars['ID']['input'];
-  /** Reason why this incoming payment has been canceled. This value will be publicly visible in the metadata field if this incoming payment is requested through Open Payments. */
+  /** Reason why this incoming payment has been canceled. This value will be sent to the sender. */
   reason?: InputMaybe<Scalars['String']['input']>;
 };
 
