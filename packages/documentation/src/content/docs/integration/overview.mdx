@@ -1,0 +1,54 @@
+---
+title: Integrate Rafiki with your ASE
+---
+
+import { Card, CardGrid, Badge } from '@astrojs/starlight/components'
+
+## Before you begin
+
+You must be, or be working with, an account servicing entity (ASE). An ASE is an entity that provides and maintains payment accounts for its customers and is regulated in the jurisdictions it operates. Examples of ASEs include banks, digital wallet providers, and mobile money providers. The [account servicing entity](/overview/concepts/account-servicing-entity) page provides examples of an ASE's responsibilities and obligations.
+
+For testing purposes, you can set up a [mock account servicing entity](/integration/playground/overview) that's deployed Rafiki. However, Rafiki **should not** be used in production environments by non-regulated ASEs.
+
+## Software components
+
+<CardGrid>
+  
+  <Card title="Auth service"> The Auth service hosts the Open Payments authorization server. Integration with this service is required if you don't develop your own in-house service for authorization.<p></p><p>[Learn more >](/integration/deployment/services/auth-service)</p></Card>
+  
+  <Card title="Backend service"> The Backend service hosts the Open Payments resource server, ILP connector, and Backend Admin API.<p></p><p>[Learn more >](/integration/deployment/services/backend-service)</p></Card>
+  
+  <Card title="Frontend service"> The Frontend service offers an optional administrative user interface for interacting with the Backend Admin API.<p></p><p>[Learn more >](/integration/deployment/services/frontend-service)</p></Card>
+
+</CardGrid>
+
+## Integration steps
+
+<CardGrid>
+  <Card title="Integration checklist" icon="approve-check"> Review the integration checklist for more required and optional steps.<p></p><p>[Review the checklist >](/integration/requirements/overview)</p></Card>
+
+  <Card title="Tenants"><Badge text="Required" variant="danger" /> A tenant represents an isolated environment for an ASE. You must create a tenant even if you don't intend to share your Rafiki instance across ASEs.<p></p><p>[Create a tenant >](/integration/requirements/tenants)</p></Card>
+
+  <Card title="Assets"><Badge text="Required" variant="danger" /> An asset is a monetary unit represented by a currency code and a scale. Rafiki must be set up for at least one asset.<p></p><p>[Create an asset >](/integration/requirements/assets)</p></Card>
+
+  <Card title="Wallet addresses"><Badge text="Required" variant="danger" /> Each payment account in the ASE's system must be linked to a wallet address. You must have at least one asset in Rafiki before creating wallet addresses.<p></p><p>[Create a wallet address >](/integration/requirements/wallet-addresses)</p></Card>
+
+  <Card title="Webhook endpoint"><Badge text="Required" variant="danger" /> You must expose a webhook endpoint that listens for events dispatched by Rafiki, then react accordingly by calling/interfacing with the Backend Admin API. For example, deposit or withdraw liquidity.<p></p><p>[Specify a webhook endpoint >](/integration/requirements/webhook-events)</p></Card>
+
+</CardGrid>
+
+## Payments
+
+The following steps illustrate how to make a basic payment between two wallet addresses on the same Rafiki instance.
+
+<CardGrid>
+
+  <Card title="1. Create an incoming payment"> Use the Backend Admin API's `createIncomingPayment` to create an incoming payment resource on the recipient's wallet account.<p></p><p>[createIncomingPayment mutation >](https://rafiki.dev/apis/graphql/backend#mutation-createIncomingPayment)</p></Card>
+
+  <Card title="2. Create a quote"> Use the Backend Admin API's `createQuote` to create a quote resource on the sender's wallet account. The quote shows how much it will cost the sender to deliver an amount to the receiver.<p></p><p>[createQuote mutation >](https://rafiki.dev/apis/graphql/backend#mutation-createQuote)</p></Card>
+
+  <Card title="3. Create an outgoing payment"> Use the Backend Admin API's `createOutgoingPayment` to create an outgoing payment resource on the sender's wallet account. This operations starts the payment. At this point, the sender's ASE must fund/approve the payment before it sends.<p></p><p>[createOutgoingPayment mutation >](https://rafiki.dev/apis/graphql/backend#mutation-createOutgoingPayment)</p></Card>
+
+  <Card title="Handle webhook requests"> As the payment flow progresses, the ASE is be notified about events that happen in the system. Some events are actionable, such as an `outgoing_payment.created` event. Review the webhook events page to learn more about handling each event.<p></p><p>[Webhook events >](/integration/requirements/webhook-events)</p></Card>
+
+</CardGrid>

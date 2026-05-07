@@ -27,10 +27,10 @@ Since the purpose of peering is to facilitate payments, which often involves ext
 Each node on the Interledger network can take on the role of sender, connector, or receiver, depending on the payment.
 
 - Sender - Originates the payment by sending ILP packets.
-- Connector - An intermediary between a sender and receiver that forwards ILP packets. Connectors can facilitate payments to or from anyone they’re peered with.
+- Connector - An intermediary between a sender and receiver that forwards ILP packets. Connectors can facilitate payments to or from anyone they're peered with.
 - Receiver - The final recipient of the ILP packets and, as such, the payment.
 
-If the sender and receiver nodes are peers, then the payment flow is straightforward and no intermediary connector nodes are needed. However, if the sender and receiver aren’t peers, then the payment must route through one or more connectors. Rafiki’s [backend service](/integration/deployment/services/backend-service#interledger-connector) includes an Interledger connector for sending and receiving ILP packets.
+If the sender and receiver nodes are peers, then the payment flow is straightforward and no intermediary connector nodes are needed. However, if the sender and receiver aren't peers, then the payment must route through one or more connectors. Rafiki's [backend service](/integration/deployment/services/backend-service#interledger-connector) includes an Interledger connector for sending and receiving ILP packets.
 
 In the image below, the sender node (A) and the receiver node (C) share a common peer (B). In payments from the sender to the receiver, node B performs the role of connector to facilitate payments between the two.
 
@@ -60,8 +60,8 @@ When a `GET` request is made to a payment pointer, the response contains the ILP
 ## STREAM Protocol
 
 The <LinkOut href='https://interledger.org/developers/rfcs/stream-protocol/'>STREAM Protocol</LinkOut> is the transport layer protocol in the Interledger Protocol stack. After SPSP communicates the ILP address of the destination account and the shared secret, the STREAM protocol uses these details to set up a STREAM connection between the
-counterparties.{' '}
+counterparties.
 
-Rafiki’s `backend` service includes an Interledger connector for sending and receiving STREAM packets. STREAM packets are encoded, encrypted, and sent as the `data` field in ILP packets. The protocol uses the shared secret to authenticate and encrypt packets, and to generate conditions and fulfillments.
+Rafiki's `backend` service includes an Interledger connector for sending and receiving STREAM packets. STREAM packets are encoded, encrypted, and sent as the `data` field in ILP packets. The protocol uses the shared secret to authenticate and encrypt packets, and to generate conditions and fulfillments.
 
-A critical function of STREAM is to determine the path exchange rate and handle any changes in the rate. Rafiki’s exchange rates service allows you to provide exchange rate information.
+A critical function of STREAM is to determine the path exchange rate and handle any changes in the rate. Rafiki's exchange rates service allows you to provide exchange rate information.
