@@ -165,12 +165,13 @@ export default function ViewPeerPage() {
                     error={response?.errors.general.fieldErrors.maxPacketAmount}
                     description={
                       <>
-                        The maximum amount of value that can be sent in a single{' '}
+                        The maximum amount of value that you are willing to
+                        accept from the peer in a single{' '}
                         <a
                           className='default-link'
-                          href='https://interledger.org/developers/rfcs/stream-protocol/#35-packets-and-frames'
+                          href='https://rafiki.dev/admin/admin-user-guide/'
                         >
-                          Interledger STREAM Packet
+                          Interledger packet
                         </a>
                         .
                       </>
