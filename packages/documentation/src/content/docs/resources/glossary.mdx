@@ -8,6 +8,10 @@ import { LinkOut } from '@interledger/docs-design-system'
 
 An entity that provides and maintains a payment account for a payer and/or payee. An ASE is a regulated entity in the country or countries it operates. Examples include digital wallets, banks, and mobile money providers. Non-regulated entities shouldn't use Rafiki in production environments due to the potential legal and compliance risks involved.
 
+## Asset
+
+An asset is made up of a currency `code` and a `scale` that together represent a monetary value. An ISO4217 currency code should be used whenever possible. The `scale` represents the decimal units. For example, US dollars can be delineated as code: USD, with scale 2, where value 1000 represents $10.00.
+
 ## Auth service
 
 A reference implementation of an Open Payments authorization server in Rafiki. The `auth` service manages grant authorization and authentication, allowing clients (for example, third-party applications) to create payments and quotes. It issues access tokens and validates client access rights through communication with the resource server.
@@ -24,7 +28,7 @@ The core service in Rafiki responsible for managing business logic and external 
 
 ## Client
 
-An application or service, such as a mobile or web app, that interacts with the authorization server to obtain grants and access tokens. Clients use tokens to access resource servers and perform actions, such as retrieving transaction history and setting up payments, on behalf of a user or system.
+An app or service, such as a mobile or web app, that interacts with the authorization server to obtain grants and access tokens. Clients use tokens to access resource servers and perform actions, such as retrieving transaction history and setting up payments, on behalf of a user or system.
 
 ## Frontend service
 
@@ -56,7 +60,7 @@ A unit of data that carries payment information through the Interledger network.
 
 ## Open Payments
 
-An API standard and a set of APIs that allows clients to securely retrieve account information and initiate payments from your customers' accounts with their consent. By adhering to this standard, Rafiki enables integration with external applications and supports the secure and uniform management of payments, quotes, and account data through the Open Payments APIs. For more information, visit the <LinkOut href="https://openpayments.dev">Open Payments documentation</LinkOut>.
+An API standard and a set of APIs that allows clients to securely retrieve account information and authorize payments from your customers' accounts with their consent. By adhering to this standard, Rafiki enables integration with external applications and supports the secure and uniform management of payments, quotes, and account data through the Open Payments APIs. For more information, visit the <LinkOut href="https://openpayments.dev">Open Payments documentation</LinkOut>.
 
 ## Operator
 
