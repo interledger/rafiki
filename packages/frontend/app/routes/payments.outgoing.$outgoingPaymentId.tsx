@@ -83,6 +83,10 @@ export default function ViewOutgoingPaymentPage() {
                 <p className='mt-1'>{outgoingPayment.id}</p>
               </div>
               <div>
+                <p className='font-medium'>Tenant ID</p>
+                <p className='mt-1'>{`${outgoingPayment.tenant?.id} ${outgoingPayment.tenant?.publicName}`}</p>
+              </div>
+              <div>
                 <p className='font-medium'>Wallet Address ID </p>
                 <Link
                   to={`/wallet-addresses/${outgoingPayment.walletAddressId}`}

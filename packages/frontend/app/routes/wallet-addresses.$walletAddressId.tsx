@@ -85,6 +85,12 @@ export default function ViewWalletAddressPage() {
                     readOnly
                   />
                   <Input
+                    label='Tenant ID'
+                    value={`${walletAddress.tenant?.id} ${walletAddress.tenant?.publicName ? `(${walletAddress.tenant.publicName})` : ''}`}
+                    disabled
+                    readOnly
+                  />
+                  <Input
                     label='URL'
                     value={walletAddress.address}
                     disabled

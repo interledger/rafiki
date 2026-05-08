@@ -49,6 +49,10 @@ export const getIncomingPayment = async (
             assetCode
             assetScale
           }
+          tenant {
+            id
+            publicName
+          }
           metadata
           createdAt
           liquidity
@@ -93,6 +97,10 @@ export const getOutgoingPayment = async (
             assetCode
             assetScale
             value
+          }
+          tenant {
+            id
+            publicName
           }
           liquidity
         }

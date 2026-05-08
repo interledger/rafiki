@@ -51,6 +51,10 @@ export const getPeer = async (request: Request, args: QueryPeerArgs) => {
               authToken
             }
           }
+          tenant {
+            id
+            publicName
+          }
         }
       }
     `,
