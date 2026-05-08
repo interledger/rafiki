@@ -11,7 +11,8 @@ import {
 import type { UiContainer } from '@ory/client'
 import { useLoaderData } from '@remix-run/react'
 import { PageHeader } from '~/components'
-import { Button, Input } from '../components/ui'
+import { Button, Heading, Text, TextField } from '@radix-ui/themes'
+import { renderFieldError } from '../lib/form-errors'
 import variables from '../lib/envConfig.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 
@@ -62,12 +63,48 @@ export default function Settings() {
     groups: ['password']
   })
   const actionUrl = uiContainer.action
+  type TextFieldType =
+    | 'text'
+    | 'email'
+    | 'password'
+    | 'number'
+    | 'tel'
+    | 'url'
+    | 'search'
+    | 'date'
+    | 'datetime-local'
+    | 'time'
+    | 'week'
+    | 'month'
+    | 'hidden'
+  const normalizeType = (type: string): TextFieldType => {
+    const allowed: TextFieldType[] = [
+      'text',
+      'email',
+      'password',
+      'number',
+      'tel',
+      'url',
+      'search',
+      'date',
+      'datetime-local',
+      'time',
+      'week',
+      'month',
+      'hidden'
+    ]
+    return allowed.includes(type as TextFieldType)
+      ? (type as TextFieldType)
+      : 'text'
+  }
   return (
     <div className='pt-4 flex flex-col space-y-4'>
       <div className='flex flex-col rounded-md bg-offwhite px-6'>
         <PageHeader>
           <div className='flex-1'>
-            <h3 className='text-2xl'>Account Settings</h3>
+            <Heading as='h3' size='5'>
+              Account Settings
+            </Heading>
             {uiContainer.messages?.map((message) => {
               return <p key={message.id}>{message.text}</p>
             })}
@@ -76,7 +113,9 @@ export default function Settings() {
         {/* Profile Settings */}
         <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
           <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Profile</h3>
+            <Heading as='h3' size='4' weight='medium'>
+              Profile
+            </Heading>
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
             <form method='post' action={actionUrl}>
@@ -91,19 +130,46 @@ export default function Settings() {
                     ) {
                       return (
                         <div className='w-full md:w-1/2 lg:w-1/3' key={index}>
-                          <Input
-                            type={attributes.type}
-                            name={attributes.name}
-                            required={attributes.required}
-                            disabled={attributes.disabled}
-                            defaultValue={attributes.value}
-                            label={
-                              attributes.type !== 'hidden' ? label : undefined
-                            }
-                            error={field.messages
-                              .map((message) => message.text)
-                              .join('; ')}
-                          />
+                          {attributes.type === 'hidden' ? (
+                            <input
+                              type='hidden'
+                              name={attributes.name}
+                              value={attributes.value}
+                            />
+                          ) : (
+                            <div>
+                              <Text
+                                as='label'
+                                htmlFor={attributes.name}
+                                size='2'
+                                weight='medium'
+                                className='block'
+                              >
+                                {label}
+                                {attributes.required ? (
+                                  <Text as='span' color='red'>
+                                    {' '}
+                                    *
+                                  </Text>
+                                ) : null}
+                              </Text>
+                              <TextField.Root
+                                id={attributes.name}
+                                type={normalizeType(attributes.type)}
+                                name={attributes.name}
+                                required={attributes.required}
+                                disabled={attributes.disabled}
+                                defaultValue={attributes.value}
+                                size='3'
+                                className='w-full'
+                              />
+                              {renderFieldError(
+                                field.messages
+                                  .map((message) => message.text)
+                                  .join('; ')
+                              )}
+                            </div>
+                          )}
                         </div>
                       )
                     }
@@ -144,7 +210,9 @@ export default function Settings() {
         {/* Password Settings */}
         <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
           <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Password</h3>
+            <Heading as='h3' size='4' weight='medium'>
+              Password
+            </Heading>
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
             <form method='post' action={actionUrl}>
@@ -159,19 +227,46 @@ export default function Settings() {
                     ) {
                       return (
                         <div className='w-full md:w-1/2 lg:w-1/3' key={index}>
-                          <Input
-                            type={attributes.type}
-                            name={attributes.name}
-                            required={attributes.required}
-                            disabled={attributes.disabled}
-                            defaultValue={attributes.value}
-                            label={
-                              attributes.type !== 'hidden' ? label : undefined
-                            }
-                            error={field.messages
-                              .map((message) => message.text)
-                              .join('; ')}
-                          />
+                          {attributes.type === 'hidden' ? (
+                            <input
+                              type='hidden'
+                              name={attributes.name}
+                              value={attributes.value}
+                            />
+                          ) : (
+                            <div>
+                              <Text
+                                as='label'
+                                htmlFor={attributes.name}
+                                size='2'
+                                weight='medium'
+                                className='block'
+                              >
+                                {label}
+                                {attributes.required ? (
+                                  <Text as='span' color='red'>
+                                    {' '}
+                                    *
+                                  </Text>
+                                ) : null}
+                              </Text>
+                              <TextField.Root
+                                id={attributes.name}
+                                type={normalizeType(attributes.type)}
+                                name={attributes.name}
+                                required={attributes.required}
+                                disabled={attributes.disabled}
+                                defaultValue={attributes.value}
+                                size='3'
+                                className='w-full'
+                              />
+                              {renderFieldError(
+                                field.messages
+                                  .map((message) => message.text)
+                                  .join('; ')
+                              )}
+                            </div>
+                          )}
                         </div>
                       )
                     }
