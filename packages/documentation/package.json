@@ -21,7 +21,7 @@
     "rehype-mathjax": "^7.1.0",
     "remark-math": "^6.0.0",
     "starlight-fullview-mode": "^0.2.6",
-    "starlight-links-validator": "^0.23.0",
+    "starlight-links-validator": "^0.24.0",
     "starlight-versions": "^0.8.1"
   },
   "devDependencies": {
