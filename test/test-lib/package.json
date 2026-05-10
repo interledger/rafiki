@@ -25,7 +25,7 @@
     "@types/node": "^24.0.0",
     "axios": "1.15.2",
     "graphql": "^16.11.0",
-    "json-canonicalize": "^1.0.6",
+    "json-canonicalize": "^1.2.0",
     "koa": "^2.15.3",
     "yaml": "^2.7.0"
   }
