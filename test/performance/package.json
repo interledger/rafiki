@@ -28,6 +28,6 @@
     "core-js": "^3.40.0",
     "json-canonicalize": "^1.0.6",
     "webpack": "^5.97.1",
-    "webpack-cli": "^6.0.1"
+    "webpack-cli": "^7.0.2"
   }
 }
