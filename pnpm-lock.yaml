@@ -1025,10 +1025,10 @@ importers:
         version: 1.0.6
       webpack:
         specifier: ^5.97.1
-        version: 5.97.1(@swc/core@1.11.29)(webpack-cli@6.0.1)
+        version: 5.97.1(@swc/core@1.11.29)(webpack-cli@7.0.2)
       webpack-cli:
-        specifier: ^6.0.1
-        version: 6.0.1(webpack@5.97.1)
+        specifier: ^7.0.2
+        version: 7.0.2(webpack@5.97.1)
 
   test/test-lib:
     dependencies:
@@ -2035,8 +2035,8 @@ packages:
     resolution: {integrity: sha512-WyOx8cJQ+FQus4Mm4uPIZA64gbk3Wxh0so5Lcii0aJifqwoVOlfFtorjLE0Hen4OYyHZMXDWqMmaQemBhgxFRQ==}
     engines: {node: '>=14'}
 
-  '@discoveryjs/json-ext@0.6.3':
-    resolution: {integrity: sha512-4B4OijXeVNOPZlYA2oEwWOTkzyltLao+xbotHQeqN++Rv27Y6s818+n2Qkp8q+Fxhn0t/5lA5X1Mxktud8eayQ==}
+  '@discoveryjs/json-ext@1.1.0':
+    resolution: {integrity: sha512-Xc3VhU02wqZ1HvHRJUwL09HkZSTvidqY5Ya0NXBSYOxAp+Ln9dcJr9fySI+CkONzP3PekQo9WdzCv0PGER/mOA==}
     engines: {node: '>=14.17.0'}
 
   '@emnapi/runtime@1.8.1':
@@ -5851,6 +5851,7 @@ packages:
 
   '@ungap/structured-clone@1.2.0':
     resolution: {integrity: sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==}
+    deprecated: Potential CWE-502 - Update to 1.3.1 or higher
 
   '@upsetjs/venn.js@2.0.0':
     resolution: {integrity: sha512-WbBhLrooyePuQ1VZxrJjtLvTc4NVfpOyKx0sKqioq9bX1C1m7Jgykkn8gLrtwumBioXIqam8DLxp88Adbue6Hw==}
@@ -5914,31 +5915,6 @@ packages:
 
   '@webassemblyjs/wast-printer@1.14.1':
     resolution: {integrity: sha512-kPSSXE6De1XOR820C90RIo2ogvZG+c3KiHzqUoO/F34Y2shGzesfqv7o57xrxovZJH/MetF5UjroJ/R/3isoiw==}
-
-  '@webpack-cli/configtest@3.0.1':
-    resolution: {integrity: sha512-u8d0pJ5YFgneF/GuvEiDA61Tf1VDomHHYMjv/wc9XzYj7nopltpG96nXN5dJRstxZhcNpV1g+nT6CydO7pHbjA==}
-    engines: {node: '>=18.12.0'}
-    peerDependencies:
-      webpack: ^5.82.0
-      webpack-cli: 6.x.x
-
-  '@webpack-cli/info@3.0.1':
-    resolution: {integrity: sha512-coEmDzc2u/ffMvuW9aCjoRzNSPDl/XLuhPdlFRpT9tZHmJ/039az33CE7uH+8s0uL1j5ZNtfdv0HkfaKRBGJsQ==}
-    engines: {node: '>=18.12.0'}
-    peerDependencies:
-      webpack: ^5.82.0
-      webpack-cli: 6.x.x
-
-  '@webpack-cli/serve@3.0.1':
-    resolution: {integrity: sha512-sbgw03xQaCLiT6gcY/6u3qBDn01CWw/nbaXl3gTdTFuJJ75Gffv3E3DBpgvY2fkkrdS1fpjaXNOmJlnbtKauKg==}
-    engines: {node: '>=18.12.0'}
-    peerDependencies:
-      webpack: ^5.82.0
-      webpack-cli: 6.x.x
-      webpack-dev-server: '*'
-    peerDependenciesMeta:
-      webpack-dev-server:
-        optional: true
 
   '@whatwg-node/disposablestack@0.0.5':
     resolution: {integrity: sha512-9lXugdknoIequO4OYvIjhygvfSEgnO8oASLqLelnDhkRjgBZhc39shC3QSlZuyDO9bgYSIVa2cHAiN+St3ty4w==}
@@ -6791,9 +6767,9 @@ packages:
     resolution: {integrity: sha512-yPVavfyCcRhmorC7rWlkHn15b4wDVgVmBA7kV4QVBsF7kv/9TKJAbAXVTxvTnwP8HHKjRCJDClKbciiYS7p0DQ==}
     engines: {node: '>=16'}
 
-  commander@12.1.0:
-    resolution: {integrity: sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA==}
-    engines: {node: '>=18'}
+  commander@14.0.3:
+    resolution: {integrity: sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw==}
+    engines: {node: '>=20'}
 
   commander@2.20.3:
     resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==}
@@ -11557,10 +11533,6 @@ packages:
     resolution: {integrity: sha512-X2UW6Nw3n/aMgDVy+0rSqgHlv39WZAlZrXCdnbyEiKm17DSqHX4MmQMaST3FbeWR5FTuRcUwYAziZajji0Y7mg==}
     engines: {node: '>=10'}
 
-  resolve@1.22.6:
-    resolution: {integrity: sha512-njhxM7mV12JfufShqGy3Rz8j11RPdLy4xi15UurGJeoHLfJpVXKdh3ueuOqbYUcDZnffr6X739JBo5LzyahEsw==}
-    hasBin: true
-
   resolve@1.22.8:
     resolution: {integrity: sha512-oKWePCxqpd6FlLvGV1VU0x7bkPmmCNolxzjMf4NczoDnQcIWrAF+cPtZn5i6n+RfD2d9i0tzpKnG6Yk168yIyw==}
     hasBin: true
@@ -13125,14 +13097,14 @@ packages:
   webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
 
-  webpack-cli@6.0.1:
-    resolution: {integrity: sha512-MfwFQ6SfwinsUVi0rNJm7rHZ31GyTcpVE5pgVA3hwFRb7COD4TzjUUwhGWKfO50+xdc2MQPuEBBJoqIMGt3JDw==}
-    engines: {node: '>=18.12.0'}
+  webpack-cli@7.0.2:
+    resolution: {integrity: sha512-dB0R4T+C/8YuvM+fabdvil6QE44/ChDXikV5lOOkrUeCkW5hTJv2pGLE3keh+D5hjYw8icBaJkZzpFoaHV4T+g==}
+    engines: {node: '>=20.9.0'}
     hasBin: true
     peerDependencies:
-      webpack: ^5.82.0
-      webpack-bundle-analyzer: '*'
-      webpack-dev-server: '*'
+      webpack: ^5.101.0
+      webpack-bundle-analyzer: ^4.0.0 || ^5.0.0
+      webpack-dev-server: ^5.0.0
     peerDependenciesMeta:
       webpack-bundle-analyzer:
         optional: true
@@ -13709,7 +13681,7 @@ snapshots:
       '@babel/traverse': 7.26.9
       '@babel/types': 7.26.9
       convert-source-map: 2.0.0
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -13729,7 +13701,7 @@ snapshots:
       '@babel/traverse': 7.27.4
       '@babel/types': 7.28.5
       convert-source-map: 2.0.0
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -13826,7 +13798,7 @@ snapshots:
       '@babel/core': 7.26.9
       '@babel/helper-compilation-targets': 7.26.5
       '@babel/helper-plugin-utils': 7.26.5
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       lodash.debounce: 4.0.8
       resolve: 1.22.8
     transitivePeerDependencies:
@@ -14721,7 +14693,7 @@ snapshots:
       '@babel/parser': 7.28.5
       '@babel/template': 7.25.9
       '@babel/types': 7.28.5
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -14733,7 +14705,7 @@ snapshots:
       '@babel/parser': 7.28.5
       '@babel/template': 7.26.9
       '@babel/types': 7.28.5
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -14745,7 +14717,7 @@ snapshots:
       '@babel/parser': 7.28.5
       '@babel/template': 7.27.2
       '@babel/types': 7.28.5
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -14813,7 +14785,7 @@ snapshots:
 
   '@ctrl/tinycolor@4.1.0': {}
 
-  '@discoveryjs/json-ext@0.6.3': {}
+  '@discoveryjs/json-ext@1.1.0': {}
 
   '@emnapi/runtime@1.8.1':
     dependencies:
@@ -15217,7 +15189,7 @@ snapshots:
   '@eslint/config-array@0.23.5':
     dependencies:
       '@eslint/object-schema': 3.0.5
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       minimatch: 10.2.5
     transitivePeerDependencies:
       - supports-color
@@ -15233,7 +15205,7 @@ snapshots:
   '@eslint/eslintrc@2.1.4':
     dependencies:
       ajv: 6.12.6
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       espree: 9.6.1
       globals: 13.19.0
       ignore: 5.2.4
@@ -15760,7 +15732,7 @@ snapshots:
       '@types/json-stable-stringify': 1.0.34
       '@whatwg-node/fetch': 0.9.8
       chalk: 4.1.2
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       dotenv: 16.4.7
       graphql: 16.11.0
       graphql-request: 6.1.0(graphql@16.11.0)
@@ -15894,7 +15866,7 @@ snapshots:
   '@humanwhocodes/config-array@0.13.0':
     dependencies:
       '@humanwhocodes/object-schema': 2.0.3
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       minimatch: 3.1.2
     transitivePeerDependencies:
       - supports-color
@@ -17904,7 +17876,7 @@ snapshots:
       '@typescript-eslint/parser': 5.60.1(eslint@8.57.1)(typescript@5.8.3)
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.7
-      eslint-import-resolver-typescript: 3.5.5(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-node@0.3.7)(eslint-plugin-import@2.27.5)(eslint@8.57.1)
+      eslint-import-resolver-typescript: 3.5.5(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-node@0.3.7)(eslint-plugin-import@2.27.5(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint@8.57.1)
       eslint-plugin-import: 2.27.5(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-typescript@3.5.5)(eslint@8.57.1)
       eslint-plugin-jest: 26.9.0(@typescript-eslint/eslint-plugin@5.60.1(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1)(jest@29.7.0(@types/node@24.11.0)(ts-node@10.9.2(@swc/core@1.11.29)(@types/node@24.11.0)(typescript@5.4.3)))(typescript@5.8.3)
       eslint-plugin-jest-dom: 4.0.3(eslint@8.57.1)
@@ -18847,7 +18819,7 @@ snapshots:
       '@typescript-eslint/scope-manager': 5.60.1
       '@typescript-eslint/type-utils': 5.60.1(eslint@8.57.1)(typescript@5.8.3)
       '@typescript-eslint/utils': 5.60.1(eslint@8.57.1)(typescript@5.8.3)
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       eslint: 8.57.1
       grapheme-splitter: 1.0.4
       ignore: 5.2.4
@@ -18900,7 +18872,7 @@ snapshots:
       '@typescript-eslint/scope-manager': 5.60.1
       '@typescript-eslint/types': 5.60.1
       '@typescript-eslint/typescript-estree': 5.60.1(typescript@5.8.3)
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       eslint: 8.57.1
     optionalDependencies:
       typescript: 5.8.3
@@ -18926,7 +18898,7 @@ snapshots:
       '@typescript-eslint/types': 8.59.0
       '@typescript-eslint/typescript-estree': 8.59.0(typescript@5.8.3)
       '@typescript-eslint/visitor-keys': 8.59.0
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       eslint: 10.2.1(jiti@2.4.2)
       typescript: 5.8.3
     transitivePeerDependencies:
@@ -18936,7 +18908,7 @@ snapshots:
     dependencies:
       '@typescript-eslint/tsconfig-utils': 8.59.0(typescript@5.8.3)
       '@typescript-eslint/types': 8.59.0
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       typescript: 5.8.3
     transitivePeerDependencies:
       - supports-color
@@ -18974,7 +18946,7 @@ snapshots:
     dependencies:
       '@typescript-eslint/typescript-estree': 5.60.1(typescript@5.8.3)
       '@typescript-eslint/utils': 5.60.1(eslint@8.57.1)(typescript@5.8.3)
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       eslint: 8.57.1
       tsutils: 3.21.0(typescript@5.8.3)
     optionalDependencies:
@@ -18986,7 +18958,7 @@ snapshots:
     dependencies:
       '@typescript-eslint/typescript-estree': 7.5.0(typescript@5.4.3)
       '@typescript-eslint/utils': 7.5.0(eslint@8.57.1)(typescript@5.4.3)
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       eslint: 8.57.1
       ts-api-utils: 1.0.1(typescript@5.4.3)
     optionalDependencies:
@@ -18999,7 +18971,7 @@ snapshots:
       '@typescript-eslint/types': 8.59.0
       '@typescript-eslint/typescript-estree': 8.59.0(typescript@5.8.3)
       '@typescript-eslint/utils': 8.59.0(eslint@10.2.1(jiti@2.4.2))(typescript@5.8.3)
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       eslint: 10.2.1(jiti@2.4.2)
       ts-api-utils: 2.5.0(typescript@5.8.3)
       typescript: 5.8.3
@@ -19020,7 +18992,7 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 5.60.1
       '@typescript-eslint/visitor-keys': 5.60.1
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       globby: 11.1.0
       is-glob: 4.0.3
       semver: 7.7.4
@@ -19034,7 +19006,7 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 5.62.0
       '@typescript-eslint/visitor-keys': 5.62.0
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       globby: 11.1.0
       is-glob: 4.0.3
       semver: 7.7.4
@@ -19048,7 +19020,7 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 7.5.0
       '@typescript-eslint/visitor-keys': 7.5.0
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       globby: 11.1.0
       is-glob: 4.0.3
       minimatch: 9.0.3
@@ -19065,7 +19037,7 @@ snapshots:
       '@typescript-eslint/tsconfig-utils': 8.59.0(typescript@5.8.3)
       '@typescript-eslint/types': 8.59.0
       '@typescript-eslint/visitor-keys': 8.59.0
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       minimatch: 10.2.5
       semver: 7.7.3
       tinyglobby: 0.2.15
@@ -19286,21 +19258,6 @@ snapshots:
       '@webassemblyjs/ast': 1.14.1
       '@xtuc/long': 4.2.2
 
-  '@webpack-cli/configtest@3.0.1(webpack-cli@6.0.1)(webpack@5.97.1)':
-    dependencies:
-      webpack: 5.97.1(@swc/core@1.11.29)(webpack-cli@6.0.1)
-      webpack-cli: 6.0.1(webpack@5.97.1)
-
-  '@webpack-cli/info@3.0.1(webpack-cli@6.0.1)(webpack@5.97.1)':
-    dependencies:
-      webpack: 5.97.1(@swc/core@1.11.29)(webpack-cli@6.0.1)
-      webpack-cli: 6.0.1(webpack@5.97.1)
-
-  '@webpack-cli/serve@3.0.1(webpack-cli@6.0.1)(webpack@5.97.1)':
-    dependencies:
-      webpack: 5.97.1(@swc/core@1.11.29)(webpack-cli@6.0.1)
-      webpack-cli: 6.0.1(webpack@5.97.1)
-
   '@whatwg-node/disposablestack@0.0.5':
     dependencies:
       tslib: 2.8.1
@@ -19395,7 +19352,7 @@ snapshots:
 
   agent-base@7.1.0:
     dependencies:
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -19621,7 +19578,7 @@ snapshots:
       '@typescript-eslint/scope-manager': 8.54.0
       '@typescript-eslint/types': 8.54.0
       astrojs-compiler-sync: 1.1.1(@astrojs/compiler@2.13.0)
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       entities: 7.0.1
       eslint-scope: 8.4.0
       eslint-visitor-keys: 4.2.1
@@ -19801,7 +19758,7 @@ snapshots:
       '@babel/core': 7.26.9
       find-cache-dir: 4.0.0
       schema-utils: 4.3.0
-      webpack: 5.97.1(@swc/core@1.11.29)(webpack-cli@6.0.1)
+      webpack: 5.97.1(@swc/core@1.11.29)(webpack-cli@7.0.2)
 
   babel-plugin-istanbul@6.1.1:
     dependencies:
@@ -20386,7 +20343,7 @@ snapshots:
 
   commander@11.1.0: {}
 
-  commander@12.1.0: {}
+  commander@14.0.3: {}
 
   commander@2.20.3: {}
 
@@ -20998,7 +20955,7 @@ snapshots:
 
   docker-modem@3.0.6:
     dependencies:
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       readable-stream: 3.6.0
       split-ca: 1.0.1
       ssh2: 1.11.0
@@ -21443,12 +21400,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-import-resolver-typescript@3.5.5(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-node@0.3.7)(eslint-plugin-import@2.27.5)(eslint@8.57.1):
+  eslint-import-resolver-typescript@3.5.5(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-node@0.3.7)(eslint-plugin-import@2.27.5(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint@8.57.1):
     dependencies:
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       enhanced-resolve: 5.18.0
       eslint: 8.57.1
-      eslint-module-utils: 2.7.4(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-node@0.3.7)(eslint-import-resolver-typescript@3.5.5)(eslint@8.57.1)
+      eslint-module-utils: 2.7.4(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-node@0.3.7)(eslint-import-resolver-typescript@3.5.5(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-node@0.3.7)(eslint-plugin-import@2.27.5(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
       eslint-plugin-import: 2.27.5(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-typescript@3.5.5)(eslint@8.57.1)
       get-tsconfig: 4.5.0
       globby: 13.1.3
@@ -21461,14 +21418,14 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-module-utils@2.7.4(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-node@0.3.7)(eslint-import-resolver-typescript@3.5.5)(eslint@8.57.1):
+  eslint-module-utils@2.7.4(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-node@0.3.7)(eslint-import-resolver-typescript@3.5.5(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-node@0.3.7)(eslint-plugin-import@2.27.5(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
       '@typescript-eslint/parser': 5.60.1(eslint@8.57.1)(typescript@5.8.3)
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.7
-      eslint-import-resolver-typescript: 3.5.5(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-node@0.3.7)(eslint-plugin-import@2.27.5)(eslint@8.57.1)
+      eslint-import-resolver-typescript: 3.5.5(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-node@0.3.7)(eslint-plugin-import@2.27.5(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint@8.57.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -21501,7 +21458,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.7
-      eslint-module-utils: 2.7.4(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-node@0.3.7)(eslint-import-resolver-typescript@3.5.5)(eslint@8.57.1)
+      eslint-module-utils: 2.7.4(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-node@0.3.7)(eslint-import-resolver-typescript@3.5.5(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-node@0.3.7)(eslint-plugin-import@2.27.5(@typescript-eslint/parser@5.60.1(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
       has: 1.0.3
       is-core-module: 2.13.0
       is-glob: 4.0.3
@@ -21648,7 +21605,7 @@ snapshots:
       '@types/estree': 1.0.7
       ajv: 6.15.0
       cross-spawn: 7.0.6
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       escape-string-regexp: 4.0.0
       eslint-scope: 9.1.2
       eslint-visitor-keys: 5.0.1
@@ -22932,7 +22889,7 @@ snapshots:
   http-proxy-agent@7.0.0:
     dependencies:
       agent-base: 7.1.0
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -22952,7 +22909,7 @@ snapshots:
   https-proxy-agent@7.0.2:
     dependencies:
       agent-base: 7.1.0
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -23412,7 +23369,7 @@ snapshots:
 
   istanbul-lib-source-maps@4.0.1:
     dependencies:
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       istanbul-lib-coverage: 3.2.0
       source-map: 0.6.1
     transitivePeerDependencies:
@@ -23934,7 +23891,7 @@ snapshots:
       content-disposition: 0.5.4
       content-type: 1.0.5
       cookies: 0.9.1
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       delegates: 1.0.0
       depd: 2.0.0
       destroy: 1.2.0
@@ -25038,7 +24995,7 @@ snapshots:
   micromark@3.2.0:
     dependencies:
       '@types/debug': 4.1.12
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       decode-named-character-reference: 1.0.2
       micromark-core-commonmark: 1.1.0
       micromark-factory-space: 1.1.0
@@ -25060,7 +25017,7 @@ snapshots:
   micromark@4.0.0:
     dependencies:
       '@types/debug': 4.1.12
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       decode-named-character-reference: 1.0.2
       devlop: 1.1.0
       micromark-core-commonmark: 2.0.1
@@ -26389,7 +26346,7 @@ snapshots:
 
   rechoir@0.8.0:
     dependencies:
-      resolve: 1.22.6
+      resolve: 1.22.8
 
   recma-build-jsx@1.0.0:
     dependencies:
@@ -26721,7 +26678,7 @@ snapshots:
 
   require-in-the-middle@7.4.0:
     dependencies:
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       module-details-from-path: 1.0.3
       resolve: 1.22.8
     transitivePeerDependencies:
@@ -26749,12 +26706,6 @@ snapshots:
   resolve-from@5.0.0: {}
 
   resolve.exports@2.0.2: {}
-
-  resolve@1.22.6:
-    dependencies:
-      is-core-module: 2.13.0
-      path-parse: 1.0.7
-      supports-preserve-symlinks-flag: 1.0.0
 
   resolve@1.22.8:
     dependencies:
@@ -27746,7 +27697,7 @@ snapshots:
       schema-utils: 4.3.0
       serialize-javascript: 6.0.2
       terser: 5.37.0
-      webpack: 5.97.1(@swc/core@1.11.29)(webpack-cli@6.0.1)
+      webpack: 5.97.1(@swc/core@1.11.29)(webpack-cli@7.0.2)
     optionalDependencies:
       '@swc/core': 1.11.29
 
@@ -28474,7 +28425,7 @@ snapshots:
   vite-node@0.28.5(@types/node@24.11.0)(sass@1.89.2)(terser@5.37.0):
     dependencies:
       cac: 6.7.14
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       mlly: 1.8.0
       pathe: 1.1.2
       picocolors: 1.1.1
@@ -28494,7 +28445,7 @@ snapshots:
   vite-node@3.0.0-beta.2(@types/node@24.11.0)(jiti@2.4.2)(sass@1.89.2)(terser@5.37.0)(yaml@2.7.0):
     dependencies:
       cac: 6.7.14
-      debug: 4.4.3(supports-color@9.4.0)
+      debug: 4.4.3(supports-color@10.2.2)
       es-module-lexer: 1.7.0
       pathe: 1.1.2
       vite: 6.4.1(@types/node@24.11.0)(jiti@2.4.2)(sass@1.89.2)(terser@5.37.0)(yaml@2.7.0)
@@ -28601,21 +28552,17 @@ snapshots:
 
   webidl-conversions@3.0.1: {}
 
-  webpack-cli@6.0.1(webpack@5.97.1):
+  webpack-cli@7.0.2(webpack@5.97.1):
     dependencies:
-      '@discoveryjs/json-ext': 0.6.3
-      '@webpack-cli/configtest': 3.0.1(webpack-cli@6.0.1)(webpack@5.97.1)
-      '@webpack-cli/info': 3.0.1(webpack-cli@6.0.1)(webpack@5.97.1)
-      '@webpack-cli/serve': 3.0.1(webpack-cli@6.0.1)(webpack@5.97.1)
-      colorette: 2.0.19
-      commander: 12.1.0
+      '@discoveryjs/json-ext': 1.1.0
+      commander: 14.0.3
       cross-spawn: 7.0.6
       envinfo: 7.14.0
       fastest-levenshtein: 1.0.16
       import-local: 3.1.0
       interpret: 3.1.1
       rechoir: 0.8.0
-      webpack: 5.97.1(@swc/core@1.11.29)(webpack-cli@6.0.1)
+      webpack: 5.97.1(@swc/core@1.11.29)(webpack-cli@7.0.2)
       webpack-merge: 6.0.1
 
   webpack-merge@6.0.1:
@@ -28626,7 +28573,7 @@ snapshots:
 
   webpack-sources@3.2.3: {}
 
-  webpack@5.97.1(@swc/core@1.11.29)(webpack-cli@6.0.1):
+  webpack@5.97.1(@swc/core@1.11.29)(webpack-cli@7.0.2):
     dependencies:
       '@types/eslint-scope': 3.7.7
       '@types/estree': 1.0.7
@@ -28652,7 +28599,7 @@ snapshots:
       watchpack: 2.4.2
       webpack-sources: 3.2.3
     optionalDependencies:
-      webpack-cli: 6.0.1(webpack@5.97.1)
+      webpack-cli: 7.0.2(webpack@5.97.1)
     transitivePeerDependencies:
       - '@swc/core'
       - esbuild
