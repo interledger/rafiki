@@ -221,11 +221,12 @@ If a non-200 status is returned, indicating an error, or the request times out, 
 
 <div class="overflow-table">
 
-| Event type                                                  | Description                                                                    |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| [`incoming_payment.created`](#incoming-payment-created)     | An incoming payment was created                                                |
-| [`incoming_payment.completed`](#incoming-payment-completed) | An incoming payment is complete and won't accept any additional incoming funds |
-| [`incoming_payment.expired`](#incoming-payment-expired)     | An incoming payment expired and won't accept any additional incoming funds     |
+| Event type                                                                                | Description                                                                    |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| [`incoming_payment.created`](#incoming-payment-created)                                   | An incoming payment was created                                                |
+| [`incoming_payment.completed`](#incoming-payment-completed)                               | An incoming payment is complete and won't accept any additional incoming funds |
+| [`incoming_payment.partial_payment_received`](#incoming-payment-partial-payment-received) | An incoming payment has received a partial payment                             |
+| [`incoming_payment.expired`](#incoming-payment-expired)                                   | An incoming payment expired and won't accept any additional incoming funds     |
 
 </div>
 
@@ -248,7 +249,7 @@ If a non-200 status is returned, indicating an error, or the request times out, 
 
 The `incoming_payment.created` event indicates an incoming payment was created. At this point, the incoming payment hasn't received any funds.
 
-The incoming payment either completes or expires.
+The incoming payment can either complete, receive a partial payment, or expire.
 
 #### Incoming payment completed
 
@@ -289,6 +290,44 @@ The incoming payment either completes or expires.
 </details>
 
 The `incoming_payment.completed` event indicates the payment completed either automatically or manually, and that any funds received into the incoming payment should be withdrawn and then credited to the recipient's account on your ledger.
+
+#### Incoming payment partial payment received
+
+<details>
+  <summary>Expand for event sequence</summary>
+  <Mermaid
+    graph={`sequenceDiagram
+      participant R as Rafiki
+      participant ASE as Account servicing entity
+
+    R->>ASE: Fires incoming_payment.partial_payment_received event to webhook endpoint
+    ASE->>ASE: Reviews event data
+    alt Accept partial payment
+      ASE->>R: Backend Admin API call: ConfirmPartialIncomingPayment
+      R-->>ASE: success: true
+      ASE->>ASE: Apply partial payment<br />to associated incoming payment
+    else Reject partial payment
+      ASE->>R: Backend Admin API call: RejectPartialIncomingPayment
+      R-->>ASE: success: true
+    end
+
+`}
+/>
+
+</details>
+
+The `incoming_payment.partial_payment_received` event indicates an existing incoming payment has received a partial payment. The event should be reviewed for data from the sender as the event could contain details that the ASE should handle before approving the partial payment. The ASE can also choose to reject the partial payment. A reject reason will be transmitted back to the sender in the `outgoing_payment.failed` webhook.
+
+<div class="overflow-table">
+
+| Environment variables                       | Type      | Description                                                                                                                                                                                                                                                                      |
+| ------------------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ENABLE_PARTIAL_PAYMENT_DECISION`           | `backend` | Enables an ASE to act upon (approve/reject) a partial payment. The default is `false`.                                                                                                                                                                                           |
+| `DB_ENCRYPTION_SECRET`                      | `backend` | A base64-encoded 32-byte secret used to encrypt/decrypt transmitted payment data (`dataToTransmit`) stored on incoming/outgoing payment records and events.                                                                                                                      |
+| `PARTIAL_PAYMENT_DECISION_MAX_WAIT_MS`      | `backend` | The maximum time, in milliseconds, Rafiki will wait for an ASE to confirm or reject a partial incoming payment. Rafiki will reject the payment if a response isn't received in time. Only used if this value is less than the `PARTIAL_PAYMENT_DECISION_SAFETY_MARGIN_MS` value. |
+| `PARTIAL_PAYMENT_DECISION_SAFETY_MARGIN_MS` | `backend` | The time, in milliseconds, Rafiki is guaranteed to have to respond before an ILP packet expires.                                                                                                                                                                                 |
+
+</div>
 
 #### Incoming payment expired
 
