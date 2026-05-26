@@ -1,44 +1,44 @@
 ---
-title: Sobre Rafiki
+title: Descripción general
 ---
 
 import { LinkOut, Tooltip } from '@interledger/docs-design-system'
 import { Card, CardGrid } from '@astrojs/starlight/components'
 
-Implementing and maintaining the [Interledger Protocol (ILP)](#interledger) stack on your own can be difficult and time-consuming. Rafiki makes it easy to integrate with the Interledger network without needing to develop and maintain your own implementations.
+Implementar y mantener la pila del [Protocolo Interledger (ILP)](#interledger) por cuenta propia puede resultar difícil y llevar mucho tiempo. Rafiki facilita la integración con la red Interledger sin necesidad de desarrollar y mantener sus propias implementaciones.
 
-Rafiki is open-source software maintained by a dedicated team and freely available to any licensed <Tooltip content="A regulated entity that provides and maintains payment accounts for its customers" client:load>[account servicing entity](/es/overview/concepts/account-servicing-entity)</Tooltip> (ASE) wanting to implement Interledger and [Open Payments](#pagos-abiertos) on users' accounts.
+Rafiki es un software de código abierto mantenido por un equipo especializado y disponible de forma gratuita para cualquier <Tooltip content="Una entidad regulada que proporciona y mantiene cuentas de pago para sus clientes." client:load>[entidad que administra cuentas](/es/overview/concepts/account-servicing-entity)</Tooltip> (account servicing entity, ASE) con licencia que desee implementar Interledger y [Open Payments](#open-payments) en las cuentas de sus usuarios.
 
-:::tip[Try it out]
-The [Local Playground](/es/integration/playground/overview) allows you to test Rafiki by running two mock account servicing entities that automatically peer with one another.
+:::tip[Pruébelo]
+El [Local Playground](/integration/playground/overview) le permite probar Rafiki ejecutando dos entidades que administran cuentas simuladas que se interconectan automáticamente entre sí.
 :::
 
-## Casos de Uso
+## Casos de uso
 
-### Pagos entre pares (ASEs)
+### Pagos entre pares entre ASE
 
-In the context of Rafiki, a peer is another ASE with whom you transact. Forming a peering relationship requires you to both agree on the currency in which you will transact, on a settlement mechanism and cadence, and other details. Interledger creates interoperability between different payment systems and currencies, making it easier for peers to directly transact with one another.
+En el contexto de Rafiki, un par es otra ASE con la que se realizan transacciones. Para establecer una relación de interconexión, es necesario que ambos acuerden la moneda en la que realizarán las transacciones, un mecanismo y una frecuencia de liquidación, así como otros detalles. Interledger permite la interoperabilidad entre diferentes sistemas de pago y monedas, lo que facilita que los pares realicen transacciones directamente entre sí.
 
 ### Pagos de comercio electrónico
 
-If a merchant accepts Interledger or Open Payments as a payment method, then a customer can pay using their wallet address instead of entering, for example, a credit card number and other personal details on the merchant’s site. Rafiki’s implementation of Interledger and Open Payments means your account holders can use their wallet addresses for both one-time purchases and recurring purchases, such as subscriptions, anywhere Interledger or Open Payments is an accepted payment method.
+Si un comerciante acepta Interledger u Open Payments como método de pago, el consumidor puede pagar con su dirección de billetera en lugar de ingresar, por ejemplo, el número de una tarjeta de crédito y otros datos personales en el sitio del comerciante. Gracias a la implementación de Interledger y Open Payments por parte de Rafiki, los titulares de cuentas pueden utilizar sus direcciones de billetera tanto para compras únicas como para compras recurrentes, como suscripciones, en cualquier lugar donde Interledger u Open Payments sean métodos de pago aceptados.
 
-### Monetización web
+### Web Monetization
 
-With <LinkOut href="https://webmonetization.org">Web Monetization</LinkOut>, site visitors can pay an amount of their choosing to a participating site with little to no interaction. Both the site and the site visitor must have an Open Payments-enabled wallet address to receive and send payments. Rafiki’s implementation of Interledger’s Simple Payment Setup Protocol (SPSP) and the Open Payments standard means you can assign one or more wallet addresses to your account holders’ accounts, making these accounts support incoming and outgoing Web Monetization payments right out of the box.
+Con <LinkOut href="https://webmonetization.org">Web Monetization</LinkOut>, los visitantes del sitio web pueden pagar un monto de su elección a un sitio web participante con una interacción mínima o nula. Tanto el sitio como el visitante deben tener direcciones de billetera compatibles con Open Payments para recibir y enviar pagos. Gracias a la implementación por parte de Rafiki del Protocolo de Configuración de Pagos Simples (SPSP) de Interledger y del estándar de Open Payments, puede asignar una o más direcciones de billetera a las cuentas de sus titulares, lo que permite que estas cuentas admitan pagos entrantes y salientes mediante Web Monetization de forma inmediata.
 
 ## Interledger
 
-The Interledger network is a network of nodes that have implemented the Interledger Protocol (ILP) stack. Rafiki is a reference implementation if the ILP stack, enabling you to more easily become a node on the network and start sending and receiving payments.
+La red Interledger es una red de nodos que han implementado la pila del Protocolo Interledger (ILP). Rafiki es una implementación de referencia de la pila ILP, que le permite convertirse más fácilmente en un nodo de la red y empezar a enviar y recibir pagos.
 
-Interledger is designed to be a network on top of existing payment networks that serves as the interoperability layer between them all, forwarding payment messages (packets) while also taking care of currency conversion. Interledger ensures that packets take the fastest and cheapest route from one Interledger node to another.
+Interledger se configura como una red que opera por encima de las redes de pago existentes y que actúa como una capa de interoperabilidad entre todas ellas, reenviando mensajes de pago (paquetes) y encargándose también de la conversión de moneda. Interledger se encarga de que los paquetes sigan la ruta más rápida y económica de un nodo de Interledger a otro.
 
-[Learn more about Interledger](/es/overview/concepts/interledger)
+[Más información sobre Interledger](/es/overview/concepts/interledger)
 
-## Pagos Abiertos
+## Open Payments
 
-Open Payments is an API standard and set of open RESTful APIs that facilitate interoperability in the setup and completion of payments. The standard provides a uniform way to create and manage grants and resources for incoming payments, quotes, and outgoing payments.
+Open Payments es un estándar de API y un conjunto de API RESTful abiertas que facilitan la interoperabilidad en la configuración y realización de pagos. El estándar ofrece una forma uniforme de crear y gestionar concesiones y recursos para pagos entrantes, cotizaciones y pagos salientes.
 
-By following the Open Payments standard, Rafiki allows your customers' accounts to become Open Payments-enabled. Clients, such as mobile apps, can then call the Open Payments APIs to securely retrieve transaction data and initiate payments from your customers' accounts with your customers' prior consent.
+Al seguir el estándar de Open Payments, Rafiki permite que las cuentas de sus clientes sean compatibles con Open Payments. Por lo tanto, los clientes, como las aplicaciones móviles, pueden recurrir a las API de Open Payments para recuperar de manera segura los datos de las transacciones e iniciar pagos desde las cuentas de sus clientes, previo consentimiento de estos.
 
-[Learn more about Open Payments](/es/overview/concepts/open-payments)
+[Obtenga más información sobre Open Payments](/es/overview/concepts/open-payments)
