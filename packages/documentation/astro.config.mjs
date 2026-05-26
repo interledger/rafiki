@@ -109,12 +109,15 @@ export default defineConfig({
                 {
                   label: 'Account servicing entity',
                   translations: {
-                    es: 'Servicio de Cuentas de Entidad (ASE)'
+                    es: 'Entidad que administra la cuenta (ASE)'
                   },
                   link: '/overview/concepts/account-servicing-entity'
                 },
                 {
                   label: 'Multi-tenancy',
+                  translations: {
+                    es: 'Multitenencia'
+                  },
                   link: '/overview/concepts/multi-tenancy'
                 },
                 {
