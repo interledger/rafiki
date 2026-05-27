@@ -305,7 +305,7 @@ The `incoming_payment.completed` event indicates the payment completed either au
     alt Accept partial payment
       ASE->>R: Backend Admin API call: ConfirmPartialIncomingPayment
       R-->>ASE: success: true
-      ASE->>ASE: Apply partial payment<br />to associated incoming payment
+      ASE->>ASE: Process payment (e.g. credit receiver)
     else Reject partial payment
       ASE->>R: Backend Admin API call: RejectPartialIncomingPayment
       R-->>ASE: success: true
@@ -318,12 +318,14 @@ The `incoming_payment.completed` event indicates the payment completed either au
 
 The `incoming_payment.partial_payment_received` event indicates an existing incoming payment has received a partial payment. The event should be reviewed for data from the sender as the event could contain details that the ASE should handle before approving the partial payment. The ASE can also choose to reject the partial payment. A reject reason will be transmitted back to the sender in the `outgoing_payment.failed` webhook.
 
+An example use case for this event is approving a specific payment after an AML/KYC check is successful. Partial payment decisioning is disabled by default and can be enabled through the `ENABLE_PARTIAL_PAYMENT_DECISION` environment variable.
+
 <div class="overflow-table">
 
 | Environment variables                       | Type      | Description                                                                                                                                                                                                                                                                      |
 | ------------------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ENABLE_PARTIAL_PAYMENT_DECISION`           | `backend` | Enables an ASE to act upon (approve/reject) a partial payment. The default is `false`.                                                                                                                                                                                           |
-| `DB_ENCRYPTION_SECRET`                      | `backend` | A base64-encoded 32-byte secret used to encrypt/decrypt transmitted payment data (`dataToTransmit`) stored on incoming/outgoing payment records and events.                                                                                                                      |
+| `DB_ENCRYPTION_SECRET`                      | `backend` | A base64-encoded secret used to encrypt/decrypt transmitted payment data (`dataToTransmit`) stored on incoming/outgoing payment records and events.                                                                                                                              |
 | `PARTIAL_PAYMENT_DECISION_MAX_WAIT_MS`      | `backend` | The maximum time, in milliseconds, Rafiki will wait for an ASE to confirm or reject a partial incoming payment. Rafiki will reject the payment if a response isn't received in time. Only used if this value is less than the `PARTIAL_PAYMENT_DECISION_SAFETY_MARGIN_MS` value. |
 | `PARTIAL_PAYMENT_DECISION_SAFETY_MARGIN_MS` | `backend` | The time, in milliseconds, Rafiki is guaranteed to have to respond before an ILP packet expires.                                                                                                                                                                                 |
 
