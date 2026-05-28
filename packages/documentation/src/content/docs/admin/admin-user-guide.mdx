@@ -33,7 +33,7 @@ The Rafiki Admin app HMAC-signs requests (HMAC SHA-256) to the Backend Admin API
 
 <LargeImg
   src='/img/admin-guide/home-pre.png'
-  alt='A screenshot of the Rafiki Admin application user interface displaying the API credentials screen before the credentials have been entered. It shows two text fields: one for tenant ID and one for API secret, and an empty navigation menu.'
+  alt='A screenshot of the Rafiki Admin application user interface displaying the API credentials screen before the credentials have been entered. It shows two text fields: one for tenant ID and one for API secret, and a navigation menu showing only the Home option.'
 />
 
 After successfully configuring your API credentials, a message will appear indicating that the credentials have been configured, and the left navigation menu will be populated with the available options.
@@ -72,8 +72,8 @@ npm run invite-user -- example@mail.com
 After running the `invite-user` script, the script generates a recovery link that also serves as an invitation link. This link is output to the terminal, and the administrator can send it to the user. When the user opens the link in their browser, they're automatically logged in and taken to the account settings page where they can set a new password. Afterward, they can log in normally via the Rafiki Admin URL.
 
 <LargeImg
-  src='/img/admin-guide/account-settings.png'
-  alt='A screenshot of the Rafiki Admin application user interface displaying the "Account Settings" section. It shows two text fields: one to change an email address and one to change a password.'
+  src='/img/admin-guide/account-settings-recovery.png'
+  alt='A screenshot of the Rafiki Admin application user interface displaying the "Account Settings" section after using an invitation link. It shows a success message indicating the account was recovered, along with two text fields: one to change an email address and one to change a password.'
 />
 
 :::note
@@ -116,11 +116,11 @@ Ory Kratos provides frontend components (such as forms and buttons) for identity
 The screenshots in this guide may not perfectly reflect the appearance of the Rafiki Admin UI in all environments. Specifically, the left navigation menu can differ slightly depending on whether authentication via Kratos is enabled.
 :::
 
-After logging in, you'll be greeted by the main landing page with a left-hand navigation menu. This menu provides access to the main capabilities needed to manage your Rafiki instance.
+After logging in and your API credentials are configured, the left-hand navigation menu provides access to the main capabilities needed to manage your Rafiki instance.
 
 <LargeImg
   src='/img/admin-guide/home.png'
-  alt='Rafiki Admin application user interface welcome screen with navigation options like Home, Peers, Assets, Wallet Addresses, Webhooks, and more on the left sidebar.'
+  alt='A screenshot of the Rafiki Admin application user interface displaying the home page with API credentials configured. It shows the full left-hand navigation menu including Home, Tenants, Assets, Peers, Wallet Addresses, Webhook Events, Payments, and Account Settings.'
 />
 
 Each of the following menu items leads to a different page of the Rafiki Admin app:
@@ -129,7 +129,7 @@ Each of the following menu items leads to a different page of the Rafiki Admin a
 - [Assets](#assets)
 - [Peers](#peers)
 - [Wallet addresses](#wallet-addresses)
-- [Webhooks](#webhooks)
+- [Webhook events](#webhooks)
 - [Payments](#payments)
 - [Account settings](#account-settings)
 
@@ -186,14 +186,14 @@ To edit an existing tenant, select any tenant entry from the table on the main T
 
 The Edit Tenant page includes the following sections:
 
-| Section                       | Field       | Description                                                                                 |
-| ----------------------------- | ----------- | ------------------------------------------------------------------------------------------- |
-| General Information           | Tenant ID   | A unique identifier assigned by Rafiki when the tenant was created. This cannot be changed. |
-|                               | Public Name | A public name for the tenant.                                                               |
-|                               | Email       | The tenant's email address.                                                                 |
-| Identity Provider Information | Consent URL | The URL of the tenant's identity provider consent endpoint.                                 |
-|                               | Secret      | The secret for the tenant's identity provider.                                              |
-| Sensitive Information         | API Secret  | The tenant's API credential used to authenticate requests. Read-only for operators.         |
+| Section                       | Field       | Description                                                                                |
+| ----------------------------- | ----------- | ------------------------------------------------------------------------------------------ |
+| General Information           | Tenant ID   | A unique identifier assigned by Rafiki when the tenant was created. This can't be changed. |
+|                               | Public Name | A public name for the tenant.                                                              |
+|                               | Email       | The tenant's email address.                                                                |
+| Identity Provider Information | Consent URL | The URL of the tenant's identity provider consent endpoint.                                |
+|                               | Secret      | The secret for the tenant's identity provider.                                             |
+| Sensitive Information         | API Secret  | The tenant's API credential used to authenticate requests. Read-only for operators.        |
 
 You can modify the public name, email, consent URL, and secret for a tenant. The tenant ID can't be changed. The API secret is read-only for operators but can be rotated by the tenants when logged in under their own account.
 
@@ -203,7 +203,16 @@ After editing any of the preceding fields, select **Save** to commit those chang
 
 As an operator, you may need to delete tenants from your Rafiki instance. The option to delete a tenant is only visible when viewing a non-operator tenant. An operator can't delete themselves.
 
-To perform this irreversible action, select **Delete tenant**. Confirm the deletion by typing "delete tenant" into the text field and selecting **Delete this tenant**.
+To perform this irreversible action, select **Delete tenant**.
+
+<img
+  src='/img/admin-guide/delete-tenant.png'
+  alt='A screenshot of the Rafiki Admin app user interface displaying the "Delete Tenant" modal window.'
+  class='img-outline'
+  style='max-width:400px'
+/>
+
+Confirm the deletion by typing "delete tenant" into the text field and selecting **Delete this tenant**.
 
 ## Assets
 
@@ -238,7 +247,7 @@ Fill out the following fields to create your new asset:
 | General Information | Code                 | The asset code, generally an ISO 4217 currency code where available.              |
 |                     | Scale                | Difference in order of magnitude between the standard unit and a fractional unit. |
 |                     | Withdrawal Threshold | The minimum amount of liquidity that can be withdrawn from the asset.             |
-|                     | Tenant Id            | Select a tenant to associate with this asset.                                     |
+|                     | Tenant ID            | Select a tenant to associate with this asset.                                     |
 
 After completing these fields, select **Create** to add the new asset.
 
@@ -383,7 +392,7 @@ Operators can create wallet addresses for any tenant. Tenants can only create th
 
 ### Create wallet address
 
-To create a new wallet address, select **Create wallet address** from the main Wallet Address page.
+To create a new wallet address, select **Create wallet address** from the main Wallet Addresses page.
 
 <LargeImg
   src='/img/admin-guide/create-wallet-address.png'
@@ -451,7 +460,7 @@ In both cases, the recommended approach is to create a new wallet address and de
 
 ## Webhook events
 
-The Webhook Events page allows you to monitor and manage webhook events in your Rafiki instance. Webhook events in Rafiki are the main communication channel between you and your Rafiki instance. See Webhook events for more information about webhook events.
+The Webhook Events page allows you to monitor and manage webhook events in your Rafiki instance. Webhook events in Rafiki are the main communication channel between you and your Rafiki instance. See [Webhook event types](/resources/webhook-event-types) for more information about webhook events.
 
 All triggered webhook events appear in the table. For each webhook event, you can see the webhook ID, the event type, and the date and time of the event. A field at the top of the page allows you to filter the table by event type, making it easier to drill down into specific events.
 
@@ -470,12 +479,16 @@ All payments appear in the table. For each payment, you can view the unique paym
 
 <LargeImg
   src='/img/admin-guide/payments.png'
-  alt='A screenshot of the Rafiki Admin application user interface displaying the "Payments" section. It shows a table where payment details would be displayed including ID, payment type, payment state, and the date of the payment.'
+  alt='A screenshot of the Rafiki Admin application user interface displaying the "Payments" section. It shows an empty table  with a "No payments found" message, along with filter fields at the top for payment type and wallet address ID.'
 />
 
 ## Account settings
 
 The Account Settings page allows you to manage your personal account information, including updating your email address and password.
+
+:::note
+The Account Settings page and its navigation menu item are only available when authentication is enabled via Ory Kratos.
+:::
 
 <LargeImg
   src='/img/admin-guide/account-settings.png'

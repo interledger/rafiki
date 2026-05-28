@@ -56,7 +56,7 @@ pnpm localenv:compose:psql up
 Optional authentication setup - to enable Rafiki Admin authentication locally, run:
 
 ```sh
-pnpm localenv:compose:adminauth:up
+pnpm localenv:compose:adminauth up
 ```
 
 ## Shutting down
@@ -191,13 +191,21 @@ Authentication is disabled by default for ease of development, but it can be ena
 pnpm localenv:compose:adminauth up
 ```
 
-The Admin UI requires a valid API secret and tenant id to make requests to the Admin APIs, which must be submitted via a form on the frontend. For our convenience, we log a link on Mock Account Servicing Entity (MASE) start that can be used to access the Admin UI and set the credentials automatically. The credentials used pull from the MASE’s `SIGNATURE_SECRET` and `OPERATOR_TENANT_ID` environment variables.
+The Admin UI requires a valid API secret and tenant ID to make requests to the Admin APIs, which must be submitted via a form on the frontend. For our convenience, we log a link on Mock Account Servicing Entity (MASE) start that can be used to access the Admin UI and set the credentials automatically. The credentials used pull from the MASE’s `SIGNATURE_SECRET` and `OPERATOR_TENANT_ID` environment variables.
 
 ```
 cloud-nine-mock-ase-1  | Local Dev Setup:
 cloud-nine-mock-ase-1  | Use this URL to access the frontend with operator tenant credentials:
 cloud-nine-mock-ase-1  | http://localhost:3010/?tenantId=438fa74a-fa7d-4317-9ced-dde32ece1787&apiSecret=iyIgCprjb9uL8wFckR%2BpLEkJWMB7FJhgkvqhTQR%2F964%3D
 ```
+
+Once authentication is enabled, create a user account by running the `invite-user` script from your terminal:
+
+```sh
+docker exec -it <admin-container-name> npm run invite-user -- example@mail.com
+```
+
+This generates a one-time invitation link. Open it in your browser to set a password and log in. See the [Rafiki Admin user guide](/admin/admin-user-guide#invite-a-user) for more details.
 
 For additional details on using the Rafiki Admin application within the Local Playground, including enabling authentication and managing users, see the [Local Playground Rafiki Admin](https://rafiki.dev/integration/playground/overview/#rafiki-admin) documentation.
 
@@ -220,6 +228,10 @@ For additional details on using the Rafiki Admin application within the Local Pl
 | Down (with Postgresql)                           | `pnpm localenv:compose:psql down`                |
 | Down (with Postgresql) and kill volumes          | `pnpm localenv:compose:psql down --volumes`      |
 | Build all the containers (with Postgresql)       | `pnpm localenv:compose:psql build`               |
+| Start (with admin auth)                          | `pnpm localenv:compose:adminauth up`             |
+| Start (with admin auth) detached                 | `pnpm localenv:compose:adminauth up -d`          |
+| Down (with admin auth)                           | `pnpm localenv:compose:adminauth down`           |
+| Down and kill volumes (with admin auth)          | `pnpm localenv:compose:adminauth down --volumes` |
 
 # Known Issues
 
