@@ -205,7 +205,7 @@ Once authentication is enabled, create a user account by running the `invite-use
 docker exec -it <admin-container-name> npm run invite-user -- example@mail.com
 ```
 
-This generates a one-time invitation link. Open it in your browser to set a password and log in. See the [Rafiki Admin user guide](/admin/admin-user-guide#invite-a-user) for more details.
+This generates a one-time invitation link. Open it in your browser to set a password and log in. See the [Rafiki Admin user guide](https://rafiki.dev/admin/admin-user-guide#invite-a-user) for more details.
 
 For additional details on using the Rafiki Admin application within the Local Playground, including enabling authentication and managing users, see the [Local Playground Rafiki Admin](https://rafiki.dev/integration/playground/overview/#rafiki-admin) documentation.
 
