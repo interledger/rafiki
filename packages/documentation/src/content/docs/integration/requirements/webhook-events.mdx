@@ -162,7 +162,7 @@ To recreate the signed payload string, concatenate the following.
 - A period (.) character
 - The actual JSON payload from the request body, containing the `id`, `type`, and `data` attributes
 
-This string format is essential for accurate signature validation.
+This string format is essential for accurate signature validation. The webhook body must be JSON canonicalized before HMAC computation.
 
 ### Generate the expected signature
 
