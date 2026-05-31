@@ -412,6 +412,8 @@ input ApproveIncomingPaymentInput {
 input CancelIncomingPaymentInput {
   "Unique identifier of the incoming payment to be canceled. Note: incoming payment must be PENDING."
   id: ID!
+  "Reason for canceling the incoming payment."
+  reason: String
 }
 
 input CreateAssetInput {
@@ -996,6 +998,10 @@ type IncomingPayment implements BasePayment & Model {
   senderWalletAddress: String
   "The tenant associated with the incoming payment. If not provided, it will be obtained from the signature."
   tenant: Tenant
+  "Reason why the incoming payment was canceled."
+  reason: String
+  "The date and time that the incoming payment was canceled."
+  cancelledAt: String
 }
 
 type Receiver {

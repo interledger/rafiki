@@ -177,6 +177,8 @@ export type BasePayment = {
 export type CancelIncomingPaymentInput = {
   /** Unique identifier of the incoming payment to be canceled. Note: incoming payment must be PENDING. */
   id: Scalars['ID']['input'];
+  /** Reason for canceling the incoming payment. */
+  reason?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CancelIncomingPaymentResponse = {
@@ -635,6 +637,8 @@ export type HttpOutgoingInput = {
 
 export type IncomingPayment = BasePayment & Model & {
   __typename?: 'IncomingPayment';
+  /** The date and time that the incoming payment was canceled. */
+  cancelledAt?: Maybe<Scalars['String']['output']>;
   /** Information about the wallet address of the Open Payments client that created the incoming payment. */
   client?: Maybe<Scalars['String']['output']>;
   /** The date and time that the incoming payment was created. */
@@ -649,6 +653,8 @@ export type IncomingPayment = BasePayment & Model & {
   liquidity?: Maybe<Scalars['UInt64']['output']>;
   /** Additional metadata associated with the incoming payment. */
   metadata?: Maybe<Scalars['JSONObject']['output']>;
+  /** Reason why the incoming payment was canceled. */
+  reason?: Maybe<Scalars['String']['output']>;
   /** The total amount that has been paid into the wallet address under this incoming payment. */
   receivedAmount: Amount;
   /** The sender's wallet address URL. Applicable only to card payments. */
@@ -2439,6 +2445,7 @@ export type HttpOutgoingResolvers<ContextType = any, ParentType extends Resolver
 };
 
 export type IncomingPaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['IncomingPayment'] = ResolversParentTypes['IncomingPayment']> = {
+  cancelledAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   client?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   expiresAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -2446,6 +2453,7 @@ export type IncomingPaymentResolvers<ContextType = any, ParentType extends Resol
   incomingAmount?: Resolver<Maybe<ResolversTypes['Amount']>, ParentType, ContextType>;
   liquidity?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   metadata?: Resolver<Maybe<ResolversTypes['JSONObject']>, ParentType, ContextType>;
+  reason?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   receivedAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   senderWalletAddress?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   state?: Resolver<ResolversTypes['IncomingPaymentState'], ParentType, ContextType>;

@@ -252,7 +252,8 @@ export const cancelIncomingPayment: MutationResolvers<TenantedApolloContext>['ca
 
     const incomingPaymentOrError = await incomingPaymentService.cancel(
       args.input.id,
-      ctx.tenant.id
+      ctx.tenant.id,
+      args.input.reason
     )
 
     if (isIncomingPaymentError(incomingPaymentOrError)) {
@@ -308,6 +309,10 @@ export function paymentToGraphql(
     receivedAmount: payment.receivedAmount,
     metadata: payment.metadata,
     createdAt: new Date(+payment.createdAt).toISOString(),
-    senderWalletAddress: payment.senderWalletAddress
+    senderWalletAddress: payment.senderWalletAddress,
+    reason: payment.reason,
+    cancelledAt: payment.cancelledAt
+      ? new Date(payment.cancelledAt).toISOString()
+      : undefined
   }
 }
