@@ -308,6 +308,27 @@ describe('Incoming Payment Service', (): void => {
         expect(canceledIncomingPayment.cancelledAt).toBeDefined()
         expect(!canceledIncomingPayment.approvedAt).toBeTruthy()
       })
+
+      it('should cancel incoming payment with reason', async (): Promise<void> => {
+        const reason = 'cancelled by operator'
+        const incomingPayment = await createIncomingPaymentHelper()
+        assert.ok(!isIncomingPaymentError(incomingPayment))
+
+        await IncomingPayment.query(knex)
+          .findOne({ id: incomingPayment.id })
+          .patch({ state: IncomingPaymentState.Pending })
+
+        const canceledIncomingPayment = await incomingPaymentService.cancel(
+          incomingPayment.id,
+          Config.operatorTenantId,
+          reason
+        )
+        assert.ok(!isIncomingPaymentError(canceledIncomingPayment))
+        expect(canceledIncomingPayment.id).toBe(incomingPayment.id)
+        expect(canceledIncomingPayment.cancelledAt).toBeDefined()
+        expect(!canceledIncomingPayment.approvedAt).toBeTruthy()
+        expect(canceledIncomingPayment.reason).toBe(reason)
+      })
     })
   })
 
