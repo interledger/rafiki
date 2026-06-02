@@ -69,7 +69,7 @@ export interface IncomingPaymentService
   cancel(
     id: string,
     tenantId: string,
-    reason?: string
+    cancellationReason?: string
   ): Promise<IncomingPayment | IncomingPaymentError>
   complete(
     id: string,
@@ -103,8 +103,8 @@ export async function createIncomingPaymentService(
     get: (options) => getIncomingPayment(deps, options),
     create: (options, trx) => createIncomingPayment(deps, options, trx),
     approve: (id, tenantId) => approveIncomingPayment(deps, id, tenantId),
-    cancel: (id, tenantId, cancelReason) =>
-      cancelIncomingPayment(deps, id, tenantId, cancelReason),
+    cancel: (id, tenantId, cancellationReason) =>
+      cancelIncomingPayment(deps, id, tenantId, cancellationReason),
     complete: (id, tenantId) => completeIncomingPayment(deps, id, tenantId),
     getWalletAddressPage: (options) => getWalletAddressPage(deps, options),
     processNext: () => processNextIncomingPayment(deps),
@@ -465,7 +465,7 @@ async function cancelIncomingPayment(
   deps: ServiceDependencies,
   id: string,
   tenantId: string,
-  reason?: string
+  cancellationReason?: string
 ): Promise<IncomingPayment | IncomingPaymentError> {
   return deps.knex.transaction(async (trx) => {
     const payment = await IncomingPayment.query(trx)
@@ -495,7 +495,7 @@ async function cancelIncomingPayment(
     if (!payment.cancelledAt) {
       await payment.$query(trx).patch({
         cancelledAt: new Date(Date.now()),
-        reason: reason
+        cancellationReason: cancellationReason
       })
     }
 

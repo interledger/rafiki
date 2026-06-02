@@ -15,24 +15,24 @@ body:graphql {
     cancelIncomingPayment(input: $input) {
       payment {
         id
-        reason
+        cancellationReason
       }
     }
   }
-
+  
 }
 
 body:graphql:vars {
   {
     "input": {
       "id": "{{incomingPaymentId}}",
-      "reason": "{{reason}}"
+      "cancellationReason": "{{cancellationReason}}"
     }
   }
 }
 
 script:pre-request {
   const scripts = require('./scripts');
-
+  
   scripts.addApiSignatureHeader('backend', 'receiver');
 }
