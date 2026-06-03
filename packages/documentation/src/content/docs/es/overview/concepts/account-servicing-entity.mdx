@@ -1,37 +1,31 @@
 ---
-title: Servicio de Cuentas de Entidad (ASE)
+title: Entidad que administra la cuenta (ASE)
 ---
 
-An account servicing entity (ASE) is a regulated entity that provides and maintains payment accounts for its customers. Examples of ASEs include banks, digital wallet providers, and mobile money providers.
+Una entidad que administra la cuenta (account servicing entity, ASE) es una entidad regulada que proporciona y mantiene cuentas de pago para sus clientes. Algunos ejemplos de ASE son los bancos, los proveedores de billeteras digitales y los proveedores de dinero móvil.
 
-As regulated entities, ASEs are subject to the laws, rules, and regulations of their jurisdictions. As such, Rafiki should **not** be used in production environments by non-regulated entities.
+Como entidades reguladas, las ASE están sujetas a las leyes, normas y regulaciones de sus jurisdicciones. Por lo tanto, las entidades no reguladas **no** deben utilizar Rafiki en entornos de producción.
 
-## Responsibilities and obligations
+## Responsabilidades y obligaciones
 
-A few examples of an ASE's responsibilities and obligations include:
+<img
+  src='/img/ase-responsibilites.png'
+  alt='Image with four panels that summarize the four main responsibilities of ASEs'
+  style='max-width:600px'
+/>
 
-- Regulatory compliance
-- Account provisioning and maintenance
-- Transaction handling
-- Ledger management
-- Authentication and consent
+### AML (Prevención del lavado de dinero)
 
-### Regulatory compliance
+Las ASE cumplen con las leyes y regulaciones contra el lavado de dinero para detectar y prevenir el lavado de dinero y otras actividades financieras sospechosas.
 
-ASEs must onboard account holders in compliance with regulatory requirements, such as performing Know Your Customer (KYC) checks, anti-money laundering (AML) processes, and sanctions screening.
+### KYC/KYB (Conozca a su cliente/negocio)
 
-### Account provisioning and maintenance
+Las prácticas de KYC y KYB garantizan que las ASE verifiquen la identidad de sus clientes mediante la recopilación de documentos de identidad y comprobantes de domicilio, la verificación de registros comerciales, la consulta de listas de sanciones y otros procesos.
 
-ASEs manage the creation, upkeep, and security of payment accounts. This includes providing channels for account holders (individuals or businesses) to interact with their accounts via mobile apps, websites, and other interfaces.
+### Gestión de cuentas de los usuarios
 
-### Transaction handling
+Las ASE gestionan la creación, el mantenimiento y la seguridad de las cuentas de sus clientes y de los saldos de dichas cuentas. Del mismo modo, son responsables de autenticar a sus clientes y de ofrecerles canales seguros para que interactúen con sus cuentas a través de aplicaciones móviles, sitios web u otras interfaces.
 
-ASEs handle deposits and withdrawals through various external payment methods such as bank transfers, credit cards, and other payment services.
+### Libro contable
 
-### Ledger management
-
-ASEs maintain a ledger of account balances and transaction histories for their account holders.
-
-### Authentication and consent
-
-In the context of Open Payments, ASEs are responsible for authenticating resource owners (for example, account holders) and obtaining their consent when clients, such as mobile apps, request access to a resource (for example, an account).
+Dado que las ASE gestionan depósitos y retiros a través de métodos de pago externos (como transferencias bancarias, tarjetas de crédito y otros servicios), deben registrar en su libro contable todas las transacciones y la información de saldos.

@@ -52,6 +52,7 @@ services:
       SIGNATURE_VERSION: 1
       SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       IDP_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
+      DB_ENCRYPTION_SECRET: 'zO9KogehJECHReHgQr+ZWGkmgOD4AYa4ksUxALSwgM8='
       DISPLAY_NAME: Happy Life Bank
       DISPLAY_ICON: bank-icon.svg
       OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
@@ -114,6 +115,7 @@ services:
       OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
       CARD_SERVICE_URL: 'http://happy-life-bank-card-service:4007'
       POS_WEBHOOK_SERVICE_URL: 'http://happy-life-bank-point-of-sale:4008/webhook'
+      DB_ENCRYPTION_SECRET: 'zO9KogehJECHReHgQr+ZWGkmgOD4AYa4ksUxALSwgM8='
       WALLET_ADDRESS_NOT_FOUND_POLLING_ENABLED: true
     depends_on:
       - cloud-nine-backend

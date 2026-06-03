@@ -31,7 +31,9 @@ import {
   IncomingPayment,
   IncomingPaymentConnection,
   IncomingPaymentResponse,
-  IncomingPaymentState as SchemaPaymentState
+  IncomingPaymentState as SchemaPaymentState,
+  ConfirmPartialIncomingPaymentResponse,
+  RejectPartialIncomingPaymentResponse
 } from '../generated/graphql'
 import {
   IncomingPaymentError,
@@ -42,6 +44,8 @@ import { Amount, serializeAmount } from '../../open_payments/amount'
 import { GraphQLErrorCode } from '../errors'
 import { createTenant } from '../../tests/tenant'
 import { faker } from '@faker-js/faker'
+import { WalletAddress } from '../../open_payments/wallet_address/model'
+import Redis from 'ioredis'
 
 describe('Incoming Payment Resolver', (): void => {
   let deps: IocContract<AppServices>
@@ -60,6 +64,10 @@ describe('Incoming Payment Resolver', (): void => {
     accountingService = await deps.use('accountingService')
     asset = await createAsset(deps)
     tenantId = Config.operatorTenantId
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
   })
 
   afterAll(async (): Promise<void> => {
@@ -1057,5 +1065,260 @@ describe('Incoming Payment Resolver', (): void => {
         await truncateTables(deps)
       })
     })
+  })
+
+  describe('Mutation.(confirm/reject)PartialIncomingPayment', () => {
+    const PARTIAL_PAYMENT_DECISION_PREFIX = 'partial_payment_decision'
+    const confirmPartialIncomingPaymentMutation = gql`
+      mutation ConfirmPartialIncomingPayment(
+        $input: ConfirmPartialIncomingPaymentInput!
+      ) {
+        confirmPartialIncomingPayment(input: $input) {
+          success
+        }
+      }
+    `
+    const rejectPartialIncomingPaymentMutation = gql`
+      mutation RejectPartialIncomingPayment(
+        $input: RejectPartialIncomingPaymentInput!
+      ) {
+        rejectPartialIncomingPayment(input: $input) {
+          success
+        }
+      }
+    `
+    let redis: Redis
+    let walletAddress: WalletAddress
+
+    beforeEach(async (): Promise<void> => {
+      redis = await deps.use('redis')
+      walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
+    })
+
+    afterEach((): void => {
+      jest.restoreAllMocks()
+    })
+
+    test.each`
+      action       | mutation
+      ${'confirm'} | ${confirmPartialIncomingPaymentMutation}
+      ${'reject'}  | ${rejectPartialIncomingPaymentMutation}
+    `(
+      'can $action a partial incoming payment',
+      async ({ action, mutation }): Promise<void> => {
+        const incomingPayment = await createIncomingPayment(deps, {
+          walletAddressId: walletAddress.id,
+          tenantId: walletAddress.tenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
+        })
+
+        const partialIncomingPaymentId = uuid()
+
+        const result = await appContainer.apolloClient
+          .mutate({
+            mutation,
+            variables: {
+              input: {
+                incomingPaymentId: incomingPayment.id,
+                partialIncomingPaymentId
+              }
+            }
+          })
+          .then(
+            (
+              mutation
+            ):
+              | ConfirmPartialIncomingPaymentResponse
+              | RejectPartialIncomingPaymentResponse =>
+              action === 'confirm'
+                ? mutation.data?.confirmPartialIncomingPayment
+                : mutation.data?.rejectPartialIncomingPayment
+          )
+
+        expect(result.success).toBe(true)
+      }
+    )
+
+    test('uses rejection reason when rejecting partial incoming payment', async (): Promise<void> => {
+      const incomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: walletAddress.id,
+        tenantId: walletAddress.tenantId,
+        initiationReason: IncomingPaymentInitiationReason.Admin
+      })
+      const partialIncomingPaymentId = uuid()
+      const reason = 'Incorrect data provided'
+      const redisSpy = jest.spyOn(redis, 'set')
+
+      const result = await appContainer.apolloClient
+        .mutate({
+          mutation: rejectPartialIncomingPaymentMutation,
+          variables: {
+            input: {
+              incomingPaymentId: incomingPayment.id,
+              partialIncomingPaymentId,
+              reason
+            }
+          }
+        })
+        .then(
+          (mutation): RejectPartialIncomingPaymentResponse =>
+            mutation.data?.rejectPartialIncomingPayment
+        )
+
+      expect(result.success).toBe(true)
+      expect(redisSpy).toHaveBeenCalledWith(
+        `${PARTIAL_PAYMENT_DECISION_PREFIX}:${incomingPayment.id}:${partialIncomingPaymentId}`,
+        JSON.stringify({ success: false, reason })
+      )
+    })
+
+    test.each`
+      action       | mutation
+      ${'confirm'} | ${confirmPartialIncomingPaymentMutation}
+      ${'reject'}  | ${rejectPartialIncomingPaymentMutation}
+    `(
+      'cannot $action partial incoming payment that does not belong to tenant',
+      async ({ mutation }): Promise<void> => {
+        const incomingPayment = await createIncomingPayment(deps, {
+          walletAddressId: walletAddress.id,
+          tenantId: walletAddress.tenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
+        })
+        const partialIncomingPaymentId = uuid()
+
+        const otherTenant = await createTenant(deps)
+        const tenantApolloClient = await createApolloClient(
+          appContainer.container,
+          appContainer.app,
+          otherTenant.id
+        )
+
+        const incomingPaymentServiceSpy = jest.spyOn(
+          incomingPaymentService,
+          'updatePartialPaymentDecision'
+        )
+        expect.assertions(3)
+        try {
+          await tenantApolloClient.mutate({
+            mutation,
+            variables: {
+              input: {
+                incomingPaymentId: incomingPayment.id,
+                partialIncomingPaymentId
+              }
+            }
+          })
+        } catch (error) {
+          expect(incomingPaymentServiceSpy).not.toHaveBeenCalled()
+          expect(error).toBeInstanceOf(ApolloError)
+          expect((error as ApolloError).graphQLErrors).toContainEqual(
+            expect.objectContaining({
+              message: errorToMessage[IncomingPaymentError.UnknownPayment],
+              extensions: expect.objectContaining({
+                code: GraphQLErrorCode.NotFound
+              })
+            })
+          )
+        }
+      }
+    )
+
+    test.each`
+      action       | mutation                                 | state
+      ${'confirm'} | ${confirmPartialIncomingPaymentMutation} | ${IncomingPaymentState.Completed}
+      ${'reject'}  | ${rejectPartialIncomingPaymentMutation}  | ${IncomingPaymentState.Completed}
+      ${'confirm'} | ${confirmPartialIncomingPaymentMutation} | ${IncomingPaymentState.Expired}
+      ${'reject'}  | ${rejectPartialIncomingPaymentMutation}  | ${IncomingPaymentState.Expired}
+    `(
+      'cannot $action partial payment for incoming payment that is $state',
+      async ({ mutation, state }): Promise<void> => {
+        const incomingPayment = await createIncomingPayment(deps, {
+          walletAddressId: walletAddress.id,
+          tenantId: walletAddress.tenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
+        })
+        const knex = await deps.use('knex')
+        await IncomingPaymentModel.query(knex).patchAndFetchById(
+          incomingPayment.id,
+          { state }
+        )
+
+        const incomingPaymentServiceSpy = jest.spyOn(
+          incomingPaymentService,
+          'updatePartialPaymentDecision'
+        )
+        expect.assertions(3)
+        try {
+          await appContainer.apolloClient.mutate({
+            mutation,
+            variables: {
+              input: {
+                incomingPaymentId: incomingPayment.id,
+                partialIncomingPaymentId: uuid()
+              }
+            }
+          })
+        } catch (error) {
+          expect(incomingPaymentServiceSpy).not.toHaveBeenCalled()
+          expect(error).toBeInstanceOf(ApolloError)
+          expect((error as ApolloError).graphQLErrors).toContainEqual(
+            expect.objectContaining({
+              message: errorToMessage[IncomingPaymentError.InvalidState],
+              extensions: expect.objectContaining({
+                code: errorToCode[IncomingPaymentError.InvalidState]
+              })
+            })
+          )
+        }
+      }
+    )
+
+    test.each`
+      action       | mutation
+      ${'confirm'} | ${confirmPartialIncomingPaymentMutation}
+      ${'reject'}  | ${rejectPartialIncomingPaymentMutation}
+    `(
+      '$action errors if redis write fails',
+      async ({ action, mutation }): Promise<void> => {
+        const redisSpy = jest.spyOn(redis, 'set').mockImplementationOnce(() => {
+          throw new Error('unknown redis error')
+        })
+
+        const incomingPayment = await createIncomingPayment(deps, {
+          walletAddressId: walletAddress.id,
+          tenantId: walletAddress.tenantId,
+          initiationReason: IncomingPaymentInitiationReason.Admin
+        })
+        const partialIncomingPaymentId = uuid()
+        const result = await appContainer.apolloClient
+          .mutate({
+            mutation,
+            variables: {
+              input: {
+                incomingPaymentId: incomingPayment.id,
+                partialIncomingPaymentId
+              }
+            }
+          })
+          .then(
+            (
+              mutation
+            ):
+              | ConfirmPartialIncomingPaymentResponse
+              | RejectPartialIncomingPaymentResponse =>
+              action === 'confirm'
+                ? mutation.data?.confirmPartialIncomingPayment
+                : mutation.data?.rejectPartialIncomingPayment
+          )
+
+        expect(result.success).toBe(false)
+        expect(redisSpy).toHaveBeenCalledWith(
+          `${PARTIAL_PAYMENT_DECISION_PREFIX}:${incomingPayment.id}:${partialIncomingPaymentId}`,
+          JSON.stringify({ success: action === 'confirm' ? true : false })
+        )
+      }
+    )
   })
 })
