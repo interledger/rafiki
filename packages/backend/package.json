@@ -71,7 +71,7 @@
     "@opentelemetry/instrumentation-undici": "^0.4.0",
     "@opentelemetry/resources": "^1.22.0",
     "@opentelemetry/sdk-metrics": "^1.25.1",
-    "@opentelemetry/sdk-node": "^0.52.1",
+    "@opentelemetry/sdk-node": "^0.217.0",
     "@opentelemetry/sdk-trace-node": "^1.25.1",
     "ajv": "^8.12.0",
     "axios": "1.16.0",
