@@ -15,6 +15,7 @@ body:graphql {
     cancelIncomingPayment(input: $input) {
       payment {
         id
+        cancellationReason
       }
     }
   }
@@ -24,7 +25,8 @@ body:graphql {
 body:graphql:vars {
   {
     "input": {
-      "id": "{{incomingPaymentId}}"
+      "id": "{{incomingPaymentId}}",
+      "cancellationReason": "{{cancellationReason}}"
     }
   }
 }
