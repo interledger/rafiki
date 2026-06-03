@@ -1,19 +1,17 @@
 {
-  "enabled": true,
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:base"],
+  "enabled": true,
+  "extends": ["config:recommended"],
   "prConcurrentLimit": 10,
   "branchConcurrentLimit": 0,
   "branchPrefix": "renovate-",
-  "prHourlyLimit": 1,
+  "prHourlyLimit": 2,
   "rebaseWhen": "conflicted",
   "rangeStrategy": "bump",
   "prCreation": "not-pending",
-  "docker": {
-    "enabled": false
-  },
   "labels": ["dependencies"],
   "packageRules": [
+    { "matchCategories": ["docker"], "enabled": false },
     {
       "matchPackageNames": ["@types/node", "node"],
       "allowedVersions": "<21.0.0"
