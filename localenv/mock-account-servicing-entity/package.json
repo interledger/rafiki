@@ -11,7 +11,7 @@
   "dependencies": {
     "@apollo/client": "^3.11.8",
     "@headlessui/react": "^1.7.19",
-    "@interledger/http-signature-utils": "2.0.2",
+    "@interledger/http-signature-utils": "2.0.3",
     "@remix-run/node": "^2.16.4",
     "@remix-run/react": "^2.16.4",
     "@remix-run/serve": "^2.16.4",
