@@ -175,6 +175,8 @@ export type BasePayment = {
 };
 
 export type CancelIncomingPaymentInput = {
+  /** Reason for canceling the incoming payment. */
+  cancellationReason?: InputMaybe<Scalars['String']['input']>;
   /** Unique identifier of the incoming payment to be canceled. Note: incoming payment must be PENDING. */
   id: Scalars['ID']['input'];
 };
@@ -647,6 +649,10 @@ export type HttpOutgoingInput = {
 
 export type IncomingPayment = BasePayment & Model & {
   __typename?: 'IncomingPayment';
+  /** Reason why the incoming payment was canceled. */
+  cancellationReason?: Maybe<Scalars['String']['output']>;
+  /** The date and time that the incoming payment was canceled. */
+  cancelledAt?: Maybe<Scalars['String']['output']>;
   /** Information about the wallet address of the Open Payments client that created the incoming payment. */
   client?: Maybe<Scalars['String']['output']>;
   /** The date and time that the incoming payment was created. */
@@ -2490,6 +2496,8 @@ export type HttpOutgoingResolvers<ContextType = any, ParentType extends Resolver
 };
 
 export type IncomingPaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['IncomingPayment'] = ResolversParentTypes['IncomingPayment']> = {
+  cancellationReason?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  cancelledAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   client?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   expiresAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
