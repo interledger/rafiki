@@ -375,7 +375,8 @@ async function handleExpired(
     deps.logger.debug({ amountReceived }, 'deleting expired incoming payment')
     await incomingPayment.$query(deps.knex).patch({
       state: IncomingPaymentState.Expired,
-      deletedAt: new Date()
+      deletedAt: new Date(),
+      processAt: null
     })
   }
 }
@@ -750,7 +751,7 @@ async function getPage(
 ): Promise<IncomingPayment[]> {
   const { filter, pagination, sortOrder, tenantId, walletAddressId, client } =
     options ?? {}
-  const query = IncomingPayment.query(deps.knex)
+  const query = IncomingPayment.query(deps.knex).whereNull('deletedAt')
 
   if (tenantId) {
     query.where('tenantId', tenantId)

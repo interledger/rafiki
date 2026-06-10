@@ -814,6 +814,13 @@ describe('Incoming Payment Service', (): void => {
           })
         ).resolves.toBeUndefined()
 
+        await expect(
+          incomingPaymentService.getPage({
+            walletAddressId
+          })
+        ).resolves.toHaveLength(0)
+
+        // confirm the row still exists with deletedAt set
         const softDeletedIncomingPayment = await IncomingPayment.query(
           knex
         ).findById(incomingPayment.id)
