@@ -104,6 +104,7 @@ export class IncomingPayment
   public processAt!: Date | null
   public approvedAt?: Date | null
   public cancelledAt?: Date | null
+  public deletedAt?: Date | null
   public initiatedBy!: IncomingPaymentInitiationReason
 
   public readonly assetId!: string

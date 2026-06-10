@@ -818,9 +818,9 @@ describe('Incoming Payment Service', (): void => {
           knex
         ).findById(incomingPayment.id)
         expect(softDeletedIncomingPayment).toBeDefined()
-        expect(softDeletedIncomingPayment?.deletedAt).toBeLessThanOrEqual(
-          Date.now()
-        )
+        expect(softDeletedIncomingPayment).toMatchObject({
+          deletedAt: expect.any(Date)
+        })
       })
     })
 

@@ -134,7 +134,9 @@ async function getIncomingPayment(
   deps: ServiceDependencies,
   options: GetOptions
 ): Promise<IncomingPayment | undefined> {
-  const incomingPayment = await IncomingPayment.query(deps.knex).get(options)
+  const incomingPayment = await IncomingPayment.query(deps.knex)
+    .get(options)
+    .whereNull('deletedAt')
   if (!incomingPayment) {
     return
   }
@@ -371,7 +373,10 @@ async function handleExpired(
     })
   } else {
     deps.logger.debug({ amountReceived }, 'deleting expired incoming payment')
-    await incomingPayment.$query(deps.knex).delete()
+    await incomingPayment.$query(deps.knex).patch({
+      state: IncomingPaymentState.Expired,
+      deletedAt: new Date()
+    })
   }
 }
 
