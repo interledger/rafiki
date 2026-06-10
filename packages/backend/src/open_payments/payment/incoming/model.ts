@@ -48,6 +48,7 @@ export interface IncomingPaymentResponse {
   metadata?: Record<string, unknown>
   approvedAt?: string
   cancelledAt?: string
+  deletedAt?: string
 }
 
 export type IncomingPaymentData = IncomingPaymentResponse &
@@ -218,6 +219,9 @@ export class IncomingPayment
     }
     if (this.cancelledAt) {
       data.cancelledAt = new Date(this.cancelledAt).toISOString()
+    }
+    if (this.deletedAt) {
+      data.deletedAt = new Date(this.deletedAt).toISOString()
     }
 
     return data
