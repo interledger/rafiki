@@ -33,7 +33,10 @@ export enum IncomingPaymentState {
   Completed = 'COMPLETED',
   // If the payment expires before it is completed then the state will move to `EXPIRED`
   // and no further payments will be accepted.
-  Expired = 'EXPIRED'
+  Expired = 'EXPIRED',
+  // If the payment is cancelled before it is completed then the state will move to `CANCELLED`
+  // and no further payments will be accepted.
+  Cancelled = 'CANCELLED'
 }
 
 export interface IncomingPaymentResponse {
@@ -116,7 +119,10 @@ export class IncomingPayment
   public cancellationReason?: string | null
 
   public get completed(): boolean {
-    return this.state === IncomingPaymentState.Completed
+    return (
+      this.state === IncomingPaymentState.Completed ||
+      this.state === IncomingPaymentState.Cancelled
+    )
   }
 
   public get incomingAmount(): Amount | undefined {
@@ -163,7 +169,8 @@ export class IncomingPayment
         })
         .whereNotIn('state', [
           IncomingPaymentState.Expired,
-          IncomingPaymentState.Completed
+          IncomingPaymentState.Completed,
+          IncomingPaymentState.Cancelled
         ])
     } else {
       incomingPayment = await IncomingPayment.query()
@@ -172,7 +179,8 @@ export class IncomingPayment
         })
         .whereNotIn('state', [
           IncomingPaymentState.Expired,
-          IncomingPaymentState.Completed
+          IncomingPaymentState.Completed,
+          IncomingPaymentState.Cancelled
         ])
     }
     if (incomingPayment) {
@@ -184,7 +192,8 @@ export class IncomingPayment
   public isExpiredOrComplete(): boolean {
     return (
       this.state === IncomingPaymentState.Expired ||
-      this.state === IncomingPaymentState.Completed
+      this.state === IncomingPaymentState.Completed ||
+      this.state === IncomingPaymentState.Cancelled
     )
   }
 

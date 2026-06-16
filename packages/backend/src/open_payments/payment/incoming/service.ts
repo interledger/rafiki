@@ -512,7 +512,8 @@ async function cancelIncomingPayment(
     if (!payment.cancelledAt) {
       await payment.$query(trx).patch({
         cancelledAt: new Date(Date.now()),
-        cancellationReason: cancellationReason
+        cancellationReason: cancellationReason,
+        state: IncomingPaymentState.Cancelled
       })
     }
 
