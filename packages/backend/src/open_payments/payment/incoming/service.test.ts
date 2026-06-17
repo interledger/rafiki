@@ -815,6 +815,21 @@ describe('Incoming Payment Service', (): void => {
         ).resolves.toBeUndefined()
 
         await expect(
+          incomingPaymentService.update({
+            id: incomingPayment.id,
+            tenantId: Config.operatorTenantId,
+            metadata: {}
+          })
+        ).resolves.toBe(IncomingPaymentError.UnknownPayment)
+
+        await expect(
+          incomingPaymentService.complete(
+            incomingPayment.id,
+            Config.operatorTenantId
+          )
+        ).resolves.toBe(IncomingPaymentError.UnknownPayment)
+
+        await expect(
           incomingPaymentService.getPage({
             walletAddressId
           })
