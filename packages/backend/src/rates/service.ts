@@ -223,19 +223,23 @@ class RatesServiceImpl implements RatesService {
       })
 
       const tenantExchangeRatesUrl = exchangeUrlSetting[0]?.value
-      if (!tenantExchangeRatesUrl) {
-        return this.deps.operatorExchangeRatesUrl
+
+      if (tenantExchangeRatesUrl) {
+        await this.cache.set(urlCacheKey, tenantExchangeRatesUrl)
+        return tenantExchangeRatesUrl
       }
-
-      await this.cache.set(urlCacheKey, tenantExchangeRatesUrl)
-
-      return tenantExchangeRatesUrl
     } catch (error) {
       this.deps.logger.error(
         { error },
         'Failed to get exchange rates URL from database'
       )
     }
+
+    if (this.deps.operatorExchangeRatesUrl) {
+      return this.deps.operatorExchangeRatesUrl
+    }
+
+    throw new Error('Missing exchange rates URL')
   }
 
   private checkBaseAsset(asset: unknown): void {

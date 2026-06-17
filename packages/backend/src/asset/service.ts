@@ -112,19 +112,6 @@ async function createAsset(
       .andWhere('tenantId', tenantId)
       .select('*')
 
-    const sameCodeAssets = assets.find((asset) => asset.code === code)
-    if (!sameCodeAssets && assets.length > 0) {
-      const exchangeUrlSetting = await deps.tenantSettingService.get({
-        tenantId,
-        key: TenantSettingKeys.EXCHANGE_RATES_URL.name
-      })
-
-      const tenantExchangeRatesUrl = exchangeUrlSetting[0]?.value
-      if (!tenantExchangeRatesUrl && !deps.config.operatorExchangeRatesUrl) {
-        return AssetError.NoRatesForAsset
-      }
-    }
-
     const deletedAsset = assets.find(
       (asset) =>
         asset.deletedAt !== null && asset.code === code && asset.scale === scale

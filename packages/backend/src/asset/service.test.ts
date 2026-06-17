@@ -165,25 +165,6 @@ describe('Asset Service', (): void => {
       )
     })
 
-    test('Cannot create more than one asset if no exchange rates URL is set', async (): Promise<void> => {
-      await truncateTable(appContainer.knex, 'tenantSettings')
-      config.operatorExchangeRatesUrl = undefined
-      const firstAssetOptions = {
-        ...randomAsset(),
-        tenantId: Config.operatorTenantId
-      }
-      await expect(
-        assetService.create(firstAssetOptions)
-      ).resolves.toMatchObject(firstAssetOptions)
-      const secondAssetOptions = {
-        ...randomAsset(),
-        tenantId: Config.operatorTenantId
-      }
-      await expect(assetService.create(secondAssetOptions)).resolves.toEqual(
-        AssetError.NoRatesForAsset
-      )
-    })
-
     test('Cannot create asset with scale > 255', async (): Promise<void> => {
       const options = {
         code: 'ABC',
