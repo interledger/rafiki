@@ -155,9 +155,9 @@ async function updateIncomingPayment(
   deps: ServiceDependencies,
   options: UpdateOptions
 ): Promise<IncomingPayment | IncomingPaymentError> {
-  const incomingPayment = await IncomingPayment.query(
-    deps.knex
-  ).patchAndFetchById(options.id, options)
+  const incomingPayment = await IncomingPayment.query(deps.knex)
+    .patchAndFetchById(options.id, options)
+    .whereNull('deletedAt')
   if (incomingPayment) {
     const asset = await deps.assetService.get(incomingPayment.assetId)
     if (asset) incomingPayment.asset = asset
@@ -372,7 +372,10 @@ async function handleExpired(
       processAt: new Date()
     })
   } else {
-    deps.logger.debug({ amountReceived }, 'deleting expired incoming payment')
+    deps.logger.debug(
+      { amountReceived },
+      'soft deleting expired incoming payment'
+    )
     await incomingPayment.$query(deps.knex).patch({
       state: IncomingPaymentState.Expired,
       deletedAt: new Date(),
@@ -534,6 +537,7 @@ async function completeIncomingPayment(
   return deps.knex.transaction(async (trx) => {
     const payment = await IncomingPayment.query(trx)
       .findOne({ id, ...(tenantId && { tenantId }) })
+      .whereNull('deletedAt')
       .forUpdate()
     if (!payment) return IncomingPaymentError.UnknownPayment
 
