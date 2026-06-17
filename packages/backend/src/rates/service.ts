@@ -207,9 +207,7 @@ class RatesServiceImpl implements RatesService {
     return { base, rates }
   }
 
-  private async getExchangeRatesUrl(
-    tenantId: string
-  ): Promise<string | undefined> {
+  private async getExchangeRatesUrl(tenantId: string): Promise<string> {
     const urlCacheKey = `${this.URL_CACHE_PREFIX}${tenantId}`
     const cachedUrl = await this.cache.get(urlCacheKey)
     if (cachedUrl) {
