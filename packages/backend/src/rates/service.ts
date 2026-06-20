@@ -170,12 +170,12 @@ class RatesServiceImpl implements RatesService {
       await this.cache.set(ratesCacheKey, JSON.stringify(rates))
       return rates
     } catch (err) {
-      // TODO: make more efficient
-      const errorMessage =
-        err instanceof RatesError
-          ? errorToMessage[(err as RatesError).type]
-          : errorToMessage[RatesErrorCode.CouldNotFetchRates]
+      if (err instanceof RatesError) {
+        this.deps.logger.error({ ...err, baseAssetCode }, err.message)
+        throw err
+      }
 
+      const ratesError = new RatesError(RatesErrorCode.CouldNotFetchRates)
       this.deps.logger.error(
         {
           ...(isAxiosError(err)
@@ -187,12 +187,10 @@ class RatesServiceImpl implements RatesService {
             : { err }),
           baseAssetCode
         },
-        errorMessage
+        ratesError.message
       )
 
-      throw err instanceof RatesError
-        ? err
-        : new RatesError(RatesErrorCode.CouldNotFetchRates)
+      throw ratesError
     } finally {
       delete this.inProgressRequests[ratesCacheKey]
     }
