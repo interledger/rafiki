@@ -16,7 +16,8 @@ export enum QuoteErrorCode {
   InvalidAmount = 'InvalidAmount',
   InvalidReceiver = 'InvalidReceiver',
   InactiveWalletAddress = 'InactiveWalletAddress',
-  NonPositiveReceiveAmount = 'NonPositiveReceiveAmount'
+  NonPositiveReceiveAmount = 'NonPositiveReceiveAmount',
+  CrossCurrencyPaymentsNotSupported = 'CrossCurrencyPaymentsNotSupported'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -29,7 +30,8 @@ export const errorToHTTPCode: {
   [QuoteErrorCode.InvalidAmount]: 400,
   [QuoteErrorCode.InvalidReceiver]: 400,
   [QuoteErrorCode.InactiveWalletAddress]: 400,
-  [QuoteErrorCode.NonPositiveReceiveAmount]: 400
+  [QuoteErrorCode.NonPositiveReceiveAmount]: 400,
+  [QuoteErrorCode.CrossCurrencyPaymentsNotSupported]: 501
 }
 
 export const errorToCode: {
@@ -39,7 +41,8 @@ export const errorToCode: {
   [QuoteErrorCode.InvalidAmount]: GraphQLErrorCode.BadUserInput,
   [QuoteErrorCode.InvalidReceiver]: GraphQLErrorCode.BadUserInput,
   [QuoteErrorCode.InactiveWalletAddress]: GraphQLErrorCode.Inactive,
-  [QuoteErrorCode.NonPositiveReceiveAmount]: GraphQLErrorCode.BadUserInput
+  [QuoteErrorCode.NonPositiveReceiveAmount]: GraphQLErrorCode.BadUserInput,
+  [QuoteErrorCode.CrossCurrencyPaymentsNotSupported]: GraphQLErrorCode.Inactive
 }
 
 export const errorToMessage: {
@@ -49,5 +52,7 @@ export const errorToMessage: {
   [QuoteErrorCode.InvalidAmount]: 'invalid amount',
   [QuoteErrorCode.InvalidReceiver]: 'invalid receiver',
   [QuoteErrorCode.InactiveWalletAddress]: 'inactive wallet address',
-  [QuoteErrorCode.NonPositiveReceiveAmount]: 'non-positive receive amount'
+  [QuoteErrorCode.NonPositiveReceiveAmount]: 'non-positive receive amount',
+  [QuoteErrorCode.CrossCurrencyPaymentsNotSupported]:
+    'cross currency payments are not supported'
 }

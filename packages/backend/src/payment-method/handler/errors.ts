@@ -6,7 +6,8 @@ interface ErrorDetails {
 }
 
 export enum PaymentMethodHandlerErrorCode {
-  QuoteNonPositiveReceiveAmount = 'QuoteNonPositiveReceiveAmount'
+  QuoteNonPositiveReceiveAmount = 'QuoteNonPositiveReceiveAmount',
+  CrossCurrencyPaymentsNotSupported = 'CrossCurrencyPaymentsNotSupported'
 }
 
 export class PaymentMethodHandlerError extends Error {

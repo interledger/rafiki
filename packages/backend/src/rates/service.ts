@@ -11,6 +11,19 @@ import { createInMemoryDataStore } from '../middleware/cache/data-stores/in-memo
 import { CacheDataStore } from '../middleware/cache/data-stores'
 import { TenantSettingService } from '../tenants/settings/service'
 import { TenantSettingKeys } from '../tenants/settings/model'
+import {
+  ConvertError,
+  RatesError,
+  RatesErrorCode,
+  errorToMessage
+} from './errors'
+
+export {
+  ConvertError,
+  RatesError,
+  RatesErrorCode,
+  isConvertError
+} from './errors'
 
 const REQUEST_TIMEOUT = 5_000 // millseconds
 
@@ -48,14 +61,6 @@ interface ServiceDependencies extends BaseService {
   // Used for getting the exchange rates URL from db.
   tenantSettingService: TenantSettingService
 }
-
-export enum ConvertError {
-  InvalidDestinationPrice = 'InvalidDestinationPrice'
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-export const isConvertError = (o: any): o is ConvertError =>
-  Object.values(ConvertError).includes(o)
 
 export function createRatesService(deps: ServiceDependencies): RatesService {
   return new RatesServiceImpl(deps)
@@ -165,7 +170,11 @@ class RatesServiceImpl implements RatesService {
       await this.cache.set(ratesCacheKey, JSON.stringify(rates))
       return rates
     } catch (err) {
-      const errorMessage = 'Could not fetch rates'
+      // TODO: make more efficient
+      const errorMessage =
+        err instanceof RatesError
+          ? errorToMessage[(err as RatesError).type]
+          : errorToMessage[RatesErrorCode.CouldNotFetchRates]
 
       this.deps.logger.error(
         {
@@ -181,7 +190,9 @@ class RatesServiceImpl implements RatesService {
         errorMessage
       )
 
-      throw new Error(errorMessage)
+      throw err instanceof RatesError
+        ? err
+        : new RatesError(RatesErrorCode.CouldNotFetchRates)
     } finally {
       delete this.inProgressRequests[ratesCacheKey]
     }
@@ -192,10 +203,6 @@ class RatesServiceImpl implements RatesService {
     tenantId: string
   ): Promise<Rates> {
     const url = await this.getExchangeRatesUrl(tenantId)
-
-    if (!url) {
-      return { base: baseAssetCode, rates: {} }
-    }
 
     const res = await this.axios.get<Rates>(url, {
       params: { base: baseAssetCode }
@@ -214,18 +221,13 @@ class RatesServiceImpl implements RatesService {
       return cachedUrl
     }
 
+    let tenantExchangeRatesUrl
     try {
       const exchangeUrlSetting = await this.deps.tenantSettingService.get({
         tenantId,
         key: TenantSettingKeys.EXCHANGE_RATES_URL.name
       })
-
-      const tenantExchangeRatesUrl = exchangeUrlSetting[0]?.value
-
-      if (tenantExchangeRatesUrl) {
-        await this.cache.set(urlCacheKey, tenantExchangeRatesUrl)
-        return tenantExchangeRatesUrl
-      }
+      tenantExchangeRatesUrl = exchangeUrlSetting[0]?.value
     } catch (error) {
       this.deps.logger.error(
         { error },
@@ -233,24 +235,32 @@ class RatesServiceImpl implements RatesService {
       )
     }
 
+    if (tenantExchangeRatesUrl) {
+      await this.cache.set(urlCacheKey, tenantExchangeRatesUrl)
+      return tenantExchangeRatesUrl
+    }
+
     if (this.deps.operatorExchangeRatesUrl) {
       return this.deps.operatorExchangeRatesUrl
     }
 
-    throw new Error('Missing exchange rates URL')
+    throw new RatesError(RatesErrorCode.MissingExchangeRatesUrl)
   }
 
   private checkBaseAsset(asset: unknown): void {
-    let errorMessage: string | undefined
+    let errorCode: RatesErrorCode | undefined
     if (!asset) {
-      errorMessage = 'Missing base asset'
+      errorCode = RatesErrorCode.MissingBaseAsset
     } else if (typeof asset !== 'string') {
-      errorMessage = 'Base asset should be a string'
+      errorCode = RatesErrorCode.InvalidBaseAsset
     }
 
-    if (errorMessage) {
-      this.deps.logger.warn({ err: errorMessage }, `received asset: ${asset}`)
-      throw new Error(errorMessage)
+    if (errorCode) {
+      this.deps.logger.warn(
+        { err: errorToMessage[errorCode] },
+        `received asset: ${asset}`
+      )
+      throw new RatesError(errorCode)
     }
   }
 }
