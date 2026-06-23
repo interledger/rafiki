@@ -23,8 +23,16 @@ import {
 import { IncomingPaymentInitiationReason } from '../../open_payments/payment/incoming/types'
 import { IncomingPaymentService } from '../../open_payments/payment/incoming/service'
 import { errorToMessage, TransferError } from '../../accounting/errors'
-import { PaymentMethodHandlerError } from '../handler/errors'
+import {
+  PaymentMethodHandlerError,
+  PaymentMethodHandlerErrorCode
+} from '../handler/errors'
 import { ConvertError } from '../../rates/service'
+import {
+  RatesError,
+  RatesErrorCode,
+  errorToMessage as ratesErrorToMessage
+} from '../../rates/errors'
 import {
   createTenantSettings,
   exchangeRatesSetting
@@ -175,6 +183,41 @@ describe('LocalPaymentService', (): void => {
         )
         expect((err as PaymentMethodHandlerError).description).toBe(
           'Failed to convert debitAmount to receive amount'
+        )
+        expect((err as PaymentMethodHandlerError).retryable).toBe(false)
+      }
+    })
+
+    test('fails when exchange rates URL is not set', async (): Promise<void> => {
+      const ratesService = await deps.use('ratesService')
+      jest
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .spyOn(ratesService as any, 'getExchangeRatesUrl')
+        .mockRejectedValueOnce(
+          new RatesError(RatesErrorCode.MissingExchangeRatesUrl)
+        )
+
+      expect.assertions(5)
+      try {
+        await localPaymentService.getQuote({
+          walletAddress: walletAddressMap['USD'],
+          receiver: await createReceiver(deps, walletAddressMap['EUR']),
+          debitAmount: {
+            assetCode: 'USD',
+            assetScale: 2,
+            value: 100n
+          }
+        })
+      } catch (err) {
+        expect(err).toBeInstanceOf(PaymentMethodHandlerError)
+        expect((err as PaymentMethodHandlerError).message).toBe(
+          'Received error during local quoting'
+        )
+        expect((err as PaymentMethodHandlerError).description).toBe(
+          ratesErrorToMessage[RatesErrorCode.MissingExchangeRatesUrl]
+        )
+        expect((err as PaymentMethodHandlerError).code).toBe(
+          PaymentMethodHandlerErrorCode.CouldNotGetRates
         )
         expect((err as PaymentMethodHandlerError).retryable).toBe(false)
       }

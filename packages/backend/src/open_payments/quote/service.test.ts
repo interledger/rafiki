@@ -35,6 +35,7 @@ import {
   PaymentMethodHandlerError,
   PaymentMethodHandlerErrorCode
 } from '../../payment-method/handler/errors'
+import { RatesError, RatesErrorCode, errorToMessage } from '../../rates/errors'
 import { Receiver } from '../receiver/model'
 import { WalletAddressService } from '../wallet_address/service'
 
@@ -550,6 +551,66 @@ describe('QuoteService', (): void => {
         })
       ).resolves.toMatchObject({
         type: QuoteErrorCode.NonPositiveReceiveAmount
+      })
+    })
+
+    test('fails when exchange rates URL is not set', async (): Promise<void> => {
+      const receiver = await createReceiver(deps, receivingWalletAddress)
+      const ratesService = await deps.use('ratesService')
+
+      jest
+        .spyOn(ratesService, 'rates')
+        .mockRejectedValueOnce(
+          new RatesError(RatesErrorCode.MissingExchangeRatesUrl)
+        )
+
+      await expect(
+        quoteService.create({
+          tenantId,
+          walletAddressId: sendingWalletAddress.id,
+          receiver: receiver.incomingPayment!.id,
+          method: 'ilp',
+          debitAmount: {
+            value: 2n,
+            assetCode: sendingWalletAddress.asset.code,
+            assetScale: sendingWalletAddress.asset.scale
+          }
+        })
+      ).resolves.toMatchObject({
+        type: QuoteErrorCode.CouldNotGetRates,
+        details: {
+          description: errorToMessage[RatesErrorCode.MissingExchangeRatesUrl]
+        }
+      })
+    })
+
+    test('fails when exchange rates cannot be fetched due to a network failure', async (): Promise<void> => {
+      const receiver = await createReceiver(deps, receivingWalletAddress)
+      const ratesService = await deps.use('ratesService')
+
+      jest
+        .spyOn(ratesService, 'rates')
+        .mockRejectedValueOnce(
+          new RatesError(RatesErrorCode.CouldNotFetchRates)
+        )
+
+      await expect(
+        quoteService.create({
+          tenantId,
+          walletAddressId: sendingWalletAddress.id,
+          receiver: receiver.incomingPayment!.id,
+          method: 'ilp',
+          debitAmount: {
+            value: 2n,
+            assetCode: sendingWalletAddress.asset.code,
+            assetScale: sendingWalletAddress.asset.scale
+          }
+        })
+      ).resolves.toMatchObject({
+        type: QuoteErrorCode.CouldNotGetRates,
+        details: {
+          description: errorToMessage[RatesErrorCode.CouldNotFetchRates]
+        }
       })
     })
 

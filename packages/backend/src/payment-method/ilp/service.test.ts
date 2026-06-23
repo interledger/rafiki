@@ -38,6 +38,7 @@ import {
   createTenantSettings,
   exchangeRatesSetting
 } from '../../tests/tenantSettings'
+import { errorToMessage, RatesError, RatesErrorCode } from '../../rates/errors'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -293,7 +294,9 @@ describe('IlpPaymentService', (): void => {
       const ratesService = await deps.use('ratesService')
       jest
         .spyOn(ratesService, 'rates')
-        .mockImplementation(() => Promise.reject(new Error('fail')))
+        .mockImplementation(() =>
+          Promise.reject(new RatesError(RatesErrorCode.CouldNotFetchRates))
+        )
 
       expect.assertions(4)
       try {
@@ -313,7 +316,7 @@ describe('IlpPaymentService', (): void => {
           'Received error during ILP quoting'
         )
         expect((err as PaymentMethodHandlerError).description).toBe(
-          'Could not get rates from service'
+          errorToMessage[RatesErrorCode.CouldNotFetchRates]
         )
         expect((err as PaymentMethodHandlerError).retryable).toBe(false)
       }
