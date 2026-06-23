@@ -785,7 +785,7 @@ describe('Incoming Payment Service', (): void => {
         })
       })
 
-      test('Deletes an expired incoming payment (and account) with no money', async (): Promise<void> => {
+      test('Soft deletes an expired incoming payment with no money', async (): Promise<void> => {
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId,
           incomingAmount: {
@@ -806,11 +806,43 @@ describe('Incoming Payment Service', (): void => {
         await expect(incomingPaymentService.processNext()).resolves.toBe(
           incomingPayment.id
         )
-        expect(
-          await incomingPaymentService.get({
+
+        // soft-deteleted records should not appear via normal service lookup
+        await expect(
+          incomingPaymentService.get({
             id: incomingPayment.id
           })
-        ).toBeUndefined()
+        ).resolves.toBeUndefined()
+
+        await expect(
+          incomingPaymentService.update({
+            id: incomingPayment.id,
+            tenantId: Config.operatorTenantId,
+            metadata: {}
+          })
+        ).resolves.toBe(IncomingPaymentError.UnknownPayment)
+
+        await expect(
+          incomingPaymentService.complete(
+            incomingPayment.id,
+            Config.operatorTenantId
+          )
+        ).resolves.toBe(IncomingPaymentError.UnknownPayment)
+
+        await expect(
+          incomingPaymentService.getPage({
+            walletAddressId
+          })
+        ).resolves.toHaveLength(0)
+
+        // confirm the row still exists with deletedAt set
+        const softDeletedIncomingPayment = await IncomingPayment.query(
+          knex
+        ).findById(incomingPayment.id)
+        expect(softDeletedIncomingPayment).toBeDefined()
+        expect(softDeletedIncomingPayment).toMatchObject({
+          deletedAt: expect.any(Date)
+        })
       })
     })
 

@@ -134,7 +134,9 @@ async function getIncomingPayment(
   deps: ServiceDependencies,
   options: GetOptions
 ): Promise<IncomingPayment | undefined> {
-  const incomingPayment = await IncomingPayment.query(deps.knex).get(options)
+  const incomingPayment = await IncomingPayment.query(deps.knex)
+    .get(options)
+    .whereNull('deletedAt')
   if (!incomingPayment) {
     return
   }
@@ -153,9 +155,9 @@ async function updateIncomingPayment(
   deps: ServiceDependencies,
   options: UpdateOptions
 ): Promise<IncomingPayment | IncomingPaymentError> {
-  const incomingPayment = await IncomingPayment.query(
-    deps.knex
-  ).patchAndFetchById(options.id, options)
+  const incomingPayment = await IncomingPayment.query(deps.knex)
+    .patchAndFetchById(options.id, options)
+    .whereNull('deletedAt')
   if (incomingPayment) {
     const asset = await deps.assetService.get(incomingPayment.assetId)
     if (asset) incomingPayment.asset = asset
@@ -370,8 +372,15 @@ async function handleExpired(
       processAt: new Date()
     })
   } else {
-    deps.logger.debug({ amountReceived }, 'deleting expired incoming payment')
-    await incomingPayment.$query(deps.knex).delete()
+    deps.logger.debug(
+      { amountReceived },
+      'soft deleting expired incoming payment'
+    )
+    await incomingPayment.$query(deps.knex).patch({
+      state: IncomingPaymentState.Expired,
+      deletedAt: new Date(),
+      processAt: null
+    })
   }
 }
 
@@ -528,6 +537,7 @@ async function completeIncomingPayment(
   return deps.knex.transaction(async (trx) => {
     const payment = await IncomingPayment.query(trx)
       .findOne({ id, ...(tenantId && { tenantId }) })
+      .whereNull('deletedAt')
       .forUpdate()
     if (!payment) return IncomingPaymentError.UnknownPayment
 
@@ -745,7 +755,7 @@ async function getPage(
 ): Promise<IncomingPayment[]> {
   const { filter, pagination, sortOrder, tenantId, walletAddressId, client } =
     options ?? {}
-  const query = IncomingPayment.query(deps.knex)
+  const query = IncomingPayment.query(deps.knex).whereNull('deletedAt')
 
   if (tenantId) {
     query.where('tenantId', tenantId)
