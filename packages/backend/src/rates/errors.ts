@@ -28,7 +28,7 @@ export const isConvertError = (o: any): o is ConvertError =>
 export const errorToMessage: {
   [key in RatesErrorCode]: string
 } = {
-  [RatesErrorCode.CouldNotFetchRates]: 'Could not fetch rates',
+  [RatesErrorCode.CouldNotFetchRates]: 'Could not fetch exchange rates',
   [RatesErrorCode.MissingExchangeRatesUrl]: 'Missing exchange rates URL',
   [RatesErrorCode.FailedToGetExchangeRatesUrl]:
     'Failed to get exchange rates URL from database',

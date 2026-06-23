@@ -250,7 +250,7 @@ async function createQuote(
 
         if (err.code === PaymentMethodHandlerErrorCode.CouldNotGetRates) {
           stopTimer()
-          return new QuoteError(QuoteErrorCode.CouldNotGetRates, {
+          return new QuoteError(QuoteErrorCode.CouldNotFetchRates, {
             description: err.description,
             details: err.details
           })

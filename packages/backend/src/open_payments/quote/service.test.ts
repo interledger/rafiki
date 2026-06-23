@@ -577,7 +577,7 @@ describe('QuoteService', (): void => {
           }
         })
       ).resolves.toMatchObject({
-        type: QuoteErrorCode.CouldNotGetRates,
+        type: QuoteErrorCode.CouldNotFetchRates,
         details: {
           description: errorToMessage[RatesErrorCode.MissingExchangeRatesUrl]
         }
@@ -607,7 +607,7 @@ describe('QuoteService', (): void => {
           }
         })
       ).resolves.toMatchObject({
-        type: QuoteErrorCode.CouldNotGetRates,
+        type: QuoteErrorCode.CouldNotFetchRates,
         details: {
           description: errorToMessage[RatesErrorCode.CouldNotFetchRates]
         }

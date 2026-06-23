@@ -19,7 +19,8 @@ export enum OutgoingPaymentError {
   NegativeReceiveAmount = 'NegativeReceiveAmount',
   InvalidReceiver = 'InvalidReceiver',
   InvalidInterval = 'InvalidInterval',
-  OnlyOneGrantAmountAllowed = 'OnlyOneGrantAmountAllowed'
+  OnlyOneGrantAmountAllowed = 'OnlyOneGrantAmountAllowed',
+  CouldNotFetchRates = 'CouldNotFetchRates'
 }
 
 export const quoteErrorToOutgoingPaymentError: Record<
@@ -33,7 +34,8 @@ export const quoteErrorToOutgoingPaymentError: Record<
   [QuoteErrorCode.InactiveWalletAddress]:
     OutgoingPaymentError.InactiveWalletAddress,
   [QuoteErrorCode.NonPositiveReceiveAmount]:
-    OutgoingPaymentError.NegativeReceiveAmount
+    OutgoingPaymentError.NegativeReceiveAmount,
+  [QuoteErrorCode.CouldNotFetchRates]: OutgoingPaymentError.CouldNotFetchRates
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -54,7 +56,8 @@ export const errorToHTTPCode: {
   [OutgoingPaymentError.NegativeReceiveAmount]: 400,
   [OutgoingPaymentError.InvalidReceiver]: 400,
   [OutgoingPaymentError.InvalidInterval]: 500,
-  [OutgoingPaymentError.OnlyOneGrantAmountAllowed]: 500
+  [OutgoingPaymentError.OnlyOneGrantAmountAllowed]: 500,
+  [OutgoingPaymentError.CouldNotFetchRates]: 500
 }
 
 export const errorToCode: {
@@ -72,7 +75,9 @@ export const errorToCode: {
   [OutgoingPaymentError.InvalidReceiver]: GraphQLErrorCode.BadUserInput,
   [OutgoingPaymentError.InvalidInterval]: GraphQLErrorCode.InternalServerError,
   [OutgoingPaymentError.OnlyOneGrantAmountAllowed]:
-    GraphQLErrorCode.BadUserInput
+    GraphQLErrorCode.BadUserInput,
+  [OutgoingPaymentError.CouldNotFetchRates]:
+    GraphQLErrorCode.InternalServerError
 }
 
 export const errorToMessage: {
@@ -90,7 +95,8 @@ export const errorToMessage: {
   [OutgoingPaymentError.InvalidReceiver]: 'invalid receiver',
   [OutgoingPaymentError.InvalidInterval]: 'invalid interval',
   [OutgoingPaymentError.OnlyOneGrantAmountAllowed]:
-    'only one of receiveAmount or debitAmount allowed'
+    'only one of receiveAmount or debitAmount allowed',
+  [OutgoingPaymentError.CouldNotFetchRates]: 'could not fetch exchange rates'
 }
 
 export const FundingError = { ...OutgoingPaymentError, ...TransferError }
