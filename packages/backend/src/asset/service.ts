@@ -9,7 +9,6 @@ import { WalletAddress } from '../open_payments/wallet_address/model'
 import { Peer } from '../payment-method/ilp/peer/model'
 import { CacheDataStore } from '../middleware/cache/data-stores'
 import { TenantSettingService } from '../tenants/settings/service'
-import { TenantSettingKeys } from '../tenants/settings/model'
 import { IAppConfig } from '../config/app'
 
 export interface AssetOptions {

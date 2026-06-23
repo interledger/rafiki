@@ -9,8 +9,8 @@ import { Pagination, SortOrder } from '../shared/baseModel'
 import { getPageTests } from '../shared/baseModel.test'
 import { createTestApp, TestContainer } from '../tests/app'
 import { createAsset, randomAsset } from '../tests/asset'
-import { truncateTable, truncateTables } from '../tests/tableManager'
-import { Config, IAppConfig } from '../config/app'
+import { truncateTables } from '../tests/tableManager'
+import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
@@ -36,12 +36,10 @@ describe('Asset Service', (): void => {
   let peerService: PeerService
   let walletAddressService: WalletAddressService
   let tenantSettingService: TenantSettingService
-  let config: IAppConfig
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    config = await deps.use('config')
     assetService = await deps.use('assetService')
     walletAddressService = await deps.use('walletAddressService')
     tenantSettingService = await deps.use('tenantSettingService')
