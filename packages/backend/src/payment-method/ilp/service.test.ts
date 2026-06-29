@@ -303,7 +303,7 @@ describe('IlpPaymentService', (): void => {
         await ilpPaymentService.getQuote({
           quoteId: uuid(),
           walletAddress: walletAddressMap['USD'],
-          receiver: await createReceiver(deps, walletAddressMap['USD']),
+          receiver: await createReceiver(deps, walletAddressMap['EUR']),
           debitAmount: {
             assetCode: 'USD',
             assetScale: 2,

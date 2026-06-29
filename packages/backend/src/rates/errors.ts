@@ -29,7 +29,8 @@ export const errorToMessage: {
   [key in RatesErrorCode]: string
 } = {
   [RatesErrorCode.CouldNotFetchRates]: 'Could not fetch exchange rates',
-  [RatesErrorCode.MissingExchangeRatesUrl]: 'Missing exchange rates URL',
+  [RatesErrorCode.MissingExchangeRatesUrl]:
+    'Exchange rate conversion currently not supported',
   [RatesErrorCode.FailedToGetExchangeRatesUrl]:
     'Failed to get exchange rates URL from database',
   [RatesErrorCode.MissingBaseAsset]: 'Missing base asset',

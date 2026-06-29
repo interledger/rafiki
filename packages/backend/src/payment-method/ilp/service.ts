@@ -65,28 +65,36 @@ async function getQuote(
       description: 'Time to get rates'
     }
   )
-  let rates
+
+  let rates = {
+    base: options.walletAddress.asset.code,
+    rates: {}
+  }
+
   try {
     rates = await deps.ratesService.rates(
       options.walletAddress.asset.code,
       options.walletAddress.tenantId
     )
   } catch (err) {
-    const paymentsHandlerError = new PaymentMethodHandlerError(
-      'Received error during ILP quoting',
-      {
-        description: 'Could not get rates from service',
-        retryable: false
-      }
-    )
+    if (options.receiver.assetCode !== options.walletAddress.asset.code) {
+      const paymentsHandlerError = new PaymentMethodHandlerError(
+        'Received error during ILP quoting',
+        {
+          description: 'Could not get rates from service',
+          retryable: false
+        }
+      )
 
-    if (err instanceof RatesError) {
-      paymentsHandlerError.description = err.message
-      paymentsHandlerError.code = PaymentMethodHandlerErrorCode.CouldNotGetRates
+      if (err instanceof RatesError) {
+        paymentsHandlerError.description = err.message
+        paymentsHandlerError.code =
+          PaymentMethodHandlerErrorCode.CouldNotGetRates
+        throw paymentsHandlerError
+      }
+
       throw paymentsHandlerError
     }
-
-    throw paymentsHandlerError
   } finally {
     stopTimerRates()
   }
