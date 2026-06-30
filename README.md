@@ -38,7 +38,7 @@ Please read the [contribution guidelines](.github/contributing.md) before submit
 
 ## Community Calls
 
-Our Rafiki community calls are open to our community members. We have them every Tuesday at 15:30 GMT, via Google Meet.
+Our Rafiki community calls are open to our community members. We have them every third Tuesday at 14:30 UTC, via Google Meet.
 
 **Google Meet joining info**
 
@@ -48,7 +48,7 @@ Or dial: ‪(GB) +44 20 3956 0467‬ PIN: ‪140 111 239‬#
 
 More phone numbers: https://tel.meet/sms-fwny-ezc?pin=5321780226087
 
-[Add to Google Calendar](https://calendar.google.com/calendar/event?action=TEMPLATE&tmeid=YjN1NW5ibDloN2dua2IwM2thOWlrZXRvMTVfMjAyMzA0MTdUMTUwMDAwWiBjX2NqMDI3Z21oc3VqazkxZXZpMjRkOXB2bXQ0QGc&tmsrc=c_cj027gmhsujk91evi24d9pvmt4%40group.calendar.google.com&scp=ALL)
+[Add to Google Calendar](https://calendar.google.com/calendar/event?action=TEMPLATE&tmeid=c2Uyc21oaGNla3M5cDFsbTgwcWR2a2x2bGRfMjAyNjA3MjFUMTQzMDAwWiBjX2NqMDI3Z21oc3VqazkxZXZpMjRkOXB2bXQ0QGc&tmsrc=c_cj027gmhsujk91evi24d9pvmt4%40group.calendar.google.com&scp=ALL)
 
 ## Local Development Environment
 
