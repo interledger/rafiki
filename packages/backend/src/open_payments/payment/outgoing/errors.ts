@@ -96,7 +96,7 @@ export const errorToMessage: {
   [OutgoingPaymentError.InvalidInterval]: 'invalid interval',
   [OutgoingPaymentError.OnlyOneGrantAmountAllowed]:
     'only one of receiveAmount or debitAmount allowed',
-  [OutgoingPaymentError.CouldNotFetchRates]: 'could not fetch exchange rates'
+  [OutgoingPaymentError.CouldNotFetchRates]: 'could not convert between assets'
 }
 
 export const FundingError = { ...OutgoingPaymentError, ...TransferError }

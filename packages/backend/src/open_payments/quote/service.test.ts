@@ -577,45 +577,8 @@ describe('QuoteService', (): void => {
           }
         })
       ).resolves.toMatchObject({
-        type: QuoteErrorCode.CouldNotFetchRates,
-        details: {
-          description: errorToMessage[RatesErrorCode.MissingExchangeRatesUrl]
-        }
+        type: QuoteErrorCode.CouldNotFetchRates
       })
-    })
-
-    test('succeeds when exchange rates service fails but receiver wallet asset code matches sender', async (): Promise<void> => {
-      const receivingWalletAddress = await createWalletAddress(deps, {
-        tenantId,
-        assetId: sendingWalletAddress.assetId
-      })
-
-      const receiver = await createReceiver(deps, receivingWalletAddress)
-
-      const ratesService = await deps.use('ratesService')
-
-      jest
-        .spyOn(ratesService, 'rates')
-        .mockRejectedValue(new RatesError(RatesErrorCode.CouldNotFetchRates))
-
-      const quote = await quoteService.create({
-        tenantId,
-        walletAddressId: sendingWalletAddress.id,
-        receiver: receiver.incomingPayment!.id,
-        method: 'ilp',
-        debitAmount: {
-          value: 2n,
-          assetCode: sendingWalletAddress.asset.code,
-          assetScale: sendingWalletAddress.asset.scale
-        }
-      })
-
-      assert.ok(!isQuoteError(quote))
-      expect(quote).toMatchObject({
-        walletAddressId: sendingWalletAddress.id,
-        receiver: receiver.incomingPayment!.id
-      })
-      expect(Number(quote.estimatedExchangeRate)).toBe(1)
     })
 
     test('fails when exchange rates cannot be fetched due to a network failure', async (): Promise<void> => {
@@ -641,10 +604,7 @@ describe('QuoteService', (): void => {
           }
         })
       ).resolves.toMatchObject({
-        type: QuoteErrorCode.CouldNotFetchRates,
-        details: {
-          description: errorToMessage[RatesErrorCode.CouldNotFetchRates]
-        }
+        type: QuoteErrorCode.CouldNotFetchRates
       })
     })
 

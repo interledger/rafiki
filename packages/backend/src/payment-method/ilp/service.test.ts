@@ -322,6 +322,40 @@ describe('IlpPaymentService', (): void => {
       }
     })
 
+    test('succeeds when exchange rates service fails but receiver wallet asset code matches sender', async (): Promise<void> => {
+      const ratesService = await deps.use('ratesService')
+      jest
+        .spyOn(ratesService, 'rates')
+        .mockRejectedValue(new RatesError(RatesErrorCode.CouldNotFetchRates))
+
+      const options: StartQuoteOptions = {
+        quoteId: uuid(),
+        walletAddress: walletAddressMap['USD'],
+        receiver: await createReceiver(deps, walletAddressMap['USD']),
+        debitAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: 100n
+        }
+      }
+
+      await expect(ilpPaymentService.getQuote(options)).resolves.toMatchObject({
+        receiver: options.receiver,
+        walletAddress: options.walletAddress,
+        debitAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: 100n
+        },
+        receiveAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: 99n
+        },
+        estimatedExchangeRate: 1
+      })
+    })
+
     test('returns all fields correctly', async (): Promise<void> => {
       const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({}))
 

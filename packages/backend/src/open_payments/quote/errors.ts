@@ -53,5 +53,5 @@ export const errorToMessage: {
   [QuoteErrorCode.InvalidReceiver]: 'invalid receiver',
   [QuoteErrorCode.InactiveWalletAddress]: 'inactive wallet address',
   [QuoteErrorCode.NonPositiveReceiveAmount]: 'non-positive receive amount',
-  [QuoteErrorCode.CouldNotFetchRates]: 'could not fetch exchange rates'
+  [QuoteErrorCode.CouldNotFetchRates]: 'could not convert between assets'
 }
