@@ -35,7 +35,7 @@ import {
   PaymentMethodHandlerError,
   PaymentMethodHandlerErrorCode
 } from '../../payment-method/handler/errors'
-import { RatesError, RatesErrorCode, errorToMessage } from '../../rates/errors'
+import { RatesError, RatesErrorCode } from '../../rates/errors'
 import { Receiver } from '../receiver/model'
 import { WalletAddressService } from '../wallet_address/service'
 
