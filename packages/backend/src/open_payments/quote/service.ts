@@ -218,30 +218,40 @@ async function createQuote(
           : undefined
       })
     } catch (err) {
-      if (
-        err instanceof PaymentMethodHandlerError &&
-        err.code === PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount
-      ) {
-        let details = undefined
+      if (err instanceof PaymentMethodHandlerError) {
+        if (
+          err.code ===
+          PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount
+        ) {
+          let details = undefined
 
-        if (err.details?.minSendAmount) {
-          details = {
-            minSendAmount: {
-              value: 0n,
-              assetCode: walletAddress.asset.code,
-              assetScale: walletAddress.asset.scale
+          if (err.details?.minSendAmount) {
+            details = {
+              minSendAmount: {
+                value: 0n,
+                assetCode: walletAddress.asset.code,
+                assetScale: walletAddress.asset.scale
+              }
             }
-          }
-          const quoteMinSendAmount = err.details.minSendAmount as bigint
+            const quoteMinSendAmount = err.details.minSendAmount as bigint
 
-          details.minSendAmount.value = calculateMinSendAmount(
-            quoteMinSendAmount,
-            sendingFee
+            details.minSendAmount.value = calculateMinSendAmount(
+              quoteMinSendAmount,
+              sendingFee
+            )
+          }
+
+          stopTimer()
+          return new QuoteError(
+            QuoteErrorCode.NonPositiveReceiveAmount,
+            details
           )
         }
 
-        stopTimer()
-        return new QuoteError(QuoteErrorCode.NonPositiveReceiveAmount, details)
+        if (err.code === PaymentMethodHandlerErrorCode.CouldNotGetRates) {
+          stopTimer()
+          return new QuoteError(QuoteErrorCode.CouldNotFetchRates)
+        }
       }
       throw err
     }

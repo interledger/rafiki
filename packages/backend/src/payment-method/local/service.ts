@@ -10,6 +10,7 @@ import {
   isConvertError,
   RateConvertDestinationOpts,
   RateConvertSourceOpts,
+  RatesError,
   RatesService
 } from '../../rates/service'
 import { IAppConfig } from '../../config/app'
@@ -80,13 +81,23 @@ async function getQuote(
         { opts, err },
         'Unknown error while attempting to convert rates'
       )
-      throw new PaymentMethodHandlerError(
+
+      const paymentsHandlerError = new PaymentMethodHandlerError(
         'Received error during local quoting',
         {
           description: 'Unknown error while attempting to convert rates',
           retryable: false
         }
       )
+
+      if (err instanceof RatesError) {
+        paymentsHandlerError.description = err.message
+        paymentsHandlerError.code =
+          PaymentMethodHandlerErrorCode.CouldNotGetRates
+        throw paymentsHandlerError
+      }
+
+      throw paymentsHandlerError
     }
     return convertResults
   }

@@ -38,6 +38,7 @@ import {
   createTenantSettings,
   exchangeRatesSetting
 } from '../../tests/tenantSettings'
+import { errorToMessage, RatesError, RatesErrorCode } from '../../rates/errors'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -293,14 +294,16 @@ describe('IlpPaymentService', (): void => {
       const ratesService = await deps.use('ratesService')
       jest
         .spyOn(ratesService, 'rates')
-        .mockImplementation(() => Promise.reject(new Error('fail')))
+        .mockImplementation(() =>
+          Promise.reject(new RatesError(RatesErrorCode.CouldNotFetchRates))
+        )
 
       expect.assertions(4)
       try {
         await ilpPaymentService.getQuote({
           quoteId: uuid(),
           walletAddress: walletAddressMap['USD'],
-          receiver: await createReceiver(deps, walletAddressMap['USD']),
+          receiver: await createReceiver(deps, walletAddressMap['EUR']),
           debitAmount: {
             assetCode: 'USD',
             assetScale: 2,
@@ -313,10 +316,44 @@ describe('IlpPaymentService', (): void => {
           'Received error during ILP quoting'
         )
         expect((err as PaymentMethodHandlerError).description).toBe(
-          'Could not get rates from service'
+          errorToMessage[RatesErrorCode.CouldNotFetchRates]
         )
         expect((err as PaymentMethodHandlerError).retryable).toBe(false)
       }
+    })
+
+    test('succeeds when exchange rates service fails but receiver wallet asset code matches sender', async (): Promise<void> => {
+      const ratesService = await deps.use('ratesService')
+      jest
+        .spyOn(ratesService, 'rates')
+        .mockRejectedValue(new RatesError(RatesErrorCode.CouldNotFetchRates))
+
+      const options: StartQuoteOptions = {
+        quoteId: uuid(),
+        walletAddress: walletAddressMap['USD'],
+        receiver: await createReceiver(deps, walletAddressMap['USD']),
+        debitAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: 100n
+        }
+      }
+
+      await expect(ilpPaymentService.getQuote(options)).resolves.toMatchObject({
+        receiver: options.receiver,
+        walletAddress: options.walletAddress,
+        debitAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: 100n
+        },
+        receiveAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: 99n
+        },
+        estimatedExchangeRate: 1
+      })
     })
 
     test('returns all fields correctly', async (): Promise<void> => {

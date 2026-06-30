@@ -9,8 +9,8 @@ import { Pagination, SortOrder } from '../shared/baseModel'
 import { getPageTests } from '../shared/baseModel.test'
 import { createTestApp, TestContainer } from '../tests/app'
 import { createAsset, randomAsset } from '../tests/asset'
-import { truncateTable, truncateTables } from '../tests/tableManager'
-import { Config, IAppConfig } from '../config/app'
+import { truncateTables } from '../tests/tableManager'
+import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
@@ -36,12 +36,10 @@ describe('Asset Service', (): void => {
   let peerService: PeerService
   let walletAddressService: WalletAddressService
   let tenantSettingService: TenantSettingService
-  let config: IAppConfig
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    config = await deps.use('config')
     assetService = await deps.use('assetService')
     walletAddressService = await deps.use('walletAddressService')
     tenantSettingService = await deps.use('tenantSettingService')
@@ -162,25 +160,6 @@ describe('Asset Service', (): void => {
       await expect(assetService.create(options)).resolves.toMatchObject(options)
       await expect(assetService.create(options)).resolves.toEqual(
         AssetError.DuplicateAsset
-      )
-    })
-
-    test('Cannot create more than one asset if no exchange rates URL is set', async (): Promise<void> => {
-      await truncateTable(appContainer.knex, 'tenantSettings')
-      config.operatorExchangeRatesUrl = undefined
-      const firstAssetOptions = {
-        ...randomAsset(),
-        tenantId: Config.operatorTenantId
-      }
-      await expect(
-        assetService.create(firstAssetOptions)
-      ).resolves.toMatchObject(firstAssetOptions)
-      const secondAssetOptions = {
-        ...randomAsset(),
-        tenantId: Config.operatorTenantId
-      }
-      await expect(assetService.create(secondAssetOptions)).resolves.toEqual(
-        AssetError.NoRatesForAsset
       )
     })
 

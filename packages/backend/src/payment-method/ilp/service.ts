@@ -5,7 +5,7 @@ import {
   StartQuoteOptions,
   PayOptions
 } from '../handler/service'
-import { RatesService } from '../../rates/service'
+import { RatesError, RatesService } from '../../rates/service'
 import { IlpPlugin, IlpPluginOptions } from './ilp_plugin'
 import * as Pay from '@interledger/pay'
 import { convertRatesToIlpPrices } from './rates'
@@ -65,17 +65,36 @@ async function getQuote(
       description: 'Time to get rates'
     }
   )
-  let rates
+
+  let rates = {
+    base: options.walletAddress.asset.code,
+    rates: {}
+  }
+
   try {
     rates = await deps.ratesService.rates(
       options.walletAddress.asset.code,
       options.walletAddress.tenantId
     )
-  } catch (_err) {
-    throw new PaymentMethodHandlerError('Received error during ILP quoting', {
-      description: 'Could not get rates from service',
-      retryable: false
-    })
+  } catch (err) {
+    if (options.receiver.assetCode !== options.walletAddress.asset.code) {
+      const paymentsHandlerError = new PaymentMethodHandlerError(
+        'Received error during ILP quoting',
+        {
+          description: 'Could not get rates from service',
+          retryable: false
+        }
+      )
+
+      if (err instanceof RatesError) {
+        paymentsHandlerError.description = err.message
+        paymentsHandlerError.code =
+          PaymentMethodHandlerErrorCode.CouldNotGetRates
+        throw paymentsHandlerError
+      }
+
+      throw paymentsHandlerError
+    }
   } finally {
     stopTimerRates()
   }

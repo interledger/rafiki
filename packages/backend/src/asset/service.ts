@@ -9,7 +9,6 @@ import { WalletAddress } from '../open_payments/wallet_address/model'
 import { Peer } from '../payment-method/ilp/peer/model'
 import { CacheDataStore } from '../middleware/cache/data-stores'
 import { TenantSettingService } from '../tenants/settings/service'
-import { TenantSettingKeys } from '../tenants/settings/model'
 import { IAppConfig } from '../config/app'
 
 export interface AssetOptions {
@@ -111,19 +110,6 @@ async function createAsset(
     const assets = await Asset.query(deps.knex)
       .andWhere('tenantId', tenantId)
       .select('*')
-
-    const sameCodeAssets = assets.find((asset) => asset.code === code)
-    if (!sameCodeAssets && assets.length > 0) {
-      const exchangeUrlSetting = await deps.tenantSettingService.get({
-        tenantId,
-        key: TenantSettingKeys.EXCHANGE_RATES_URL.name
-      })
-
-      const tenantExchangeRatesUrl = exchangeUrlSetting[0]?.value
-      if (!tenantExchangeRatesUrl && !deps.config.operatorExchangeRatesUrl) {
-        return AssetError.NoRatesForAsset
-      }
-    }
 
     const deletedAsset = assets.find(
       (asset) =>

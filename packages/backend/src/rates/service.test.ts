@@ -1,4 +1,5 @@
-import { RatesService, ConvertError } from './service'
+import { RatesService, ConvertError, createRatesService } from './service'
+import { RatesError, RatesErrorCode } from './errors'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -12,6 +13,7 @@ import {
   exchangeRatesSetting
 } from '../tests/tenantSettings'
 import { CreateOptions } from '../tenants/settings/service'
+import { v4 as uuid } from 'uuid'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -288,23 +290,51 @@ describe('Rates service', function () {
           throw new Error()
         })
 
-      await expect(service.rates('USD', tenantId)).rejects.toThrow(
-        'Could not fetch rates'
-      )
+      await expect(service.rates('USD', tenantId)).rejects.toMatchObject({
+        type: RatesErrorCode.CouldNotFetchRates
+      })
       await expect(service.rates('USD', tenantId)).resolves.toEqual(usdRates)
       expect(apiRequestCount).toBe(2)
     })
   })
 
+  describe('getExchangeRatesUrl', () => {
+    it('throws MissingExchangeRatesUrl when no tenant or operator URL is configured', async () => {
+      const ratesServiceWithoutUrl = createRatesService({
+        logger: await deps.use('logger'),
+        operatorTenantId: Config.operatorTenantId,
+        exchangeRatesLifetime,
+        tenantSettingService: await deps.use('tenantSettingService')
+      })
+
+      await expect(
+        ratesServiceWithoutUrl.rates('USD', uuid())
+      ).rejects.toMatchObject({
+        type: RatesErrorCode.MissingExchangeRatesUrl
+      })
+    })
+  })
+
   describe('checkBaseAsset', (): void => {
     it.each`
-      asset        | description
-      ${undefined} | ${'is not provided'}
-      ${['USD']}   | ${'is not a string'}
-      ${''}        | ${'is an empty string'}
-    `(`throws if base asset $description`, ({ asset }): void => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expect(() => (<any>service).checkBaseAsset(asset)).toThrow()
-    })
+      asset        | errorCode                          | description
+      ${undefined} | ${RatesErrorCode.MissingBaseAsset} | ${'is not provided'}
+      ${['USD']}   | ${RatesErrorCode.InvalidBaseAsset} | ${'is not a string'}
+      ${''}        | ${RatesErrorCode.MissingBaseAsset} | ${'is an empty string'}
+    `(
+      `throws $errorCode when base asset $description`,
+      ({ asset, errorCode }): void => {
+        let thrown: unknown
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ;(<any>service).checkBaseAsset(asset)
+        } catch (err) {
+          thrown = err
+        }
+
+        expect(thrown).toBeInstanceOf(RatesError)
+        expect((thrown as RatesError).type).toBe(errorCode)
+      }
+    )
   })
 })
