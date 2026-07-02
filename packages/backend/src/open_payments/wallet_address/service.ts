@@ -136,6 +136,7 @@ export async function createWalletAddressService({
 }
 
 export const FORBIDDEN_PATHS = [
+  '/healthz',
   '/incoming-payments',
   '/outgoing-payments',
   '/quotes'
