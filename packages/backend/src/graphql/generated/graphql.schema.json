@@ -4267,6 +4267,12 @@
         "interfaces": null,
         "enumValues": [
           {
+            "name": "CANCELLED",
+            "description": "The payment is cancelled before completion, and no further funds will be accepted.",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "COMPLETED",
             "description": "The payment is completed automatically once the expected `incomingAmount` is received or manually via an API call.",
             "isDeprecated": false,
