@@ -341,7 +341,8 @@ async function processNextIncomingPayment(
     }
     if (
       incomingPayment.state === IncomingPaymentState.Expired ||
-      incomingPayment.state === IncomingPaymentState.Completed
+      incomingPayment.state === IncomingPaymentState.Completed ||
+      incomingPayment.state === IncomingPaymentState.Cancelled
     ) {
       await handleDeactivated(deps, incomingPayment)
     } else {
