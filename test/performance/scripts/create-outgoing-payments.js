@@ -114,7 +114,6 @@ export default function (data) {
   }
 
   const createReceiverResponse = request(createReceiverPayload)
-  console.log(createReceiverResponse)
   const receiver = createReceiverResponse.createReceiver.receiver
 
   const createQuotePayload = {
@@ -162,7 +161,27 @@ export default function (data) {
     }
   }
 
-  request(createOutgoingPaymentPayload)
+  const createOutgoingPaymentResponse = request(createOutgoingPaymentPayload)
+  const outgoingPayment =
+    createOutgoingPaymentResponse.createOutgoingPayment.payment
+
+  const fundOutgoingPaymentPayload = {
+    query: `
+      mutation DepositOutgoingPaymentLiquidity($input: DepositOutgoingPaymentLiquidityInput!) {
+        depositOutgoingPaymentLiquidity(input: $input) {
+          success
+        }
+      }
+    `,
+    variables: {
+      input: {
+        outgoingPaymentId: outgoingPayment.id,
+        idempotencyKey: uuidv4()
+      }
+    }
+  }
+
+  request(fundOutgoingPaymentPayload)
 }
 
 export function handleSummary(data) {
