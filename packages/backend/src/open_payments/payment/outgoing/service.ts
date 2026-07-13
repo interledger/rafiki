@@ -70,7 +70,7 @@ export interface OutgoingPaymentService
   fund(
     options: FundOutgoingPaymentOptions
   ): Promise<OutgoingPayment | FundingError>
-  processNext(): Promise<string | undefined>
+  processNext(): Promise<string[] | undefined>
   getGrantSpentAmounts(options: {
     grantId: string
     limits?: Limits
@@ -103,7 +103,7 @@ export async function createOutgoingPaymentService(
     create: (options) => createOutgoingPayment(deps, options),
     cancel: (options) => cancelOutgoingPayment(deps, options),
     fund: (options) => fundPayment(deps, options),
-    processNext: () => worker.processPendingPayment(deps),
+    processNext: () => worker.processPendingPayments(deps),
     getWalletAddressPage: (options) => getWalletAddressPage(deps, options),
     getGrantSpentAmounts: (options) => getGrantSpentAmounts(deps, options)
   }
@@ -707,15 +707,15 @@ export async function calculateLegacyGrantSpentAmounts(
     intervalReceiveAmountValue,
     latestPayment: latestPayment
       ? {
-          id: latestPayment.id,
-          debitAmountValue: latestPayment.debitAmount.value,
-          debitAmountCode: latestPayment.debitAmount.assetCode,
-          debitAmountScale: latestPayment.debitAmount.assetScale,
-          receiveAmountValue: latestPayment.receiveAmount.value,
-          receiveAmountCode: latestPayment.receiveAmount.assetCode,
-          receiveAmountScale: latestPayment.receiveAmount.assetScale,
-          state: latestPayment.state
-        }
+        id: latestPayment.id,
+        debitAmountValue: latestPayment.debitAmount.value,
+        debitAmountCode: latestPayment.debitAmount.assetCode,
+        debitAmountScale: latestPayment.debitAmount.assetScale,
+        receiveAmountValue: latestPayment.receiveAmount.value,
+        receiveAmountCode: latestPayment.receiveAmount.assetCode,
+        receiveAmountScale: latestPayment.receiveAmount.assetScale,
+        state: latestPayment.state
+      }
       : null
   }
 }
@@ -799,7 +799,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
     latestSpentAmounts?.intervalEnd &&
     paymentLimits.paymentInterval.end &&
     paymentLimits.paymentInterval.end.toJSDate() <=
-      latestSpentAmounts.intervalStart
+    latestSpentAmounts.intervalStart
   ) {
     deps.logger.error(
       {
@@ -859,10 +859,10 @@ async function validateGrantAndAddSpentAmountsToPayment(
     // detect if we need to restart interval sum at 0 or continue from last
     const isInIntervalAndFirstPayment = hasInterval
       ? !latestSpentAmounts ||
-        (latestSpentAmounts.intervalEnd &&
-          paymentLimits.paymentInterval?.start &&
-          latestSpentAmounts.intervalEnd <=
-            paymentLimits.paymentInterval.start.toJSDate())
+      (latestSpentAmounts.intervalEnd &&
+        paymentLimits.paymentInterval?.start &&
+        latestSpentAmounts.intervalEnd <=
+        paymentLimits.paymentInterval.start.toJSDate())
       : false
 
     outgoingPaymentGrantSpentAmounts.grantTotalDebitAmountValue =
@@ -952,7 +952,7 @@ function exceedsGrantLimits(
       limits.debitAmount.value - spentValue < payment.debitAmount.value) ||
     (limits.receiveAmount &&
       limits.receiveAmount.value - spentReceive <
-        payment.receiveAmount.value) ||
+      payment.receiveAmount.value) ||
     false
   )
 }
@@ -1165,9 +1165,9 @@ async function getRemainingGrantSpentAmounts(
   ) {
     if (
       latestGrantSpentAmounts.intervalStart?.getTime() !==
-        latestPaymentSpentAmounts.intervalStart.getTime() ||
+      latestPaymentSpentAmounts.intervalStart.getTime() ||
       latestGrantSpentAmounts.intervalEnd?.getTime() !==
-        latestPaymentSpentAmounts.intervalEnd.getTime()
+      latestPaymentSpentAmounts.intervalEnd.getTime()
     ) {
       latestIntervalSpentAmounts =
         (await OutgoingPaymentGrantSpentAmounts.query(deps.knex)

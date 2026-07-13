@@ -11,9 +11,9 @@ import { trace, Span } from '@opentelemetry/api'
 export const RETRY_BACKOFF_SECONDS = 10
 
 // Returns the id of the processed payment (if any).
-export async function processPendingPayment(
+export async function processPendingPayments(
   deps_: ServiceDependencies
-): Promise<string | undefined> {
+): Promise<string[] | undefined> {
   const tracer = trace.getTracer('outgoing_payment_worker')
 
   return tracer.startActiveSpan(
@@ -25,11 +25,11 @@ export async function processPendingPayment(
           callName: 'OutgoingPaymentWorker:processPendingPayment'
         }
       )
-      const paymentId = await deps_.knex.transaction(async (trx) => {
-        const payment = await getPendingPayment(trx, deps_)
-        if (!payment) return
+      const paymentIds = await deps_.knex.transaction(async (trx) => {
+        const payments = await getPendingPayments(trx, deps_)
+        if (payments.length === 0) return
 
-        await handlePaymentLifecycle(
+        const promises = payments.map((payment) => handlePaymentLifecycle(
           {
             ...deps_,
             knex: trx,
@@ -39,28 +39,29 @@ export async function processPendingPayment(
             })
           },
           payment
-        )
-        return payment.id
+        ))
+        await Promise.all(promises)
+        return payments.map(payment => payment.id)
       })
 
       stopTimer()
       span.end()
-      return paymentId
+      return paymentIds
     }
   )
 }
 
 // Fetch (and lock) a payment for work.
-async function getPendingPayment(
+async function getPendingPayments(
   trx: Knex.Transaction,
   deps: ServiceDependencies
-): Promise<OutgoingPayment | undefined> {
+): Promise<OutgoingPayment[]> {
   const stopTimer = deps.telemetry.startTimer('get_pending_payment_ms', {
     callName: 'OutoingPaymentWorker:getPendingPayment'
   })
   const now = new Date(Date.now()).toISOString()
   const payments = await OutgoingPayment.query(trx)
-    .limit(1)
+    .limit(deps.config.outgoingPaymentBatchSize)
     // Ensure the payment cannot be processed concurrently by multiple workers.
     .forUpdate()
     // Don't wait for a payment that is already being processed.
@@ -77,7 +78,7 @@ async function getPendingPayment(
     })
     .withGraphFetched('quote')
   stopTimer()
-  return payments[0]
+  return payments
 }
 
 async function handlePaymentLifecycle(
