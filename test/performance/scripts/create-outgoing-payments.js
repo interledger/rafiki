@@ -114,6 +114,7 @@ export default function (data) {
   }
 
   const createReceiverResponse = request(createReceiverPayload)
+  console.log(createReceiverResponse)
   const receiver = createReceiverResponse.createReceiver.receiver
 
   const createQuotePayload = {
