@@ -171,7 +171,7 @@ describe('Lifecycle', (): void => {
 
   describe('Grant Spent Amounts', (): void => {
     beforeAll(async (): Promise<void> => {
-      deps = initIocContainer(Config)
+      deps = initIocContainer({ ...Config, outgoingPaymentBatchSize: 1 })
       appContainer = await createTestApp(deps)
       outgoingPaymentService = await deps.use('outgoingPaymentService')
       accountingService = await deps.use('accountingService')

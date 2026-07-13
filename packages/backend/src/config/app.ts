@@ -17,9 +17,9 @@ function envStringArray(name: string, value: string[]): string[] {
   return envValue == null
     ? value
     : envValue
-      .split(',')
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0)
+        .split(',')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0)
 }
 
 function envInt(name: string, value: number): number {
@@ -65,11 +65,11 @@ export const Config = {
     'OPEN_TELEMETRY_COLLECTOR_URLS',
     envBool('LIVENET', false)
       ? [
-        'http://livenet-otel-collector-NLB-f7992547e797f23d.elb.eu-west-2.amazonaws.com:4317'
-      ]
+          'http://livenet-otel-collector-NLB-f7992547e797f23d.elb.eu-west-2.amazonaws.com:4317'
+        ]
       : [
-        'http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317'
-      ]
+          'http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317'
+        ]
   ),
   openTelemetryExportInterval: envInt('OPEN_TELEMETRY_EXPORT_INTERVAL', 15000),
   telemetryExchangeRatesUrl: envString(
@@ -91,9 +91,9 @@ export const Config = {
     process.env.NODE_ENV === 'test'
       ? `${process.env.DATABASE_URL}_${process.env.JEST_WORKER_ID}`
       : envString(
-        'DATABASE_URL',
-        'postgresql://postgres:password@localhost:5432/development'
-      ),
+          'DATABASE_URL',
+          'postgresql://postgres:password@localhost:5432/development'
+        ),
   walletAddressUrl: envString(
     'WALLET_ADDRESS_URL',
     'http://127.0.0.1:3001/.well-known/pay'
@@ -134,7 +134,7 @@ export const Config = {
 
   outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 1),
   outgoingPaymentWorkerIdle: envInt('OUTGOING_PAYMENT_WORKER_IDLE', 10), // milliseconds
-  outgoingPaymentBatchSize: envInt('OUTGOING_PAYMENT_WORKER_BATCH_SIZE', 1),
+  outgoingPaymentBatchSize: envInt('OUTGOING_PAYMENT_WORKER_BATCH_SIZE', 5),
 
   incomingPaymentWorkers: envInt('INCOMING_PAYMENT_WORKERS', 1),
   incomingPaymentWorkerIdle: envInt('INCOMING_PAYMENT_WORKER_IDLE', 200), // milliseconds

@@ -126,7 +126,9 @@ describe('OutgoingPaymentService', (): void => {
     expectState: OutgoingPaymentState,
     expectedError?: string
   ): Promise<OutgoingPayment> {
-    await expect(outgoingPaymentService.processNext()).resolves.toEqual([paymentId])
+    await expect(outgoingPaymentService.processNext()).resolves.toEqual([
+      paymentId
+    ])
     const payment = await outgoingPaymentService.get({
       id: paymentId
     })
@@ -349,7 +351,7 @@ describe('OutgoingPaymentService', (): void => {
         if (receiver) {
           // "as any" to circumvent "readonly" check (compile time only) to allow overriding "isLocal" here
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ; (receiver.isLocal as any) = false
+          ;(receiver.isLocal as any) = false
           return receiver
         }
         return undefined
@@ -3045,7 +3047,7 @@ describe('OutgoingPaymentService', (): void => {
         expect(result.spentDebitAmount?.assetScale).toBe(asset.scale)
         expect(result.spentReceiveAmount?.value).toBe(
           payment1.quote.receiveAmount.value +
-          payment2.quote.receiveAmount.value
+            payment2.quote.receiveAmount.value
         )
         expect(result.spentReceiveAmount?.assetCode).toBe(
           payment2.quote.receiveAmount.assetCode

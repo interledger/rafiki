@@ -29,19 +29,21 @@ export async function processPendingPayments(
         const payments = await getPendingPayments(trx, deps_)
         if (payments.length === 0) return
 
-        const promises = payments.map((payment) => handlePaymentLifecycle(
-          {
-            ...deps_,
-            knex: trx,
-            logger: deps_.logger.child({
-              payment: payment.id,
-              from_state: payment.state
-            })
-          },
-          payment
-        ))
+        const promises = payments.map((payment) =>
+          handlePaymentLifecycle(
+            {
+              ...deps_,
+              knex: trx,
+              logger: deps_.logger.child({
+                payment: payment.id,
+                from_state: payment.state
+              })
+            },
+            payment
+          )
+        )
         await Promise.all(promises)
-        return payments.map(payment => payment.id)
+        return payments.map((payment) => payment.id)
       })
 
       stopTimer()
