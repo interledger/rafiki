@@ -134,7 +134,7 @@ export const Config = {
 
   outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 1),
   outgoingPaymentWorkerIdle: envInt('OUTGOING_PAYMENT_WORKER_IDLE', 10), // milliseconds
-  outgoingPaymentBatchSize: envInt('OUTGOING_PAYMENT_WORKER_BATCH_SIZE', 100),
+  outgoingPaymentBatchSize: envInt('OUTGOING_PAYMENT_WORKER_BATCH_SIZE', 500),
 
   incomingPaymentWorkers: envInt('INCOMING_PAYMENT_WORKERS', 1),
   incomingPaymentWorkerIdle: envInt('INCOMING_PAYMENT_WORKER_IDLE', 200), // milliseconds
