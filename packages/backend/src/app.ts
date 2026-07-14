@@ -323,7 +323,10 @@ export class App {
         process.nextTick(() => this.processWalletAddress())
       }
       for (let i = 0; i < this.config.outgoingPaymentWorkers; i++) {
-        process.nextTick(() => this.processOutgoingPayment())
+        setInterval(
+          () => this.processOutgoingPayment(),
+          this.config.outgoingPaymentProcessingIntervalMs
+        )
       }
       for (let i = 0; i < this.config.incomingPaymentWorkers; i++) {
         process.nextTick(() => this.processIncomingPayment())
