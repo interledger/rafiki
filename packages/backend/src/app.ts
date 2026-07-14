@@ -945,15 +945,11 @@ export class App {
         return true
       })
       .then((hasMoreWork) => {
-        if (hasMoreWork)
-          setTimeout(
-            () => this.processIncomingPayment(),
-            this.config.incomingPaymentProcessingIntervalMs
-          )
+        if (hasMoreWork) process.nextTick(() => this.processIncomingPayment())
         else
           setTimeout(
             () => this.processIncomingPayment(),
-            this.config.incomingPaymentProcessingIntervalMs
+            this.config.incomingPaymentWorkerIdle
           ).unref()
       })
   }
