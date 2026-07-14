@@ -891,11 +891,15 @@ export class App {
         return true
       })
       .then((hasMoreWork) => {
-        if (hasMoreWork) process.nextTick(() => this.processOutgoingPayment())
+        if (hasMoreWork)
+          setTimeout(
+            () => this.processOutgoingPayment(),
+            this.config.outgoingPaymentProcessingIntervalMs
+          )
         else
           setTimeout(
             () => this.processOutgoingPayment(),
-            this.config.outgoingPaymentWorkerIdle
+            this.config.outgoingPaymentProcessingIntervalMs
           ).unref()
       })
   }
@@ -941,11 +945,15 @@ export class App {
         return true
       })
       .then((hasMoreWork) => {
-        if (hasMoreWork) process.nextTick(() => this.processIncomingPayment())
+        if (hasMoreWork)
+          setTimeout(
+            () => this.processIncomingPayment(),
+            this.config.incomingPaymentProcessingIntervalMs
+          )
         else
           setTimeout(
             () => this.processIncomingPayment(),
-            this.config.incomingPaymentWorkerIdle
+            this.config.incomingPaymentProcessingIntervalMs
           ).unref()
       })
   }
