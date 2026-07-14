@@ -76,7 +76,7 @@ export interface IncomingPaymentService
     id: string,
     tenantId?: string
   ): Promise<IncomingPayment | IncomingPaymentError>
-  processNext(): Promise<string | undefined>
+  processNext(): Promise<string[] | undefined>
   update(
     options: UpdateOptions
   ): Promise<IncomingPayment | IncomingPaymentError>
@@ -313,43 +313,46 @@ async function getApprovedOrCanceledIncomingPayment(
 // Returns the id of the processed incoming payment (if any).
 async function processNextIncomingPayment(
   deps_: ServiceDependencies
-): Promise<string | undefined> {
+): Promise<string[] | undefined> {
   return deps_.knex.transaction(async (trx) => {
     const now = new Date(Date.now()).toISOString()
     const incomingPayments = await IncomingPayment.query(trx)
-      .limit(1)
+      .limit(deps_.config.incomingPaymentBatchSize)
       // Ensure the incoming payments cannot be processed concurrently by multiple workers.
       .forUpdate()
       // If an incoming payment is locked, don't wait — just come back for it later.
       .skipLocked()
       .where('processAt', '<=', now)
 
-    const incomingPayment = incomingPayments[0]
-    if (!incomingPayment) return
+    if (incomingPayments.length === 0) return
 
-    const asset = await deps_.assetService.get(incomingPayment.assetId)
-    if (asset) incomingPayment.asset = asset
+    const processIncoming = async (incomingPayment: IncomingPayment) => {
+      const asset = await deps_.assetService.get(incomingPayment.assetId)
+      if (asset) incomingPayment.asset = asset
+      incomingPayment.walletAddress = await deps_.walletAddressService.get(
+        incomingPayment.walletAddressId
+      )
 
-    incomingPayment.walletAddress = await deps_.walletAddressService.get(
-      incomingPayment.walletAddressId
-    )
-
-    const deps = {
-      ...deps_,
-      knex: trx,
-      logger: deps_.logger.child({
-        incomingPayment: incomingPayment.id
-      })
+      const deps = {
+        ...deps_,
+        knex: trx,
+        logger: deps_.logger.child({
+          incomingPayment: incomingPayment.id
+        })
+      }
+      if (
+        incomingPayment.state === IncomingPaymentState.Expired ||
+        incomingPayment.state === IncomingPaymentState.Completed
+      ) {
+        await handleDeactivated(deps, incomingPayment)
+      } else {
+        await handleExpired(deps, incomingPayment)
+      }
+      return incomingPayment.id
     }
-    if (
-      incomingPayment.state === IncomingPaymentState.Expired ||
-      incomingPayment.state === IncomingPaymentState.Completed
-    ) {
-      await handleDeactivated(deps, incomingPayment)
-    } else {
-      await handleExpired(deps, incomingPayment)
-    }
-    return incomingPayment.id
+
+    const promises = incomingPayments.map(processIncoming)
+    return Promise.all(promises)
   })
 }
 

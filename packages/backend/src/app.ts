@@ -323,13 +323,16 @@ export class App {
         process.nextTick(() => this.processWalletAddress())
       }
       for (let i = 0; i < this.config.outgoingPaymentWorkers; i++) {
-        setInterval(
+        setTimeout(
           () => this.processOutgoingPayment(),
           this.config.outgoingPaymentProcessingIntervalMs
         )
       }
       for (let i = 0; i < this.config.incomingPaymentWorkers; i++) {
-        process.nextTick(() => this.processIncomingPayment())
+        setTimeout(
+          () => this.processIncomingPayment(),
+          this.config.incomingPaymentProcessingIntervalMs
+        )
       }
       for (let i = 0; i < this.config.webhookWorkers; i++) {
         process.nextTick(() => this.processWebhook())
