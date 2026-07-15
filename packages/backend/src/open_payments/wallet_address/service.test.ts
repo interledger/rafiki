@@ -846,9 +846,9 @@ describe('Open Payments Wallet Address Service', (): void => {
       'Does not process wallet address $description for withdrawal',
       async ({ processAt }): Promise<void> => {
         await walletAddress.$query(knex).patch({ processAt })
-        await expect(
-          walletAddressService.processNext()
-        ).resolves.toBeUndefined()
+        await expect(walletAddressService.processNext()).resolves.toHaveLength(
+          0
+        )
         await expect(
           walletAddressService.get(walletAddress.id)
         ).resolves.toEqual(walletAddress)
@@ -877,7 +877,7 @@ describe('Open Payments Wallet Address Service', (): void => {
           processAt: new Date(),
           totalEventsAmount
         })
-        await expect(walletAddressService.processNext()).resolves.toBe(
+        await expect(walletAddressService.processNext()).resolves.toContain(
           walletAddress.id
         )
         await expect(

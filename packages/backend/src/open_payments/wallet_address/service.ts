@@ -79,7 +79,7 @@ export interface WalletAddressService {
     sortOrder?: SortOrder,
     tenantId?: string
   ): Promise<WalletAddress[]>
-  processNext(): Promise<string | undefined>
+  processNext(): Promise<string[] | undefined>
   triggerEvents(limit: number): Promise<number>
 }
 
@@ -130,7 +130,7 @@ export async function createWalletAddressService({
     getOrPollByUrl: (url) => getOrPollByUrl(deps, url),
     getPage: (pagination?, sortOrder?, tenantId?) =>
       getWalletAddressPage(deps, pagination, sortOrder, tenantId),
-    processNext: () => processNextWalletAddress(deps),
+    processNext: () => processNextWalletAddresses(deps),
     triggerEvents: (limit) => triggerWalletAddressEvents(deps, limit)
   }
 }
@@ -453,14 +453,6 @@ async function getWalletAddressPage(
   return addresses
 }
 
-// Returns the id of the processed wallet address (if any).
-async function processNextWalletAddress(
-  deps: ServiceDependencies
-): Promise<string | undefined> {
-  const walletAddresses = await processNextWalletAddresses(deps, 1)
-  return walletAddresses[0]?.id
-}
-
 async function triggerWalletAddressEvents(
   deps: ServiceDependencies,
   limit: number
@@ -473,12 +465,12 @@ async function triggerWalletAddressEvents(
 // Returns the processed accounts (if any).
 async function processNextWalletAddresses(
   deps_: ServiceDependencies,
-  limit: number
-): Promise<WalletAddress[]> {
+  limit?: number
+): Promise<string[]> {
   return deps_.knex.transaction(async (trx) => {
     const now = new Date(Date.now()).toISOString()
     const walletAddresses = await WalletAddress.query(trx)
-      .limit(limit)
+      .limit(limit || deps_.config.walletAddressBatchSize)
       // Ensure the wallet addresses cannot be processed concurrently by multiple workers.
       .forUpdate()
       // If a wallet address is locked, don't wait — just come back for it later.
@@ -504,7 +496,7 @@ async function processNextWalletAddresses(
       })
     }
 
-    return walletAddresses
+    return walletAddresses.map((w) => w.id)
   })
 }
 

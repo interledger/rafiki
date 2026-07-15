@@ -133,6 +133,11 @@ export const Config = {
 
   walletAddressWorkers: envInt('WALLET_ADDRESS_WORKERS', 1),
   walletAddressWorkerIdle: envInt('WALLET_ADDRESS_WORKER_IDLE', 200), // milliseconds
+  walletAddressBatchSize: envInt('WALLET_ADDRESS_BATCH_SIZE', 250),
+  walletAddressProcessingIntervalMs: envInt(
+    'WALLET_ADDRESS_PROCESSING_INTERVAL_MS',
+    200
+  ), // milliseconds
 
   authServerGrantUrl: envString('AUTH_SERVER_GRANT_URL'),
   authServerIntrospectionUrl: envString('AUTH_SERVER_INTROSPECTION_URL'),

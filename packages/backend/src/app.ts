@@ -320,7 +320,10 @@ export class App {
     // Workers are in the way during tests.
     if (this.config.env !== 'test') {
       for (let i = 0; i < this.config.walletAddressWorkers; i++) {
-        process.nextTick(() => this.processWalletAddress())
+        setTimeout(
+          () => this.processWalletAddress(),
+          this.config.walletAddressProcessingIntervalMs
+        )
       }
       for (let i = 0; i < this.config.outgoingPaymentWorkers; i++) {
         setTimeout(
@@ -873,11 +876,15 @@ export class App {
         return true
       })
       .then((hasMoreWork) => {
-        if (hasMoreWork) process.nextTick(() => this.processWalletAddress())
+        if (hasMoreWork)
+          setTimeout(
+            () => this.processWalletAddress(),
+            this.config.walletAddressProcessingIntervalMs
+          )
         else
           setTimeout(
             () => this.processWalletAddress(),
-            this.config.walletAddressWorkerIdle
+            this.config.walletAddressProcessingIntervalMs
           ).unref()
       })
   }
