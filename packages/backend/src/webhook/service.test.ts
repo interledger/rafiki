@@ -438,7 +438,9 @@ describe('Webhook Service', (): void => {
           event,
           setting ? new URL(setting.value) : undefined
         )
-        await expect(webhookService.processNext()).resolves.toEqual(webhook.id)
+        await expect(webhookService.processNext()).resolves.toEqual([
+          webhook.id
+        ])
         scope.done()
         const dbWebhook = await Webhook.query().findById(webhook.id)
         await expect(dbWebhook).toMatchObject(
@@ -473,7 +475,7 @@ describe('Webhook Service', (): void => {
         })
         .reply(200)
 
-      await expect(webhookService.processNext()).resolves.toEqual(webhook.id)
+      await expect(webhookService.processNext()).resolves.toEqual([webhook.id])
       scope.done()
     })
 
@@ -481,7 +483,9 @@ describe('Webhook Service', (): void => {
       'Schedules retry if request fails (%i)',
       async (status): Promise<void> => {
         const scope = mockWebhookServer(status)
-        await expect(webhookService.processNext()).resolves.toEqual(webhook.id)
+        await expect(webhookService.processNext()).resolves.toEqual([
+          webhook.id
+        ])
         scope.done()
         const updatedWebhook = await Webhook.query(knex).findById(webhook.id)
         assert.ok(updatedWebhook?.processAt)
@@ -517,7 +521,9 @@ describe('Webhook Service', (): void => {
             setting ? Number(setting.value) + 1 : Config.webhookTimeout + 1
           )
           .reply(200)
-        await expect(webhookService.processNext()).resolves.toEqual(webhook.id)
+        await expect(webhookService.processNext()).resolves.toEqual([
+          webhook.id
+        ])
         scope.done()
         const updatedWebhook = await Webhook.query(knex).findById(webhook.id)
         assert.ok(updatedWebhook?.processAt)
@@ -611,7 +617,9 @@ describe('Webhook Service', (): void => {
           Webhook.query(knex).findById(nextWebhook.id).withGraphFetched('event')
         ).resolves.toEqual(nextWebhook)
 
-        await expect(webhookService.processNext()).resolves.toBe(nextWebhook.id)
+        await expect(webhookService.processNext()).resolves.toEqual([
+          nextWebhook.id
+        ])
         scope.done()
         await expect(
           Webhook.query(knex).findById(nextWebhook.id)
@@ -632,7 +640,7 @@ describe('Webhook Service', (): void => {
       })
 
       const scope = mockWebhookServer(200, event, new URL(tenantWebhookUrl))
-      await expect(webhookService.processNext()).resolves.toEqual(webhook.id)
+      await expect(webhookService.processNext()).resolves.toEqual([webhook.id])
       await expect(
         Webhook.query(knex).findById(webhook.id)
       ).resolves.toMatchObject({
@@ -642,6 +650,45 @@ describe('Webhook Service', (): void => {
       })
 
       scope.done()
+    })
+
+    test('Delivers a batch of due webhooks in a single call', async (): Promise<void> => {
+      const extraWebhooks: Webhook[] = []
+      for (let i = 0; i < 4; i++) {
+        const extraEvent = await WebhookEvent.query(knex).insertAndFetch({
+          id: uuid(),
+          type: WalletAddressEventType.WalletAddressNotFound,
+          data: { account: { id: uuid() } },
+          tenantId: Config.operatorTenantId
+        })
+        extraWebhooks.push(
+          await Webhook.query(knex).insertAndFetch({
+            recipientTenantId: Config.operatorTenantId,
+            eventId: extraEvent.id
+          })
+        )
+      }
+
+      const allIds = [webhook.id, ...extraWebhooks.map((w) => w.id)]
+      const scope = nock(webhookUrl.origin)
+        .post(webhookUrl.pathname)
+        .times(allIds.length)
+        .reply(200)
+
+      const processed = await webhookService.processNext()
+      expect(processed).toHaveLength(allIds.length)
+      expect(processed?.slice().sort()).toEqual(allIds.slice().sort())
+      scope.done()
+
+      const delivered = await Webhook.query(knex).findByIds(allIds)
+      expect(delivered).toHaveLength(allIds.length)
+      for (const w of delivered) {
+        expect(w).toMatchObject({
+          attempts: 1,
+          statusCode: 200,
+          processAt: null
+        })
+      }
     })
   })
 

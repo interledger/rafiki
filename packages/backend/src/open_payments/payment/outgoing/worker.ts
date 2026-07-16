@@ -29,20 +29,33 @@ export async function processPendingPayments(
         const payments = await getPendingPayments(trx, deps_)
         if (payments.length === 0) return
 
-        const promises = payments.map((payment) =>
-          handlePaymentLifecycle(
-            {
-              ...deps_,
-              knex: trx,
-              logger: deps_.logger.child({
-                payment: payment.id,
-                from_state: payment.state
-              })
-            },
-            payment
-          )
+        // Process the claimed batch in bounded-concurrency chunks. Each in-flight
+        // payment can check out its own pool connection for accounting (Postgres
+        // accounting mode), so capping concurrency keeps connections free for API
+        // traffic and webhook-driven liquidity callbacks. Without this a large
+        // batch fans out one Promise per payment and starves the connection pool.
+        const concurrency = Math.max(
+          1,
+          deps_.config.outgoingPaymentWorkerConcurrency
         )
-        await Promise.all(promises)
+        for (let i = 0; i < payments.length; i += concurrency) {
+          const chunk = payments.slice(i, i + concurrency)
+          await Promise.all(
+            chunk.map((payment) =>
+              handlePaymentLifecycle(
+                {
+                  ...deps_,
+                  knex: trx,
+                  logger: deps_.logger.child({
+                    payment: payment.id,
+                    from_state: payment.state
+                  })
+                },
+                payment
+              )
+            )
+          )
+        }
         return payments.map((payment) => payment.id)
       })
 

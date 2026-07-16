@@ -91,8 +91,8 @@ export function initIocContainer(
       client: 'postgresql',
       connection: config.databaseUrl,
       pool: {
-        min: 2,
-        max: 10
+        min: config.databasePoolMin,
+        max: config.databasePoolMax
       },
       migrations: {
         directory: './',
