@@ -159,6 +159,10 @@ export const Config = {
     'OUTGOING_PAYMENT_PROCESSING_INTERVAL_MS',
     200
   ), // milliseconds
+  outgoingPaymentMaxQueueSize: envInt(
+    'OUTGOING_PAYMENT_MAX_QUEUE_SIZE',
+    100_000
+  ),
 
   incomingPaymentWorkers: envInt('INCOMING_PAYMENT_WORKERS', 1),
   incomingPaymentWorkerIdle: envInt('INCOMING_PAYMENT_WORKER_IDLE', 200), // milliseconds

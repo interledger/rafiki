@@ -34,6 +34,7 @@ import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
 import { DateTime, Interval } from 'luxon'
 import { knex } from 'knex'
+import { Redis } from 'ioredis'
 import { AccountAlreadyExistsError } from '../../../accounting/errors'
 import { PaymentMethodHandlerService } from '../../../payment-method/handler/service'
 import { TelemetryService } from '../../../telemetry/service'
@@ -88,6 +89,7 @@ export interface ServiceDependencies extends BaseService {
   assetService: AssetService
   telemetry: TelemetryService
   feeService: FeeService
+  redis: Redis
 }
 
 export async function createOutgoingPaymentService(
@@ -169,6 +171,46 @@ async function getOutgoingPaymentsPage(
     }
     return payment
   })
+}
+
+async function isOverQueueThreshold(
+  deps: ServiceDependencies
+): Promise<boolean> {
+  const cacheKey = 'counts:outgoing_payments:pending'
+  const cached = await deps.redis.get(cacheKey)
+  if (cached !== null) {
+    return parseInt(cached, 10) >= deps.config.outgoingPaymentMaxQueueSize
+  }
+
+  const result = (await OutgoingPayment.query(deps.knex)
+    .whereIn('state', [
+      OutgoingPaymentState.Funding,
+      OutgoingPaymentState.Sending
+    ])
+    .count('* as count')
+    .first()) as unknown as { count: string } | undefined
+  const count = parseInt(result?.count || '0', 10)
+
+  await deps.redis.set(cacheKey, count, 'EX', 60)
+  return count >= deps.config.outgoingPaymentMaxQueueSize
+}
+
+async function incrementPendingCount(deps: ServiceDependencies): Promise<void> {
+  const cacheKey = 'counts:outgoing_payments:pending'
+  const exists = await deps.redis.exists(cacheKey)
+  if (exists) {
+    await deps.redis.incr(cacheKey)
+  }
+}
+
+export async function decrementPendingCount(
+  deps: ServiceDependencies
+): Promise<void> {
+  const cacheKey = 'counts:outgoing_payments:pending'
+  const exists = await deps.redis.exists(cacheKey)
+  if (exists) {
+    await deps.redis.decr(cacheKey)
+  }
 }
 
 async function getOutgoingPayment(
@@ -254,7 +296,7 @@ async function cancelOutgoingPayment(
 ): Promise<OutgoingPayment | OutgoingPaymentError> {
   const { id, tenantId } = options
 
-  return deps.knex.transaction(async (trx) => {
+  const paymentOrError = await deps.knex.transaction(async (trx) => {
     let payment = await OutgoingPayment.query(trx)
       .findOne({
         id,
@@ -301,12 +343,23 @@ async function cancelOutgoingPayment(
 
     return addSentAmount(deps, payment)
   })
+
+  if (!isOutgoingPaymentError(paymentOrError)) {
+    await decrementPendingCount(deps)
+  }
+
+  return paymentOrError
 }
 
 async function createOutgoingPayment(
   deps: ServiceDependencies,
   options: CreateOutgoingPaymentOptions
 ): Promise<OutgoingPayment | OutgoingPaymentError> {
+  const overThreshold = await isOverQueueThreshold(deps)
+  if (overThreshold) {
+    return OutgoingPaymentError.OverQueueThreshold
+  }
+
   const tracer = trace.getTracer('outgoing_payment_service_create')
 
   return tracer.startActiveSpan(
@@ -522,6 +575,8 @@ async function createOutgoingPayment(
         )
 
         stopTimerAddAmount()
+
+        await incrementPendingCount(deps)
 
         return paymentWithSentAmount
       } catch (err) {
