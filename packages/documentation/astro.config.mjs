@@ -4,6 +4,7 @@ import starlight from '@astrojs/starlight'
 import remarkMath from 'remark-math'
 import rehypeMathjax from 'rehype-mathjax'
 import starlightLinksValidator from 'starlight-links-validator'
+import starlightLlmsTxt from 'starlight-llms-txt'
 import starlightFullViewMode from 'starlight-fullview-mode'
 import { rehypeHeadingIds } from '@astrojs/markdown-remark'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
@@ -378,6 +379,70 @@ export default defineConfig({
         }
       ],
       plugins: [
+        starlightLlmsTxt({
+          details: `Rafiki documentation is for Account Servicing Entities (ASEs) — regulated institutions such as banks, digital wallet providers, and mobile money operators — who want to run Rafiki to add Interledger and Open Payments functionality to their users' accounts. It is not documentation for an end-user product or a payment app.
+
+Rafiki exposes several separate HTTP services rather than a single API surface: a GraphQL Admin API for managing the backend (peers, assets, wallet addresses, liquidity), a separate GraphQL Admin API for the auth service, an ILP connector, an Open Payments REST API that implements the Open Payments protocol, and an auto-peering server. Questions about configuring or operating a Rafiki instance are answered by the Admin APIs; questions about initiating or receiving payments are answered by the Open Payments API, which is specified independently at openpayments.dev.
+
+Rafiki supports two interchangeable accounting backends: TigerBeetle (the default, purpose-built for financial accounting) and PostgreSQL (an alternative for deployments that prefer a single database). Integration guidance does not change based on which is used.
+
+This site publishes documentation for multiple Rafiki versions. Prefer the current/default version unless the user explicitly asks about an older release — content under a version prefix such as v1-beta describes a prior API surface and may no longer be accurate.
+
+Key terminology notes:
+
+- Rafiki is the reference implementation of the Open Payments protocol; ASEs deploy and operate it themselves, on their own infrastructure
+- Wallet addresses are URL-based identifiers for financial accounts — not cryptocurrency wallets
+- An Account Servicing Entity (ASE) is the regulated institution that holds and manages accounts on behalf of its users and runs Rafiki
+- Peering is the trust relationship two Rafiki instances (run by different ASEs) establish to exchange payments directly — distinct from a payment between two end users
+- Grants and GNAP (Grant Negotiation and Authorization Protocol) refer to Open Payments' authorization flow, distinct from OAuth`,
+          exclude: ['v1-beta/**'],
+          optionalLinks: [
+            {
+              label: 'GitHub repository',
+              url: 'https://github.com/interledger/rafiki',
+              description:
+                'Source code, issues, and contributions for the Rafiki project'
+            },
+            {
+              label: 'Open Payments documentation',
+              url: 'https://openpayments.dev',
+              description:
+                'Specification and SDKs for the Open Payments API that Rafiki implements'
+            }
+          ],
+          customSets: [
+            {
+              label: 'Overview and concepts',
+              description:
+                'Introduction to Rafiki and core concepts such as account servicing entities, multi-tenancy, accounting, clearing and settlement, and Interledger',
+              paths: ['overview/**']
+            },
+            {
+              label: 'Integration',
+              description:
+                'Requirements, services, and deployment guidance for integrating Rafiki, including tenants, assets, peers, wallet addresses, exchange rates, sending fees, and testing locally',
+              paths: ['integration/**']
+            },
+            {
+              label: 'Administration',
+              description:
+                'Using Rafiki Admin to manage asset, peer, and payment liquidity',
+              paths: ['admin/**']
+            },
+            {
+              label: 'APIs',
+              description:
+                'GraphQL Admin API documentation for the backend and auth services — the Open Payments REST API itself is specified separately at openpayments.dev',
+              paths: ['apis/**']
+            },
+            {
+              label: 'Resources',
+              description:
+                'Glossary, architecture, environment variables, webhook event types, and release notes',
+              paths: ['resources/**']
+            }
+          ]
+        }),
         starlightVersions({
           current: {
             label: 'v2-beta'
