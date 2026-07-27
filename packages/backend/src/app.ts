@@ -320,19 +320,13 @@ export class App {
     // Workers are in the way during tests.
     if (this.config.env !== 'test') {
       for (let i = 0; i < this.config.walletAddressWorkers; i++) {
-        process.nextTick(
-          () => this.processWalletAddress()
-        )
+        process.nextTick(() => this.processWalletAddress())
       }
       for (let i = 0; i < this.config.outgoingPaymentWorkers; i++) {
-        process.nextTick(
-          () => this.processOutgoingPayment()
-        )
+        process.nextTick(() => this.processOutgoingPayment())
       }
       for (let i = 0; i < this.config.incomingPaymentWorkers; i++) {
-        process.nextTick(
-          () => this.processIncomingPayment()
-        )
+        process.nextTick(() => this.processIncomingPayment())
       }
       for (let i = 0; i < this.config.webhookWorkers; i++) {
         process.nextTick(() => this.processWebhook())
@@ -873,15 +867,11 @@ export class App {
         return true
       })
       .then((hasMoreWork) => {
-        if (hasMoreWork)
-          setTimeout(
-            () => this.processWalletAddress(),
-            this.config.walletAddressProcessingIntervalMs
-          )
+        if (hasMoreWork) process.nextTick(() => this.processWalletAddress())
         else
           setTimeout(
             () => this.processWalletAddress(),
-            this.config.walletAddressProcessingIntervalMs
+            this.config.walletAddressWorkerIdle
           ).unref()
       })
   }
@@ -951,10 +941,7 @@ export class App {
         return true
       })
       .then((hasMoreWork) => {
-        if (hasMoreWork)
-          process.nextTick(
-            () => this.processIncomingPayment()
-          )
+        if (hasMoreWork) process.nextTick(() => this.processIncomingPayment())
         else
           setTimeout(
             () => this.processIncomingPayment(),
