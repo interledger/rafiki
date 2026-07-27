@@ -756,11 +756,6 @@ export const start = async (
   logger.info(`Connector listening on ${config.connectorPort}`)
   logger.info('🐒 has 🚀. Get ready for 🍌🍌🍌🍌🍌')
 
-  logger.info(
-    `Running the Rafiki WW 2026 build with an outgoing payment batch size of ${config.outgoingPaymentBatchSize}.`
-  )
-  logger.info(`Happy Testing - Nathan 🫡`)
-
   if (config.enableAutoPeering) {
     await app.startAutoPeeringServer(config.autoPeeringServerPort)
     logger.info(
