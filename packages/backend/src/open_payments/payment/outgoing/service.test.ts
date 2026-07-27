@@ -2176,6 +2176,72 @@ describe('OutgoingPaymentService', (): void => {
       return payment
     }
 
+    test(
+      'Returns a batch of outgoing payments in a single call',
+      withConfigOverride(
+        () => config,
+        { outgoingPaymentBatchSize: 2 },
+        async (): Promise<void> => {
+          incomingPayment = await createIncomingPayment(deps, {
+            walletAddressId: receiverWalletAddress.id,
+            incomingAmount: {
+              value: receiveAmount.value,
+              assetCode: receiverWalletAddress.asset.code,
+              assetScale: receiverWalletAddress.asset.scale
+            },
+            tenantId: Config.operatorTenantId,
+            initiationReason: IncomingPaymentInitiationReason.Admin
+          })
+          assert.ok(incomingPayment.walletAddress)
+
+          const paymentA = await setup({
+            tenantId,
+            receiver: incomingPayment.getUrl(config.openPaymentsUrl),
+            receiveAmount,
+            method: 'ilp'
+          })
+          mockPaymentHandlerPay(paymentA, incomingPayment)
+
+          const incomingPaymentB = await createIncomingPayment(deps, {
+            walletAddressId: receiverWalletAddress.id,
+            incomingAmount: {
+              value: receiveAmount.value,
+              assetCode: receiverWalletAddress.asset.code,
+              assetScale: receiverWalletAddress.asset.scale
+            },
+            tenantId: Config.operatorTenantId,
+            initiationReason: IncomingPaymentInitiationReason.Admin
+          })
+          assert.ok(incomingPaymentB.walletAddress)
+
+          const paymentB = await setup({
+            tenantId,
+            receiver: incomingPaymentB.getUrl(config.openPaymentsUrl),
+            receiveAmount,
+            method: 'ilp'
+          })
+          mockPaymentHandlerPay(paymentB, incomingPaymentB)
+
+          const processedIds = await outgoingPaymentService.processNext()
+          expect(processedIds).toHaveLength(2)
+          expect(processedIds).toEqual(
+            expect.arrayContaining([paymentA.id, paymentB.id])
+          )
+
+          await expect(
+            outgoingPaymentService.get({ id: paymentA.id })
+          ).resolves.toMatchObject({
+            state: OutgoingPaymentState.Completed
+          })
+          await expect(
+            outgoingPaymentService.get({ id: paymentB.id })
+          ).resolves.toMatchObject({
+            state: OutgoingPaymentState.Completed
+          })
+        }
+      )
+    )
+
     test('Telemetry Transaction Counter increments for COMPLETED transactions', async (): Promise<void> => {
       const incrementTrxCounterSpy = jest
         .spyOn(telemetryService!, 'incrementCounter')

@@ -745,6 +745,62 @@ describe('Incoming Payment Service', (): void => {
       })
     })
 
+    test(
+      'Returns a batch of incoming payments in a single call',
+      withConfigOverride(
+        () => config,
+        { incomingPaymentBatchSize: 2 },
+        async (): Promise<void> => {
+          const createExpiredIncomingPayment = async () => {
+            const incomingPayment = await createIncomingPayment(deps, {
+              walletAddressId,
+              incomingAmount: {
+                value: BigInt(123),
+                assetCode: asset.code,
+                assetScale: asset.scale
+              },
+              expiresAt: new Date(Date.now() + 30_000),
+              metadata: {
+                description: 'Test incoming payment',
+                externalRef: '#123'
+              },
+              tenantId,
+              initiationReason: IncomingPaymentInitiationReason.Admin
+            })
+            await accountingService.createDeposit({
+              id: uuid(),
+              account: incomingPayment,
+              amount: BigInt(1)
+            })
+            return incomingPayment
+          }
+
+          const incomingPaymentA = await createExpiredIncomingPayment()
+          const incomingPaymentB = await createExpiredIncomingPayment()
+
+          jest.useFakeTimers()
+          jest.setSystemTime(incomingPaymentB.expiresAt)
+
+          const processedIds = await incomingPaymentService.processNext()
+          expect(processedIds).toHaveLength(2)
+          expect(processedIds).toEqual(
+            expect.arrayContaining([incomingPaymentA.id, incomingPaymentB.id])
+          )
+
+          await expect(
+            incomingPaymentService.get({ id: incomingPaymentA.id })
+          ).resolves.toMatchObject({
+            state: IncomingPaymentState.Expired
+          })
+          await expect(
+            incomingPaymentService.get({ id: incomingPaymentB.id })
+          ).resolves.toMatchObject({
+            state: IncomingPaymentState.Expired
+          })
+        }
+      )
+    )
+
     describe('handleExpired', (): void => {
       test('Deactivates an expired incoming payment with received money', async (): Promise<void> => {
         const incomingPayment = await createIncomingPayment(deps, {
