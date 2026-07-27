@@ -145,7 +145,7 @@ export const Config = {
 
   outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 1),
   outgoingPaymentWorkerIdle: envInt('OUTGOING_PAYMENT_WORKER_IDLE', 10), // milliseconds
-  outgoingPaymentBatchSize: envInt('OUTGOING_PAYMENT_WORKER_BATCH_SIZE', 250),
+  outgoingPaymentBatchSize: envInt('OUTGOING_PAYMENT_WORKER_BATCH_SIZE', 1),
   // How many payments in a claimed batch are processed concurrently. Each
   // in-flight payment can check out its own pool connection(s) for accounting
   // (Postgres accounting mode), so this MUST stay below databasePoolMax with
@@ -155,10 +155,6 @@ export const Config = {
     'OUTGOING_PAYMENT_WORKER_CONCURRENCY',
     10
   ),
-  outgoingPaymentProcessingIntervalMs: envInt(
-    'OUTGOING_PAYMENT_PROCESSING_INTERVAL_MS',
-    200
-  ), // milliseconds
   outgoingPaymentMaxQueueSize: envInt(
     'OUTGOING_PAYMENT_MAX_QUEUE_SIZE',
     100_000
@@ -166,11 +162,7 @@ export const Config = {
 
   incomingPaymentWorkers: envInt('INCOMING_PAYMENT_WORKERS', 1),
   incomingPaymentWorkerIdle: envInt('INCOMING_PAYMENT_WORKER_IDLE', 200), // milliseconds
-  incomingPaymentBatchSize: envInt('INCOMING_PAYMENT_WORKER_BATCH_SIZE', 250),
-  incomingPaymentProcessingIntervalMs: envInt(
-    'INCOMING_PAYMENT_PROCESSING_INTERVAL_MS',
-    200
-  ), // milliseconds
+  incomingPaymentBatchSize: envInt('INCOMING_PAYMENT_WORKER_BATCH_SIZE', 1),
   pollIncomingPaymentCreatedWebhook: envBool(
     'POLL_INCOMING_PAYMENT_CREATED_WEBHOOK',
     false
@@ -189,7 +181,7 @@ export const Config = {
   // Number of due webhooks a single worker claims and delivers concurrently per
   // poll. Each claimed webhook's HTTP delivery overlaps the others, so this is
   // effectively the per-worker delivery concurrency.
-  webhookWorkerBatchSize: envInt('WEBHOOK_WORKER_BATCH_SIZE', 20),
+  webhookWorkerBatchSize: envInt('WEBHOOK_WORKER_BATCH_SIZE', 1),
   webhookUrl: envString('WEBHOOK_URL'),
   webhookTimeout: envInt('WEBHOOK_TIMEOUT', 2000), // milliseconds
   webhookMaxRetry: envInt('WEBHOOK_MAX_RETRY', 10),
