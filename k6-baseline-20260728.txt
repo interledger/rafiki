@@ -1,0 +1,59 @@
+Rafiki Performance Baseline
+============================
+Date: 2026-07-28
+Environment: localenv (TigerBeetle accounting)
+Script: test/performance/scripts/create-outgoing-payments.js
+Scenario: Cross-wallet payments, Cloud Nine → Happy Life Bank
+          (createReceiver → createQuote → createOutgoingPayment per iteration)
+
+*** HISTORICAL RECORD — DO NOT USE AS A THROUGHPUT BASELINE ***
+
+This run used vus: 1. With a single virtual user the "Iterations/s" figure
+below is arithmetically just 1000 / iteration_duration_ms (109.79ms -> 9.11),
+so it measures SERIAL LATENCY, not throughput, and cannot show a concurrency
+or batching improvement. Measured capacity on the same build was roughly 2.5x
+this number.
+
+Note also that this run predates the addition of a 4th mutation
+(depositOutgoingPaymentLiquidity) to the script, so it is 3 requests per
+iteration where later runs are 4. Comparing it directly against a later run
+produces a phantom regression.
+
+Superseded by test/performance/bench.sh + outgoing-payments-bench.js.
+See performance-improvement.md sections 1 and 2.
+
+Test Configuration
+------------------
+VUs:      1
+Duration: 600s (10 minutes)
+
+Results
+-------
+Iterations completed:   5,464
+Iterations/s:           9.11
+HTTP requests total:    16,393
+HTTP requests/s:        27.32
+Failed requests:        0 (0.00%)
+
+HTTP Request Duration
+---------------------
+avg:    36.25ms
+min:    16.64ms
+median: 21.85ms
+p(90):  67.39ms
+p(95):  69.65ms
+max:   345.38ms
+
+Iteration Duration (full createReceiver+createQuote+createOutgoingPayment cycle)
+-----------------
+avg:    109.79ms
+min:     97.48ms
+median: 108.25ms
+p(90):  117.14ms
+p(95):  120.97ms
+max:    573.62ms
+
+Data
+----
+Received: 5.9 MB (9.8 kB/s)
+Sent:     12 MB  (21 kB/s)
