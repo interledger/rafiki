@@ -23,12 +23,14 @@ them, so they are stated first.
 | Any single Open Payments–level API call | **< 500 ms** |
 | Full multi-call round trip              | **< 3 s**    |
 
-**The SLO binds before the throughput ceiling does, and that changes the plan.**
-At 20 VUs the system produces its best raw throughput (13.4/s) but `createQuote`
-takes **804 ms** — already in breach. At 5 VUs `createQuote` is 315 ms, inside
-budget. So SLO-respecting capacity today is ~11/s, not 13.4/s, and any future
-number must be quoted as _throughput at p95 within SLO_, never raw throughput.
-`bench.sh` should be extended to fail a run that breaches the per-call budget.
+**The SLO binds before the throughput ceiling does.** On peer traffic at 20 VUs the
+system produces its best accepted rate but `createQuote` p95 is ~1,180 ms — well
+past the warning line. At 5 VUs it is inside budget. Any number must therefore be
+quoted as _throughput at p95 within SLO_, never raw throughput.
+
+The harness now enforces this (§2): a run **fails** on p95 ≥ 2,000 ms and **warns**
+at ≥ 500 ms, and the same gate covers asynchronous payment failures and a send
+worker that cannot drain.
 
 ### Hard constraint: the API cannot change
 
@@ -57,53 +59,83 @@ backbone of Phase 4 rather than an afterthought.
 
 ## 1. Where we are
 
-|                          |                                                                             |
-| ------------------------ | --------------------------------------------------------------------------- |
-| Throughput today         | **~11 payments/s** within SLO (5 VUs), fresh-reset stack                    |
-| Target here              | **250/s** → gap **~23×**                                                    |
-| Target in production     | **1,000/s** on 3 nodes + Cloud SQL                                          |
-| Binding constraint       | Per-payment **CPU** in a single-threaded Node process                       |
-| Not the constraint       | TigerBeetle (~3% utilisation), Postgres CPU (~55%, has headroom)            |
-| Biggest **latency** cost | `createQuote` — **80% of creation latency**, dominated by an ILP rate probe |
-| Blocked route            | Bulk/async ingestion — the API cannot change (§0)                           |
+### There are two separate ceilings, and the second one was invisible until now
 
-Phase 0 (trustworthy measurement) and Phase 1 (remove waste) are done and verified.
-They bought **+9.4% throughput** and **−54% to −89% database work per payment**.
-Phase 1.5 (correctness bugs) is done. The remaining ~23× has to come from Phases 2–4.
+Creating a payment is synchronous; **sending** it is not. The four admin mutations
+return as soon as the payment is recorded, and a background worker moves the money
+afterwards. The benchmark only ever watched those four calls return 200, so it
+measured how fast the API says _yes_ — not how fast the system clears work.
 
-**How the ~23× decomposes.** It is not one change; it is three multiplied together,
-and missing any one of them misses the target:
+Measuring drain time after each run makes the gap visible:
 
-| Factor                        | Today                          | Needed              | Phase |
-| ----------------------------- | ------------------------------ | ------------------- | ----- |
-| Per-payment cost              | ~40 ms sender CPU, ~18 queries | ~10 ms, < 8 queries | 2     |
-| Concurrency before SLO breach | ~5 in flight                   | 100+                | 2 + 4 |
-| Processes doing the work      | 1 (single-threaded)            | N, role-specialised | 4     |
+| topology | VUs | accepted/s | **sustained/s** | drain after a 30 s run |
+| -------- | --- | ---------- | --------------- | ---------------------- |
+| peer     | 5   | 10.82      | **7.31**        | 15 s                   |
+| peer     | 20  | 12.84      | **6.55**        | 30 s                   |
+| local    | 40  | 78.34      | **22.81**       | 75 s                   |
 
-Roughly 4× × 5× × 3× — with process count now carrying more of the load than
-originally planned, because the API-change route is closed.
+`sustained/s = completed ÷ (accept window + drain window)` — the rate at which the
+system actually clears payments. Accepted rate overstates real capacity by **1.5×
+on peer and 3.4× on local**.
 
-**Latency share is not CPU share — keep these separate.** The binding constraint on
-throughput is CPU. `createQuote`'s 80% is a share of _wall-clock latency_, and a
-large part of it is the backend **waiting** on the ILP pacer's ~25 ms inter-packet
-delays, not burning event-loop time. Waiting does not consume CPU. So `createQuote`
-being 80% of the clock does **not** establish that it is 80% of the CPU cost per
-payment — the probe does drag real CPU with it (packet encode/decode, per-packet
-HMACs, and until Phase 1 ~11 peer lookups), but the split between waiting and
-working has not been measured. This is why Phase 2 starts by instrumenting the probe
-rather than assuming the headline number transfers to throughput.
+Two consequences, and they reorder the plan:
 
-**The one-line version:** we are not bound by the ledger or the database. We are
-bound by per-payment CPU in a single-threaded Node process, and by a synchronous
-four-round-trip creation API whose dominant _latency_ cost is an ILP rate probe that
-re-derives static peer configuration on every single payment.
+1. **The send worker is a distinct, currently binding ceiling** — ~7/s for peer and
+   ~23/s for local, against ingestion of ~11/s and ~78/s respectively. Making
+   `createQuote` free would raise the accepted rate and do nothing for the sustained
+   rate. `OUTGOING_PAYMENT_WORKERS` is 1 with batch size 1.
+2. **Peer sustained throughput gets _worse_ with more concurrency** (7.31 → 6.55 from
+   5 to 20 VUs) while latency breaches the SLO. Past ~5 VUs, peer load is pure queue
+   growth.
+
+### Status
+
+|                       |                                                                            |
+| --------------------- | -------------------------------------------------------------------------- |
+| Sustained today       | **~7/s peer**, **~23/s local** (accepted: ~11/s and ~78/s)                 |
+| Target here           | **250/s** → gap **~11× local, ~34× peer**                                  |
+| Target in production  | **1,000/s** on 3 nodes + Cloud SQL                                         |
+| Ceiling 1 — ingestion | Per-payment CPU; on peer, dominated by the ILP rate probe in `createQuote` |
+| Ceiling 2 — send      | Single background worker, batch size 1                                     |
+| Not the constraint    | TigerBeetle (~3%), Postgres CPU (~55%), sender/receiver lock contention    |
+| Blocked route         | Bulk/async ingestion — the API cannot change (§0)                          |
+
+Phase 0 (measurement), Phase 1 (remove waste) and Phase 1.5 (correctness bugs) are
+done and verified. Phase 1 bought +9.4% accepted throughput and −54% to −89%
+database work per payment.
+
+**How the remaining gap decomposes.** Four factors, and missing any one misses the
+target:
+
+| Factor                        | Today                   | Needed              | Phase  |
+| ----------------------------- | ----------------------- | ------------------- | ------ |
+| Send worker capacity          | ~7/s peer, ~23/s local  | ≥ target rate       | **2a** |
+| Ingestion cost per payment    | ~40 ms CPU, ~18 queries | ~10 ms, < 8 queries | 2b / 3 |
+| Concurrency before SLO breach | ~5 in flight (peer)     | 100+                | 2b / 4 |
+| Processes doing the work      | 1 (single-threaded)     | N, role-specialised | 4      |
+
+**Latency share is not CPU share — keep these separate.** `createQuote`'s 80% is a
+share of _wall-clock latency_, and much of it is the backend **waiting** on the ILP
+pacer's ~25 ms inter-packet delays rather than burning event-loop time. Waiting
+consumes no CPU. The probe does drag real CPU with it (packet encode/decode,
+per-packet HMACs, and until Phase 1 ~11 peer lookups), but the split has not been
+measured directly. The peer-vs-local comparison now bounds it from outside: removing
+ILP entirely raises accepted throughput ~7× (11 → 78/s), so ILP dominates the
+ingestion path — but it lifts sustained throughput only ~3× (7 → 23/s), because the
+send worker then becomes the limit.
+
+**The one-line version:** we are not bound by the ledger or the database. Ingestion
+is bound by per-payment CPU in a single-threaded Node process — on peer traffic,
+mostly an ILP rate probe re-deriving static peer configuration every time — and
+end-to-end throughput is bound by a single background send worker behind it.
 
 ### A caveat that governs every number in this document
 
-A **fresh-reset** stack measures ~11 payments/s where a **warm long-lived** stack
-measured ~19/s. Both are legitimate; they are different environments. Every
-before/after pair below was captured in the same environment, back to back. Never
-compare a number from one table against a number in another.
+Absolute numbers move with the environment: a **fresh-reset** stack measures lower
+than a **warm long-lived** one (~11/s vs ~19/s accepted on the same peer build), and
+a co-resident load generator depresses everything. Every before/after pair was
+captured in the same environment, back to back. Never compare a number from one
+table against a number in another; compare within a table, or re-measure.
 
 ---
 
@@ -136,61 +168,112 @@ baselines.
 
 ### The harness now
 
-| File                                                  | Purpose                                                                                                                                            |
-| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `test/performance/scripts/outgoing-payments-bench.js` | Pinned benchmark. Per-mutation request tags; `constant-vus` and `ramping-arrival-rate` scenarios; machine-readable `BENCH_JSON_BEGIN/END` summary. |
-| `test/performance/bench.sh`                           | Runner: optional `--reset`, idle-load measurement, discarded warmup, VU sweep (1/5/20), container CPU sampling, database transactions per payment. |
-| `test/performance/compare.py`                         | Diffs two result files — throughput, work per payment, per-mutation latency, CPU.                                                                  |
-| `test/performance/repeat-vus5.sh`                     | N repeats at peak concurrency for confidence intervals.                                                                                            |
+One parameterised script, not a copy per scenario. The previous copies drifted
+apart and the local-payment one silently bit-rotted against a schema change
+(`edge.node.url` when the field had become `address`), so local payments were
+never actually measured.
+
+| File                                                  | Purpose                                                                                                                                                  |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `test/performance/scripts/outgoing-payments-bench.js` | The benchmark. Dimensions via env; per-mutation request tags; SLO thresholds; machine-readable `BENCH_JSON_BEGIN/END` summary.                           |
+| `test/performance/bench.sh`                           | Runner: matrix sweep, `--reset`, idle-load measurement, warmup, settle, completion tracking, CPU sampling, database transactions per payment, `REPEATS`. |
+| `test/performance/compare.py`                         | Diffs two result files, matching runs on their full dimension tuple. Aggregates repeats and reports spread.                                              |
+
+**Dimensions.** Every scenario is a point in this space, and every result records
+where it came from:
+
+| Dimension  | Values                                  | Why it matters                                                                                                                                                                                                                                                                                                       |
+| ---------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TOPOLOGY` | `peer` \| `local`                       | `createReceiver` resolves a local URL to a local incoming payment and a foreign URL to a remote one, so the four-mutation flow is identical and only the receiver address changes. `local` selects the LOCAL payment method and bypasses ILP entirely — making peer-vs-local a direct measurement of what ILP costs. |
+| `STRATEGY` | `many-to-many` \| `fan-in` \| `fan-out` | How senders and receivers are paired, which is what would drive database and ledger lock contention. `fan-in` = many senders to one receiver; `fan-out` = one sender to many receivers.                                                                                                                              |
+| `VUS`      | concurrency                             |                                                                                                                                                                                                                                                                                                                      |
+| `MODE`     | `quick` \| `full`                       | `quick` is a smoke test — 1 VU, ~10 s, no reset, no warmup, fails on any error. For "does this run at all", never for reporting.                                                                                                                                                                                     |
+
+`setup()` builds wallet-address pools sized to the VU count, creating `perf-snd-N` /
+`perf-rcv-N` addresses on whichever instance owns them (including through the
+peer's admin API). Each VU keeps one pairing for the whole run, so a fan-in run
+really does drive every payment at one receiver.
 
 ```bash
-./test/performance/bench.sh baseline --reset
-./test/performance/bench.sh phase1  --reset
-python3 test/performance/compare.py test/performance/results/{baseline,phase1}.json
+./test/performance/bench.sh quick                  # ~30s smoke test
+./test/performance/bench.sh baseline --reset       # full matrix
+TOPOLOGIES=local VU_LEVELS=40 REPEATS=3 ./test/performance/bench.sh x
+python3 test/performance/compare.py results/{baseline,phase2}.json
 ```
 
-### Rules the harness enforces, and why
+### What the harness enforces, and why
 
 - **Warm up and discard.** Without it, database transactions per payment fell
   64 → 34 → 30 across three successive runs — the system was still warming while
   being measured.
 - **`--reset` before each compared set.** Payment tables grow monotonically; a
   later run on a bigger table is not a fair comparison.
+- **Settle before measuring anything.** Payments are created synchronously and sent
+  asynchronously, so a run's backlog keeps draining after k6 exits. Without a drain
+  step the next cell is measured on a system still working through the previous
+  one, and the idle reading measures leftover work rather than a quiet node
+  (observed drifting 92 → 244 → 292 → 315 tx/s across runs).
+- **Report completion, not acceptance.** Each run records a server-side time window
+  and queries the terminal state of the payments created in it. A run that accepts
+  fast and then fails payments asynchronously must not read as clean.
 - **Measure work, not just speed.** Throughput alone cannot distinguish "more
   efficient" from "given more CPU". Database transactions per payment and CPU are
-  what must fall for the system to scale.
+  what have to fall for the system to scale.
 - **Measure idle load.** Transactions/sec with no load applied exposes background
   waste that hides inside CPU percentages. This is what caught the busy loop.
 - **Repeat before believing a sub-20% delta.** A single 45 s run cannot resolve it.
-  Take 3 and check the distributions do not overlap.
+  `REPEATS=N`; `compare.py` averages and prints the spread.
 
-### Still outstanding from Phase 0
+**SLO gate.** A run **fails** on p95 per call ≥ 2,000 ms, on ≥ 5% of payments failing
+asynchronously, or on the send worker failing to drain. It **warns** at p95 ≥ 500 ms,
+on any asynchronous failures at all, and when the drain window exceeds the accept
+window — the signature of ingestion outrunning the worker.
+
+### Still outstanding
 
 - Move the load generator **off** the system under test. k6 currently competes with
-  both nodes and Postgres for cores, which compresses every number.
-- Report throughput **at a latency SLO** ("payments/s at p95 < 500 ms") rather than
-  raw payments/s.
-- Note that `process_pending_payment_ms` telemetry now times a whole batch rather
-  than one payment, so dashboards are not comparable across the `nl/batch-workers`
-  boundary.
+  both nodes and Postgres for cores, which depresses every number.
+- **Replace drain-based `sustained/s` with a steady-state measurement.** The current
+  figure is a lower bound: the drain phase has no arrivals, so the worker is
+  clearing a shrinking queue under different conditions, and draining to fully empty
+  includes the tail. The rigorous version holds a constant arrival rate and checks
+  whether in-flight depth stabilises or grows without bound. The `ramping-arrival-rate`
+  scenario exists for this. Do it before quoting a capacity number outside the team.
+- Drain polling is every 5 s, so `drain_seconds` is granular to ±5 s.
+- Currency is not yet a dimension; the seeds have USD/EUR/MXN/JPY, and cross-currency
+  forces real rate conversion.
+- `process_pending_payment_ms` telemetry now times a whole batch rather than one
+  payment, so dashboards are not comparable across the `nl/batch-workers` boundary.
 
 ---
 
 ## 3. What we know about the system
 
-### 3.1 It collapses at 5 concurrent requests
+### 3.1 Peer traffic stops scaling at ~5 concurrent; local does not
 
-Warm long-lived stack, 45 s runs:
+Warm long-lived stack, 45 s runs, **peer** topology:
 
-| VUs   | payments/s | iteration p50 | failures |
+| VUs   | accepted/s | iteration p50 | failures |
 | ----- | ---------- | ------------- | -------- |
 | 1     | 7.5        | 131 ms        | 0        |
 | **5** | **18.9**   | 254 ms        | 0        |
 | 20    | 17.6       | 1.13 s        | 0        |
 | 50    | 14.3       | 3.46 s        | 0        |
 
-Past ~5 concurrent, throughput **falls** while latency grows super-linearly, with
-**zero errors**. That is pure queueing — a serialised resource, not failures.
+Past ~5 concurrent, accepted throughput **falls** while latency grows
+super-linearly, with **zero errors** — pure queueing, not failures.
+
+**This is peer-specific.** On `local` the same sweep keeps climbing: ~50/s accepted
+at 5 VUs, ~80/s at 40 VUs. So it is not a general concurrency limit in the request
+path; it is the ILP creation path saturating.
+
+Two corrections to how this was originally read:
+
+- These runs predate the harness restructure, so they were **fan-in and fan-out
+  simultaneously** — every payment `gfranklin → pfry`, the maximally contended
+  pairing and the only one ever measured. Contention was a natural suspect; it has
+  since been ruled out (§3.5).
+- They report **accepted** throughput. Sustained rates are far lower (§1).
 
 ### 3.2 The bottleneck is Node CPU, not the datastores
 
@@ -264,9 +347,49 @@ is dead code at runtime.
 paths the branch is behaviourally identical to `main`. The only changed default was
 `walletAddressBatchSize: 250`, which activated the busy loop fixed in Phase 1.
 
-Batching was also aimed at the wrong layer: it batches _background workers_, but the
-ceiling is in the _synchronous ingestion path_, which falls over at 5 concurrent
-requests.
+A note on where batching was aimed. The original reading was that it targeted the
+wrong layer, because the ceiling looked like the synchronous ingestion path. That is
+only half right: **the background worker is itself a hard ceiling** (§1), so batching
+those workers was aimed at a real constraint. It just could not help while shipped at
+batch size 1, and the harness could not have detected it either way.
+
+### 3.5 Lock contention is not currently a factor
+
+The `strategy` dimension exists to separate independent payments from ones sharing a
+sender or a receiver, since those are what would contend on wallet-address rows and
+liquidity accounts. Measured on `local`:
+
+| VUs | many-to-many | fan-in  | fan-out |
+| --- | ------------ | ------- | ------- |
+| 5   | 49.67/s      | 49.83/s | 50.06/s |
+| 40  | 80.34/s      | 81.95/s | 81.51/s |
+
+Identical within noise, with database transactions per payment flat at ~14.5 across
+all three. **Sender/receiver contention is not a limiter at this scale** — CPU and
+the send worker saturate first.
+
+This is a useful negative result twice over: it removes contention from the suspect
+list for the §3.1 concurrency ceiling, and it means the pre-restructure benchmark's
+accidental fan-in+fan-out pairing did not bias the historical numbers. The dimension
+stays instrumented, because contention is exactly the kind of thing that surfaces
+once the current ceilings are lifted.
+
+### 3.6 ILP dominates the creation path — measured, not inferred
+
+`local` payments bypass the ILP connector and its rate probe entirely
+(`quote/service.ts` selects `receiver.isLocal ? 'LOCAL' : 'ILP'`), so peer-vs-local
+prices ILP directly:
+
+|                            | peer | local | ratio  |
+| -------------------------- | ---- | ----- | ------ |
+| accepted/s (1 VU smoke)    | 2.7  | 21.8  | **8×** |
+| accepted/s (best observed) | ~13  | ~80   | **6×** |
+| sustained/s                | ~7   | ~23   | **3×** |
+
+Removing ILP raises ingestion by roughly 6–8×, confirming it dominates the creation
+path. But it lifts _sustained_ throughput only ~3×, because the send worker then
+becomes the limit. Both numbers matter: the first sizes Phase 2, the second says
+Phase 2 alone cannot reach the target.
 
 ---
 
@@ -398,22 +521,42 @@ are listed here so nobody "finishes" them without re-deciding:
 
 ## 5. The next phases
 
-Sequencing matters more than any individual item here. **Do not start with Phase 4.**
-Throwing replicas at the current code multiplies a ~18-query-per-payment workload
-across more processes and hits the Postgres wall almost immediately.
+**Sequencing has changed.** The discovery that the send worker is a separate,
+currently binding ceiling (§1) means Phase 2 on its own cannot move end-to-end
+throughput: making `createQuote` free raises the _accepted_ rate and leaves the
+_sustained_ rate where it is. The two ceilings have to come down together.
 
-### Phase 2 — Make `createQuote` cheap _(next up)_
+Revised order of attack:
 
-**Why now:** it is 80% of creation latency — the single largest remaining cost on
-the clock, and nothing else in the creation path is close.
+| Order  | Work                                                                  | Why here                                                                                                                   |
+| ------ | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| **2a** | Raise send-worker capacity (Phase 4 items 1–4, pulled forward)        | It is the binding ceiling for both topologies today. Nothing else shows up in sustained throughput until it moves.         |
+| **2b** | Make `createQuote` cheap (Phase 2)                                    | The binding ceiling on _peer_ ingestion, ~6–8× per §3.6, and it buys the SLO headroom needed to run at higher concurrency. |
+| **3**  | Internal efficiency behind an unchanged API (Phase 3)                 | Broad per-payment cost reduction; helps both ceilings.                                                                     |
+| **4**  | Full role-specialised topology and horizontal scale (rest of Phase 4) | Converts per-node efficiency into the target.                                                                              |
 
-**But size the prize before chasing it.** Latency share is not CPU share (§3.3), and
-throughput is CPU-bound. Some of the 288 ms is the backend idling on pacer timers,
-which frees no CPU when removed. Step 1 below exists to establish how much of this
-converts into throughput before the rest of the phase is committed to. If the probe
-turns out to be mostly waiting, its removal still raises per-VU throughput and cuts
-latency sharply — but the honest expectation for peak throughput should be revised
-down, and Phase 3 becomes the load-bearing work sooner.
+2a and 2b are largely independent and could run in parallel by different people.
+
+**Still do not simply add replicas first.** Multiplying a ~18-query-per-payment
+workload across processes hits the Postgres wall; the point of pulling worker
+capacity forward is to fix _why_ one worker is slow, not to paper over it.
+
+### Phase 2 — Make `createQuote` cheap
+
+**Why:** it is 80% of creation latency, and §3.6 now prices the whole ILP path from
+outside — removing it (via `local`) raises accepted throughput **6–8×**. That is the
+ceiling on what this phase can deliver for ingestion.
+
+**The prize is now partly sized, with one caveat left.** §3.6 bounds the _total_ ILP
+cost, but not the split between the probe's pacer waiting (frees no CPU when removed)
+and its real work (packet encode/decode, per-packet HMACs). The 6–8× is also an upper
+bound for this phase specifically, since `local` skips more than just the probe.
+Step 1 still exists, but it is now a narrower question: how much of the measured ILP
+cost is the _probe_ rather than the rest of the ILP send path.
+
+**And note the hard limit:** even a perfect Phase 2 lifts sustained throughput only
+to whatever the send worker can clear — ~23/s today (§1). This phase must be paired
+with 2a to show up in end-to-end numbers.
 
 **The insight:** the rate probe re-derives _static peer configuration_ on every
 payment. `maxPacketAmount` is a column on the peer record. Exchange rates are
@@ -499,8 +642,19 @@ with no change to the API surface.
 ### Phase 4 — Role-specialised processes and horizontal scale
 
 **Now the backbone of the plan, not an afterthought** — with the API-change route
-closed, process count carries more of the multiplier. Only meaningful after Phase 2,
-and it was only safe once the §6 correctness bugs were fixed.
+closed, process count carries more of the multiplier. It was only safe to attempt
+once the §6 correctness bugs were fixed.
+
+> **Items 1, 3, 4 and 5 below are Phase 2a and should start now.** They are what
+> raises send-worker capacity, which §1 shows is the binding ceiling on sustained
+> throughput. The remainder — the full role-specialised topology and scaling out —
+> still belongs after Phase 2b.
+>
+> **Profile the worker before changing it.** We know it clears ~7/s (peer) and ~23/s
+> (local) with one loop at batch size 1, but not _why_. If its per-payment cost is
+> the ILP send path, it shares a root cause with Phase 2b; if it is claim-query
+> overhead or transaction serialisation, item 4 is the fix. That measurement decides
+> how much of 2a is real work.
 
 **The core idea (per the deployment model):** run several instances of the same
 image with different configuration, each doing a subset of the work. Kubernetes
@@ -686,6 +840,17 @@ Three consequences:
    and **Postgres is a query-count problem, not a CPU problem** — Phase 1 cut ~26
    queries per payment to ~18; at 1,000/s that is still ~18,000 queries/second.
 
+**These are ingestion-side numbers, and they are no longer the whole story.** They
+were derived from CPU measured while the API was accepting payments, so they size
+ceiling 1. Ceiling 2 — the send worker — is not a CPU-capacity question at all: the
+node is nowhere near saturated during the drain phase, and throughput there is
+limited by a single worker loop with batch size 1. Adding cores does not help it;
+adding worker processes and letting a batch actually be a batch does.
+
+Put differently: the table says 250/s **ingestion** needs ~10 sender cores. Reaching
+250/s **sustained** additionally needs the send path to go from ~7–23/s to 250/s,
+which is a concurrency and process-topology problem, not a core-count one.
+
 ### The concurrency floor, and why the SLO tightens it
 
 Little's Law: sustaining λ payments/s at latency W requires `L = λW` in flight.
@@ -707,35 +872,50 @@ actually hold the concurrency, which puts more weight on Phase 4.
 
 ### What has to become true
 
-| Lever                    | Today         | Needs to be                       | Phase |
-| ------------------------ | ------------- | --------------------------------- | ----- |
-| Postgres queries/payment | ~18 (was ~26) | **< 8**                           | 2 / 3 |
-| Sender CPU/payment       | ~40 ms        | **~10 ms**                        | 2 / 3 |
-| `createQuote` latency    | ~288 ms       | **well under 500 ms SLO at load** | 2     |
-| Concurrent in flight     | degrades at 5 | **100+**                          | 2 / 4 |
-| Processes doing the work | 1             | **N, role-specialised**           | 4     |
-| TigerBeetle transfers    | 1 per request | **batched internally**            | 3     |
+| Lever                     | Today                      | Needs to be                       | Phase  |
+| ------------------------- | -------------------------- | --------------------------------- | ------ |
+| **Send worker capacity**  | **~7/s peer, ~23/s local** | **≥ 250/s**                       | **2a** |
+| Send workers × batch size | 1 × 1                      | **N × meaningful batch**          | 2a     |
+| `createQuote` latency     | ~288 ms                    | **well under 500 ms SLO at load** | 2b     |
+| Postgres queries/payment  | ~18 (was ~26)              | **< 8**                           | 2b / 3 |
+| Sender CPU/payment        | ~40 ms                     | **~10 ms**                        | 2b / 3 |
+| Concurrent in flight      | degrades at 5 (peer)       | **100+**                          | 2b / 4 |
+| Processes doing the work  | 1                          | **N, role-specialised**           | 4      |
+| TigerBeetle transfers     | 1 per request              | **batched internally**            | 3      |
 
 ### Realistic assessment
 
 Both targets remain reasonable — the ledger is idle, the database has per-query
-headroom, and nothing in the design is fundamentally hostile. But the API constraint
-removed the single biggest lever, so the programme is now longer and leans harder on
-per-payment efficiency and process topology:
+headroom, and nothing in the design is fundamentally hostile. But two things have
+made the programme longer than first estimated: the API constraint removed the
+biggest single lever, and the send worker turned out to be a second ceiling that the
+old harness could not see.
 
 - **Phase 0 + 1 + 1.5** — done. Trustworthy measurement, waste removed, correctness
   bugs fixed.
-- **Phase 2** — the largest remaining single win, and it buys SLO headroom as well as
-  throughput. Mostly self-contained caching work.
-- **Phase 3** — now internal-only efficiency behind an unchanged API. Smaller than the
+- **Phase 2a** (send worker) — now first. Until it moves, nothing else changes
+  sustained throughput. Also the least explored area, so the least certain estimate.
+- **Phase 2b** (`createQuote`) — bounded at 6–8× for peer ingestion by §3.6, and it
+  buys the SLO headroom needed to run at higher concurrency.
+- **Phase 3** — internal-only efficiency behind an unchanged API. Smaller than the
   original bulk/async plan; TigerBeetle micro-batching is the standout item.
-- **Phase 4** — role-specialised processes. Promoted to the backbone: with the API
-  fixed, multiplying processes is how the remaining gap is closed.
+- **Phase 4** — role-specialised processes; how the remaining gap is closed once
+  per-payment cost is down.
 
-**The honest risk:** if Phase 2 reveals that most of `createQuote` is idle waiting
-rather than CPU (§3.3), then per-node throughput moves less than hoped, and hitting
-250/s locally depends more heavily on Phase 4 than this plan currently assumes. That
-measurement should be taken before committing to the rest of the sequence.
+**Honest risks, in order:**
+
+1. **The send worker is the least understood part of the system.** We know it clears
+   ~7/s (peer) and ~23/s (local) and that it runs single-threaded with batch size 1,
+   but we have not profiled _why_. If its cost is dominated by the same ILP send path
+   that makes peer ingestion slow, then 2a and 2b are the same fix and the estimate
+   improves; if not, 2a is its own body of work.
+2. **`sustained/s` is a lower bound from a drain measurement**, not a steady-state
+   one (§2). The real numbers could be somewhat better. Replace the metric before
+   quoting capacity outside the team.
+3. **The split between pacer waiting and real CPU inside the probe is still
+   unmeasured.** §3.6 bounds the total ILP cost but not that split, so Phase 2b's
+   contribution to _throughput_ (as opposed to latency) remains the softest number
+   in this plan.
 
 ---
 
@@ -747,17 +927,29 @@ source ~/.nvm/nvm.sh && nvm use 24.18.0
 
 pnpm localenv:compose up -d
 
-# full sweep with reset + warmup, writes test/performance/results/<label>.json
+# smoke test: does the harness and the code run at all? (~30s, not a measurement)
+./test/performance/bench.sh quick
+
+# full matrix sweep (topology x strategy x VUs) with reset + warmup + settle,
+# writes test/performance/results/<label>.json
 ./test/performance/bench.sh mylabel --reset
 
-# confidence check at peak concurrency
-./test/performance/repeat-vus5.sh mylabel 3
+# narrow the matrix and repeat for confidence intervals
+TOPOLOGIES=local STRATEGIES=fan-in VU_LEVELS=40 REPEATS=3 \
+  ./test/performance/bench.sh mylabel
 
-# diff two result sets
+# diff two result sets (matched on topology/strategy/VUs)
 python3 test/performance/compare.py \
   test/performance/results/baseline.json \
   test/performance/results/phase1.json
 ```
+
+**Knobs:** `TOPOLOGIES`, `STRATEGIES`, `VU_LEVELS`, `DURATION`, `REPEATS`,
+`SETTLE_TIMEOUT_S`, `SLO_WARN_MS`, `SLO_FAIL_MS`, `COMPLETION_WARN_PCT`,
+`COMPLETION_FAIL_PCT`.
+
+**Read `sustained_per_sec`, not `payments_per_sec`.** The first is what the system
+clears; the second is only what the API accepted (§1).
 
 **Development loop.** `localenv` bind-mounts `packages/backend/src` and runs
 `ts-node-dev --respawn`, so **source edits go live with no Docker rebuild**. This

@@ -68,3 +68,6 @@ k6-test-summary.txt
 
 # performance benchmark output
 test/performance/results/
+
+# python bytecode from test/performance/compare.py
+test/performance/__pycache__/
