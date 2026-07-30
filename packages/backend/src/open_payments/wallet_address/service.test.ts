@@ -838,17 +838,27 @@ describe('Open Payments Wallet Address Service', (): void => {
       })
     })
 
+    // processAt is built inside the test body, not in the test.each table: the
+    // table is evaluated once when the describe block is registered, so a
+    // `Date.now() + 60_000` literal there goes stale and lands in the past
+    // whenever the suite takes over a minute to reach this test (which it does
+    // under `--maxWorkers=50%`), making the "not ready" case flaky.
     test.each`
-      processAt                        | description
-      ${null}                          | ${'not scheduled'}
-      ${new Date(Date.now() + 60_000)} | ${'not ready'}
+      offsetMs  | description
+      ${null}   | ${'not scheduled'}
+      ${60_000} | ${'not ready'}
     `(
       'Does not process wallet address $description for withdrawal',
-      async ({ processAt }): Promise<void> => {
+      async ({ offsetMs }): Promise<void> => {
+        const processAt =
+          offsetMs === null ? null : new Date(Date.now() + offsetMs)
         await walletAddress.$query(knex).patch({ processAt })
-        await expect(walletAddressService.processNext()).resolves.toHaveLength(
-          0
-        )
+        // Must be undefined, not []. app.ts treats a truthy result as "more
+        // work available" and reschedules via process.nextTick, so returning an
+        // empty array (which is truthy) busy-loops the worker.
+        await expect(
+          walletAddressService.processNext()
+        ).resolves.toBeUndefined()
         await expect(
           walletAddressService.get(walletAddress.id)
         ).resolves.toEqual(walletAddress)
@@ -938,6 +948,21 @@ describe('Open Payments Wallet Address Service', (): void => {
         walletAddressService.get(walletAddressB.id)
       ).resolves.toMatchObject({ processAt: null })
     })
+
+    test('Returns undefined once the queue is drained, so the worker can idle', async (): Promise<void> => {
+      // Regression guard for the worker busy loop: app.ts reschedules via
+      // process.nextTick whenever processNext() resolves truthy. An empty array
+      // is truthy, so returning [] here spins the worker at full tilt — it was
+      // measured issuing ~1,969 pointless BEGIN/SELECT/COMMIT round trips per
+      // second against Postgres on a completely idle node.
+      await walletAddress.$query(knex).patch({ processAt: new Date() })
+      await expect(walletAddressService.processNext()).resolves.toContain(
+        walletAddress.id
+      )
+
+      // Nothing left to claim.
+      await expect(walletAddressService.processNext()).resolves.toBeUndefined()
+    })
   })
 
   describe('triggerEvents', (): void => {
@@ -957,13 +982,17 @@ describe('Open Payments Wallet Address Service', (): void => {
       }
     })
 
+    // See the note in the processNext block: build processAt inside the test so
+    // the "not ready" offset cannot go stale before the test runs.
     test.each`
-      processAt                        | description
-      ${null}                          | ${'not scheduled'}
-      ${new Date(Date.now() + 60_000)} | ${'not ready'}
+      offsetMs  | description
+      ${null}   | ${'not scheduled'}
+      ${60_000} | ${'not ready'}
     `(
       'Does not process wallet address $description for withdrawal',
-      async ({ processAt }): Promise<void> => {
+      async ({ offsetMs }): Promise<void> => {
+        const processAt =
+          offsetMs === null ? null : new Date(Date.now() + offsetMs)
         for (let i = 1; i < walletAddresses.length; i++) {
           await walletAddresses[i].$query(knex).patch({ processAt })
         }

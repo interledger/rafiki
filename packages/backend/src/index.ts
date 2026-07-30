@@ -244,7 +244,8 @@ export function initIocContainer(
       keyId: config.keyId,
       privateKey: config.privateKey,
       walletAddressUrl: config.walletAddressUrl,
-      useHttp: process.env.NODE_ENV === 'development'
+      useHttp: process.env.NODE_ENV === 'development',
+      validateResponses: config.openPaymentsValidateResponses
     })
   })
   container.singleton('tokenIntrospectionClient', async (deps) => {
@@ -318,6 +319,11 @@ export function initIocContainer(
       config
     })
   })
+  container.singleton('peerCache', async (deps) => {
+    const config = await deps.use('config')
+    return createInMemoryDataStore(config.localCacheDuration)
+  })
+
   container.singleton('peerService', async (deps) => {
     return await createPeerService({
       knex: await deps.use('knex'),
@@ -325,7 +331,8 @@ export function initIocContainer(
       accountingService: await deps.use('accountingService'),
       assetService: await deps.use('assetService'),
       httpTokenService: await deps.use('httpTokenService'),
-      routerService: await deps.use('routerService')
+      routerService: await deps.use('routerService'),
+      peerCache: await deps.use('peerCache')
     })
   })
   container.singleton('authServerService', async (deps) => {

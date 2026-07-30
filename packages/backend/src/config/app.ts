@@ -229,6 +229,15 @@ export const Config = {
   ),
   walletAddressRedirectHtmlPage: process.env.WALLET_ADDRESS_REDIRECT_HTML_PAGE,
   localCacheDuration: envInt('LOCAL_CACHE_DURATION_MS', 15_000),
+  // AJV-validates every Open Payments response against the OpenAPI spec. These
+  // responses come from other organisations' servers, so validation is a real
+  // defence — it defaults to on, matching the client library's own default.
+  // Disabling it is a measurable CPU saving on the hot path (4 client calls per
+  // outgoing payment) for operators who accept trusting peer responses.
+  openPaymentsValidateResponses: envBool(
+    'OPEN_PAYMENTS_VALIDATE_RESPONSES',
+    true
+  ),
   operatorTenantId: envString('OPERATOR_TENANT_ID'),
   enableIlpTiming: envBool('ENABLE_ILP_TIMING_TELEMETRY', true),
   dbSchema: undefined as string | undefined,

@@ -168,7 +168,10 @@ async function canApiSignatureBeProcessed(
 
   const op = redis.multi()
   op.set(key, signature)
-  op.expire(key, ttlMilliseconds)
+  // EXPIRE takes seconds. Passing milliseconds here retained every replay-guard
+  // key for ttlSeconds * 1000 seconds (8.3 hours at the 30s default) instead of
+  // ttlSeconds, growing the keyspace by ~4 keys per payment indefinitely.
+  op.expire(key, config.adminApiSignatureTtlSeconds)
   await op.exec()
 
   return true

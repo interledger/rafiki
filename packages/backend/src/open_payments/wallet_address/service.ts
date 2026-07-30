@@ -130,7 +130,14 @@ export async function createWalletAddressService({
     getOrPollByUrl: (url) => getOrPollByUrl(deps, url),
     getPage: (pagination?, sortOrder?, tenantId?) =>
       getWalletAddressPage(deps, pagination, sortOrder, tenantId),
-    processNext: () => processNextWalletAddresses(deps),
+    // Must resolve to undefined — not an empty array — when there was no work.
+    // app.ts treats a truthy result as "more work available" and reschedules
+    // via process.nextTick; [] is truthy, which busy-loops the worker and
+    // starves the event loop. Matches the webhook worker's contract.
+    processNext: async () => {
+      const ids = await processNextWalletAddresses(deps)
+      return ids.length > 0 ? ids : undefined
+    },
     triggerEvents: (limit) => triggerWalletAddressEvents(deps, limit)
   }
 }

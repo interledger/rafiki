@@ -22,6 +22,7 @@ import { isValidHttpUrl } from '../../../shared/utils'
 import { v4 as uuid } from 'uuid'
 import { TransferError } from '../../../accounting/errors'
 import { RouterService } from '../connector/ilp-routing/service'
+import { CacheDataStore } from '../../../middleware/cache/data-stores'
 
 export interface HttpOptions {
   incoming?: {
@@ -88,6 +89,7 @@ interface ServiceDependencies extends BaseService {
   httpTokenService: HttpTokenService
   knex: TransactionOrKnex
   routerService: RouterService
+  peerCache: CacheDataStore<Peer>
 }
 
 export async function createPeerService({
@@ -96,7 +98,8 @@ export async function createPeerService({
   accountingService,
   assetService,
   httpTokenService,
-  routerService
+  routerService,
+  peerCache
 }: ServiceDependencies): Promise<PeerService> {
   const log = logger.child({
     service: 'PeerService'
@@ -107,7 +110,8 @@ export async function createPeerService({
     accountingService,
     assetService,
     httpTokenService,
-    routerService
+    routerService,
+    peerCache
   }
   return {
     get: (id, tenantId) => getPeer(deps, id, tenantId),
@@ -134,11 +138,20 @@ export async function createPeerService({
   }
 }
 
+// Cached: this is called once per ILP packet via getPeerByDestinationAddress,
+// which made it the highest-QPS statement in the system. Every other hot-path
+// entity (asset, wallet address by id, fee, tenant) is already cached the same
+// way; Peer was the outlier.
 async function getPeer(
   deps: ServiceDependencies,
   id: string,
   tenantId?: string
 ): Promise<Peer | undefined> {
+  const cached = await deps.peerCache.get(id)
+  if (cached) {
+    return tenantId && cached.tenantId !== tenantId ? undefined : cached
+  }
+
   let query = Peer.query(deps.knex)
   if (tenantId) {
     query = query.where('tenantId', tenantId)
@@ -147,6 +160,7 @@ async function getPeer(
   if (peer) {
     const asset = await deps.assetService.get(peer.assetId)
     if (asset) peer.asset = asset
+    await deps.peerCache.set(peer.id, peer)
   }
   return peer
 }
@@ -266,7 +280,7 @@ async function updatePeer(
   }
 
   try {
-    return await Peer.transaction(deps.knex, async (trx) => {
+    const updated = await Peer.transaction(deps.knex, async (trx) => {
       const existingPeer = await Peer.query(trx).findById(options.id)
       if (!existingPeer) {
         return PeerError.UnknownPeer
@@ -304,6 +318,11 @@ async function updatePeer(
       if (asset) peer.asset = asset
       return peer
     })
+    // Invalidate after commit rather than writing through: a rolled-back
+    // transaction must never leave uncommitted state in the cache. Dropping
+    // the entry only costs the next reader a query.
+    await deps.peerCache.delete(options.id)
+    return updated
   } catch (err) {
     if (err instanceof NotFoundError) {
       return PeerError.UnknownPeer
@@ -446,6 +465,7 @@ async function deletePeer(
     .returning('*')
     .first()
   if (peer) {
+    await deps.peerCache.delete(peer.id)
     await clearPeerRoutes(deps, peer)
     const asset = await deps.assetService.get(peer.assetId)
     if (asset) peer.asset = asset
