@@ -159,20 +159,61 @@ async function processNextWebhook(
 
       if (webhooks.length === 0) return
 
-      // Deliver the whole claimed batch concurrently. The HTTP requests overlap
-      // while each webhook's small DB write is serialized on the transaction's
-      // single connection. Errors are isolated per webhook so one failure never
-      // rolls back the batch or blocks its siblings.
-      const processed = await Promise.all(
-        webhooks.map((webhook) => deliverWebhook(deps_, trx, webhook))
-      )
+      // Resolve tenant settings once per distinct tenant, before the fan-out.
+      // This lookup is uncached and was previously issued per webhook against
+      // the shared pool (not the transaction's connection), so a batch of N
+      // produced N concurrent pool checkouts competing with API traffic for
+      // DATABASE_POOL_MAX (20) connections.
+      const settingsByTenant = await getSettingsByTenant(deps_, webhooks)
+
+      // Deliver in bounded-concurrency chunks. Batch size previously *was* the
+      // delivery concurrency with no cap — a batch of 250 opened 250 sockets at
+      // once. Errors are isolated per webhook so one failure never rolls back
+      // the batch or blocks its siblings.
+      const concurrency = Math.max(1, deps_.config.webhookWorkerConcurrency)
+      const ids: string[] = []
+      for (let i = 0; i < webhooks.length; i += concurrency) {
+        const chunk = webhooks.slice(i, i + concurrency)
+        const processed = await Promise.all(
+          chunk.map((webhook) =>
+            deliverWebhook(deps_, trx, webhook, settingsByTenant)
+          )
+        )
+        ids.push(...processed.filter((id): id is string => id !== undefined))
+      }
 
       span.end()
 
-      const ids = processed.filter((id): id is string => id !== undefined)
       return ids.length > 0 ? ids : undefined
     })
   })
+}
+
+// Resolve tenant settings once per distinct recipient tenant in the batch.
+// Webhooks routed to the card or POS service never consult tenant settings, so
+// they are excluded from the lookup entirely.
+async function getSettingsByTenant(
+  deps: ServiceDependencies,
+  webhooks: Webhook[]
+): Promise<Map<string, Partial<FormattedTenantSettings>>> {
+  const tenantIds = new Set(
+    webhooks
+      .filter(
+        (webhook) =>
+          !webhook.metadata?.sendToCardService &&
+          !webhook.metadata?.sendToPosService
+      )
+      .map((webhook) => webhook.recipientTenantId)
+  )
+
+  const entries = await Promise.all(
+    [...tenantIds].map(async (tenantId) => {
+      const settings = await deps.tenantSettingService.get({ tenantId })
+      return [tenantId, formatSettings(settings)] as const
+    })
+  )
+
+  return new Map(entries)
 }
 
 // Deliver a single claimed webhook. Returns its id when an attempt was made,
@@ -181,7 +222,8 @@ async function processNextWebhook(
 async function deliverWebhook(
   deps_: ServiceDependencies,
   trx: TransactionOrKnex,
-  webhook: Webhook
+  webhook: Webhook,
+  settingsByTenant: Map<string, Partial<FormattedTenantSettings>>
 ): Promise<string | undefined> {
   if (!isWebhookWithEvent(webhook)) return
 
@@ -204,12 +246,11 @@ async function deliverWebhook(
         webhookUrl: deps.config.posWebhookServiceUrl
       })
     } else {
-      const settings = await deps_.tenantSettingService.get({
-        tenantId: webhook.recipientTenantId
-      })
-      const formattedSettings = formatSettings(settings)
-
-      await sendWebhook(deps, webhook, formattedSettings)
+      await sendWebhook(
+        deps,
+        webhook,
+        settingsByTenant.get(webhook.recipientTenantId) ?? {}
+      )
     }
 
     return webhook.id
@@ -292,7 +333,27 @@ async function sendWebhook(
         )
       })
     } else {
-      deps.logger.warn({ error: err }, 'error not type AxiosError')
+      // Count non-Axios failures as an attempt and back off, exactly as the
+      // Axios path does. Previously this branch rethrew without touching
+      // `attempts` or `processAt`, so the row kept a due `processAt` and an
+      // unchanged attempt count: `webhookMaxRetry` could never retire it and it
+      // was re-claimed on every poll forever. With the `ORDER BY processAt ASC`
+      // claim ordering it also sat at the head of every batch, starving newer
+      // webhooks behind it. A malformed encrypted payload (which throws here,
+      // not via Axios) was enough to trigger it.
+      const attempts = webhook.attempts + 1
+      deps.logger.warn(
+        { attempts, error: err },
+        'error not type AxiosError; counting as a failed attempt'
+      )
+
+      await webhook.$query(deps.knex).patch({
+        attempts,
+        processAt: new Date(
+          Date.now() + Math.min(attempts, 6) * RETRY_BACKOFF_MS
+        )
+      })
+
       throw err
     }
   }

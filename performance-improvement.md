@@ -1,9 +1,57 @@
 # Rafiki Outgoing Payment Performance — Status & Plan
 
 **Last updated:** 2026-07-30
-**Working branch:** `stephan-performance` (off `nl/batch-workers` @ `4f9ba6a7`) — Phase 0 + 1 complete, uncommitted
-**Target:** 1,000 outgoing payments/second **sustained throughput**
+**Working branch:** `stephan-performance` (off `nl/batch-workers` @ `4f9ba6a7`)
 **Environment:** single dev host; both Rafiki nodes, Postgres, TigerBeetle and k6 all co-resident and competing for the same cores
+
+## 0. Targets and constraints
+
+These are the ground rules the plan is built on. Everything downstream follows from
+them, so they are stated first.
+
+### Targets
+
+| Environment                                                       | Target                 |
+| ----------------------------------------------------------------- | ---------------------- |
+| This dev machine (all services co-resident)                       | **≥ 250 payments/s**   |
+| Production: 3-node Kubernetes cluster + separate Google Cloud SQL | **≥ 1,000 payments/s** |
+
+### Latency SLO
+
+| Scope                                   | Budget       |
+| --------------------------------------- | ------------ |
+| Any single Open Payments–level API call | **< 500 ms** |
+| Full multi-call round trip              | **< 3 s**    |
+
+**The SLO binds before the throughput ceiling does, and that changes the plan.**
+At 20 VUs the system produces its best raw throughput (13.4/s) but `createQuote`
+takes **804 ms** — already in breach. At 5 VUs `createQuote` is 315 ms, inside
+budget. So SLO-respecting capacity today is ~11/s, not 13.4/s, and any future
+number must be quoted as _throughput at p95 within SLO_, never raw throughput.
+`bench.sh` should be extended to fail a run that breaches the per-call budget.
+
+### Hard constraint: the API cannot change
+
+- **The Open Payments API is fixed.** It is a public specification; we do not get to
+  alter it.
+- **The Admin API can change only with strong justification, and must stay backward
+  compatible** — ASEs already integrate against it. Treat "avoid changing it" as the
+  default.
+
+This invalidates the original Phase 3. Bulk mutations and a `202`-plus-handle async
+ingestion API were the largest single lever identified, and both are now off the
+table in their original form. **The plan is restructured accordingly:** the work
+moves to what can be changed — _internal_ execution, process topology, and the
+per-payment cost behind an unchanged API surface.
+
+### The avenue that replaces it: role-specialised processes
+
+Deployment is Kubernetes, so running several instances of the same image with
+different configuration is natural: some dedicated to quote work, some to incoming
+payment workers, some serving the admin API. Locally the same shape can be modelled
+as separate `docker compose` services. This needs no API change, and it directly
+attacks the fact that one single-threaded Node process is the ceiling. It is now the
+backbone of Phase 4 rather than an afterthought.
 
 ---
 
@@ -11,16 +59,29 @@
 
 |                          |                                                                             |
 | ------------------------ | --------------------------------------------------------------------------- |
-| Throughput today         | **~11 payments/s** at peak concurrency (5 VUs), fresh-reset stack           |
-| Target                   | 1,000/s                                                                     |
-| Gap                      | **~90×**                                                                    |
+| Throughput today         | **~11 payments/s** within SLO (5 VUs), fresh-reset stack                    |
+| Target here              | **250/s** → gap **~23×**                                                    |
+| Target in production     | **1,000/s** on 3 nodes + Cloud SQL                                          |
 | Binding constraint       | Per-payment **CPU** in a single-threaded Node process                       |
 | Not the constraint       | TigerBeetle (~3% utilisation), Postgres CPU (~55%, has headroom)            |
 | Biggest **latency** cost | `createQuote` — **80% of creation latency**, dominated by an ILP rate probe |
+| Blocked route            | Bulk/async ingestion — the API cannot change (§0)                           |
 
 Phase 0 (trustworthy measurement) and Phase 1 (remove waste) are done and verified.
 They bought **+9.4% throughput** and **−54% to −89% database work per payment**.
-The remaining ~90× has to come from Phases 2–4, which are architectural, not tuning.
+Phase 1.5 (correctness bugs) is done. The remaining ~23× has to come from Phases 2–4.
+
+**How the ~23× decomposes.** It is not one change; it is three multiplied together,
+and missing any one of them misses the target:
+
+| Factor                        | Today                          | Needed              | Phase |
+| ----------------------------- | ------------------------------ | ------------------- | ----- |
+| Per-payment cost              | ~40 ms sender CPU, ~18 queries | ~10 ms, < 8 queries | 2     |
+| Concurrency before SLO breach | ~5 in flight                   | 100+                | 2 + 4 |
+| Processes doing the work      | 1 (single-threaded)            | N, role-specialised | 4     |
+
+Roughly 4× × 5× × 3× — with process count now carrying more of the load than
+originally planned, because the API-change route is closed.
 
 **Latency share is not CPU share — keep these separate.** The binding constraint on
 throughput is CPU. `createQuote`'s 80% is a share of _wall-clock latency_, and a
@@ -385,176 +446,296 @@ send path tolerate a stale-quote rejection cleanly.
 **Exit criteria:** `createQuote` is no longer the majority of creation latency, and
 peak throughput rises materially above 11/s on the standard harness.
 
-### Phase 3 — Change the shape of ingestion _(where the order of magnitude comes from)_
+### Phase 3 — Internal efficiency behind an unchanged API
 
-**Why:** even with a perfect `createQuote`, the synchronous four-round-trip API
-fights a throughput target structurally. Each payment pays four signature
-verifications, ~11 Redis round trips of bookkeeping, four separate transactions, and
-one TigerBeetle transfer per request against a ledger designed for batches of
-thousands.
+**This phase was rewritten.** It previously proposed bulk mutations and `202`-plus-
+handle async ingestion. Both required changing the API and are now ruled out (§0).
+What survives is everything that reduces per-payment cost _behind_ the existing
+request/response contract — the caller still makes the same four calls and still
+gets the same synchronous answers.
 
-**Approach, in escalating order of payoff and disruption:**
-
-1. **Composite mutation** — one call performing receiver + quote + payment + funding.
-   Removes 3 network round trips, 3 signature verifications and ~6 Redis round trips
-   per payment. Purely additive: existing mutations keep working, so it is the safe
-   first step.
-2. **Bulk mutation** — accept N payments per request: one transaction, bulk insert,
-   and critically **batched TigerBeetle transfers**. This is the largest structural
-   win available on the write path and turns the idle ledger into free throughput.
-3. **Asynchronous ingestion** — accept, persist, return `202` with a handle, and let
-   workers quote and fund. This decouples ingestion rate from processing rate, so a
-   burst above capacity queues instead of collapsing. It is what makes the target
-   reachable; the synchronous model has a hard latency floor no tuning removes.
-
-**Watch out for:** this changes the public API, so it needs design buy-in beyond the
-performance work. Async ingestion also changes the client contract — callers must
-handle a handle-and-poll or webhook flow instead of a synchronous result. Bulk
-endpoints need a defined partial-failure semantic (all-or-nothing versus per-item
-results); decide that before implementing, not after.
-
-**Exit criteria:** ingestion throughput no longer scales with per-payment network
-latency.
-
-### Phase 4 — Scale out, and make batching real
-
-**Only after Phase 2, and only safe after the batch bugs in §6 are fixed.**
+**Why it still matters:** each payment currently pays four signature verifications,
+roughly eleven Redis round trips of bookkeeping, four separate database
+transactions, and one TigerBeetle transfer against a ledger sized for batches of
+thousands. None of that is mandated by the API shape; it is how the server happens
+to service it.
 
 **Approach:**
 
-1. **Fix the batch implementation before enabling it** — per-item error isolation
-   (§6.1), one transaction per payment or per small chunk rather than one per batch,
-   bounded webhook fan-out, batched tenant-settings lookup, atomic Redis counters
-   (§6.2).
-2. **Then** set the batch-size env vars, and add them to compose files and charts so
-   the feature is actually exercised rather than shipped inert.
-3. **Run multiple backend processes.** One single-threaded Node process pegged at a
-   core, while Postgres has headroom and TigerBeetle is idle, is the most direct
-   multiplier available.
-4. **Raise `DATABASE_POOL_MAX`** (currently 20, shared by the APIs, every worker and
-   Postgres-mode accounting) in step with process count.
-5. **Remove the single-shared-transaction design** in the workers so in-transaction
-   writes stop serialising on one connection.
+1. **Cheapen the admin-API envelope.** Every mutation pays HMAC verification, two
+   Redis round trips for replay protection, and ApolloArmor cost analysis before any
+   business logic runs. Measure the envelope in isolation, then attack it — a single
+   round-trip replay guard (`SET NX` returning whether it was new, instead of `GET`
+   then `SET`) halves the Redis traffic on its own.
+2. **Internal request coalescing.** Concurrent payments to the same receiver, asset
+   pair or tenant repeat identical lookups. The rates service already coalesces
+   in-flight requests; the same pattern applies to receiver resolution and tenant
+   settings. Invisible to the caller.
+3. **Batch TigerBeetle transfers across concurrent requests.** A short accumulation
+   window (single-digit milliseconds) that groups transfers from separate in-flight
+   requests into one `createTransfers` call. Each caller still awaits its own result,
+   so the API contract is unchanged, but the ledger goes from one transfer per
+   request to one per window. This is the closest available substitute for the bulk
+   mutation, and TigerBeetle is built for exactly this.
+4. **Trim transaction scope.** Move external I/O (TigerBeetle, HTTP) out of Postgres
+   transactions — `fundPayment` currently holds a `FOR UPDATE` row lock across three
+   TigerBeetle round trips while occupying one of 20 pool connections. Shorter
+   transactions mean more concurrent requests per connection.
+
+**Watch out for:** micro-batching (item 3) adds latency by design — the accumulation
+window is a direct latency-for-throughput trade. Keep the window well inside the
+500 ms per-call budget and make it configurable so it can be turned off. Item 4
+changes transactional semantics around money movement and wants its own review.
+
+**If a _backward-compatible additive_ admin API change is ever sanctioned**, the
+single highest-value addition remains a composite mutation performing
+receiver + quote + payment + funding in one call: it removes 3 round trips, 3
+signature verifications and ~6 Redis round trips per payment, and existing mutations
+keep working untouched. Recorded here as the option to revisit, not as planned work.
+
+**Exit criteria:** per-payment CPU and Redis/database round trips fall measurably
+with no change to the API surface.
+
+### Phase 4 — Role-specialised processes and horizontal scale
+
+**Now the backbone of the plan, not an afterthought** — with the API-change route
+closed, process count carries more of the multiplier. Only meaningful after Phase 2,
+and it was only safe once the §6 correctness bugs were fixed.
+
+**The core idea (per the deployment model):** run several instances of the same
+image with different configuration, each doing a subset of the work. Kubernetes
+makes this natural; locally the same shape is modelled as separate `docker compose`
+services.
+
+**Approach:**
+
+1. **Make roles configurable.** Today every process runs every worker — the admin
+   API, the Open Payments server, and all four worker loops share one event loop, so
+   worker CPU steals from request-serving CPU. Introduce a role switch (worker counts
+   already exist as env vars; setting them to 0 is most of the mechanism) so a
+   deployment can run, say, API-only instances plus dedicated outgoing-payment,
+   incoming-payment and webhook instances.
+2. **Model it locally in `docker compose`** as separate services against the shared
+   database, so the topology is testable on this machine and the 250/s target is
+   measured against the shape that will actually be deployed.
+3. **Verify the claim mechanism is safe under real parallelism.** `FOR UPDATE SKIP
+LOCKED` should already guarantee disjoint claims across instances, but it has
+   never been exercised with more than one worker process — test it explicitly
+   before relying on it.
+4. **Restructure the worker claim** so each payment runs in its own transaction:
+   claim by _marking_ rows rather than holding `FOR UPDATE` locks for the batch's
+   lifetime. This removes the residual batch-abort noted in §6.2, ends the
+   serialisation of every in-batch write onto one connection, and is a precondition
+   for large batch sizes being useful.
+5. **Then enable batching** — set the batch-size env vars and add them to the compose
+   files and charts so the feature is actually exercised rather than shipped inert.
+6. **Raise `DATABASE_POOL_MAX`** (currently 20, shared by the APIs, every worker and
+   Postgres-mode accounting) in step with process count, and size Cloud SQL's
+   connection limit accordingly.
 
 **Note on what batch size actually buys:** throughput ≈
 `workers × min(concurrency / T_pay, 1 / D)`. Batch size does not appear —
 **concurrency and worker count are the levers**. Batch size only amortises the claim
-query and the commit. This is the arithmetic reason the batching branch showed
-mixed results.
+query and the commit. This is the arithmetic reason the batching branch showed mixed
+results, and why role-specialised processes are the more promising direction.
 
-**Exit criteria:** throughput scales roughly linearly with backend process count.
-
----
-
-## 6. Known bugs not yet fixed
-
-Independent of the performance work; each deserves its own ticket.
-
-### 6.1 One failure rolls back an entire outgoing/incoming batch
-
-The outgoing worker wraps a whole batch in one `knex.transaction` and fans out with
-`Promise.all`. Any throw escaping `handlePaymentLifecycle` rejects the `Promise.all`,
-rolls back **all N** payments' state transitions and webhook events, and — because
-Postgres marks the transaction aborted — makes every sibling's remaining queries
-fail with `current transaction is aborted`. One bad payment poisons the batch.
-Accounting happens outside the transaction so money may already have moved; recovery
-is amount-safe via `getTotalSent`, but blast radius scales with batch size.
-
-The webhook path already solved this with a per-item `try/catch`; outgoing and
-incoming did not get the same treatment. Incoming additionally has **no concurrency
-cap** — safe today only because its batch size defaults to 1.
-
-### 6.2 Redis pending-counter is not atomic
-
-```ts
-const exists = await deps.redis.exists(cacheKey)
-if (exists) {
-  await deps.redis.incr(cacheKey)
-}
-```
-
-TOCTOU. If the 60 s TTL expires between the two commands, `INCR` recreates the key
-**with no TTL**. The counter then never expires, never resyncs from the database, and
-reports a near-zero value — so `OUTGOING_PAYMENT_MAX_QUEUE_SIZE` backpressure
-silently stops working. `DECR` on the same race can leave a permanent negative.
-_Fix:_ a Lua script, or `SET NX` + `INCR`/`EXPIRE` in a `MULTI`.
-
-### 6.3 Cross-request race on tenant identity — security-relevant
-
-`tenantApiSignatureResult` is a single closure variable written by the Koa signature
-middleware and read later by the Apollo context factory. Under concurrency, request
-A's tenant can be observed by request B. This is a correctness and security issue,
-not a performance one, and should be prioritised independently.
-
-### 6.4 Smaller items
-
-- **Webhook poison pill.** Non-Axios failures neither increment `attempts` nor
-  advance `processAt`, so `webhookMaxRetry` never retires the row. Combined with the
-  new `ORDER BY processAt ASC`, it sits at the head of every batch forever.
-- **Unbounded webhook fan-out.** Batch size _is_ the delivery concurrency — no cap,
-  unlike the outgoing worker's chunking. The transaction stays open across all HTTP
-  deliveries, so commit rate is gated by the slowest delivery.
-- **Uncached tenant-settings lookup per webhook**, issued against the pool rather
-  than the transaction: N concurrent checkouts against `DATABASE_POOL_MAX=20`.
-- **No `orderBy` on the outgoing claim query**, so under backlog, ordering is
-  whatever the index scan yields.
+**Exit criteria:** throughput scales roughly linearly with process count; 250/s
+within SLO on this machine; the same topology projects to 1,000/s on three nodes.
 
 ---
 
-## 7. Sizing the 1,000 TPS target
+## 6. Phase 1.5 — correctness bugs (done)
+
+Fixed before any further performance work, on the reasoning that batching and
+horizontal scale both _amplify_ these: every one of them is either latent today only
+because batch sizes default to 1, or gets worse with concurrency. Shipping Phase 2
+or 4 on top of them would have turned quiet bugs into loud ones.
+
+Each is recorded below with root cause, impact and the fix applied.
+
+### 6.1 Cross-request tenant identity leak — security
+
+**Root cause.** `tenantApiSignatureResult` was a single closure variable in
+`app.ts`, written by the Koa signature middleware and read later by the Apollo
+context factory. Between those two points the request yields, so with more than one
+request in flight the variable holds whichever tenant authenticated most recently.
+
+**Impact.** Request A's tenant could be observed while serving request B — a
+cross-tenant data leak, triggered by ordinary concurrency rather than anything
+adversarial. Worst of the set, and the reason this batch was done first.
+
+**Fix.** The resolved tenant now lives on the per-request Koa context
+(`ctx.tenantApiSignatureResult`, added to `AppContextData`); the Apollo context
+factory takes `{ ctx }` and reads it from there. Both the production and the test
+middleware were updated. The factory throws if the tenant is absent, so a future
+middleware reordering fails closed instead of silently serving a tenantless context.
+
+### 6.2 One failure rolled back an entire batch
+
+**Root cause.** The outgoing worker wraps a whole claimed batch in one
+`knex.transaction` and fans out with `Promise.all`. Any throw escaping
+`handlePaymentLifecycle` rejected the `Promise.all`. The incoming worker was worse:
+an uncapped `Promise.all` with no `try/catch` anywhere.
+
+**Impact.** One bad payment rolled back **all N** siblings' state transitions and
+webhook events. Accounting happens outside the transaction, so money may already
+have moved; recovery is amount-safe via `getTotalSent`, but the blast radius scaled
+with batch size. Latent today only because the batch size defaults to 1 — it would
+have appeared the moment batching was switched on.
+
+**Fix.** Per-item `try/catch` in both workers: a failing payment is logged with its
+id and skipped, and its siblings still commit. The incoming worker also gained
+bounded concurrency (`INCOMING_PAYMENT_WORKER_CONCURRENCY`, default 10) to match the
+outgoing worker, so a large batch cannot fan out one pool checkout per payment.
+
+**Known residual — deliberately not fixed here.** If the failure was a _database_
+error, Postgres has already marked the transaction aborted, so the siblings'
+remaining statements fail too and the batch still rolls back. Fixing that requires
+each payment to run in its own transaction, which the current claim design forbids:
+rows are claimed with `SELECT … FOR UPDATE SKIP LOCKED` and the locks must be held
+for the batch's lifetime, so a second transaction writing to those rows would block
+on the first and self-deadlock. Doing it properly means claiming by _marking_ rows
+rather than locking them — a worker restructure, scheduled in Phase 4. The fix
+applied here covers the common non-database failures (ILP, HTTP, accounting).
+
+### 6.3 Non-atomic Redis pending counter
+
+**Root cause.** `EXISTS` followed by `INCR`/`DECR` as two separate commands.
+
+**Impact.** If the 60 s TTL expired between them, `INCR` _recreated_ the key with
+value 1 and — because `INCR` sets no expiry — no TTL at all. The counter then never
+expired, never resynced from the database, and reported a value near zero forever,
+silently disabling `OUTGOING_PAYMENT_MAX_QUEUE_SIZE` backpressure. `DECR` on the same
+race left a permanent negative.
+
+**Fix.** A Lua script performs the existence check and the update as one atomic
+step, so the key is either adjusted or left absent for the next
+`isOverQueueThreshold()` miss to rebuild. `INCRBY` on an existing key preserves its
+remaining TTL, so the 60 s refresh cycle is unchanged. Failures are logged and
+swallowed — the counter is a cache in front of a `COUNT(*)` and must never fail
+payment creation.
+
+### 6.4 Webhook poison pill
+
+**Root cause.** In `sendWebhook`, non-Axios errors were logged and rethrown without
+touching `attempts` or `processAt`.
+
+**Impact.** The row kept a due `processAt` and an unchanged attempt count, so
+`webhookMaxRetry` could never retire it: it was re-claimed on every poll forever.
+With the `ORDER BY processAt ASC` claim ordering it also sat at the head of every
+batch, starving newer webhooks behind it. A single malformed encrypted payload —
+which throws here rather than through Axios — was enough to trigger it.
+
+**Fix.** Non-Axios failures now count as an attempt and set the same backoff
+`processAt` as the Axios path, so the row retires normally through
+`webhookMaxRetry`. The error is still rethrown so the caller logs it as unexpected.
+
+### 6.5 Unbounded webhook fan-out and per-webhook settings lookup
+
+**Root cause.** Batch size _was_ the delivery concurrency — no cap, unlike the
+outgoing worker's chunking. Separately, `tenantSettingService.get` was called once
+per webhook, uncached, against the shared pool rather than the transaction's
+connection.
+
+**Impact.** A batch of 250 opened 250 sockets at once and issued 250 concurrent pool
+checkouts against `DATABASE_POOL_MAX` (20), competing with API traffic; the claim
+transaction stayed open until the slowest delivery returned.
+
+**Fix.** Deliveries run in bounded chunks (`WEBHOOK_WORKER_CONCURRENCY`, default 10).
+Tenant settings are resolved once per _distinct_ recipient tenant before the fan-out,
+so a batch costs one lookup per tenant rather than one per webhook; webhooks routed
+to the card or POS service skip the lookup entirely.
+
+### 6.6 Missing claim ordering on outgoing payments
+
+**Root cause / impact.** The outgoing claim query had no `ORDER BY`, so under a
+sustained backlog the rows returned were whatever the index scan yielded and a
+payment could be passed over indefinitely.
+
+**Fix.** `ORDER BY "updatedAt" ASC`, matching the webhook worker's oldest-first
+ordering and letting the partial index `(updatedAt) WHERE state = 'SENDING'` drive
+the scan.
+
+---
+
+## 7. Sizing the targets
 
 Derived from the 20-VU run on the warm stack (17.2 payments/s), subtracting measured
 idle to isolate marginal cost. Treat as **order-of-magnitude**, not precision — the
 load generator shares the host.
 
-| Resource                | CPU per payment | At 1,000 TPS |
-| ----------------------- | --------------- | ------------ |
-| Sender backend (Node)   | 40.0 ms         | **40 cores** |
-| Receiver backend (Node) | 52.5 ms         | 53 cores     |
-| Postgres                | 19.3 ms         | **19 cores** |
-| TigerBeetle             | ~0              | negligible   |
+| Resource                | CPU per payment | At 250/s     | At 1,000/s   |
+| ----------------------- | --------------- | ------------ | ------------ |
+| Sender backend (Node)   | 40.0 ms         | **10 cores** | **40 cores** |
+| Receiver backend (Node) | 52.5 ms         | 13 cores     | 53 cores     |
+| Postgres                | 19.3 ms         | ~5 cores     | **19 cores** |
+| TigerBeetle             | ~0              | negligible   | negligible   |
 
 Three consequences:
 
-1. **1,000 TPS at today's efficiency needs ~40 sender-side backend cores plus ~19
-   Postgres cores.** Large but not absurd — a real target. (The receiver side is a
-   different organisation in production; it only lands on you in closed-loop tests.)
-2. **TigerBeetle is a non-issue.** 2–3% utilisation, and built for batches of
-   thousands.
-3. **Postgres is a query-count problem, not a CPU problem.** Phase 1 cut ~26 queries
-   per payment to ~18; at 1,000 TPS that is still ~18,000 queries/second against a
-   single primary handling transactional writes.
+1. **250/s on this machine needs per-payment cost to come down.** At today's
+   efficiency it would want ~10 sender cores; this host does not have that to spare
+   once the receiver node, Postgres and k6 are also resident. So the local target is
+   reached mainly by making each payment cheaper (Phase 2/3), with role-specialised
+   processes (Phase 4) using the cores that remain more effectively.
+2. **1,000/s on 3 nodes is the same arithmetic with more hardware**, plus Cloud SQL
+   removing Postgres from the contended host. The receiver side is a different
+   organisation in production; it only lands on you in closed-loop tests, so the
+   real per-node requirement is the sender column.
+3. **TigerBeetle is a non-issue** (2–3% utilisation, built for batches of thousands),
+   and **Postgres is a query-count problem, not a CPU problem** — Phase 1 cut ~26
+   queries per payment to ~18; at 1,000/s that is still ~18,000 queries/second.
 
-### The concurrency floor
+### The concurrency floor, and why the SLO tightens it
 
-Little's Law: at 1,000 TPS with ~360 ms per-payment latency you must hold
-`L = λW ≈ 360` payments in flight. **The system currently degrades past 5.** Even at
-a Phase-2-improved 120 ms, the floor is ~120 concurrent. This is the hard blocker,
-and it is why Phase 3's async ingestion is mandatory rather than optional.
+Little's Law: sustaining λ payments/s at latency W requires `L = λW` in flight.
+
+| Target  | Latency                | Required in flight |
+| ------- | ---------------------- | ------------------ |
+| 250/s   | 360 ms (today)         | 90                 |
+| 250/s   | 120 ms (post-Phase-2)  | 30                 |
+| 1,000/s | 120 ms, across 3 nodes | ~40 per node       |
+
+**Today the system degrades past ~5 in flight**, and the 500 ms per-call SLO caps it
+there independently: at 20 VUs `createQuote` is already 804 ms. So concurrency is
+the binding blocker, and cutting `createQuote` latency helps twice — it lowers the
+required in-flight count _and_ buys SLO headroom to run at higher concurrency.
+
+This is also why async ingestion being unavailable hurts: it was the mechanism that
+would have let a burst queue instead of collapse. Without it, the system must
+actually hold the concurrency, which puts more weight on Phase 4.
 
 ### What has to become true
 
-| Lever                    | Today         | Needs to be     | Phase |
-| ------------------------ | ------------- | --------------- | ----- |
-| Postgres queries/payment | ~18 (was ~26) | **< 8**         | 2     |
-| Sender CPU/payment       | ~40 ms        | **~10 ms**      | 2     |
-| Concurrent in flight     | degrades at 5 | **150+**        | 3     |
-| Backend processes        | 1             | **N (cluster)** | 4     |
-| TigerBeetle transfers    | 1 per request | **batched**     | 3     |
+| Lever                    | Today         | Needs to be                       | Phase |
+| ------------------------ | ------------- | --------------------------------- | ----- |
+| Postgres queries/payment | ~18 (was ~26) | **< 8**                           | 2 / 3 |
+| Sender CPU/payment       | ~40 ms        | **~10 ms**                        | 2 / 3 |
+| `createQuote` latency    | ~288 ms       | **well under 500 ms SLO at load** | 2     |
+| Concurrent in flight     | degrades at 5 | **100+**                          | 2 / 4 |
+| Processes doing the work | 1             | **N, role-specialised**           | 4     |
+| TigerBeetle transfers    | 1 per request | **batched internally**            | 3     |
 
 ### Realistic assessment
 
-1,000 TPS is reasonable for this architecture — the ledger is idle, the database has
-per-query headroom, and nothing in the design is fundamentally hostile to it. But it
-is **a programme of work, not a sprint**:
+Both targets remain reasonable — the ledger is idle, the database has per-query
+headroom, and nothing in the design is fundamentally hostile. But the API constraint
+removed the single biggest lever, so the programme is now longer and leans harder on
+per-payment efficiency and process topology:
 
-- **Phase 0 + 1** — done. Groundwork: trustworthy measurement, waste removed.
-- **Phase 2** — should get to the low hundreds/s on a single node. Mostly
-  self-contained caching work.
-- **Phase 3** — where the order of magnitude comes from. Real engineering, changes
-  the public API, needs design buy-in.
-- **Phase 4** — converts per-node efficiency into the target. Straightforward _once_
-  per-payment cost is down and the concurrency collapse is fixed.
+- **Phase 0 + 1 + 1.5** — done. Trustworthy measurement, waste removed, correctness
+  bugs fixed.
+- **Phase 2** — the largest remaining single win, and it buys SLO headroom as well as
+  throughput. Mostly self-contained caching work.
+- **Phase 3** — now internal-only efficiency behind an unchanged API. Smaller than the
+  original bulk/async plan; TigerBeetle micro-batching is the standout item.
+- **Phase 4** — role-specialised processes. Promoted to the backbone: with the API
+  fixed, multiplying processes is how the remaining gap is closed.
+
+**The honest risk:** if Phase 2 reveals that most of `createQuote` is idle waiting
+rather than CPU (§3.3), then per-node throughput moves less than hoped, and hitting
+250/s locally depends more heavily on Phase 4 than this plan currently assumes. That
+measurement should be taken before committing to the rest of the sequence.
 
 ---
 

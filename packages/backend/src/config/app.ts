@@ -159,6 +159,13 @@ export const Config = {
   incomingPaymentWorkers: envInt('INCOMING_PAYMENT_WORKERS', 1),
   incomingPaymentWorkerIdle: envInt('INCOMING_PAYMENT_WORKER_IDLE', 200), // milliseconds
   incomingPaymentBatchSize: envInt('INCOMING_PAYMENT_WORKER_BATCH_SIZE', 1),
+  // Mirrors outgoingPaymentWorkerConcurrency: caps how many payments in a
+  // claimed batch are in flight at once, so a large batch cannot fan out one
+  // pool checkout per payment and starve API traffic.
+  incomingPaymentWorkerConcurrency: envInt(
+    'INCOMING_PAYMENT_WORKER_CONCURRENCY',
+    10
+  ),
   pollIncomingPaymentCreatedWebhook: envBool(
     'POLL_INCOMING_PAYMENT_CREATED_WEBHOOK',
     false
@@ -178,6 +185,11 @@ export const Config = {
   // poll. Each claimed webhook's HTTP delivery overlaps the others, so this is
   // effectively the per-worker delivery concurrency.
   webhookWorkerBatchSize: envInt('WEBHOOK_WORKER_BATCH_SIZE', 1),
+  // Caps concurrent webhook deliveries per claimed batch. Batch size used to be
+  // the delivery concurrency outright, so a large batch opened one socket per
+  // webhook at once and held the claim transaction open until the slowest one
+  // returned (up to webhookTimeout).
+  webhookWorkerConcurrency: envInt('WEBHOOK_WORKER_CONCURRENCY', 10),
   webhookUrl: envString('WEBHOOK_URL'),
   webhookTimeout: envInt('WEBHOOK_TIMEOUT', 2000), // milliseconds
   webhookMaxRetry: envInt('WEBHOOK_MAX_RETRY', 10),

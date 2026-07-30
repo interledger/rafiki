@@ -173,10 +173,12 @@ async function getOutgoingPaymentsPage(
   })
 }
 
+const PENDING_COUNT_CACHE_KEY = 'counts:outgoing_payments:pending'
+
 async function isOverQueueThreshold(
   deps: ServiceDependencies
 ): Promise<boolean> {
-  const cacheKey = 'counts:outgoing_payments:pending'
+  const cacheKey = PENDING_COUNT_CACHE_KEY
   const cached = await deps.redis.get(cacheKey)
   if (cached !== null) {
     return parseInt(cached, 10) >= deps.config.outgoingPaymentMaxQueueSize
@@ -195,22 +197,55 @@ async function isOverQueueThreshold(
   return count >= deps.config.outgoingPaymentMaxQueueSize
 }
 
-async function incrementPendingCount(deps: ServiceDependencies): Promise<void> {
-  const cacheKey = 'counts:outgoing_payments:pending'
-  const exists = await deps.redis.exists(cacheKey)
-  if (exists) {
-    await deps.redis.incr(cacheKey)
+// Adjust the cached pending count only if the key still exists, atomically.
+//
+// The previous EXISTS-then-INCR/DECR pair was a TOCTOU race: when the key's TTL
+// expired between the two commands, INCR *recreated* it with value 1 and — because
+// INCR does not set a TTL — no expiry at all. The counter then never expired,
+// never resynced from the database, and reported a value near zero forever, which
+// silently disabled OUTGOING_PAYMENT_MAX_QUEUE_SIZE backpressure. DECR on the same
+// race left a permanent negative.
+//
+// Running the existence check and the update inside one Lua script makes them a
+// single atomic step, so the key is either updated or left absent to be rebuilt
+// by the next isOverQueueThreshold() miss. INCRBY on an existing key preserves
+// its remaining TTL, so the 60s refresh cycle is unaffected.
+const ADJUST_IF_EXISTS_SCRIPT = `
+if redis.call('EXISTS', KEYS[1]) == 1 then
+  return redis.call('INCRBY', KEYS[1], ARGV[1])
+end
+return nil
+`
+
+async function adjustPendingCount(
+  deps: ServiceDependencies,
+  delta: number
+): Promise<void> {
+  try {
+    await deps.redis.eval(
+      ADJUST_IF_EXISTS_SCRIPT,
+      1,
+      PENDING_COUNT_CACHE_KEY,
+      delta
+    )
+  } catch (err) {
+    // The counter is a cache in front of a COUNT(*); a failed adjustment costs
+    // accuracy until the next refresh, and must never fail payment creation.
+    deps.logger.warn(
+      { err: err instanceof Error ? err.message : err, delta },
+      'could not adjust cached pending outgoing payment count'
+    )
   }
+}
+
+async function incrementPendingCount(deps: ServiceDependencies): Promise<void> {
+  await adjustPendingCount(deps, 1)
 }
 
 export async function decrementPendingCount(
   deps: ServiceDependencies
 ): Promise<void> {
-  const cacheKey = 'counts:outgoing_payments:pending'
-  const exists = await deps.redis.exists(cacheKey)
-  if (exists) {
-    await deps.redis.decr(cacheKey)
-  }
+  await adjustPendingCount(deps, -1)
 }
 
 async function getOutgoingPayment(

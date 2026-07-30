@@ -123,6 +123,10 @@ export interface AppContextData {
   container: AppContainer
   // Set by @koa/router.
   params: { [key: string]: string }
+  // Resolved by the admin API's tenant signature middleware. Must live on the
+  // per-request context, never in a closure shared across requests, or one
+  // request can observe another's tenant.
+  tenantApiSignatureResult?: TenantApiSignatureResult
 }
 
 export interface ApolloContext {
@@ -428,7 +432,11 @@ export class App {
       }
     )
 
-    let tenantApiSignatureResult: TenantApiSignatureResult
+    // The resolved tenant is stored on ctx, not in a closure variable shared by
+    // every request. A shared variable is overwritten by whichever request
+    // authenticated most recently, so under any concurrency the Apollo context
+    // factory below could read request A's tenant while serving request B —
+    // a cross-tenant data leak.
     const tenantSignatureMiddleware = async (
       ctx: AppContext,
       next: Koa.Next
@@ -437,7 +445,7 @@ export class App {
       if (!result) {
         ctx.throw(401, 'Unauthorized')
       } else {
-        tenantApiSignatureResult = {
+        ctx.tenantApiSignatureResult = {
           tenant: result.tenant,
           isOperator: result.isOperator ? true : false
         }
@@ -456,7 +464,7 @@ export class App {
         )
 
         if (tenant) {
-          tenantApiSignatureResult = {
+          ctx.tenantApiSignatureResult = {
             tenant,
             isOperator: tenant.apiSecret === this.config.adminApiSecret
           }
@@ -477,9 +485,23 @@ export class App {
 
     koa.use(
       koaMiddleware(this.apolloServer, {
-        context: async (): Promise<TenantedApolloContext> => {
+        context: async ({
+          ctx
+        }: {
+          ctx: AppContext
+        }): Promise<TenantedApolloContext> => {
+          // Read the tenant off this request's context, so concurrent requests
+          // cannot observe each other's identity.
+          const result = ctx.tenantApiSignatureResult
+          if (!result) {
+            // Unreachable in practice: the signature middleware runs first and
+            // 401s when it cannot resolve a tenant. Failing closed here means a
+            // future middleware reordering cannot silently produce a tenantless
+            // context instead of an error.
+            throw new Error('tenant not resolved for admin API request')
+          }
           return {
-            ...tenantApiSignatureResult,
+            ...result,
             container: this.container,
             logger: await this.container.use('logger')
           }

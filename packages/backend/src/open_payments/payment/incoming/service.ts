@@ -351,8 +351,41 @@ async function processNextIncomingPayment(
       return incomingPayment.id
     }
 
-    const promises = incomingPayments.map(processIncoming)
-    return Promise.all(promises)
+    // Bounded concurrency with per-item error isolation, matching the outgoing
+    // worker. Previously this was an uncapped `Promise.all` over the whole
+    // batch with no try/catch: one throw rolled back every sibling, and a large
+    // batch fanned out one in-flight promise per payment with nothing limiting
+    // pool checkouts. Safe until now only because the batch size defaults to 1.
+    //
+    // Same caveat as the outgoing worker: a database error still aborts the
+    // enclosing transaction, so full isolation needs the per-payment
+    // transaction restructure described in the plan.
+    const concurrency = Math.max(
+      1,
+      deps_.config.incomingPaymentWorkerConcurrency
+    )
+    const processed: string[] = []
+    for (let i = 0; i < incomingPayments.length; i += concurrency) {
+      const chunk = incomingPayments.slice(i, i + concurrency)
+      const results = await Promise.all(
+        chunk.map(async (incomingPayment) => {
+          try {
+            return await processIncoming(incomingPayment)
+          } catch (err) {
+            deps_.logger.error(
+              {
+                incomingPayment: incomingPayment.id,
+                err: err instanceof Error ? err.message : err
+              },
+              'incoming payment processing threw; skipping this payment'
+            )
+            return undefined
+          }
+        })
+      )
+      processed.push(...results.filter((id): id is string => id !== undefined))
+    }
+    return processed
   })
 }
 

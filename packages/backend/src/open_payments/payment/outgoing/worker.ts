@@ -41,19 +41,39 @@ export async function processPendingPayments(
         for (let i = 0; i < payments.length; i += concurrency) {
           const chunk = payments.slice(i, i + concurrency)
           await Promise.all(
-            chunk.map((payment) =>
-              handlePaymentLifecycle(
-                {
-                  ...deps_,
-                  knex: trx,
-                  logger: deps_.logger.child({
-                    payment: payment.id,
-                    from_state: payment.state
-                  })
-                },
-                payment
-              )
-            )
+            chunk.map(async (payment) => {
+              const logger = deps_.logger.child({
+                payment: payment.id,
+                from_state: payment.state
+              })
+              try {
+                await handlePaymentLifecycle(
+                  { ...deps_, knex: trx, logger },
+                  payment
+                )
+              } catch (err) {
+                // Contain the failure to this payment. Without this, one throw
+                // rejects the whole Promise.all and rolls back every sibling's
+                // state transition and webhook event — a blast radius equal to
+                // the batch size. handlePaymentLifecycle already routes send
+                // failures through onLifecycleError; what reaches here is
+                // everything outside that, including onLifecycleError's own
+                // writes failing.
+                //
+                // Caveat: if the failure was a *database* error, Postgres has
+                // already marked this transaction aborted, so the siblings'
+                // remaining statements will fail too and the batch still rolls
+                // back. Fully isolating that requires claiming rows without
+                // holding FOR UPDATE locks for the batch's lifetime, so each
+                // payment can run in its own transaction — see the worker
+                // restructure in the plan. This catch fixes the common,
+                // non-database failures (ILP, HTTP, accounting) today.
+                logger.error(
+                  { err: err instanceof Error ? err.message : err },
+                  'payment lifecycle threw; skipping this payment'
+                )
+              }
+            })
           )
         }
         return payments.map((payment) => payment.id)
@@ -91,6 +111,11 @@ async function getPendingPayments(
           [RETRY_BACKOFF_SECONDS, now]
         )
     })
+    // Oldest-first, matching the webhook worker. Without an explicit order the
+    // claim takes whatever the index scan yields, so under a sustained backlog
+    // a payment can be passed over indefinitely. Ordering by updatedAt also
+    // lets the partial index (updatedAt) WHERE state = 'SENDING' drive the scan.
+    .orderBy('updatedAt', 'asc')
     .withGraphFetched('quote')
   stopTimer()
   return payments
