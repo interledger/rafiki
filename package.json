@@ -69,6 +69,7 @@
       "@babel/core": "^7.29.6",
       "@babel/plugin-transform-modules-systemjs": "^7.29.4",
       "@apollo/server": "^5.5.0",
+      "@vanilla-extract/integration": "^8.0.10",
       "@grpc/grpc-js@>=1.0.0": "^1.10.12",
       "@opentelemetry/propagator-jaeger@>=2.0.0": "^2.9.0",
       "@remix-run/router": ">=1.23.2",
