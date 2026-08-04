@@ -50,7 +50,7 @@ overrides:
   svgo: ^4.0.2
   tar: '>=7.5.21'
   tar-fs@>=2.0.0 <3.0.0: ^2.1.4
-  tmp@>=0.2.0: ^0.2.7
+  tmp: ^0.2.7
   turbo-stream: ^3.0.0
   undici@>=5.0.0: ^8.3.0
   undici@>=6.0.0: ^6.28.0
@@ -12428,10 +12428,6 @@ packages:
     resolution: {integrity: sha512-W/YVH/QczLUxVjnQhFC61Iq232NWu3TqDdO0S/MtXVz4xybejBov4ud+CIwN9aYqjOecEqIy0PscGkwpG9ZyTw==}
     engines: {node: '>= 4'}
 
-  tmp@0.0.33:
-    resolution: {integrity: sha512-jRCJlojKnZ3addtTOjdIqoRuPEKBvNXcGYqzO6zWZX8KfKEpnGY5jfggJQ3EjKuu8D4bJRr0y+cYJFmYbImXGw==}
-    engines: {node: '>=0.6.0'}
-
   tmp@0.2.7:
     resolution: {integrity: sha512-e0votIpp4Uo2AJYSzVHV6xCcawuiez3DzqDAbrTc3YxBkplN6e+dM13ZeIcZnDg/QpSuU2zfZ3rzwY8ukEnaXw==}
     engines: {node: '>=14.14'}
@@ -21687,7 +21683,7 @@ snapshots:
     dependencies:
       chardet: 0.7.0
       iconv-lite: 0.4.24
-      tmp: 0.0.33
+      tmp: 0.2.7
 
   extract-files@11.0.0: {}
 
@@ -27575,10 +27571,6 @@ snapshots:
   tldjs@2.3.1:
     dependencies:
       punycode: 1.4.1
-
-  tmp@0.0.33:
-    dependencies:
-      os-tmpdir: 1.0.2
 
   tmp@0.2.7: {}
 
