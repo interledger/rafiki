@@ -210,6 +210,7 @@ export default function PaymentsPage() {
               <Flex gap='2' align='center'>
                 <TextField.Root
                   name='walletAddressId'
+                  aria-label='Wallet address ID'
                   placeholder='Wallet address ID'
                   style={{ width: '320px' }}
                   value={walletId}
