@@ -42,10 +42,8 @@ RUN pnpm --filter point-of-sale build
 
 FROM node:24-alpine3.23 AS runner
 
-# The runtime never shells out to npm, it only runs node directly. npm's bundled
-# dependencies (tar, brace-expansion, ip-address, undici) live in the base image
-# where our pnpm overrides can't reach them, so they show up in every image scan.
-# Dropping npm removes that whole class of finding.
+# npm isn't used at runtime and no node:24 tag ships a patched one, so its bundled
+# deps (tar, brace-expansion, ip-address, undici) fail every image scan.
 RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 
 # Since this is from a fresh image, we need to first create the Rafiki user
