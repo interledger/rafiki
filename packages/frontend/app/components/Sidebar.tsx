@@ -86,12 +86,13 @@ export const Sidebar: FC<SidebarProps> = ({
             <div className='fixed inset-0 z-20 flex'>
               <Dialog.Panel className='relative flex w-full max-w-xs flex-1 flex-col border-r border-mercury bg-[#fffef8] pt-5 pb-6'>
                 <Flex justify='between' align='center' px='5' pb='4'>
-                  <img className='w-8' src='/logo.svg' alt='Logo' />
+                  <img className='w-8' src='/logo.svg' alt='' />
                   <IconButton
                     variant='ghost'
                     onClick={() => setSidebarIsOpen(false)}
+                    aria-label='close menu'
                   >
-                    <XIcon className='h-5 w-5' />
+                    <XIcon className='h-5 w-5' aria-hidden='true' />
                   </IconButton>
                 </Flex>
                 <Box className='mt-5 h-0 flex-1 overflow-y-auto'>
@@ -205,7 +206,7 @@ export const Sidebar: FC<SidebarProps> = ({
               aria-label='open menu'
               onClick={() => setSidebarIsOpen(true)}
             >
-              <Bars strokeWidth={2.5} className='h-6 w-6' />
+              <Bars strokeWidth={2.5} className='h-6 w-6' aria-hidden='true' />
             </IconButton>
           </Box>
         </Flex>
