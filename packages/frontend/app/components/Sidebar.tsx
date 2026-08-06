@@ -85,7 +85,7 @@ export const Sidebar: FC<SidebarProps> = ({
           >
             <div className='fixed inset-0 z-20 flex'>
               <Dialog.Panel className='relative flex w-full max-w-xs flex-1 flex-col border-r border-mercury bg-[#fffef8] pt-5 pb-6'>
-                <Flex justify='between' align='center' px='5' pb='4'>
+                <div className='flex justify-between items-center px-5 mb-4'>
                   <img className='w-8' src='/logo.svg' alt='' />
                   <IconButton
                     variant='ghost'
@@ -94,7 +94,7 @@ export const Sidebar: FC<SidebarProps> = ({
                   >
                     <XIcon className='h-5 w-5' />
                   </IconButton>
-                </Flex>
+                </div>
                 <nav className='mt-5 h-0 flex-1 overflow-y-auto'>
                   <ul className='flex flex-col gap-1 px-3'>
                     {navigationToShow.map(({ name, href }) => (
