@@ -95,12 +95,11 @@ export const Sidebar: FC<SidebarProps> = ({
                     <XIcon className='h-5 w-5' />
                   </IconButton>
                 </Flex>
-                <Box className='mt-5 h-0 flex-1 overflow-y-auto'>
-                  <nav className='px-3'>
-                    <Flex direction='column' gap='1'>
-                      {navigationToShow.map(({ name, href }) => (
+                <nav className='mt-5 h-0 flex-1 overflow-y-auto'>
+                  <ul className='flex flex-col gap-1 px-3'>
+                    {navigationToShow.map(({ name, href }) => (
+                      <li key={name}>
                         <NavLink
-                          key={name}
                           to={href}
                           onClick={() => setSidebarIsOpen(false)}
                           className={({ isActive }) =>
@@ -114,8 +113,11 @@ export const Sidebar: FC<SidebarProps> = ({
                         >
                           {name}
                         </NavLink>
-                      ))}
-                      {authEnabled && (
+                      </li>
+                    ))}
+
+                    {authEnabled && (
+                      <li>
                         <NavLink
                           key='Account Settings'
                           to='/settings'
@@ -130,15 +132,15 @@ export const Sidebar: FC<SidebarProps> = ({
                         >
                           Account Settings
                         </NavLink>
-                      )}
-                      {logoutUrl && (
-                        <Button asChild>
-                          <a href={logoutUrl}>Logout</a>
-                        </Button>
-                      )}
-                    </Flex>
-                  </nav>
-                </Box>
+                      </li>
+                    )}
+                  </ul>
+                  {logoutUrl && (
+                    <Button asChild>
+                      <a href={logoutUrl}>Logout</a>
+                    </Button>
+                  )}
+                </nav>
               </Dialog.Panel>
             </div>
           </Transition.Child>
@@ -158,47 +160,54 @@ export const Sidebar: FC<SidebarProps> = ({
           </Flex>
           {/* Logo - END */}
           {/* Desktop Navigation */}
-          <Box className='hidden w-full mt-5 flex-1 flex-col overflow-y-auto md:block'>
-            <Flex direction='column' gap='1'>
+          <nav className='hidden w-full mt-5 flex-1 flex-col overflow-y-auto md:block'>
+            <ul className='flex flex-col gap-1'>
               {navigationToShow.map(({ name, href }) => (
-                <NavLink
-                  key={name}
-                  to={href}
-                  className={({ isActive }) =>
-                    cx(
-                      isActive
-                        ? 'bg-[#F37F64]/10 text-[#F37F64]'
-                        : 'text-tealish/70 hover:bg-[#F37F64]/5',
-                      'flex px-3 py-2 font-medium rounded-md'
-                    )
-                  }
-                >
-                  {name}
-                </NavLink>
+                <li key={name}>
+                  <NavLink
+                    key={name}
+                    to={href}
+                    className={({ isActive }) =>
+                      cx(
+                        isActive
+                          ? 'bg-[#F37F64]/10 text-[#F37F64]'
+                          : 'text-tealish/70 hover:bg-[#F37F64]/5',
+                        'flex px-3 py-2 font-medium rounded-md'
+                      )
+                    }
+                  >
+                    {name}
+                  </NavLink>
+                </li>
               ))}
+
               {authEnabled && (
-                <NavLink
-                  key='Account Settings'
-                  to='/settings'
-                  className={({ isActive }) =>
-                    cx(
-                      isActive
-                        ? 'bg-[#F37F64]/10 text-[#F37F64]'
-                        : 'text-tealish/70 hover:bg-[#F37F64]/5',
-                      'flex px-3 py-2 font-medium rounded-md'
-                    )
-                  }
-                >
-                  Account Settings
-                </NavLink>
+                <li>
+                  <NavLink
+                    key='Account Settings'
+                    to='/settings'
+                    className={({ isActive }) =>
+                      cx(
+                        isActive
+                          ? 'bg-[#F37F64]/10 text-[#F37F64]'
+                          : 'text-tealish/70 hover:bg-[#F37F64]/5',
+                        'flex px-3 py-2 font-medium rounded-md'
+                      )
+                    }
+                  >
+                    Account Settings
+                  </NavLink>
+                </li>
               )}
-              {logoutUrl && (
-                <Button asChild>
-                  <a href={logoutUrl}>Logout</a>
-                </Button>
-              )}
-            </Flex>
-          </Box>
+            </ul>
+
+            {logoutUrl && (
+              <Button className='mt-1' asChild>
+                <a href={logoutUrl}>Logout</a>
+              </Button>
+            )}
+          </nav>
+
           {/* Desktop Navigation - END */}
           <Box className='ml-auto flex md:hidden'>
             <IconButton
