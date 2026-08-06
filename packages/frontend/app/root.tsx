@@ -31,11 +31,7 @@ import axios from 'axios'
 import { logger } from './utils/logger.server'
 import { getSession } from './lib/session.server'
 
-export const meta: MetaFunction = () => [
-  { title: 'Rafiki Admin' },
-  { charset: 'utf-8' },
-  { name: 'viewport', content: 'width=device-width,initial-scale=1' }
-]
+export const meta: MetaFunction = () => [{ title: 'Rafiki Admin' }]
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
@@ -125,6 +121,8 @@ export default function App() {
   return (
     <html lang='en' className='h-full'>
       <head>
+        <meta charSet='utf-8' />
+        <meta name='viewport' content='width=device-width,initial-scale=1' />
         <Meta />
         <Links />
       </head>
@@ -170,6 +168,8 @@ export function ErrorBoundary() {
     return (
       <html lang='en' className='h-full'>
         <head>
+          <meta charSet='utf-8' />
+          <meta name='viewport' content='width=device-width,initial-scale=1' />
           <Meta />
           <Links />
         </head>

@@ -1,7 +1,8 @@
 import {
   json,
   type ActionFunctionArgs,
-  type LoaderFunctionArgs
+  type LoaderFunctionArgs,
+  type MetaFunction
 } from '@remix-run/node'
 import {
   Form,
@@ -40,6 +41,10 @@ import type { ZodFieldErrors } from '~/shared/types'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { getTenantInfo } from '~/lib/api/tenant.server'
 import type { UpdateTenantInput } from '~/generated/graphql'
+
+export const meta: MetaFunction = () => [
+  { title: 'Tenant Details - Rafiki Admin' }
+]
 
 type FormFieldProps = {
   name: string

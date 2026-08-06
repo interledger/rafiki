@@ -2,7 +2,13 @@ import { Form } from '@remix-run/react'
 import { Button, Heading } from '@radix-ui/themes'
 import variables from '../lib/envConfig.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
-import { redirectDocument, type LoaderFunctionArgs } from '@remix-run/node'
+import {
+  redirectDocument,
+  type LoaderFunctionArgs,
+  type MetaFunction
+} from '@remix-run/node'
+
+export const meta: MetaFunction = () => [{ title: 'Welcome - Rafiki Admin' }]
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')

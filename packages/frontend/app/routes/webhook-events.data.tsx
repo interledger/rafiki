@@ -4,7 +4,11 @@ import { Fragment, useEffect } from 'react'
 import { XIcon } from '~/components/icons'
 import { prettify } from '~/shared/utils'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
-import { type LoaderFunctionArgs } from '@remix-run/node'
+import { type LoaderFunctionArgs, type MetaFunction } from '@remix-run/node'
+
+export const meta: MetaFunction = () => [
+  { title: 'Webhook Event Data - Rafiki Admin' }
+]
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')

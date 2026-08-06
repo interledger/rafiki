@@ -3,6 +3,7 @@ import {
   json,
   type LoaderFunctionArgs,
   type ActionFunctionArgs,
+  type MetaFunction,
   redirect
 } from '@remix-run/node'
 import {
@@ -35,6 +36,8 @@ import {
 } from '~/shared/utils'
 import { checkAuthAndRedirect } from '~/lib/kratos_checks.server'
 import type { ZodFieldErrors } from '~/shared/types'
+
+export const meta: MetaFunction = () => [{ title: 'Payments - Rafiki Admin' }]
 
 interface PaymentSearchParams {
   type: string | null

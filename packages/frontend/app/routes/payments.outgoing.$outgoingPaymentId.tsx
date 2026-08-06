@@ -1,4 +1,4 @@
-import type { LoaderFunctionArgs } from '@remix-run/node'
+import type { LoaderFunctionArgs, MetaFunction } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { Link, Outlet, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
@@ -17,6 +17,10 @@ export type LiquidityActionOutletContext = {
   withdrawLiquidityDisplayAmount: string
   depositLiquidityDisplayAmount: string
 }[]
+
+export const meta: MetaFunction = () => [
+  { title: 'Outgoing Payment Details - Rafiki Admin' }
+]
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const cookies = request.headers.get('cookie')
