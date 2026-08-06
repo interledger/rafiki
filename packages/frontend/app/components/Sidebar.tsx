@@ -147,7 +147,7 @@ export const Sidebar: FC<SidebarProps> = ({
         <Flex className='flex min-h-0 flex-1 items-center px-5 py-6 md:flex-col md:items-start md:overflow-y-auto'>
           {/* Logo */}
           <Flex align='center' gap='2' className='flex-shrink-0'>
-            <img className='w-8' src='/logo.svg' alt='Logo' />
+            <img className='w-8' src='/logo.svg' alt='' />
             <Heading
               size='6'
               className='hidden md:inline-block whitespace-nowrap'
