@@ -68,10 +68,10 @@ export const Snackbar: FC<SnackbarProps> = ({
           >
             <div className='flex items-center space-x-2'>
               {message.type === 'success' && (
-                <CheckCircleSolid aria-hidden='true' className='w-4 h-4 text-white flex-shrink-0' />
+                <CheckCircleSolid className='w-4 h-4 text-white flex-shrink-0' />
               )}
               {message.type === 'error' && (
-                <XCircleSolid aria-hidden='true' className='w-4 h-4 text-red-400 flex-shrink-0' />
+                <XCircleSolid className='w-4 h-4 text-red-400 flex-shrink-0' />
               )}
               <p
                 className={cx(

@@ -92,7 +92,7 @@ export const Sidebar: FC<SidebarProps> = ({
                     onClick={() => setSidebarIsOpen(false)}
                     aria-label='close menu'
                   >
-                    <XIcon className='h-5 w-5' aria-hidden='true' />
+                    <XIcon className='h-5 w-5' />
                   </IconButton>
                 </Flex>
                 <Box className='mt-5 h-0 flex-1 overflow-y-auto'>
@@ -206,7 +206,7 @@ export const Sidebar: FC<SidebarProps> = ({
               aria-label='open menu'
               onClick={() => setSidebarIsOpen(true)}
             >
-              <Bars strokeWidth={2.5} className='h-6 w-6' aria-hidden='true' />
+              <Bars strokeWidth={2.5} className='h-6 w-6' />
             </IconButton>
           </Box>
         </Flex>

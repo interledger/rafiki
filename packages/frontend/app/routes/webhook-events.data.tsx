@@ -60,7 +60,7 @@ export default function WebhookEventData() {
                     onClick={dismiss}
                   >
                     <span className='sr-only'>Close</span>
-                    <XIcon className='h-8 w-8' aria-hidden='true' />
+                    <XIcon className='h-8 w-8' />
                   </button>
                 </div>
                 <div className='overflow-auto flex-1 text-xs break-words whitespace-pre'>
