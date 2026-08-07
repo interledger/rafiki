@@ -84,16 +84,20 @@ export default function PeersPage() {
                               to={`/peers/${peer.node.id}`}
                               className='group-hover:underline'
                               onClick={(e) => e.stopPropagation()}
-                              aria-label={
+                              aria-describedby={
                                 peer.node.name
                                   ? undefined
-                                  : `No peer name (ID: ${peer.node.id})`
+                                  : `peer-id-${peer.node.id}`
                               }
                             >
                               {peer.node.name || 'No peer name'}
                             </Link>
                           </Text>
-                          <Text size='1' color='gray'>
+                          <Text
+                            id={`peer-id-${peer.node.id}`}
+                            size='1'
+                            color='gray'
+                          >
                             (ID: {peer.node.id})
                           </Text>
                         </Flex>

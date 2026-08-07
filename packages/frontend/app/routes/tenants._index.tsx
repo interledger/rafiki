@@ -114,10 +114,10 @@ export default function TenantsPage() {
                               to={`/tenants/${tenant.node.id}`}
                               className='group-hover:underline'
                               onClick={(e) => e.stopPropagation()}
-                              aria-label={
+                              aria-describedby={
                                 tenant.node.publicName
                                   ? undefined
-                                  : `No public name (ID: ${tenant.node.id})`
+                                  : `tenant-id-${tenant.node.id}`
                               }
                             >
                               {tenant.node.publicName || 'No public name'}
@@ -127,7 +127,11 @@ export default function TenantsPage() {
                             <Badge color='yellow'>Operator</Badge>
                           )}
                         </Flex>
-                        <Text size='1' color='gray'>
+                        <Text
+                          id={`tenant-id-${tenant.node.id}`}
+                          size='1'
+                          color='gray'
+                        >
                           (ID: {tenant.node.id})
                         </Text>
                       </Flex>
