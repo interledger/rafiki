@@ -139,11 +139,9 @@ export default function PaymentsPage() {
           <Flex align='center' gap='2' className='flex-wrap md:flex-nowrap'>
             <DropdownMenu.Root>
               <DropdownMenu.Trigger className='inline-flex min-w-[220px] items-center justify-between gap-2 rounded-md border border-pearl bg-white px-3 py-2 text-sm text-tealish shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F37F64]'>
-                <Flex
-                  align='center'
-                  justify='between'
-                  gap='2'
-                  className='w-full'
+                <button
+                  type='button'
+                  className='flex w-full items-center justify-between gap-2'
                 >
                   <span className='truncate'>
                     {type.length
@@ -163,7 +161,7 @@ export default function PaymentsPage() {
                       clipRule='evenodd'
                     />
                   </svg>
-                </Flex>
+                </button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content
                 align='start'
@@ -172,6 +170,7 @@ export default function PaymentsPage() {
               >
                 <DropdownMenu.CheckboxItem
                   checked={type.length === 0}
+                  onSelect={(e) => e.preventDefault()}
                   onCheckedChange={() =>
                     updateParams({
                       type: null,
@@ -188,6 +187,7 @@ export default function PaymentsPage() {
                   <DropdownMenu.CheckboxItem
                     key={value}
                     checked={type.includes(value)}
+                    onSelect={(e) => e.preventDefault()}
                     onCheckedChange={() => setTypeFilterParams(value)}
                   >
                     {capitalize(value)}
