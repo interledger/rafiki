@@ -128,6 +128,12 @@ export default function App() {
       </head>
       <body className='h-full bg-polkadot bg-cover bg-no-repeat bg-center bg-fixed text-tealish'>
         <Theme accentColor='orange'>
+          <a
+            href='#main-content'
+            className='sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-20 focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-tealish focus:shadow-md'
+          >
+            Skip to main content
+          </a>
           <div className='min-h-full relative z-10'>
             {displaySidebar && (
               <Sidebar
@@ -139,7 +145,10 @@ export default function App() {
             <div
               className={`pt-20 md:pt-0 flex ${displaySidebar ? 'md:pl-60' : ''} flex-1 flex-col`}
             >
-              <main className={isIndex ? 'flex-1' : 'flex-1 pb-8 px-4 md:pt-3'}>
+              <main
+                id='main-content'
+                className={isIndex ? 'flex-1' : 'flex-1 pb-8 px-4 md:pt-3'}
+              >
                 <Outlet />
               </main>
             </div>
