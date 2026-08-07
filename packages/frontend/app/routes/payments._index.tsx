@@ -197,6 +197,7 @@ export default function PaymentsPage() {
 
             <Form
               method='post'
+              className='flex-1'
               onSubmit={(e) => {
                 if (!walletId) {
                   e.preventDefault()
@@ -209,12 +210,16 @@ export default function PaymentsPage() {
                 }
               }}
             >
-              <Flex gap='2' align='center'>
+              <Flex
+                gap='2'
+                align='center'
+                className='w-full md:min-w-80 md:max-w-full'
+              >
                 <TextField.Root
                   name='walletAddressId'
                   aria-label='Wallet address ID'
                   placeholder='Wallet address ID'
-                  style={{ width: '320px' }}
+                  className='flex-grow'
                   value={walletId}
                   onChange={(e) => setWalletId(e.target.value)}
                 />
@@ -233,6 +238,7 @@ export default function PaymentsPage() {
                     viewBox='0 0 24 24'
                     stroke='currentColor'
                     strokeWidth={2}
+                    aria-hidden='true'
                   >
                     <path
                       strokeLinecap='round'
