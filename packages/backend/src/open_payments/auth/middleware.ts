@@ -147,6 +147,10 @@ export function createOutgoingPaymentGrantTokenIntrospectionMiddleware() {
 
       const access = tokenInfo.access[0]
 
+      // httpsigMiddleware resolves the caller's key from ctx.client; set it
+      // exactly as createTokenIntrospectionMiddleware does for every sibling
+      // route.
+      ctx.client = tokenInfo.client
       ctx.grant = {
         id: tokenInfo.grant,
         limits:
