@@ -95,7 +95,10 @@ export const Sidebar: FC<SidebarProps> = ({
                     <XIcon className='h-5 w-5' />
                   </IconButton>
                 </div>
-                <nav className='mt-5 h-0 flex-1 overflow-y-auto'>
+                <nav
+                  className='mt-5 h-0 flex-1 overflow-y-auto'
+                  aria-label='main navigation'
+                >
                   <ul className='flex flex-col gap-1 px-3'>
                     {navigationToShow.map(({ name, href }) => (
                       <li key={name}>
@@ -146,7 +149,10 @@ export const Sidebar: FC<SidebarProps> = ({
           </Transition.Child>
         </Dialog>
       </Transition.Root>
-      <nav className='fixed inset-x-0 z-10 flex h-20 flex-col border-r border-mercury bg-[#fffef8] md:inset-y-0 md:h-auto md:w-60'>
+      <nav
+        className='fixed inset-x-0 z-10 flex h-20 flex-col border-r border-mercury bg-[#fffef8] md:inset-y-0 md:h-auto md:w-60'
+        aria-label='main navigation'
+      >
         <Flex className='flex min-h-0 flex-1 items-center px-5 py-6 md:flex-col md:items-start md:overflow-y-auto'>
           {/* Logo */}
           <Flex align='center' gap='2' className='flex-shrink-0'>
