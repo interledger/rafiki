@@ -250,15 +250,15 @@ export default function ViewAssetPage() {
               >
                 Liquidity Information
               </Heading>
-              <Flex justify='between' align='center'>
-                <Flex direction='column' gap='1'>
-                  <Text weight='medium'>Amount</Text>
-                  <Text size='2' color='gray'>
-                    {formatAmount(asset.liquidity ?? '0', asset.scale)}{' '}
-                    {asset.code}
-                  </Text>
-                </Flex>
-                <Flex gap='3'>
+              <Flex justify='between' align='center' wrap='wrap'>
+                <FormField
+                  label='Amount'
+                  name='liquidity'
+                  value={`${formatAmount(asset.liquidity ?? '0', asset.scale)} ${asset.code}`}
+                  disabled
+                  readOnly
+                />
+                <Flex gap='3' className='mt-6'>
                   <Button asChild>
                     <Link
                       aria-label='deposit asset liquidity page'

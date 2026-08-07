@@ -270,13 +270,14 @@ export default function ViewWalletAddressPage() {
                 Liquidity Information
               </Heading>
               <Flex justify='between' align='center'>
-                <Flex direction='column' gap='1'>
-                  <Text weight='medium'>Amount</Text>
-                  <Text size='2' color='gray'>
-                    {displayLiquidityAmount}
-                  </Text>
-                </Flex>
-                <Flex gap='3'>
+                <FormField
+                  label='Amount'
+                  name='liquidity'
+                  value={displayLiquidityAmount}
+                  disabled
+                  readOnly
+                />
+                <Flex gap='3' className='mt-6'>
                   {BigInt(walletAddress.liquidity ?? '0') ? (
                     <Button asChild>
                       <Link
