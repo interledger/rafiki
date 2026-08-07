@@ -254,10 +254,7 @@ export default function ViewWalletAddressPage() {
               </Flex>
               <Flex justify='end'>
                 <Button asChild>
-                  <Link
-                    aria-label='go to asset page'
-                    to={`/assets/${walletAddress.asset.id}`}
-                  >
+                  <Link to={`/assets/${walletAddress.asset.id}`}>
                     View asset
                   </Link>
                 </Button>
@@ -285,7 +282,6 @@ export default function ViewWalletAddressPage() {
                   {BigInt(walletAddress.liquidity ?? '0') ? (
                     <Button asChild>
                       <Link
-                        aria-label='withdraw wallet address liquidity page'
                         preventScrollReset
                         to={`/wallet-addresses/${walletAddress.id}/withdraw-liquidity`}
                       >
@@ -293,12 +289,7 @@ export default function ViewWalletAddressPage() {
                       </Link>
                     </Button>
                   ) : (
-                    <Button
-                      disabled={true}
-                      aria-label='withdraw wallet address liquidity page'
-                    >
-                      Withdraw
-                    </Button>
+                    <Button disabled={true}>Withdraw</Button>
                   )}
                 </Flex>
               </Flex>

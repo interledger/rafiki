@@ -192,9 +192,6 @@ export default function Settings() {
                         <div key={index}>
                           <Button
                             type={attributes.type}
-                            aria-label={
-                              attributes.label?.text || attributes.name
-                            }
                             name={attributes.name}
                             disabled={attributes.disabled}
                             value={attributes.value}
@@ -289,9 +286,6 @@ export default function Settings() {
                         <div key={index}>
                           <Button
                             type={attributes.type}
-                            aria-label={
-                              attributes.label?.text || attributes.name
-                            }
                             name={attributes.name}
                             disabled={attributes.disabled}
                             value={attributes.value}

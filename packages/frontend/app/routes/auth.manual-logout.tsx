@@ -30,11 +30,7 @@ export default function Logout() {
               button below, or closing your browser.
             </p>
             <Form method='post'>
-              <Button
-                aria-label='manual-logout'
-                name='manual-logout'
-                type='submit'
-              >
+              <Button name='manual-logout' type='submit'>
                 Manual Logout
               </Button>
             </Form>

@@ -172,9 +172,6 @@ export default function Recovery() {
                           <Button
                             key={index}
                             type={attributes.type}
-                            aria-label={
-                              attributes.label?.text || attributes.name
-                            }
                             name={attributes.name}
                             disabled={attributes.disabled}
                             value={attributes.value}

@@ -411,12 +411,7 @@ export default function ViewPeerPage() {
               </Flex>
               <Flex justify='end'>
                 <Button asChild>
-                  <Link
-                    aria-label='go to asset page'
-                    to={`/assets/${peer.asset.id}`}
-                  >
-                    View asset
-                  </Link>
+                  <Link to={`/assets/${peer.asset.id}`}>View asset</Link>
                 </Button>
               </Flex>
             </Flex>
@@ -441,7 +436,6 @@ export default function ViewPeerPage() {
                 <Flex gap='3' className='mt-6'>
                   <Button asChild>
                     <Link
-                      aria-label='deposit peer liquidity page'
                       preventScrollReset
                       to={`/peers/${peer.id}/deposit-liquidity`}
                     >
@@ -450,7 +444,6 @@ export default function ViewPeerPage() {
                   </Button>
                   <Button asChild>
                     <Link
-                      aria-label='withdraw peer liquidity page'
                       preventScrollReset
                       to={`/peers/${peer.id}/withdraw-liquidity`}
                     >

@@ -169,9 +169,6 @@ export default function Login() {
                           <Button
                             key={index}
                             type={attributes.type}
-                            aria-label={
-                              attributes.label?.text || attributes.name
-                            }
                             name={attributes.name}
                             disabled={attributes.disabled}
                             value={attributes.value}
@@ -186,9 +183,7 @@ export default function Login() {
                 </fieldset>
               </div>
             </form>
-            <a aria-label='account-recovery' href={recoveryUrl}>
-              Forgot password?
-            </a>
+            <a href={recoveryUrl}>Forgot password?</a>
           </div>
         </div>
       </div>

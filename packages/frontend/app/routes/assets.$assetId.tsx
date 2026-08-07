@@ -265,7 +265,6 @@ export default function ViewAssetPage() {
                 <Flex gap='3' className='mt-6'>
                   <Button asChild>
                     <Link
-                      aria-label='deposit asset liquidity page'
                       preventScrollReset
                       to={`/assets/${asset.id}/deposit-liquidity`}
                     >
@@ -274,7 +273,6 @@ export default function ViewAssetPage() {
                   </Button>
                   <Button asChild>
                     <Link
-                      aria-label='withdraw asset liquidity page'
                       preventScrollReset
                       to={`/assets/${asset.id}/withdraw-liquidity`}
                     >
@@ -306,10 +304,7 @@ export default function ViewAssetPage() {
               {renderErrorPanel(response?.errors.sendingFee.message)}
               <Flex justify='end'>
                 <Button asChild>
-                  <Link
-                    aria-label='view asset fees page'
-                    to={`/assets/${asset.id}/fee-history`}
-                  >
+                  <Link to={`/assets/${asset.id}/fee-history`}>
                     Fee history
                   </Link>
                 </Button>

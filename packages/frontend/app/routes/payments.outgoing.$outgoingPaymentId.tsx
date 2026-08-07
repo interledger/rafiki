@@ -259,7 +259,6 @@ export default function ViewOutgoingPaymentPage() {
                 {BigInt(outgoingPayment.liquidity ?? '0') ? (
                   <Button asChild>
                     <Link
-                      aria-label='withdraw outgoing payment liquidity page'
                       preventScrollReset
                       to={`/payments/outgoing/${outgoingPayment.id}/withdraw-liquidity`}
                     >
@@ -267,17 +266,11 @@ export default function ViewOutgoingPaymentPage() {
                     </Link>
                   </Button>
                 ) : (
-                  <Button
-                    disabled={true}
-                    aria-label='withdraw outgoing payment liquidity page'
-                  >
-                    Withdraw liquidity
-                  </Button>
+                  <Button disabled={true}>Withdraw liquidity</Button>
                 )}
                 {outgoingPayment.state === OutgoingPaymentState.Funding ? (
                   <Button asChild>
                     <Link
-                      aria-label='deposit outgoing payment liquidity page'
                       preventScrollReset
                       to={`/payments/outgoing/${outgoingPayment.id}/deposit-liquidity`}
                     >
@@ -285,12 +278,7 @@ export default function ViewOutgoingPaymentPage() {
                     </Link>
                   </Button>
                 ) : (
-                  <Button
-                    disabled={true}
-                    aria-label='deposit outgoing payment liquidity page'
-                  >
-                    Deposit liquidity
-                  </Button>
+                  <Button disabled={true}>Deposit liquidity</Button>
                 )}
               </Flex>
             </Flex>

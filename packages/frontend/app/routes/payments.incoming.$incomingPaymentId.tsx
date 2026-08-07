@@ -213,7 +213,6 @@ export default function ViewIncomingPaymentPage() {
                 {canWithdrawLiquidity ? (
                   <Button asChild>
                     <Link
-                      aria-label='withdraw incoming payment liquidity page'
                       preventScrollReset
                       to={`/payments/incoming/${incomingPayment.id}/withdraw-liquidity`}
                     >
@@ -221,12 +220,7 @@ export default function ViewIncomingPaymentPage() {
                     </Link>
                   </Button>
                 ) : (
-                  <Button
-                    disabled={true}
-                    aria-label='withdraw incoming payment liquidity page'
-                  >
-                    Withdraw liquidity
-                  </Button>
+                  <Button disabled={true}>Withdraw liquidity</Button>
                 )}
               </Flex>
             </Flex>
