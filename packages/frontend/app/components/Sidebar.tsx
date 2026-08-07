@@ -167,7 +167,7 @@ export const Sidebar: FC<SidebarProps> = ({
           </Flex>
           {/* Logo - END */}
           {/* Desktop Navigation */}
-          <nav className='hidden w-full mt-5 flex-1 flex-col overflow-y-auto md:block'>
+          <Box className='hidden w-full mt-5 flex-1 flex-col overflow-y-auto md:block'>
             <ul className='flex flex-col gap-1'>
               {navigationToShow.map(({ name, href }) => (
                 <li key={name}>
@@ -213,7 +213,7 @@ export const Sidebar: FC<SidebarProps> = ({
                 <a href={logoutUrl}>Logout</a>
               </Button>
             )}
-          </nav>
+          </Box>
 
           {/* Desktop Navigation - END */}
           <Box className='ml-auto flex md:hidden'>
