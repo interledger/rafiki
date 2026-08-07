@@ -82,8 +82,8 @@ export default function TenantsPage() {
             </Text>
           </Box>
           {me.isOperator && (
-            <Button onClick={() => navigate('/tenants/create')}>
-              Add tenant
+            <Button asChild>
+              <Link to='/tenants/create'>Add tenant</Link>
             </Button>
           )}
         </Flex>

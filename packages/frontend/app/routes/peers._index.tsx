@@ -51,7 +51,9 @@ export default function PeersPage() {
       <Flex direction='column' gap='4'>
         <Flex justify='between' align='start'>
           <Heading size='5'>Peers</Heading>
-          <Button onClick={() => navigate('/peers/create')}>Create peer</Button>
+          <Button asChild>
+            <Link to='/peers/create'>Create peer</Link>
+          </Button>
         </Flex>
 
         <Flex direction='column' gap='4'>

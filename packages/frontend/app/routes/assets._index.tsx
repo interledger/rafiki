@@ -52,7 +52,9 @@ export default function AssetsPage() {
       <Flex direction='column' gap='4'>
         <Flex justify='between' align='start'>
           <Heading size='5'>Assets</Heading>
-          <Button onClick={() => navigate('/assets/create')}>Add asset</Button>
+          <Button asChild>
+            <Link to='/assets/create'>Add asset</Link>
+          </Button>
         </Flex>
 
         <Flex direction='column' gap='4'>
