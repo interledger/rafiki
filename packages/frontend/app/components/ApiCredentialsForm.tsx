@@ -54,13 +54,8 @@ export const ApiCredentialsForm = ({
         <Form method='post' action='/api/set-credentials' className='space-y-4'>
           <p className='text-green-600 mb-4'>✓ API credentials configured</p>
           <input hidden readOnly name='intent' value='clear' />
-          <Button
-            type='submit'
-            color='red'
-            aria-label='Clear API credentials'
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Submitting...' : 'Clear Credentials'}
+          <Button type='submit' color='red' disabled={isSubmitting}>
+            {isSubmitting ? 'Clearing credentials...' : 'Clear Credentials'}
           </Button>
         </Form>
       ) : (
@@ -129,12 +124,8 @@ export const ApiCredentialsForm = ({
           </div>
           <input hidden readOnly name='intent' value='save' />
           <div className='flex justify-center'>
-            <Button
-              type='submit'
-              aria-label='Save API credentials'
-              disabled={!!tenantIdError || isSubmitting}
-            >
-              {isSubmitting ? 'Submitting...' : 'Save Credentials'}
+            <Button type='submit' disabled={!!tenantIdError || isSubmitting}>
+              {isSubmitting ? 'Saving credentials...' : 'Save Credentials'}
             </Button>
           </div>
         </Form>
