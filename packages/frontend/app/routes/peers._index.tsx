@@ -3,7 +3,7 @@ import {
   type LoaderFunctionArgs,
   type MetaFunction
 } from '@remix-run/node'
-import { useLoaderData, useNavigate } from '@remix-run/react'
+import { Link, useLoaderData, useNavigate } from '@remix-run/react'
 import { Box, Button, Flex, Heading, Table, Text } from '@radix-ui/themes'
 import { listPeers } from '~/lib/api/peer.server'
 import { paginationSchema } from '~/lib/validate.server'
@@ -73,13 +73,25 @@ export default function PeersPage() {
                   peers.edges.map((peer) => (
                     <Table.Row
                       key={peer.node.id}
+                      className='group'
                       style={{ cursor: 'pointer' }}
                       onClick={() => navigate(`/peers/${peer.node.id}`)}
                     >
                       <Table.Cell>
                         <Flex direction='column' gap='1'>
-                          <Text weight='medium'>
-                            {peer.node.name || 'No peer name'}
+                          <Text weight='medium' asChild>
+                            <Link
+                              to={`/peers/${peer.node.id}`}
+                              className='group-hover:underline'
+                              onClick={(e) => e.stopPropagation()}
+                              aria-label={
+                                peer.node.name
+                                  ? undefined
+                                  : `No peer name (ID: ${peer.node.id})`
+                              }
+                            >
+                              {peer.node.name || 'No peer name'}
+                            </Link>
                           </Text>
                           <Text size='1' color='gray'>
                             (ID: {peer.node.id})

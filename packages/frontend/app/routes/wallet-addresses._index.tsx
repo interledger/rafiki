@@ -3,7 +3,7 @@ import {
   type LoaderFunctionArgs,
   type MetaFunction
 } from '@remix-run/node'
-import { useLoaderData, useNavigate } from '@remix-run/react'
+import { Link, useLoaderData, useNavigate } from '@remix-run/react'
 import {
   Badge,
   Box,
@@ -90,13 +90,22 @@ export default function WalletAddressesPage() {
                   walletAddresses.edges.map((wa) => (
                     <Table.Row
                       key={wa.node.id}
+                      className='group'
                       style={{ cursor: 'pointer' }}
                       onClick={() =>
                         navigate(`/wallet-addresses/${wa.node.id}`)
                       }
                     >
                       <Table.Cell>
-                        <Text>{wa.node.address}</Text>
+                        <Text asChild>
+                          <Link
+                            to={`/wallet-addresses/${wa.node.id}`}
+                            className='group-hover:underline'
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {wa.node.address}
+                          </Link>
+                        </Text>
                       </Table.Cell>
                       <Table.Cell>
                         <Text weight='medium'>

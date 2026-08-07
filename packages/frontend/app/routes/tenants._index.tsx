@@ -3,7 +3,7 @@ import {
   type LoaderFunctionArgs,
   type MetaFunction
 } from '@remix-run/node'
-import { useLoaderData, useNavigate } from '@remix-run/react'
+import { Link, useLoaderData, useNavigate } from '@remix-run/react'
 import {
   Box,
   Button,
@@ -102,14 +102,26 @@ export default function TenantsPage() {
                 tenantEdges.map((tenant) => (
                   <Table.Row
                     key={tenant.node.id}
+                    className='group'
                     style={{ cursor: 'pointer' }}
                     onClick={() => navigate(`/tenants/${tenant.node.id}`)}
                   >
                     <Table.Cell>
                       <Flex direction='column' gap='1'>
                         <Flex align='center' gap='2'>
-                          <Text weight='medium'>
-                            {tenant.node.publicName || 'No public name'}
+                          <Text weight='medium' asChild>
+                            <Link
+                              to={`/tenants/${tenant.node.id}`}
+                              className='group-hover:underline'
+                              onClick={(e) => e.stopPropagation()}
+                              aria-label={
+                                tenant.node.publicName
+                                  ? undefined
+                                  : `No public name (ID: ${tenant.node.id})`
+                              }
+                            >
+                              {tenant.node.publicName || 'No public name'}
+                            </Link>
                           </Text>
                           {me.isOperator && me.id == tenant.node.id && (
                             <Badge color='yellow'>Operator</Badge>

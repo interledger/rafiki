@@ -11,7 +11,8 @@ import {
   useNavigate,
   useSearchParams,
   Form,
-  useActionData
+  useActionData,
+  Link
 } from '@remix-run/react'
 import {
   Box,
@@ -272,6 +273,7 @@ export default function PaymentsPage() {
                   payments.edges.map((payment) => (
                     <Table.Row
                       key={payment.node.id}
+                      className='group'
                       style={{ cursor: 'pointer' }}
                       onClick={() => {
                         const subpath = paymentSubpathByType[payment.node.type]
@@ -281,7 +283,15 @@ export default function PaymentsPage() {
                       }}
                     >
                       <Table.Cell>
-                        <Text>{payment.node.id}</Text>
+                        <Text asChild>
+                          <Link
+                            to={`/payments/${paymentSubpathByType[payment.node.type]}/${payment.node.id}`}
+                            className='group-hover:underline'
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {payment.node.id}
+                          </Link>
+                        </Text>
                       </Table.Cell>
                       <Table.Cell>
                         <Text weight='medium'>

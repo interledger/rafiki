@@ -3,7 +3,7 @@ import {
   type LoaderFunctionArgs,
   type MetaFunction
 } from '@remix-run/node'
-import { useLoaderData, useNavigate } from '@remix-run/react'
+import { Link, useLoaderData, useNavigate } from '@remix-run/react'
 import { Box, Button, Flex, Heading, Table, Text } from '@radix-ui/themes'
 import { listAssets } from '~/lib/api/asset.server'
 import { paginationSchema } from '~/lib/validate.server'
@@ -74,11 +74,20 @@ export default function AssetsPage() {
                   assets.edges.map((asset) => (
                     <Table.Row
                       key={asset.node.id}
+                      className='group'
                       style={{ cursor: 'pointer' }}
                       onClick={() => navigate(`/assets/${asset.node.id}`)}
                     >
                       <Table.Cell>
-                        <Text size='2'>{asset.node.id}</Text>
+                        <Text size='2' asChild>
+                          <Link
+                            to={`/assets/${asset.node.id}`}
+                            className='group-hover:underline'
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {asset.node.id}
+                          </Link>
+                        </Text>
                       </Table.Cell>
                       <Table.Cell>
                         <Text weight='medium'>{asset.node.code}</Text>
