@@ -151,6 +151,7 @@ export default function ViewTenantPage() {
               <Flex align='center' justify='between' gap='3' wrap='wrap'>
                 <Heading
                   as='h2'
+                  id='general-information-heading'
                   size='2'
                   weight='medium'
                   className='uppercase tracking-wide text-gray-600'
@@ -166,7 +167,10 @@ export default function ViewTenantPage() {
               </Flex>
               {renderErrorPanel(response?.errors?.general.message)}
               <Form method='post' replace preventScrollReset>
-                <fieldset disabled={isSubmitting}>
+                <fieldset
+                  disabled={isSubmitting}
+                  aria-labelledby='general-information-heading'
+                >
                   <Flex direction='column' gap='4'>
                     <input type='hidden' name='id' value={tenant.id} />
                     <FormField
@@ -219,6 +223,7 @@ export default function ViewTenantPage() {
             <Flex direction='column' gap='4'>
               <Heading
                 as='h2'
+                id='idp-information-heading'
                 size='2'
                 weight='medium'
                 className='uppercase tracking-wide text-gray-600'
@@ -227,7 +232,10 @@ export default function ViewTenantPage() {
               </Heading>
               {renderErrorPanel(response?.errors?.idp.message)}
               <Form method='post' replace preventScrollReset>
-                <fieldset disabled={isSubmitting}>
+                <fieldset
+                  disabled={isSubmitting}
+                  aria-labelledby='idp-information-heading'
+                >
                   <Flex direction='column' gap='4'>
                     <input type='hidden' name='id' value={tenant.id} />
                     <FormField
@@ -266,6 +274,7 @@ export default function ViewTenantPage() {
               <Flex direction='column' gap='4'>
                 <Heading
                   as='h2'
+                  id='sensitive-information-heading'
                   size='2'
                   weight='medium'
                   className='uppercase tracking-wide text-gray-600'
@@ -274,7 +283,10 @@ export default function ViewTenantPage() {
                 </Heading>
                 {renderErrorPanel(response?.errors?.sensitive.message)}
                 <Form method='post' replace preventScrollReset>
-                  <fieldset disabled={isSubmitting}>
+                  <fieldset
+                    disabled={isSubmitting}
+                    aria-labelledby='sensitive-information-heading'
+                  >
                     <Flex direction='column' gap='4'>
                       <input type='hidden' name='id' value={tenant.id} />
                       <FormField
@@ -282,7 +294,7 @@ export default function ViewTenantPage() {
                         label='API Secret'
                         type='password'
                         value={tenant.apiSecret}
-                        required
+                        required={!me.isOperator}
                         disabled={me.isOperator}
                       />
                     </Flex>

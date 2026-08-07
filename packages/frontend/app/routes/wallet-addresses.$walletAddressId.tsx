@@ -134,6 +134,7 @@ export default function ViewWalletAddressPage() {
               <Flex align='center' justify='between' gap='3' wrap='wrap'>
                 <Heading
                   as='h2'
+                  id='general-information-heading'
                   size='2'
                   weight='medium'
                   className='uppercase tracking-wide text-gray-600'
@@ -147,7 +148,10 @@ export default function ViewWalletAddressPage() {
               </Flex>
               {renderErrorPanel(response?.errors.message)}
               <Form method='post' replace preventScrollReset>
-                <fieldset disabled={isSubmitting}>
+                <fieldset
+                  disabled={isSubmitting}
+                  aria-labelledby='general-information-heading'
+                >
                   <Flex direction='column' gap='4'>
                     <input type='hidden' name='id' value={walletAddress.id} />
                     <FormField

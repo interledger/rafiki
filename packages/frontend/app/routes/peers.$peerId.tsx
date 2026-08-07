@@ -165,6 +165,7 @@ export default function ViewPeerPage() {
               <Flex align='center' justify='between' gap='3' wrap='wrap'>
                 <Heading
                   as='h2'
+                  id='general-information-heading'
                   size='2'
                   weight='medium'
                   className='uppercase tracking-wide text-gray-600'
@@ -177,7 +178,10 @@ export default function ViewPeerPage() {
               </Flex>
               {renderErrorPanel(response?.errors.general.message)}
               <Form method='post' replace preventScrollReset>
-                <fieldset disabled={currentPageAction}>
+                <fieldset
+                  disabled={currentPageAction}
+                  aria-labelledby='general-information-heading'
+                >
                   <Flex direction='column' gap='4'>
                     <input type='hidden' name='id' value={peer.id} />
                     <FormField
@@ -270,6 +274,7 @@ export default function ViewPeerPage() {
             <Flex direction='column' gap='4'>
               <Heading
                 as='h2'
+                id='http-information-heading'
                 size='2'
                 weight='medium'
                 className='uppercase tracking-wide text-gray-600'
@@ -278,7 +283,10 @@ export default function ViewPeerPage() {
               </Heading>
               {renderErrorPanel(response?.errors.http.message)}
               <Form method='post' replace preventScrollReset>
-                <fieldset disabled={currentPageAction}>
+                <fieldset
+                  disabled={currentPageAction}
+                  aria-labelledby='http-information-heading'
+                >
                   <Flex direction='column' gap='4'>
                     <input type='hidden' name='id' value={peer.id} />
                     <FormField

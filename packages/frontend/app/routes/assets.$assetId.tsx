@@ -172,6 +172,7 @@ export default function ViewAssetPage() {
               <Flex align='center' justify='between' gap='3' wrap='wrap'>
                 <Heading
                   as='h2'
+                  id='general-information-heading'
                   size='2'
                   weight='medium'
                   className='uppercase tracking-wide text-gray-600'
@@ -184,7 +185,10 @@ export default function ViewAssetPage() {
               </Flex>
               {renderErrorPanel(response?.errors.general.message)}
               <Form method='post' replace preventScrollReset>
-                <fieldset disabled={currentPageAction}>
+                <fieldset
+                  disabled={currentPageAction}
+                  aria-labelledby='general-information-heading'
+                >
                   <Flex direction='column' gap='4'>
                     <input type='hidden' name='id' value={asset.id} />
                     <FormField
@@ -285,6 +289,7 @@ export default function ViewAssetPage() {
               <Flex direction='column' gap='2'>
                 <Heading
                   as='h2'
+                  id='sending-fee-heading'
                   size='2'
                   weight='medium'
                   className='uppercase tracking-wide text-gray-600'
@@ -310,7 +315,10 @@ export default function ViewAssetPage() {
                 </Button>
               </Flex>
               <Form method='post' replace preventScrollReset>
-                <fieldset disabled={currentPageAction}>
+                <fieldset
+                  disabled={currentPageAction}
+                  aria-labelledby='sending-fee-heading'
+                >
                   <Flex direction='column' gap='4'>
                     <input type='hidden' name='assetId' value={asset.id} />
                     <Flex gap='3' className='flex-1'>
