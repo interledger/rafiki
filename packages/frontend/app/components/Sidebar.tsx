@@ -3,7 +3,7 @@ import { NavLink } from '@remix-run/react'
 import { cx } from 'class-variance-authority'
 import type { FC } from 'react'
 import { Fragment, useState } from 'react'
-import { Box, Button, Flex, Heading, IconButton } from '@radix-ui/themes'
+import { Box, Button, Flex, IconButton, Text } from '@radix-ui/themes'
 import { Bars, XIcon } from './icons'
 
 interface SidebarProps {
@@ -157,12 +157,13 @@ export const Sidebar: FC<SidebarProps> = ({
           {/* Logo */}
           <Flex align='center' gap='2' className='flex-shrink-0'>
             <img className='w-8' src='/logo.svg' alt='' />
-            <Heading
+            <Text
               size='6'
+              weight='bold'
               className='hidden md:inline-block whitespace-nowrap'
             >
               Rafiki Admin
-            </Heading>
+            </Text>
           </Flex>
           {/* Logo - END */}
           {/* Desktop Navigation */}
