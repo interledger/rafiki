@@ -1,10 +1,13 @@
 import { Popover, Transition } from '@headlessui/react'
-import { Fragment } from 'react'
+import { cx } from 'class-variance-authority'
+import { Fragment, useId } from 'react'
 
 type PopoverFilterOption = {
   name: string
   value: string
   action: () => void
+  /** Selecting this option clears/overrides the other selections below it. */
+  exclusive?: boolean
 }
 
 type PopoverFilterProps = {
@@ -18,10 +21,20 @@ export const PopoverFilter = ({
   options,
   values
 }: PopoverFilterProps) => {
+  const labelId = useId()
+  const exclusiveDescriptionId = `${labelId}-exclusive-description`
+  const hasExclusiveOption = options.some((option) => option.exclusive)
+
   return (
     <Popover className='relative'>
-      <Popover.Button className='inline-flex w-[400px] items-center justify-between gap-2 rounded-md border border-pearl bg-white px-3 py-2 text-sm text-tealish shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F37F64]'>
-        <span className='truncate'>{label}</span>
+      <Popover.Button
+        id={labelId}
+        aria-haspopup='true'
+        className='inline-flex w-[400px] items-center justify-between gap-2 rounded-md border border-pearl bg-white px-3 py-2 text-sm text-tealish shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F37F64]'
+      >
+        <span className='truncate' title={label}>
+          {label}
+        </span>
         <svg
           xmlns='http://www.w3.org/2000/svg'
           width='14'
@@ -44,24 +57,37 @@ export const PopoverFilter = ({
         leaveTo='opacity-0'
       >
         <Popover.Panel className='absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm'>
-          <div className='space-y-2 p-2'>
-            {options.map((option) => (
-              <div key={option.value} className='flex items-center'>
-                <input
-                  type='checkbox'
-                  id={option.value}
-                  className='w-5 h-5 rounded border-gray-300 text-[#F37F64] focus:ring-[#F37F64]'
-                  checked={values ? values.includes(option.value) : false}
-                  onChange={option.action}
-                />
+          <div className='space-y-2 p-2' role='group' aria-labelledby={labelId}>
+            {hasExclusiveOption && (
+              <span id={exclusiveDescriptionId} className='sr-only'>
+                Selecting this clears the other selections below.
+              </span>
+            )}
+            {options.map((option) => {
+              const optionId = `${labelId}-${option.value}`
+              return (
                 <label
-                  htmlFor={option.value}
-                  className='ml-3 min-w-0 flex-1 text-gray-900'
+                  key={option.value}
+                  htmlFor={optionId}
+                  className={cx(
+                    'flex items-center gap-3 text-gray-900',
+                    option.exclusive && 'border-b border-gray-200 pb-2'
+                  )}
                 >
-                  {option.name}
+                  <input
+                    type='checkbox'
+                    id={optionId}
+                    className='w-5 h-5 rounded border-gray-300 text-[#F37F64] focus:ring-[#F37F64]'
+                    checked={values ? values.includes(option.value) : false}
+                    onChange={option.action}
+                    aria-describedby={
+                      option.exclusive ? exclusiveDescriptionId : undefined
+                    }
+                  />
+                  <span className='min-w-0 flex-1'>{option.name}</span>
                 </label>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </Popover.Panel>
       </Transition>

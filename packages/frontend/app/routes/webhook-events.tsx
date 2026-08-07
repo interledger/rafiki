@@ -113,6 +113,7 @@ export default function WebhookEventsPage() {
                   {
                     name: 'All',
                     value: 'all',
+                    exclusive: true,
                     action: () => {
                       navigate(``)
                     }
