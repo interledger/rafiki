@@ -272,6 +272,11 @@ describe('utils', (): void => {
         })
       ).resolves.toBe(true)
 
+      // Redis EXPIRE is in seconds; a ms/seconds mixup would leave TTL ≈ ttlSeconds*1000.
+      const ttl = await redis.ttl(`signature:${signature}`)
+      expect(ttl).toBeGreaterThan(0)
+      expect(ttl).toBeLessThanOrEqual(Config.adminApiSignatureTtlSeconds)
+
       const verified = await verifyApiSignature(ctx, {
         ...Config,
         adminApiSecret: 'test-secret'
