@@ -1,4 +1,4 @@
-import { createHmac } from 'crypto'
+import { createHmac, timingSafeEqual } from 'crypto'
 import { canonicalize } from 'json-canonicalize'
 import { AppContext } from '../app'
 
@@ -10,6 +10,20 @@ function getSignatureParts(signature: string) {
   const digest = signatureVersionAndDigest[1]
 
   return { timestamp, version, digest }
+}
+
+
+function hmacHexDigestsEqual(expectedHex: string, providedHex: string): boolean {
+  const expected = Buffer.from(expectedHex, 'hex')
+  const provided = Buffer.from(providedHex, 'hex')
+  if (
+    expected.length === 0 ||
+    expected.length !== provided.length ||
+    expectedHex.length !== providedHex.length
+  ) {
+    return false
+  }
+  return timingSafeEqual(expected, provided)
 }
 
 function verifyWebhookSignatureDigest(
@@ -34,7 +48,7 @@ function verifyWebhookSignatureDigest(
   hmac.update(payload)
   const digest = hmac.digest('hex')
 
-  return digest === signatureDigest
+  return hmacHexDigestsEqual(digest, signatureDigest)
 }
 
 export async function webhookHttpSigMiddleware(
