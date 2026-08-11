@@ -322,7 +322,7 @@ export default function ViewTenantPage() {
             <Form method='post' onSubmit={submitHandler}>
               <input type='hidden' name='id' value={tenant.id} />
               <input type='hidden' name='intent' value='delete' />
-              <Button type='submit' color='red' aria-label='delete tenant'>
+              <Button type='submit' color='red' variant='classic'>
                 Delete tenant
               </Button>
             </Form>

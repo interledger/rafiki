@@ -54,7 +54,7 @@ export default function Index() {
             >
               Welcome
             </Text>
-            <Heading size='8' className='text-[#F37F64] mb-4'>
+            <Heading size='8' color='amber' className='mb-4'>
               Rafiki Admin
             </Heading>
             <Text as='p' size='3' color='gray' className='mt-6'>

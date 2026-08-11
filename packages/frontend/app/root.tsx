@@ -127,7 +127,7 @@ export default function App() {
         <Links />
       </head>
       <body className='h-full bg-polkadot bg-cover bg-no-repeat bg-center bg-fixed text-tealish'>
-        <Theme accentColor='orange'>
+        <Theme accentColor='amber'>
           <a
             href='#main-content'
             className='sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-20 focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-tealish focus:shadow-md'

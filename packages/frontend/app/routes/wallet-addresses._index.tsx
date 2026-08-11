@@ -113,7 +113,10 @@ export default function WalletAddressesPage() {
                         </Text>
                       </Table.Cell>
                       <Table.Cell>
-                        <Badge color={statusColorMap[wa.node.status] || 'gray'}>
+                        <Badge
+                          color={statusColorMap[wa.node.status] || 'gray'}
+                          variant='outline'
+                        >
                           {wa.node.status}
                         </Badge>
                       </Table.Cell>

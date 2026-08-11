@@ -54,7 +54,12 @@ export const ApiCredentialsForm = ({
         <Form method='post' action='/api/set-credentials' className='space-y-4'>
           <p className='text-green-600 mb-4'>✓ API credentials configured</p>
           <input hidden readOnly name='intent' value='clear' />
-          <Button type='submit' color='red' disabled={isSubmitting}>
+          <Button
+            type='submit'
+            color='red'
+            variant='outline'
+            disabled={isSubmitting}
+          >
             {isSubmitting ? 'Clearing credentials...' : 'Clear Credentials'}
           </Button>
         </Form>
