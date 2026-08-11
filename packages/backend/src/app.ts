@@ -730,9 +730,6 @@ export class App {
       '/:tenantId/outgoing-payment-grant',
       // Expects token used for outgoing payment payment creation
       createOutgoingPaymentGrantTokenIntrospectionMiddleware(),
-      // Every other token-protected Open Payments route pairs introspection
-      // with HTTP message signature verification; possession of the access
-      // token alone is not supposed to be sufficient to call this endpoint.
       httpsigMiddleware,
       outgoingPaymentRoutes.getGrantSpentAmounts
     )
