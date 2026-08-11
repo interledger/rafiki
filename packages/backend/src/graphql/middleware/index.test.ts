@@ -258,40 +258,41 @@ describe('GraphQL Middleware', (): void => {
 
       const createAssetSpy = jest.spyOn(assetService, 'create')
 
-      const [firstRequest, secondRequest, thirdRequest] =
-        await Promise.allSettled([
-          callCreateAssetMutation(input),
-          callCreateAssetMutation(input),
-          callCreateAssetMutation(input)
-        ])
+      const requests = await Promise.allSettled([
+        callCreateAssetMutation(input),
+        callCreateAssetMutation(input),
+        callCreateAssetMutation(input)
+      ])
 
-      assert.ok('value' in firstRequest)
+      // Which of the concurrent requests acquires the lock first is a race, so
+      // assert on the outcome as a set rather than on a particular request.
+      const fulfilled = requests.filter((request) => 'value' in request)
+      const rejected = requests.filter((request) => 'reason' in request)
 
-      expect(firstRequest).toEqual({
-        status: 'fulfilled',
-        value: {
-          __typename: 'AssetMutationResponse',
-          asset: {
-            __typename: 'Asset',
-            id: firstRequest.value?.asset?.id,
-            code: input.code,
-            scale: input.scale,
-            withdrawalThreshold: null
-          }
+      expect(fulfilled).toHaveLength(1)
+      expect(rejected).toHaveLength(2)
+
+      const winner = fulfilled[0]
+      assert.ok('value' in winner)
+
+      expect(winner.value).toEqual({
+        __typename: 'AssetMutationResponse',
+        asset: {
+          __typename: 'Asset',
+          id: winner.value?.asset?.id,
+          code: input.code,
+          scale: input.scale,
+          withdrawalThreshold: null
         }
       })
-      expect(secondRequest).toEqual({
-        status: 'rejected',
-        reason: new GraphQLError(
-          `Concurrent request for idempotencyKey: ${input.idempotencyKey}`
-        )
-      })
-      expect(thirdRequest).toEqual({
-        status: 'rejected',
-        reason: new GraphQLError(
-          `Concurrent request for idempotencyKey: ${input.idempotencyKey}`
-        )
-      })
+      for (const request of rejected) {
+        expect(request).toEqual({
+          status: 'rejected',
+          reason: new GraphQLError(
+            `Concurrent request for idempotencyKey: ${input.idempotencyKey}`
+          )
+        })
+      }
       expect(createAssetSpy).toHaveBeenCalledTimes(1)
     })
   })

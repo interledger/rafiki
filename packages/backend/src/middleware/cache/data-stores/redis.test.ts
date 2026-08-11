@@ -14,7 +14,7 @@ describe('Redis Data Store', (): void => {
 
   afterEach(async () => {
     jest.useRealTimers()
-    await redis.flushall()
+    await redis.flushdb()
   })
 
   afterAll(async () => {
