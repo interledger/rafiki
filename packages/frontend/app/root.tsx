@@ -134,6 +134,13 @@ export default function App() {
           >
             Skip to main content
           </a>
+          <Snackbar
+            id='snackbar'
+            onClose={() => setSnackbarOpen(false)}
+            show={snackbarOpen}
+            message={message}
+            dismissAfter={200000}
+          />
           <div className='min-h-full relative z-10'>
             {displaySidebar && (
               <Sidebar
@@ -153,13 +160,6 @@ export default function App() {
               </main>
             </div>
           </div>
-          <Snackbar
-            id='snackbar'
-            onClose={() => setSnackbarOpen(false)}
-            show={snackbarOpen}
-            message={message}
-            dismissAfter={2000}
-          />
         </Theme>
         <ScrollRestoration />
         <PublicEnv env={publicEnv} />
