@@ -205,7 +205,8 @@ export function ErrorBoundary() {
           <Heading
             as='h4'
             size='5'
-            className='font-semibold -tracking-widest text-[#F37F64]'
+            color='amber'
+            className='font-semibold -tracking-widest'
           >
             {error.status}
           </Heading>
