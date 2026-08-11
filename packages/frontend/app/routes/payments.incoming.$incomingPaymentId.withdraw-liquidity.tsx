@@ -5,7 +5,11 @@ import { LiquidityConfirmDialog } from '~/components/LiquidityConfirmDialog'
 import { createIncomingPaymentWithdrawal } from '~/lib/api/payments.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
-import { type LoaderFunctionArgs } from '@remix-run/node'
+import { type LoaderFunctionArgs, type MetaFunction } from '@remix-run/node'
+
+export const meta: MetaFunction = () => [
+  { title: 'Withdraw Incoming Payment Liquidity - Rafiki Admin' }
+]
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')

@@ -1,5 +1,9 @@
-import { json, type LoaderFunctionArgs } from '@remix-run/node'
-import { useLoaderData, useNavigate } from '@remix-run/react'
+import {
+  json,
+  type LoaderFunctionArgs,
+  type MetaFunction
+} from '@remix-run/node'
+import { Link, useLoaderData, useNavigate } from '@remix-run/react'
 import {
   Badge,
   Box,
@@ -12,6 +16,10 @@ import {
 import { listWalletAddresses } from '~/lib/api/wallet-address.server'
 import { paginationSchema } from '~/lib/validate.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
+
+export const meta: MetaFunction = () => [
+  { title: 'Wallet Addresses - Rafiki Admin' }
+]
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
@@ -59,8 +67,8 @@ export default function WalletAddressesPage() {
       <Flex direction='column' gap='4'>
         <Flex justify='between' align='start'>
           <Heading size='5'>Wallet Addresses</Heading>
-          <Button onClick={() => navigate('/wallet-addresses/create')}>
-            Create wallet address
+          <Button asChild>
+            <Link to='/wallet-addresses/create'>Create wallet address</Link>
           </Button>
         </Flex>
 
@@ -82,13 +90,22 @@ export default function WalletAddressesPage() {
                   walletAddresses.edges.map((wa) => (
                     <Table.Row
                       key={wa.node.id}
+                      className='group'
                       style={{ cursor: 'pointer' }}
                       onClick={() =>
                         navigate(`/wallet-addresses/${wa.node.id}`)
                       }
                     >
                       <Table.Cell>
-                        <Text>{wa.node.address}</Text>
+                        <Text asChild>
+                          <Link
+                            to={`/wallet-addresses/${wa.node.id}`}
+                            className='group-hover:underline'
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {wa.node.address}
+                          </Link>
+                        </Text>
                       </Table.Cell>
                       <Table.Cell>
                         <Text weight='medium'>

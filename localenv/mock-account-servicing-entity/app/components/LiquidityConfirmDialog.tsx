@@ -32,7 +32,7 @@ export const LiquidityConfirmDialog = ({
                 onClick={onClose}
               >
                 <span className='sr-only'>Close</span>
-                <XIcon className='h-8 w-8' aria-hidden='true' />
+                <XIcon className='h-8 w-8' />
               </button>
             </div>
             <div>

@@ -3,6 +3,7 @@ import {
   json,
   type LoaderFunctionArgs,
   type ActionFunctionArgs,
+  type MetaFunction,
   redirect
 } from '@remix-run/node'
 import {
@@ -10,7 +11,8 @@ import {
   useNavigate,
   useSearchParams,
   Form,
-  useActionData
+  useActionData,
+  Link
 } from '@remix-run/react'
 import {
   Box,
@@ -35,6 +37,8 @@ import {
 } from '~/shared/utils'
 import { checkAuthAndRedirect } from '~/lib/kratos_checks.server'
 import type { ZodFieldErrors } from '~/shared/types'
+
+export const meta: MetaFunction = () => [{ title: 'Payments - Rafiki Admin' }]
 
 interface PaymentSearchParams {
   type: string | null
@@ -135,11 +139,9 @@ export default function PaymentsPage() {
           <Flex align='center' gap='2' className='flex-wrap md:flex-nowrap'>
             <DropdownMenu.Root>
               <DropdownMenu.Trigger className='inline-flex min-w-[220px] items-center justify-between gap-2 rounded-md border border-pearl bg-white px-3 py-2 text-sm text-tealish shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F37F64]'>
-                <Flex
-                  align='center'
-                  justify='between'
-                  gap='2'
-                  className='w-full'
+                <button
+                  type='button'
+                  className='flex w-full items-center justify-between gap-2'
                 >
                   <span className='truncate'>
                     {type.length
@@ -152,7 +154,6 @@ export default function PaymentsPage() {
                     height='14'
                     viewBox='0 0 20 20'
                     fill='currentColor'
-                    aria-hidden='true'
                   >
                     <path
                       fillRule='evenodd'
@@ -160,7 +161,7 @@ export default function PaymentsPage() {
                       clipRule='evenodd'
                     />
                   </svg>
-                </Flex>
+                </button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content
                 align='start'
@@ -169,6 +170,7 @@ export default function PaymentsPage() {
               >
                 <DropdownMenu.CheckboxItem
                   checked={type.length === 0}
+                  onSelect={(e) => e.preventDefault()}
                   onCheckedChange={() =>
                     updateParams({
                       type: null,
@@ -185,6 +187,7 @@ export default function PaymentsPage() {
                   <DropdownMenu.CheckboxItem
                     key={value}
                     checked={type.includes(value)}
+                    onSelect={(e) => e.preventDefault()}
                     onCheckedChange={() => setTypeFilterParams(value)}
                   >
                     {capitalize(value)}
@@ -195,6 +198,7 @@ export default function PaymentsPage() {
 
             <Form
               method='post'
+              className='flex-1'
               onSubmit={(e) => {
                 if (!walletId) {
                   e.preventDefault()
@@ -207,11 +211,16 @@ export default function PaymentsPage() {
                 }
               }}
             >
-              <Flex gap='2' align='center'>
+              <Flex
+                gap='2'
+                align='center'
+                className='w-full md:min-w-80 md:max-w-full'
+              >
                 <TextField.Root
                   name='walletAddressId'
+                  aria-label='Wallet address ID'
                   placeholder='Wallet address ID'
-                  style={{ width: '320px' }}
+                  className='flex-grow'
                   value={walletId}
                   onChange={(e) => setWalletId(e.target.value)}
                 />
@@ -221,6 +230,7 @@ export default function PaymentsPage() {
                   value={searchParams.get('type') ?? ''}
                 />
                 <Button type='submit'>
+                  <span className='sr-only'>Filter by wallet address ID</span>
                   <svg
                     xmlns='http://www.w3.org/2000/svg'
                     width='16'
@@ -229,6 +239,7 @@ export default function PaymentsPage() {
                     viewBox='0 0 24 24'
                     stroke='currentColor'
                     strokeWidth={2}
+                    aria-hidden='true'
                   >
                     <path
                       strokeLinecap='round'
@@ -262,6 +273,7 @@ export default function PaymentsPage() {
                   payments.edges.map((payment) => (
                     <Table.Row
                       key={payment.node.id}
+                      className='group'
                       style={{ cursor: 'pointer' }}
                       onClick={() => {
                         const subpath = paymentSubpathByType[payment.node.type]
@@ -271,7 +283,15 @@ export default function PaymentsPage() {
                       }}
                     >
                       <Table.Cell>
-                        <Text>{payment.node.id}</Text>
+                        <Text asChild>
+                          <Link
+                            to={`/payments/${paymentSubpathByType[payment.node.type]}/${payment.node.id}`}
+                            className='group-hover:underline'
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {payment.node.id}
+                          </Link>
+                        </Text>
                       </Table.Cell>
                       <Table.Cell>
                         <Text weight='medium'>

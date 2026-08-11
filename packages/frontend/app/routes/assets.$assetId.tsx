@@ -1,7 +1,8 @@
 import {
   json,
   type ActionFunctionArgs,
-  type LoaderFunctionArgs
+  type LoaderFunctionArgs,
+  type MetaFunction
 } from '@remix-run/node'
 import {
   Form,
@@ -50,6 +51,10 @@ import {
 import type { ZodFieldErrors } from '~/shared/types'
 import { formatAmount } from '~/shared/utils'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
+
+export const meta: MetaFunction = () => [
+  { title: 'Asset Details - Rafiki Admin' }
+]
 
 type FormFieldProps = {
   name: string
@@ -167,6 +172,7 @@ export default function ViewAssetPage() {
               <Flex align='center' justify='between' gap='3' wrap='wrap'>
                 <Heading
                   as='h2'
+                  id='general-information-heading'
                   size='2'
                   weight='medium'
                   className='uppercase tracking-wide text-gray-600'
@@ -179,7 +185,10 @@ export default function ViewAssetPage() {
               </Flex>
               {renderErrorPanel(response?.errors.general.message)}
               <Form method='post' replace preventScrollReset>
-                <fieldset disabled={currentPageAction}>
+                <fieldset
+                  disabled={currentPageAction}
+                  aria-labelledby='general-information-heading'
+                >
                   <Flex direction='column' gap='4'>
                     <input type='hidden' name='id' value={asset.id} />
                     <FormField
@@ -245,18 +254,17 @@ export default function ViewAssetPage() {
               >
                 Liquidity Information
               </Heading>
-              <Flex justify='between' align='center'>
-                <Flex direction='column' gap='1'>
-                  <Text weight='medium'>Amount</Text>
-                  <Text size='2' color='gray'>
-                    {formatAmount(asset.liquidity ?? '0', asset.scale)}{' '}
-                    {asset.code}
-                  </Text>
-                </Flex>
-                <Flex gap='3'>
+              <Flex justify='between' align='center' wrap='wrap'>
+                <FormField
+                  label='Amount'
+                  name='liquidity'
+                  value={`${formatAmount(asset.liquidity ?? '0', asset.scale)} ${asset.code}`}
+                  disabled
+                  readOnly
+                />
+                <Flex gap='3' className='mt-6'>
                   <Button asChild>
                     <Link
-                      aria-label='deposit asset liquidity page'
                       preventScrollReset
                       to={`/assets/${asset.id}/deposit-liquidity`}
                     >
@@ -265,7 +273,6 @@ export default function ViewAssetPage() {
                   </Button>
                   <Button asChild>
                     <Link
-                      aria-label='withdraw asset liquidity page'
                       preventScrollReset
                       to={`/assets/${asset.id}/withdraw-liquidity`}
                     >
@@ -280,6 +287,7 @@ export default function ViewAssetPage() {
               <Flex direction='column' gap='2'>
                 <Heading
                   as='h2'
+                  id='sending-fee-heading'
                   size='2'
                   weight='medium'
                   className='uppercase tracking-wide text-gray-600'
@@ -296,16 +304,16 @@ export default function ViewAssetPage() {
               {renderErrorPanel(response?.errors.sendingFee.message)}
               <Flex justify='end'>
                 <Button asChild>
-                  <Link
-                    aria-label='view asset fees page'
-                    to={`/assets/${asset.id}/fee-history`}
-                  >
+                  <Link to={`/assets/${asset.id}/fee-history`}>
                     Fee history
                   </Link>
                 </Button>
               </Flex>
               <Form method='post' replace preventScrollReset>
-                <fieldset disabled={currentPageAction}>
+                <fieldset
+                  disabled={currentPageAction}
+                  aria-labelledby='sending-fee-heading'
+                >
                   <Flex direction='column' gap='4'>
                     <input type='hidden' name='assetId' value={asset.id} />
                     <Flex gap='3' className='flex-1'>

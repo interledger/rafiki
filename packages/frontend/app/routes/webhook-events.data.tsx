@@ -4,7 +4,11 @@ import { Fragment, useEffect } from 'react'
 import { XIcon } from '~/components/icons'
 import { prettify } from '~/shared/utils'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
-import { type LoaderFunctionArgs } from '@remix-run/node'
+import { type LoaderFunctionArgs, type MetaFunction } from '@remix-run/node'
+
+export const meta: MetaFunction = () => [
+  { title: 'Webhook Event Data - Rafiki Admin' }
+]
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
@@ -60,7 +64,7 @@ export default function WebhookEventData() {
                     onClick={dismiss}
                   >
                     <span className='sr-only'>Close</span>
-                    <XIcon className='h-8 w-8' aria-hidden='true' />
+                    <XIcon className='h-8 w-8' />
                   </button>
                 </div>
                 <div className='overflow-auto flex-1 text-xs break-words whitespace-pre'>

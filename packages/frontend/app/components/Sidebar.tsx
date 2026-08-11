@@ -3,7 +3,7 @@ import { NavLink } from '@remix-run/react'
 import { cx } from 'class-variance-authority'
 import type { FC } from 'react'
 import { Fragment, useState } from 'react'
-import { Box, Button, Flex, Heading, IconButton } from '@radix-ui/themes'
+import { Box, Button, Flex, IconButton, Text } from '@radix-ui/themes'
 import { Bars, XIcon } from './icons'
 
 interface SidebarProps {
@@ -85,21 +85,24 @@ export const Sidebar: FC<SidebarProps> = ({
           >
             <div className='fixed inset-0 z-20 flex'>
               <Dialog.Panel className='relative flex w-full max-w-xs flex-1 flex-col border-r border-mercury bg-[#fffef8] pt-5 pb-6'>
-                <Flex justify='between' align='center' px='5' pb='4'>
-                  <img className='w-8' src='/logo.svg' alt='Logo' />
+                <div className='flex justify-between items-center px-5 mb-4'>
+                  <img className='w-8' src='/logo.svg' alt='' />
                   <IconButton
                     variant='ghost'
                     onClick={() => setSidebarIsOpen(false)}
+                    aria-label='close menu'
                   >
                     <XIcon className='h-5 w-5' />
                   </IconButton>
-                </Flex>
-                <Box className='mt-5 h-0 flex-1 overflow-y-auto'>
-                  <nav className='px-3'>
-                    <Flex direction='column' gap='1'>
-                      {navigationToShow.map(({ name, href }) => (
+                </div>
+                <nav
+                  className='mt-5 h-0 flex-1 overflow-y-auto'
+                  aria-label='main navigation'
+                >
+                  <ul className='flex flex-col gap-1 px-3'>
+                    {navigationToShow.map(({ name, href }) => (
+                      <li key={name}>
                         <NavLink
-                          key={name}
                           to={href}
                           onClick={() => setSidebarIsOpen(false)}
                           className={({ isActive }) =>
@@ -113,8 +116,11 @@ export const Sidebar: FC<SidebarProps> = ({
                         >
                           {name}
                         </NavLink>
-                      ))}
-                      {authEnabled && (
+                      </li>
+                    ))}
+
+                    {authEnabled && (
+                      <li>
                         <NavLink
                           key='Account Settings'
                           to='/settings'
@@ -129,75 +135,86 @@ export const Sidebar: FC<SidebarProps> = ({
                         >
                           Account Settings
                         </NavLink>
-                      )}
-                      {logoutUrl && (
-                        <Button asChild>
-                          <a href={logoutUrl}>Logout</a>
-                        </Button>
-                      )}
-                    </Flex>
-                  </nav>
-                </Box>
+                      </li>
+                    )}
+                  </ul>
+                  {logoutUrl && (
+                    <Button asChild>
+                      <a href={logoutUrl}>Logout</a>
+                    </Button>
+                  )}
+                </nav>
               </Dialog.Panel>
             </div>
           </Transition.Child>
         </Dialog>
       </Transition.Root>
-      <nav className='fixed inset-x-0 z-10 flex h-20 flex-col border-r border-mercury bg-[#fffef8] md:inset-y-0 md:h-auto md:w-60'>
+      <nav
+        className='fixed inset-x-0 z-10 flex h-20 flex-col border-r border-mercury bg-[#fffef8] md:inset-y-0 md:h-auto md:w-60'
+        aria-label='main navigation'
+      >
         <Flex className='flex min-h-0 flex-1 items-center px-5 py-6 md:flex-col md:items-start md:overflow-y-auto'>
           {/* Logo */}
           <Flex align='center' gap='2' className='flex-shrink-0'>
-            <img className='w-8' src='/logo.svg' alt='Logo' />
-            <Heading
+            <img className='w-8' src='/logo.svg' alt='' />
+            <Text
               size='6'
+              weight='bold'
               className='hidden md:inline-block whitespace-nowrap'
             >
               Rafiki Admin
-            </Heading>
+            </Text>
           </Flex>
           {/* Logo - END */}
           {/* Desktop Navigation */}
           <Box className='hidden w-full mt-5 flex-1 flex-col overflow-y-auto md:block'>
-            <Flex direction='column' gap='1'>
+            <ul className='flex flex-col gap-1'>
               {navigationToShow.map(({ name, href }) => (
-                <NavLink
-                  key={name}
-                  to={href}
-                  className={({ isActive }) =>
-                    cx(
-                      isActive
-                        ? 'bg-[#F37F64]/10 text-[#F37F64]'
-                        : 'text-tealish/70 hover:bg-[#F37F64]/5',
-                      'flex px-3 py-2 font-medium rounded-md'
-                    )
-                  }
-                >
-                  {name}
-                </NavLink>
+                <li key={name}>
+                  <NavLink
+                    key={name}
+                    to={href}
+                    className={({ isActive }) =>
+                      cx(
+                        isActive
+                          ? 'bg-[#F37F64]/10 text-[#F37F64]'
+                          : 'text-tealish/70 hover:bg-[#F37F64]/5',
+                        'flex px-3 py-2 font-medium rounded-md'
+                      )
+                    }
+                  >
+                    {name}
+                  </NavLink>
+                </li>
               ))}
+
               {authEnabled && (
-                <NavLink
-                  key='Account Settings'
-                  to='/settings'
-                  className={({ isActive }) =>
-                    cx(
-                      isActive
-                        ? 'bg-[#F37F64]/10 text-[#F37F64]'
-                        : 'text-tealish/70 hover:bg-[#F37F64]/5',
-                      'flex px-3 py-2 font-medium rounded-md'
-                    )
-                  }
-                >
-                  Account Settings
-                </NavLink>
+                <li>
+                  <NavLink
+                    key='Account Settings'
+                    to='/settings'
+                    className={({ isActive }) =>
+                      cx(
+                        isActive
+                          ? 'bg-[#F37F64]/10 text-[#F37F64]'
+                          : 'text-tealish/70 hover:bg-[#F37F64]/5',
+                        'flex px-3 py-2 font-medium rounded-md'
+                      )
+                    }
+                  >
+                    Account Settings
+                  </NavLink>
+                </li>
               )}
-              {logoutUrl && (
-                <Button asChild>
-                  <a href={logoutUrl}>Logout</a>
-                </Button>
-              )}
-            </Flex>
+            </ul>
+
+            {logoutUrl && (
+              <Button className='mt-1' asChild>
+                <a href={logoutUrl}>Logout</a>
+              </Button>
+            )}
           </Box>
+
           {/* Desktop Navigation - END */}
           <Box className='ml-auto flex md:hidden'>
             <IconButton

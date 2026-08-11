@@ -1,4 +1,8 @@
-import { json, type LoaderFunctionArgs } from '@remix-run/node'
+import {
+  json,
+  type LoaderFunctionArgs,
+  type MetaFunction
+} from '@remix-run/node'
 import {
   Outlet,
   useLoaderData,
@@ -11,6 +15,10 @@ import { listWebhooks } from '~/lib/api/webhook.server'
 import { webhooksSearchParams } from '~/lib/validate.server'
 import { WebhookEventType } from '~/shared/enums'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
+
+export const meta: MetaFunction = () => [
+  { title: 'Webhook Events - Rafiki Admin' }
+]
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
@@ -105,6 +113,7 @@ export default function WebhookEventsPage() {
                   {
                     name: 'All',
                     value: 'all',
+                    exclusive: true,
                     action: () => {
                       navigate(``)
                     }

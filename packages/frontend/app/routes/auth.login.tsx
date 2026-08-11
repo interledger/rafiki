@@ -1,6 +1,7 @@
 import {
   json,
   type LoaderFunctionArgs,
+  type MetaFunction,
   redirectDocument
 } from '@remix-run/node'
 import { uuidSchema } from '~/lib/validate.server'
@@ -11,6 +12,8 @@ import { Button, Heading, Text, TextField } from '@radix-ui/themes'
 import { renderFieldError } from '../lib/form-errors'
 import variables from '../lib/envConfig.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
+
+export const meta: MetaFunction = () => [{ title: 'Login - Rafiki Admin' }]
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
@@ -166,9 +169,6 @@ export default function Login() {
                           <Button
                             key={index}
                             type={attributes.type}
-                            aria-label={
-                              attributes.label?.text || attributes.name
-                            }
                             name={attributes.name}
                             disabled={attributes.disabled}
                             value={attributes.value}
@@ -183,9 +183,7 @@ export default function Login() {
                 </fieldset>
               </div>
             </form>
-            <a aria-label='account-recovery' href={recoveryUrl}>
-              Forgot password?
-            </a>
+            <a href={recoveryUrl}>Forgot password?</a>
           </div>
         </div>
       </div>

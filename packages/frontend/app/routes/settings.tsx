@@ -1,7 +1,8 @@
 import {
   json,
   redirectDocument,
-  type LoaderFunctionArgs
+  type LoaderFunctionArgs,
+  type MetaFunction
 } from '@remix-run/node'
 import { uuidSchema } from '~/lib/validate.server'
 import {
@@ -15,6 +16,10 @@ import { Button, Heading, Text, TextField } from '@radix-ui/themes'
 import { renderFieldError } from '../lib/form-errors'
 import variables from '../lib/envConfig.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
+
+export const meta: MetaFunction = () => [
+  { title: 'Account Settings - Rafiki Admin' }
+]
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
@@ -187,9 +192,6 @@ export default function Settings() {
                         <div key={index}>
                           <Button
                             type={attributes.type}
-                            aria-label={
-                              attributes.label?.text || attributes.name
-                            }
                             name={attributes.name}
                             disabled={attributes.disabled}
                             value={attributes.value}
@@ -284,9 +286,6 @@ export default function Settings() {
                         <div key={index}>
                           <Button
                             type={attributes.type}
-                            aria-label={
-                              attributes.label?.text || attributes.name
-                            }
                             name={attributes.name}
                             disabled={attributes.disabled}
                             value={attributes.value}

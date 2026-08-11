@@ -1,7 +1,8 @@
 import {
   json,
   type ActionFunctionArgs,
-  type LoaderFunctionArgs
+  type LoaderFunctionArgs,
+  type MetaFunction
 } from '@remix-run/node'
 import {
   Form,
@@ -39,6 +40,10 @@ import {
 import type { ZodFieldErrors } from '~/shared/types'
 import { formatAmount } from '~/shared/utils'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
+
+export const meta: MetaFunction = () => [
+  { title: 'Peer Details - Rafiki Admin' }
+]
 
 type FormFieldProps = {
   name: string
@@ -160,6 +165,7 @@ export default function ViewPeerPage() {
               <Flex align='center' justify='between' gap='3' wrap='wrap'>
                 <Heading
                   as='h2'
+                  id='general-information-heading'
                   size='2'
                   weight='medium'
                   className='uppercase tracking-wide text-gray-600'
@@ -172,7 +178,10 @@ export default function ViewPeerPage() {
               </Flex>
               {renderErrorPanel(response?.errors.general.message)}
               <Form method='post' replace preventScrollReset>
-                <fieldset disabled={currentPageAction}>
+                <fieldset
+                  disabled={currentPageAction}
+                  aria-labelledby='general-information-heading'
+                >
                   <Flex direction='column' gap='4'>
                     <input type='hidden' name='id' value={peer.id} />
                     <FormField
@@ -265,6 +274,7 @@ export default function ViewPeerPage() {
             <Flex direction='column' gap='4'>
               <Heading
                 as='h2'
+                id='http-information-heading'
                 size='2'
                 weight='medium'
                 className='uppercase tracking-wide text-gray-600'
@@ -273,7 +283,10 @@ export default function ViewPeerPage() {
               </Heading>
               {renderErrorPanel(response?.errors.http.message)}
               <Form method='post' replace preventScrollReset>
-                <fieldset disabled={currentPageAction}>
+                <fieldset
+                  disabled={currentPageAction}
+                  aria-labelledby='http-information-heading'
+                >
                   <Flex direction='column' gap='4'>
                     <input type='hidden' name='id' value={peer.id} />
                     <FormField
@@ -398,12 +411,7 @@ export default function ViewPeerPage() {
               </Flex>
               <Flex justify='end'>
                 <Button asChild>
-                  <Link
-                    aria-label='go to asset page'
-                    to={`/assets/${peer.asset.id}`}
-                  >
-                    View asset
-                  </Link>
+                  <Link to={`/assets/${peer.asset.id}`}>View asset</Link>
                 </Button>
               </Flex>
             </Flex>
@@ -417,18 +425,17 @@ export default function ViewPeerPage() {
               >
                 Liquidity Information
               </Heading>
-              <Flex justify='between' align='center'>
-                <Flex direction='column' gap='1'>
-                  <Text weight='medium'>Amount</Text>
-                  <Text size='2' color='gray'>
-                    {formatAmount(peer.liquidity ?? '0', peer.asset.scale)}{' '}
-                    {peer.asset.code}
-                  </Text>
-                </Flex>
-                <Flex gap='3'>
+              <Flex justify='between' align='center' wrap='wrap'>
+                <FormField
+                  label='Amount'
+                  name='liquidity'
+                  value={`${formatAmount(peer.liquidity ?? '0', peer.asset.scale)} ${peer.asset.code}`}
+                  disabled
+                  readOnly
+                />
+                <Flex gap='3' className='mt-6'>
                   <Button asChild>
                     <Link
-                      aria-label='deposit peer liquidity page'
                       preventScrollReset
                       to={`/peers/${peer.id}/deposit-liquidity`}
                     >
@@ -437,7 +444,6 @@ export default function ViewPeerPage() {
                   </Button>
                   <Button asChild>
                     <Link
-                      aria-label='withdraw peer liquidity page'
                       preventScrollReset
                       to={`/peers/${peer.id}/withdraw-liquidity`}
                     >
