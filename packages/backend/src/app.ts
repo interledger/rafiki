@@ -52,7 +52,8 @@ import {
 import { QuoteService } from './open_payments/quote/service'
 import {
   OutgoingPaymentRoutes,
-  CreateBody as OutgoingCreateBody
+  CreateBody as OutgoingCreateBody,
+  SignedGrantContext
 } from './open_payments/payment/outgoing/routes'
 import { OutgoingPaymentService } from './open_payments/payment/outgoing/service'
 import { IlpPlugin, IlpPluginOptions } from './payment-method/ilp/ilp_plugin'
@@ -693,10 +694,11 @@ export class App {
     // GET /outgoing-payment-grant
     // Get grant spent amounts (scoped to interval, if any) from grant
     // with outgoing payment create access
-    router.get(
+    router.get<DefaultState, SignedGrantContext>(
       '/:tenantId/outgoing-payment-grant',
       // Expects token used for outgoing payment payment creation
       createOutgoingPaymentGrantTokenIntrospectionMiddleware(),
+      httpsigMiddleware,
       outgoingPaymentRoutes.getGrantSpentAmounts
     )
 

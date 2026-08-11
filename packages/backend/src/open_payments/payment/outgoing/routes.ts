@@ -3,7 +3,8 @@ import {
   ReadContext,
   CreateContext,
   ListContext,
-  IntrospectionContext
+  IntrospectionContext,
+  HttpSigContext
 } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import {
@@ -87,6 +88,8 @@ async function getOutgoingPayment(
 export interface GrantContext extends IntrospectionContext {
   grant: { id: string; limits?: Limits }
 }
+
+export type SignedGrantContext = GrantContext & HttpSigContext
 
 async function getOutgoingPaymentGrantSpentAmounts(
   deps: ServiceDependencies,
