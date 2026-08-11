@@ -124,7 +124,9 @@ export default function TenantsPage() {
                             </Link>
                           </Text>
                           {me.isOperator && me.id == tenant.node.id && (
-                            <Badge color='yellow'>Operator</Badge>
+                            <Badge color='yellow' variant='outline'>
+                              Operator
+                            </Badge>
                           )}
                         </Flex>
                         <Text
@@ -143,9 +145,13 @@ export default function TenantsPage() {
                     </Table.Cell>
                     <Table.Cell>
                       {tenant.node.deletedAt ? (
-                        <Badge color='red'>Inactive</Badge>
+                        <Badge color='red' variant='outline'>
+                          Inactive
+                        </Badge>
                       ) : (
-                        <Badge color='green'>Active</Badge>
+                        <Badge color='green' variant='outline'>
+                          Active
+                        </Badge>
                       )}
                     </Table.Cell>
                   </Table.Row>

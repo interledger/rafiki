@@ -175,7 +175,7 @@ export default function WebhookEventsPage() {
                         </Table.Cell>
                         <Table.Cell>
                           <Button
-                            variant='soft'
+                            variant='ghost'
                             onClick={() => {
                               navigate(
                                 `/webhook-events/data${

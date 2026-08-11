@@ -24,7 +24,8 @@ export default function Auth() {
         <div className='p-4 space-y-6 md:p-10 md:space-y-16'>
           <Heading
             as='h1'
-            className='text-6xl pt-10 md:text-9xl md:pt-16 text-[#F37F64]'
+            color='amber'
+            className='text-6xl pt-10 md:text-9xl md:pt-16'
           >
             Welcome!
           </Heading>

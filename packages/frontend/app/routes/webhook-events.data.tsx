@@ -60,7 +60,7 @@ export default function WebhookEventData() {
                 <div className='absolute right-0 top-0 pr-4 pt-4'>
                   <button
                     type='button'
-                    className='text-gray-400 hover:text-gray-500 focus:outline-none'
+                    className='text-gray-400 hover:text-gray-500'
                     onClick={dismiss}
                   >
                     <span className='sr-only'>Close</span>

@@ -108,8 +108,8 @@ export const Sidebar: FC<SidebarProps> = ({
                           className={({ isActive }) =>
                             cx(
                               isActive
-                                ? 'bg-[#F37F64]/10 text-[#F37F64]'
-                                : 'text-tealish/70 hover:bg-[#F37F64]/5',
+                                ? 'bg-[var(--amber-a2)] text-[#975800]'
+                                : 'text-tealish/80 hover:bg-[var(--amber-a2)]',
                               'flex px-3 py-2 font-medium rounded-md'
                             )
                           }
@@ -127,8 +127,8 @@ export const Sidebar: FC<SidebarProps> = ({
                           className={({ isActive }) =>
                             cx(
                               isActive
-                                ? 'bg-[#F37F64]/10 text-[#F37F64]'
-                                : 'text-tealish/70 hover:bg-[#F37F64]/5',
+                                ? 'bg-[var(--amber-a2)] text-[#975800]'
+                                : 'text-tealish/80 hover:bg-[var(--amber-a2)]',
                               'flex px-3 py-2 font-medium rounded-md'
                             )
                           }
@@ -177,8 +177,8 @@ export const Sidebar: FC<SidebarProps> = ({
                     className={({ isActive }) =>
                       cx(
                         isActive
-                          ? 'bg-[#F37F64]/10 text-[#F37F64]'
-                          : 'text-tealish/70 hover:bg-[#F37F64]/5',
+                          ? 'bg-[var(--amber-a2)] text-[#975800]'
+                          : 'text-tealish/80 hover:bg-[var(--amber-a2)]',
                         'flex px-3 py-2 font-medium rounded-md'
                       )
                     }
@@ -196,8 +196,8 @@ export const Sidebar: FC<SidebarProps> = ({
                     className={({ isActive }) =>
                       cx(
                         isActive
-                          ? 'bg-[#F37F64]/10 text-[#F37F64]'
-                          : 'text-tealish/70 hover:bg-[#F37F64]/5',
+                          ? 'bg-[var(--amber-a2)] text-[#975800]'
+                          : 'text-tealish/80 hover:bg-[var(--amber-a2)]',
                         'flex px-3 py-2 font-medium rounded-md'
                       )
                     }

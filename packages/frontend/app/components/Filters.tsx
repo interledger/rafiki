@@ -30,7 +30,7 @@ export const PopoverFilter = ({
       <Popover.Button
         id={labelId}
         aria-haspopup='true'
-        className='inline-flex w-[400px] items-center justify-between gap-2 rounded-md border border-pearl bg-white px-3 py-2 text-sm text-tealish shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F37F64]'
+        className='inline-flex w-[400px] items-center justify-between gap-2 rounded-md border border-pearl bg-white px-3 py-2 text-sm text-tealish shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--focus-8)]'
       >
         <span className='truncate' title={label}>
           {label}
@@ -77,7 +77,7 @@ export const PopoverFilter = ({
                   <input
                     type='checkbox'
                     id={optionId}
-                    className='w-5 h-5 rounded border-gray-300 text-[#F37F64] focus:ring-[#F37F64]'
+                    className='w-5 h-5 rounded border-gray-300 text-[var(--accent-9)] focus:ring-[var(--focus-8)]'
                     checked={values ? values.includes(option.value) : false}
                     onChange={option.action}
                     aria-describedby={

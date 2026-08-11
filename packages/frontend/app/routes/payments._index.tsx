@@ -138,7 +138,7 @@ export default function PaymentsPage() {
           <Heading size='5'>Payments</Heading>
           <Flex align='center' gap='2' className='flex-wrap md:flex-nowrap'>
             <DropdownMenu.Root>
-              <DropdownMenu.Trigger className='inline-flex min-w-[220px] items-center justify-between gap-2 rounded-md border border-pearl bg-white px-3 py-2 text-sm text-tealish shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F37F64]'>
+              <DropdownMenu.Trigger className='inline-flex min-w-[220px] items-center justify-between gap-2 rounded-md border border-pearl bg-white px-3 py-2 text-sm text-tealish shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--focus-8)]'>
                 <button
                   type='button'
                   className='flex w-full items-center justify-between gap-2'

@@ -460,7 +460,7 @@ export default function ViewPeerPage() {
           <Form method='post' onSubmit={submitHandler}>
             <input type='hidden' name='id' value={peer.id} />
             <input type='hidden' name='intent' value='delete' />
-            <Button type='submit' color='red' aria-label='delete peer'>
+            <Button type='submit' color='red' variant='classic'>
               Delete peer
             </Button>
           </Form>

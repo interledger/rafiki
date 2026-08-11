@@ -367,7 +367,7 @@ export default function ViewAssetPage() {
           <Form method='post' onSubmit={submitHandler}>
             <input type='hidden' name='id' value={asset.id} />
             <input type='hidden' name='intent' value='delete' />
-            <Button type='submit' color='red' aria-label='delete asset'>
+            <Button type='submit' color='red' variant='classic'>
               Delete asset
             </Button>
           </Form>
