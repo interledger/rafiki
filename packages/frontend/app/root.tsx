@@ -139,7 +139,7 @@ export default function App() {
             onClose={() => setSnackbarOpen(false)}
             show={snackbarOpen}
             message={message}
-            dismissAfter={200000}
+            dismissAfter={2000}
           />
           <div className='min-h-full relative z-10'>
             {displaySidebar && (
