@@ -158,7 +158,8 @@ async function canApiSignatureBeProcessed(
   const { timestamp } = getSignatureParts(signature)
   const signatureTime = Number(timestamp)
   const currentTime = Date.now()
-  const ttlMilliseconds = config.adminApiSignatureTtlSeconds * 1000
+  const ttlSeconds = config.adminApiSignatureTtlSeconds
+  const ttlMilliseconds = ttlSeconds * 1000
 
   if (currentTime - signatureTime > ttlMilliseconds) return false
 
@@ -168,7 +169,8 @@ async function canApiSignatureBeProcessed(
 
   const op = redis.multi()
   op.set(key, signature)
-  op.expire(key, ttlMilliseconds)
+  // Redis EXPIRE takes seconds (not milliseconds).
+  op.expire(key, ttlSeconds)
   await op.exec()
 
   return true
