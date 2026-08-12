@@ -37,6 +37,7 @@ div.forward {
 /* Allow the body background to show through the Radix Theme wrapper. */
 .radix-themes {
   background-color: transparent;
+  --cursor-button: pointer;
 }
 
 /* Ensure Radix card surfaces stay white over the page background. */
