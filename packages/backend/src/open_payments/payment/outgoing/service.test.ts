@@ -126,7 +126,9 @@ describe('OutgoingPaymentService', (): void => {
     expectState: OutgoingPaymentState,
     expectedError?: string
   ): Promise<OutgoingPayment> {
-    await expect(outgoingPaymentService.processNext()).resolves.toBe(paymentId)
+    await expect(outgoingPaymentService.processNext()).resolves.toEqual([
+      paymentId
+    ])
     const payment = await outgoingPaymentService.get({
       id: paymentId
     })

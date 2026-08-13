@@ -333,10 +333,16 @@ export class App {
         process.nextTick(() => this.processWalletAddress())
       }
       for (let i = 0; i < this.config.outgoingPaymentWorkers; i++) {
-        process.nextTick(() => this.processOutgoingPayment())
+        setTimeout(
+          () => this.processOutgoingPayment(),
+          this.config.outgoingPaymentProcessingIntervalMs
+        )
       }
       for (let i = 0; i < this.config.incomingPaymentWorkers; i++) {
-        process.nextTick(() => this.processIncomingPayment())
+        setTimeout(
+          () => this.processIncomingPayment(),
+          this.config.incomingPaymentProcessingIntervalMs
+        )
       }
       for (let i = 0; i < this.config.webhookWorkers; i++) {
         process.nextTick(() => this.processWebhook())
@@ -858,11 +864,15 @@ export class App {
         return true
       })
       .then((hasMoreWork) => {
-        if (hasMoreWork) process.nextTick(() => this.processOutgoingPayment())
+        if (hasMoreWork)
+          setTimeout(
+            () => this.processOutgoingPayment(),
+            this.config.outgoingPaymentProcessingIntervalMs
+          )
         else
           setTimeout(
             () => this.processOutgoingPayment(),
-            this.config.outgoingPaymentWorkerIdle
+            this.config.outgoingPaymentProcessingIntervalMs
           ).unref()
       })
   }
@@ -908,11 +918,15 @@ export class App {
         return true
       })
       .then((hasMoreWork) => {
-        if (hasMoreWork) process.nextTick(() => this.processIncomingPayment())
+        if (hasMoreWork)
+          setTimeout(
+            () => this.processIncomingPayment(),
+            this.config.incomingPaymentProcessingIntervalMs
+          )
         else
           setTimeout(
             () => this.processIncomingPayment(),
-            this.config.incomingPaymentWorkerIdle
+            this.config.incomingPaymentProcessingIntervalMs
           ).unref()
       })
   }
