@@ -6,6 +6,7 @@ import {
   OutgoingPaymentEventType
 } from './model'
 import {
+  decrementPendingCount,
   revertGrantSpentAmounts,
   ServiceDependencies,
   updateGrantSpentAmounts
@@ -193,6 +194,7 @@ export async function handleFailed(
   }
 
   await sendWebhookEvent(deps, payment, OutgoingPaymentEventType.PaymentFailed)
+  await decrementPendingCount(deps)
   stopTimer()
 }
 
@@ -220,6 +222,7 @@ async function handleCompleted(
     payment,
     OutgoingPaymentEventType.PaymentCompleted
   )
+  await decrementPendingCount(deps)
   stopTimer()
 }
 

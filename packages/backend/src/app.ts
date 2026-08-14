@@ -855,9 +855,12 @@ export class App {
       .processNext()
       .catch((err) => {
         this.logger.warn({ error: err.message }, 'processOutgoingPayment error')
-        return true
+        // Back off on error rather than hot-looping via the fast-drain path.
+        return undefined
       })
       .then((hasMoreWork) => {
+        // Drain a backlog immediately instead of waiting a full poll interval;
+        // only fall back to the interval when there was nothing (or an error).
         if (hasMoreWork) process.nextTick(() => this.processOutgoingPayment())
         else
           setTimeout(
@@ -923,7 +926,8 @@ export class App {
       .processNext()
       .catch((err) => {
         this.logger.warn({ error: err.message }, 'processWebhook error')
-        return true
+        // Back off on error rather than hot-looping via the fast-drain path.
+        return undefined
       })
       .then((hasMoreWork) => {
         if (hasMoreWork) process.nextTick(() => this.processWebhook())

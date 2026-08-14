@@ -91,8 +91,8 @@ export function initIocContainer(
       client: 'postgresql',
       connection: config.databaseUrl,
       pool: {
-        min: 2,
-        max: 10
+        min: config.databasePoolMin,
+        max: config.databasePoolMax
       },
       migrations: {
         directory: './',
@@ -600,7 +600,8 @@ export function initIocContainer(
       quoteService: await deps.use('quoteService'),
       assetService: await deps.use('assetService'),
       telemetry: await deps.use('telemetry'),
-      feeService: await deps.use('feeService')
+      feeService: await deps.use('feeService'),
+      redis: await deps.use('redis')
     })
   })
 
