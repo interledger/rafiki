@@ -171,7 +171,7 @@ describe('Lifecycle', (): void => {
 
   describe('Grant Spent Amounts', (): void => {
     beforeAll(async (): Promise<void> => {
-      deps = initIocContainer(Config)
+      deps = initIocContainer({ ...Config, outgoingPaymentBatchSize: 1 })
       appContainer = await createTestApp(deps)
       outgoingPaymentService = await deps.use('outgoingPaymentService')
       accountingService = await deps.use('accountingService')
@@ -270,8 +270,8 @@ describe('Lifecycle', (): void => {
         // advance time to ensure spents amounts created by processNext, if any, have
         // later createdAt so that fetching latest is accurate
         jest.advanceTimersByTime(500)
-        const processedPaymentId = await outgoingPaymentService.processNext()
-        expect(processedPaymentId).toBe(payment.id)
+        const processedPaymentIds = await outgoingPaymentService.processNext()
+        expect(processedPaymentIds).toContain(payment.id)
 
         const finalPayment = await outgoingPaymentService.get({
           id: payment.id
@@ -336,8 +336,8 @@ describe('Lifecycle', (): void => {
         })
 
         jest.advanceTimersByTime(500)
-        const processedPaymentId = await outgoingPaymentService.processNext()
-        expect(processedPaymentId).toBe(payment.id)
+        const processedPaymentIds = await outgoingPaymentService.processNext()
+        expect(processedPaymentIds).toContain(payment.id)
 
         const finalPayment = await outgoingPaymentService.get({
           id: payment.id
@@ -418,8 +418,8 @@ describe('Lifecycle', (): void => {
           // advance time to ensure spents amounts created by processNext, if any, have
           // later createdAt so that fetching latest is accurate
           jest.advanceTimersByTime(500)
-          const processedPaymentId = await outgoingPaymentService.processNext()
-          expect(processedPaymentId).toBe(payment.id)
+          const processedPaymentIds = await outgoingPaymentService.processNext()
+          expect(processedPaymentIds).toContain(payment.id)
 
           const finalPayment = await outgoingPaymentService.get({
             id: payment.id
@@ -494,8 +494,8 @@ describe('Lifecycle', (): void => {
           // advance time to ensure spents amounts created by processNext, if any, have
           // later createdAt so that fetching latest is accurate
           jest.advanceTimersByTime(500)
-          const processedPaymentId = await outgoingPaymentService.processNext()
-          expect(processedPaymentId).toBe(payment.id)
+          const processedPaymentIds = await outgoingPaymentService.processNext()
+          expect(processedPaymentIds).toContain(payment.id)
 
           const finalPayment = await outgoingPaymentService.get({
             id: payment.id
@@ -582,8 +582,8 @@ describe('Lifecycle', (): void => {
           // advance time to ensure spents amounts created by processNext, if any, have
           // later createdAt so that fetching latest is accurate
           jest.advanceTimersByTime(500)
-          const processedPaymentId = await outgoingPaymentService.processNext()
-          expect(processedPaymentId).toBe(payment.id)
+          const processedPaymentIds = await outgoingPaymentService.processNext()
+          expect(processedPaymentIds).toContain(payment.id)
 
           const latestGrantSpentAmounts =
             await OutgoingPaymentGrantSpentAmounts.query(knex)
@@ -681,8 +681,8 @@ describe('Lifecycle', (): void => {
           // advance time to ensure spents amounts created by processNext, if any, have
           // later createdAt so that fetching latest is accurate
           jest.advanceTimersByTime(500)
-          const processedPaymentId = await outgoingPaymentService.processNext()
-          expect(processedPaymentId).toBe(secondPayment.id)
+          const processedPaymentIds = await outgoingPaymentService.processNext()
+          expect(processedPaymentIds).toContain(secondPayment.id)
 
           const finalPayment = await outgoingPaymentService.get({
             id: secondPayment.id
@@ -771,8 +771,8 @@ describe('Lifecycle', (): void => {
           // advance time to ensure spents amounts created by processNext, if any, have
           // later createdAt so that fetching latest is accurate
           jest.advanceTimersByTime(500)
-          const processedPaymentId = await outgoingPaymentService.processNext()
-          expect(processedPaymentId).toBe(secondPayment.id)
+          const processedPaymentIds = await outgoingPaymentService.processNext()
+          expect(processedPaymentIds).toContain(secondPayment.id)
 
           const finalPayment = await outgoingPaymentService.get({
             id: secondPayment.id
@@ -875,8 +875,8 @@ describe('Lifecycle', (): void => {
           // advance time to ensure spents amounts created by processNext, if any, have
           // later createdAt so that fetching latest is accurate
           jest.advanceTimersByTime(500)
-          const processedPaymentId = await outgoingPaymentService.processNext()
-          expect(processedPaymentId).toBe(secondPayment.id)
+          const processedPaymentIds = await outgoingPaymentService.processNext()
+          expect(processedPaymentIds).toContain(secondPayment.id)
 
           const finalPayment = await outgoingPaymentService.get({
             id: secondPayment.id
@@ -949,9 +949,9 @@ describe('Lifecycle', (): void => {
                   firstPayment
                 )
               )
-            const id = await outgoingPaymentService.processNext()
+            const ids = await outgoingPaymentService.processNext()
             jest.advanceTimersByTime(500)
-            expect(id).toBe(firstPayment.id)
+            expect(ids).toContain(firstPayment.id)
 
             // Grant spent amounts should correspond to the first payment
             // Should not detect a difference and insert a new spent amount.
@@ -1066,9 +1066,9 @@ describe('Lifecycle', (): void => {
                   receive: firstPaymentSettledAmount
                 })(accountingService, receiverWalletAddressId, firstPayment)
               )
-            let id = await outgoingPaymentService.processNext()
+            let ids = await outgoingPaymentService.processNext()
             jest.advanceTimersByTime(500)
-            expect(id).toBe(firstPayment.id)
+            expect(ids).toContain(firstPayment.id)
 
             latestSpentAmounts[2] =
               await OutgoingPaymentGrantSpentAmounts.query(knex)
@@ -1114,9 +1114,9 @@ describe('Lifecycle', (): void => {
                   receive: secondPaymentSettledAmount
                 })(accountingService, receiverWalletAddressId, secondPayment)
               )
-            id = await outgoingPaymentService.processNext()
+            ids = await outgoingPaymentService.processNext()
             jest.advanceTimersByTime(500)
-            expect(id).toBe(secondPayment.id)
+            expect(ids).toContain(secondPayment.id)
 
             latestSpentAmounts[3] =
               await OutgoingPaymentGrantSpentAmounts.query(knex)
@@ -1261,9 +1261,9 @@ describe('Lifecycle', (): void => {
                   receive: firstPaymentSettledAmount
                 })(accountingService, receiverWalletAddressId, firstPayment)
               )
-            let id = await outgoingPaymentService.processNext()
+            let ids = await outgoingPaymentService.processNext()
             jest.advanceTimersByTime(500)
-            expect(id).toBe(firstPayment.id)
+            expect(ids).toContain(firstPayment.id)
 
             latestSpentAmounts[2] =
               await OutgoingPaymentGrantSpentAmounts.query(knex)
@@ -1357,9 +1357,9 @@ describe('Lifecycle', (): void => {
                   receive: secondPaymentSettledAmount
                 })(accountingService, receiverWalletAddressId, secondPayment)
               )
-            id = await outgoingPaymentService.processNext()
+            ids = await outgoingPaymentService.processNext()
             jest.advanceTimersByTime(500)
-            expect(id).toBe(secondPayment.id)
+            expect(ids).toContain(secondPayment.id)
 
             latestSpentAmounts[4] =
               await OutgoingPaymentGrantSpentAmounts.query(knex)
@@ -1501,9 +1501,9 @@ describe('Lifecycle', (): void => {
             jest
               .spyOn(paymentMethodHandlerService, 'pay')
               .mockImplementationOnce(mockPayErrorFactory()())
-            let id = await outgoingPaymentService.processNext()
+            let ids = await outgoingPaymentService.processNext()
             jest.advanceTimersByTime(500)
-            expect(id).toBe(firstPayment.id)
+            expect(ids).toContain(firstPayment.id)
 
             const failedPayment = await outgoingPaymentService.get({
               id: firstPayment.id
@@ -1552,9 +1552,9 @@ describe('Lifecycle', (): void => {
                   secondPayment
                 )
               )
-            id = await outgoingPaymentService.processNext()
+            ids = await outgoingPaymentService.processNext()
             jest.advanceTimersByTime(500)
-            expect(id).toBe(secondPayment.id)
+            expect(ids).toContain(secondPayment.id)
 
             const completedPayment = await outgoingPaymentService.get({
               id: secondPayment.id
@@ -1716,8 +1716,8 @@ describe('Lifecycle', (): void => {
 
         // Process payment after interval boundary (in February)
         jest.setSystemTime(new Date('2025-02-01T00:00:01Z'))
-        const processedPaymentId = await outgoingPaymentService.processNext()
-        expect(processedPaymentId).toBe(payment.id)
+        const processedPaymentIds = await outgoingPaymentService.processNext()
+        expect(processedPaymentIds).toContain(payment.id)
 
         const finishSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
           knex
@@ -1799,8 +1799,8 @@ describe('Lifecycle', (): void => {
         // Process payment after interval boundary (in February)
         jest.setSystemTime(new Date('2025-02-01T00:00:01Z'))
         jest.advanceTimersByTime(500)
-        const processedPaymentId = await outgoingPaymentService.processNext()
-        expect(processedPaymentId).toBe(payment.id)
+        const processedPaymentIds = await outgoingPaymentService.processNext()
+        expect(processedPaymentIds).toContain(payment.id)
 
         const endSpentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
           knex
@@ -1899,8 +1899,8 @@ describe('Lifecycle', (): void => {
         // Process payment after interval boundary (in February)
         jest.setSystemTime(new Date('2025-02-01T00:00:01Z'))
         jest.advanceTimersByTime(500)
-        const processedPaymentId = await outgoingPaymentService.processNext()
-        expect(processedPaymentId).toBe(payment.id)
+        const processedPaymentIds = await outgoingPaymentService.processNext()
+        expect(processedPaymentIds).toContain(payment.id)
 
         const finalPayment = await outgoingPaymentService.get({
           id: payment.id
@@ -2090,9 +2090,9 @@ describe('Lifecycle', (): void => {
                   })(accountingService, receiverWalletAddressId, firstPayment)
                 )
 
-              const processedPaymentId =
+              const processedPaymentIds =
                 await outgoingPaymentService.processNext()
-              expect(processedPaymentId).toBe(firstPayment.id)
+              expect(processedPaymentIds).toContain(firstPayment.id)
 
               const completedPayment = await outgoingPaymentService.get({
                 id: firstPayment.id
@@ -2279,9 +2279,9 @@ describe('Lifecycle', (): void => {
                 .spyOn(paymentMethodHandlerService, 'pay')
                 .mockImplementationOnce(mockPayErrorFactory()())
 
-              const processedPaymentId =
+              const processedPaymentIds =
                 await outgoingPaymentService.processNext()
-              expect(processedPaymentId).toBe(firstPayment.id)
+              expect(processedPaymentIds).toContain(firstPayment.id)
 
               const failedPayment = await outgoingPaymentService.get({
                 id: firstPayment.id

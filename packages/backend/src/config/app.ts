@@ -127,6 +127,11 @@ export const Config = {
 
   walletAddressWorkers: envInt('WALLET_ADDRESS_WORKERS', 1),
   walletAddressWorkerIdle: envInt('WALLET_ADDRESS_WORKER_IDLE', 200), // milliseconds
+  walletAddressBatchSize: envInt('WALLET_ADDRESS_BATCH_SIZE', 250),
+  walletAddressProcessingIntervalMs: envInt(
+    'WALLET_ADDRESS_PROCESSING_INTERVAL_MS',
+    200
+  ), // milliseconds
 
   authServerGrantUrl: envString('AUTH_SERVER_GRANT_URL'),
   authServerIntrospectionUrl: envString('AUTH_SERVER_INTROSPECTION_URL'),
@@ -134,9 +139,19 @@ export const Config = {
 
   outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 1),
   outgoingPaymentWorkerIdle: envInt('OUTGOING_PAYMENT_WORKER_IDLE', 10), // milliseconds
+  outgoingPaymentBatchSize: envInt('OUTGOING_PAYMENT_WORKER_BATCH_SIZE', 250),
+  outgoingPaymentProcessingIntervalMs: envInt(
+    'OUTGOING_PAYMENT_PROCESSING_INTERVAL_MS',
+    200
+  ), // milliseconds
 
   incomingPaymentWorkers: envInt('INCOMING_PAYMENT_WORKERS', 1),
   incomingPaymentWorkerIdle: envInt('INCOMING_PAYMENT_WORKER_IDLE', 200), // milliseconds
+  incomingPaymentBatchSize: envInt('INCOMING_PAYMENT_WORKER_BATCH_SIZE', 250),
+  incomingPaymentProcessingIntervalMs: envInt(
+    'INCOMING_PAYMENT_PROCESSING_INTERVAL_MS',
+    200
+  ), // milliseconds
   pollIncomingPaymentCreatedWebhook: envBool(
     'POLL_INCOMING_PAYMENT_CREATED_WEBHOOK',
     false
