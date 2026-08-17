@@ -2,6 +2,8 @@
 title: Compensación y liquidación
 ---
 
+import { LinkOut } from '@interledger/docs-design-system'
+
 ## Compensación
 
 Cuando se realiza un pago a través de los canales bancarios tradicionales, el dinero no se transfiere de forma instantánea. Primero, se realizan verificaciones para confirmar que el dinero existe y se puede transferir. Las redes de compensación son responsables del intercambio de mensajes entre las ASE para facilitar estas verificaciones. Este proceso se denomina compensación. Cuando un pago se compensa correctamente, significa que la ASE del pagador tiene una obligación con la ASE del beneficiario.
@@ -12,7 +14,7 @@ El [Interledger Protocol (ILP)](/es/overview/concepts/interledger) no es una red
 - Las ASE interconectadas intercambian paquetes ILP, que son paquetes de valor que contienen información de las transacciones. Los paquetes ILP son similares a los mensajes intercambiados durante el proceso de compensación tradicional.
 - El intercambio exitoso de paquetes ILP entre pares crea obligaciones entre ellos que deben liquidarse. La recepción de un paquete ILP cumplido es básicamente un pagaré condicional —una promesa de pago— que afecta los saldos contables financieros entre los pares.
 
-Puede obtener más información sobre la compensación en relación con ILP en los [documentos para desarrolladores de Interledger](https://interledger.org/developers/rfcs/peering-clearing-settling/).
+Puede obtener más información sobre la compensación en relación con ILP en los <LinkOut href='https://interledger.org/developers/rfcs/peering-clearing-settling/'>documentos para desarrolladores de Interledger</LinkOut>.
 
 Conceptualmente, Rafiki se sitúa en el nivel de compensación, pero no es una red de compensación. Es un software que permite implementar el Interledger Protocol de forma más rápida y sencilla. Rafiki utiliza ILP para [hacer un seguimiento de la liquidez](/es/overview/concepts/accounting) entre activos, pagos y pares. Una ASE aún debe conectar Rafiki con su sistema de backend existente y su libro mayor interno para la autenticación, la obtención de los tipos de cambio y la gestión de la liquidez. Por ejemplo, si un pago entrante se completa en Rafiki, el backend de la ASE debe acreditar los fondos en la cuenta del destinatario dentro de su propio sistema, independientemente de cómo lo implemente.
 
@@ -24,6 +26,6 @@ En la banca tradicional, la liquidación es el cumplimiento de una obligación e
 
 Cuando la ASE del pagador liquida con la ASE del beneficiario, es muy probable que no esté transfiriendo dinero en efectivo de forma física. Lo más probable es que exista un intermediario, como un banco de reserva o un banco central, que mantenga cuentas para ambas ASE. El intermediario transfiere los fondos de una cuenta a la otra, acreditando y debitando las cuentas según sea necesario.
 
-Con Interledger, el concepto de liquidación no es tan diferente. Cada [par](/integration/requirements/peers) debe acordar un sistema de liquidación que se utilizará para cumplir con sus obligaciones mutuas. Sin embargo, ILP en sí mismo no es un sistema de liquidación. Esto significa que los pares deben tener alguna otra forma de cumplir con sus obligaciones e intercambiar valor. Los ejemplos pueden incluir el uso de un sistema de liquidación bruta en tiempo real, como Fedwire; una red de cámara de compensación automatizada (ACH); un servicio de transferencia de dinero o algún otro canal de pago. Puede obtener más información sobre la liquidación en relación con ILP en los [documentos para desarrolladores de Interledger](https://interledger.org/developers/rfcs/settlement-engines/).
+Con Interledger, el concepto de liquidación no es tan diferente. Cada [par](/integration/requirements/peers) debe acordar un sistema de liquidación que se utilizará para cumplir con sus obligaciones mutuas. Sin embargo, ILP en sí mismo no es un sistema de liquidación. Esto significa que los pares deben tener alguna otra forma de cumplir con sus obligaciones e intercambiar valor. Los ejemplos pueden incluir el uso de un sistema de liquidación bruta en tiempo real, como Fedwire; una red de cámara de compensación automatizada (ACH); un servicio de transferencia de dinero o algún otro canal de pago. Puede obtener más información sobre la liquidación en relación con ILP en los <LinkOut href='https://interledger.org/developers/rfcs/settlement-engines/'>documentos para desarrolladores de Interledger</LinkOut>.
 
 Rafiki tampoco es un sistema de liquidación. [Realiza un seguimiento de la liquidez](/es/overview/concepts/accounting) a través de cuentas de liquidez y de liquidación. Las cuentas de liquidez registran los importes de los depósitos, los retiros y las transferencias. Las cuentas de liquidación registran la disponibilidad de fondos, denominados en un único activo. Un saldo negativo significa que hay fondos disponibles. Cuanto más se aproxima a cero el saldo de una cuenta de liquidación, mayor es la probabilidad de que un par deba realizar la liquidación con el otro a través del sistema de liquidación que hayan acordado.

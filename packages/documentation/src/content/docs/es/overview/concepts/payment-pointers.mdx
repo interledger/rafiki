@@ -1,12 +1,12 @@
 ---
-title: Payment Pointers y direcciones de billetera
+title: Payment pointers y wallet addresses
 ---
 
-## Payment Pointers
+## Payment pointers
 
-Un Payment Pointer es un identificador estandarizado para una cuenta de pago que admite pagos mediante Interledger. Cada Payment Pointer debe resolverse en una URL HTTPS que funcione como un punto final [SPSP](/es/overview/concepts/interledger#simple-payment-setup-protocol-spsp) para facilitar el envío y la recepción de paquetes ILP.
+Un Payment pointer es un identificador estandarizado para una cuenta de pago que admite pagos mediante Interledger. Cada Payment pointer debe resolverse en una URL HTTPS que funcione como un punto final [SPSP](/es/overview/concepts/interledger#protocolo-de-configuración-de-pago-simple-spsp) para facilitar el envío y la recepción de paquetes ILP.
 
-Puede determinar si una URL es un Payment Pointer enviando una solicitud `GET` a la URL con un encabezado `accept: application/spsp4+json`.
+Puede determinar si una URL es un Payment pointer enviando una solicitud `GET` a la URL con un encabezado `accept: application/spsp4+json`.
 
 ```http title="Ejemplo de solicitud"
 curl --request GET \
@@ -14,34 +14,34 @@ curl --request GET \
  --header 'accept: application/spsp4+json'
 ```
 
-Si un servidor SPSP devuelve una respuesta, significa que la URL es un Payment Pointer.
+Si un servidor SPSP devuelve una respuesta, significa que la URL es un Payment pointer.
 
-```http title="Example response"
+```http title="Ejemplo de respuesta"
 {
  "destination_account":"example.0.cloudnine.ind.alice.cdfa5e16-e759",
  "shared_secret":"7h0s7EpQDqcgzqmX-mwrNHFHinPvJq8Jw",
 }
 ```
 
-Los Payment Pointers suelen representarse mediante la notación abreviada `$`. Por ejemplo, `$wallet.example.com/alice`, que se resuelve en `https://wallet.example.com/alice/`.
+Los Payment pointers suelen representarse mediante la notación abreviada `$`. Por ejemplo, `$wallet.example.com/alice`, que se resuelve en `https://wallet.example.com/alice/`.
 
-Rafiki asigna un Payment Pointer a cada una de las cuentas de sus clientes. Este Payment Pointer también es una dirección de billetera, ya que Rafiki es compatible tanto con Interledger como con Open Payments.
+Rafiki asigna un Payment pointer a cada una de las cuentas de sus clientes. Este Payment pointer también es un wallet address, ya que Rafiki es compatible tanto con Interledger como con Open Payments.
 
-## Direcciones de billetera
+## Wallet addresses
 
-Una dirección de billetera es una URL segura y única de una cuenta de pago compatible con Open Payments. Funciona como un punto de entrada a las API de Open Payments, y facilita interacciones como el envío y la recepción de pagos.
+Un wallet address es una URL segura y única de una cuenta de pago compatible con Open Payments. Funciona como un punto de entrada a las API de Open Payments, y facilita interacciones como el envío y la recepción de pagos.
 
-Puede determinar si una URL es una dirección de billetera enviando una solicitud `GET` a la URL con un encabezado `accept: application/json`.
+Puede determinar si una URL es un wallet address enviando una solicitud `GET` a la URL con un encabezado `accept: application/json`.
 
-```http title="Example request"
+```http title="Ejemplo de solicitud"
 curl --request GET \
  --url https://wallet.example.com/alice \
  --header 'accept: application/json'
 ```
 
-Una respuesta válida significa que la URL es una dirección de billetera.
+Una respuesta válida significa que la URL es un wallet address.
 
-```http title="Example response"
+```http title="Ejemplo de respuesta"
 {
   "id": "https://wallet.example.com/alice",
   "publicName": "Alice",
@@ -54,4 +54,4 @@ Una respuesta válida significa que la URL es una dirección de billetera.
 
 Las URL `authServer` y `resourceServer` incluyen el identificador del tenant (UUID v4) como un segmento de ruta para garantizar que las solicitudes de Open Payments se dirijan al tenant correcto.
 
-Rafiki asigna una dirección de billetera a cada una de las cuentas de sus clientes. Esta dirección de billetera también es un Payment Pointer porque Rafiki es compatible con Open Payments e Interledger. Consulte los requisitos de integración para [direcciones de billetera](/integration/requirements/wallet-addresses) para obtener más información.
+Rafiki asigna un wallet address a cada una de las cuentas de sus clientes. Este wallet address también es un Payment pointer porque Rafiki es compatible con Open Payments e Interledger. Consulte los requisitos de integración para [wallet addresses](/integration/requirements/wallet-addresses) para obtener más información.
