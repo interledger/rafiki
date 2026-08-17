@@ -144,15 +144,12 @@ export default defineConfig({
                 },
                 {
                   label: 'Open Payments',
-                  translations: {
-                    es: 'Pagos Abiertos'
-                  },
                   link: '/overview/concepts/open-payments'
                 },
                 {
                   label: 'Payment pointers and wallet addresses',
                   translations: {
-                    es: 'Apuntadores de pago y direcciones de billeteras'
+                    es: 'Payment pointers y wallet addresses'
                   },
                   link: '/overview/concepts/payment-pointers'
                 },
