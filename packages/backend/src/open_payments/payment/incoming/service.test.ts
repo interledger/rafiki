@@ -310,6 +310,9 @@ describe('Incoming Payment Service', (): void => {
         assert.ok(!isIncomingPaymentError(canceledIncomingPayment))
         expect(canceledIncomingPayment.id).toBe(incomingPayment.id)
         expect(canceledIncomingPayment.cancelledAt).toBeDefined()
+        expect(canceledIncomingPayment.state).toBe(
+          IncomingPaymentState.Cancelled
+        )
         expect(!canceledIncomingPayment.approvedAt).toBeTruthy()
       })
 
@@ -330,6 +333,9 @@ describe('Incoming Payment Service', (): void => {
         assert.ok(!isIncomingPaymentError(canceledIncomingPayment))
         expect(canceledIncomingPayment.id).toBe(incomingPayment.id)
         expect(canceledIncomingPayment.cancelledAt).toBeDefined()
+        expect(canceledIncomingPayment.state).toBe(
+          IncomingPaymentState.Cancelled
+        )
         expect(!canceledIncomingPayment.approvedAt).toBeTruthy()
         expect(canceledIncomingPayment.cancellationReason).toBe(reason)
       })

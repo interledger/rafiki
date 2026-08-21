@@ -116,7 +116,11 @@ describe('Models', (): void => {
         })
       })
 
-      test.each([IncomingPaymentState.Completed, IncomingPaymentState.Expired])(
+      test.each([
+        IncomingPaymentState.Completed,
+        IncomingPaymentState.Expired,
+        IncomingPaymentState.Cancelled
+      ])(
         'returns incoming payment with existing methods if payment state is %s',
         async (paymentState): Promise<void> => {
           incomingPayment.state = paymentState

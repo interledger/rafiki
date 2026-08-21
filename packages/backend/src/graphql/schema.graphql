@@ -1044,6 +1044,8 @@ enum IncomingPaymentState {
   COMPLETED
   "The payment has expired before completion, and no further funds will be accepted."
   EXPIRED
+  "The payment is cancelled before completion, and no further funds will be accepted."
+  CANCELLED
 }
 
 type Amount {
