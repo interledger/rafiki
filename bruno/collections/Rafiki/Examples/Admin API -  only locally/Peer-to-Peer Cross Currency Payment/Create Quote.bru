@@ -55,12 +55,12 @@ script:post-response {
   const body = res.getBody();
 
   if (body?.data) {
-    bru.setEnvVar("quoteId", body.data.createQuote.quote.id);
+    bru.setVar("quoteId", body.data.createQuote.quote.id);
   }
 }
 
 tests {
   test("Quote id is string", function() {
-    expect(bru.getEnvVar("quoteId")).to.be.a("string");
+    expect(bru.getVar("quoteId")).to.be.a("string");
   })
 }
