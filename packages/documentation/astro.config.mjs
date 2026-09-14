@@ -6,7 +6,7 @@ import rehypeMathjax from 'rehype-mathjax'
 import starlightLinksValidator from 'starlight-links-validator'
 import starlightLlmsTxt from 'starlight-llms-txt'
 import starlightFullViewMode from 'starlight-fullview-mode'
-import { rehypeHeadingIds } from '@astrojs/markdown-remark'
+import { unified, rehypeHeadingIds } from '@astrojs/markdown-remark'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 import starlightVersions from 'starlight-versions'
 
@@ -15,17 +15,19 @@ export default defineConfig({
   site: 'https://rafiki.dev',
   outDir: './build',
   markdown: {
-    remarkPlugins: [remarkMath],
-    rehypePlugins: [
-      rehypeMathjax,
-      rehypeHeadingIds,
-      [
-        rehypeAutolinkHeadings,
-        {
-          behavior: 'wrap'
-        }
+    processor: unified({
+      remarkPlugins: [remarkMath],
+      rehypePlugins: [
+        rehypeMathjax,
+        rehypeHeadingIds,
+        [
+          rehypeAutolinkHeadings,
+          {
+            behavior: 'wrap'
+          }
+        ]
       ]
-    ]
+    })
   },
   integrations: [
     starlight({
