@@ -100,7 +100,12 @@ export const Config = {
   ),
   env: envString('NODE_ENV', 'development'),
   trustProxy: envBool('TRUST_PROXY', false),
-  redisUrl: envString('REDIS_URL', 'redis://127.0.0.1:6379'),
+  // Each Jest worker gets its own Redis logical database so that state (and
+  // flushes) in one worker cannot clobber another worker running concurrently.
+  redisUrl:
+    process.env.NODE_ENV === 'test'
+      ? `${process.env.REDIS_URL}/${process.env.JEST_WORKER_ID}`
+      : envString('REDIS_URL', 'redis://127.0.0.1:6379'),
   redisTls: parseRedisTlsConfig(
     process.env.REDIS_TLS_CA_FILE_PATH,
     process.env.REDIS_TLS_KEY_FILE_PATH,

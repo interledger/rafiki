@@ -22,7 +22,9 @@ export function createRedisDataStore(
       await redisClient.del(key)
     },
     async deleteAll(): Promise<void> {
-      await redisClient.flushall()
+      // flushdb, not flushall: only clear the database this store is bound to,
+      // leaving other logical databases on a shared Redis untouched.
+      await redisClient.flushdb()
     }
   }
 }
