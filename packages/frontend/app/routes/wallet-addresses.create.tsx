@@ -1,6 +1,10 @@
 import type { ReactNode } from 'react'
 import { useState } from 'react'
-import { json, type ActionFunctionArgs } from '@remix-run/node'
+import {
+  json,
+  type ActionFunctionArgs,
+  type MetaFunction
+} from '@remix-run/node'
 import {
   Form,
   useActionData,
@@ -31,6 +35,10 @@ import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
 import type { listTenants } from '~/lib/api/tenant.server'
 import { whoAmI, loadTenants, getTenantInfo } from '~/lib/api/tenant.server'
+
+export const meta: MetaFunction = () => [
+  { title: 'Create Wallet Address - Rafiki Admin' }
+]
 
 const WALLET_ADDRESS_URL_KEY = 'WALLET_ADDRESS_URL'
 

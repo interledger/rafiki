@@ -1,4 +1,4 @@
-import type { LoaderFunctionArgs } from '@remix-run/node'
+import type { LoaderFunctionArgs, MetaFunction } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { Link, Outlet, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
@@ -17,6 +17,10 @@ export type LiquidityActionOutletContext = {
   withdrawLiquidityDisplayAmount: string
   depositLiquidityDisplayAmount: string
 }[]
+
+export const meta: MetaFunction = () => [
+  { title: 'Outgoing Payment Details - Rafiki Admin' }
+]
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const cookies = request.headers.get('cookie')
@@ -255,7 +259,6 @@ export default function ViewOutgoingPaymentPage() {
                 {BigInt(outgoingPayment.liquidity ?? '0') ? (
                   <Button asChild>
                     <Link
-                      aria-label='withdraw outgoing payment liquidity page'
                       preventScrollReset
                       to={`/payments/outgoing/${outgoingPayment.id}/withdraw-liquidity`}
                     >
@@ -263,17 +266,11 @@ export default function ViewOutgoingPaymentPage() {
                     </Link>
                   </Button>
                 ) : (
-                  <Button
-                    disabled={true}
-                    aria-label='withdraw outgoing payment liquidity page'
-                  >
-                    Withdraw liquidity
-                  </Button>
+                  <Button disabled={true}>Withdraw liquidity</Button>
                 )}
                 {outgoingPayment.state === OutgoingPaymentState.Funding ? (
                   <Button asChild>
                     <Link
-                      aria-label='deposit outgoing payment liquidity page'
                       preventScrollReset
                       to={`/payments/outgoing/${outgoingPayment.id}/deposit-liquidity`}
                     >
@@ -281,12 +278,7 @@ export default function ViewOutgoingPaymentPage() {
                     </Link>
                   </Button>
                 ) : (
-                  <Button
-                    disabled={true}
-                    aria-label='deposit outgoing payment liquidity page'
-                  >
-                    Deposit liquidity
-                  </Button>
+                  <Button disabled={true}>Deposit liquidity</Button>
                 )}
               </Flex>
             </Flex>

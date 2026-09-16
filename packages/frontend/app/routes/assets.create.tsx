@@ -22,9 +22,13 @@ import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createAssetSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
-import { type LoaderFunctionArgs } from '@remix-run/node'
+import { type LoaderFunctionArgs, type MetaFunction } from '@remix-run/node'
 import { whoAmI, loadTenants } from '~/lib/api/tenant.server'
 import { getSession } from '~/lib/session.server'
+
+export const meta: MetaFunction = () => [
+  { title: 'Create Asset - Rafiki Admin' }
+]
 
 type FormFieldProps = {
   name: string

@@ -1,7 +1,8 @@
 import {
   json,
   type ActionFunctionArgs,
-  type LoaderFunctionArgs
+  type LoaderFunctionArgs,
+  type MetaFunction
 } from '@remix-run/node'
 import {
   Form,
@@ -31,6 +32,10 @@ import { RedirectDialog } from '~/components/RedirectDialog'
 import type { ReactNode } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { loadTenants, whoAmI } from '~/lib/api/tenant.server'
+
+export const meta: MetaFunction = () => [
+  { title: 'Create Peer - Rafiki Admin' }
+]
 
 type SelectOption = {
   label: string

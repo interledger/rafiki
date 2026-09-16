@@ -1,4 +1,4 @@
-import type { LoaderFunctionArgs } from '@remix-run/node'
+import type { LoaderFunctionArgs, MetaFunction } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { Link, Outlet, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
@@ -12,6 +12,10 @@ import {
   prettify
 } from '~/shared/utils'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
+
+export const meta: MetaFunction = () => [
+  { title: 'Incoming Payment Details - Rafiki Admin' }
+]
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const cookies = request.headers.get('cookie')
@@ -209,7 +213,6 @@ export default function ViewIncomingPaymentPage() {
                 {canWithdrawLiquidity ? (
                   <Button asChild>
                     <Link
-                      aria-label='withdraw incoming payment liquidity page'
                       preventScrollReset
                       to={`/payments/incoming/${incomingPayment.id}/withdraw-liquidity`}
                     >
@@ -217,12 +220,7 @@ export default function ViewIncomingPaymentPage() {
                     </Link>
                   </Button>
                 ) : (
-                  <Button
-                    disabled={true}
-                    aria-label='withdraw incoming payment liquidity page'
-                  >
-                    Withdraw liquidity
-                  </Button>
+                  <Button disabled={true}>Withdraw liquidity</Button>
                 )}
               </Flex>
             </Flex>

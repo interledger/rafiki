@@ -1197,6 +1197,9 @@ describe('introspect', () => {
             }
           ]
         })
+        // httpsigMiddleware (applied on the route) resolves the caller's key
+        // from ctx.client
+        expect(ctx.client).toEqual(client)
         expect(next).toHaveBeenCalled()
       }
     )

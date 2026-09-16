@@ -1,7 +1,13 @@
-import { redirect, type LoaderFunctionArgs } from '@remix-run/node'
+import {
+  redirect,
+  type LoaderFunctionArgs,
+  type MetaFunction
+} from '@remix-run/node'
 import { Form } from '@remix-run/react'
 import { Button, Heading } from '@radix-ui/themes'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
+
+export const meta: MetaFunction = () => [{ title: 'Log Out - Rafiki Admin' }]
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
@@ -24,11 +30,7 @@ export default function Logout() {
               button below, or closing your browser.
             </p>
             <Form method='post'>
-              <Button
-                aria-label='manual-logout'
-                name='manual-logout'
-                type='submit'
-              >
+              <Button name='manual-logout' type='submit'>
                 Manual Logout
               </Button>
             </Form>

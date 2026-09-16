@@ -20,8 +20,12 @@ import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createTenantSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
-import { type LoaderFunctionArgs } from '@remix-run/node'
+import { type LoaderFunctionArgs, type MetaFunction } from '@remix-run/node'
 import { TenantSettingKey } from '~/generated/graphql'
+
+export const meta: MetaFunction = () => [
+  { title: 'Create Tenant - Rafiki Admin' }
+]
 
 type FormFieldProps = {
   name: string

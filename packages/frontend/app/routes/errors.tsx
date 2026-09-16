@@ -1,9 +1,15 @@
 // This page handles User-facing errors in the browser for Kratos
-import { json, type LoaderFunctionArgs } from '@remix-run/node'
+import {
+  json,
+  type LoaderFunctionArgs,
+  type MetaFunction
+} from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import { Heading } from '@radix-ui/themes'
 import variables from '../lib/envConfig.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
+
+export const meta: MetaFunction = () => [{ title: 'Error - Rafiki Admin' }]
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')

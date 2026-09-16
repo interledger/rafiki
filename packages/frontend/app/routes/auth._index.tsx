@@ -2,7 +2,13 @@ import { Form } from '@remix-run/react'
 import { Button, Heading } from '@radix-ui/themes'
 import variables from '../lib/envConfig.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
-import { redirectDocument, type LoaderFunctionArgs } from '@remix-run/node'
+import {
+  redirectDocument,
+  type LoaderFunctionArgs,
+  type MetaFunction
+} from '@remix-run/node'
+
+export const meta: MetaFunction = () => [{ title: 'Welcome - Rafiki Admin' }]
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
@@ -18,7 +24,8 @@ export default function Auth() {
         <div className='p-4 space-y-6 md:p-10 md:space-y-16'>
           <Heading
             as='h1'
-            className='text-6xl pt-10 md:text-9xl md:pt-16 text-[#F37F64]'
+            color='amber'
+            className='text-6xl pt-10 md:text-9xl md:pt-16'
           >
             Welcome!
           </Heading>

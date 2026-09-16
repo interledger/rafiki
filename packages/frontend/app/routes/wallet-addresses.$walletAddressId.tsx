@@ -1,7 +1,8 @@
 import {
   json,
   type ActionFunctionArgs,
-  type LoaderFunctionArgs
+  type LoaderFunctionArgs,
+  type MetaFunction
 } from '@remix-run/node'
 import {
   Form,
@@ -32,6 +33,10 @@ import { updateWalletAddressSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import { formatAmount } from '~/shared/utils'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
+
+export const meta: MetaFunction = () => [
+  { title: 'Wallet Address Details - Rafiki Admin' }
+]
 
 type FormFieldProps = {
   name: string
@@ -129,6 +134,7 @@ export default function ViewWalletAddressPage() {
               <Flex align='center' justify='between' gap='3' wrap='wrap'>
                 <Heading
                   as='h2'
+                  id='general-information-heading'
                   size='2'
                   weight='medium'
                   className='uppercase tracking-wide text-gray-600'
@@ -142,7 +148,10 @@ export default function ViewWalletAddressPage() {
               </Flex>
               {renderErrorPanel(response?.errors.message)}
               <Form method='post' replace preventScrollReset>
-                <fieldset disabled={isSubmitting}>
+                <fieldset
+                  disabled={isSubmitting}
+                  aria-labelledby='general-information-heading'
+                >
                   <Flex direction='column' gap='4'>
                     <input type='hidden' name='id' value={walletAddress.id} />
                     <FormField
@@ -245,10 +254,7 @@ export default function ViewWalletAddressPage() {
               </Flex>
               <Flex justify='end'>
                 <Button asChild>
-                  <Link
-                    aria-label='go to asset page'
-                    to={`/assets/${walletAddress.asset.id}`}
-                  >
+                  <Link to={`/assets/${walletAddress.asset.id}`}>
                     View asset
                   </Link>
                 </Button>
@@ -265,17 +271,17 @@ export default function ViewWalletAddressPage() {
                 Liquidity Information
               </Heading>
               <Flex justify='between' align='center'>
-                <Flex direction='column' gap='1'>
-                  <Text weight='medium'>Amount</Text>
-                  <Text size='2' color='gray'>
-                    {displayLiquidityAmount}
-                  </Text>
-                </Flex>
-                <Flex gap='3'>
+                <FormField
+                  label='Amount'
+                  name='liquidity'
+                  value={displayLiquidityAmount}
+                  disabled
+                  readOnly
+                />
+                <Flex gap='3' className='mt-6'>
                   {BigInt(walletAddress.liquidity ?? '0') ? (
                     <Button asChild>
                       <Link
-                        aria-label='withdraw wallet address liquidity page'
                         preventScrollReset
                         to={`/wallet-addresses/${walletAddress.id}/withdraw-liquidity`}
                       >
@@ -283,12 +289,7 @@ export default function ViewWalletAddressPage() {
                       </Link>
                     </Button>
                   ) : (
-                    <Button
-                      disabled={true}
-                      aria-label='withdraw wallet address liquidity page'
-                    >
-                      Withdraw
-                    </Button>
+                    <Button disabled={true}>Withdraw</Button>
                   )}
                 </Flex>
               </Flex>

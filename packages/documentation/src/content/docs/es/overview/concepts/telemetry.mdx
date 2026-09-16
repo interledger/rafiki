@@ -4,196 +4,197 @@ title: Telemetría
 
 import { LinkOut } from '@interledger/docs-design-system'
 
-The objective of the telemetry feature is to gather metrics and establish an infrastructure for visualizing valuable network insights. Some of the metrics that we at the Interledger Foundation collect include:
+El objetivo de la función de telemetría es recopilar métricas y establecer una infraestructura para visualizar información valiosa de la red. Algunas de las métricas que recopilamos en Interledger Foundation incluyen las siguientes:
 
-- The total amount of money transferred via packet data within a specified time frame (daily, weekly, monthly)
-- The number of transactions that have been at least partially successful
-- The number of ILP packets flowing through the network
-- The average amount of money held within the network per transaction
-- The average time it takes for an outgoing payment to complete
+- La cantidad total de dinero transferido a través de paquetes de datos en un tiempo específico (diario, semanal, mensual).
+- El número de transacciones que han sido al menos parcialmente exitosas.
+- El número de paquetes ILP que fluyen a través de la red.
+- La cantidad promedio de dinero retenido en la red por transacción.
+- El tiempo promedio que tarda en completarse un pago saliente.
 
-Our goals are to:
+Nuestros objetivos son:
 
-- Track the growth of the network in terms of transaction sizes and the number of transactions processed
-- Use the data for our own insights
-- Enable you to gain your own insights
+- Hacer un seguimiento del crecimiento de la red en términos del tamaño de las transacciones y la cantidad de transacciones procesadas.
+- Utilizar los datos para nuestros propios análisis.
+- Permitirle obtener sus propios análisis.
 
-### Privacy and optionality
+### Privacidad y opcionalidad
 
-Privacy is a paramount concern for the Interledger Foundation. Rafiki’s telemetry feature is designed to provide valuable network insights without violating privacy or aiding malicious ASEs. Review the [Privacy](#privacy) section below for more information.
+La privacidad es una preocupación primordial para Interledger Foundation. La función de telemetría de Rafiki está diseñada para proporcionar información valiosa de la red sin vulnerar la privacidad ni facilitar actividades maliciosas por parte de las ASE. Consulte la sección [Privacidad](#privacidad) a continuación para obtener más información.
 
-The telemetry feature is currently enabled by default on test environments (environments not dealing with real money). When active, the feature transmits metrics to the testnet collector. You can opt in to sharing your metrics with a livenet collector when operating in a production livenet environment (with real money). Regardless of environment, you can also opt-out of telemetry completely. Review the [telemetry environment variables](#telemetry-environment-variables) for more information.
+Actualmente, la función de telemetría está habilitada de forma predeterminada en los entornos de prueba (entornos que no manejan dinero real). Cuando está activa, la función transmite métricas al recopilador de testnet. Puede optar por compartir sus métricas con un recopilador de livenet cuando opere en un entorno de livenet de producción (con dinero real). Independientemente del entorno, también puede optar por desactivar la telemetría por completo. Revise las [variables de entorno de telemetría](#variables-de-entorno-de-telemetría) para obtener más información.
 
-### Architecture
+### Arquitectura
 
-![Architecture diagram for Rafiki telemetry](/img/concepts-telemetry-architecture.png)
+![Diagrama de arquitectura para la telemetría de Rafiki](/img/concepts-telemetry-architecture.png)
 
 ### OpenTelemetry (OTEL)
 
-The Interledger Foundation has adopted <LinkOut href="https://opentelemetry.io/">OpenTelemetry (OTEL)</LinkOut> to ensure compliance with a standardized framework that is compatible with a variety of tool suites. OTEL allows you to use your preferred tools for data analysis, while Rafiki is instrumented and observable through a standardized metrics format.
+Interledger Foundation ha adoptado <LinkOut href="https://opentelemetry.io/">OpenTelemetry (OTEL)</LinkOut> para garantizar el cumplimiento de un marco estandarizado compatible con una variedad de conjuntos de herramientas. OTEL permite utilizar las herramientas de análisis de datos que prefiera, mientras que Rafiki está instrumentado y puede observarse mediante un formato de métricas estandarizado.
 
-### Telemetry Elastic Container Service (ECS) cluster
+### Clúster de Elastic Container Service (ECS) de telemetría
 
-The Telemetry Replica service is hosted on AWS ECS Fargate and is configured for availability and load balancing of custom ADOT (AWS Distro for OpenTelemetry) Collector ECS tasks.
+El servicio de réplica de telemetría está alojado en AWS ECS Fargate y está configurado para la disponibilidad y el equilibrio de carga de las tareas de ECS personalizadas del recopilador ADOT (AWS Distro for OpenTelemetry).
 
-When you opt for telemetry, metrics are sent to our Telemetry service. To enable you to build your own telemetry solutions, instrumented Rafiki can send data to multiple endpoints. This allows for the integration of a local <LinkOut href="https://opentelemetry.io/docs/collector/">OTEL Collector</LinkOut> container that can support custom requirements. Metrics communication is facilitated through <LinkOut href="https://grpc.io/">gRPC</LinkOut>.
+Cuando opta por la telemetría, las métricas se envían a nuestro servicio de Telemetría. Para que pueda crear sus propias soluciones de telemetría, Rafiki instrumentado puede enviar datos a múltiples puntos finales. Esto permite integrar un contenedor local de <LinkOut href="https://opentelemetry.io/docs/collector/">OTEL Collector</LinkOut> que puede admitir requisitos personalizados. La comunicación de métricas se facilita a través de <LinkOut href="https://grpc.io/">gRPC</LinkOut>.
 
-### OTEL SDK - Rafiki instrumentation
+### SDK de OTEL - Instrumentación de Rafiki
 
-The OTEL SDK is integrated into Rafiki to create, collect, and export metrics. The SDK integrates seamlessly with the OTEL Collector.
+El SDK de OTEL está integrado en Rafiki para crear, recopilar y exportar métricas. El SDK se integra a la perfección con el OTEL Collector.
 
 ### Prometheus - AMP
 
-The Interledger Foundation uses Amazon Managed Service for Prometheus (AMP) to collect data from the telemetry cluster.
+Interledger Foundation utiliza Amazon Managed Service para Prometheus (AMP) para recopilar datos del clúster de telemetría.
 
 :::note
-AMP offers limited configuration options and cannot crawl data outside of AWS. This limitation led us to adopt a push model, using `prometheusRemoteWrite`, instead of a pull model. For future development, we may consider hosting our own Prometheus.
+AMP ofrece opciones de configuración limitadas y no puede recopilar datos fuera de AWS. Esta limitación nos llevó a adoptar un modelo push, utilizando `prometheusRemoteWrite`, en lugar de un modelo pull. Para el desarrollo futuro, podemos considerar alojar nuestro propio Prometheus.
 :::
 
 ### Grafana - Grafana Cloud
 
-Grafana Cloud is used for data visualization dashboards and offers multiple tools that extend Prometheus Promql.
+Grafana Cloud se utiliza para paneles de visualización de datos y ofrece múltiples herramientas que amplían Promql de Prometheus.
 
 :::note
-The Interledger Foundation initially used Amazon-hosted Grafana which did not meet our needs for embedding dashboards. Grafana Cloud offers a feature called _public dashboards_ which allows us to share dashboards. However, embedding may still pose a challenge.
+Interledger Foundation inicialmente utilizó Grafana alojado en Amazon, pero no cumplía con nuestras necesidades de incrustación de paneles. Grafana Cloud ofrece una función llamada _paneles públicos_ que nos permite compartir paneles. Sin embargo, la incrustación aún puede representar un desafío.
 :::
 
-### Exchange rates
+### Tipos de cambio
 
-For telemetry purposes, all amounts collected by instrumented Rafiki should be converted to a base currency.
+Para fines de telemetría, todos los importes recopilados por Rafiki instrumentado deben convertirse a una moneda base.
 
-:::caution[Privacy reasoning]
-If only two ASEs are peered over a non-USD currency and we collect data in that currency, it would be easy to determine the volumes moved between those two ASEs. To maintain privacy, we convert all amounts to a base currency.
+:::caution[Justificación de privacidad]
+Si solo dos ASE están interconectadas mediante una moneda distinta del USD y recopilamos datos en esa moneda, sería fácil determinar los volúmenes transferidos entre esas dos ASE. Para mantener la privacidad, convertimos todos los importes a una moneda base.
 :::
 
-If an ASE does not provide the necessary exchange rate for a transaction, the telemetry solution still converts the amount to the base currency using external exchange rates. A Lambda function on AWS retrieves and stores the external exchange rates. The function is triggered by a daily `CloudWatch` event and stores the rates in a public S3 bucket. The S3 bucket does not have versioning, and the data is overwritten daily to further ensure privacy.
+Si una ASE no proporciona el tipo de cambio necesario para una transacción, la solución de telemetría igualmente convierte el importe a la moneda base utilizando tipos de cambio externos. Una función Lambda en AWS recupera y almacena los tipos de cambio externos. La función se activa mediante un evento diario de `CloudWatch` y almacena los tipos de cambio en un bucket público de S3. El bucket de S3 no tiene control de versiones, y los datos se sobrescriben diariamente para garantizar aún más la privacidad.
 
-### Instrumentation
+### Instrumentación
 
-Rafiki has the following metrics. All data points (counter increases) are exported to collection endpoints at a configurable interval. The default interval is 15 seconds.
+Rafiki tiene las siguientes métricas. Todos los puntos de datos (incrementos del contador) se exportan a los puntos finales de recopilación en un intervalo configurable. El intervalo predeterminado es de 15 segundos.
 
 <div class="overflow-table wide-column">
 
-| Metric                    | Type      | Description                                | Behavior                                                                       |
-| ------------------------- | --------- | ------------------------------------------ | ------------------------------------------------------------------------------ |
-| `transactions_total`      | Counter   | Count of funded outgoing transactions      | Increases by 1 for each successfully funded outgoing payment resource          |
-| `packet_count_prepare`    | Counter   | Count of ILP Prepare packets that are sent | Increases by 1 for each Prepare packet that's sent                             |
-| `packet_count_fulfill`    | Counter   | Count of ILP Fulfill packets               | Increases by 1 for each Fulfill packet that's received                         |
-| `packet_count_reject`     | Counter   | Count of ILP Reject packets                | Increases by 1 for each Reject packet that's received                          |
-| `packet_amount_fulfill`   | Counter   | Amount sent through the network            | Increases by the amount sent in each ILP packet                                |
-| `transaction_fee_amounts` | Counter   | Fee amount sent through network            | Increases by the amount sent minus the amount received for an outgoing payment |
-| `ilp_pay_time_ms`         | Histogram | Time to complete an ILP payment            | Records the time taken to make an ILP payment                                  |
+| Métrica                   | Tipo       | Descripción                                      | Comportamiento                                                                  |
+| ------------------------- | ---------- | ------------------------------------------------ | ------------------------------------------------------------------------------- |
+| `transactions_total`      | Contador   | Cantidad de transacciones salientes financiadas  | Aumenta en 1 por cada recurso de pago saliente financiado correctamente         |
+| `packet_count_prepare`    | Contador   | Cantidad de paquetes ILP Prepare enviados        | Aumenta en 1 por cada paquete Prepare enviado                                   |
+| `packet_count_fulfill`    | Contador   | Cantidad de paquetes ILP Fulfill                 | Aumenta en 1 por cada paquete Fulfill recibido                                  |
+| `packet_count_reject`     | Contador   | Cantidad de paquetes ILP Reject                  | Aumenta en 1 por cada paquete Reject recibido                                   |
+| `packet_amount_fulfill`   | Contador   | Importe enviado a través de la red               | Aumenta según el importe enviado en cada paquete ILP                            |
+| `transaction_fee_amounts` | Contador   | Importe de comisiones enviado a través de la red | Aumenta según el importe enviado menos el importe recibido por un pago saliente |
+| `ilp_pay_time_ms`         | Histograma | Tiempo para completar un pago ILP                | Registra el tiempo necesario para realizar un pago ILP                          |
 
 </div>
 
-The current implementation only collects metrics on the SENDING side of a transaction. Metrics for external Open Payments transactions RECEIVED by a Rafiki instance in the network are not collected.
+La implementación actual solo recopila métricas en el lado de ENVÍO de una transacción. No se recopilan las métricas de las transacciones externas de Open Payments RECIBIDAS por una instancia de Rafiki en la red.
 
-## Privacy
+## Privacidad
 
-Rafiki telemetry is designed with a strong emphasis on privacy. The system anonymizes user data and refrains from collecting identifiable information. Since transactions can originate from any user to a Rafiki instance, the privacy measures are implemented directly at the source (each Rafiki instance). This means that at the individual level, the data is already anonymous as single Rafiki instances service transactions for multiple users.
+La telemetría de Rafiki está diseñada con un fuerte énfasis en la privacidad. El sistema anonimiza los datos de los usuarios y se abstiene de recopilar información identificable. Dado que las transacciones pueden originarse desde cualquier usuario hacia una instancia de Rafiki, las medidas de privacidad se implementan directamente en el origen (cada instancia de Rafiki). Esto significa que, a nivel individual, los datos ya son anónimos, ya que las instancias individuales de Rafiki procesan transacciones de múltiples usuarios.
 
-### Differential privacy and local differential privacy (LDP)
+### Privacidad diferencial y privacidad diferencial local (LDP)
 
-Differential privacy is a system for publicly sharing information about a dataset by describing the patterns of groups within the dataset while withholding information about individuals in the dataset. Local differential privacy (LDP) is a variant of differential privacy where noise is added to each individual’s data point before the data point is sent to the server. This ensures that the server never sees the actual data, providing a strong privacy guarantee.
+La privacidad diferencial es un sistema para compartir públicamente información sobre un conjunto de datos mediante la descripción de los patrones de los grupos en el conjunto de datos, sin revelar información sobre las personas incluidas en el conjunto de datos. La privacidad diferencial local (LDP) es una variante de la privacidad diferencial en la que se agrega ruido al punto de datos de cada persona antes de que este se envíe al servidor. Esto garantiza que el servidor nunca vea los datos reales, lo que proporciona una garantía de privacidad sólida.
 
-### Rounding technique and bucketing
+### Técnica de redondeo y agrupación por intervalos
 
-Rafiki’s telemetry implementation uses a rounding technique that essentially aggregates multiple transactions into the same value, making them indistinguishable. This is achieved by dividing the transaction values into buckets and rounding the values to the nearest bucket.
+La implementación de telemetría de Rafiki utiliza una técnica de redondeo que básicamente agrega múltiples transacciones en un mismo valor, lo que las hace indistinguibles. Esto se logra dividiendo los valores de las transacciones en intervalos y redondeando los valores al intervalo más cercano.
 
-The bucket size is calculated based on the raw transaction value. For lower value transactions, which are expected to occur more frequently, the bucket sizes are determined linearly for higher granularity. However, after a certain threshold, the bucket size calculation switches to a logarithmic function to ensure privacy for higher value transactions (which are less frequent but pose greater privacy concerns).
+El tamaño del intervalo se calcula en función del valor bruto de la transacción. Para las transacciones de menor valor, que se espera que ocurran con mayor frecuencia, los tamaños de los intervalos se determinan de forma lineal para lograr una mayor granularidad. Sin embargo, después de un determinado umbral, el cálculo del tamaño del intervalo cambia a una función logarítmica para garantizar la privacidad de las transacciones de mayor valor (que son menos frecuentes pero suponen mayores preocupaciones de privacidad).
 
-To handle outliers, a clipping technique is implemented, capping the buckets. Any value that exceeds a given threshold is placed in a single bucket. Conversely, any value that falls below a certain minimum is also placed in a single bucket. This ensures that both high and low outliers do not disproportionately affect the overall data, providing further privacy guarantees for these transactions.
+Para gestionar los valores atípicos, se implementa una técnica de recorte que limita los intervalos. Cualquier valor que supere un umbral determinado se coloca en un único intervalo. Asimismo, cualquier valor que se encuentre por debajo de un mínimo determinado también se coloca en un único intervalo. Esto garantiza que tanto los valores atípicos altos como los bajos no afecten de manera desproporcionada los datos generales, lo que proporciona mayores garantías de privacidad para estas transacciones.
 
-### Laplacian distribution
+### Distribución de Laplace
 
-The Laplacian distribution is often used in differential privacy due to its double exponential decay property. This property ensures that a small change in the data does not significantly affect the probability distribution of the output, providing a strong privacy guarantee.
+La distribución de Laplace se utiliza con frecuencia en la privacidad diferencial debido a su propiedad de doble decaimiento exponencial. Esta propiedad garantiza que un pequeño cambio en los datos no afecte significativamente la distribución de probabilidad del resultado, lo que proporciona una garantía de privacidad sólida.
 
-To achieve local differential privacy (LDP), noise is selected from the Laplacian distribution and added to the rounded values. The noise is generated based on a privacy parameter, which is calculated using the sensitivity of the function.
+Para lograr la privacidad diferencial local (LDP), se selecciona ruido de la distribución de Laplace y se agrega a los valores redondeados. El ruido se genera en función de un parámetro de privacidad, que se calcula utilizando la sensibilidad de la función.
 
-The sensitivity of a function in differential privacy is the maximum amount that any single observation can change the output of the function. In this case, the sensitivity is considered to be the maximum of the rounded value and the bucket size.
+La sensibilidad de una función en la privacidad diferencial es la cantidad máxima en la que una única observación puede modificar el resultado de la función. En este caso, se considera que la sensibilidad es el valor máximo entre el valor redondeado y el tamaño del intervalo.
 
-The privacy parameter is computed as one-tenth of the sensitivity. This parameter controls the trade-off between privacy and utility: a smaller privacy parameter means more privacy but less utility, and a larger privacy parameter means less privacy but more utility.
+El parámetro de privacidad se calcula como una décima parte de la sensibilidad. Este parámetro controla el equilibrio entre privacidad y utilidad: un parámetro de privacidad más pequeño significa mayor privacidad pero menor utilidad, mientras que un parámetro de privacidad más grande significa menor privacidad pero mayor utilidad.
 
-The noise, selected from the Laplacian distribution, is then generated using this privacy parameter and added to the rounded value. If the resulting value is zero, the value is set to half the bucket size to ensure that the noise does not completely obscure the transaction value.
+El ruido, seleccionado de la distribución de Laplace, se genera utilizando este parámetro de privacidad y luego se agrega al valor redondeado. Si el valor resultante es cero, se establece en la mitad del tamaño del intervalo para garantizar que el ruido no oculte por completo el valor de la transacción.
 
-### Currency conversion
+### Conversión de moneda
 
-Another factor that obscures sensitive data is currency conversion. In cross-currency transactions, exchange rates are provided by you, as the ASE, internally. As such, the exchange rates cannot be correlated to an individual transaction. If you don’t or can’t provide the necessary rates, an external API for exchange rates is used. The obtained exchange rates are overwritten frequently in this case, with no versioning or history access. This introduces an additional layer of noise and further protects the privacy of the transactions.
+Otro factor que oculta los datos confidenciales es la conversión de moneda. En las transacciones entre distintas monedas, usted, como ASE, proporciona los tipos de cambio internamente. De este modo, los tipos de cambio no se pueden correlacionar con una transacción individual. Si no proporciona o no puede proporcionar los tipos de cambio necesarios, se utiliza una API externa para los tipos de cambio. En este caso, los tipos de cambio obtenidos se sobrescriben con frecuencia, sin control de versiones ni acceso al historial. Esto introduce una capa adicional de ruido y protege aún más la privacidad de las transacciones.
 
-### Experimental transaction values when using the algorithm
+### Valores experimentales de las transacciones al utilizar el algoritmo
 
-The following table shows the values in the algorithm when running transactions for different amounts. The raw value increases as you move down the rows of the table. All values are in scale 4.
+La siguiente tabla muestra los valores del algoritmo al ejecutar transacciones por diferentes importes. El valor bruto aumenta a medida que se desciende por las filas de la tabla. Todos los valores están en la escala 4.
 
 <div class="overflow-table">
 
-| Raw value | Bucket size | Rounded value | Privacy parameter | Laplace noise | Final value |
-| --------- | ----------- | ------------- | ----------------- | ------------- | ----------- |
-| 8300      | 10000       | 10000         | 1000              | 2037          | 12037       |
-| 13200     | 15000       | 15000         | 1500              | 1397          | 16397       |
-| 147700    | 160000      | 160000        | 16000             | -27128        | 132872      |
-| 1426100   | 2560000     | 2560000       | 256000            | -381571       | 2178429     |
-| 1788200   | 2560000     | 2560000       | 256000            | 463842        | 3023842     |
-| 90422400  | 10000000    | 90000000      | 1000000           | 2210649       | 92210649    |
-| 112400400 | 10000000    | 100000000     | 1000000           | 407847        | 100407847   |
-| 222290500 | 10000000    | 100000000     | 1000000           | -686149       | 99313851    |
+| Valor bruto | Tamaño del intervalo | Valor redondeado | Parámetro de privacidad | Ruido de Laplace | Valor final |
+| ----------- | -------------------- | ---------------- | ----------------------- | ---------------- | ----------- |
+| 8300        | 10000                | 10000            | 1000                    | 2037             | 12037       |
+| 13200       | 15000                | 15000            | 1500                    | 1397             | 16397       |
+| 147700      | 160000               | 160000           | 16000                   | -27128           | 132872      |
+| 1426100     | 2560000              | 2560000          | 256000                  | -381571          | 2178429     |
+| 1788200     | 2560000              | 2560000          | 256000                  | 463842           | 3023842     |
+| 90422400    | 10000000             | 90000000         | 1000000                 | 2210649          | 92210649    |
+| 112400400   | 10000000             | 100000000        | 1000000                 | 407847           | 100407847   |
+| 222290500   | 10000000             | 100000000        | 1000000                 | -686149          | 99313851    |
 
 </div>
 
-### References
+### Referencias
 
-Rafiki’s telemetry solution is a combination of techniques described in various white papers on privacy-preserving data collection. More information can be found in the following papers:
+La solución de telemetría de Rafiki es una combinación de técnicas descritas en diversos documentos técnicos sobre la recopilación de datos con preservación de la privacidad. Se puede obtener más información en los siguientes documentos:
 
 - <LinkOut href='https://jwcn-eurasipjournals.springeropen.com/articles/10.1186/s13638-020-01675-8'>
-    Local differential privacy for human-centered computing
+    Privacidad diferencial local para la computación centrada en el ser humano
   </LinkOut>
 - <LinkOut href='https://www.microsoft.com/en-us/research/blog/collecting-telemetry-data-privately/'>
-    Collecting telemetry data privately
+    Recopilación de datos de telemetría de forma privada
   </LinkOut>
 - <LinkOut href='https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/42852.pdf'>
-    RAPPOR: Randomized aggregatable privacy-preserving ordinal response
+    RAPPOR: Respuesta ordinal aleatorizada, agregable y con preservación de la
+    privacidad
   </LinkOut>
 
-## Deploy custom telemetry
+## Implementación de telemetría personalizada
 
-Rafiki allows you to build your own telemetry solution based on the <LinkOut href="https://opentelemetry.io/">OpenTelemetry (OTEL)</LinkOut> standardized metrics format that Rafiki exposes.
+Rafiki le permite crear su propia solución de telemetría basada en el formato de métricas estandarizado de <LinkOut href="https://opentelemetry.io/">OpenTelemetry (OTEL)</LinkOut> que expone Rafiki.
 
-You must deploy your own OTEL Collector that acts as a sidecar container to Rafiki, then provide the OTEL Collector’s ingest endpoint so that Rafiki can begin sending metrics to the collector.
+Debe implementar su propio OTEL Collector que actúe como un contenedor sidecar para Rafiki, y luego proporcionar el punto final de ingesta del OTEL Collector para que Rafiki pueda comenzar a enviar métricas al recopilador.
 
-### Telemetry environment variables
+### Variables de entorno de telemetría
 
-#### Required
+#### Obligatorio
 
-When the `ENABLE_TELEMETRY` variable is `true`, the following are required.
-
-<div class="overflow-table">
-
-| Variable name   | Type   | Description                                                                                                                                                                                      |
-| --------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `INSTANCE_NAME` | String | Your Rafiki instance's name used to communicate for telemetry and auto-peering. For telemetry, it's used to distinguish between the different instances pushing data to the telemetry collector. |
-
-</div>
-
-#### Optional
+Cuando la variable `ENABLE_TELEMETRY` está establecida en `true`, se requiere lo siguiente.
 
 <div class="overflow-table">
 
-| Variable name                    | Type    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| -------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ENABLE_TELEMETRY`               | Boolean | Enables the telemetry service on Rafiki. Defaults to `true`.                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `LIVENET`                        | Boolean | Determines where to send metrics. Defaults to `false`, resulting in metrics being sent to the testnet OTEL Collector. <p>Set to `true` on production environments dealing with real money.</p>                                                                                                                                                                                                                                                                                                           |
-| `OPEN_TELEMETRY_COLLECTOR_URLS`  | String  | A CSV of URLs for OTEL Collectors (e.g., `http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317,http://happy-life-otel-collector:4317`).                                                                                                                                                                                                                                                                                                                                           |
-| `OPEN_TELEMETRY_EXPORT_INTERVAL` | Number  | Indicates, in milliseconds, how often the instrumented Rafiki instance should send metrics. Defaults to`15000`.                                                                                                                                                                                                                                                                                                                                                                                          |
-| `TELEMETRY_EXCHANGE_RATES_URL`   | String  | <p>Defines the endpoint Rafiki queries for exchange rates. Used as a fallback if/when [exchange rates](/integration/requirements/exchange-rates) aren’t provided.</p><p>When set, the response format of the external exchange rates API should be of type `rates`, as is expected by the rate service.</p><p>Defaults to `https://telemetry-exchange-rates.s3.amazonaws.com/exchange-rates-usd.json`, which points to a public S3 that has the previously mentioned required format, updated daily.</p> |
+| Nombre de la variable | Tipo   | Descripción                                                                                                                                                                                                                                   |
+| --------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `INSTANCE_NAME`       | Cadena | Nombre de la instancia de Rafiki utilizado para comunicarse con fines de telemetría e interconexión automática. Para la telemetría, se utiliza para distinguir entre las diferentes instancias que envían datos al recopilador de telemetría. |
 
 </div>
 
-### Example Docker OTEL Collector image and configuration
+#### Opcional
 
-Below is an example of a Docker OTEL Collector image and configuration that integrates with Rafiki and sends data to a Prometheus remote write endpoint.
+<div class="overflow-table">
 
-You can test the configuration in our [Local Playground](/integration/playground/overview) by providing the environment variables in the preceding table to `happy-life-backend` in the <LinkOut href="https://github.com/interledger/rafiki/blob/main/localenv/happy-life-bank/docker-compose.yml">`docker-compose.yml`</LinkOut> file.
+| Nombre de la variable            | Tipo     | Descripción                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| -------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ENABLE_TELEMETRY`               | Booleano | Habilita el servicio de telemetría en Rafiki. El valor predeterminado está establecido en `true`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `LIVENET`                        | Booleano | Determina el destino al que se enviarán las métricas. El valor predeterminado está establecido en `false`, lo que hace que las métricas se envíen al OTEL Collector de testnet. <p>Establezca este valor en `true` en entornos de producción que gestionan dinero real.</p>                                                                                                                                                                                                                                                                                                                                                              |
+| `OPEN_TELEMETRY_COLLECTOR_URLS`  | Cadena   | Un CSV de URL para OTEL Collectors (por ejemplo, `http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317,http://happy-life-otel-collector:4317`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `OPEN_TELEMETRY_EXPORT_INTERVAL` | Número   | Indica, en milisegundos, con qué frecuencia la instancia instrumentada de Rafiki debe enviar métricas. El valor predeterminado está establecido en `15000`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `TELEMETRY_EXCHANGE_RATES_URL`   | Cadena   | <p>Define el punto final que Rafiki consulta para obtener los tipos de cambio. Se utiliza como alternativa si/cuando no se proporcionan los [tipos de cambio](/integration/requirements/exchange-rates).</p><p>Cuando se establece, el formato de respuesta de la API externa de tipos de cambio debe ser del tipo `rates`, tal como lo espera el servicio de tipos de cambio.</p><p>Está establecido de forma predeterminada en `https://telemetry-exchange-rates.s3.amazonaws.com/exchange-rates-usd.json`, que apunta a un bucket público de S3 que tiene el formato requerido mencionado anteriormente, actualizado diariamente.</p> |
 
-#### Docker Compose config
+</div>
+
+### Ejemplo de imagen Docker de OTEL Collector y su configuración
+
+A continuación, se muestra un ejemplo de una imagen Docker de OTEL Collector y su configuración, que se integra con Rafiki y envía datos a un punto final de escritura remota de Prometheus.
+
+Puede probar la configuración en nuestro [Local Playground](/integration/playground/overview) agregando las variables de entorno indicadas en la tabla anterior a `happy-life-backend` en el archivo <LinkOut href="https://github.com/interledger/rafiki/blob/main/localenv/happy-life-bank/docker-compose.yml">`docker-compose.yml`</LinkOut>.
+
+#### Configuración de Docker Compose
 
 ```yaml
 # Serves as example for optional local collector configuration
@@ -213,9 +214,9 @@ happy-life-otel-collector:
 	- '13132:13133' # health_check extension
 ```
 
-#### OTEL Collector config
+#### Configuración de OTEL Collector
 
-Supplemental documentation is available in <LinkOut href="https://opentelemetry.io/docs/collector/configuration/">OTEL’s Collector Configuration</LinkOut> documentation.
+Encontrará documentación complementaria en la documentación de <LinkOut href="https://opentelemetry.io/docs/collector/configuration/">configuración de OTEL Collector</LinkOut>.
 
 ```yaml wrap
 # Serves as example for the configuration of a local OpenTelemetry Collector that sends metrics to an AWS Managed Prometheus Workspace

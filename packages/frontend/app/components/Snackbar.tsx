@@ -1,7 +1,7 @@
 import { Transition } from '@headlessui/react'
 import { cx } from 'class-variance-authority'
 import type { FC } from 'react'
-import { Fragment, useEffect } from 'react'
+import { Fragment, useEffect, useRef } from 'react'
 import { type Message } from '~/lib/message.server'
 import { CheckCircleSolid, XIcon, XCircleSolid } from './icons'
 
@@ -19,7 +19,30 @@ interface SnackbarProps {
   dismissAfter?: number
 }
 
-export const Snackbar: FC<SnackbarProps> = ({
+export const Snackbar: FC<SnackbarProps> = (props) => (
+  <>
+    <SnackbarAnnouncer message={props.message} show={props.show} />
+    <SnackbarToast {...props} />
+  </>
+)
+
+// Live regions are only reliably announced by screen readers when the browser
+// already has the node registered and then content its changes.
+const SnackbarAnnouncer: FC<Pick<SnackbarProps, 'message' | 'show'>> = ({
+  message,
+  show = false
+}) => (
+  <div
+    role={message?.type === 'error' ? 'alert' : 'status'}
+    aria-live={message?.type === 'error' ? 'assertive' : 'polite'}
+    aria-atomic='true'
+    className='sr-only'
+  >
+    {show ? message?.content : ''}
+  </div>
+)
+
+const SnackbarToast: FC<SnackbarProps> = ({
   id,
   message,
   onClose,
@@ -27,14 +50,19 @@ export const Snackbar: FC<SnackbarProps> = ({
   show = false,
   dismissAfter
 }) => {
-  useEffect(() => {
-    let timer: NodeJS.Timeout
+  const timerRef = useRef<ReturnType<typeof setTimeout>>()
+
+  const startTimer = () => {
     if (dismissAfter && show) {
-      timer = setTimeout(() => {
-        onClose()
-      }, dismissAfter)
+      timerRef.current = setTimeout(onClose, dismissAfter)
     }
-    return () => clearTimeout(timer)
+  }
+
+  const clearTimer = () => clearTimeout(timerRef.current)
+
+  useEffect(() => {
+    startTimer()
+    return clearTimer
   }, [dismissAfter, onClose, show])
 
   if (!message) return null
@@ -61,6 +89,10 @@ export const Snackbar: FC<SnackbarProps> = ({
           leaveTo='opacity-0 scale-95'
         >
           <div
+            onMouseEnter={clearTimer}
+            onMouseLeave={startTimer}
+            onFocus={clearTimer}
+            onBlur={startTimer}
             className={cx(
               'relative mx-4 flex w-full transform items-center justify-between space-x-3 overflow-hidden rounded-xl py-3 px-4 text-left align-middle shadow-lg transition-all sm:max-w-[22rem]',
               message.type === 'success' ? 'bg-green-500' : 'bg-white'
@@ -73,7 +105,9 @@ export const Snackbar: FC<SnackbarProps> = ({
               {message.type === 'error' && (
                 <XCircleSolid className='w-4 h-4 text-red-400 flex-shrink-0' />
               )}
+              {/* hidden here to avoid double narration (announced via SnackbarAnnouncer already) */}
               <p
+                aria-hidden='true'
                 className={cx(
                   'text',
                   message.type === 'success' ? 'text-white' : 'text-tealish'
@@ -83,6 +117,7 @@ export const Snackbar: FC<SnackbarProps> = ({
               </p>
             </div>
             <button
+              type='button'
               className={cx(
                 '-mr-2',
                 message.type === 'success'

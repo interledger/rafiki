@@ -1,9 +1,15 @@
-import { json, type LoaderFunctionArgs } from '@remix-run/node'
-import { useLoaderData, useNavigate } from '@remix-run/react'
+import {
+  json,
+  type LoaderFunctionArgs,
+  type MetaFunction
+} from '@remix-run/node'
+import { Link, useLoaderData, useNavigate } from '@remix-run/react'
 import { Box, Button, Flex, Heading, Table, Text } from '@radix-ui/themes'
 import { listAssets } from '~/lib/api/asset.server'
 import { paginationSchema } from '~/lib/validate.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
+
+export const meta: MetaFunction = () => [{ title: 'Assets - Rafiki Admin' }]
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
@@ -46,7 +52,9 @@ export default function AssetsPage() {
       <Flex direction='column' gap='4'>
         <Flex justify='between' align='start'>
           <Heading size='5'>Assets</Heading>
-          <Button onClick={() => navigate('/assets/create')}>Add asset</Button>
+          <Button asChild>
+            <Link to='/assets/create'>Add asset</Link>
+          </Button>
         </Flex>
 
         <Flex direction='column' gap='4'>
@@ -68,11 +76,20 @@ export default function AssetsPage() {
                   assets.edges.map((asset) => (
                     <Table.Row
                       key={asset.node.id}
+                      className='group'
                       style={{ cursor: 'pointer' }}
                       onClick={() => navigate(`/assets/${asset.node.id}`)}
                     >
                       <Table.Cell>
-                        <Text size='2'>{asset.node.id}</Text>
+                        <Text size='2' asChild>
+                          <Link
+                            to={`/assets/${asset.node.id}`}
+                            className='group-hover:underline'
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {asset.node.id}
+                          </Link>
+                        </Text>
                       </Table.Cell>
                       <Table.Cell>
                         <Text weight='medium'>{asset.node.code}</Text>

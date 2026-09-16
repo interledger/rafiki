@@ -138,7 +138,8 @@ export async function createWalletAddressService({
 export const FORBIDDEN_PATHS = [
   '/incoming-payments',
   '/outgoing-payments',
-  '/quotes'
+  '/quotes',
+  '/healthz'
 ]
 
 function isValidWalletAddressUrl(walletAddressUrl: string): boolean {

@@ -57,10 +57,10 @@ export const ApiCredentialsForm = ({
           <Button
             type='submit'
             color='red'
-            aria-label='Clear API credentials'
+            variant='outline'
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Submitting...' : 'Clear Credentials'}
+            {isSubmitting ? 'Clearing credentials...' : 'Clear Credentials'}
           </Button>
         </Form>
       ) : (
@@ -129,12 +129,8 @@ export const ApiCredentialsForm = ({
           </div>
           <input hidden readOnly name='intent' value='save' />
           <div className='flex justify-center'>
-            <Button
-              type='submit'
-              aria-label='Save API credentials'
-              disabled={!!tenantIdError || isSubmitting}
-            >
-              {isSubmitting ? 'Submitting...' : 'Save Credentials'}
+            <Button type='submit' disabled={!!tenantIdError || isSubmitting}>
+              {isSubmitting ? 'Saving credentials...' : 'Save Credentials'}
             </Button>
           </div>
         </Form>
