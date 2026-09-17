@@ -5,9 +5,6 @@ import type {
   UiNodeInputAttributes
 } from '@ory/client'
 
-// Replaces the two helpers we used from @ory/integrations/ui. That package is archived and
-// is a Next.js integration, so it pulled Next into this Remix app as a transitive dependency.
-
 const DEFAULT_GROUP: UiNodeGroupEnum = 'default'
 
 /**
