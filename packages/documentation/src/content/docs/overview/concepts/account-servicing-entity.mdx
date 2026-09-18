@@ -6,6 +6,12 @@ An account servicing entity (ASE) is a regulated entity that provides and mainta
 
 As regulated entities, ASEs are subject to the laws, rules, and regulations of their jurisdictions. As such, Rafiki should **not** be used in production environments by non-regulated entities.
 
+## Data retention
+
+All data stays with the ASE, minus optional [telemetry](/overview/concepts/telemetry) data that's aggregated and pushed to the Interledger Foundation. Rafiki holds no source-of-truth data, personal or otherwise.
+
+Rafiki imposes no retention schedule on payment or liquidity records itself. That data resides on infrastructure the ASE deploys and administers. As such, retention limitation is a policy the ASE applies at its own database and infrastructure layer.
+
 ## Responsibilities and obligations
 
 <img
@@ -22,10 +28,12 @@ ASEs follow anti-money laundering laws and regulations to detect and prevent mon
 
 KYC and KYB practices ensure ASEs verify the identities of their customers by collecting IDs and proof of address, verifying business registrations, checking against sanctions lists, and other processes.
 
-### User account management
+### User account and data management
 
-ASEs manage the creation, upkeep, and security of their customers' accounts and balances therein. Similarly, they're responsible for authenticating their customers and providing secure channels for them to interact with their accounts via mobile apps, websites, or other interfaces.
+ASEs manage the creation, storage, upkeep, and security of their customers' accounts and balances therein.
 
-### Ledger
+ASEs are also responsible for authenticating their customers and providing secure channels for them to interact with their accounts via mobile apps, websites, or other interfaces.
+
+### Ledgers
 
 As ASEs handle deposits and withdrawals through external payment methods (like bank transfers, credit cards, and other services) they must record all transactions and balance information in their ledger.
