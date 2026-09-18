@@ -20,7 +20,7 @@ Our goals are to:
 
 ### Privacy and optionality
 
-Privacy is a paramount concern for the Interledger Foundation. Rafiki’s telemetry feature is designed to provide valuable network insights without violating privacy or aiding malicious ASEs. Review the [Privacy](#privacy) section below for more information.
+Privacy is a paramount concern for the Interledger Foundation. Rafiki's telemetry feature is designed to provide valuable network insights without violating privacy or aiding malicious ASEs. Review the [Privacy](#privacy) section below for more information.
 
 The telemetry feature is currently enabled by default on test environments (environments not dealing with real money). When active, the feature transmits metrics to the testnet collector. You can opt in to sharing your metrics with a livenet collector when operating in a production livenet environment (with real money). Regardless of environment, you can also opt-out of telemetry completely. Review the [telemetry environment variables](#telemetry-environment-variables) for more information.
 
@@ -90,7 +90,9 @@ The current implementation only collects metrics on the SENDING side of a transa
 
 ## Privacy
 
-Rafiki telemetry is designed with a strong emphasis on privacy. The system anonymizes user data and refrains from collecting identifiable information. Since transactions can originate from any user to a Rafiki instance, the privacy measures are implemented directly at the source (each Rafiki instance). This means that at the individual level, the data is already anonymous as single Rafiki instances service transactions for multiple users.
+Rafiki telemetry is designed with a strong emphasis on privacy. It's enabled by default on test environments and is opt-in on production deployments.
+
+The system anonymizes user data and refrains from collecting identifiable information. Since transactions can originate from any user to a Rafiki instance, the privacy measures are implemented directly at the source (each Rafiki instance). This means that at the individual level, the data is already anonymous as single Rafiki instances service transactions for multiple users.
 
 ### Differential privacy and local differential privacy (LDP)
 

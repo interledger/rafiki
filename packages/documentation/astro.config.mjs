@@ -369,6 +369,10 @@ export default defineConfig({
               link: '/resources/webhook-event-types'
             },
             {
+              label: 'Further learning',
+              link: '/resources/further-learning'
+            },
+            {
               label: 'Get involved',
               link: '/resources/get-involved'
             }
