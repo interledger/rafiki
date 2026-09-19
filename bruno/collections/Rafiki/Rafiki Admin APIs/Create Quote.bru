@@ -57,12 +57,12 @@ script:pre-request {
   
   const randomInt = Math.floor(Math.random() * (1001));
   
-  const initialRequest = bru.getEnvVar("initialWalletAddressRequest");
+  const initialRequest = bru.getVar("initialWalletAddressRequest");
   const postRequestBody = {
       query: initialRequest.body.query,
       variables: {
         "input": {
-          "assetId": bru.getEnvVar("assetId"),
+          "assetId": bru.getVar("assetId") || bru.getEnvVar("assetId"),
           "url": "https://" + bru.getEnvVar("OpenPaymentsHost") + "/simon/" + randomInt,
           "publicName": "Simon"
       }
@@ -82,7 +82,7 @@ script:pre-request {
   
   const response = await fetch(`${initialRequest.url}`, postRequest);
   const body = await response.json();
-  bru.setEnvVar("secondWalletAddressId", body.data.createWalletAddress.walletAddress.id);
+  bru.setVar("secondWalletAddressId", body.data.createWalletAddress.walletAddress.id);
   
   scripts.addApiSignatureHeader();
 }
@@ -91,6 +91,6 @@ script:post-response {
   const body = res.getBody();
   
   if (body?.data) {
-    bru.setEnvVar("quoteId", body.data.createQuote.quote.id);
+    bru.setVar("quoteId", body.data.createQuote.quote.id);
   }
 }
