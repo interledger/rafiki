@@ -27,6 +27,8 @@ export async function isLoggedIn(
   }
 }
 
+// Called from every loader/action since Remix v2 has no route middleware. React Router v7
+// (which Remix v2 upgrades into) supports handling this globally on the root route.
 export async function checkAuthAndRedirect(
   url: string,
   cookieHeader?: string | null

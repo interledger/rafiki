@@ -5,10 +5,7 @@ import {
   type MetaFunction
 } from '@remix-run/node'
 import { uuidSchema } from '~/lib/validate.server'
-import {
-  isUiNodeInputAttributes,
-  filterNodesByGroups
-} from '@ory/integrations/ui'
+import { isUiNodeInputAttributes, formNodes } from '~/lib/kratos_ui'
 import type { UiContainer } from '@ory/client'
 import { useLoaderData } from '@remix-run/react'
 import { PageHeader } from '~/components'
@@ -59,14 +56,8 @@ export default function Settings() {
   const { responseData } = useLoaderData<typeof loader>()
   const uiContainer: UiContainer = responseData.ui
   const uiNodes = uiContainer.nodes
-  const profileNodes = filterNodesByGroups({
-    nodes: uiNodes,
-    groups: ['profile']
-  })
-  const passwordNodes = filterNodesByGroups({
-    nodes: uiNodes,
-    groups: ['password']
-  })
+  const profileNodes = formNodes(uiNodes, 'profile')
+  const passwordNodes = formNodes(uiNodes, 'password')
   const actionUrl = uiContainer.action
   type TextFieldType =
     | 'text'

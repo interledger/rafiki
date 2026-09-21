@@ -14,7 +14,7 @@ For an example of how to get these services up and running, see our [local envir
 
 Access to Rafiki Admin is restricted to ensure that only authorized users can register. This is achieved by using an invitation-only system, where new users are invited by an administrator. The registration flow is not public, so users cannot sign up on their own. Instead, administrators create accounts using the `invite-user` script.
 
-An administrator (someone with backend interface system access) can run the invite-user script in one of two ways, either from outside the container on the host machine where Docker is running: `docker exec -it <admin-container-name> npm run invite-user -- example@mail.com`, or directly inside the Rafiki Admin Docker container: `npm run invite-user -- example@mail.com`.
+An administrator (someone with backend interface system access) can run the invite-user script in one of two ways, either from outside the container on the host machine where Docker is running: `docker exec -it <admin-container-name> node --run invite-user -- example@mail.com`, or directly inside the Rafiki Admin Docker container: `node --run invite-user -- example@mail.com`.
 
 After running the invite-user script, it generates a recovery link that also serves as an invitation link. This link is output to the terminal, and the administrator can send it to the user. When the user opens the link in their browser, they are automatically logged in and taken to the account settings page, where they can set a new password. Afterward, they can log in normally via the Rafiki Admin URL.
 
@@ -22,7 +22,7 @@ After running the invite-user script, it generates a recovery link that also ser
 
 There is an automated account recovery flow which is triggered by clicking "Forgot password?" on the login page. This functionality requires an SMTP mail server for sending recovery links to users. Alternatively, an administrator may generate a recovery link using the same `invite-user` script.
 
-To remove a user, administrators can use the following script: `docker exec -it <admin-container-name> npm run delete-user -- example@mail.com`.
+To remove a user, administrators can use the following script: `docker exec -it <admin-container-name> node --run delete-user -- example@mail.com`.
 
 ### Why Ory Kratos?
 

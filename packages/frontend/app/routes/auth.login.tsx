@@ -5,7 +5,7 @@ import {
   redirectDocument
 } from '@remix-run/node'
 import { uuidSchema } from '~/lib/validate.server'
-import { isUiNodeInputAttributes } from '@ory/integrations/ui'
+import { isUiNodeInputAttributes } from '~/lib/kratos_ui'
 import type { UiContainer } from '@ory/client'
 import { useLoaderData } from '@remix-run/react'
 import { Button, Heading, Text, TextField } from '@radix-ui/themes'
