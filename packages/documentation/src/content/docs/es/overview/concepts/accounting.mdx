@@ -228,11 +228,11 @@ A single-phase transfer posts funds to accounts immediately when the transfer is
 <Mermaid
   graph={`sequenceDiagram
     participant R as Rafiki
-    participant ASE as Account servicing entity
+    participant FSP as Financial service provider
 
-    R->>ASE: Fires webhook event when incoming payment completes
-    ASE->>R: Withdraws payment amount from incoming payment liquidity account
-    ASE->>ASE: Credits the recipient's account by the payment amount
+    R->>FSP: Fires webhook event when incoming payment completes
+    FSP->>R: Withdraws payment amount from incoming payment liquidity account
+    FSP->>FSP: Credits the recipient's account by the payment amount
 
 `}
 />
@@ -248,10 +248,10 @@ A two-phase transfer moves funds in two stages.
 
 <Mermaid
   graph={`sequenceDiagram
-    Rafiki->>ASE: Fires webhook event when incoming payment completes
-    ASE->>Rafiki: Withdraws payment amount from incoming payment<br />liquidity account (reserve funds pending)
-    ASE->>ASE: Credits the recipient's account by the payment amount
-    ASE->>Rafiki: Resolve funds (post)
+    Rafiki->>FSP: Fires webhook event when incoming payment completes
+    FSP->>Rafiki: Withdraws payment amount from incoming payment<br />liquidity account (reserve funds pending)
+    FSP->>FSP: Credits the recipient's account by the payment amount
+    FSP->>Rafiki: Resolve funds (post)
     Rafiki->>Rafiki: Two-phase transfer complete
   `}
 />

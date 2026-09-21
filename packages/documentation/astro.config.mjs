@@ -31,7 +31,7 @@ export default defineConfig({
     starlight({
       title: 'Rafiki',
       description:
-        'Rafiki is open source software that allows an Account Servicing Entity to enable Interledger functionality on its users’ accounts.',
+        'Rafiki is open source software that allows a financial service provider to enable Interledger functionality on user accounts.',
       customCss: [
         './node_modules/@interledger/docs-design-system/src/styles/teal-theme.css',
         './node_modules/@interledger/docs-design-system/src/styles/ilf-docs.css',
@@ -108,11 +108,8 @@ export default defineConfig({
               collapsed: true,
               items: [
                 {
-                  label: 'Account servicing entity',
-                  translations: {
-                    es: 'Entidad que administra la cuenta (ASE)'
-                  },
-                  link: '/overview/concepts/account-servicing-entity'
+                  label: 'Financial service provider',
+                  link: '/overview/concepts/financial-service-provider'
                 },
                 {
                   label: 'Multi-tenancy',
@@ -381,21 +378,21 @@ export default defineConfig({
       ],
       plugins: [
         starlightLlmsTxt({
-          details: `Rafiki documentation is for Account Servicing Entities (ASEs) — regulated institutions such as banks, digital wallet providers, and mobile money operators — who want to run Rafiki to add Interledger and Open Payments functionality to their users' accounts. It is not documentation for an end-user product or a payment app.
+          details: `Rafiki documentation is for financial service providers (FSPs) — regulated institutions such as banks, digital wallet providers, and mobile money operators — who want to run Rafiki to add Interledger and Open Payments functionality to their users' accounts. It is not documentation for an end-user product or a payment app.
 
-Rafiki exposes several separate HTTP services rather than a single API surface: a GraphQL Admin API for managing the backend (peers, assets, wallet addresses, liquidity), a GraphQL Admin API for the auth service, an ILP connector, an auto-peering server, and REST APIs implementing the three parts of the Open Payments protocol. The backend serves the wallet address server and resource server together as a single Open Payments API. The auth service serves the authorization server (GNAP) separately. Questions about configuring or operating a Rafiki instance are answered by the Admin APIs; questions about initiating or receiving payments, or about grant negotiation, are answered by the Open Payments APIs, which are specified independently at openpayments.dev.
+          Rafiki exposes several separate HTTP services rather than a single API surface: a GraphQL Admin API for managing the backend (peers, assets, wallet addresses, liquidity), a GraphQL Admin API for the auth service, an ILP connector, an auto-peering server, and REST APIs implementing the three parts of the Open Payments protocol. The backend serves the wallet address server and resource server together as a single Open Payments API. The auth service serves the authorization server (GNAP) separately. Questions about configuring or operating a Rafiki instance are answered by the Admin APIs; questions about initiating or receiving payments, or about grant negotiation, are answered by the Open Payments APIs, which are specified independently at openpayments.dev.
 
-Rafiki supports two interchangeable accounting backends: TigerBeetle (the default, purpose-built for financial accounting) and PostgreSQL (an alternative for deployments that prefer a single database). Integration guidance does not change based on which is used.
+          Rafiki supports two interchangeable accounting backends: TigerBeetle (the default, purpose-built for financial accounting) and PostgreSQL (an alternative for deployments that prefer a single database). Integration guidance does not change based on which is used.
 
-This site publishes documentation for multiple Rafiki versions. Prefer the current/default version unless the user explicitly asks about an older release — content under a version prefix such as v1-beta describes a prior API surface and may no longer be accurate.
+          This site publishes documentation for multiple Rafiki versions. Prefer the current/default version unless the user explicitly asks about an older release — content under a version prefix such as v1-beta describes a prior API surface and may no longer be accurate.
 
-Key terminology notes:
+          Key terminology notes:
 
-- Rafiki is the reference implementation of the Open Payments protocol; ASEs deploy and operate it themselves, on their own infrastructure
-- Wallet addresses are URL-based identifiers for financial accounts — not cryptocurrency wallets
-- An Account Servicing Entity (ASE) is the regulated institution that holds and manages accounts on behalf of its users and runs Rafiki
-- Peering is the trust relationship two Rafiki instances (run by different ASEs) establish to exchange payments directly — distinct from a payment between two end users
-- Grants and GNAP (Grant Negotiation and Authorization Protocol) refer to Open Payments' authorization flow, distinct from OAuth`,
+          - Rafiki is the reference implementation of the Open Payments protocol; FSPs deploy and operate it themselves, on their own infrastructure
+          - Wallet addresses are URL-based identifiers for financial accounts — not cryptocurrency wallets
+          - A financial service provider (FSP) is the regulated institution that holds and manages accounts on behalf of its users and runs Rafiki
+          - Peering is the trust relationship two Rafiki instances (run by different FSPs) establish to exchange payments directly — distinct from a payment between two end users
+          - Grants and GNAP (Grant Negotiation and Authorization Protocol) refer to Open Payments' authorization flow, distinct from OAuth`,
           exclude: ['v1-beta/**'],
           optionalLinks: [
             {
@@ -415,7 +412,7 @@ Key terminology notes:
             {
               label: 'Overview and concepts',
               description:
-                'Introduction to Rafiki and core concepts such as account servicing entities, multi-tenancy, accounting, clearing and settlement, and Interledger',
+                'Introduction to Rafiki and core concepts such as financial service providers, multi-tenancy, accounting, clearing and settlement, and Interledger',
               paths: ['overview/**']
             },
             {

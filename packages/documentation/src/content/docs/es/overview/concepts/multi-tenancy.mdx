@@ -2,9 +2,9 @@
 title: Multitenencia
 ---
 
-La multitenencia es un enfoque arquitectónico que permite que una sola instancia de Rafiki preste servicio a múltiples entidades que administran cuentas (account servicing entities, ASE). Esto permite a las organizaciones compartir servicios de aplicaciones y recursos de bases de datos, al tiempo que mantienen el aislamiento y la seguridad de los datos. Al implementar la multitenencia, Rafiki simplifica el proceso de integración para las ASE, lo que hace que la incorporación sea más rápida y sencilla.
+La multitenencia es un enfoque arquitectónico que permite que una sola instancia de Rafiki preste servicio a múltiples entidades que administran cuentas (financial service providers, FSPs). Esto permite a las organizaciones compartir servicios de aplicaciones y recursos de bases de datos, al tiempo que mantienen el aislamiento y la seguridad de los datos. Al implementar la multitenencia, Rafiki simplifica el proceso de integración para las FSP, lo que hace que la incorporación sea más rápida y sencilla.
 
-En un entorno multicliente, la entidad responsable de administrar una instancia de Rafiki que presta servicio a múltiples ASE se denomina **operador**. Cada ASE que utiliza la instancia compartida de Rafiki se denomina **cliente**.
+En un entorno multicliente, la entidad responsable de administrar una instancia de Rafiki que presta servicio a múltiples FSP se denomina **operador**. Cada FSP que utiliza la instancia compartida de Rafiki se denomina **cliente**.
 
 ## Funciones y responsabilidades del operador y del cliente
 
@@ -28,7 +28,7 @@ Los clientes se agregan a través de la API de administración del backend o de 
 
 ### Cliente
 
-Un cliente es una ASE que se conecta a una instancia compartida de Rafiki en lugar de ejecutar su propio entorno. Para conectarse al entorno compartido, cada cliente debe instalar y ejecutar su propio servicio de integración. Los clientes son responsables de lo siguiente:
+Un cliente es una FSP que se conecta a una instancia compartida de Rafiki en lugar de ejecutar su propio entorno. Para conectarse al entorno compartido, cada cliente debe instalar y ejecutar su propio servicio de integración. Los clientes son responsables de lo siguiente:
 
 - Crear y administrar wallet addresses para sus usuarios (por ejemplo, sus consumidores).
 - Enviar y recibir pagos.
@@ -38,7 +38,7 @@ Un cliente es una ASE que se conecta a una instancia compartida de Rafiki en lug
 ## Beneficios de la multitenencia
 
 - El mantenimiento centralizado permite a los operadores realizar actualizaciones una sola vez para todos los clientes.
-- La incorporación mejorada permite que las nuevas ASE se conecten al entorno compartido sin tener que implementar su propia instancia de Rafiki.
+- La incorporación mejorada permite que las nuevas FSP se conecten al entorno compartido sin tener que implementar su propia instancia de Rafiki.
 - La administración simplificada ofrece a los operadores una forma rápida de agregar y eliminar clientes.
 
 ### Consideraciones clave

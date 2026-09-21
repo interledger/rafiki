@@ -237,10 +237,10 @@ If a non-200 status is returned, indicating an error, or the request times out, 
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
-      participant ASE as Account servicing entity
+      participant FSP as Financial service provider
 
-      R->>ASE: Fires incoming_payment.created event to webhook endpoint
-      ASE->>ASE: No action required
+      R->>FSP: Fires incoming_payment.created event to webhook endpoint
+      FSP->>FSP: No action required
 
 `}
 />
@@ -260,12 +260,12 @@ The incoming payment can either complete, receive a partial payment, or expire.
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
-      participant ASE as Account servicing entity
+      participant FSP as Financial service provider
 
-      R->>ASE: Fires incoming_payment.completed event to webhook endpoint,<br/>receivedAmount: $10
-      ASE->>R: Backend Admin API call: createIncomingPaymentWithdrawal
-      R-->>ASE: success: true
-      ASE->>ASE: Credit recipient's account with $10
+      R->>FSP: Fires incoming_payment.completed event to webhook endpoint,<br/>receivedAmount: $10
+      FSP->>R: Backend Admin API call: createIncomingPaymentWithdrawal
+      R-->>FSP: success: true
+      FSP->>FSP: Credit recipient's account with $10
 
 `}
 />
@@ -274,14 +274,14 @@ The incoming payment can either complete, receive a partial payment, or expire.
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
-      participant ASE as Account servicing entity
+      participant FSP as Financial service provider
 
-      R->>ASE: Fires incoming_payment.completed event to webhook endpoint,<br/>receivedAmount: $10
-      ASE->>R: Backend Admin API call: createIncomingPaymentWithdrawal
-      R-->>ASE: success: true
-      ASE->>ASE: Credit recipient's account with $10
-      ASE->>R: Backend Admin API call: postLiquidityWithdrawal
-      R-->>ASE: success: true
+      R->>FSP: Fires incoming_payment.completed event to webhook endpoint,<br/>receivedAmount: $10
+      FSP->>R: Backend Admin API call: createIncomingPaymentWithdrawal
+      R-->>FSP: success: true
+      FSP->>FSP: Credit recipient's account with $10
+      FSP->>R: Backend Admin API call: postLiquidityWithdrawal
+      R-->>FSP: success: true
       R->>R: Two-phase transfer completed
 
 `}
@@ -298,17 +298,17 @@ The `incoming_payment.completed` event indicates the payment completed either au
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
-      participant ASE as Account servicing entity
+      participant FSP as Financial service provider
 
-    R->>ASE: Fires incoming_payment.partial_payment_received event to webhook endpoint
-    ASE->>ASE: Reviews event data
+    R->>FSP: Fires incoming_payment.partial_payment_received event to webhook endpoint
+    FSP->>FSP: Reviews event data
     alt Accept partial payment
-      ASE->>R: Backend Admin API call: ConfirmPartialIncomingPayment
-      R-->>ASE: success: true
-      ASE->>ASE: Process payment (e.g. credit receiver)
+      FSP->>R: Backend Admin API call: ConfirmPartialIncomingPayment
+      R-->>FSP: success: true
+      FSP->>FSP: Process payment (e.g. credit receiver)
     else Reject partial payment
-      ASE->>R: Backend Admin API call: RejectPartialIncomingPayment
-      R-->>ASE: success: true
+      FSP->>R: Backend Admin API call: RejectPartialIncomingPayment
+      R-->>FSP: success: true
     end
 
 `}
@@ -316,7 +316,7 @@ The `incoming_payment.completed` event indicates the payment completed either au
 
 </details>
 
-The `incoming_payment.partial_payment_received` event indicates an existing incoming payment has received a partial payment. The event should be reviewed for data from the sender as the event could contain details that the ASE should handle before approving the partial payment. The ASE can also choose to reject the partial payment. A reject reason will be transmitted back to the sender in the `outgoing_payment.failed` webhook.
+The `incoming_payment.partial_payment_received` event indicates an existing incoming payment has received a partial payment. The event should be reviewed for data from the sender as the event could contain details that the FSP should handle before approving the partial payment. The FSP can also choose to reject the partial payment. A reject reason will be transmitted back to the sender in the `outgoing_payment.failed` webhook.
 
 An example use case for this event is approving a specific payment after an AML/KYC check is successful. Partial payment decisioning is disabled by default and can be enabled through the `ENABLE_PARTIAL_PAYMENT_DECISION` environment variable.
 
@@ -324,9 +324,9 @@ An example use case for this event is approving a specific payment after an AML/
 
 | Environment variables                       | Type      | Description                                                                                                                                                                                                                                                                      |
 | ------------------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ENABLE_PARTIAL_PAYMENT_DECISION`           | `backend` | Enables an ASE to act upon (approve/reject) a partial payment. The default is `false`.                                                                                                                                                                                           |
+| `ENABLE_PARTIAL_PAYMENT_DECISION`           | `backend` | Enables an FSP to act upon (approve/reject) a partial payment. The default is `false`.                                                                                                                                                                                           |
 | `DB_ENCRYPTION_SECRET`                      | `backend` | A base64-encoded secret used to encrypt/decrypt transmitted payment data (`dataToTransmit`) stored on incoming/outgoing payment records and events.                                                                                                                              |
-| `PARTIAL_PAYMENT_DECISION_MAX_WAIT_MS`      | `backend` | The maximum time, in milliseconds, Rafiki will wait for an ASE to confirm or reject a partial incoming payment. Rafiki will reject the payment if a response isn't received in time. Only used if this value is less than the `PARTIAL_PAYMENT_DECISION_SAFETY_MARGIN_MS` value. |
+| `PARTIAL_PAYMENT_DECISION_MAX_WAIT_MS`      | `backend` | The maximum time, in milliseconds, Rafiki will wait for an FSP to confirm or reject a partial incoming payment. Rafiki will reject the payment if a response isn't received in time. Only used if this value is less than the `PARTIAL_PAYMENT_DECISION_SAFETY_MARGIN_MS` value. |
 | `PARTIAL_PAYMENT_DECISION_SAFETY_MARGIN_MS` | `backend` | The time, in milliseconds, Rafiki is guaranteed to have to respond before an ILP packet expires.                                                                                                                                                                                 |
 
 </div>
@@ -341,12 +341,12 @@ An example use case for this event is approving a specific payment after an AML/
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
-      participant ASE as Account servicing entity
+      participant FSP as Financial service provider
 
-      R->>ASE: Fires incoming_payment.expired event to webhook endpoint,<br/>receivedAmount: $2.55
-      ASE->>R: Backend Admin API call: createIncomingPaymentWithdrawal
-      R-->>ASE: success: true
-      ASE->>ASE: Credit recipient's account with $2.55
+      R->>FSP: Fires incoming_payment.expired event to webhook endpoint,<br/>receivedAmount: $2.55
+      FSP->>R: Backend Admin API call: createIncomingPaymentWithdrawal
+      R-->>FSP: success: true
+      FSP->>FSP: Credit recipient's account with $2.55
 
 `}
 />
@@ -383,17 +383,17 @@ An outgoing payment for \$12 was created.
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
-      participant ASE as Account servicing entity
+      participant FSP as Financial service provider
 
-      R->>ASE: Fires outgoing_payment.created event to webhook endpoint,<br/> debitAmount: $12
-      ASE->>ASE: Checks that sender's account has sufficient funds
+      R->>FSP: Fires outgoing_payment.created event to webhook endpoint,<br/> debitAmount: $12
+      FSP->>FSP: Checks that sender's account has sufficient funds
       alt Account has sufficient funds
-        ASE->>ASE: Put hold of $12 on sender's account
-        ASE->>R: Backend Admin API call: depositOutgoingPaymentLiquidity
-        R-->>ASE: success: true
+        FSP->>FSP: Put hold of $12 on sender's account
+        FSP->>R: Backend Admin API call: depositOutgoingPaymentLiquidity
+        R-->>FSP: success: true
       else Account has insufficient funds
-        ASE->>R: Backend Admin API call: cancelOutgoingPayment,<br/>Reason: insufficient funds
-        R-->>ASE: success: true
+        FSP->>R: Backend Admin API call: cancelOutgoingPayment,<br/>Reason: insufficient funds
+        R-->>FSP: success: true
       end
 
 `}
@@ -414,12 +414,12 @@ If the sender has insufficient funds or if the payment should otherwise not be f
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
-      participant ASE as Account servicing entity
+      participant FSP as Financial service provider
 
-      R->>ASE: Fires outgoing_payment.completed event to webhook endpoint,<br/>debitAmount: $12, sentAmount: $11.50
-      ASE->>R: Backend Admin API call: createOutgoingPaymentWithdrawal
-      R-->>ASE: success: true
-      ASE->>ASE: Remove hold and deduct $12 from sender's account,<br/>credit your account with $0.50
+      R->>FSP: Fires outgoing_payment.completed event to webhook endpoint,<br/>debitAmount: $12, sentAmount: $11.50
+      FSP->>R: Backend Admin API call: createOutgoingPaymentWithdrawal
+      R-->>FSP: success: true
+      FSP->>FSP: Remove hold and deduct $12 from sender's account,<br/>credit your account with $0.50
 
 `}
 />
@@ -428,14 +428,14 @@ If the sender has insufficient funds or if the payment should otherwise not be f
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
-      participant ASE as Account servicing entity
+      participant FSP as Financial service provider
 
-      R->>ASE: Fires outgoing_payment.completed event to webhook endpoint,<br/>debitAmount: $12, sentAmount: $11.50
-      ASE->>R: Backend Admin API call: createOutgoingPaymentWithdrawal
-      R-->>ASE: success: true
-      ASE->>ASE: Remove hold and deduct $12 from sender's account,<br/>credit your account with $0.50
-      ASE->>R: Backend Admin API call: postLiquidityWithdrawal
-      R-->>ASE: success: true
+      R->>FSP: Fires outgoing_payment.completed event to webhook endpoint,<br/>debitAmount: $12, sentAmount: $11.50
+      FSP->>R: Backend Admin API call: createOutgoingPaymentWithdrawal
+      R-->>FSP: success: true
+      FSP->>FSP: Remove hold and deduct $12 from sender's account,<br/>credit your account with $0.50
+      FSP->>R: Backend Admin API call: postLiquidityWithdrawal
+      R-->>FSP: success: true
       R->>R: Two-phase transfer complete
 
 `}
@@ -457,12 +457,12 @@ An outgoing payment for \$12 failed. \$8 was sent successfully.
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
-      participant ASE as Account servicing entity
+      participant FSP as Financial service provider
 
-      R->>ASE: Fires outgoing_payment.failed event to webhook endpoint,<br/>debitAmount: $12, sentAmount: $8
-      ASE->>R: Backend Admin API call: createOutgoingPaymentWithdrawal
-      R-->>ASE: success: true
-      ASE->>ASE: Remove hold and deduct $8 from the sender's account
+      R->>FSP: Fires outgoing_payment.failed event to webhook endpoint,<br/>debitAmount: $12, sentAmount: $8
+      FSP->>R: Backend Admin API call: createOutgoingPaymentWithdrawal
+      R-->>FSP: success: true
+      FSP->>FSP: Remove hold and deduct $8 from the sender's account
 
 `}
 />
@@ -492,11 +492,11 @@ The wallet address, `https://wallet.example.com/carla_garcia` was requested but 
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
-      participant ASE as Account servicing entity
+      participant FSP as Financial service provider
 
-      R->>ASE: Fires wallet_address.not_found event to webhook endpoint,<br/>wallet address: https://wallet.example.com/carla_garcia
-      ASE->>R: Backend Admin API call: createWalletAddress,<br/>url: https://wallet.example.com/carla_garcia,<br/>public name: Carla Eva Garcia
-      R-->>ASE: success: true
+      R->>FSP: Fires wallet_address.not_found event to webhook endpoint,<br/>wallet address: https://wallet.example.com/carla_garcia
+      FSP->>R: Backend Admin API call: createWalletAddress,<br/>url: https://wallet.example.com/carla_garcia,<br/>public name: Carla Eva Garcia
+      R-->>FSP: success: true
 
 `}
 />
@@ -525,12 +525,12 @@ A wallet address received a Web Monetization payment of \$0.33
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
-      participant ASE as Account servicing entity
+      participant FSP as Financial service provider
 
-      R->>ASE: Fires wallet_address.web_monetization event to webhook endpoint,<br/>receivedAmount: $0.33
-      ASE->>R: Backend Admin API call: createWalletAddressWithdrawal
-      R-->>ASE: success: true
-      ASE->>ASE: Credit recipient's account with $0.33
+      R->>FSP: Fires wallet_address.web_monetization event to webhook endpoint,<br/>receivedAmount: $0.33
+      FSP->>R: Backend Admin API call: createWalletAddressWithdrawal
+      R-->>FSP: success: true
+      FSP->>FSP: Credit recipient's account with $0.33
 
 `}
 />
@@ -559,11 +559,11 @@ Your asset liquidity for USD (asset scale: 2) drops below \$100.00.
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
-      participant ASE as Account servicing entity
+      participant FSP as Financial service provider
 
-      R->>ASE: Fires asset.liquidity_low event to webhook endpoint,<br/>asset: USD (scale: 2, id: "abc")
-      ASE->>R: Backend Admin API call: depositAssetLiquidity
-      R-->>ASE: success: true
+      R->>FSP: Fires asset.liquidity_low event to webhook endpoint,<br/>asset: USD (scale: 2, id: "abc")
+      FSP->>R: Backend Admin API call: depositAssetLiquidity
+      R-->>FSP: success: true
 
 `}
 />
@@ -592,11 +592,11 @@ The liquidity for your peer, Happy Life Bank, drops below \$100.00 USD.
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
-      participant ASE as Account servicing entity
+      participant FSP as Financial service provider
 
-      R->>ASE: Fires peer.liquidity_low event to webhook endpoint,<br/>peer: Happy Life Bank (asset: "USD", scale: 2, id: "abc")
-      ASE->>R: Backend Admin API call: depositPeerLiquidity
-      R-->>ASE: success: true
+      R->>FSP: Fires peer.liquidity_low event to webhook endpoint,<br/>peer: Happy Life Bank (asset: "USD", scale: 2, id: "abc")
+      FSP->>R: Backend Admin API call: depositPeerLiquidity
+      R-->>FSP: success: true
 
 `}
 />

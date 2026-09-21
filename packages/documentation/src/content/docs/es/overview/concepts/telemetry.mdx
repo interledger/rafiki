@@ -20,7 +20,7 @@ Nuestros objetivos son:
 
 ### Privacidad y opcionalidad
 
-La privacidad es una preocupación primordial para Interledger Foundation. La función de telemetría de Rafiki está diseñada para proporcionar información valiosa de la red sin vulnerar la privacidad ni facilitar actividades maliciosas por parte de las ASE. Consulte la sección [Privacidad](#privacidad) a continuación para obtener más información.
+La privacidad es una preocupación primordial para Interledger Foundation. La función de telemetría de Rafiki está diseñada para proporcionar información valiosa de la red sin vulnerar la privacidad ni facilitar actividades maliciosas por parte de las FSP (financial service provider). Consulte la sección [Privacidad](#privacidad) a continuación para obtener más información.
 
 Actualmente, la función de telemetría está habilitada de forma predeterminada en los entornos de prueba (entornos que no manejan dinero real). Cuando está activa, la función transmite métricas al recopilador de testnet. Puede optar por compartir sus métricas con un recopilador de livenet cuando opere en un entorno de livenet de producción (con dinero real). Independientemente del entorno, también puede optar por desactivar la telemetría por completo. Revise las [variables de entorno de telemetría](#variables-de-entorno-de-telemetría) para obtener más información.
 
@@ -63,10 +63,10 @@ Interledger Foundation inicialmente utilizó Grafana alojado en Amazon, pero no 
 Para fines de telemetría, todos los importes recopilados por Rafiki instrumentado deben convertirse a una moneda base.
 
 :::caution[Justificación de privacidad]
-Si solo dos ASE están interconectadas mediante una moneda distinta del USD y recopilamos datos en esa moneda, sería fácil determinar los volúmenes transferidos entre esas dos ASE. Para mantener la privacidad, convertimos todos los importes a una moneda base.
+Si solo dos FSP están interconectadas mediante una moneda distinta del USD y recopilamos datos en esa moneda, sería fácil determinar los volúmenes transferidos entre esas dos FSP. Para mantener la privacidad, convertimos todos los importes a una moneda base.
 :::
 
-Si una ASE no proporciona el tipo de cambio necesario para una transacción, la solución de telemetría igualmente convierte el importe a la moneda base utilizando tipos de cambio externos. Una función Lambda en AWS recupera y almacena los tipos de cambio externos. La función se activa mediante un evento diario de `CloudWatch` y almacena los tipos de cambio en un bucket público de S3. El bucket de S3 no tiene control de versiones, y los datos se sobrescriben diariamente para garantizar aún más la privacidad.
+Si una FSP no proporciona el tipo de cambio necesario para una transacción, la solución de telemetría igualmente convierte el importe a la moneda base utilizando tipos de cambio externos. Una función Lambda en AWS recupera y almacena los tipos de cambio externos. La función se activa mediante un evento diario de `CloudWatch` y almacena los tipos de cambio en un bucket público de S3. El bucket de S3 no tiene control de versiones, y los datos se sobrescriben diariamente para garantizar aún más la privacidad.
 
 ### Instrumentación
 
@@ -118,7 +118,7 @@ El ruido, seleccionado de la distribución de Laplace, se genera utilizando este
 
 ### Conversión de moneda
 
-Otro factor que oculta los datos confidenciales es la conversión de moneda. En las transacciones entre distintas monedas, usted, como ASE, proporciona los tipos de cambio internamente. De este modo, los tipos de cambio no se pueden correlacionar con una transacción individual. Si no proporciona o no puede proporcionar los tipos de cambio necesarios, se utiliza una API externa para los tipos de cambio. En este caso, los tipos de cambio obtenidos se sobrescriben con frecuencia, sin control de versiones ni acceso al historial. Esto introduce una capa adicional de ruido y protege aún más la privacidad de las transacciones.
+Otro factor que oculta los datos confidenciales es la conversión de moneda. En las transacciones entre distintas monedas, usted, como FSP, proporciona los tipos de cambio internamente. De este modo, los tipos de cambio no se pueden correlacionar con una transacción individual. Si no proporciona o no puede proporcionar los tipos de cambio necesarios, se utiliza una API externa para los tipos de cambio. En este caso, los tipos de cambio obtenidos se sobrescriben con frecuencia, sin control de versiones ni acceso al historial. Esto introduce una capa adicional de ruido y protege aún más la privacidad de las transacciones.
 
 ### Valores experimentales de las transacciones al utilizar el algoritmo
 

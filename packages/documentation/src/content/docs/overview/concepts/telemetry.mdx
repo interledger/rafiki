@@ -20,7 +20,7 @@ Our goals are to:
 
 ### Privacy and optionality
 
-Privacy is a paramount concern for the Interledger Foundation. Rafiki's telemetry feature is designed to provide valuable network insights without violating privacy or aiding malicious ASEs. Review the [Privacy](#privacy) section below for more information.
+Privacy is a paramount concern for the Interledger Foundation. Rafiki's telemetry feature is designed to provide valuable network insights without violating privacy or aiding malicious financial service providers (FSPs). Review the [Privacy](#privacy) section below for more information.
 
 The telemetry feature is currently enabled by default on test environments (environments not dealing with real money). When active, the feature transmits metrics to the testnet collector. You can opt in to sharing your metrics with a livenet collector when operating in a production livenet environment (with real money). Regardless of environment, you can also opt-out of telemetry completely. Review the [telemetry environment variables](#telemetry-environment-variables) for more information.
 
@@ -63,10 +63,10 @@ The Interledger Foundation initially used Amazon-hosted Grafana which didn't mee
 For telemetry purposes, all amounts collected by instrumented Rafiki should be converted to a base currency.
 
 :::caution[Privacy reasoning]
-If only two ASEs are peered over a non-USD currency and we collect data in that currency, it would be easy to determine the volumes moved between those two ASEs. To maintain privacy, we convert all amounts to a base currency.
+If only two FSPs are peered over a non-USD currency and we collect data in that currency, it would be easy to determine the volumes moved between those two FSPs. To maintain privacy, we convert all amounts to a base currency.
 :::
 
-If an ASE doesn't provide the necessary exchange rate for a transaction, the telemetry solution still converts the amount to the base currency using external exchange rates. A Lambda function on AWS retrieves and stores the external exchange rates. The function is triggered by a daily `CloudWatch` event and stores the rates in a public S3 bucket. The S3 bucket doesn't have versioning, and the data is overwritten daily to further ensure privacy.
+If an FSP doesn't provide the necessary exchange rate for a transaction, the telemetry solution still converts the amount to the base currency using external exchange rates. A Lambda function on AWS retrieves and stores the external exchange rates. The function is triggered by a daily `CloudWatch` event and stores the rates in a public S3 bucket. The S3 bucket doesn't have versioning, and the data is overwritten daily to further ensure privacy.
 
 ### Instrumentation
 
@@ -120,7 +120,7 @@ The noise, selected from the Laplacian distribution, is then generated using thi
 
 ### Currency conversion
 
-Another factor that obscures sensitive data is currency conversion. In cross-currency transactions, exchange rates are provided by you, as the ASE, internally. As such, the exchange rates can't be correlated to an individual transaction. If you don't or can't provide the necessary rates, an external API for exchange rates is used. The obtained exchange rates are overwritten frequently in this case, with no versioning or history access. This introduces an additional layer of noise and further protects the privacy of the transactions.
+Another factor that obscures sensitive data is currency conversion. In cross-currency transactions, exchange rates are provided by you, as the FSP, internally. As such, the exchange rates can't be correlated to an individual transaction. If you don't or can't provide the necessary rates, an external API for exchange rates is used. The obtained exchange rates are overwritten frequently in this case, with no versioning or history access. This introduces an additional layer of noise and further protects the privacy of the transactions.
 
 ### Experimental transaction values when using the algorithm
 

@@ -1,0 +1,41 @@
+---
+title: Financial service provider (FSP)
+---
+
+A financial service provider (FSP) is a regulated entity that provides and maintains payment accounts for its customers. Examples of FSPs include banks, digital wallet providers, and mobile money providers.
+
+As regulated entities, FSPs are subject to the laws, rules, and regulations of their jurisdictions. As such, Rafiki should **not** be used in production environments by non-regulated entities.
+
+## Data retention
+
+All data stays with the FSP, minus optional [telemetry](/overview/concepts/telemetry) data that's aggregated and pushed to the Interledger Foundation. Rafiki holds no source-of-truth data, personal or otherwise.
+
+Rafiki imposes no retention schedule on payment or liquidity records itself. That data resides on infrastructure the FSP deploys and administers. As such, retention limitation is a policy the FSP applies at its own database and infrastructure layer.
+
+## Responsibilities and obligations
+
+<img
+  src='/img/fsp-responsibilites.png'
+  alt='Image with four panels that summarize the four main responsibilities of FSPs'
+  style='max-width:600px'
+/>
+
+### AML (Anti-money laundering)
+
+FSPs follow anti-money laundering laws and regulations to detect and prevent money laundering and other suspicious financial activities.
+
+### KYC/KYB (Know your customer/business)
+
+KYC and KYB practices ensure FSPs verify the identities of their customers by collecting IDs and proof of address, verifying business registrations, checking against sanctions lists, and other processes.
+
+### User account and data management
+
+FSPs are responsible for:
+
+- Managing the creation, storage, upkeep, and security of their customers' accounts and balances therein.
+- Authenticating their customers and providing secure channels for them to interact with their accounts via mobile apps, websites, or other interfaces.
+- Storing and maintaining their own wallet address-to-customer account mapping. Rafiki hosts [wallet addresses](/integration/requirements/wallet-addresses) for account discoverability but doesn't store any link between an address and a customer account.
+
+### Ledgers
+
+As FSPs handle deposits and withdrawals through external payment methods (like bank transfers, credit cards, and other services) they must record all transactions and balance information in their ledger.

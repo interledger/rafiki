@@ -2,9 +2,9 @@
 title: Multi-tenancy
 ---
 
-Multi-tenancy is an architectural approach that enables a single Rafiki instance to service multiple account servicing entities (ASEs). This allows organizations to share application services and database resources while maintaining data isolation and security. By implementing multi-tenancy, Rafiki simplifies the integration process for ASEs, making onboarding faster and easier.
+Multi-tenancy is an architectural approach that enables a single Rafiki instance to service multiple financial service providers (FSPs). This allows organizations to share application services and database resources while maintaining data isolation and security. By implementing multi-tenancy, Rafiki simplifies the integration process for FSPs, making onboarding faster and easier.
 
-In a multi-tenant environment, the entity responsible for managing a Rafiki instance that serves multiple ASEs is called an **operator**. Each ASE that uses the shared Rafiki instance is called a **tenant**.
+In a multi-tenant environment, the entity responsible for managing a Rafiki instance that serves multiple FSPs is called an **operator**. Each FSP that uses the shared Rafiki instance is called a **tenant**.
 
 ## Operator and tenant roles and responsibilities
 
@@ -28,7 +28,7 @@ Tenants are added through the Backend Admin API or the [Rafiki Admin application
 
 ### Tenant
 
-A tenant is an ASE that connects to a shared Rafiki instance rather than running its own environment. To connect to the shared environment, each tenant must install and run their own integration service. Tenants are responsible for the following:
+A tenant is an FSP that connects to a shared Rafiki instance rather than running its own environment. To connect to the shared environment, each tenant must install and run their own integration service. Tenants are responsible for the following:
 
 - Creating and managing wallet addresses for their users (for example, their customers)
 - Sending and receiving payments
@@ -38,7 +38,7 @@ A tenant is an ASE that connects to a shared Rafiki instance rather than running
 ## Benefits of multi-tenancy
 
 - Centralized maintenance lets operators perform updates once for all tenants.
-- Enhanced onboarding allows new ASEs to connect to the shared environment without deploying their own Rafiki instance.
+- Enhanced onboarding allows new FSPs to connect to the shared environment without deploying their own Rafiki instance.
 - Simplified administration provides operators with a quick way to add and remove tenants.
 
 ### Key considerations
