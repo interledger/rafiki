@@ -202,7 +202,7 @@ cloud-nine-mock-ase-1  | http://localhost:3010/?tenantId=438fa74a-fa7d-4317-9ced
 Once authentication is enabled, create a user account by running the `invite-user` script from your terminal:
 
 ```sh
-docker exec -it <admin-container-name> npm run invite-user -- example@mail.com
+docker exec -it <admin-container-name> node --run invite-user -- example@mail.com
 ```
 
 This generates a one-time invitation link. Open it in your browser to set a password and log in. See the [Rafiki Admin user guide](https://rafiki.dev/admin/admin-user-guide#invite-a-user) for more details.

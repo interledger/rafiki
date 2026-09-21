@@ -62,11 +62,11 @@ Access to Rafiki Admin uses an invitation-only system to ensure that only author
 An administrator (someone with backend interface system access) can run the `invite-user` script in one of two ways: from outside the container on the host machine where Docker is running or directly inside the Rafiki Admin Docker container.
 
 ```nginx title="Outside container on host machine"
-docker exec -it <admin-container-name> npm run invite-user -- example@mail.com
+docker exec -it <admin-container-name> node --run invite-user -- example@mail.com
 ```
 
 ```nginx title="Inside Rafiki Admin Docker container"
-npm run invite-user -- example@mail.com
+node --run invite-user -- example@mail.com
 ```
 
 After running the `invite-user` script, the script generates a recovery link that also serves as an invitation link. This link is output to the terminal, and the administrator can send it to the user. When the user opens the link in their browser, they're automatically logged in and taken to the account settings page where they can set a new password. Afterward, they can log in normally via the Rafiki Admin URL.
@@ -97,7 +97,7 @@ Rafiki Admin provides an automated account recovery flow which requires an SMTP 
 To remove a user, administrators can run the following script in a terminal window:
 
 ```nginx
-docker exec -it <admin-container-name> npm run delete-user -- example@mail.com.
+docker exec -it <admin-container-name> node --run delete-user -- example@mail.com.
 ```
 
 ### Why Ory Kratos?
