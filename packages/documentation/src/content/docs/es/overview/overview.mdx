@@ -7,7 +7,7 @@ import { Card, CardGrid } from '@astrojs/starlight/components'
 
 Implementar y mantener la pila del [Protocolo Interledger (ILP)](#interledger) por cuenta propia puede resultar difícil y llevar mucho tiempo. Rafiki facilita la integración con la red Interledger sin necesidad de desarrollar y mantener sus propias implementaciones.
 
-Rafiki es un software de código abierto mantenido por un equipo especializado y disponible de forma gratuita para cualquier <Tooltip content="Una entidad regulada que proporciona y mantiene cuentas de pago para sus clientes.">[entidad que administra cuentas](/es/overview/concepts/account-servicing-entity)</Tooltip> (account servicing entity, ASE) con licencia que desee implementar Interledger y [Open Payments](#open-payments) en las cuentas de sus usuarios.
+Rafiki es un software de código abierto mantenido por un equipo especializado y disponible de forma gratuita para cualquier [entidad que administra cuentas](/es/overview/concepts/financial-service-provider) (financial service provider, FSP) con licencia que desee implementar Interledger y [Open Payments](#open-payments) en las cuentas de sus usuarios.
 
 :::tip[Pruébelo]
 El [Local Playground](/integration/playground/overview) le permite probar Rafiki ejecutando dos entidades que administran cuentas simuladas que se interconectan automáticamente entre sí.
@@ -15,9 +15,9 @@ El [Local Playground](/integration/playground/overview) le permite probar Rafiki
 
 ## Casos de uso
 
-### Pagos entre pares entre ASE
+### Pagos entre pares entre FSP
 
-En el contexto de Rafiki, un par es otra ASE con la que se realizan transacciones. Para establecer una relación de interconexión, es necesario que ambos acuerden la moneda en la que realizarán las transacciones, un mecanismo y una frecuencia de liquidación, así como otros detalles. Interledger permite la interoperabilidad entre diferentes sistemas de pago y monedas, lo que facilita que los pares realicen transacciones directamente entre sí.
+En el contexto de Rafiki, un par es otra FSP con la que se realizan transacciones. Para establecer una relación de interconexión, es necesario que ambos acuerden la moneda en la que realizarán las transacciones, un mecanismo y una frecuencia de liquidación, así como otros detalles. Interledger permite la interoperabilidad entre diferentes sistemas de pago y monedas, lo que facilita que los pares realicen transacciones directamente entre sí.
 
 ### Pagos de comercio electrónico
 

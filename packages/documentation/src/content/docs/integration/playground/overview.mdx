@@ -9,7 +9,7 @@ import {
   LargeImg
 } from '@interledger/docs-design-system'
 
-The Local Playground provides a suite of packages that, together, mock an account servicing entity that has deployed Rafiki. It exposes an <LinkOut href='https://interledger.org/developers/rfcs/simple-payment-setup-protocol/'>SPSP</LinkOut> endpoint, the [Open Payments APIs](/overview/concepts/open-payments) with its required <LinkOut href='https://datatracker.ietf.org/doc/draft-ietf-gnap-core-protocol/'>GNAP</LinkOut> auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and the Rafiki Admin app to view and manage each Rafiki instance.
+The Local Playground provides a suite of packages that, together, mock a financial service provider (FSP) that has deployed Rafiki. It exposes an <LinkOut href='https://interledger.org/developers/rfcs/simple-payment-setup-protocol/'>SPSP</LinkOut> endpoint, the [Open Payments APIs](/overview/concepts/open-payments) with its required <LinkOut href='https://datatracker.ietf.org/doc/draft-ietf-gnap-core-protocol/'>GNAP</LinkOut> auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and the Rafiki Admin app to view and manage each Rafiki instance.
 
 This suite of packages includes:
 
@@ -19,7 +19,7 @@ This suite of packages includes:
 | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | [`backend`](/integration/deployment/services/backend-service)   | <ul><li>SPSP</li><li>Open Payments APIs</li><li>GraphQL Admin APIs</li><li>STREAM endpoint</li></ul> |
 | [`auth`](/integration/deployment/services/auth-service)         | GNAP auth server                                                                                     |
-| `mock-account-servicing-entity`                                 | mocks an account servicing entity                                                                    |
+| `mock-account-servicing-entity`                                 | mocks an FSP                                                                                         |
 | [`frontend`](/integration/deployment/services/frontend-service) | Remix app to expose a UI for Rafiki admin management via interaction with the Backend Admin APIs     |
 
 </div>
@@ -32,13 +32,13 @@ These packages depend on the following databases:
   style='max-width:300px'
 />
 
-The Local Playground comes with containerized versions of the Rafiki packages and three pre-configured docker-compose files. <LinkOut href="https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml">Cloud Nine Wallet</LinkOut> and <LinkOut href='https://github.com/interledger/rafiki/blob/main/localenv/happy-life-bank/docker-compose.yml'>Happy Life Bank</LinkOut> will start two mock account servicing entities with their respective Rafiki `backend` and `auth` servers. They automatically peer, and two to three user accounts are created on both of them. The third file is for <LinkOut href="https://github.com/interledger/rafiki/blob/main/localenv/cloud-ten-wallet/docker-compose.yml">Cloud Ten Wallet</LinkOut> which is a mock ASE representing a tenant in a multi-tenant environment. See [Enabling multi-tenancy](#enabling-multi-tenancy) for more information.
+The Local Playground comes with containerized versions of the Rafiki packages and three pre-configured docker-compose files. <LinkOut href="https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml">Cloud Nine Wallet</LinkOut> and <LinkOut href='https://github.com/interledger/rafiki/blob/main/localenv/happy-life-bank/docker-compose.yml'>Happy Life Bank</LinkOut> will start two mock FSPs with their respective Rafiki `backend` and `auth` servers. They automatically peer, and two to three user accounts are created on both of them. The third file is for <LinkOut href="https://github.com/interledger/rafiki/blob/main/localenv/cloud-ten-wallet/docker-compose.yml">Cloud Ten Wallet</LinkOut> which is a mock FSP representing a tenant in a multi-tenant environment. See [Enabling multi-tenancy](#enabling-multi-tenancy) for more information.
 
 This environment will set up a playground where you can use the GraphQL Admin APIs and the Open Payments APIs.
 
 :::note
 
-The Mock ASE provided in this repository is intended solely for internal use and demonstration purposes. It's not designed to serve as a reference architecture. If you are looking for a reference implementation of an ASE, please refer to the <LinkOut href='https://wallet.interledger-test.dev/'>Test Wallet</LinkOut>.
+The Mock FSP provided in this repository is intended solely for internal use and demonstration purposes. It's not designed to serve as a reference architecture. If you are looking for a reference implementation of an FSP, please refer to the <LinkOut href='https://wallet.interledger-test.dev/'>Test Wallet</LinkOut>.
 :::
 
 ## Running the local environment
@@ -91,7 +91,7 @@ The following components are made available via the Local Playground:
 
 <LargeImg src='/img/localenv.png' alt='Overview of components' />
 
-#### Mock account servicing entity 1 - Cloud Nine Wallet
+#### Mock FSP 1 - Cloud Nine Wallet
 
 | Label | Component                          | URL                             |
 | ----- | ---------------------------------- | ------------------------------- |
@@ -103,7 +103,7 @@ The following components are made available via the Local Playground:
 | f     | Rafiki Admin UI                    | `http://localhost:3010`         |
 | g     | Kratos API - _disabled by default_ | `http://localhost:4433`         |
 
-#### Mock account servicing entity 2 - Happy Life Bank
+#### Mock FSP 2 - Happy Life Bank
 
 | Label | Component                          | URL                             |
 | ----- | ---------------------------------- | ------------------------------- |
@@ -139,7 +139,7 @@ We've secured access to Rafiki Admin using <LinkOut href='https://www.ory.sh/doc
 :::note[Enabling Rafiki Admin authentication locally]
 If you'd like to enable authentication locally you can run `pnpm localenv:compose:adminauth up`
 
-Separate registrations/users are required for each mock ASE's Admin app as the ASEs are designed to run as separate mock entities. Visit the Rafiki Admin user guide to learn how to [invite](/admin/admin-user-guide#invite-a-user) and [remove](/admin/admin-user-guide#remove-a-user) users via provided scripts.
+Separate registrations/users are required for each mock FSP's Admin app as the FSPs are designed to run as separate mock entities. Visit the Rafiki Admin user guide to learn how to [invite](/admin/admin-user-guide#invite-a-user) and [remove](/admin/admin-user-guide#remove-a-user) users via provided scripts.
 
 After you've registered, you can come back to your Rafiki Admin account by navigating to `localhost:3010` (Cloud Nine Wallet) or `localhost:4010` (Happy Life Bank) and logging in.
 

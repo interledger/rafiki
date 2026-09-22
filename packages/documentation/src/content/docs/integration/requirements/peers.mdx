@@ -9,7 +9,7 @@ import { LinkOut } from '@interledger/docs-design-system'
 import { Badge } from '@astrojs/starlight/components'
 import TenantIdHmacNote from '/src/content/docs/partials/_tenant-id-hmac-note.mdx'
 
-To join the Interledger network and be able to send and receive payments, you must add one or more peers to your Rafiki instance. Peering establishes the connections needed for your Rafiki instance to interact with another account servicing entity (ASE). The purpose of this guide is to help you set up and manage peers.
+To join the Interledger network and be able to send and receive payments, you must add one or more peers to your Rafiki instance. Peering establishes the connections needed for your Rafiki instance to interact with another financial service provider (FSP). The purpose of this guide is to help you set up and manage peers.
 
 While this guide focuses on the conceptual and technical steps of adding and managing peers via the Backend Admin API, the Rafiki Admin app offers the same capabilities in a user-friendly interface.
 
@@ -28,10 +28,10 @@ Tenants can view, edit, and delete only their own peers. They can't create peers
 ## Perform prerequisites
 
 :::note
-Peering isn't required unless you want to participate in transactions with another ASE on the Interledger network. For foundational peering concepts, refer to the Peers section of [Interledger Concepts](/overview/concepts/interledger/#peers).
+Peering isn't required unless you want to participate in transactions with another FSP on the Interledger network. For foundational peering concepts, refer to the Peers section of [Interledger Concepts](/overview/concepts/interledger/#peers).
 :::
 
-Before adding a peer, you and the account servicing entity you intend to peer with must both:
+Before adding a peer, you and the FSP you intend to peer with must both:
 
 ### Run an Interledger connector
 
@@ -65,7 +65,7 @@ While you can deposit an `initialLiquidity` for your peer, you can also deposit 
 
 ### Define a maxPacketAmount value
 
-The `maxPacketAmount` specifies the maximum packet size you are willing to accept from the peer. Your peer's `maxPacketAmount` value doesn't need to match, as this value is independently set by each ASE. If omitted, payments won't be broken into smaller packets.
+The `maxPacketAmount` specifies the maximum packet size you are willing to accept from the peer. Your peer's `maxPacketAmount` value doesn't need to match, as this value is independently set by each FSP. If omitted, payments won't be broken into smaller packets.
 
 ## Set up peering in Rafiki
 
