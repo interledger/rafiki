@@ -6,14 +6,14 @@
 
 ## What is Rafiki?
 
-Rafiki is open source software that provides an efficient solution for an [account servicing entity](https://rafiki.dev/resources/glossary#account-servicing-entity-ase) to enable Interledger functionality on its users' accounts.
+Rafiki is open source software that provides an efficient solution for a financial service provider (FSP) to enable Interledger functionality on its users' accounts.
 
 This includes
 
 - sending and receiving payments (via [SPSP](https://rafiki.dev/resources/glossary#simple-payment-setup-protocol-spsp) and [Open Payments](https://rafiki.dev/overview/concepts/open-payments))
 - allowing third-party access to initiate payments and view transaction data (via [Open Payments](https://rafiki.dev/overview/concepts/open-payments))
 
-**❗ Rafiki is intended to be run by account servicing entities only and should not be used in production by non-regulated entities.**
+**❗ Rafiki is intended to be run by financial service providers only and should not be used in production by non-regulated entities.**
 
 Rafiki is made up of several components, including an Interledger connector, a high-throughput accounting database called [TigerBeetle](https://rafiki.dev/overview/concepts/accounting#tigerbeetle), and several APIs:
 
