@@ -61,12 +61,12 @@ script:post-response {
   const body = res.getBody();
   
   if (body?.data) {
-    bru.setEnvVar("outgoingPaymentId", body.data.createOutgoingPayment.payment.id);
+    bru.setVar("outgoingPaymentId", body.data.createOutgoingPayment.payment.id);
   }
 }
 
 tests {
   test("Outgoing Payment id is string", function() {
-    expect(bru.getEnvVar("outgoingPaymentId")).to.be.a("string");
+    expect(bru.getVar("outgoingPaymentId")).to.be.a("string");
   })
 }

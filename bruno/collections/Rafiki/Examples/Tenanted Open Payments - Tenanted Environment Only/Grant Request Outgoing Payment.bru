@@ -48,7 +48,7 @@ script:post-response {
   scripts.storeTokenDetails();
   
   const body = res.getBody()
-  bru.setEnvVar("senderTenantOpenPaymentsContinuationUri", body?.continue.uri)
+  bru.setVar("senderTenantOpenPaymentsContinuationUri", body?.continue.uri)
 }
 
 tests {
