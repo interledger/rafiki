@@ -70,7 +70,7 @@ export interface OutgoingPaymentService
   fund(
     options: FundOutgoingPaymentOptions
   ): Promise<OutgoingPayment | FundingError>
-  processNext(): Promise<string | undefined>
+  processNext(): Promise<string[] | undefined>
   getGrantSpentAmounts(options: {
     grantId: string
     limits?: Limits
@@ -103,7 +103,7 @@ export async function createOutgoingPaymentService(
     create: (options) => createOutgoingPayment(deps, options),
     cancel: (options) => cancelOutgoingPayment(deps, options),
     fund: (options) => fundPayment(deps, options),
-    processNext: () => worker.processPendingPayment(deps),
+    processNext: () => worker.processPendingPayments(deps),
     getWalletAddressPage: (options) => getWalletAddressPage(deps, options),
     getGrantSpentAmounts: (options) => getGrantSpentAmounts(deps, options)
   }

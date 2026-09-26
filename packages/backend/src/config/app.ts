@@ -134,9 +134,19 @@ export const Config = {
 
   outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 1),
   outgoingPaymentWorkerIdle: envInt('OUTGOING_PAYMENT_WORKER_IDLE', 10), // milliseconds
+  outgoingPaymentBatchSize: envInt('OUTGOING_PAYMENT_WORKER_BATCH_SIZE', 250),
+  outgoingPaymentProcessingIntervalMs: envInt(
+    'OUTGOING_PAYMENT_PROCESSING_INTERVAL_MS',
+    200
+  ), // milliseconds
 
   incomingPaymentWorkers: envInt('INCOMING_PAYMENT_WORKERS', 1),
   incomingPaymentWorkerIdle: envInt('INCOMING_PAYMENT_WORKER_IDLE', 200), // milliseconds
+  incomingPaymentBatchSize: envInt('INCOMING_PAYMENT_WORKER_BATCH_SIZE', 250),
+  incomingPaymentProcessingIntervalMs: envInt(
+    'INCOMING_PAYMENT_PROCESSING_INTERVAL_MS',
+    200
+  ), // milliseconds
   pollIncomingPaymentCreatedWebhook: envBool(
     'POLL_INCOMING_PAYMENT_CREATED_WEBHOOK',
     false

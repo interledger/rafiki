@@ -772,7 +772,7 @@ describe('Incoming Payment Service', (): void => {
 
         jest.useFakeTimers()
         jest.setSystemTime(incomingPayment.expiresAt)
-        await expect(incomingPaymentService.processNext()).resolves.toBe(
+        await expect(incomingPaymentService.processNext()).resolves.toContain(
           incomingPayment.id
         )
         await expect(
@@ -803,7 +803,7 @@ describe('Incoming Payment Service', (): void => {
         })
         jest.useFakeTimers()
         jest.setSystemTime(incomingPayment.expiresAt)
-        await expect(incomingPaymentService.processNext()).resolves.toBe(
+        await expect(incomingPaymentService.processNext()).resolves.toContain(
           incomingPayment.id
         )
 
@@ -886,9 +886,9 @@ describe('Incoming Payment Service', (): void => {
           if (eventType === IncomingPaymentEventType.IncomingPaymentExpired) {
             jest.useFakeTimers()
             jest.setSystemTime(incomingPayment.expiresAt)
-            await expect(incomingPaymentService.processNext()).resolves.toBe(
-              incomingPayment.id
-            )
+            await expect(
+              incomingPaymentService.processNext()
+            ).resolves.toContain(incomingPayment.id)
           } else {
             await incomingPayment.onCredit({
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -923,7 +923,7 @@ describe('Incoming Payment Service', (): void => {
           assert.ok(incomingPayment.processAt)
           jest.useFakeTimers()
           jest.setSystemTime(incomingPayment.processAt)
-          await expect(incomingPaymentService.processNext()).resolves.toBe(
+          await expect(incomingPaymentService.processNext()).resolves.toContain(
             incomingPayment.id
           )
           const events = await IncomingPaymentEvent.query(knex)
@@ -974,9 +974,9 @@ describe('Incoming Payment Service', (): void => {
               assert.ok(incomingPayment.processAt)
               jest.useFakeTimers()
               jest.setSystemTime(incomingPayment.processAt)
-              await expect(incomingPaymentService.processNext()).resolves.toBe(
-                incomingPayment.id
-              )
+              await expect(
+                incomingPaymentService.processNext()
+              ).resolves.toContain(incomingPayment.id)
               const events = await IncomingPaymentEvent.query(knex)
                 .where({
                   incomingPaymentId: incomingPayment.id,
@@ -1127,7 +1127,7 @@ describe('Incoming Payment Service', (): void => {
       const future = new Date(Date.now() + 40_000)
       jest.useFakeTimers()
       jest.setSystemTime(future)
-      await expect(incomingPaymentService.processNext()).resolves.toBe(
+      await expect(incomingPaymentService.processNext()).resolves.toContain(
         incomingPayment.id
       )
       await expect(
