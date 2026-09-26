@@ -20,7 +20,8 @@ export enum OutgoingPaymentError {
   InvalidReceiver = 'InvalidReceiver',
   InvalidInterval = 'InvalidInterval',
   OnlyOneGrantAmountAllowed = 'OnlyOneGrantAmountAllowed',
-  CouldNotFetchRates = 'CouldNotFetchRates'
+  CouldNotFetchRates = 'CouldNotFetchRates',
+  OverQueueThreshold = 'OverQueueThreshold'
 }
 
 export const quoteErrorToOutgoingPaymentError: Record<
@@ -57,7 +58,8 @@ export const errorToHTTPCode: {
   [OutgoingPaymentError.InvalidReceiver]: 400,
   [OutgoingPaymentError.InvalidInterval]: 500,
   [OutgoingPaymentError.OnlyOneGrantAmountAllowed]: 500,
-  [OutgoingPaymentError.CouldNotFetchRates]: 500
+  [OutgoingPaymentError.CouldNotFetchRates]: 500,
+  [OutgoingPaymentError.OverQueueThreshold]: 500
 }
 
 export const errorToCode: {
@@ -77,6 +79,8 @@ export const errorToCode: {
   [OutgoingPaymentError.OnlyOneGrantAmountAllowed]:
     GraphQLErrorCode.BadUserInput,
   [OutgoingPaymentError.CouldNotFetchRates]:
+    GraphQLErrorCode.InternalServerError,
+  [OutgoingPaymentError.OverQueueThreshold]:
     GraphQLErrorCode.InternalServerError
 }
 
@@ -96,7 +100,9 @@ export const errorToMessage: {
   [OutgoingPaymentError.InvalidInterval]: 'invalid interval',
   [OutgoingPaymentError.OnlyOneGrantAmountAllowed]:
     'only one of receiveAmount or debitAmount allowed',
-  [OutgoingPaymentError.CouldNotFetchRates]: 'could not convert between assets'
+  [OutgoingPaymentError.CouldNotFetchRates]: 'could not convert between assets',
+  [OutgoingPaymentError.OverQueueThreshold]:
+    'too many active payments; try again later'
 }
 
 export const FundingError = { ...OutgoingPaymentError, ...TransferError }

@@ -11,9 +11,9 @@ import { trace, Span } from '@opentelemetry/api'
 export const RETRY_BACKOFF_SECONDS = 10
 
 // Returns the id of the processed payment (if any).
-export async function processPendingPayment(
+export async function processPendingPayments(
   deps_: ServiceDependencies
-): Promise<string | undefined> {
+): Promise<string[] | undefined> {
   const tracer = trace.getTracer('outgoing_payment_worker')
 
   return tracer.startActiveSpan(
@@ -25,42 +25,58 @@ export async function processPendingPayment(
           callName: 'OutgoingPaymentWorker:processPendingPayment'
         }
       )
-      const paymentId = await deps_.knex.transaction(async (trx) => {
-        const payment = await getPendingPayment(trx, deps_)
-        if (!payment) return
+      const paymentIds = await deps_.knex.transaction(async (trx) => {
+        const payments = await getPendingPayments(trx, deps_)
+        if (payments.length === 0) return
 
-        await handlePaymentLifecycle(
-          {
-            ...deps_,
-            knex: trx,
-            logger: deps_.logger.child({
-              payment: payment.id,
-              from_state: payment.state
-            })
-          },
-          payment
+        // Process the claimed batch in bounded-concurrency chunks. Each in-flight
+        // payment can check out its own pool connection for accounting (Postgres
+        // accounting mode), so capping concurrency keeps connections free for API
+        // traffic and webhook-driven liquidity callbacks. Without this a large
+        // batch fans out one Promise per payment and starves the connection pool.
+        const concurrency = Math.max(
+          1,
+          deps_.config.outgoingPaymentWorkerConcurrency
         )
-        return payment.id
+        for (let i = 0; i < payments.length; i += concurrency) {
+          const chunk = payments.slice(i, i + concurrency)
+          await Promise.all(
+            chunk.map((payment) =>
+              handlePaymentLifecycle(
+                {
+                  ...deps_,
+                  knex: trx,
+                  logger: deps_.logger.child({
+                    payment: payment.id,
+                    from_state: payment.state
+                  })
+                },
+                payment
+              )
+            )
+          )
+        }
+        return payments.map((payment) => payment.id)
       })
 
       stopTimer()
       span.end()
-      return paymentId
+      return paymentIds
     }
   )
 }
 
 // Fetch (and lock) a payment for work.
-async function getPendingPayment(
+async function getPendingPayments(
   trx: Knex.Transaction,
   deps: ServiceDependencies
-): Promise<OutgoingPayment | undefined> {
+): Promise<OutgoingPayment[]> {
   const stopTimer = deps.telemetry.startTimer('get_pending_payment_ms', {
     callName: 'OutoingPaymentWorker:getPendingPayment'
   })
   const now = new Date(Date.now()).toISOString()
   const payments = await OutgoingPayment.query(trx)
-    .limit(1)
+    .limit(deps.config.outgoingPaymentBatchSize)
     // Ensure the payment cannot be processed concurrently by multiple workers.
     .forUpdate()
     // Don't wait for a payment that is already being processed.
@@ -77,7 +93,7 @@ async function getPendingPayment(
     })
     .withGraphFetched('quote')
   stopTimer()
-  return payments[0]
+  return payments
 }
 
 async function handlePaymentLifecycle(

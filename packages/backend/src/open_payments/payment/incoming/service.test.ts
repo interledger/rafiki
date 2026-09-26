@@ -745,6 +745,62 @@ describe('Incoming Payment Service', (): void => {
       })
     })
 
+    test(
+      'Returns a batch of incoming payments in a single call',
+      withConfigOverride(
+        () => config,
+        { incomingPaymentBatchSize: 2 },
+        async (): Promise<void> => {
+          const createExpiredIncomingPayment = async () => {
+            const incomingPayment = await createIncomingPayment(deps, {
+              walletAddressId,
+              incomingAmount: {
+                value: BigInt(123),
+                assetCode: asset.code,
+                assetScale: asset.scale
+              },
+              expiresAt: new Date(Date.now() + 30_000),
+              metadata: {
+                description: 'Test incoming payment',
+                externalRef: '#123'
+              },
+              tenantId,
+              initiationReason: IncomingPaymentInitiationReason.Admin
+            })
+            await accountingService.createDeposit({
+              id: uuid(),
+              account: incomingPayment,
+              amount: BigInt(1)
+            })
+            return incomingPayment
+          }
+
+          const incomingPaymentA = await createExpiredIncomingPayment()
+          const incomingPaymentB = await createExpiredIncomingPayment()
+
+          jest.useFakeTimers()
+          jest.setSystemTime(incomingPaymentB.expiresAt)
+
+          const processedIds = await incomingPaymentService.processNext()
+          expect(processedIds).toHaveLength(2)
+          expect(processedIds).toEqual(
+            expect.arrayContaining([incomingPaymentA.id, incomingPaymentB.id])
+          )
+
+          await expect(
+            incomingPaymentService.get({ id: incomingPaymentA.id })
+          ).resolves.toMatchObject({
+            state: IncomingPaymentState.Expired
+          })
+          await expect(
+            incomingPaymentService.get({ id: incomingPaymentB.id })
+          ).resolves.toMatchObject({
+            state: IncomingPaymentState.Expired
+          })
+        }
+      )
+    )
+
     describe('handleExpired', (): void => {
       test('Deactivates an expired incoming payment with received money', async (): Promise<void> => {
         const incomingPayment = await createIncomingPayment(deps, {
@@ -772,7 +828,7 @@ describe('Incoming Payment Service', (): void => {
 
         jest.useFakeTimers()
         jest.setSystemTime(incomingPayment.expiresAt)
-        await expect(incomingPaymentService.processNext()).resolves.toBe(
+        await expect(incomingPaymentService.processNext()).resolves.toContain(
           incomingPayment.id
         )
         await expect(
@@ -803,7 +859,7 @@ describe('Incoming Payment Service', (): void => {
         })
         jest.useFakeTimers()
         jest.setSystemTime(incomingPayment.expiresAt)
-        await expect(incomingPaymentService.processNext()).resolves.toBe(
+        await expect(incomingPaymentService.processNext()).resolves.toContain(
           incomingPayment.id
         )
 
@@ -886,9 +942,9 @@ describe('Incoming Payment Service', (): void => {
           if (eventType === IncomingPaymentEventType.IncomingPaymentExpired) {
             jest.useFakeTimers()
             jest.setSystemTime(incomingPayment.expiresAt)
-            await expect(incomingPaymentService.processNext()).resolves.toBe(
-              incomingPayment.id
-            )
+            await expect(
+              incomingPaymentService.processNext()
+            ).resolves.toContain(incomingPayment.id)
           } else {
             await incomingPayment.onCredit({
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -923,7 +979,7 @@ describe('Incoming Payment Service', (): void => {
           assert.ok(incomingPayment.processAt)
           jest.useFakeTimers()
           jest.setSystemTime(incomingPayment.processAt)
-          await expect(incomingPaymentService.processNext()).resolves.toBe(
+          await expect(incomingPaymentService.processNext()).resolves.toContain(
             incomingPayment.id
           )
           const events = await IncomingPaymentEvent.query(knex)
@@ -974,9 +1030,9 @@ describe('Incoming Payment Service', (): void => {
               assert.ok(incomingPayment.processAt)
               jest.useFakeTimers()
               jest.setSystemTime(incomingPayment.processAt)
-              await expect(incomingPaymentService.processNext()).resolves.toBe(
-                incomingPayment.id
-              )
+              await expect(
+                incomingPaymentService.processNext()
+              ).resolves.toContain(incomingPayment.id)
               const events = await IncomingPaymentEvent.query(knex)
                 .where({
                   incomingPaymentId: incomingPayment.id,
@@ -1127,7 +1183,7 @@ describe('Incoming Payment Service', (): void => {
       const future = new Date(Date.now() + 40_000)
       jest.useFakeTimers()
       jest.setSystemTime(future)
-      await expect(incomingPaymentService.processNext()).resolves.toBe(
+      await expect(incomingPaymentService.processNext()).resolves.toContain(
         incomingPayment.id
       )
       await expect(

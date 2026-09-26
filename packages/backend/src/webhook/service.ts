@@ -1,6 +1,7 @@
 import axios, { isAxiosError } from 'axios'
 import { createDecipheriv, createHmac } from 'crypto'
 import { canonicalize } from 'json-canonicalize'
+import { TransactionOrKnex } from 'objection'
 
 import { isWebhookWithEvent, Webhook, WebhookWithEvent } from './model'
 import { WebhookEvent } from './event/model'
@@ -38,7 +39,7 @@ export interface WebhookService {
   getLatestByResourceId(
     options: WebhookByResourceIdOptions
   ): Promise<WebhookEvent | undefined>
-  processNext(): Promise<string | undefined>
+  processNext(): Promise<string[] | undefined>
   getPage(options?: GetPageOptions): Promise<WebhookEvent[]>
 }
 
@@ -127,11 +128,11 @@ async function getLatestWebhookEventByResourceId(
   return await query.first()
 }
 
-// Fetch (and lock) a webhook for work.
-// Returns the id of the processed webhook (if any).
+// Fetch (and lock) a batch of due webhooks and deliver them concurrently.
+// Returns the ids of the webhooks processed in this batch (if any).
 async function processNextWebhook(
   deps_: ServiceDependencies
-): Promise<string | undefined> {
+): Promise<string[] | undefined> {
   if (!deps_.knex) {
     throw new Error('Knex undefined')
   }
@@ -142,8 +143,8 @@ async function processNextWebhook(
     return deps_.knex!.transaction(async (trx) => {
       const now = Date.now()
       const webhooks = await Webhook.query(trx)
-        .limit(1)
-        // Ensure the webhook cannot be processed concurrently by multiple workers.
+        .limit(deps_.config.webhookWorkerBatchSize)
+        // Ensure a webhook cannot be processed concurrently by multiple workers.
         .forUpdate()
         // If a webhook is locked, don't wait — just come back for it later.
         .skipLocked()
@@ -151,41 +152,78 @@ async function processNextWebhook(
           `attempts < GREATEST(coalesce((select value from "tenantSettings" where "tenantId" = "webhooks"."recipientTenantId" and key = '${TenantSettingKeys.WEBHOOK_MAX_RETRY.name}')::integer, ${deps_.config.webhookMaxRetry}))`
         )
         .where('processAt', '<=', new Date(now).toISOString())
+        // Oldest-due first: fair delivery order and lets the processAt index
+        // drive the scan.
+        .orderBy('processAt', 'asc')
         .withGraphFetched('event')
 
-      const webhook = webhooks[0]
-      if (!webhook || !isWebhookWithEvent(webhook)) return
+      if (webhooks.length === 0) return
 
-      const deps = {
-        ...deps_,
-        knex: trx,
-        logger: deps_.logger.child({
-          event: webhook.eventId,
-          webhook: webhook.id
-        })
-      }
-
-      if (webhook.metadata?.sendToCardService) {
-        await sendWebhook(deps, webhook, {
-          webhookUrl: deps.config.cardWebhookUrl
-        })
-      } else if (webhook.metadata?.sendToPosService) {
-        await sendWebhook(deps, webhook, {
-          webhookUrl: deps.config.posWebhookServiceUrl
-        })
-      } else {
-        const settings = await deps_.tenantSettingService.get({
-          tenantId: webhook.recipientTenantId
-        })
-        const formattedSettings = formatSettings(settings)
-
-        await sendWebhook(deps, webhook, formattedSettings)
-      }
+      // Deliver the whole claimed batch concurrently. The HTTP requests overlap
+      // while each webhook's small DB write is serialized on the transaction's
+      // single connection. Errors are isolated per webhook so one failure never
+      // rolls back the batch or blocks its siblings.
+      const processed = await Promise.all(
+        webhooks.map((webhook) => deliverWebhook(deps_, trx, webhook))
+      )
 
       span.end()
-      return webhook.id
+
+      const ids = processed.filter((id): id is string => id !== undefined)
+      return ids.length > 0 ? ids : undefined
     })
   })
+}
+
+// Deliver a single claimed webhook. Returns its id when an attempt was made,
+// or undefined when it could not be processed. Never throws: any error is
+// contained so it cannot abort the surrounding batch transaction.
+async function deliverWebhook(
+  deps_: ServiceDependencies,
+  trx: TransactionOrKnex,
+  webhook: Webhook
+): Promise<string | undefined> {
+  if (!isWebhookWithEvent(webhook)) return
+
+  const deps = {
+    ...deps_,
+    knex: trx,
+    logger: deps_.logger.child({
+      event: webhook.eventId,
+      webhook: webhook.id
+    })
+  }
+
+  try {
+    if (webhook.metadata?.sendToCardService) {
+      await sendWebhook(deps, webhook, {
+        webhookUrl: deps.config.cardWebhookUrl
+      })
+    } else if (webhook.metadata?.sendToPosService) {
+      await sendWebhook(deps, webhook, {
+        webhookUrl: deps.config.posWebhookServiceUrl
+      })
+    } else {
+      const settings = await deps_.tenantSettingService.get({
+        tenantId: webhook.recipientTenantId
+      })
+      const formattedSettings = formatSettings(settings)
+
+      await sendWebhook(deps, webhook, formattedSettings)
+    }
+
+    return webhook.id
+  } catch (err) {
+    // sendWebhook already handles Axios failures (it schedules a retry). Any
+    // error reaching here is unexpected (e.g. a non-Axios failure). Log and
+    // swallow it so the rest of the batch still commits; the webhook stays due
+    // and is retried on a later poll rather than hot-looping this one.
+    deps.logger.error(
+      { err: err instanceof Error ? err.message : err },
+      'unexpected error delivering webhook'
+    )
+    return undefined
+  }
 }
 
 type WebhookHeaders = {

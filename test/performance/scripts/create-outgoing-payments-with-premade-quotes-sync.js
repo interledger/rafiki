@@ -12,7 +12,9 @@ export const options = {
   // A number specifying the number of VUs to run concurrently.
   vus: 1,
   // A string specifying the total duration of the test run.
-  duration: '600s'
+  duration: '600s',
+  setupTimeout: '600000s',
+  iterations: 1000
 }
 
 const CLOUD_NINE_GQL_ENDPOINT = __ENV.CLOUD_NINE_GQL_ENDPOINT
@@ -48,44 +50,7 @@ function request(query) {
   return JSON.parse(response.body).data
 }
 
-export function setup() {
-  const query = {
-    query: `
-      query GetWalletAddresses {
-        walletAddresses {
-          edges {
-            node {
-              id
-              address
-            }
-          }
-        }
-      }
-    `
-  }
-
-  const data = request(query)
-  const c9WalletAddresses = data.walletAddresses.edges
-  const c9WalletAddress = c9WalletAddresses.find(
-    (edge) => edge.node.address === CLOUD_NINE_WALLET_ADDRESS
-  )?.node
-  if (!c9WalletAddress) {
-    fail(`could not find wallet address: ${CLOUD_NINE_WALLET_ADDRESS}`)
-  }
-
-  return { data: { c9WalletAddress } }
-}
-
-// The function that defines VU logic.
-//
-// See https://grafana.com/docs/k6/latest/examples/get-started-with-k6/ to learn more
-// about authoring k6 scripts.
-//
-export default function (data) {
-  const {
-    data: { c9WalletAddress }
-  } = data
-
+function createQuote(c9WalletAddress) {
   const createReceiverPayload = {
     query: `
       mutation CreateReceiver($input: CreateReceiverInput!) {
@@ -142,6 +107,95 @@ export default function (data) {
 
   const createQuoteResponse = request(createQuotePayload)
   const quote = createQuoteResponse.createQuote.quote
+  console.log('createdQuote, quoteId=', quote.id)
+  return quote
+}
+
+export function setup() {
+  const query = {
+    query: `
+      query GetWalletAddresses {
+        walletAddresses {
+          edges {
+            node {
+              id
+              address
+            }
+          }
+        }
+      }
+    `
+  }
+
+  const data = request(query)
+  const c9WalletAddresses = data.walletAddresses.edges
+  const c9WalletAddress = c9WalletAddresses.find(
+    (edge) => edge.node.address === CLOUD_NINE_WALLET_ADDRESS
+  ).node
+  if (!c9WalletAddress) {
+    fail(`could not find wallet address: ${CLOUD_NINE_WALLET_ADDRESS}`)
+  }
+
+  const createReceiverPayload = {
+    query: `
+      mutation CreateReceiver($input: CreateReceiverInput!) {
+        createReceiver(input: $input) {
+          receiver {
+            id
+          }
+        }
+      }
+    `,
+    variables: {
+      input: {
+        expiresAt: null,
+        metadata: {
+          description: 'Hello my friend',
+          externalRef: null
+        },
+        incomingAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: 1002
+        },
+        walletAddressUrl: HAPPY_LIFE_BANK_WALLET_ADDRESS
+      }
+    }
+  }
+
+  const createReceiverResponse = request(createReceiverPayload)
+  const receiver = createReceiverResponse.createReceiver.receiver
+
+  const quotes = []
+  for (let i = 0; i < 1000; i++) {
+    quotes.push(createQuote(c9WalletAddress, receiver))
+  }
+
+  return { data: { c9WalletAddress, quotes } }
+}
+
+// The function that defines VU logic.
+//
+// See https://grafana.com/docs/k6/latest/examples/get-started-with-k6/ to learn more
+// about authoring k6 scripts.
+//
+export default function (data) {
+  const {
+    data: { c9WalletAddress, quotes }
+  } = data
+
+  let quote
+  try {
+    // eslint-disable-next-line no-undef
+    quote = quotes[__ITER]
+    if (!quote) {
+      console.log('Quotes exhausted, creating more')
+      quote = createQuote(c9WalletAddress)
+    }
+  } catch (err) {
+    console.log('Quotes exhausted, creating more')
+    quote = createQuote(c9WalletAddress)
+  }
 
   const createOutgoingPaymentPayload = {
     query: `

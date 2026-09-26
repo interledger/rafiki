@@ -94,6 +94,12 @@ export const Config = {
           'DATABASE_URL',
           'postgresql://postgres:password@localhost:5432/development'
         ),
+  // Knex connection pool bounds. The pool is shared by the Open Payments/admin
+  // APIs, every background worker, and (when USE_TIGERBEETLE=false) all Postgres
+  // accounting transfers. It must be large enough to leave headroom for API
+  // traffic while the workers process batches; see outgoingPaymentWorkerConcurrency.
+  databasePoolMin: envInt('DATABASE_POOL_MIN', 2),
+  databasePoolMax: envInt('DATABASE_POOL_MAX', 20),
   walletAddressUrl: envString(
     'WALLET_ADDRESS_URL',
     'http://127.0.0.1:3001/.well-known/pay'
@@ -127,6 +133,7 @@ export const Config = {
 
   walletAddressWorkers: envInt('WALLET_ADDRESS_WORKERS', 1),
   walletAddressWorkerIdle: envInt('WALLET_ADDRESS_WORKER_IDLE', 200), // milliseconds
+  walletAddressBatchSize: envInt('WALLET_ADDRESS_BATCH_SIZE', 250),
 
   authServerGrantUrl: envString('AUTH_SERVER_GRANT_URL'),
   authServerIntrospectionUrl: envString('AUTH_SERVER_INTROSPECTION_URL'),
@@ -134,9 +141,24 @@ export const Config = {
 
   outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 1),
   outgoingPaymentWorkerIdle: envInt('OUTGOING_PAYMENT_WORKER_IDLE', 10), // milliseconds
+  outgoingPaymentBatchSize: envInt('OUTGOING_PAYMENT_WORKER_BATCH_SIZE', 1),
+  // How many payments in a claimed batch are processed concurrently. Each
+  // in-flight payment can check out its own pool connection(s) for accounting
+  // (Postgres accounting mode), so this MUST stay below databasePoolMax with
+  // room to spare for API traffic — otherwise a batch starves the pool and
+  // API/webhook-callback requests time out acquiring a connection.
+  outgoingPaymentWorkerConcurrency: envInt(
+    'OUTGOING_PAYMENT_WORKER_CONCURRENCY',
+    10
+  ),
+  outgoingPaymentMaxQueueSize: envInt(
+    'OUTGOING_PAYMENT_MAX_QUEUE_SIZE',
+    100_000
+  ),
 
   incomingPaymentWorkers: envInt('INCOMING_PAYMENT_WORKERS', 1),
   incomingPaymentWorkerIdle: envInt('INCOMING_PAYMENT_WORKER_IDLE', 200), // milliseconds
+  incomingPaymentBatchSize: envInt('INCOMING_PAYMENT_WORKER_BATCH_SIZE', 1),
   pollIncomingPaymentCreatedWebhook: envBool(
     'POLL_INCOMING_PAYMENT_CREATED_WEBHOOK',
     false
@@ -152,6 +174,10 @@ export const Config = {
 
   webhookWorkers: envInt('WEBHOOK_WORKERS', 1),
   webhookWorkerIdle: envInt('WEBHOOK_WORKER_IDLE', 200), // milliseconds
+  // Number of due webhooks a single worker claims and delivers concurrently per
+  // poll. Each claimed webhook's HTTP delivery overlaps the others, so this is
+  // effectively the per-worker delivery concurrency.
+  webhookWorkerBatchSize: envInt('WEBHOOK_WORKER_BATCH_SIZE', 1),
   webhookUrl: envString('WEBHOOK_URL'),
   webhookTimeout: envInt('WEBHOOK_TIMEOUT', 2000), // milliseconds
   webhookMaxRetry: envInt('WEBHOOK_MAX_RETRY', 10),

@@ -846,9 +846,9 @@ describe('Open Payments Wallet Address Service', (): void => {
       'Does not process wallet address $description for withdrawal',
       async ({ processAt }): Promise<void> => {
         await walletAddress.$query(knex).patch({ processAt })
-        await expect(
-          walletAddressService.processNext()
-        ).resolves.toBeUndefined()
+        await expect(walletAddressService.processNext()).resolves.toHaveLength(
+          0
+        )
         await expect(
           walletAddressService.get(walletAddress.id)
         ).resolves.toEqual(walletAddress)
@@ -877,7 +877,7 @@ describe('Open Payments Wallet Address Service', (): void => {
           processAt: new Date(),
           totalEventsAmount
         })
-        await expect(walletAddressService.processNext()).resolves.toBe(
+        await expect(walletAddressService.processNext()).resolves.toContain(
           walletAddress.id
         )
         await expect(
@@ -904,6 +904,40 @@ describe('Open Payments Wallet Address Service', (): void => {
         ])
       }
     )
+
+    test('Returns a batch of wallet addresses in a single call', async (): Promise<void> => {
+      const walletAddressB = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
+        createLiquidityAccount: true
+      })
+
+      await Promise.all(
+        [walletAddress, walletAddressB].map((wa) =>
+          expect(
+            accountingService.createDeposit({
+              id: uuid(),
+              account: wa,
+              amount: BigInt(10)
+            })
+          ).resolves.toBeUndefined()
+        )
+      )
+      await walletAddress.$query(knex).patch({ processAt: new Date() })
+      await walletAddressB.$query(knex).patch({ processAt: new Date() })
+
+      const processedIds = await walletAddressService.processNext()
+      expect(processedIds).toHaveLength(2)
+      expect(processedIds).toEqual(
+        expect.arrayContaining([walletAddress.id, walletAddressB.id])
+      )
+
+      await expect(
+        walletAddressService.get(walletAddress.id)
+      ).resolves.toMatchObject({ processAt: null })
+      await expect(
+        walletAddressService.get(walletAddressB.id)
+      ).resolves.toMatchObject({ processAt: null })
+    })
   })
 
   describe('triggerEvents', (): void => {
