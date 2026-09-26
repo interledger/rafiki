@@ -20,6 +20,7 @@ import {
   ConfirmationDialog,
   type ConfirmationDialogRef
 } from '~/components/ConfirmationDialog'
+import { Timestamp } from '~/components/Timestamp'
 import {
   Box,
   Button,
@@ -173,7 +174,7 @@ export default function ViewPeerPage() {
                   General Information
                 </Heading>
                 <Text size='2' color='gray'>
-                  Created at {new Date(peer.createdAt).toLocaleString()}
+                  Created at <Timestamp value={peer.createdAt} />
                 </Text>
               </Flex>
               {renderErrorPanel(response?.errors.general.message)}

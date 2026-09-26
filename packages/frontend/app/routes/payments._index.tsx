@@ -24,7 +24,7 @@ import {
   Text,
   TextField
 } from '@radix-ui/themes'
-import { Badge } from '~/components'
+import { Badge, Timestamp } from '~/components'
 import { renderErrorPanel, renderFieldError } from '~/lib/form-errors'
 import { listPayments } from '~/lib/api/payments.server'
 import { paymentsSearchParams } from '~/lib/validate.server'
@@ -311,7 +311,7 @@ export default function PaymentsPage() {
                       </Table.Cell>
                       <Table.Cell>
                         <Text>
-                          {new Date(payment.node.createdAt).toLocaleString()}
+                          <Timestamp value={payment.node.createdAt} />
                         </Text>
                       </Table.Cell>
                       <Table.Cell>

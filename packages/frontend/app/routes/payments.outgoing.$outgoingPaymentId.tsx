@@ -2,7 +2,7 @@ import type { LoaderFunctionArgs, MetaFunction } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { Link, Outlet, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
-import { Badge } from '~/components'
+import { Badge, Timestamp } from '~/components'
 import { Box, Button, Card, Flex, Heading, Text } from '@radix-ui/themes'
 import { OutgoingPaymentState } from '~/generated/graphql'
 import { getOutgoingPayment } from '~/lib/api/payments.server'
@@ -80,8 +80,7 @@ export default function ViewOutgoingPaymentPage() {
                 General Information
               </Heading>
               <Text size='2' color='gray'>
-                Created at{' '}
-                {new Date(outgoingPayment.createdAt).toLocaleString()}
+                Created at <Timestamp value={outgoingPayment.createdAt} />
               </Text>
             </Flex>
 
