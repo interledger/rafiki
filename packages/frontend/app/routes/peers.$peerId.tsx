@@ -370,44 +370,63 @@ export default function ViewPeerPage() {
               >
                 Asset Information
               </Heading>
-              <Flex gap='6' wrap='wrap' className='w-full'>
-                <Flex
-                  direction='column'
-                  gap='1'
-                  className='flex-1 min-w-[160px]'
-                >
-                  <Text size='2' weight='medium' className='text-gray-700'>
-                    Code
-                  </Text>
-                  <Text size='2' color='gray'>
-                    {peer.asset.code}
-                  </Text>
-                </Flex>
-                <Flex
-                  direction='column'
-                  gap='1'
-                  className='flex-1 min-w-[160px]'
-                >
-                  <Text size='2' weight='medium' className='text-gray-700'>
-                    Scale
-                  </Text>
-                  <Text size='2' color='gray'>
-                    {peer.asset.scale}
-                  </Text>
-                </Flex>
-                <Flex
-                  direction='column'
-                  gap='1'
-                  className='flex-1 min-w-[200px]'
-                >
-                  <Text size='2' weight='medium' className='text-gray-700'>
-                    Withdrawal threshold
-                  </Text>
-                  <Text size='2' color='gray'>
-                    {peer.asset.withdrawalThreshold ??
-                      'No withdrawal threshold'}
-                  </Text>
-                </Flex>
+              <Flex gap='6' wrap='wrap' className='w-full' asChild>
+                <dl>
+                  <Flex
+                    direction='column'
+                    gap='1'
+                    className='flex-1 min-w-[160px]'
+                  >
+                    <Text
+                      size='2'
+                      weight='medium'
+                      className='text-gray-700'
+                      asChild
+                    >
+                      <dt>Code</dt>
+                    </Text>
+                    <Text size='2' color='gray' asChild>
+                      <dd>{peer.asset.code}</dd>
+                    </Text>
+                  </Flex>
+                  <Flex
+                    direction='column'
+                    gap='1'
+                    className='flex-1 min-w-[160px]'
+                  >
+                    <Text
+                      size='2'
+                      weight='medium'
+                      className='text-gray-700'
+                      asChild
+                    >
+                      <dt>Scale</dt>
+                    </Text>
+                    <Text size='2' color='gray' asChild>
+                      <dd>{peer.asset.scale}</dd>
+                    </Text>
+                  </Flex>
+                  <Flex
+                    direction='column'
+                    gap='1'
+                    className='flex-1 min-w-[200px]'
+                  >
+                    <Text
+                      size='2'
+                      weight='medium'
+                      className='text-gray-700'
+                      asChild
+                    >
+                      <dt>Withdrawal threshold</dt>
+                    </Text>
+                    <Text size='2' color='gray' asChild>
+                      <dd>
+                        {peer.asset.withdrawalThreshold ??
+                          'No withdrawal threshold'}
+                      </dd>
+                    </Text>
+                  </Flex>
+                </dl>
               </Flex>
               <Flex justify='end'>
                 <Button asChild>
