@@ -20,7 +20,7 @@
     "hostile": "^1.4.0",
     "mock-account-service-lib": "workspace:*",
     "test-lib": "workspace:*",
-    "uuid": "^9.0.1",
+    "uuid": "^11.0.0",
     "yaml": "^2.7.0"
   }
 }
