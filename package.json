@@ -66,8 +66,8 @@
   "pnpm": {
     "overrides": {
       "@ardatan/relay-compiler": "^13.0.2",
-      "@babel/core": "^7.29.6",
-      "@babel/plugin-transform-modules-systemjs": "^7.29.4",
+      "@babel/core": "^7.29.7",
+      "@babel/plugin-transform-modules-systemjs": "^7.29.8",
       "@apollo/server": "^5.5.0",
       "@vanilla-extract/integration": "^8.0.10",
       "@grpc/grpc-js@>=1.0.0": "^1.10.12",
