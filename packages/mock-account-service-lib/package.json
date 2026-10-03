@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.11.8",
-    "@interledger/http-signature-utils": "2.0.2",
+    "@interledger/http-signature-utils": "2.0.3",
     "graphql": "^16.11.0",
     "pino": "^8.19.0",
     "pino-pretty": "^11.0.0",
