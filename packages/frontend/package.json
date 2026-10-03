@@ -15,7 +15,7 @@
   "dependencies": {
     "@apollo/client": "^3.11.8",
     "@headlessui/react": "^1.7.19",
-    "@radix-ui/themes": "^3.2.1",
+    "@radix-ui/themes": "^3.3.0",
     "@remix-run/node": "^2.17.5",
     "@remix-run/react": "^2.17.5",
     "@remix-run/serve": "^2.17.5",
