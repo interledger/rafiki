@@ -59,12 +59,12 @@ script:post-response {
   const body = res.getBody();
   
   if (body?.data) {
-    bru.setEnvVar("incomingPaymentId", body.data.createIncomingPayment.payment.id);
+    bru.setVar("incomingPaymentId", body.data.createIncomingPayment.payment.id);
   }
 }
 
 tests {
   test("incomingPaymentId is string", function() {
-    expect(bru.getEnvVar("incomingPaymentId")).to.be.a("string");
+    expect(bru.getVar("incomingPaymentId")).to.be.a("string");
   })
 }

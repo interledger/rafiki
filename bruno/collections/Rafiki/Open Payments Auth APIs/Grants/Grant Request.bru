@@ -65,7 +65,7 @@ script:post-response {
   // save continue uri
   const responseJson = res.body;
   if (res?.body?.continue?.uri) {
-    bru.setEnvVar('continueUri', res.body.continue.uri);
+    bru.setVar('continueUri', res.body.continue.uri);
   } else {
     console.warn('continue.uri not found in response');
   }

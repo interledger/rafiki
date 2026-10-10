@@ -36,7 +36,7 @@ script:post-response {
   const body = res.getBody();
   
   if (body?.id) {
-    bru.setEnvVar("outgoingPaymentId", body.id.split("/").pop());
+    bru.setVar("outgoingPaymentId", body.id.split("/").pop());
   }
   
 }

@@ -28,8 +28,8 @@ script:post-response {
   }
   
   const body = res.getBody()
-  bru.setEnvVar("senderAssetCode", body?.assetCode)
-  bru.setEnvVar("senderAssetScale", body?.assetScale)
+  bru.setVar("senderAssetCode", body?.assetCode)
+  bru.setVar("senderAssetScale", body?.assetScale)
   
   const authUrl = url.parse(body?.authServer)
   if (
@@ -37,17 +37,17 @@ script:post-response {
       authUrl.hostname.includes('happy-life-bank')
   ){
       const port = authUrl.hostname.includes('cloud-nine-wallet')? authUrl.port: Number(authUrl.port) + 1000
-      bru.setEnvVar("senderOpenPaymentsAuthHost", authUrl.protocol + '//localhost:' + port + authUrl.path);
+      bru.setVar("senderOpenPaymentsAuthHost", authUrl.protocol + '//localhost:' + port + authUrl.path);
   } else {
-      bru.setEnvVar("senderOpenPaymentsAuthHost", body?.authServer);
+      bru.setVar("senderOpenPaymentsAuthHost", body?.authServer);
   }
   
   const resourceUrl = url.parse(body?.resourceServer)
   if (resourceUrl.hostname.includes('cloud-nine-wallet') || resourceUrl.hostname.includes('happy-life-bank')) {
     const port = resourceUrl.hostname.includes('cloud-nine-wallet') ? bru.getEnvVar('senderOpenPaymentsPort') : bru.getEnvVar('receiverOpenPaymentsPort')
-      bru.setEnvVar("senderOpenPaymentsHost", 'http://localhost:' + port + resourceUrl.path);
+      bru.setVar("senderOpenPaymentsHost", 'http://localhost:' + port + resourceUrl.path);
   } else {
-      bru.setEnvVar("senderOpenPaymentsHost", body?.resourceServer);
+      bru.setVar("senderOpenPaymentsHost", body?.resourceServer);
   }
 }
 

@@ -56,10 +56,10 @@ const scripts = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         keyId: useDirectedIdentity
-          ? JSON.parse(bru.getEnvVar('directedIdentityPublicKey')).kid
+          ? JSON.parse(bru.getVar('directedIdentityPublicKey')).kid
           : bru.getEnvVar('clientKeyId'),
         base64Key: useDirectedIdentity
-          ? bru.getEnvVar('directedIdentityPrivateKey')
+          ? bru.getVar('directedIdentityPrivateKey')
           : bru.getEnvVar('clientPrivateKey'),
         request: {
           url,
@@ -169,7 +169,7 @@ const scripts = {
     const requestUrl = url.parse(this.resolveTemplateVariables(req.getUrl()))
 
     if (hostVarName) {
-      bru.setEnvVar(hostVarName, requestUrl.protocol + '//' + requestUrl.host)
+      bru.setVar(hostVarName, requestUrl.protocol + '//' + requestUrl.host)
     }
 
     if (requestUrl.hostname === 'localhost') {
@@ -185,13 +185,13 @@ const scripts = {
     const body = res.getBody()
 
     if (body?.access_token) {
-      bru.setEnvVar('accessToken', body.access_token.value)
-      bru.setEnvVar('tokenId', body.access_token.manage.split('/').pop())
+      bru.setVar('accessToken', body.access_token.value)
+      bru.setVar('tokenId', body.access_token.manage.split('/').pop())
     }
 
     if (body?.continue) {
-      bru.setEnvVar('continueToken', body.continue.access_token.value)
-      bru.setEnvVar('continueId', body.continue.uri.split('/').pop())
+      bru.setVar('continueToken', body.continue.access_token.value)
+      bru.setVar('continueId', body.continue.uri.split('/').pop())
     }
   },
 
@@ -242,7 +242,7 @@ const scripts = {
       .forEach((wa) => {
         const varName = mapFromPublicNameToVariableName[wa.publicName]
         if (varName) {
-          bru.setEnvVar(varName, wa.id)
+          bru.setVar(varName, wa.id)
         }
       })
   },
@@ -267,11 +267,11 @@ const scripts = {
       x: publicKey.x
     }
 
-    bru.setEnvVar(
+    bru.setVar(
       'directedIdentityPrivateKey',
       Buffer.from(privateKeyString, 'utf-8').toString('base64')
     )
-    bru.setEnvVar('directedIdentityPublicKey', JSON.stringify(jwk))
+    bru.setVar('directedIdentityPublicKey', JSON.stringify(jwk))
   }
 }
 
