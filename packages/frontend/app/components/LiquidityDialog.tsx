@@ -62,6 +62,8 @@ export const LiquidityDialog = ({
           <Flex direction='column' gap='2'>
             <Flex align='center' gap='2'>
               <Text
+                as='label'
+                htmlFor={amountId}
                 size='2'
                 weight='medium'
                 className='tracking-wide text-gray-700 min-w-[70px]'
