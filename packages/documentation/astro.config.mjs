@@ -470,6 +470,10 @@ export default defineConfig({
       ]
     })
   ],
+  redirects: {
+    '/overview/overview#more-about-account-servicing-entities':
+      '/overview/concepts/financial-service-provider'
+  },
   server: {
     port: 1101
   }
