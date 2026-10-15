@@ -63,18 +63,18 @@ script:post-response {
   const body = res.getBody();
   
   if (body?.data) {
-    bru.setEnvVar("walletAddressId", body.data.createWalletAddress.walletAddress.id);
-    bru.setEnvVar("walletAddressUrl", body.data.createWalletAddress.walletAddress.url);
-    bru.setEnvVar('initialWalletAddressRequest',req)
+    bru.setVar("walletAddressId", body.data.createWalletAddress.walletAddress.id);
+    bru.setVar("walletAddressUrl", body.data.createWalletAddress.walletAddress.url);
+    bru.setVar('initialWalletAddressRequest',req)
   }
 }
 
 tests {
   test("walletAddressId is string", function() {
-    expect(bru.getEnvVar("walletAddressId")).to.be.a("string");
+    expect(bru.getVar("walletAddressId")).to.be.a("string");
   })
   test("walletAddressUrl is string", function() {
-    expect(bru.getEnvVar("walletAddressUrl")).to.be.a("string");
+    expect(bru.getVar("walletAddressUrl")).to.be.a("string");
   })
   
 }
