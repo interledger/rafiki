@@ -1,8 +1,8 @@
-import { Form } from '@remix-run/react'
 import type { ChangeEvent } from 'react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { Button, Dialog, Flex, Text, TextField } from '@radix-ui/themes'
 import { renderFieldError } from '~/lib/form-errors'
+import { LiquidityConfirmDialog } from '~/components/LiquidityConfirmDialog'
 
 type BasicAsset = {
   code: string
@@ -22,8 +22,10 @@ export const LiquidityDialog = ({
   type,
   asset
 }: LiquidityDialogProps) => {
+  const [displayAmount, setDisplayAmount] = useState<string>('')
   const [actualAmount, setActualAmount] = useState<number>(0)
   const [errorMessage, setErrorMessage] = useState<string>('')
+  const [isConfirming, setIsConfirming] = useState<boolean>(false)
   const amountId = useId()
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -39,6 +41,7 @@ export const LiquidityDialog = ({
     } else {
       setErrorMessage('')
     }
+    setDisplayAmount(userInput)
     setActualAmount(integerScaledInput)
   }
 
@@ -48,6 +51,19 @@ export const LiquidityDialog = ({
       inputRef.current.focus()
     }
   }, [])
+
+  if (isConfirming) {
+    return (
+      <LiquidityConfirmDialog
+        title={title}
+        onClose={onClose}
+        type={type}
+        displayAmount={`${displayAmount} ${asset.code}`}
+        amount={String(actualAmount)}
+        onBack={() => setIsConfirming(false)}
+      />
+    )
+  }
 
   return (
     <Dialog.Root open={true} onOpenChange={(open) => !open && onClose()}>
@@ -77,6 +93,7 @@ export const LiquidityDialog = ({
                 required
                 type='number'
                 name='displayAmount'
+                value={displayAmount}
                 onChange={handleChange}
                 step='any'
                 size='3'
@@ -86,29 +103,21 @@ export const LiquidityDialog = ({
             {renderFieldError(errorMessage)}
           </Flex>
 
-          <Form method='post' replace preventScrollReset>
-            <input
-              required
-              min={1}
-              type='hidden'
-              name='amount'
-              value={actualAmount}
-            />
-            <Flex justify='end' gap='3' mt='2'>
-              <Dialog.Close>
-                <Button variant='soft' color='gray' type='button'>
-                  Cancel
-                </Button>
-              </Dialog.Close>
-              <Button
-                aria-label={`${type} liquidity`}
-                type='submit'
-                disabled={!!errorMessage}
-              >
-                {type} liquidity
+          <Flex justify='end' gap='3' mt='2'>
+            <Dialog.Close>
+              <Button variant='soft' color='gray' type='button'>
+                Cancel
               </Button>
-            </Flex>
-          </Form>
+            </Dialog.Close>
+            <Button
+              aria-label={`review ${type.toLowerCase()} liquidity`}
+              type='button'
+              disabled={!!errorMessage || !(actualAmount >= 1)}
+              onClick={() => setIsConfirming(true)}
+            >
+              Review
+            </Button>
+          </Flex>
         </Flex>
       </Dialog.Content>
     </Dialog.Root>
