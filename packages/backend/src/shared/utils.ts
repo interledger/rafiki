@@ -1,6 +1,6 @@
 import { validate, version } from 'uuid'
 import { URL, type URL as URLType } from 'url'
-import { createCipheriv, createHmac, randomBytes } from 'crypto'
+import { createCipheriv, createHmac, randomBytes, timingSafeEqual } from 'crypto'
 import { canonicalize } from 'json-canonicalize'
 import { IAppConfig } from '../config/app'
 import { AppContext, AppServices } from '../app'
@@ -125,6 +125,20 @@ function getSignatureParts(signature: string) {
   return { timestamp, version, digest }
 }
 
+function hmacHexDigestsEqual(expectedHex: string, providedHex: string): boolean {
+  const expected = Buffer.from(expectedHex, 'hex')
+  const provided = Buffer.from(providedHex, 'hex')
+  // Reject non-hex / length mismatch before timingSafeEqual (throws on unequal length).
+  if (
+    expected.length === 0 ||
+    expected.length !== provided.length ||
+    expectedHex.length !== providedHex.length
+  ) {
+    return false
+  }
+  return timingSafeEqual(expected, provided)
+}
+
 function verifyApiSignatureDigest(
   signature: string,
   request: AppContext['request'],
@@ -147,7 +161,7 @@ function verifyApiSignatureDigest(
   hmac.update(payload)
   const digest = hmac.digest('hex')
 
-  return digest === signatureDigest
+  return hmacHexDigestsEqual(digest, signatureDigest)
 }
 
 async function canApiSignatureBeProcessed(
