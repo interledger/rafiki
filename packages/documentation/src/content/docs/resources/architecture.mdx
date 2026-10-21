@@ -1,5 +1,6 @@
 ---
 title: Architecture
+lastUpdated: 2026-10-21
 ---
 
 import { LinkOut } from '@interledger/docs-design-system'
@@ -19,8 +20,8 @@ These services rely on a number of databases.
 - <LinkOut href='https://github.com/tigerbeetle/tigerbeetle'>
     TigerBeetle
   </LinkOut>
-  , used by the `backend` service for accounting balances
-- A Redis database used by the `backend` service as a cache to share STREAM connection details across processes
+  (recommended), used by the `backend` service for accounting balances. Alternatively, a Postgres database can be used for accounting.
+- A Redis database used by the `backend` service as a cache to share STREAM connection details across processes and to coordinate idempotency locking for Admin API mutations
 
 An additional package for [token introspection](/integration/deployment/services/auth-service#token-introspection) is also included with Rafiki. This is an internal package that requires no action on your part if you’re using Rafiki’s `auth` service.
 
