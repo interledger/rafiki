@@ -35,6 +35,7 @@ import {
   ConfirmationDialog,
   type ConfirmationDialogRef
 } from '~/components/ConfirmationDialog'
+import { Timestamp } from '~/components/Timestamp'
 import { FeeType } from '~/generated/graphql'
 import {
   getAssetInfo,
@@ -180,7 +181,7 @@ export default function ViewAssetPage() {
                   General Information
                 </Heading>
                 <Text size='2' color='gray'>
-                  Created at {new Date(asset.createdAt).toLocaleString()}
+                  Created at <Timestamp value={asset.createdAt} />
                 </Text>
               </Flex>
               {renderErrorPanel(response?.errors.general.message)}
@@ -296,8 +297,7 @@ export default function ViewAssetPage() {
                 </Heading>
                 {asset.sendingFee ? (
                   <Text size='2' color='gray'>
-                    Created at{' '}
-                    {new Date(asset.sendingFee.createdAt).toLocaleString()}
+                    Created at <Timestamp value={asset.sendingFee.createdAt} />
                   </Text>
                 ) : null}
               </Flex>

@@ -7,6 +7,7 @@ import { paginationSchema } from '~/lib/validate.server'
 import { getAssetWithFees } from '~/lib/api/asset.server'
 import { useLoaderData, useNavigate } from '@remix-run/react'
 import { Box, Button, Flex, Heading, Table, Text } from '@radix-ui/themes'
+import { Timestamp } from '~/components/Timestamp'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 
 export const meta: MetaFunction = () => [{ title: 'Asset Fees - Rafiki Admin' }]
@@ -101,7 +102,7 @@ export default function AssetFeesPage() {
                       </Table.Cell>
                       <Table.Cell>
                         <Text>
-                          {new Date(fee.node.createdAt).toLocaleString()}
+                          <Timestamp value={fee.node.createdAt} />
                         </Text>
                       </Table.Cell>
                     </Table.Row>

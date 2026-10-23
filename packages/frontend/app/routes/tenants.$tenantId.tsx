@@ -29,6 +29,7 @@ import {
   ConfirmationDialog,
   type ConfirmationDialogRef
 } from '~/components/ConfirmationDialog'
+import { Timestamp } from '~/components/Timestamp'
 import { updateTenant, deleteTenant, whoAmI } from '~/lib/api/tenant.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import {
@@ -159,10 +160,13 @@ export default function ViewTenantPage() {
                   General Information
                 </Heading>
                 <Text size='2' color='gray'>
-                  {`Created at ${new Date(tenant.createdAt).toLocaleString()}`}
-                  {tenantDeleted && tenant.deletedAt
-                    ? ` · Deleted at ${new Date(tenant.deletedAt).toLocaleString()}`
-                    : ''}
+                  Created at <Timestamp value={tenant.createdAt} />
+                  {tenantDeleted && tenant.deletedAt && (
+                    <>
+                      {' · Deleted at '}
+                      <Timestamp value={tenant.deletedAt} />
+                    </>
+                  )}
                 </Text>
               </Flex>
               {renderErrorPanel(response?.errors?.general.message)}
