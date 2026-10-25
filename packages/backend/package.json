@@ -89,7 +89,7 @@
     "knex": "^3.1.0",
     "koa": "^2.15.4",
     "koa-bodyparser": "^4.4.1",
-    "lodash": "^4.17.21",
+    "lodash": "^4.18.1",
     "luxon": "^3.4.4",
     "objection": "^3.1.5",
     "objection-db-errors": "^1.1.2",
