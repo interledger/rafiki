@@ -35,7 +35,7 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "globals": "^17.12.0",
     "prettier": "^3.9.6",
-    "prettier-plugin-astro": "^0.14.1",
+    "prettier-plugin-astro": "^1.1.2",
     "spectaql": "^3.0.9",
     "typescript-eslint": "^8.69.0"
   }
