@@ -82,8 +82,8 @@ importers:
         specifier: ^7.3.1
         version: 7.5.0(eslint@8.57.1)(typescript@5.4.3)
       dotenv:
-        specifier: ^16.4.7
-        version: 16.4.7
+        specifier: ^16.6.1
+        version: 16.6.1
       eslint:
         specifier: ^8.57.1
         version: 8.57.1
@@ -239,8 +239,8 @@ importers:
         specifier: 1.20.0
         version: 1.20.0(debug@4.3.2)
       dotenv:
-        specifier: ^16.4.7
-        version: 16.4.7
+        specifier: ^16.6.1
+        version: 16.6.1
       graphql:
         specifier: ^16.11.0
         version: 16.11.0
@@ -435,8 +435,8 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       dotenv:
-        specifier: ^16.4.7
-        version: 16.4.7
+        specifier: ^16.6.1
+        version: 16.6.1
       extensible-error:
         specifier: ^1.0.2
         version: 1.0.2
@@ -896,8 +896,8 @@ importers:
         specifier: 1.20.0
         version: 1.20.0(debug@4.3.2)
       dotenv:
-        specifier: ^16.4.7
-        version: 16.4.7
+        specifier: ^16.6.1
+        version: 16.6.1
       graphql:
         specifier: ^16.11.0
         version: 16.11.0
@@ -7494,6 +7494,10 @@ packages:
 
   dotenv@16.4.7:
     resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
+    engines: {node: '>=12'}
+
+  dotenv@16.6.1:
+    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
     engines: {node: '>=12'}
 
   dset@3.1.4:
@@ -15507,7 +15511,7 @@ snapshots:
       '@whatwg-node/fetch': 0.9.8
       chalk: 4.1.2
       debug: 4.4.3(supports-color@10.2.2)
-      dotenv: 16.4.7
+      dotenv: 16.6.1
       graphql: 16.11.0
       graphql-request: 6.1.0(graphql@16.11.0)
       http-proxy-agent: 7.0.0
@@ -20722,6 +20726,8 @@ snapshots:
       tslib: 2.8.1
 
   dotenv@16.4.7: {}
+
+  dotenv@16.6.1: {}
 
   dset@3.1.4: {}
 
