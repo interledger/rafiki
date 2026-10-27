@@ -1077,8 +1077,8 @@ importers:
         specifier: 7.4.0
         version: 7.4.0
       '@koa/bodyparser':
-        specifier: ^5.1.2
-        version: 5.1.2(koa@2.16.4)
+        specifier: ^6.1.0
+        version: 6.1.0(koa@2.16.4)
       '@types/koa':
         specifier: 2.15.0
         version: 2.15.0
@@ -3089,6 +3089,9 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
+  '@hapi/bourne@3.0.0':
+    resolution: {integrity: sha512-Waj1cwPXJDucOib4a3bAISsKJVb15MKi9IvmTI/7ssVEm6sywXGjVJDhl6/umt1pK1ZS7PacXU3A1PmFKHEZ2w==}
+
   '@headlessui/react@1.7.19':
     resolution: {integrity: sha512-Ll+8q3OlMJfJbAKM/+/Y2q6PPYbryqNTXDbryx7SXLIDamkF6iQFbriYHga0dY44PvDhvvBWCx1Xj4U5+G4hOw==}
     engines: {node: '>=10'}
@@ -3451,11 +3454,11 @@ packages:
   '@jspm/core@2.0.1':
     resolution: {integrity: sha512-Lg3PnLp0QXpxwLIAuuJboLeRaIhrgJjeuh797QADg3xz8wGLugQOS5DpsE8A6i6Adgzf+bacllkKZG3J0tGfDw==}
 
-  '@koa/bodyparser@5.1.2':
-    resolution: {integrity: sha512-eGJm9/66iUX+LUH03Cz0e94unbSKrmSPCick4MO5UorAAomcjC5Kl+SkoZ6CSyPew3neMYjj7n+djnlGYBSJAg==}
-    engines: {node: '>= 16'}
+  '@koa/bodyparser@6.1.0':
+    resolution: {integrity: sha512-thVG/Utbz9+dB4Nl8EBJKoaOI1DzO74dJqeDFILbAVhUq6C+4rmmrKFwxiDE63ScywOs0CHypx1IUrSRMueFTw==}
+    engines: {node: '>= 18'}
     peerDependencies:
-      koa: ^2.16.4
+      koa: ^3.1.2
 
   '@koa/cors@5.0.0':
     resolution: {integrity: sha512-x/iUDjcS90W69PryLDIMgFyV21YLTnG9zOpPXS7Bkt2b8AsY3zZsIpOLBkYr9fBcF3HbkKaER5hOBZLfpLgYNw==}
@@ -5334,6 +5337,9 @@ packages:
   '@types/caseless@0.12.2':
     resolution: {integrity: sha512-6ckxMjBBD8URvjB6J3NcnuAn5Pkl7t3TizAg+xdlzzQGSPSmBcXf8KoIH0ua/i+tio+ZRUHEXp0HEmvaR4kt0w==}
 
+  '@types/co-body@6.1.3':
+    resolution: {integrity: sha512-UhuhrQ5hclX6UJctv5m4Rfp52AfG9o9+d9/HwjxhVB5NjXxr5t9oKgJxN8xRHgr35oo8meUEHUPFWiKg6y71aA==}
+
   '@types/concat-stream@1.6.1':
     resolution: {integrity: sha512-eHE4cQPoj6ngxBZMvVf6Hw7Mh4jMW4U9lpGmS5GBPB9RYxlFg+CHaVN7ErNY4W9XfLIEn20b4VDYaIrbq0q4uA==}
 
@@ -6756,6 +6762,10 @@ packages:
 
   co-body@6.1.0:
     resolution: {integrity: sha512-m7pOT6CdLN7FuXUcpuz/8lfQ/L77x8SchHCF4G0RBTJO20Wzmhn5Sp4/5WsKy8OSpifBSUrmg83qEqaDHdyFuQ==}
+
+  co-body@6.2.0:
+    resolution: {integrity: sha512-Kbpv2Yd1NdL1V/V4cwLVxraHDV6K8ayohr2rmH0J87Er8+zJjcTa6dAn9QMPC9CRgU8+aNajKbSf1TzDB1yKPA==}
+    engines: {node: '>=8.0.0'}
 
   co@4.6.0:
     resolution: {integrity: sha512-QVb0dM5HvG+uaxitm8wONl7jltx8dqhfU33DcqtOZcLSVIKSDDLDi7+0LbAKiyI8hD9u42m2YxXSkMGWThaecQ==}
@@ -15620,6 +15630,8 @@ snapshots:
       protobufjs: 7.6.6
       yargs: 17.7.2
 
+  '@hapi/bourne@3.0.0': {}
+
   '@headlessui/react@1.7.19(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
     dependencies:
       '@tanstack/react-virtual': 3.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -16097,12 +16109,13 @@ snapshots:
 
   '@jspm/core@2.0.1': {}
 
-  '@koa/bodyparser@5.1.2(koa@2.16.4)':
+  '@koa/bodyparser@6.1.0(koa@2.16.4)':
     dependencies:
-      co-body: 6.1.0
+      '@types/co-body': 6.1.3
+      co-body: 6.2.0
       koa: 2.16.4
       lodash.merge: 4.6.2
-      type-is: 1.6.18
+      type-is: 2.0.1
 
   '@koa/cors@5.0.0':
     dependencies:
@@ -18188,6 +18201,11 @@ snapshots:
 
   '@types/caseless@0.12.2': {}
 
+  '@types/co-body@6.1.3':
+    dependencies:
+      '@types/node': 24.11.0
+      '@types/qs': 6.14.0
+
   '@types/concat-stream@1.6.1':
     dependencies:
       '@types/node': 24.11.0
@@ -20025,6 +20043,14 @@ snapshots:
 
   co-body@6.1.0:
     dependencies:
+      inflation: 2.0.0
+      qs: 6.15.2
+      raw-body: 2.5.2
+      type-is: 1.6.18
+
+  co-body@6.2.0:
+    dependencies:
+      '@hapi/bourne': 3.0.0
       inflation: 2.0.0
       qs: 6.15.2
       raw-body: 2.5.2
