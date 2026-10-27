@@ -303,8 +303,8 @@ importers:
         specifier: 2.15.0
         version: 2.15.0
       '@types/koa-bodyparser':
-        specifier: ^4.3.12
-        version: 4.3.12
+        specifier: ^4.3.13
+        version: 4.3.13
       '@types/koa-session':
         specifier: ^6.4.5
         version: 6.4.5
@@ -529,8 +529,8 @@ importers:
         specifier: 2.15.0
         version: 2.15.0
       '@types/koa-bodyparser':
-        specifier: ^4.3.12
-        version: 4.3.12
+        specifier: ^4.3.13
+        version: 4.3.13
       '@types/koa__cors':
         specifier: ^5.0.1
         version: 5.0.1
@@ -632,8 +632,8 @@ importers:
         specifier: 2.15.0
         version: 2.15.0
       '@types/koa-bodyparser':
-        specifier: ^4.3.12
-        version: 4.3.12
+        specifier: ^4.3.13
+        version: 4.3.13
       '@types/koa__cors':
         specifier: ^5.0.1
         version: 5.0.1
@@ -939,8 +939,8 @@ importers:
         specifier: 2.15.0
         version: 2.15.0
       '@types/koa-bodyparser':
-        specifier: ^4.3.12
-        version: 4.3.12
+        specifier: ^4.3.13
+        version: 4.3.13
       '@types/koa__cors':
         specifier: ^5.0.1
         version: 5.0.1
@@ -1083,8 +1083,8 @@ importers:
         specifier: 2.15.0
         version: 2.15.0
       '@types/koa-bodyparser':
-        specifier: ^4.3.12
-        version: 4.3.12
+        specifier: ^4.3.13
+        version: 4.3.13
       '@types/node':
         specifier: ^24.0.0
         version: 24.11.0
@@ -5532,8 +5532,8 @@ packages:
   '@types/keygrip@1.0.2':
     resolution: {integrity: sha512-GJhpTepz2udxGexqos8wgaBx4I/zWIDPh/KOGEwAqtuGDkOUJu5eFvwmdBX4AmB8Odsr+9pHCQqiAqDL/yKMKw==}
 
-  '@types/koa-bodyparser@4.3.12':
-    resolution: {integrity: sha512-hKMmRMVP889gPIdLZmmtou/BijaU1tHPyMNmcK7FAHAdATnRcGQQy78EqTTxLH1D4FTsrxIzklAQCso9oGoebQ==}
+  '@types/koa-bodyparser@4.3.13':
+    resolution: {integrity: sha512-yW9afsDnV1ymnhMBfAlzsKZ45sYnvIlTRS+eF5MUZOQ8ePIIj3ajwi+9b4a0vdyYvh6uJKYibU8R1zrUIpCmCA==}
 
   '@types/koa-compose@3.2.5':
     resolution: {integrity: sha512-B8nG/OoE1ORZqCkBVsup/AKcvjdgoHnfi4pZMn5UwAPCbhk/96xyv284eBYW8JlQbQ7zDmnpFr68I/40mFoIBQ==}
@@ -18424,7 +18424,7 @@ snapshots:
 
   '@types/keygrip@1.0.2': {}
 
-  '@types/koa-bodyparser@4.3.12':
+  '@types/koa-bodyparser@4.3.13':
     dependencies:
       '@types/koa': 2.15.0
 
