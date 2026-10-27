@@ -12,7 +12,7 @@ overrides:
   '@vanilla-extract/integration': ^8.0.10
   '@grpc/grpc-js@>=1.0.0': ^1.10.12
   '@opentelemetry/propagator-jaeger': ^2.10.0
-  '@remix-run/router': '>=1.23.2'
+  '@remix-run/router': '>=1.23.4'
   axios: 1.20.0
   brace-expansion@>=1.0.0 <2.0.0: ^1.1.18
   brace-expansion@>=2.0.0 <3.0.0: ^2.1.4
@@ -4866,8 +4866,8 @@ packages:
       typescript:
         optional: true
 
-  '@remix-run/router@1.23.3':
-    resolution: {integrity: sha512-4An71tdz9X8+3sI4Qqqd2LWd9vS39J7sqd9EU4Scw7TJE/qB10Flv/UuqbPVgfQV9XoK8Np6jNquZitnZq5i+Q==}
+  '@remix-run/router@1.23.4':
+    resolution: {integrity: sha512-q7j5geK7xs3UJSdm9/iytUNclBnLmYx1EnSeCFXHPeutdqgIMeFeHtUZgS3EhlKxdBEAu8OwtJCwmLrEzpSs7Q==}
     engines: {node: '>=14.0.0'}
 
   '@remix-run/serve@2.17.5':
@@ -17692,7 +17692,7 @@ snapshots:
       '@npmcli/package-json': 4.0.1
       '@remix-run/node': 2.17.5(typescript@5.9.3)
       '@remix-run/react': 2.17.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3)
-      '@remix-run/router': 1.23.3
+      '@remix-run/router': 1.23.4
       '@remix-run/server-runtime': 2.17.5(typescript@5.9.3)
       '@types/mdx': 2.0.7
       '@vanilla-extract/integration': 8.0.10
@@ -17808,7 +17808,7 @@ snapshots:
 
   '@remix-run/react@2.17.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.9.3)':
     dependencies:
-      '@remix-run/router': 1.23.3
+      '@remix-run/router': 1.23.4
       '@remix-run/server-runtime': 2.17.5(typescript@5.9.3)
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
@@ -17818,7 +17818,7 @@ snapshots:
     optionalDependencies:
       typescript: 5.9.3
 
-  '@remix-run/router@1.23.3': {}
+  '@remix-run/router@1.23.4': {}
 
   '@remix-run/serve@2.17.5(typescript@5.9.3)':
     dependencies:
@@ -17836,7 +17836,7 @@ snapshots:
 
   '@remix-run/server-runtime@2.17.5(typescript@5.9.3)':
     dependencies:
-      '@remix-run/router': 1.23.3
+      '@remix-run/router': 1.23.4
       '@types/cookie': 0.6.0
       '@web3-storage/multipart-parser': 1.0.0
       cookie: 0.7.2
@@ -25960,14 +25960,14 @@ snapshots:
 
   react-router-dom@6.30.4(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
     dependencies:
-      '@remix-run/router': 1.23.3
+      '@remix-run/router': 1.23.4
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
       react-router: 6.30.4(react@18.2.0)
 
   react-router@6.30.4(react@18.2.0):
     dependencies:
-      '@remix-run/router': 1.23.3
+      '@remix-run/router': 1.23.4
       react: 18.2.0
 
   react-style-singleton@2.2.3(@types/react@18.2.73)(react@18.2.0):
