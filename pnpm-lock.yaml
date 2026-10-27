@@ -13,7 +13,7 @@ overrides:
   '@grpc/grpc-js@>=1.0.0': ^1.14.6
   '@opentelemetry/propagator-jaeger': ^2.10.0
   '@remix-run/router': '>=1.23.2'
-  axios: 1.20.0
+  axios: 1.21.0
   brace-expansion@>=1.0.0 <2.0.0: ^1.1.18
   brace-expansion@>=2.0.0 <3.0.0: ^2.1.4
   brace-expansion@>=5.0.0 <6.0.0: ^5.0.9
@@ -142,8 +142,8 @@ importers:
         specifier: ^9.0.8
         version: 9.0.8
       axios:
-        specifier: 1.20.0
-        version: 1.20.0(debug@4.3.2)
+        specifier: 1.21.0
+        version: 1.21.0(debug@4.3.2)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -236,8 +236,8 @@ importers:
         specifier: ^8.12.0
         version: 8.18.0
       axios:
-        specifier: 1.20.0
-        version: 1.20.0(debug@4.3.2)
+        specifier: 1.21.0
+        version: 1.21.0(debug@4.3.2)
       dotenv:
         specifier: ^16.4.7
         version: 16.4.7
@@ -429,8 +429,8 @@ importers:
         specifier: ^8.12.0
         version: 8.18.0
       axios:
-        specifier: 1.20.0
-        version: 1.20.0(debug@4.3.2)
+        specifier: 1.21.0
+        version: 1.21.0(debug@4.3.2)
       base64url:
         specifier: ^3.0.1
         version: 3.0.1
@@ -759,8 +759,8 @@ importers:
         specifier: ^2.17.5
         version: 2.17.5(typescript@5.9.3)
       axios:
-        specifier: 1.20.0
-        version: 1.20.0(debug@4.3.2)
+        specifier: 1.21.0
+        version: 1.21.0(debug@4.3.2)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -893,8 +893,8 @@ importers:
         specifier: ^12.0.2
         version: 12.0.2
       axios:
-        specifier: 1.20.0
-        version: 1.20.0(debug@4.3.2)
+        specifier: 1.21.0
+        version: 1.21.0(debug@4.3.2)
       dotenv:
         specifier: ^16.4.7
         version: 16.4.7
@@ -984,8 +984,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       axios:
-        specifier: 1.20.0
-        version: 1.20.0(debug@4.3.2)
+        specifier: 1.21.0
+        version: 1.21.0(debug@4.3.2)
       pino:
         specifier: ^8.19.0
         version: 8.19.0
@@ -1089,8 +1089,8 @@ importers:
         specifier: ^24.0.0
         version: 24.11.0
       axios:
-        specifier: 1.20.0
-        version: 1.20.0(debug@4.3.2)
+        specifier: 1.21.0
+        version: 1.21.0(debug@4.3.2)
       graphql:
         specifier: ^16.11.0
         version: 16.11.0
@@ -6337,8 +6337,8 @@ packages:
     resolution: {integrity: sha512-RE3mdQ7P3FRSe7eqCWoeQ/Z9QXrtniSjp1wUjt5nRC3WIpz5rSCve6o3fsZ2aCpJtrZjSZgjwXAoTO5k4tEI0w==}
     engines: {node: '>=4'}
 
-  axios@1.20.0:
-    resolution: {integrity: sha512-r8aOh8j9cGKpgQAqpzrUHnSIc6a59Y3Xf/cv8sy1DrHCkZHzQGEuoq1tARk6qSyDdtQGSDgpb9kFlruzPvrgwg==}
+  axios@1.21.0:
+    resolution: {integrity: sha512-YCzXMB53Q9PZBsh7yN7wtapit4WepwcHS2fP8QhGsBxSz5YtgYobV7GGlWlAJi+RxfU77GQTQi2DSLUma42EYA==}
 
   axobject-query@4.1.0:
     resolution: {integrity: sha512-qIj0G9wZbMGNLjLmg1PT6v2mE9AH2zlnADJD/2tC6E00hgmhUOfEB6greHPAfLRSufHqROIUTkw6E+M3lH0PTQ==}
@@ -16732,7 +16732,7 @@ snapshots:
 
   '@ory/client@1.9.0':
     dependencies:
-      axios: 1.20.0(debug@4.3.2)
+      axios: 1.21.0(debug@4.3.2)
     transitivePeerDependencies:
       - debug
       - supports-color
@@ -19513,7 +19513,7 @@ snapshots:
 
   axe-core@4.10.2: {}
 
-  axios@1.20.0(debug@4.3.2):
+  axios@1.21.0(debug@4.3.2):
     dependencies:
       follow-redirects: 1.16.2(debug@4.3.2)
       form-data: 4.0.6
@@ -23762,7 +23762,7 @@ snapshots:
 
   localtunnel@2.0.2:
     dependencies:
-      axios: 1.20.0(debug@4.3.2)
+      axios: 1.21.0(debug@4.3.2)
       debug: 4.3.2
       openurl: 1.1.1
       yargs: 17.1.1
@@ -25248,7 +25248,7 @@ snapshots:
     dependencies:
       '@types/request': 2.48.8
       '@types/superagent': 4.1.15
-      axios: 1.20.0(debug@4.3.2)
+      axios: 1.21.0(debug@4.3.2)
       combos: 0.2.0
       fs-extra: 9.1.0
       js-yaml: 4.3.2
