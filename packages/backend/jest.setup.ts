@@ -73,6 +73,9 @@ const setup = async (globalConfig): Promise<void> => {
     if (!process.env.REDIS_URL) {
       const redisContainer = await new GenericContainer('redis:7')
         .withExposedPorts(REDIS_PORT)
+        // Each worker uses its own logical database, indexed by JEST_WORKER_ID.
+        // Redis only provides 16 by default, which a high core count exceeds.
+        .withCommand(['redis-server', '--databases', '64'])
         .start()
 
       global.__BACKEND_REDIS__ = redisContainer

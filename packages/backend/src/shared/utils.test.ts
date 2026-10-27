@@ -157,7 +157,7 @@ describe('utils', (): void => {
 
     afterEach(async (): Promise<void> => {
       jest.useRealTimers()
-      await redis.flushall()
+      await redis.flushdb()
     })
 
     afterAll(async (): Promise<void> => {
@@ -319,7 +319,7 @@ describe('utils', (): void => {
     })
 
     afterEach(async (): Promise<void> => {
-      await redis.flushall()
+      await redis.flushdb()
       await truncateTables(deps)
     })
 
