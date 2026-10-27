@@ -28,7 +28,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@typescript-eslint/parser": "^8.69.0",
-    "astro-eslint-parser": "^3.1.0",
+    "astro-eslint-parser": "^3.2.0",
     "eslint": "^10.9.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-astro": "^3.1.0",
