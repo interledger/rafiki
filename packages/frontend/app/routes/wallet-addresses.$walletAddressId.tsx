@@ -24,6 +24,7 @@ import {
   Select
 } from '@radix-ui/themes'
 import { renderErrorPanel, renderFieldError } from '~/lib/form-errors'
+import { Timestamp } from '~/components/Timestamp'
 import {
   getWalletAddress,
   updateWalletAddress
@@ -142,8 +143,7 @@ export default function ViewWalletAddressPage() {
                   General Information
                 </Heading>
                 <Text size='2' color='gray'>
-                  Created at{' '}
-                  {new Date(walletAddress.createdAt).toLocaleString()}
+                  Created at <Timestamp value={walletAddress.createdAt} />
                 </Text>
               </Flex>
               {renderErrorPanel(response?.errors.message)}
