@@ -40,7 +40,7 @@ export type TenantInstanceConfig = {
 }
 
 export type JSONError<T extends z.ZodTypeAny> = {
-  errors: z.typeToFlattenedError<z.infer<T>>
+  errors: z.ZodFlattenedError<z.infer<T>>
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
