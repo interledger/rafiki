@@ -12,7 +12,7 @@
     "lint": "prettier --check '**/*.{js,mjs,ts,tsx,json,md,mdx,astro}' && eslint --max-warnings=0 ."
   },
   "dependencies": {
-    "@astrojs/markdown-remark": "^7.3.0",
+    "@astrojs/markdown-remark": "^7.3.5",
     "@astrojs/starlight": "^0.42.0",
     "@interledger/docs-design-system": "^0.14.2",
     "astro": "~7.2.10",
