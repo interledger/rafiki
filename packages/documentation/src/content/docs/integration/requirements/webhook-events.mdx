@@ -190,7 +190,16 @@ function verifyWebhookSignature(request: Request): boolean {
   const hmac = createHmac('sha256', config['SIGNATURE_SECRET'])
   hmac.update(payload)
   const digest = hmac.digest('hex')
-  return digest === signatureDigest
+  const expected = Buffer.from(digest, 'hex')
+  const provided = Buffer.from(signatureDigest, 'hex')
+  if (
+    expected.length === 0 ||
+    expected.length !== provided.length ||
+    digest.length !== signatureDigest.length
+  ) {
+    return false
+  }
+  return require('crypto').timingSafeEqual(expected, provided)
 }
 ```
 
