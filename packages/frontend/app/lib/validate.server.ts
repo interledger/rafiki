@@ -39,7 +39,7 @@ export const peerGeneralInfoSchema = z
       }),
     maxPacketAmount: z.coerce
       .bigint({
-        invalid_type_error: 'Max packet amount is expected to be a number.'
+        error: 'Max packet amount is expected to be a number.'
       })
       .optional()
   })
@@ -70,7 +70,7 @@ export const updateAssetSchema = z
   .object({
     withdrawalThreshold: z.coerce
       .bigint({
-        invalid_type_error: 'Max packet amount is expected to be a number.'
+        error: 'Max packet amount is expected to be a number.'
       })
       .optional()
   })
@@ -85,7 +85,7 @@ export const setAssetFeeSchema = z.object({
     .max(10000, { message: 'Basis points should be from 0 to 10000' }),
   fixed: z.coerce
     .bigint({
-      invalid_type_error: 'Fixed Fee amount is expected to be a number.'
+      error: 'Fixed Fee amount is expected to be a number.'
     })
     .nonnegative()
 })
@@ -100,7 +100,7 @@ export const createAssetSchema = z
       .transform((code) => code.toUpperCase()),
     scale: z.coerce
       .number({
-        invalid_type_error: 'Max packet amount is expected to be a number.'
+        error: 'Max packet amount is expected to be a number.'
       })
       .int()
       .min(0, { message: 'Scale should be from 0 to 255' })
@@ -112,7 +112,7 @@ export const createAssetSchema = z
 
 export const amountSchema = z.coerce
   .bigint({
-    invalid_type_error: 'Amount is expected to be a number.'
+    error: 'Amount is expected to be a number.'
   })
   .positive()
 
