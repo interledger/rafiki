@@ -1,6 +1,11 @@
 import { validate, version } from 'uuid'
 import { URL, type URL as URLType } from 'url'
-import { createCipheriv, createHmac, randomBytes, timingSafeEqual } from 'crypto'
+import {
+  createCipheriv,
+  createHmac,
+  randomBytes,
+  timingSafeEqual
+} from 'crypto'
 import { canonicalize } from 'json-canonicalize'
 import { IAppConfig } from '../config/app'
 import { AppContext, AppServices } from '../app'
@@ -125,7 +130,10 @@ function getSignatureParts(signature: string) {
   return { timestamp, version, digest }
 }
 
-function hmacHexDigestsEqual(expectedHex: string, providedHex: string): boolean {
+function hmacHexDigestsEqual(
+  expectedHex: string,
+  providedHex: string
+): boolean {
   const expected = Buffer.from(expectedHex, 'hex')
   const provided = Buffer.from(providedHex, 'hex')
   // Reject non-hex / length mismatch before timingSafeEqual (throws on unequal length).
