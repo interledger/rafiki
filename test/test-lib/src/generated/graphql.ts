@@ -709,6 +709,8 @@ export type IncomingPaymentResponse = {
 };
 
 export enum IncomingPaymentState {
+  /** The payment is cancelled before completion, and no further funds will be accepted. */
+  Cancelled = 'CANCELLED',
   /** The payment is completed automatically once the expected `incomingAmount` is received or manually via an API call. */
   Completed = 'COMPLETED',
   /** The payment has expired before completion, and no further funds will be accepted. */
