@@ -55,7 +55,7 @@ overrides:
   tmp: ^0.2.7
   turbo-stream: ^3.0.0
   undici@>=5.0.0: ^8.3.0
-  undici@>=6.0.0: ^6.28.0
+  undici@>=6.0.0: ^6.29.1
   vite@>=6.0.0 <7.0.0: ^6.4.3
   webpack: ^5.104.1
   websocket-driver: ^0.7.5
@@ -173,8 +173,8 @@ importers:
         specifier: ^2.8.3
         version: 2.8.3
       zod:
-        specifier: ^3.22.4
-        version: 3.23.4
+        specifier: ^4.0.0
+        version: 4.6.6
     devDependencies:
       '@remix-run/dev':
         specifier: ^2.17.5
@@ -213,14 +213,14 @@ importers:
         specifier: ^3.2.0
         version: 3.2.0(@apollo/server@5.5.0(graphql@16.11.0))(@envelop/core@5.2.3)(@escape.tech/graphql-armor-types@0.7.0)
       '@graphql-tools/graphql-file-loader':
-        specifier: ^8.1.24
-        version: 8.1.24(graphql@16.11.0)
+        specifier: ^9.1.0
+        version: 9.1.0(graphql@16.11.0)
       '@graphql-tools/load':
-        specifier: ^8.1.21
-        version: 8.1.21(graphql@16.11.0)
+        specifier: ^9.1.0
+        version: 9.1.0(graphql@16.11.0)
       '@graphql-tools/schema':
-        specifier: ^10.1.5
-        version: 10.1.5(graphql@16.11.0)
+        specifier: ^11.0.7
+        version: 11.0.7(graphql@16.11.0)
       '@interledger/http-signature-utils':
         specifier: 2.0.2
         version: 2.0.2
@@ -364,14 +364,14 @@ importers:
         specifier: ^3.2.0
         version: 3.2.0(@apollo/server@5.5.0(graphql@16.11.0))(@envelop/core@5.2.3)(@escape.tech/graphql-armor-types@0.7.0)
       '@graphql-tools/graphql-file-loader':
-        specifier: ^8.1.24
-        version: 8.1.24(graphql@16.11.0)
+        specifier: ^9.1.0
+        version: 9.1.0(graphql@16.11.0)
       '@graphql-tools/load':
-        specifier: ^8.1.21
-        version: 8.1.21(graphql@16.11.0)
+        specifier: ^9.1.0
+        version: 9.1.0(graphql@16.11.0)
       '@graphql-tools/schema':
-        specifier: ^10.1.5
-        version: 10.1.5(graphql@16.11.0)
+        specifier: ^11.0.7
+        version: 11.0.7(graphql@16.11.0)
       '@interledger/http-signature-utils':
         specifier: 2.0.2
         version: 2.0.2
@@ -799,8 +799,8 @@ importers:
         specifier: ^2.8.3
         version: 2.8.3
       zod:
-        specifier: ^3.22.4
-        version: 3.22.4
+        specifier: ^4.0.0
+        version: 4.6.6
     devDependencies:
       '@ory/client':
         specifier: ^1.9.0
@@ -2962,6 +2962,12 @@ packages:
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
 
+  '@graphql-tools/graphql-file-loader@9.1.0':
+    resolution: {integrity: sha512-MLbtflBbZN66FrfjLobygUJmbddfKr+LU4D+dFsG39VNQ7V6XetQjgoSoQpicKBpDHYZMwm3DvNNUSTFuE/7uQ==}
+    engines: {node: '>=22.18.0'}
+    peerDependencies:
+      graphql: ^16.0.0 || ^17.0.0
+
   '@graphql-tools/graphql-tag-pluck@8.0.1':
     resolution: {integrity: sha512-4sfBJSoXxVB4rRCCp2GTFhAYsUJgAPSKxSV+E3Voc600mK52JO+KsHCCTnPgCeyJFMNR9l94J6+tqxVKmlqKvw==}
     engines: {node: '>=16.0.0'}
@@ -2974,6 +2980,12 @@ packages:
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
 
+  '@graphql-tools/import@8.0.7':
+    resolution: {integrity: sha512-o1ExqNDusfkqgoIOGceZDppvbTqEY1N6OL0ANhOazCssm3lHGx+8XTCzKP07iZejKItV8MPKLCPup41nISujvA==}
+    engines: {node: '>=22.18.0'}
+    peerDependencies:
+      graphql: ^16.0.0 || ^17.0.0
+
   '@graphql-tools/json-file-loader@8.0.11':
     resolution: {integrity: sha512-xsfIbPyxyXWnu+GSC5HCw945Gt++b+5NeEvpunw2cK9myGhF2Bkb8N4QTNwWy+7kvOAKzNopBGqGV+x3uaQAZA==}
     engines: {node: '>=16.0.0'}
@@ -2985,11 +2997,29 @@ packages:
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
 
+  '@graphql-tools/load-files@8.0.7':
+    resolution: {integrity: sha512-+9Qz6tj644B1Xf37ckqlgliPf+m1ZEZpW2woORzwXjkvCIP05y8mvaArLZTVVRXcLZCVs2CXsLT7z9V30N+VZQ==}
+    engines: {node: '>=22.18.0'}
+    peerDependencies:
+      graphql: ^16.0.0 || ^17.0.0
+
   '@graphql-tools/load@8.1.21':
     resolution: {integrity: sha512-OiaAP3PqRpmWBexUxHnGMB9PuW5OY7GfTLWj+f0BbSeXckkJmikA8ZrfR0G973AHUz6y9t058ItZEi4F9+Cy9A==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+
+  '@graphql-tools/load@9.1.0':
+    resolution: {integrity: sha512-rQV7sWGMR82zLBSCPM21S3A9uwsHT6vN+TA5vucEzcbU6+nlwI95ttqbCQv10ijx2JdKuS0QS0dyTnWrki64Jw==}
+    engines: {node: '>=22.18.0'}
+    peerDependencies:
+      graphql: ^16.0.0 || ^17.0.0
+
+  '@graphql-tools/merge@10.0.7':
+    resolution: {integrity: sha512-Xnf0rvHPI1EPFs4cVTlcfZzQ1kgo8XtaHIlF3mfRPTaeLBo1/9HQeofkOIqFYDFogUXk08fTKZCe+/hdX6J+GA==}
+    engines: {node: '>=22.18.0'}
+    peerDependencies:
+      graphql: ^16.0.0 || ^17.0.0
 
   '@graphql-tools/merge@8.3.1':
     resolution: {integrity: sha512-BMm99mqdNZbEYeTPK3it9r9S6rsZsQKtlqJsSBknAclXq2pGEfOxjcIZi+kBSkHZKPKCRrYDd5vY0+rUmIHVLg==}
@@ -3038,6 +3068,12 @@ packages:
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
 
+  '@graphql-tools/schema@11.0.7':
+    resolution: {integrity: sha512-YYi+ODhGjsL2J1ATsf8dquhH7OBdtdS/xqs6TKSweIhcsOTqSOxbwJXi5tIP9djruf35YqPMFnkgSSPyv2QokA==}
+    engines: {node: '>=22.18.0'}
+    peerDependencies:
+      graphql: ^16.0.0 || ^17.0.0
+
   '@graphql-tools/schema@8.5.1':
     resolution: {integrity: sha512-0Esilsh0P/qYcB5DKQpiKeQs/jevzIadNTaT0jeWklPMwNbT7yMX4EqZany7mbeRRlSRwMzNzL5olyFdffHBZg==}
     peerDependencies:
@@ -3045,12 +3081,6 @@ packages:
 
   '@graphql-tools/url-loader@8.0.24':
     resolution: {integrity: sha512-f+Yt6sswiEPrcWsInMbmf+3HNENV2IZK1z3IiGMHuyqb+QsMbJLxzDPHnxMtF2QGJOiRjBQy2sF2en7DPG+jSw==}
-    engines: {node: '>=16.0.0'}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-
-  '@graphql-tools/utils@10.1.3':
-    resolution: {integrity: sha512-loco2ctrrMQzdpSHbcOo6+Ecp21BV67cQ2pNGhuVKAexruu01RdLn3LgtK47B9BpLz3cUD6U0u1R0rur7xMOOg==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
@@ -3066,6 +3096,12 @@ packages:
     engines: {node: '>=16.0.0'}
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+
+  '@graphql-tools/utils@13.2.0':
+    resolution: {integrity: sha512-s3+6E/Zve4Okj7+60HpMBoVDmMBzuskX1u9C1/kNi86V3Aez1Eh1LP0crh929kzhb1YcyZYyVWGuKyfztuF5qA==}
+    engines: {node: '>=22.18.0'}
+    peerDependencies:
+      graphql: ^16.0.0 || ^17.0.0
 
   '@graphql-tools/utils@8.9.0':
     resolution: {integrity: sha512-pjJIWH0XOVnYGXCqej8g/u/tsfV4LvLlj0eATKQu5zwnxd/TiTHq7Cg313qUPTFFHZ3PP5wJ15chYVtLDwaymg==}
@@ -6994,10 +7030,6 @@ packages:
 
   cross-fetch@4.1.0:
     resolution: {integrity: sha512-uKm5PU+MHTootlWEY+mZ4vvXoCn4fLQxT9dSc1sXVMSFkINTJVN8cAQROpwcKm8bJ/c7rgZVIBWzH5T78sNZZw==}
-
-  cross-inspect@1.0.0:
-    resolution: {integrity: sha512-4PFfn4b5ZN6FMNGSZlyb7wUhuN8wvj8t/VQHZdM4JsDcruGJ8L2kf9zao98QIrBPFCpdk27qst/AGTl7pL3ypQ==}
-    engines: {node: '>=16.0.0'}
 
   cross-inspect@1.0.1:
     resolution: {integrity: sha512-Pcw1JTvZLSJH83iiGWt6fRcT+BjZlCDRVwYLbUcHzv/CRpB7r0MlSrGbIyQvVSNyGnbt7G4AXuyCiDR3POvZ1A==}
@@ -12649,8 +12681,8 @@ packages:
   undici-types@7.16.0:
     resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
 
-  undici@6.28.1:
-    resolution: {integrity: sha512-zWpdTVD54H48CIybL0rWQ3ukpb9d23wM7eH5RtfdmeP70cWHNjtfo7P4vZX+5CoDcO53J4Pu5uXp7lNfjc6DRA==}
+  undici@6.29.1:
+    resolution: {integrity: sha512-EvRlUt/QqAEvXdQeRMYUfwOQsfzpDztykrG2owGEE/rBOBoYv9uF39ZzsNDh4lTFHhTr2XOZjKkYgueD12ZmGA==}
     engines: {node: '>=18.17'}
 
   unicode-canonical-property-names-ecmascript@2.0.1:
@@ -13302,14 +13334,11 @@ packages:
     resolution: {integrity: sha512-zK7YHHz4ZXpW89AHXUPbQVGKI7uvkd3hzusTdotCg1UxyaVtg0zFJSTfW/Dq5f7OBBVnq6cZIaC8Ti4hb6dtCA==}
     engines: {node: '>= 14'}
 
-  zod@3.22.4:
-    resolution: {integrity: sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==}
+  zod@4.6.6:
+    resolution: {integrity: sha512-4UmzQUF5fxvfcYHlbjBmejU+w+hbDnWFx4aS8kBx7nPBHcO2SqPbpAG8snbdg+Xse4pRefR98hgjFgIMCI/UhA==}
 
-  zod@3.23.4:
-    resolution: {integrity: sha512-/AtWOKbBgjzEYYQRNfoGKHObgfAZag6qUJX1VbHo2PRBgS+wfWagEY2mizjfyAPcGesrJOcx/wcl0L9WnVrHFw==}
-
-  zod@4.3.6:
-    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
+  zod@4.6.7:
+    resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -13660,7 +13689,7 @@ snapshots:
   '@astrojs/sitemap@3.7.4':
     dependencies:
       sitemap: 9.0.1
-      zod: 4.3.6
+      zod: 4.6.7
 
   '@astrojs/starlight@0.42.0(@astrojs/markdown-remark@7.3.0)(astro@7.2.10(@astrojs/markdown-remark@7.3.0)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.11.0)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3)':
     dependencies:
@@ -15200,7 +15229,7 @@ snapshots:
 
   '@graphql-codegen/plugin-helpers@5.0.3(graphql@16.11.0)':
     dependencies:
-      '@graphql-tools/utils': 10.1.3(graphql@16.11.0)
+      '@graphql-tools/utils': 10.7.2(graphql@16.11.0)
       change-case-all: 1.0.15
       common-tags: 1.8.2
       graphql: 16.11.0
@@ -15267,7 +15296,7 @@ snapshots:
       '@graphql-codegen/plugin-helpers': 5.0.3(graphql@16.11.0)
       '@graphql-tools/optimize': 2.0.0(graphql@16.11.0)
       '@graphql-tools/relay-operation-optimizer': 7.0.0(graphql@16.11.0)
-      '@graphql-tools/utils': 10.1.3(graphql@16.11.0)
+      '@graphql-tools/utils': 10.7.2(graphql@16.11.0)
       auto-bind: 4.0.0
       change-case-all: 1.0.15
       dependency-graph: 0.11.0
@@ -15457,6 +15486,15 @@ snapshots:
       tslib: 2.8.1
       unixify: 1.0.0
 
+  '@graphql-tools/graphql-file-loader@9.1.0(graphql@16.11.0)':
+    dependencies:
+      '@graphql-tools/import': 8.0.7(graphql@16.11.0)
+      '@graphql-tools/load-files': 8.0.7(graphql@16.11.0)
+      '@graphql-tools/utils': 13.2.0(graphql@16.11.0)
+      graphql: 16.11.0
+      tslib: 2.8.1
+      unixify: 1.0.0
+
   '@graphql-tools/graphql-tag-pluck@8.0.1(@babel/core@7.29.7)(graphql@16.11.0)':
     dependencies:
       '@babel/parser': 7.29.2
@@ -15477,6 +15515,13 @@ snapshots:
       resolve-from: 5.0.0
       tslib: 2.8.1
 
+  '@graphql-tools/import@8.0.7(graphql@16.11.0)':
+    dependencies:
+      '@graphql-tools/utils': 13.2.0(graphql@16.11.0)
+      graphql: 16.11.0
+      resolve-from: 5.0.0
+      tslib: 2.8.1
+
   '@graphql-tools/json-file-loader@8.0.11(graphql@16.11.0)':
     dependencies:
       '@graphql-tools/utils': 10.7.2(graphql@16.11.0)
@@ -15492,12 +15537,33 @@ snapshots:
       tslib: 2.8.1
       unixify: 1.0.0
 
+  '@graphql-tools/load-files@8.0.7(graphql@16.11.0)':
+    dependencies:
+      '@graphql-tools/utils': 13.2.0(graphql@16.11.0)
+      graphql: 16.11.0
+      tslib: 2.8.1
+      unixify: 1.0.0
+
   '@graphql-tools/load@8.1.21(graphql@16.11.0)':
     dependencies:
       '@graphql-tools/schema': 10.1.5(graphql@16.11.0)
       '@graphql-tools/utils': 12.1.0(graphql@16.11.0)
       graphql: 16.11.0
       p-limit: 3.1.0
+      tslib: 2.8.1
+
+  '@graphql-tools/load@9.1.0(graphql@16.11.0)':
+    dependencies:
+      '@graphql-tools/schema': 11.0.7(graphql@16.11.0)
+      '@graphql-tools/utils': 13.2.0(graphql@16.11.0)
+      graphql: 16.11.0
+      p-limit: 3.1.0
+      tslib: 2.8.1
+
+  '@graphql-tools/merge@10.0.7(graphql@16.11.0)':
+    dependencies:
+      '@graphql-tools/utils': 13.2.0(graphql@16.11.0)
+      graphql: 16.11.0
       tslib: 2.8.1
 
   '@graphql-tools/merge@8.3.1(graphql@16.11.0)':
@@ -15571,6 +15637,13 @@ snapshots:
       graphql: 16.11.0
       tslib: 2.8.1
 
+  '@graphql-tools/schema@11.0.7(graphql@16.11.0)':
+    dependencies:
+      '@graphql-tools/merge': 10.0.7(graphql@16.11.0)
+      '@graphql-tools/utils': 13.2.0(graphql@16.11.0)
+      graphql: 16.11.0
+      tslib: 2.8.1
+
   '@graphql-tools/schema@8.5.1(graphql@16.11.0)':
     dependencies:
       '@graphql-tools/merge': 8.3.1(graphql@16.11.0)
@@ -15599,14 +15672,6 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@graphql-tools/utils@10.1.3(graphql@16.11.0)':
-    dependencies:
-      '@graphql-typed-document-node/core': 3.2.0(graphql@16.11.0)
-      cross-inspect: 1.0.0
-      dset: 3.1.4
-      graphql: 16.11.0
-      tslib: 2.8.1
-
   '@graphql-tools/utils@10.7.2(graphql@16.11.0)':
     dependencies:
       '@graphql-typed-document-node/core': 3.2.0(graphql@16.11.0)
@@ -15620,6 +15685,13 @@ snapshots:
       '@graphql-typed-document-node/core': 3.2.0(graphql@16.11.0)
       '@whatwg-node/promise-helpers': 2.0.0
       cross-inspect: 1.0.1
+      graphql: 16.11.0
+      tslib: 2.8.1
+
+  '@graphql-tools/utils@13.2.0(graphql@16.11.0)':
+    dependencies:
+      '@graphql-typed-document-node/core': 3.2.0(graphql@16.11.0)
+      '@whatwg-node/promise-helpers': 2.0.0
       graphql: 16.11.0
       tslib: 2.8.1
 
@@ -17840,7 +17912,7 @@ snapshots:
       cookie-signature: 1.2.0
       source-map-support: 0.5.21
       stream-slice: 0.1.2
-      undici: 6.28.1
+      undici: 6.29.1
     optionalDependencies:
       typescript: 5.9.3
 
@@ -19481,7 +19553,7 @@ snapshots:
       vitefu: 1.1.3(vite@8.2.2(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))
       xxhash-wasm: 1.1.0
       yargs-parser: 22.0.0
-      zod: 4.3.6
+      zod: 4.6.7
     optionalDependencies:
       '@astrojs/markdown-remark': 7.3.0
       sharp: 0.35.4(@types/node@24.11.0)
@@ -20290,10 +20362,6 @@ snapshots:
       node-fetch: 2.7.0
     transitivePeerDependencies:
       - encoding
-
-  cross-inspect@1.0.0:
-    dependencies:
-      tslib: 2.8.1
 
   cross-inspect@1.0.1:
     dependencies:
@@ -27453,7 +27521,7 @@ snapshots:
       ssh-remote-port-forward: 1.0.4
       tar-fs: 3.1.1
       tmp: 0.2.7
-      undici: 6.28.1
+      undici: 6.29.1
     transitivePeerDependencies:
       - bare-abort-controller
       - bare-buffer
@@ -27808,7 +27876,7 @@ snapshots:
 
   undici-types@7.16.0: {}
 
-  undici@6.28.1: {}
+  undici@6.29.1: {}
 
   unicode-canonical-property-names-ecmascript@2.0.1: {}
 
@@ -27855,7 +27923,7 @@ snapshots:
     dependencies:
       css-tree: 3.1.0
       ohash: 2.0.11
-      undici: 6.28.1
+      undici: 6.29.1
 
   unique-filename@3.0.0:
     dependencies:
@@ -28440,10 +28508,8 @@ snapshots:
       compress-commons: 6.0.2
       readable-stream: 4.1.0
 
-  zod@3.22.4: {}
+  zod@4.6.6: {}
 
-  zod@3.23.4: {}
-
-  zod@4.3.6: {}
+  zod@4.6.7: {}
 
   zwitch@2.0.4: {}

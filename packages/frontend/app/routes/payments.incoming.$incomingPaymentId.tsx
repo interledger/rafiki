@@ -2,7 +2,7 @@ import type { LoaderFunctionArgs, MetaFunction } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { Link, Outlet, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
-import { Badge } from '~/components'
+import { Badge, Timestamp } from '~/components'
 import { Box, Button, Card, Flex, Heading, Text } from '@radix-ui/themes'
 import { IncomingPaymentState } from '~/generated/graphql'
 import { getIncomingPayment } from '~/lib/api/payments.server'
@@ -54,8 +54,6 @@ export default function ViewIncomingPaymentPage() {
     incomingPayment.receivedAmount.assetScale
   )} ${incomingPayment.receivedAmount.assetCode}`
 
-  const expiresAtLocale = new Date(incomingPayment.expiresAt).toLocaleString()
-
   return (
     <Box p='4'>
       <Flex direction='column' gap='4'>
@@ -74,12 +72,11 @@ export default function ViewIncomingPaymentPage() {
               </Heading>
               <Flex direction='column' gap='1' align='end'>
                 <Text size='2' color='gray'>
-                  Created at{' '}
-                  {new Date(incomingPayment.createdAt).toLocaleString()}
+                  Created at <Timestamp value={incomingPayment.createdAt} />
                 </Text>
-                {new Date(expiresAtLocale) > new Date() && (
+                {new Date(incomingPayment.expiresAt) > new Date() && (
                   <Text size='2' color='gray'>
-                    Expires at {expiresAtLocale}
+                    Expires at <Timestamp value={incomingPayment.expiresAt} />
                   </Text>
                 )}
               </Flex>
