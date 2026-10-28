@@ -26,8 +26,10 @@ interface VerifyApiSignatureArgs {
   apiSignatureVersion: number
 }
 
-
-function hmacHexDigestsEqual(expectedHex: string, providedHex: string): boolean {
+function hmacHexDigestsEqual(
+  expectedHex: string,
+  providedHex: string
+): boolean {
   const expected = Buffer.from(expectedHex, 'hex')
   const provided = Buffer.from(providedHex, 'hex')
   if (
