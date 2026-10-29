@@ -46,7 +46,7 @@ overrides:
   postcss: ^8.5.23
   protobufjs: ^7.6.5
   proxy-addr: ^2.0.8
-  qs@<6.14.1: '>=6.14.1'
+  qs@<6.14.1: '>=6.17.1'
   sha.js: '>=2.4.12'
   sharp: ^0.35.0
   shell-quote: ^1.9.0
@@ -11274,6 +11274,10 @@ packages:
     resolution: {integrity: sha512-5LK5BZ2XDHMvcUJaf0CQ5HL3aVgKbpklvByC7qLSxYkfE8COEEbJg5xCHWCTqzqi0Gs4Jn5Mv5v3R38W6edscA==}
     engines: {node: '>=0.6'}
 
+  qs@6.17.1:
+    resolution: {integrity: sha512-jd3COkaKVgGUW+ZHyEHCG9bH7RoaaiWuMgzsIBjUMVjLAaWGWpoUAVwljVvBHxRu/2qEHnadLGZrkutYUBPQJA==}
+    engines: {node: '>=0.6'}
+
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
 
@@ -20079,7 +20083,7 @@ snapshots:
   co-body@6.1.0:
     dependencies:
       inflation: 2.0.0
-      qs: 6.17.0
+      qs: 6.17.1
       raw-body: 2.5.2
       type-is: 1.6.18
 
@@ -21594,7 +21598,7 @@ snapshots:
       parseurl: 1.3.3
       path-to-regexp: 0.1.13
       proxy-addr: 2.0.8
-      qs: 6.17.0
+      qs: 6.17.1
       range-parser: 1.2.1
       safe-buffer: 5.2.1
       send: 0.19.0
@@ -25899,6 +25903,11 @@ snapshots:
       es-define-property: 1.0.1
       side-channel: 1.1.1
 
+  qs@6.17.1:
+    dependencies:
+      es-define-property: 1.0.1
+      side-channel: 1.1.1
+
   queue-microtask@1.2.3: {}
 
   queue-tick@1.0.1: {}
@@ -27478,7 +27487,7 @@ snapshots:
       http-basic: 8.1.3
       http-response-object: 3.0.2
       promise: 8.3.0
-      qs: 6.17.0
+      qs: 6.17.1
 
   thenify-all@1.6.0:
     dependencies:
@@ -27519,7 +27528,7 @@ snapshots:
       faye-websocket: 0.10.0
       livereload-js: 2.4.0
       object-assign: 4.1.1
-      qs: 6.17.0
+      qs: 6.17.1
     transitivePeerDependencies:
       - supports-color
 
