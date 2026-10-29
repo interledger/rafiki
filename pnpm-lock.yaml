@@ -229,8 +229,8 @@ importers:
         specifier: 7.4.0
         version: 7.4.0
       '@interledger/openapi':
-        specifier: 2.0.2
-        version: 2.0.2
+        specifier: 2.0.4
+        version: 2.0.4
       '@koa/cors':
         specifier: ^5.0.0
         version: 5.0.0
@@ -380,8 +380,8 @@ importers:
         specifier: 7.4.0
         version: 7.4.0
       '@interledger/openapi':
-        specifier: 2.0.2
-        version: 2.0.2
+        specifier: 2.0.4
+        version: 2.0.4
       '@interledger/pay':
         specifier: 0.4.0-alpha.12
         version: 0.4.0-alpha.12
@@ -603,8 +603,8 @@ importers:
         specifier: ^3.14.1
         version: 3.14.1(@types/react@18.2.73)(graphql-ws@5.14.0(graphql@16.11.0))(graphql@16.11.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@interledger/openapi':
-        specifier: 2.0.2
-        version: 2.0.2
+        specifier: 2.0.4
+        version: 2.0.4
       '@koa/cors':
         specifier: ^5.0.0
         version: 5.0.0
@@ -986,8 +986,8 @@ importers:
   packages/token-introspection:
     dependencies:
       '@interledger/openapi':
-        specifier: 2.0.2
-        version: 2.0.2
+        specifier: 2.0.4
+        version: 2.0.4
       axios:
         specifier: 1.20.0
         version: 1.20.0(debug@4.3.2)
@@ -3332,9 +3332,6 @@ packages:
 
   '@interledger/open-payments@7.4.0':
     resolution: {integrity: sha512-VLnHdvQ0J76/72yzJQwvNno9EJG42iAvkHQZmgunIW35DxZrB6QVgShV9fz4k5DH68Mg8KYQR6+60mwmnG/gJg==}
-
-  '@interledger/openapi@2.0.2':
-    resolution: {integrity: sha512-HOQnALmRtRkGkh63OnFhoCVsK4BKhQosJyoBCe6Cuu+jp8Oj2fAqTNz8ys+h6s30cJcIpk2UBlsj4wZ3pj26Ug==}
 
   '@interledger/openapi@2.0.4':
     resolution: {integrity: sha512-3V6xCk2dKnpBiS6ppBDtQsItZ4r1r/YO9T93Pag2yMxIIAe0NAwUfq5yWPYJtNTQ8j2br+z/AwlgWwenxKffWg==}
@@ -15857,20 +15854,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@interledger/openapi@2.0.2':
-    dependencies:
-      '@apidevtools/json-schema-ref-parser': 11.7.2
-      ajv: 8.18.0
-      ajv-formats: 2.1.1(ajv@8.18.0)
-      koa: 2.16.4
-      openapi-default-setter: 12.1.3
-      openapi-request-coercer: 12.1.3
-      openapi-request-validator: 12.1.3
-      openapi-response-validator: 12.1.3
-      openapi-types: 12.1.3
-    transitivePeerDependencies:
-      - supports-color
-
   '@interledger/openapi@2.0.4':
     dependencies:
       '@apidevtools/json-schema-ref-parser': 11.7.2
@@ -25263,8 +25246,8 @@ snapshots:
 
   openapi-request-validator@12.1.3:
     dependencies:
-      ajv: 8.18.0
-      ajv-formats: 2.1.1(ajv@8.18.0)
+      ajv: 8.20.0
+      ajv-formats: 2.1.1(ajv@8.20.0)
       content-type: 1.0.5
       openapi-jsonschema-parameters: 12.1.3
       openapi-types: 12.1.3
@@ -25272,7 +25255,7 @@ snapshots:
 
   openapi-response-validator@12.1.3:
     dependencies:
-      ajv: 8.18.0
+      ajv: 8.20.0
       openapi-types: 12.1.3
 
   openapi-response-validator@9.3.1:
