@@ -9,7 +9,7 @@ overrides:
   '@babel/core': ^7.29.6
   '@babel/plugin-transform-modules-systemjs': ^7.29.4
   '@apollo/server': ^5.5.1
-  '@vanilla-extract/integration': ^8.0.10
+  '@vanilla-extract/integration': ^8.0.11
   '@grpc/grpc-js@>=1.0.0': ^1.14.6
   '@graphql-tools/utils@<12.0.1': ^12.0.1
   '@opentelemetry/propagator-jaeger': ^2.10.0
@@ -5923,11 +5923,11 @@ packages:
   '@vanilla-extract/babel-plugin-debug-ids@1.2.2':
     resolution: {integrity: sha512-MeDWGICAF9zA/OZLOKwhoRlsUW+fiMwnfuOAqFVohL31Agj7Q/RBWAYweqjHLgFBCsdnr6XIfwjJnmb2znEWxw==}
 
-  '@vanilla-extract/css@1.21.2':
-    resolution: {integrity: sha512-ehF/tmv2MxQwOJB1DicALUqnjZTnmY9Y7J2ccKB578JzZpYeL6sLAUqbaXo1taw1Erp0qBq0I4Kejs0uU/pBfg==}
+  '@vanilla-extract/css@1.21.3':
+    resolution: {integrity: sha512-h7wXxEowNLjhGfTHqReoSBWjAzxDADM8yUuUL/enDWXQVwy50JnY8xFNaie04XHTmrBPKJjwcwRNuTGlFIJLSA==}
 
-  '@vanilla-extract/integration@8.0.10':
-    resolution: {integrity: sha512-01IB5gbrgTe8IIrtfRXXTmACl5D8Enzqp2cKbCWaMKXmnoilXXVCPbJoA96q88PXkNDXsXepCxUugMvEmL3c7A==}
+  '@vanilla-extract/integration@8.0.11':
+    resolution: {integrity: sha512-f24QLKpY6qN1AJcWxvbfP6H3BNJPkLC6La52OfRje6KNPTrlFX4nBlw10UDyPI7pwwh6zXR7IKyD/LCmWQBnpg==}
 
   '@vanilla-extract/private@1.0.9':
     resolution: {integrity: sha512-gT2jbfZuaaCLrAxwXbRgIhGhcXbRZCG3v4TTUnjw0EJ7ArdBRxkq4msNJkbuRkCgfIK5ATmprB5t9ljvLeFDEA==}
@@ -7323,14 +7323,6 @@ packages:
   decode-named-character-reference@1.0.2:
     resolution: {integrity: sha512-O8x12RzrUF8xyVcY0KJowWsmaJxQbmy0/EtnNtHRpsOcT7dFk5W598coHqBVpmWo1oQQfsCqfCmkZN5DJrZVdg==}
 
-  dedent@1.2.0:
-    resolution: {integrity: sha512-i4tcg0ClgvMUSxwHpt+NHQ01ZJmAkl6eBvDNrSZG9e+oLRTCSHv0wpr/Bzjpf6CwKeIHGevE1M34Y1Axdms5VQ==}
-    peerDependencies:
-      babel-plugin-macros: ^3.1.0
-    peerDependenciesMeta:
-      babel-plugin-macros:
-        optional: true
-
   dedent@1.7.2:
     resolution: {integrity: sha512-WzMx3mW98SN+zn3hgemf4OzdmyNhhhKz5Ay0pUfQiMQ3e1g+xmTJWp/pKdwKVXhdSkAEGIIzqeuWrL3mV/AXbA==}
     peerDependencies:
@@ -7347,6 +7339,10 @@ packages:
 
   deep-object-diff@1.1.9:
     resolution: {integrity: sha512-Rn+RuwkmkDwCi2/oXOFS9Gsr5lJZu/yTGpK7wAaAIE75CC+LCGEZHpY6VQJa/RoJcrmaA/docWJZvYohlNkWPA==}
+
+  deepmerge-ts@8.0.2:
+    resolution: {integrity: sha512-uqbvqLUMrc6p0MO+WBRtTxY55hmyh94WRwI5a++PZe54X+bfVh59FSN7uWCBCW1CCVjzjnrwzfI8zidE2obMMw==}
+    engines: {node: '>=16.9.0'}
 
   deepmerge@4.2.2:
     resolution: {integrity: sha512-FJ3UgI4gIl+PHZm53knsuSFpE+nESMr7M4v9QcgB7S63Kj/6WqMiFQJpBBYz1Pt+66bZpP3Q7Lye0Oo9MPKEdg==}
@@ -10392,8 +10388,8 @@ packages:
   mlly@1.8.0:
     resolution: {integrity: sha512-l8D9ODSRWLe2KHJSifWGwBqpTZXIXTeo8mlKjY+E2HAakaTeNpqAyBZ8GSqLzHgw4XmHmC8whvpjJNMbFZN7/g==}
 
-  modern-ahocorasick@1.1.0:
-    resolution: {integrity: sha512-sEKPVl2rM+MNVkGQt3ChdmD8YsigmXdn5NifZn6jiwn9LRJpWm8F3guhaqrJT/JOat6pwpbXEk6kv+b9DMIjsQ==}
+  modern-ahocorasick@3.3.0:
+    resolution: {integrity: sha512-OEuPxzKD4fG8Zx2dUX8jDP7ArNhRdlHhjLA00k+ZmtXe49Qb6+E/M/ViDYnXOZ9A3uRbRIb1eTKPesQGKd0USA==}
 
   module-details-from-path@1.0.3:
     resolution: {integrity: sha512-ySViT69/76t8VhE1xXHK6Ch4NcDd26gx0MzKXLO+F7NOtnqH68d9zF94nT8ZWSxXh8ELOERsnJO/sWt1xZYw5A==}
@@ -13997,17 +13993,17 @@ snapshots:
   '@babel/plugin-syntax-async-generators@7.8.4(@babel/core@7.29.7)':
     dependencies:
       '@babel/core': 7.29.7
-      '@babel/helper-plugin-utils': 7.26.5
+      '@babel/helper-plugin-utils': 7.29.7
 
   '@babel/plugin-syntax-bigint@7.8.3(@babel/core@7.29.7)':
     dependencies:
       '@babel/core': 7.29.7
-      '@babel/helper-plugin-utils': 7.26.5
+      '@babel/helper-plugin-utils': 7.29.7
 
   '@babel/plugin-syntax-class-properties@7.12.13(@babel/core@7.29.7)':
     dependencies:
       '@babel/core': 7.29.7
-      '@babel/helper-plugin-utils': 7.26.5
+      '@babel/helper-plugin-utils': 7.29.7
 
   '@babel/plugin-syntax-decorators@7.23.3(@babel/core@7.29.7)':
     dependencies:
@@ -14027,12 +14023,12 @@ snapshots:
   '@babel/plugin-syntax-import-meta@7.10.4(@babel/core@7.29.7)':
     dependencies:
       '@babel/core': 7.29.7
-      '@babel/helper-plugin-utils': 7.26.5
+      '@babel/helper-plugin-utils': 7.29.7
 
   '@babel/plugin-syntax-json-strings@7.8.3(@babel/core@7.29.7)':
     dependencies:
       '@babel/core': 7.29.7
-      '@babel/helper-plugin-utils': 7.26.5
+      '@babel/helper-plugin-utils': 7.29.7
 
   '@babel/plugin-syntax-jsx@7.25.9(@babel/core@7.29.7)':
     dependencies:
@@ -14042,37 +14038,37 @@ snapshots:
   '@babel/plugin-syntax-logical-assignment-operators@7.10.4(@babel/core@7.29.7)':
     dependencies:
       '@babel/core': 7.29.7
-      '@babel/helper-plugin-utils': 7.26.5
+      '@babel/helper-plugin-utils': 7.29.7
 
   '@babel/plugin-syntax-nullish-coalescing-operator@7.8.3(@babel/core@7.29.7)':
     dependencies:
       '@babel/core': 7.29.7
-      '@babel/helper-plugin-utils': 7.26.5
+      '@babel/helper-plugin-utils': 7.29.7
 
   '@babel/plugin-syntax-numeric-separator@7.10.4(@babel/core@7.29.7)':
     dependencies:
       '@babel/core': 7.29.7
-      '@babel/helper-plugin-utils': 7.26.5
+      '@babel/helper-plugin-utils': 7.29.7
 
   '@babel/plugin-syntax-object-rest-spread@7.8.3(@babel/core@7.29.7)':
     dependencies:
       '@babel/core': 7.29.7
-      '@babel/helper-plugin-utils': 7.26.5
+      '@babel/helper-plugin-utils': 7.29.7
 
   '@babel/plugin-syntax-optional-catch-binding@7.8.3(@babel/core@7.29.7)':
     dependencies:
       '@babel/core': 7.29.7
-      '@babel/helper-plugin-utils': 7.26.5
+      '@babel/helper-plugin-utils': 7.29.7
 
   '@babel/plugin-syntax-optional-chaining@7.8.3(@babel/core@7.29.7)':
     dependencies:
       '@babel/core': 7.29.7
-      '@babel/helper-plugin-utils': 7.26.5
+      '@babel/helper-plugin-utils': 7.29.7
 
   '@babel/plugin-syntax-top-level-await@7.14.5(@babel/core@7.29.7)':
     dependencies:
       '@babel/core': 7.29.7
-      '@babel/helper-plugin-utils': 7.26.5
+      '@babel/helper-plugin-utils': 7.29.7
 
   '@babel/plugin-syntax-typescript@7.21.4(@babel/core@7.29.7)':
     dependencies:
@@ -17744,7 +17740,7 @@ snapshots:
       '@remix-run/router': 1.23.3
       '@remix-run/server-runtime': 2.17.5(typescript@5.9.3)
       '@types/mdx': 2.0.7
-      '@vanilla-extract/integration': 8.0.10
+      '@vanilla-extract/integration': 8.0.11
       arg: 5.0.2
       cacache: 17.1.4
       chalk: 4.1.2
@@ -18968,7 +18964,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vanilla-extract/css@1.21.2':
+  '@vanilla-extract/css@1.21.3':
     dependencies:
       '@emotion/hash': 0.9.0
       '@vanilla-extract/private': 1.0.9
@@ -18976,20 +18972,20 @@ snapshots:
       csstype: 3.2.3
       dedent: 1.7.2
       deep-object-diff: 1.1.9
-      deepmerge: 4.2.2
+      deepmerge-ts: 8.0.2
       lru-cache: 10.4.3
       media-query-parser: 2.0.2
-      modern-ahocorasick: 1.1.0
+      modern-ahocorasick: 3.3.0
       picocolors: 1.1.1
     transitivePeerDependencies:
       - babel-plugin-macros
 
-  '@vanilla-extract/integration@8.0.10':
+  '@vanilla-extract/integration@8.0.11':
     dependencies:
       '@babel/core': 7.29.7
       '@babel/plugin-syntax-typescript': 7.29.7(@babel/core@7.29.7)
       '@vanilla-extract/babel-plugin-debug-ids': 1.2.2
-      '@vanilla-extract/css': 1.21.2
+      '@vanilla-extract/css': 1.21.3
       dedent: 1.7.2
       esbuild: 0.28.1
       eval: 0.1.8
@@ -19602,7 +19598,7 @@ snapshots:
 
   babel-plugin-istanbul@6.1.1:
     dependencies:
-      '@babel/helper-plugin-utils': 7.26.5
+      '@babel/helper-plugin-utils': 7.29.7
       '@istanbuljs/load-nyc-config': 1.1.0
       '@istanbuljs/schema': 0.1.3
       istanbul-lib-instrument: 5.2.0
@@ -20622,8 +20618,6 @@ snapshots:
     dependencies:
       character-entities: 2.0.2
 
-  dedent@1.2.0: {}
-
   dedent@1.7.2: {}
 
   deep-equal@1.0.1: {}
@@ -20631,6 +20625,8 @@ snapshots:
   deep-is@0.1.4: {}
 
   deep-object-diff@1.1.9: {}
+
+  deepmerge-ts@8.0.2: {}
 
   deepmerge@4.2.2: {}
 
@@ -23195,7 +23191,7 @@ snapshots:
       '@types/node': 24.11.0
       chalk: 4.1.2
       co: 4.6.0
-      dedent: 1.2.0
+      dedent: 1.7.2
       is-generator-fn: 2.1.0
       jest-each: 29.7.0
       jest-matcher-utils: 29.7.0
@@ -23445,7 +23441,7 @@ snapshots:
       '@babel/core': 7.29.7
       '@babel/generator': 7.27.5
       '@babel/plugin-syntax-jsx': 7.25.9(@babel/core@7.29.7)
-      '@babel/plugin-syntax-typescript': 7.21.4(@babel/core@7.29.7)
+      '@babel/plugin-syntax-typescript': 7.29.7(@babel/core@7.29.7)
       '@babel/types': 7.29.0
       '@jest/expect-utils': 29.7.0
       '@jest/transform': 29.7.0
@@ -24944,7 +24940,7 @@ snapshots:
       pkg-types: 1.3.1
       ufo: 1.6.3
 
-  modern-ahocorasick@1.1.0: {}
+  modern-ahocorasick@3.3.0: {}
 
   module-details-from-path@1.0.3: {}
 
