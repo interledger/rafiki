@@ -13,7 +13,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@apollo/client": "^3.14.1",
+    "@apollo/client": "^4.3.5",
     "@headlessui/react": "^1.7.19",
     "@radix-ui/themes": "^3.2.1",
     "@remix-run/node": "^2.17.5",
