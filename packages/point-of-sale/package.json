@@ -19,7 +19,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@adonisjs/fold": "^8.2.0",
+    "@adonisjs/fold": "^11.1.1",
     "@apollo/client": "^3.14.1",
     "@apollo/server": "^5.5.1",
     "@koa/cors": "^5.0.0",
