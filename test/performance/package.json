@@ -26,7 +26,7 @@
     "@types/k6": "^0.54.2",
     "babel-loader": "^9.2.1",
     "core-js": "^3.40.0",
-    "json-canonicalize": "^1.0.6",
+    "json-canonicalize": "^1.2.0",
     "webpack": "^5.97.1",
     "webpack-cli": "^6.0.1"
   }
