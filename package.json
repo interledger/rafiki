@@ -68,7 +68,7 @@
       "@ardatan/relay-compiler": "^13.0.2",
       "@babel/core": "^7.29.6",
       "@babel/plugin-transform-modules-systemjs": "^7.29.4",
-      "@apollo/server": "^5.5.0",
+      "@apollo/server": "^5.5.1",
       "@vanilla-extract/integration": "^8.0.10",
       "@grpc/grpc-js@>=1.0.0": "^1.14.6",
       "@graphql-tools/utils@<12.0.1": "^12.0.1",
