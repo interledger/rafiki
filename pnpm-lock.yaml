@@ -29,7 +29,7 @@ overrides:
   form-data: ^4.0.6
   handlebars: ^4.7.9
   immutable@>=5.0.0: ^5.1.8
-  jose: '>=4.15.5'
+  jose: '>=6.2.14'
   js-yaml@>=3.0.0 <4.0.0: ^3.15.0
   js-yaml@>=4.0.0 <5.0.0: ^4.3.0
   json5@<1.0.2: '>=1.0.2'
@@ -9437,8 +9437,8 @@ packages:
     resolution: {integrity: sha512-rg9zJN+G4n2nfJl5MW3BMygZX56zKPNVEYYqq7adpmMh4Jn2QNEwhvQlFy6jPVdcod7txZtKHWnyZiA3a0zP7A==}
     hasBin: true
 
-  jose@5.4.0:
-    resolution: {integrity: sha512-6rpxTHPAQyWMb9A35BroFl1Sp0ST3DpPcm5EVIxZxdH+e0Hv9fwhyB3XLKFUcHNpdSDnETmBfuPPTTlYz5+USw==}
+  jose@6.2.14:
+    resolution: {integrity: sha512-3JasLuki1NRLQvY4wCoC37KZk4qxoBx2k2aFqLxT84IezqW0bkJKnNtxnZj/Fu1xsQivoc/lytxaRHJoGLjJ1A==}
 
   joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
@@ -15596,7 +15596,7 @@ snapshots:
       graphql-request: 6.1.0(graphql@16.11.0)
       http-proxy-agent: 7.0.0
       https-proxy-agent: 7.0.6(supports-color@10.2.2)
-      jose: 5.4.0
+      jose: 6.2.14
       js-yaml: 4.3.2
       json-stable-stringify: 1.0.1
       lodash: 4.18.1
@@ -15853,14 +15853,14 @@ snapshots:
     dependencies:
       http-message-signatures: 1.0.4
       httpbis-digest-headers: 1.0.0
-      jose: 5.4.0
+      jose: 6.2.14
       uuid: 9.0.1
 
   '@interledger/http-signature-utils@2.0.3':
     dependencies:
       http-message-signatures: 1.0.4
       httpbis-digest-headers: 1.0.0
-      jose: 5.4.0
+      jose: 6.2.14
       uuid: 9.0.1
 
   '@interledger/open-payments@7.4.0':
@@ -23552,7 +23552,7 @@ snapshots:
 
   jiti@2.4.2: {}
 
-  jose@5.4.0: {}
+  jose@6.2.14: {}
 
   joycon@3.1.1: {}
 
