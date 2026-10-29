@@ -70,7 +70,7 @@
       "@babel/plugin-transform-modules-systemjs": "^7.29.4",
       "@apollo/server": "^5.5.1",
       "@vanilla-extract/integration": "^8.0.10",
-      "@grpc/grpc-js@>=1.0.0": "^1.14.6",
+      "@grpc/grpc-js@>=1.0.0": "^1.14.7",
       "@graphql-tools/utils@<12.0.1": "^12.0.1",
       "@opentelemetry/propagator-jaeger": "^2.10.0",
       "@remix-run/router": ">=1.23.2",
