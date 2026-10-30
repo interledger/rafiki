@@ -268,11 +268,11 @@ importers:
         specifier: ^6.4.0
         version: 6.4.0
       objection:
-        specifier: ^3.1.5
-        version: 3.1.5(knex@3.1.0(pg@8.11.3))
+        specifier: ^3.9.2
+        version: 3.9.2(knex@3.1.0(pg@8.11.3))
       objection-db-errors:
         specifier: ^1.1.2
-        version: 1.1.2(objection@3.1.5(knex@3.1.0(pg@8.11.3)))
+        version: 1.1.2(objection@3.9.2(knex@3.1.0(pg@8.11.3)))
       pg:
         specifier: ^8.11.3
         version: 8.11.3
@@ -485,11 +485,11 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4
       objection:
-        specifier: ^3.1.5
-        version: 3.1.5(knex@3.1.0(pg@8.11.3))
+        specifier: ^3.9.2
+        version: 3.9.2(knex@3.1.0(pg@8.11.3))
       objection-db-errors:
         specifier: ^1.1.2
-        version: 1.1.2(objection@3.1.5(knex@3.1.0(pg@8.11.3)))
+        version: 1.1.2(objection@3.9.2(knex@3.1.0(pg@8.11.3)))
       oer-utils:
         specifier: 5.1.3-alpha.2
         version: 5.1.3-alpha.2
@@ -10635,11 +10635,11 @@ packages:
     peerDependencies:
       objection: '>= 0.9.1'
 
-  objection@3.1.5:
-    resolution: {integrity: sha512-Hx/ipAwXSuRBbOMWFKtRsAN0yITafqXtWB4OT4Z9wED7ty1h7bOnBdhLtcNus23GwLJqcMsRWdodL2p5GwlnfQ==}
+  objection@3.9.2:
+    resolution: {integrity: sha512-tORAgbOZZr7JNWAbkja2R07DJPv25bkL+T5v0PRJHTcq28LOaNY0mExoh9BhYcnbo6e9swFSbgyzCT9ZF8fZCA==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
-      knex: '>=1.0.1'
+      knex: '>=2.3.0 <4'
 
   obug@2.1.1:
     resolution: {integrity: sha512-uTqF9MuPraAQ+IsnPf366RG4cP9RtUi7MLO1N3KEc+wb0a6yKpeL0lmk2IB1jY5KHPAlTc6T/JRdC/YqxHNwkQ==}
@@ -25185,15 +25185,15 @@ snapshots:
       define-properties: 1.2.1
       es-object-atoms: 1.1.2
 
-  objection-db-errors@1.1.2(objection@3.1.5(knex@3.1.0(pg@8.11.3))):
+  objection-db-errors@1.1.2(objection@3.9.2(knex@3.1.0(pg@8.11.3))):
     dependencies:
       db-errors: 0.2.3
-      objection: 3.1.5(knex@3.1.0(pg@8.11.3))
+      objection: 3.9.2(knex@3.1.0(pg@8.11.3))
 
-  objection@3.1.5(knex@3.1.0(pg@8.11.3)):
+  objection@3.9.2(knex@3.1.0(pg@8.11.3)):
     dependencies:
-      ajv: 8.18.0
-      ajv-formats: 2.1.1(ajv@8.18.0)
+      ajv: 8.20.0
+      ajv-formats: 3.0.1(ajv@8.20.0)
       db-errors: 0.2.3
       knex: 3.1.0(pg@8.11.3)
 
@@ -25263,8 +25263,8 @@ snapshots:
 
   openapi-request-validator@12.1.3:
     dependencies:
-      ajv: 8.18.0
-      ajv-formats: 2.1.1(ajv@8.18.0)
+      ajv: 8.20.0
+      ajv-formats: 2.1.1(ajv@8.20.0)
       content-type: 1.0.5
       openapi-jsonschema-parameters: 12.1.3
       openapi-types: 12.1.3
@@ -25272,7 +25272,7 @@ snapshots:
 
   openapi-response-validator@12.1.3:
     dependencies:
-      ajv: 8.18.0
+      ajv: 8.20.0
       openapi-types: 12.1.3
 
   openapi-response-validator@9.3.1:
