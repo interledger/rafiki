@@ -1,8 +1,9 @@
 import type { ChangeEvent } from 'react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { Button, Dialog, Flex, Text, TextField } from '@radix-ui/themes'
-import { renderFieldError } from '~/lib/form-errors'
 import { LiquidityConfirmDialog } from '~/components/LiquidityConfirmDialog'
+import { renderFieldError } from '~/lib/form-errors'
+import { parseAmount } from '~/shared/utils'
 
 type BasicAsset = {
   code: string
@@ -23,26 +24,22 @@ export const LiquidityDialog = ({
   asset
 }: LiquidityDialogProps) => {
   const [displayAmount, setDisplayAmount] = useState<string>('')
-  const [actualAmount, setActualAmount] = useState<number>(0)
+  const [actualAmount, setActualAmount] = useState<string>('0')
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [isConfirming, setIsConfirming] = useState<boolean>(false)
   const amountId = useId()
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const userInput = e.target.value
-    const scaledInput = parseFloat(userInput) * Math.pow(10, asset.scale)
-    const integerScaledInput = Math.floor(scaledInput)
-    if (scaledInput < 0) {
-      const error = 'The amount should be a positive value'
-      setErrorMessage(error)
-    } else if (scaledInput !== integerScaledInput) {
-      const error = 'The asset scale cannot accomodate this value'
-      setErrorMessage(error)
+    const result = parseAmount(userInput, asset.scale)
+    if ('error' in result) {
+      setErrorMessage(result.error)
+      setActualAmount('0')
     } else {
       setErrorMessage('')
+      setActualAmount(result.amount.toString())
     }
     setDisplayAmount(userInput)
-    setActualAmount(integerScaledInput)
   }
 
   const inputRef = useRef<HTMLInputElement>(null)
@@ -112,7 +109,7 @@ export const LiquidityDialog = ({
             <Button
               aria-label={`review ${type.toLowerCase()} liquidity`}
               type='button'
-              disabled={!!errorMessage || !(actualAmount >= 1)}
+              disabled={!!errorMessage || actualAmount === '0'}
               onClick={() => setIsConfirming(true)}
             >
               Review

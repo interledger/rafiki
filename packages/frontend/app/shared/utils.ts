@@ -55,6 +55,34 @@ export function formatAmount(amount: string, scale: number) {
   return `${integerPart}.${fractionalPart}`
 }
 
+export function parseAmount(
+  input: string,
+  scale: number
+): { amount: bigint } | { error: string } {
+  const value = input.trim()
+
+  if (value.startsWith('-')) {
+    return { error: 'The amount should be a positive value' }
+  }
+
+  const match = /^(\d*)(?:\.(\d*))?$/.exec(value)
+  if (!value || !match || (!match[1] && !match[2])) {
+    return { error: 'The amount should be a valid number' }
+  }
+
+  const [, whole, fraction = ''] = match
+  if (fraction.length > scale) {
+    return { error: 'The asset scale cannot accommodate this value' }
+  }
+
+  const amount = BigInt((whole || '0') + fraction.padEnd(scale, '0'))
+  if (amount === BigInt(0)) {
+    return { error: 'The amount should be a positive value' }
+  }
+
+  return { amount }
+}
+
 export function capitalize(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
 }
