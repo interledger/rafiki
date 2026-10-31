@@ -60,7 +60,7 @@ overrides:
   vite@>=6.0.0 <7.0.0: ^6.4.3
   webpack: ^5.104.1
   websocket-driver: ^0.7.5
-  ws@>=7.0.0 <8.0.0: ^7.5.11
+  ws@>=7.0.0 <8.0.0: ^8.22.1
   ws@>=8.0.0 <9.0.0: ^8.21.0
   yaml: ^2.8.3
 
@@ -9230,7 +9230,7 @@ packages:
   isomorphic-ws@5.0.0:
     resolution: {integrity: sha512-muId7Zzn9ywDsyXgTIafTry2sV3nySZeUDe6YedVd1Hvuuep5AsIlqK+XefWpYTyJG5e503F2xIuT2lcU6rCSw==}
     peerDependencies:
-      ws: ^7.5.11
+      ws: ^8.22.1
 
   isstream@0.1.2:
     resolution: {integrity: sha512-Yljz7ffyPbrLpLngrMtZ7NduUgVvi6wG9RJ9IUcyCd59YQ911PBJphODUcbOVbqYfxe1wuYf/LJ8PauMRwsM/g==}
@@ -13201,18 +13201,6 @@ packages:
   write-file-atomic@4.0.2:
     resolution: {integrity: sha512-7KxauUdBmSdWnmpaGFg+ppNjKF8uNLry8LyzjauQDOVONfFLNKrKvQOxZ/VuTIcS/gge/YNahf5RIIQWTSarlg==}
     engines: {node: ^12.13.0 || ^14.15.0 || >=16.0.0}
-
-  ws@7.5.13:
-    resolution: {integrity: sha512-rsKI6xDBFVf4r/x8XyChGK04QR/XHroxs/jUcoWvtEZM8TPU/X/uIY9B1CsSzYws9ZJb/6bbBu7dPhFW00CAoA==}
-    engines: {node: '>=8.3.0'}
-    peerDependencies:
-      bufferutil: ^4.0.1
-      utf-8-validate: ^5.0.2
-    peerDependenciesMeta:
-      bufferutil:
-        optional: true
-      utf-8-validate:
-        optional: true
 
   ws@8.21.3:
     resolution: {integrity: sha512-201TZ/kPWxoPr/OKWjquZR1SWKXcvxdH+e1xrx89b3YbmzLMFCLfnaG1HFIgWzJOEWZ7MvpK++odZufgYR50Rw==}
@@ -17785,7 +17773,7 @@ snapshots:
       tsconfig-paths: 4.1.0
       valibot: 1.4.2(typescript@5.9.3)
       vite-node: 3.2.4(@types/node@24.11.0)(jiti@2.4.2)(lightningcss@1.33.0)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3)
-      ws: 7.5.13
+      ws: 8.21.3
     optionalDependencies:
       '@remix-run/serve': 2.17.5(typescript@5.9.3)
       typescript: 5.9.3
@@ -28374,8 +28362,6 @@ snapshots:
     dependencies:
       imurmurhash: 0.1.4
       signal-exit: 3.0.7
-
-  ws@7.5.13: {}
 
   ws@8.21.3: {}
 
