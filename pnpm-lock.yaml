@@ -235,8 +235,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       '@koa/router':
-        specifier: ^12.0.2
-        version: 12.0.2
+        specifier: ^15.7.1
+        version: 15.7.1(koa@2.16.4)
       ajv:
         specifier: ^8.12.0
         version: 8.18.0
@@ -392,8 +392,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       '@koa/router':
-        specifier: ^12.0.2
-        version: 12.0.2
+        specifier: ^15.7.1
+        version: 15.7.1(koa@2.16.4)
       '@opentelemetry/api':
         specifier: ^1.8.0
         version: 1.8.0
@@ -609,8 +609,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       '@koa/router':
-        specifier: ^12.0.2
-        version: 12.0.2
+        specifier: ^15.7.1
+        version: 15.7.1(koa@2.16.4)
       graphql:
         specifier: ^16.11.0
         version: 16.11.0
@@ -895,8 +895,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       '@koa/router':
-        specifier: ^12.0.2
-        version: 12.0.2
+        specifier: ^15.7.1
+        version: 15.7.1(koa@3.2.0)
       axios:
         specifier: 1.20.0
         version: 1.20.0(debug@4.3.2)
@@ -3490,10 +3490,11 @@ packages:
     resolution: {integrity: sha512-x/iUDjcS90W69PryLDIMgFyV21YLTnG9zOpPXS7Bkt2b8AsY3zZsIpOLBkYr9fBcF3HbkKaER5hOBZLfpLgYNw==}
     engines: {node: '>= 14.0.0'}
 
-  '@koa/router@12.0.2':
-    resolution: {integrity: sha512-sYcHglGKTxGF+hQ6x67xDfkE9o+NhVlRHBqq6gLywaMc6CojK/5vFZByphdonKinYlMLkEkacm+HEse9HzwgTA==}
-    engines: {node: '>= 12'}
-    deprecated: Please upgrade to v15 or higher. All reported bugs in this version are fixed in newer releases, dependencies have been updated, and security has been improved.
+  '@koa/router@15.7.1':
+    resolution: {integrity: sha512-dAMN3Sp/YBSSpaJ/Mgb2emPs4nPWnrKyfv+Zy22AQGBDC53gClhBwiyXdaC/ZPccMs7JWnzgIl1ungYyzyoScg==}
+    engines: {node: '>= 20'}
+    peerDependencies:
+      koa: ^3.1.2
 
   '@ljharb/through@2.3.13':
     resolution: {integrity: sha512-/gKJun8NNiWGZJkGzI/Ragc53cOdcLNdzjLaIa+GEjguQs0ulsurx8WN0jijdK9yPqDvziX995sMRLyLt1uZMQ==}
@@ -16168,12 +16169,22 @@ snapshots:
     dependencies:
       vary: 1.1.2
 
-  '@koa/router@12.0.2':
+  '@koa/router@15.7.1(koa@2.16.4)':
     dependencies:
-      debug: 4.3.7
-      http-errors: 2.0.0
+      debug: 4.4.3(supports-color@10.2.2)
+      http-errors: 2.0.1
+      koa: 2.16.4
       koa-compose: 4.1.0
-      methods: 1.1.2
+      path-to-regexp: 6.3.0
+    transitivePeerDependencies:
+      - supports-color
+
+  '@koa/router@15.7.1(koa@3.2.0)':
+    dependencies:
+      debug: 4.4.3(supports-color@10.2.2)
+      http-errors: 2.0.1
+      koa: 3.2.0
+      koa-compose: 4.1.0
       path-to-regexp: 6.3.0
     transitivePeerDependencies:
       - supports-color
