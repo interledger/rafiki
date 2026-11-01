@@ -728,8 +728,8 @@ importers:
         specifier: ^6.10.2
         version: 6.10.2(eslint@10.9.1(jiti@2.4.2))
       globals:
-        specifier: ^17.12.0
-        version: 17.12.0
+        specifier: ^17.14.0
+        version: 17.14.0
       prettier:
         specifier: ^3.9.6
         version: 3.9.6
@@ -8399,8 +8399,8 @@ packages:
     resolution: {integrity: sha512-dkQ957uSRWHw7CFXLUtUHQI3g3aWApYhfNR2O6jn/907riyTYKVBmxYVROkBcY614FSSeSJh7Xm7SrUWCxvJMQ==}
     engines: {node: '>=8'}
 
-  globals@17.12.0:
-    resolution: {integrity: sha512-cezEd/DTyyht9cvSSURyygXPfy04GtWO/5e6ZPvH7fCtjKz9PYOmuawphw1Ctd1f6C+5JypXfGD7ahNMXvevBA==}
+  globals@17.14.0:
+    resolution: {integrity: sha512-UtdkTVyAJePQv0J2M9Xe4L0ruNSDV314XiIJsADI2Zf40bcdAonE/D/OhAU8AT99oij9mhLByb+NvA3QWZYgCg==}
     engines: {node: '>=18'}
 
   globalthis@1.0.3:
@@ -21173,7 +21173,7 @@ snapshots:
       astro-eslint-parser: 3.1.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)
       eslint: 10.9.1(jiti@2.4.2)
       espree: 11.2.0
-      globals: 17.12.0
+      globals: 17.14.0
       postcss: 8.5.27
       postcss-selector-parser: 7.1.1
     optionalDependencies:
@@ -22036,7 +22036,7 @@ snapshots:
     dependencies:
       type-fest: 0.20.2
 
-  globals@17.12.0: {}
+  globals@17.14.0: {}
 
   globalthis@1.0.3:
     dependencies:
