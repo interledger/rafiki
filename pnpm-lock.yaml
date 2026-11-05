@@ -208,8 +208,8 @@ importers:
         specifier: ^5.5.1
         version: 5.5.1(graphql@16.11.0)
       '@as-integrations/koa':
-        specifier: ^1.1.1
-        version: 1.1.1(@apollo/server@5.5.1(graphql@16.11.0))(koa@2.16.4)
+        specifier: ^3.0.0
+        version: 3.0.0(@apollo/server@5.5.1(graphql@16.11.0))(koa@2.16.4)
       '@escape.tech/graphql-armor':
         specifier: ^3.2.0
         version: 3.2.0(@apollo/server@5.5.1(graphql@16.11.0))(@envelop/core@5.2.3)(@escape.tech/graphql-armor-types@0.7.0)
@@ -359,8 +359,8 @@ importers:
         specifier: ^5.5.1
         version: 5.5.1(graphql@16.11.0)
       '@as-integrations/koa':
-        specifier: ^1.1.1
-        version: 1.1.1(@apollo/server@5.5.1(graphql@16.11.0))(koa@2.16.4)
+        specifier: ^3.0.0
+        version: 3.0.0(@apollo/server@5.5.1(graphql@16.11.0))(koa@2.16.4)
       '@escape.tech/graphql-armor':
         specifier: ^3.2.0
         version: 3.2.0(@apollo/server@5.5.1(graphql@16.11.0))(@envelop/core@5.2.3)(@escape.tech/graphql-armor-types@0.7.0)
@@ -1243,12 +1243,12 @@ packages:
     resolution: {integrity: sha512-xhlTqH0m31mnsG0tIP4ETgfSB6gXDaYYsUWTrlUV93fFQPI9dd8hE0Ot6MHLCtqgB32hwJAC3YZMWlXZw7AleA==}
     engines: {node: '>=14'}
 
-  '@as-integrations/koa@1.1.1':
-    resolution: {integrity: sha512-v84cVhkLUxAH9l19pajbWp/Z9ZYTzO7jkAOiY1xndTclfpXZstiWDKejZYq7xpkBtUSSAKzNyM66uox8MP9qVg==}
-    engines: {node: '>=16.0'}
+  '@as-integrations/koa@3.0.0':
+    resolution: {integrity: sha512-90wJKDaQCBp3Urcb8DJX3Bmx4XujGcehqTnmo3qBQjiuaihlaKWg+JRMs4Vyfp1kqVvKj7Uksg7gt8MfbsYhBw==}
+    engines: {node: '>=22'}
     peerDependencies:
       '@apollo/server': ^5.5.1
-      koa: ^2.16.4
+      koa: ^3.1.2
 
   '@astrojs/compiler-binding-darwin-arm64@0.4.0':
     resolution: {integrity: sha512-ZVUwHundaQyFNjE6uoa0usaC0WOCitDCLS/4mdb4rOiJXwVUuKJBMxI5WMzXLWmamsXtK/Z//ifLXvV5Yeh4Hw==}
@@ -13481,7 +13481,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  '@as-integrations/koa@1.1.1(@apollo/server@5.5.1(graphql@16.11.0))(koa@2.16.4)':
+  '@as-integrations/koa@3.0.0(@apollo/server@5.5.1(graphql@16.11.0))(koa@2.16.4)':
     dependencies:
       '@apollo/server': 5.5.1(graphql@16.11.0)
       koa: 2.16.4
