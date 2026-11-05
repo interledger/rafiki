@@ -12,6 +12,7 @@ while IFS= read -r -d '' file; do
   [[ "$file" == *"404"* ]] && continue
   [[ "$file" == *"/v1-beta/"* ]] && continue
   [[ "$file" == *"/resources/releases.mdx" ]] && continue
+  [[ "$file" == *"/partials/"* ]] && continue
 
   last_commit=$(git log -1 --format="%ct" -- "$file")
   [[ -z "$last_commit" ]] && continue
