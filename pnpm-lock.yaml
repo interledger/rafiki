@@ -290,8 +290,8 @@ importers:
         specifier: ^3.14.1
         version: 3.14.1(@types/react@18.2.73)(graphql-ws@5.14.0(graphql@16.11.0))(graphql@16.11.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@faker-js/faker':
-        specifier: ^8.4.1
-        version: 8.4.1
+        specifier: ^10.0.0
+        version: 10.6.0
       '@graphql-codegen/cli':
         specifier: 5.0.4
         version: 5.0.4(@babel/core@7.29.7)(@parcel/watcher@2.5.1)(@types/node@24.11.0)(graphql@16.11.0)
@@ -513,8 +513,8 @@ importers:
         version: 9.0.1
     devDependencies:
       '@faker-js/faker':
-        specifier: ^8.4.1
-        version: 8.4.1
+        specifier: ^10.0.0
+        version: 10.6.0
       '@graphql-codegen/cli':
         specifier: 5.0.4
         version: 5.0.4(@babel/core@7.29.7)(@parcel/watcher@2.5.1)(@types/node@24.11.0)(graphql@16.11.0)
@@ -923,8 +923,8 @@ importers:
         version: 9.0.1
     devDependencies:
       '@faker-js/faker':
-        specifier: ^8.4.1
-        version: 8.4.1
+        specifier: ^10.0.0
+        version: 10.6.0
       '@graphql-codegen/cli':
         specifier: 5.0.4
         version: 5.0.4(@babel/core@7.29.7)(@parcel/watcher@2.5.1)(@types/node@24.11.0)(graphql@16.11.0)
@@ -2761,9 +2761,9 @@ packages:
   '@expressive-code/plugin-text-markers@0.44.2':
     resolution: {integrity: sha512-SNI7EgUSiADqbqUzzMbj1ZeC/r2pa5eg3KyFOGAd3a7EsIA4qzjXQLp+ODWQtHVDKFCdGs4J3ovSJUqvKIK96g==}
 
-  '@faker-js/faker@8.4.1':
-    resolution: {integrity: sha512-XQ3cU+Q8Uqmrbf2e0cIC/QN43sTBSC8KF12u29Mb47tWrt2hAgBXSgpZMj4Ao8Uk0iJcU99QsOCaIL8934obCg==}
-    engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0, npm: '>=6.14.13'}
+  '@faker-js/faker@10.6.0':
+    resolution: {integrity: sha512-3RQHgEtvL1Frl/d1cSreo7qhJ3Gk1OdNUai/CtZ8G+wYeRQnJih3s9xJ9/kgYekPQRdwgh0HXRPqMlzWGwivIQ==}
+    engines: {node: ^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0, npm: '>=10'}
 
   '@floating-ui/core@1.7.5':
     resolution: {integrity: sha512-1Ih4WTWyw0+lKyFMcBHGbb5U5FtuHJuujoyyr5zTaWS5EYMeT6Jb2AuDeftsCsEuchO+mM2ij5+q9crhydzLhQ==}
@@ -15080,7 +15080,7 @@ snapshots:
     dependencies:
       '@expressive-code/core': 0.44.2
 
-  '@faker-js/faker@8.4.1': {}
+  '@faker-js/faker@10.6.0': {}
 
   '@floating-ui/core@1.7.5':
     dependencies:
