@@ -111,8 +111,8 @@ importers:
         specifier: ^5.4.3
         version: 5.4.3
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^11.0.0
+        version: 11.1.0
 
   bruno/collections/Rafiki:
     dependencies:
@@ -168,8 +168,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^11.0.0
+        version: 11.1.0
       yaml:
         specifier: ^2.8.3
         version: 2.8.3
@@ -283,8 +283,8 @@ importers:
         specifier: workspace:*
         version: link:../token-introspection
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^11.0.0
+        version: 11.1.0
     devDependencies:
       '@apollo/client':
         specifier: ^3.14.1
@@ -509,8 +509,8 @@ importers:
         specifier: workspace:*
         version: link:../token-introspection
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^11.0.0
+        version: 11.1.0
     devDependencies:
       '@faker-js/faker':
         specifier: ^8.4.1
@@ -630,8 +630,8 @@ importers:
         specifier: ^8.19.0
         version: 8.19.0
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^11.0.0
+        version: 11.1.0
     devDependencies:
       '@types/koa':
         specifier: 2.15.0
@@ -794,8 +794,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^11.0.0
+        version: 11.1.0
       yaml:
         specifier: ^2.8.3
         version: 2.8.3
@@ -870,8 +870,8 @@ importers:
         specifier: ^11.0.0
         version: 11.0.0
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^11.0.0
+        version: 11.1.0
     devDependencies:
       '@types/node':
         specifier: ^24.0.0
@@ -919,8 +919,8 @@ importers:
         specifier: ^8.19.0
         version: 8.19.0
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^11.0.0
+        version: 11.1.0
     devDependencies:
       '@faker-js/faker':
         specifier: ^8.4.1
@@ -1026,8 +1026,8 @@ importers:
         specifier: workspace:*
         version: link:../test-lib
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^11.0.0
+        version: 11.1.0
       yaml:
         specifier: ^2.8.3
         version: 2.8.3
