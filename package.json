@@ -72,7 +72,7 @@
       "@vanilla-extract/integration": "^8.0.10",
       "@grpc/grpc-js@>=1.0.0": "^1.14.6",
       "@graphql-tools/utils@<12.0.1": "^12.0.1",
-      "@opentelemetry/propagator-jaeger": "^2.10.0",
+      "@opentelemetry/propagator-jaeger": "^2.12.0",
       "@remix-run/router": ">=1.23.2",
       "axios": "1.20.0",
       "brace-expansion@>=1.0.0 <2.0.0": "^1.1.18",
