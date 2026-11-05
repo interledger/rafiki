@@ -2,6 +2,7 @@
 title: Asset liquidity
 tableOfContents:
   maxHeadingLevel: 4
+lastUpdated: 2026-11-03
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components'
@@ -29,10 +30,6 @@ You can deposit and withdraw asset liquidity through the Rafiki Admin app's [Ass
     ```graphql
     mutation DepositAssetLiquidity($input: DepositAssetLiquidityInput!) {
       depositAssetLiquidity(input: $input) {
-        assetId
-        amount
-        id
-        idempotencyKey
         success
       }
     }
@@ -45,7 +42,7 @@ You can deposit and withdraw asset liquidity through the Rafiki Admin app's [Ass
         "assetId": "7b8b0f65-896d-4403-b7ba-2e24bf20eb35",
         "amount": "100",
         "id": "b97fd85a-126e-42ef-b40d-1a50a70ffa6f",
-        "idempotencyKey": "b97fd85a-126e-42ef-b40d-1a50a70ffa6f",
+        "idempotencyKey": "b97fd85a-126e-42ef-b40d-1a50a70ffa6f"
       }
     }
   ```
