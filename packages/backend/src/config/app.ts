@@ -1,6 +1,7 @@
 import { loadOrGenerateKey } from '@interledger/http-signature-utils'
 import dotenv from 'dotenv'
 import * as fs from 'fs'
+import { isValidIlpAddress } from 'ilp-packet'
 import { ConnectionOptions } from 'tls'
 
 function envString(name: string, defaultValue?: string): string {
@@ -10,6 +11,18 @@ function envString(name: string, defaultValue?: string): string {
   if (defaultValue) return defaultValue
 
   throw new Error(`Environment variable ${name} must be set.`)
+}
+
+function envIlpAddress(name: string): string {
+  const value = envString(name)
+
+  if (!isValidIlpAddress(value)) {
+    throw new Error(
+      `Environment variable ${name} must be a valid ILP address (https://interledger.org/developers/rfcs/ilp-addresses/), got "${value}".`
+    )
+  }
+
+  return value
 }
 
 function envStringArray(name: string, value: string[]): string[] {
@@ -106,7 +119,7 @@ export const Config = {
     process.env.REDIS_TLS_KEY_FILE_PATH,
     process.env.REDIS_TLS_CERT_FILE_PATH
   ),
-  ilpAddress: envString('ILP_ADDRESS'),
+  ilpAddress: envIlpAddress('ILP_ADDRESS'),
   ilpConnectorUrl: envString('ILP_CONNECTOR_URL'),
   instanceName: envString('INSTANCE_NAME'),
   streamSecret: Buffer.from(process.env.STREAM_SECRET || '', 'base64'),
