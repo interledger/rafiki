@@ -10,7 +10,7 @@ export class Grant extends BaseModel {
   }
 
   static get virtualAttributes(): string[] {
-    return ['expired', 'managementUrl']
+    return ['expired']
   }
 
   static relationMappings = {
@@ -30,6 +30,7 @@ export class Grant extends BaseModel {
   public continueToken?: string
   public accessToken!: string
   public managementId!: string
+  public managementUrl?: string | null
   public accessType!: AccessType
   public accessActions!: AccessAction[]
   public expiresAt?: Date | null
@@ -39,7 +40,15 @@ export class Grant extends BaseModel {
     return !!this.expiresAt && this.expiresAt <= new Date()
   }
 
-  public getManagementUrl(authServerUrl: string): string {
-    return `${authServerUrl}/token/${this.managementId}`
+  // Fallback for legacy grants; wrong for tenant-scoped auth servers.
+  // TODO: soft-delete grants without managementUrl and drop managementId.
+  public getManagementUrl(): string | undefined {
+    if (this.managementUrl) {
+      return this.managementUrl
+    }
+    if (this.authServer) {
+      return `${this.authServer.url}/token/${this.managementId}`
+    }
+    return undefined
   }
 }
