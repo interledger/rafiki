@@ -31,7 +31,8 @@ export async function getWalletAddressUrlFromPath(
   ctx: WalletAddressUrlContext,
   next: () => Promise<void>
 ) {
-  ctx.walletAddressUrl = `https://${ctx.request.host}/${ctx.params.walletAddressPath}`
+  const requestUrl = new URL(ctx.request.url, `https://${ctx.request.host}`)
+  ctx.walletAddressUrl = `${requestUrl.origin}${requestUrl.pathname}`
   await next()
 }
 
