@@ -28,32 +28,33 @@ import { LinkOut } from '@interledger/docs-design-system'
 
 ### Optional values
 
-| Helm value name                          | Default             | Description                                                                                          |
-| ---------------------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------- |
-| `config.backend.shouldCreateSecrets`     | `false`             | If `true`, chart-managed backend secrets are created from `secretsMaps.backend`.                     |
-| `config.backend.port.admin`              | `3001`              | The port of your Backend Admin API server.                                                           |
-| `config.backend.port.connector`          | `3002`              | The port of the ILP connector for sending packets via ILP over HTTP.                                 |
-| `config.backend.port.openPayments`       | `3000`              | The port of your Open Payments resource server.                                                      |
-| `config.backend.port.autoPeering`        | `3005`              | If automatic peering is enabled, the server uses this port.                                          |
-| `config.backend.autoPeering.enabled`     | `"false"`           | When `"true"`, automatic peering is enabled.                                                         |
-| `config.backend.telemetry.enabled`       | `"false"`           | When `"true"`, telemetry is enabled.                                                                 |
-| `config.backend.useTigerbeetle`          | `false`             | When `true`, TigerBeetle is used for accounting.                                                     |
-| `config.backend.rates.url`               | `''`                | The endpoint your Rafiki instance uses to request exchange rates.                                    |
-| `config.backend.webhook.timeout`         | `200`               | The time, in milliseconds, for wallet-address worker webhook polling timeout behavior.               |
-| `config.backend.ilp.slippage`            | `0.01`              | The accepted ILP rate fluctuation.                                                                   |
-| `config.backend.key.mount`               | `/mnt/keys/pvk.pem` | The mounted path to your Rafiki instance private key file.                                           |
-| `config.backend.idempotency.keyTTL`      | `86400000`          | The TTL, in milliseconds, for idempotency keys on Backend Admin API mutations.                       |
-| `config.backend.idempotency.keyLock`     | `2000`              | The TTL, in milliseconds, for idempotency key lock concurrency control.                              |
-| `config.backend.workerIdle`              | `200`               | The time, in milliseconds, workers wait before polling an empty queue again.                         |
-| `config.backend.workers.incomingPayment` | `1`                 | The number of workers processing incoming payment requests.                                          |
-| `config.backend.workers.outgoingPayment` | `1`                 | The number of workers processing outgoing payment requests.                                          |
-| `config.backend.workers.walletAddress`   | `1`                 | The number of workers processing wallet address requests.                                            |
-| `config.backend.workers.webhook`         | `1`                 | The number of workers processing webhook events.                                                     |
-| `config.backend.lifetime.exchangeRate`   | `15000`             | The time, in milliseconds, that exchange rates from `config.backend.rates.url` are considered valid. |
-| `config.backend.lifetime.quote`          | `300000`            | The time, in milliseconds, an Open Payments quote is valid for.                                      |
-| `config.backend.lifetime.webhook`        | `200`               | The time, in milliseconds, to wait for a `200` response from your webhook endpoint before retry.     |
-| `config.backend.withdrawalThrottleDelay` | `''`                | The delay in liquidity withdrawal processing.                                                        |
-| `config.backend.logLevel`                | `info`              | Pino log level.                                                                                      |
-| `config.backend.nodeEnv`                 | `production`        | The type of node environment: `development`, `test`, or `production`.                                |
+| Helm value name                                     | Default             | Description                                                                                          |
+| --------------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------- |
+| `config.backend.shouldCreateSecrets`                | `false`             | If `true`, chart-managed backend secrets are created from `secretsMaps.backend`.                     |
+| `config.backend.port.admin`                         | `3001`              | The port of your Backend Admin API server.                                                           |
+| `config.backend.port.connector`                     | `3002`              | The port of the ILP connector for sending packets via ILP over HTTP.                                 |
+| `config.backend.port.openPayments`                  | `3000`              | The port of your Open Payments resource server.                                                      |
+| `config.backend.port.autoPeering`                   | `3005`              | If automatic peering is enabled, the server uses this port.                                          |
+| `config.backend.autoPeering.enabled`                | `"false"`           | When `"true"`, automatic peering is enabled.                                                         |
+| `config.backend.telemetry.enabled`                  | `"false"`           | When `"true"`, telemetry is enabled.                                                                 |
+| `config.backend.telemetry.enableIlpTimingTelemetry` | `"true"`            | When `"true"`, records ILP packet processing timing data for telemetry.                              |
+| `config.backend.useTigerbeetle`                     | `false`             | When `true`, TigerBeetle is used for accounting.                                                     |
+| `config.backend.rates.url`                          | `''`                | The endpoint your Rafiki instance uses to request exchange rates.                                    |
+| `config.backend.webhook.timeout`                    | `200`               | The time, in milliseconds, for wallet-address worker webhook polling timeout behavior.               |
+| `config.backend.ilp.slippage`                       | `0.01`              | The accepted ILP rate fluctuation.                                                                   |
+| `config.backend.key.mount`                          | `/mnt/keys/pvk.pem` | The mounted path to your Rafiki instance private key file.                                           |
+| `config.backend.idempotency.keyTTL`                 | `86400000`          | The TTL, in milliseconds, for idempotency keys on Backend Admin API mutations.                       |
+| `config.backend.idempotency.keyLock`                | `2000`              | The TTL, in milliseconds, for idempotency key lock concurrency control.                              |
+| `config.backend.workerIdle`                         | `200`               | The time, in milliseconds, workers wait before polling an empty queue again.                         |
+| `config.backend.workers.incomingPayment`            | `1`                 | The number of workers processing incoming payment requests.                                          |
+| `config.backend.workers.outgoingPayment`            | `1`                 | The number of workers processing outgoing payment requests.                                          |
+| `config.backend.workers.walletAddress`              | `1`                 | The number of workers processing wallet address requests.                                            |
+| `config.backend.workers.webhook`                    | `1`                 | The number of workers processing webhook events.                                                     |
+| `config.backend.lifetime.exchangeRate`              | `15000`             | The time, in milliseconds, that exchange rates from `config.backend.rates.url` are considered valid. |
+| `config.backend.lifetime.quote`                     | `300000`            | The time, in milliseconds, an Open Payments quote is valid for.                                      |
+| `config.backend.lifetime.webhook`                   | `200`               | The time, in milliseconds, to wait for a `200` response from your webhook endpoint before retry.     |
+| `config.backend.withdrawalThrottleDelay`            | `''`                | The delay in liquidity withdrawal processing.                                                        |
+| `config.backend.logLevel`                           | `info`              | Pino log level.                                                                                      |
+| `config.backend.nodeEnv`                            | `production`        | The type of node environment: `development`, `test`, or `production`.                                |
 
 </div>
