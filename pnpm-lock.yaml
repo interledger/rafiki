@@ -28,7 +28,7 @@ overrides:
   flatted: ^3.4.2
   form-data: ^4.0.6
   handlebars: ^4.7.9
-  immutable@>=5.0.0: ^5.1.8
+  immutable@>=5.0.0: ^5.2.1
   jose: '>=4.15.5'
   js-yaml@>=3.0.0 <4.0.0: ^3.15.0
   js-yaml@>=4.0.0 <5.0.0: ^4.3.0
@@ -8861,8 +8861,8 @@ packages:
   ilp-protocol-stream@2.7.2-alpha.3:
     resolution: {integrity: sha512-4HQFVL9Wfmv6nLB5tSp68LZYcd4KRg9kBMVVVHDiqRfqYVQoyPI7EcOAIh7cA01MVzmMrqhbDzIPu6T2SQV4TA==}
 
-  immutable@5.1.9:
-    resolution: {integrity: sha512-m8nVez3rwrgmWxtLMt1ZYXB2Lv7OKYn/disyxAlSDYAlKSlFoPPfIAmAM/M5xqL4m4C/wAPw7S2/CNaUii1Hxg==}
+  immutable@5.2.1:
+    resolution: {integrity: sha512-CgXNM1BhKqpMjFHTyqQSk09OWqzHNJ/U4BdeBgXoBdR2DdgBdOSv131cO1/YMgzopqnka3B/i949UaMLEKUxOA==}
 
   import-fresh@3.3.0:
     resolution: {integrity: sha512-veYYhQa+D1QBKznvhUHxb8faxlrwUnxseDAbAp457E0wLNio2bOSKnjYDhMj+YiAq61xrMGhQk9iXVk5FzgQMw==}
@@ -13472,7 +13472,7 @@ snapshots:
     dependencies:
       '@babel/runtime': 8.0.5
       graphql: 16.11.0
-      immutable: 5.1.9
+      immutable: 5.2.1
       invariant: 2.2.4
 
   '@ardatan/sync-fetch@0.0.1':
@@ -22770,7 +22770,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  immutable@5.1.9: {}
+  immutable@5.2.1: {}
 
   import-fresh@3.3.0:
     dependencies:
@@ -26633,7 +26633,7 @@ snapshots:
   sass@1.89.2:
     dependencies:
       chokidar: 4.0.3
-      immutable: 5.1.9
+      immutable: 5.2.1
       source-map-js: 1.2.1
     optionalDependencies:
       '@parcel/watcher': 2.5.1
