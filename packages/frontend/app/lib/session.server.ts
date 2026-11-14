@@ -1,4 +1,5 @@
 import { createCookieSessionStorage } from '@remix-run/node'
+import { getCookieSecrets } from './cookie_secret.server'
 
 const { getSession, commitSession, destroySession } =
   createCookieSessionStorage({
@@ -8,7 +9,7 @@ const { getSession, commitSession, destroySession } =
       path: '/',
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
-      secrets: ['MY_SUPER_SECRET_TOKEN']
+      secrets: getCookieSecrets()
     }
   })
 
