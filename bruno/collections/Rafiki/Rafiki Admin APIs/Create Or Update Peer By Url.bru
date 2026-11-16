@@ -47,6 +47,6 @@ script:post-response {
   const body = res.getBody();
   
   if (body?.data) {
-    bru.setEnvVar("peerId", body.data.createOrUpdatePeerByUrl?.peer.id);
+    bru.setVar("peerId", body.data.createOrUpdatePeerByUrl?.peer.id);
   }
 }

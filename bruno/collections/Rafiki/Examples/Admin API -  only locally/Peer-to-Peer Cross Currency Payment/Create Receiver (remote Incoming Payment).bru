@@ -66,12 +66,12 @@ script:post-response {
   const body = res.getBody();
   
   if (body?.data) {
-    bru.setEnvVar("receiverId", body.data.createReceiver.receiver.id);
+    bru.setVar("receiverId", body.data.createReceiver.receiver.id);
   }
 }
 
 tests {
   test("Receiver id is string", function() {
-    expect(bru.getEnvVar("receiverId")).to.be.a("string");
+    expect(bru.getVar("receiverId")).to.be.a("string");
   })
 }

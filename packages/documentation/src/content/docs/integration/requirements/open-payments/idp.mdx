@@ -12,6 +12,7 @@ Open Payments requires any authorization server that issues interactive grants b
 Responsibilities of your IdP include:
 
 - Providing an interface to gather end-user consent for a particular action
+- Working with you to create a Content Security Policy (CSP) and applying this policy on its end-user consent screen (to prevent clickjacking)
 - Sending the interaction choice (approve or deny) to the authorization server
 - Sending a request to the authorization server to finish the interaction
 - Redirecting the user after the interaction is complete

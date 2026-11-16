@@ -26,6 +26,22 @@ interface VerifyApiSignatureArgs {
   apiSignatureVersion: number
 }
 
+function hmacHexDigestsEqual(
+  expectedHex: string,
+  providedHex: string
+): boolean {
+  const expected = Buffer.from(expectedHex, 'hex')
+  const provided = Buffer.from(providedHex, 'hex')
+  if (
+    expected.length === 0 ||
+    expected.length !== provided.length ||
+    expectedHex.length !== providedHex.length
+  ) {
+    return false
+  }
+  return crypto.timingSafeEqual(expected, provided)
+}
+
 function verifyApiSignatureDigest(args: VerifyApiSignatureArgs): boolean {
   const { signature, request, tenantApiSecret, apiSignatureVersion } = args
   const { body } = request
@@ -44,7 +60,7 @@ function verifyApiSignatureDigest(args: VerifyApiSignatureArgs): boolean {
   hmac.update(payload)
   const digest = hmac.digest('hex')
 
-  return digest === signatureDigest
+  return hmacHexDigestsEqual(digest, signatureDigest)
 }
 
 async function canApiSignatureBeProcessed(
@@ -55,7 +71,8 @@ async function canApiSignatureBeProcessed(
   const { timestamp } = getSignatureParts(signature)
   const signatureTime = Number(timestamp)
   const currentTime = Date.now()
-  const ttlMilliseconds = config.adminApiSignatureTtlSeconds * 1000
+  const ttlSeconds = config.adminApiSignatureTtlSeconds
+  const ttlMilliseconds = ttlSeconds * 1000
 
   if (currentTime - signatureTime > ttlMilliseconds) return false
 
@@ -65,7 +82,8 @@ async function canApiSignatureBeProcessed(
 
   const op = redis.multi()
   op.set(key, signature)
-  op.expire(key, ttlMilliseconds)
+  // Redis EXPIRE takes seconds (not milliseconds).
+  op.expire(key, ttlSeconds)
   await op.exec()
 
   return true

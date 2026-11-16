@@ -253,6 +253,11 @@ describe('Tenant Middlewares', (): void => {
         authenticatedTenantMiddleware(ctx, jest.fn())
       ).resolves.toBeUndefined()
 
+      // Redis EXPIRE is in seconds; a ms/seconds mixup would leave TTL ≈ ttlSeconds*1000.
+      const ttl = await redis.ttl(`signature:${signature}`)
+      expect(ttl).toBeGreaterThan(0)
+      expect(ttl).toBeLessThanOrEqual(config.adminApiSignatureTtlSeconds)
+
       const next = jest.fn()
       const ctxThrowSpy = jest.spyOn(ctx, 'throw')
 

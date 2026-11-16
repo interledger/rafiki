@@ -11,6 +11,7 @@ import {
 } from '@remix-run/react'
 import { Box, Button, Flex, Heading, Table, Text } from '@radix-ui/themes'
 import { PopoverFilter } from '~/components/Filters'
+import { Timestamp } from '~/components/Timestamp'
 import { listWebhooks } from '~/lib/api/webhook.server'
 import { webhooksSearchParams } from '~/lib/validate.server'
 import { WebhookEventType } from '~/shared/enums'
@@ -155,9 +156,7 @@ export default function WebhookEventsPage() {
                           <Text weight='medium'>{webhook.node.type}</Text>
                         </Table.Cell>
                         <Table.Cell>
-                          <Text>
-                            {new Date(webhook.node.createdAt).toLocaleString()}
-                          </Text>
+                          <Timestamp value={webhook.node.createdAt} />
                         </Table.Cell>
                         <Table.Cell>
                           <Flex direction='column' gap='1'>

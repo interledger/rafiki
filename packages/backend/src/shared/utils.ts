@@ -1,6 +1,11 @@
 import { validate, version } from 'uuid'
 import { URL, type URL as URLType } from 'url'
-import { createCipheriv, createHmac, randomBytes } from 'crypto'
+import {
+  createCipheriv,
+  createHmac,
+  randomBytes,
+  timingSafeEqual
+} from 'crypto'
 import { canonicalize } from 'json-canonicalize'
 import { IAppConfig } from '../config/app'
 import { AppContext, AppServices } from '../app'
@@ -125,6 +130,23 @@ function getSignatureParts(signature: string) {
   return { timestamp, version, digest }
 }
 
+function hmacHexDigestsEqual(
+  expectedHex: string,
+  providedHex: string
+): boolean {
+  const expected = Buffer.from(expectedHex, 'hex')
+  const provided = Buffer.from(providedHex, 'hex')
+  // Reject non-hex / length mismatch before timingSafeEqual (throws on unequal length).
+  if (
+    expected.length === 0 ||
+    expected.length !== provided.length ||
+    expectedHex.length !== providedHex.length
+  ) {
+    return false
+  }
+  return timingSafeEqual(expected, provided)
+}
+
 function verifyApiSignatureDigest(
   signature: string,
   request: AppContext['request'],
@@ -147,7 +169,7 @@ function verifyApiSignatureDigest(
   hmac.update(payload)
   const digest = hmac.digest('hex')
 
-  return digest === signatureDigest
+  return hmacHexDigestsEqual(digest, signatureDigest)
 }
 
 async function canApiSignatureBeProcessed(
@@ -158,7 +180,8 @@ async function canApiSignatureBeProcessed(
   const { timestamp } = getSignatureParts(signature)
   const signatureTime = Number(timestamp)
   const currentTime = Date.now()
-  const ttlMilliseconds = config.adminApiSignatureTtlSeconds * 1000
+  const ttlSeconds = config.adminApiSignatureTtlSeconds
+  const ttlMilliseconds = ttlSeconds * 1000
 
   if (currentTime - signatureTime > ttlMilliseconds) return false
 
@@ -168,7 +191,8 @@ async function canApiSignatureBeProcessed(
 
   const op = redis.multi()
   op.set(key, signature)
-  op.expire(key, ttlMilliseconds)
+  // Redis EXPIRE takes seconds (not milliseconds).
+  op.expire(key, ttlSeconds)
   await op.exec()
 
   return true

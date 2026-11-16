@@ -1,5 +1,6 @@
 ---
 title: Viewing and revoking grants
+lastUpdated: 2026-11-03
 ---
 
 import { Badge, Tabs, TabItem } from '@astrojs/starlight/components'
@@ -10,6 +11,10 @@ Grants are the mechanism in Open Payments by which your account holders give per
 ## View grants
 
 Use the `Grants` GraphQL query to look up all grants associated with a wallet address.
+
+:::note[Directed identity grants]
+`client` is `null` for grants created using [directed identity](/integration/requirements/open-payments/wallet-keys#directed-identity), where a client passes a JWK directly in the grant request instead of providing a wallet address.
+:::
 
 <Tabs>
 <TabItem label='Operation'>

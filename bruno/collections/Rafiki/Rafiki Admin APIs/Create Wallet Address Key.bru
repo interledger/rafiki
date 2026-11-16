@@ -55,6 +55,6 @@ script:post-response {
   const body = res.getBody();
   
   if (body?.data) {
-    bru.setEnvVar("walletAddressKeyId", body.data.createWalletAddressKey.walletAddressKey.id);
+    bru.setVar("walletAddressKeyId", body.data.createWalletAddressKey.walletAddressKey.id);
   }
 }

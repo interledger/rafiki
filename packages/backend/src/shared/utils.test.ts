@@ -157,7 +157,7 @@ describe('utils', (): void => {
 
     afterEach(async (): Promise<void> => {
       jest.useRealTimers()
-      await redis.flushall()
+      await redis.flushdb()
     })
 
     afterAll(async (): Promise<void> => {
@@ -272,6 +272,12 @@ describe('utils', (): void => {
         })
       ).resolves.toBe(true)
 
+      // Redis EXPIRE is in seconds; a ms/seconds mixup would leave TTL ≈ ttlSeconds*1000.
+      // ioredis is configured with `stringNumbers: true`, so ttl() resolves to a string.
+      const ttl = Number(await redis.ttl(`signature:${signature}`))
+      expect(ttl).toBeGreaterThan(0)
+      expect(ttl).toBeLessThanOrEqual(Config.adminApiSignatureTtlSeconds)
+
       const verified = await verifyApiSignature(ctx, {
         ...Config,
         adminApiSecret: 'test-secret'
@@ -319,7 +325,7 @@ describe('utils', (): void => {
     })
 
     afterEach(async (): Promise<void> => {
-      await redis.flushall()
+      await redis.flushdb()
       await truncateTables(deps)
     })
 

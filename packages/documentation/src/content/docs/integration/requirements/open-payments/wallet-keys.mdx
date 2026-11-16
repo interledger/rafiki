@@ -1,5 +1,6 @@
 ---
 title: Wallet address keys
+lastUpdated: 2026-11-03
 ---
 
 import { LinkOut } from '@interledger/docs-design-system'
@@ -8,6 +9,14 @@ import { Tabs, TabItem } from '@astrojs/starlight/components'
 Creating a public-private key pair for each wallet address isn't required when integrating with Rafiki.
 
 You only need to create key pairs for wallet addresses if you want to allow your account holders to use/be Open Payments clients under their wallet addresses. For more information, review the Open Payments documentation about <LinkOut href="https://openpayments.dev/resources/glossary/#client">clients</LinkOut> and <LinkOut href="https://openpayments.dev/identity/client-keys/">client keys</LinkOut>.
+
+## Directed identity
+
+Instead of registering a wallet address key pair, a client can pass a JSON Web Key (JWK) directly in the grant request. This is known as directed identity. It removes the need for the authorization server to fetch keys from a wallet address JSON Web Key Set (JWKS) endpoint. This is useful for clients that don't have a wallet address, or don't want to disclose one.
+
+Directed identity is only available for non-interactive grants (incoming payments and quotes). If `INCOMING_PAYMENT_INTERACTION` or `QUOTE_INTERACTION` is set to `true`, directed identity can't be used for that grant type.
+
+When a grant uses directed identity, its `client` field is `null` in the Auth Admin API. See [Viewing and revoking grants](/integration/requirements/open-payments/grants-revoking) for how this affects grant queries.
 
 ## Create a wallet address key pair
 
@@ -18,9 +27,6 @@ Use the `createWalletAddressKey` GraphQL mutation to create a key pair and assoc
 ```graphql
 mutation CreateWalletAddressKey($input: CreateWalletAddressKeyInput!) {
   createWalletAddressKey(input: $input) {
-    code
-    message
-    success
     walletAddressKey {
       id
       walletAddressId
@@ -80,9 +86,6 @@ Additionally, the request must contain the `walletAddressId` of the wallet addre
 {
   "data": {
     "createWalletAddressKey": {
-      "code": "200",
-      "message": "Added Key To Wallet Address",
-      "success": true,
       "walletAddressKey": {
         "id": "f2953571-f10c-44eb-ab41-4450a7ad6771",
         "walletAddressId": "695e7546-1803-4b45-96b6-6a53f4082018",

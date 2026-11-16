@@ -1,5 +1,6 @@
 ---
 title: Two-phase transfers
+lastUpdated: 2026-11-03
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components'
@@ -33,7 +34,6 @@ If the timeout interval passes before the transaction posts or is voided, the tr
   ```graphql wrap
   mutation PostLiquidityWithdrawal($input: PostLiquidityWithdrawalInput!) {
   postLiquidityWithdrawal(input: $input) {
-    error
     success
     }
   }
@@ -69,7 +69,6 @@ If the timeout interval passes before the transaction posts or is voided, the tr
   ```graphql wrap
   mutation VoidLiquidityWithdrawal($input: VoidLiquidityWithdrawalInput!) {
   voidLiquidityWithdrawal(input: $input) {
-    error
     success
     }
   }
