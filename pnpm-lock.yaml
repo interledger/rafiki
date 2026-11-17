@@ -59,7 +59,7 @@ overrides:
   undici@>=6.0.0: ^6.29.1
   vite@>=6.0.0 <7.0.0: ^6.4.3
   webpack: ^5.104.1
-  websocket-driver: ^0.7.5
+  websocket-driver: ^0.8.0
   ws@>=7.0.0 <8.0.0: ^7.5.11
   ws@>=8.0.0 <9.0.0: ^8.21.0
   yaml: ^2.8.3
@@ -13125,13 +13125,13 @@ packages:
       webpack-cli:
         optional: true
 
-  websocket-driver@0.7.5:
-    resolution: {integrity: sha512-ZL2+3c7kMBdIRCMz6l8jQMHyGVxj+UL+xVk74Ombiciboca8rHa15L86B19E5oh1pL9Ii/uj54gtsIrZGMo6zA==}
-    engines: {node: '>=0.8.0'}
+  websocket-driver@0.8.0:
+    resolution: {integrity: sha512-upjjWCo/1ZysdZ3rMvXXUDk9PmbYne+wSD1t78HAvIvjmR+avda0MsLWhtkn5PW8Ht34EXhhWF6OseWJ8nTGlg==}
+    engines: {node: '>=0.10.0'}
 
-  websocket-extensions@0.1.4:
-    resolution: {integrity: sha512-OqedPIGOfsDlo31UNwYbCFMSaO9m9G/0faIHj5/dZFDMFqPTcx6UwqyOy3COEaEOg/9VsGIpdqn62W5KhoKSpg==}
-    engines: {node: '>=0.8.0'}
+  websocket-extensions@0.2.0:
+    resolution: {integrity: sha512-vQaTTgDDgwlrreIJAprknlnvEtZMMxfLqoxyQYnWO8dgcz2qIzQNysCpwOekz8kqLvzrZ0dcaL9hejZ+2AszCA==}
+    engines: {node: '>=0.10.0'}
 
   whatwg-mimetype@4.0.0:
     resolution: {integrity: sha512-QaKxh0eNIi2mE9p2vEdzfagOKHCcj1pJ56EEHGQOVxp8r9/iszLUUV7v89x9O1p/T+NlTM5W7jW6+cz4Fq1YVg==}
@@ -21694,7 +21694,7 @@ snapshots:
 
   faye-websocket@0.10.0:
     dependencies:
-      websocket-driver: 0.7.5
+      websocket-driver: 0.8.0
 
   fb-watchman@2.0.1:
     dependencies:
@@ -28270,13 +28270,13 @@ snapshots:
       - svgo
       - uglify-js
 
-  websocket-driver@0.7.5:
+  websocket-driver@0.8.0:
     dependencies:
       http-parser-js: 0.5.10
       safe-buffer: 5.2.1
-      websocket-extensions: 0.1.4
+      websocket-extensions: 0.2.0
 
-  websocket-extensions@0.1.4: {}
+  websocket-extensions@0.2.0: {}
 
   whatwg-mimetype@4.0.0: {}
 
