@@ -58,6 +58,7 @@ async function updateGrant(
     .updateAndFetch({
       accessToken: options.accessToken,
       managementId: retrieveManagementId(options.managementUrl),
+      managementUrl: options.managementUrl,
       expiresAt: options.expiresIn
         ? new Date(Date.now() + options.expiresIn * 1000)
         : null
@@ -147,6 +148,7 @@ async function requestNewGrant(
       accessActions: addSubsetActions(options.accessActions),
       accessToken: openPaymentsGrant.access_token.value,
       managementId: retrieveManagementId(openPaymentsGrant.access_token.manage),
+      managementUrl: openPaymentsGrant.access_token.manage,
       authServerId,
       expiresAt: openPaymentsGrant.access_token.expires_in
         ? new Date(
@@ -161,10 +163,11 @@ async function rotateTokenAndUpdateGrant(
   deps: ServiceDependencies,
   grant: Grant
 ): Promise<Grant | undefined> {
-  if (!grant.authServer) {
+  const managementUrl = grant.getManagementUrl()
+  if (!managementUrl) {
     deps.logger.error(
       { grantId: grant.id },
-      'Could not get auth server from grant during token rotation'
+      'Could not determine management URL for grant during token rotation'
     )
     return undefined
   }
@@ -173,12 +176,12 @@ async function rotateTokenAndUpdateGrant(
 
   try {
     rotatedToken = await deps.openPaymentsClient.token.rotate({
-      url: grant.getManagementUrl(grant.authServer.url),
+      url: managementUrl,
       accessToken: grant.accessToken
     })
   } catch (err) {
     deps.logger.warn(
-      { err, authServerUrl: grant.authServer.url },
+      { err, authServerUrl: grant.authServer?.url, managementUrl },
       'Grant token rotation failed'
     )
     await deleteGrant(deps, grant.id)
