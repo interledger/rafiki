@@ -225,32 +225,51 @@ export default function ViewWalletAddressPage() {
               >
                 Asset Information
               </Heading>
-              <Flex gap='6' className='w-full'>
-                <Flex direction='column' gap='1' className='flex-1'>
-                  <Text size='2' weight='medium' className='text-gray-700'>
-                    Code
-                  </Text>
-                  <Text size='2' color='gray'>
-                    {walletAddress.asset.code}
-                  </Text>
-                </Flex>
-                <Flex direction='column' gap='1' className='flex-1'>
-                  <Text size='2' weight='medium' className='text-gray-700'>
-                    Scale
-                  </Text>
-                  <Text size='2' color='gray'>
-                    {walletAddress.asset.scale}
-                  </Text>
-                </Flex>
-                <Flex direction='column' gap='1' className='flex-1'>
-                  <Text size='2' weight='medium' className='text-gray-700'>
-                    Withdrawal threshold
-                  </Text>
-                  <Text size='2' color='gray'>
-                    {walletAddress.asset.withdrawalThreshold ??
-                      'No withdrawal threshold'}
-                  </Text>
-                </Flex>
+              <Flex gap='6' className='w-full' asChild>
+                <dl>
+                  <Flex direction='column' gap='1' className='flex-1'>
+                    <Text
+                      size='2'
+                      weight='medium'
+                      className='text-gray-700'
+                      asChild
+                    >
+                      <dt>Code</dt>
+                    </Text>
+                    <Text size='2' color='gray' asChild>
+                      <dd>{walletAddress.asset.code}</dd>
+                    </Text>
+                  </Flex>
+                  <Flex direction='column' gap='1' className='flex-1'>
+                    <Text
+                      size='2'
+                      weight='medium'
+                      className='text-gray-700'
+                      asChild
+                    >
+                      <dt>Scale</dt>
+                    </Text>
+                    <Text size='2' color='gray' asChild>
+                      <dd>{walletAddress.asset.scale}</dd>
+                    </Text>
+                  </Flex>
+                  <Flex direction='column' gap='1' className='flex-1'>
+                    <Text
+                      size='2'
+                      weight='medium'
+                      className='text-gray-700'
+                      asChild
+                    >
+                      <dt>Withdrawal threshold</dt>
+                    </Text>
+                    <Text size='2' color='gray' asChild>
+                      <dd>
+                        {walletAddress.asset.withdrawalThreshold ??
+                          'No withdrawal threshold'}
+                      </dd>
+                    </Text>
+                  </Flex>
+                </dl>
               </Flex>
               <Flex justify='end'>
                 <Button asChild>
