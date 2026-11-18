@@ -164,7 +164,9 @@ export default function ViewWalletAddressPage() {
                     <FormField
                       label='URL'
                       name='address'
-                      value={formatWalletAddressForDisplay(walletAddress.address)}
+                      value={formatWalletAddressForDisplay(
+                        walletAddress.address
+                      )}
                       disabled
                       readOnly
                     />
