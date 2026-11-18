@@ -32,7 +32,7 @@ import {
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { updateWalletAddressSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
-import { formatAmount } from '~/shared/utils'
+import { formatAmount, formatWalletAddressForDisplay } from '~/shared/utils'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 
 export const meta: MetaFunction = () => [
@@ -164,7 +164,7 @@ export default function ViewWalletAddressPage() {
                     <FormField
                       label='URL'
                       name='address'
-                      value={walletAddress.address}
+                      value={formatWalletAddressForDisplay(walletAddress.address)}
                       disabled
                       readOnly
                     />

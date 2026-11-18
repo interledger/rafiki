@@ -119,3 +119,17 @@ export function removeTrailingAndLeadingSlash(str: string): string {
 
   return str
 }
+
+export const formatWalletAddressForDisplay = (
+  paymentPointer: string
+): string => {
+  try {
+    const url = new URL(paymentPointer)
+    const decodedPath = decodeURIComponent(url.pathname)
+    const formattedUrl = `${url.origin}${decodedPath}${url.search}${url.hash}`
+
+    return formattedUrl
+  } catch {
+    return paymentPointer
+  }
+}
