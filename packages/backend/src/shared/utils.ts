@@ -293,7 +293,7 @@ export const loadRoutesFromDatabase = async (
   const routerService = await container.use('routerService')
   const logger = await container.use('logger')
 
-  const peers = await peerService.getPage()
+  const peers = await peerService.getAllForRouting()
   logger.info(
     { peerCount: peers.length },
     'loading static routes from database'

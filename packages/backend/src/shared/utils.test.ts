@@ -25,6 +25,9 @@ import { createContext } from '../tests/context'
 import { Tenant } from '../tenants/model'
 import { truncateTables } from '../tests/tableManager'
 import { generateTestKeys } from '@interledger/http-signature-utils'
+import { PeerRoutingInfo } from '../payment-method/ilp/peer/service'
+import { createAsset } from '../tests/asset'
+import { createPeer } from '../tests/peer'
 
 describe('utils', (): void => {
   describe('isValidHttpUrl', (): void => {
@@ -468,8 +471,26 @@ describe('utils', (): void => {
   })
 
   describe('loadRoutesFromDatabase', (): void => {
+    const createMockContainer = (
+      peers: PeerRoutingInfo[],
+      addStaticRoute: jest.Mock
+    ) =>
+      ({
+        use: jest.fn((service: string) => {
+          if (service === 'peerService') {
+            return { getAllForRouting: jest.fn().mockResolvedValue(peers) }
+          }
+          if (service === 'routerService') {
+            return { addStaticRoute }
+          }
+          if (service === 'logger') {
+            return { info: jest.fn() }
+          }
+        })
+      }) as unknown as IocContract<AppServices>
+
     test('loads routes from peers', async (): Promise<void> => {
-      const mockPeers = [
+      const mockPeers: PeerRoutingInfo[] = [
         {
           id: v4(),
           tenantId: v4(),
@@ -485,38 +506,26 @@ describe('utils', (): void => {
           routes: ['test.peer2.route1']
         }
       ]
+      const addStaticRoute = jest.fn()
 
-      const mockAddStaticRoute = jest.fn()
-      const mockContainer = {
-        use: jest.fn((service: string) => {
-          if (service === 'peerService') {
-            return { getPage: jest.fn().mockResolvedValue(mockPeers) }
-          }
-          if (service === 'routerService') {
-            return { addStaticRoute: mockAddStaticRoute }
-          }
-          if (service === 'logger') {
-            return { info: jest.fn() }
-          }
-        })
-      } as unknown as IocContract<AppServices>
+      await loadRoutesFromDatabase(
+        createMockContainer(mockPeers, addStaticRoute)
+      )
 
-      await loadRoutesFromDatabase(mockContainer)
-
-      expect(mockAddStaticRoute).toHaveBeenCalledTimes(3)
-      expect(mockAddStaticRoute).toHaveBeenCalledWith(
+      expect(addStaticRoute).toHaveBeenCalledTimes(3)
+      expect(addStaticRoute).toHaveBeenCalledWith(
         'test.peer1.route1',
         mockPeers[0].id,
         mockPeers[0].tenantId,
         mockPeers[0].assetId
       )
-      expect(mockAddStaticRoute).toHaveBeenCalledWith(
+      expect(addStaticRoute).toHaveBeenCalledWith(
         'test.peer1.route2',
         mockPeers[0].id,
         mockPeers[0].tenantId,
         mockPeers[0].assetId
       )
-      expect(mockAddStaticRoute).toHaveBeenCalledWith(
+      expect(addStaticRoute).toHaveBeenCalledWith(
         'test.peer2.route1',
         mockPeers[1].id,
         mockPeers[1].tenantId,
@@ -525,7 +534,7 @@ describe('utils', (): void => {
     })
 
     test('falls back to staticIlpAddress when peer has no routes', async (): Promise<void> => {
-      const mockPeers = [
+      const mockPeers: PeerRoutingInfo[] = [
         {
           id: v4(),
           tenantId: v4(),
@@ -541,37 +550,70 @@ describe('utils', (): void => {
           routes: undefined
         }
       ]
+      const addStaticRoute = jest.fn()
 
-      const mockAddStaticRoute = jest.fn()
-      const mockContainer = {
-        use: jest.fn((service: string) => {
-          if (service === 'peerService') {
-            return { getPage: jest.fn().mockResolvedValue(mockPeers) }
-          }
-          if (service === 'routerService') {
-            return { addStaticRoute: mockAddStaticRoute }
-          }
-          if (service === 'logger') {
-            return { info: jest.fn() }
-          }
-        })
-      } as unknown as IocContract<AppServices>
+      await loadRoutesFromDatabase(
+        createMockContainer(mockPeers, addStaticRoute)
+      )
 
-      await loadRoutesFromDatabase(mockContainer)
-
-      expect(mockAddStaticRoute).toHaveBeenCalledTimes(2)
-      expect(mockAddStaticRoute).toHaveBeenCalledWith(
+      expect(addStaticRoute).toHaveBeenCalledTimes(2)
+      expect(addStaticRoute).toHaveBeenCalledWith(
         'test.peer1',
         mockPeers[0].id,
         mockPeers[0].tenantId,
         mockPeers[0].assetId
       )
-      expect(mockAddStaticRoute).toHaveBeenCalledWith(
+      expect(addStaticRoute).toHaveBeenCalledWith(
         'test.peer2',
         mockPeers[1].id,
         mockPeers[1].tenantId,
         mockPeers[1].assetId
       )
+    })
+
+    describe('with database', (): void => {
+      let deps: IocContract<AppServices>
+      let appContainer: TestContainer
+
+      beforeAll(async (): Promise<void> => {
+        deps = initIocContainer(Config)
+        appContainer = await createTestApp(deps)
+      })
+
+      afterEach(async (): Promise<void> => {
+        const staticRoutesStore = await deps.use('staticRoutesStore')
+        await staticRoutesStore.deleteAll()
+        await truncateTables(deps)
+      })
+
+      afterAll(async (): Promise<void> => {
+        await appContainer.shutdown()
+      })
+
+      test('loads routes for every peer, beyond the default page size', async (): Promise<void> => {
+        // More than getPage's default page size of 20
+        const asset = await createAsset(deps)
+        const peers = []
+        for (let i = 0; i < 25; i++) {
+          peers.push(await createPeer(deps, { assetId: asset.id }))
+        }
+
+        // Simulate a restart
+        const staticRoutesStore = await deps.use('staticRoutesStore')
+        await staticRoutesStore.deleteAll()
+
+        await loadRoutesFromDatabase(deps)
+
+        const peerService = await deps.use('peerService')
+        for (const peer of peers) {
+          await expect(
+            peerService.getByDestinationAddress(
+              peer.staticIlpAddress,
+              peer.tenantId
+            )
+          ).resolves.toMatchObject({ id: peer.id })
+        }
+      })
     })
   })
 
