@@ -60,6 +60,11 @@ interface DepositPeerLiquidityArgs {
   tenantId?: string
 }
 
+export type PeerRoutingInfo = Pick<
+  Peer,
+  'id' | 'tenantId' | 'assetId' | 'staticIlpAddress' | 'routes'
+>
+
 export interface PeerService {
   get(id: string, tenantId?: string): Promise<Peer | undefined>
   create(options: CreateOptions): Promise<Peer | PeerError>
@@ -76,6 +81,7 @@ export interface PeerService {
     sortOrder?: SortOrder,
     tenantId?: string
   ): Promise<Peer[]>
+  getAllForRouting(): Promise<PeerRoutingInfo[]>
   depositLiquidity(
     args: DepositPeerLiquidityArgs
   ): Promise<void | PeerError.UnknownPeer | TransferError>
@@ -129,6 +135,7 @@ export async function createPeerService({
     getByIncomingToken: (token) => getPeerByIncomingToken(deps, token),
     getPage: (pagination?, sortOrder?, tenantId?) =>
       getPeersPage(deps, pagination, sortOrder, tenantId),
+    getAllForRouting: () => getAllPeersForRouting(deps),
     depositLiquidity: (args) => depositLiquidityById(deps, args),
     delete: (id, tenantId) => deletePeer(deps, id, tenantId)
   }
@@ -432,6 +439,19 @@ async function getPeersPage(
     if (asset) peer.asset = asset
   }
   return peers
+}
+
+// Unpaginated; for loading routes on startup only
+async function getAllPeersForRouting(
+  deps: ServiceDependencies
+): Promise<PeerRoutingInfo[]> {
+  return Peer.query(deps.knex).select(
+    'id',
+    'tenantId',
+    'assetId',
+    'staticIlpAddress',
+    'routes'
+  )
 }
 
 async function deletePeer(
