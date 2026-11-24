@@ -90,7 +90,7 @@ describe('Grant Service', (): void => {
       expect(openPaymentsGrantRequestSpy).not.toHaveBeenCalled()
     })
 
-    test('updates expired grant (by rotating existing token)', async () => {
+    test('updates expired legacy grant without managementUrl (by rotating existing token)', async () => {
       const existingGrant = await Grant.query(knex).insertAndFetch({
         authServerId: authServer.id,
         accessToken: uuid(),
@@ -133,11 +133,12 @@ describe('Grant Service', (): void => {
         expiresAt: new Date(
           Date.now() + rotatedAccessToken.access_token.expires_in! * 1000
         ),
-        managementId
+        managementId,
+        managementUrl: rotatedAccessToken.access_token.manage
       })
       expect(openPaymentsGrantRequestSpy).not.toHaveBeenCalled()
       expect(openPaymentsTokenRotationSpy).toHaveBeenCalledWith({
-        url: existingGrant.getManagementUrl(authServer.url),
+        url: `${authServer.url}/token/${existingGrant.managementId}`,
         accessToken: existingGrant.accessToken
       })
     })
@@ -175,7 +176,8 @@ describe('Grant Service', (): void => {
         expiresAt: new Date(
           Date.now() + newOpenPaymentsGrant.access_token.expires_in! * 1000
         ),
-        managementId
+        managementId,
+        managementUrl: newOpenPaymentsGrant.access_token.manage
       })
       expect(openPaymentsGrantRequestSpy).toHaveBeenCalledWith(
         { url: options.authServer },
@@ -299,13 +301,63 @@ describe('Grant Service', (): void => {
         expiresAt: new Date(
           Date.now() + newOpenPaymentsGrant.access_token.expires_in! * 1000
         ),
-        managementId
+        managementId,
+        managementUrl: newOpenPaymentsGrant.access_token.manage
       })
       expect(openPaymentsTokenRotationSpy).toHaveBeenCalled()
       expect(openPaymentsGrantRequestSpy).toHaveBeenCalled()
 
       const originalGrant = await Grant.query(knex).findById(existingGrant.id)
       expect(originalGrant?.deletedAt).toBeDefined()
+    })
+
+    test('rotates using stored managementUrl when authServer is tenant-scoped', async () => {
+      const tenantId = uuid()
+      const authOrigin = faker.internet.url({ appendSlash: false })
+      const tenantedAuthServer = await authServerService.getOrCreate(
+        `${authOrigin}/${tenantId}`
+      )
+      const managementId = uuid()
+      const managementUrl = `${authOrigin}/token/${managementId}`
+      const existingGrant = await Grant.query(knex).insertAndFetch({
+        authServerId: tenantedAuthServer.id,
+        accessToken: uuid(),
+        managementId,
+        managementUrl,
+        accessType: AccessType.IncomingPayment,
+        accessActions: [AccessAction.ReadAll, AccessAction.Create],
+        expiresAt: new Date(Date.now() - 1000)
+      })
+
+      const rotatedAccessToken = mockAccessToken()
+      const rotatedManagementId = uuid()
+      rotatedAccessToken.access_token.manage = `${authOrigin}/token/${rotatedManagementId}`
+      const openPaymentsTokenRotationSpy = jest
+        .spyOn(openPaymentsClient.token, 'rotate')
+        .mockResolvedValueOnce(rotatedAccessToken)
+      const openPaymentsGrantRequestSpy = jest.spyOn(
+        openPaymentsClient.grant,
+        'request'
+      )
+
+      const grant = await grantService.getOrCreate({
+        authServer: tenantedAuthServer.url,
+        accessType: AccessType.IncomingPayment,
+        accessActions: [AccessAction.Create, AccessAction.ReadAll]
+      })
+
+      assert(!isGrantError(grant))
+      expect(openPaymentsTokenRotationSpy).toHaveBeenCalledWith({
+        url: managementUrl,
+        accessToken: existingGrant.accessToken
+      })
+      expect(openPaymentsGrantRequestSpy).not.toHaveBeenCalled()
+      expect(grant).toMatchObject({
+        id: existingGrant.id,
+        accessToken: rotatedAccessToken.access_token.value,
+        managementId: rotatedManagementId,
+        managementUrl: rotatedAccessToken.access_token.manage
+      })
     })
 
     test('returns error if Open Payments grant request fails', async () => {
@@ -544,7 +596,7 @@ describe('Grant Service', (): void => {
       expect(openPaymentsGrantRequestSpy).not.toHaveBeenCalled()
     })
 
-    test('updates expired grant (by rotating existing token)', async () => {
+    test('updates expired legacy grant without managementUrl (by rotating existing token)', async () => {
       const existingGrant = await Grant.query(knex).insertAndFetch({
         authServerId: authServer.id,
         accessToken: uuid(),
@@ -587,11 +639,12 @@ describe('Grant Service', (): void => {
         expiresAt: new Date(
           Date.now() + rotatedAccessToken.access_token.expires_in! * 1000
         ),
-        managementId
+        managementId,
+        managementUrl: rotatedAccessToken.access_token.manage
       })
       expect(openPaymentsGrantRequestSpy).not.toHaveBeenCalled()
       expect(openPaymentsTokenRotationSpy).toHaveBeenCalledWith({
-        url: existingGrant.getManagementUrl(authServer.url),
+        url: `${authServer.url}/token/${existingGrant.managementId}`,
         accessToken: existingGrant.accessToken
       })
     })
@@ -629,7 +682,8 @@ describe('Grant Service', (): void => {
         expiresAt: new Date(
           Date.now() + newOpenPaymentsGrant.access_token.expires_in! * 1000
         ),
-        managementId
+        managementId,
+        managementUrl: newOpenPaymentsGrant.access_token.manage
       })
       expect(openPaymentsGrantRequestSpy).toHaveBeenCalledWith(
         { url: options.authServer },
@@ -753,7 +807,8 @@ describe('Grant Service', (): void => {
         expiresAt: new Date(
           Date.now() + newOpenPaymentsGrant.access_token.expires_in! * 1000
         ),
-        managementId
+        managementId,
+        managementUrl: newOpenPaymentsGrant.access_token.manage
       })
       expect(openPaymentsTokenRotationSpy).toHaveBeenCalled()
       expect(openPaymentsGrantRequestSpy).toHaveBeenCalled()
