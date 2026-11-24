@@ -679,7 +679,7 @@ importers:
         specifier: ^0.15.0
         version: 0.15.0
       astro:
-        specifier: ~7.4.13
+        specifier: ^7.4.13
         version: 7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3)
       mermaid:
         specifier: ^11.17.2
@@ -8591,10 +8591,6 @@ packages:
   fontace@0.4.1:
     resolution: {integrity: sha512-lDMvbAzSnHmbYMTEld5qdtvNH2/pWpICOqpean9IgC7vUbUJc3k+k5Dokp85CegamqQpFbXf0rAVkbzpyTA8aw==}
 
-  fontkitten@1.0.2:
-    resolution: {integrity: sha512-piJxbLnkD9Xcyi7dWJRnqszEURixe7CrF/efBfbffe2DPyabmuIuqraruY8cXTs19QoM8VJzx47BDRVNXETM7Q==}
-    engines: {node: '>=20'}
-
   fontkitten@1.0.3:
     resolution: {integrity: sha512-Wp1zXWPVUPBmfoa3Cqc9ctaKuzKAV6uLstRqlR56kSjplf5uAce+qeyYym7F+PHbGTk+tCEdkCW6RD7DX/gBZw==}
     engines: {node: '>=20'}
@@ -15661,7 +15657,7 @@ snapshots:
   '@expressive-code/plugin-shiki@0.44.2':
     dependencies:
       '@expressive-code/core': 0.44.2
-      shiki: 4.0.2
+      shiki: 4.6.0
 
   '@expressive-code/plugin-text-markers@0.44.2':
     dependencies:
@@ -18792,7 +18788,7 @@ snapshots:
   '@shikijs/primitive@4.0.2':
     dependencies:
       '@shikijs/types': 4.0.2
-      '@shikijs/vscode-textmate': 10.0.2
+      '@shikijs/vscode-textmate': 10.1.0
       '@types/hast': 3.0.5
 
   '@shikijs/primitive@4.6.0':
@@ -22597,11 +22593,7 @@ snapshots:
 
   fontace@0.4.1:
     dependencies:
-      fontkitten: 1.0.2
-
-  fontkitten@1.0.2:
-    dependencies:
-      tiny-inflate: 1.0.3
+      fontkitten: 1.0.3
 
   fontkitten@1.0.3:
     dependencies:
