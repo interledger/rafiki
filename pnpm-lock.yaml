@@ -734,10 +734,10 @@ importers:
         specifier: ^17.14.0
         version: 17.14.0
       prettier:
-        specifier: ^3.10.1
+        specifier: 3.10.1
         version: 3.10.1
       prettier-plugin-astro:
-        specifier: ^1.1.2
+        specifier: 1.1.2
         version: 1.1.2(prettier@3.10.1)
       spectaql:
         specifier: ^3.0.9
