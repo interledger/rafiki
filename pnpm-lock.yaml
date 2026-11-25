@@ -691,8 +691,8 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0
       satteri:
-        specifier: ^0.10.3
-        version: 0.10.5
+        specifier: ^0.11.7
+        version: 0.11.7
       starlight-fullview-mode:
         specifier: ^0.2.6
         version: 0.2.6(@astrojs/starlight@0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3))
