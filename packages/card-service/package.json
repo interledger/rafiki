@@ -11,7 +11,7 @@
     "copy-files": "cp -r ./src/openapi ./dist/"
   },
   "dependencies": {
-    "@adonisjs/fold": "^8.2.0",
+    "@adonisjs/fold": "^11.1.1",
     "@apollo/client": "^3.14.1",
     "@interledger/openapi": "2.0.2",
     "@koa/cors": "^5.0.0",
