@@ -21,6 +21,6 @@
     "mock-account-service-lib": "workspace:*",
     "test-lib": "workspace:*",
     "uuid": "^9.0.1",
-    "yaml": "^2.7.0"
+    "yaml": "^2.9.1"
   }
 }
