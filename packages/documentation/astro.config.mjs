@@ -14,6 +14,12 @@ import starlightVersions from 'starlight-versions'
 export default defineConfig({
   site: 'https://rafiki.dev',
   outDir: './build',
+  // Starlight 0.43 stopped forcing 'where' and left Astro's default,
+  // 'attribute'. Under 'attribute', scoped styles no longer reach child
+  // components that only apply the `class` they receive, for example
+  // `.site-logo svg` in Header.astro on the RafikiLogo <svg>.
+  // 'where' keeps the behaviour from before Starlight 0.43.
+  scopedStyleStrategy: 'where',
   markdown: {
     processor: unified({
       remarkPlugins: [remarkMath],
