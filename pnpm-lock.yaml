@@ -250,8 +250,8 @@ importers:
         specifier: ^16.11.0
         version: 16.11.0
       ioredis:
-        specifier: ^5.3.2
-        version: 5.3.2
+        specifier: ^5.11.1
+        version: 5.11.1
       json-canonicalize:
         specifier: ^1.0.6
         version: 1.0.6
@@ -464,8 +464,8 @@ importers:
         specifier: ^2.2.4-alpha.2
         version: 2.2.4-alpha.2
       ioredis:
-        specifier: ^5.3.2
-        version: 5.3.2
+        specifier: ^5.11.1
+        version: 5.11.1
       json-canonicalize:
         specifier: ^1.0.6
         version: 1.0.6
@@ -615,8 +615,8 @@ importers:
         specifier: ^16.11.0
         version: 16.11.0
       ioredis:
-        specifier: ^5.3.2
-        version: 5.3.2
+        specifier: ^5.11.1
+        version: 5.11.1
       json-canonicalize:
         specifier: ^1.0.6
         version: 1.0.6
@@ -674,13 +674,13 @@ importers:
         version: 7.3.10
       '@astrojs/starlight':
         specifier: ^0.43.1
-        version: 0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3)
+        version: 0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3)
       '@interledger/docs-design-system':
         specifier: ^0.15.0
         version: 0.15.0
       astro:
         specifier: ^7.4.13
-        version: 7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3)
+        version: 7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3)
       rehype-autolink-headings:
         specifier: ^7.1.0
         version: 7.1.0
@@ -695,16 +695,16 @@ importers:
         version: 0.10.5
       starlight-fullview-mode:
         specifier: ^0.2.6
-        version: 0.2.6(@astrojs/starlight@0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3))
+        version: 0.2.6(@astrojs/starlight@0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3))
       starlight-links-validator:
         specifier: ^0.27.0
-        version: 0.27.0(@astrojs/starlight@0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3))(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))
+        version: 0.27.0(@astrojs/starlight@0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3))(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))
       starlight-llms-txt:
         specifier: ^0.12.0
-        version: 0.12.0(@astrojs/markdown-remark@7.3.10)(@astrojs/markdown-satteri@0.4.10)(@astrojs/starlight@0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3))(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))
+        version: 0.12.0(@astrojs/markdown-remark@7.3.10)(@astrojs/markdown-satteri@0.4.10)(@astrojs/starlight@0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3))(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))
       starlight-versions:
         specifier: ^0.10.2
-        version: 0.10.2(@astrojs/starlight@0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3))
+        version: 0.10.2(@astrojs/starlight@0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3))
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
@@ -3512,8 +3512,8 @@ packages:
   '@interledger/stream-receiver@0.3.3-alpha.4':
     resolution: {integrity: sha512-wg/agXfAaSe8AorvIKCA5nMQ8HT8JjODzX4WVfoqOjZ5w0wcwEzuy95YZF/sTPLP5ttDR+NN0MTer/CTZ0p1Jw==}
 
-  '@ioredis/commands@1.2.0':
-    resolution: {integrity: sha512-Sx1pU8EM64o2BrqNpEO1CNLtKQwyhuXuqyfH7oGKCk+1a33d2r5saW8zNwm3j6BTExtjrv2BxTgzzkMwts6vGg==}
+  '@ioredis/commands@1.10.0':
+    resolution: {integrity: sha512-UmeW7z4LfctwoQ5wkhVzgq8tXkreED2xZGpX+Bg+zA+WJFZCT6c062AfCK/Dfk81xZnnwdhJCUMkitihRaoC2Q==}
 
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -7127,8 +7127,8 @@ packages:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
     engines: {node: '>=6'}
 
-  cluster-key-slot@1.1.0:
-    resolution: {integrity: sha512-2Nii8p3RwAPiFwsnZvukotvow2rIHM+yQ6ZcBXGHdniadkYGZYiGmkHJIbZPIV9nfv7m/U1IPMVVcAhoWFeklw==}
+  cluster-key-slot@1.1.1:
+    resolution: {integrity: sha512-rwHwUfXL40Chm1r08yrhU3qpUvdVlgkKNeyeGPOxnW8/SyVDvgRaed/Uz54AqWNaTCAThlj6QAs3TZcKI0xDEw==}
     engines: {node: '>=0.10.0'}
 
   co-body@6.1.0:
@@ -9329,8 +9329,8 @@ packages:
   invariant@2.2.4:
     resolution: {integrity: sha512-phJfQVBuaJM5raOpJjSfkiD6BpbCE4Ns//LaXl6wGYtUBY83nWS6Rf9tXm2e8VaK60JEjYldbPif/A2B1C2gNA==}
 
-  ioredis@5.3.2:
-    resolution: {integrity: sha512-1DKMMzlIHM02eBBVOFQ1+AolGjs6+xEcM4PDL7NqOS6szq7H9jSaEkIUH6/a5Hl241LzW6JLSiAbNvTQjUupUA==}
+  ioredis@5.11.1:
+    resolution: {integrity: sha512-ehuGcf94bQXhfagULNXrJdfnWO38v070jxSx/qE87Kjzmu2fU7ro5EFAb+OPituLqgfyuQaym5DlrNydW2sJ9A==}
     engines: {node: '>=12.22.0'}
 
   ipaddr.js@1.9.1:
@@ -10132,12 +10132,6 @@ packages:
 
   lodash.debounce@4.0.8:
     resolution: {integrity: sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==}
-
-  lodash.defaults@4.2.0:
-    resolution: {integrity: sha512-qjxPLHd3r5DnsdGacqOMU6pb/avJzdh9tFX2ymgoZE27BmjXrNy/y4LoaiTeAb+O3gL8AfpJGtqfX/ae2leYYQ==}
-
-  lodash.isarguments@3.1.0:
-    resolution: {integrity: sha512-chi4NHZlZqZD18a0imDHnZPrDeBbTtVN7GXMwuGdRH9qotxAjYs3aVLKc7zNOG9eddR5Ksd8rvFEBc9SsggPpg==}
 
   lodash.isfinite@3.3.2:
     resolution: {integrity: sha512-7FGG40uhC8Mm633uKW1r58aElFlBlxCrg9JfSi3P6aYiWmfiWF0PgMd86ZUsxE5GwWPdHoS2+48bwTh2VPkIQA==}
@@ -14084,11 +14078,11 @@ snapshots:
       github-slugger: 2.0.0
       satteri: 0.11.7
 
-  '@astrojs/mdx@8.1.6(@astrojs/markdown-remark@7.3.10)(@astrojs/markdown-satteri@0.4.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))':
+  '@astrojs/mdx@8.1.6(@astrojs/markdown-remark@7.3.10)(@astrojs/markdown-satteri@0.4.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))':
     dependencies:
       '@astrojs/internal-helpers': 0.13.2
       '@astrojs/markdown-satteri': 0.4.10
-      astro: 7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3)
+      astro: 7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3)
       es-module-lexer: 3.0.5
     optionalDependencies:
       '@astrojs/markdown-remark': 7.3.10
@@ -14111,16 +14105,16 @@ snapshots:
       sitemap: 9.0.1
       zod: 4.6.7
 
-  '@astrojs/starlight@0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3)':
+  '@astrojs/starlight@0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3)':
     dependencies:
       '@astrojs/markdown-satteri': 0.4.10
-      '@astrojs/mdx': 8.1.6(@astrojs/markdown-remark@7.3.10)(@astrojs/markdown-satteri@0.4.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))
+      '@astrojs/mdx': 8.1.6(@astrojs/markdown-remark@7.3.10)(@astrojs/markdown-satteri@0.4.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))
       '@astrojs/sitemap': 3.7.4
       '@pagefind/default-ui': 1.3.0
       '@types/hast': 3.0.5
       '@types/mdast': 4.0.4
-      astro: 7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3)
-      astro-expressive-code: 0.44.2(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))
+      astro: 7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3)
+      astro-expressive-code: 0.44.2(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))
       bcp-47: 2.1.0
       hast-util-format: 1.1.0
       hast-util-select: 6.0.4
@@ -16464,7 +16458,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@ioredis/commands@1.2.0': {}
+  '@ioredis/commands@1.10.0': {}
 
   '@isaacs/cliui@8.0.2':
     dependencies:
@@ -20127,13 +20121,13 @@ snapshots:
       - '@emnapi/runtime'
       - supports-color
 
-  astro-expressive-code@0.44.2(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3)):
+  astro-expressive-code@0.44.2(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3)):
     dependencies:
-      astro: 7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3)
+      astro: 7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3)
       rehype-expressive-code: 0.44.2
       url-extras: 0.1.0
 
-  astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3):
+  astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3):
     dependencies:
       '@astrojs/compiler-rs': 0.5.3
       '@astrojs/internal-helpers': 0.13.2
@@ -20181,7 +20175,7 @@ snapshots:
       tinyps: 0.5.2
       ultrahtml: 1.7.0
       unifont: 1.0.3
-      unstorage: 1.17.6
+      unstorage: 1.17.6(ioredis@5.11.1)
       verkit: 0.5.0
       vite: 8.3.8(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3)
       vitefu: 1.1.3(vite@8.3.8(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))
@@ -20783,7 +20777,7 @@ snapshots:
 
   clsx@2.1.1: {}
 
-  cluster-key-slot@1.1.0: {}
+  cluster-key-slot@1.1.1: {}
 
   co-body@6.1.0:
     dependencies:
@@ -23609,14 +23603,12 @@ snapshots:
     dependencies:
       loose-envify: 1.4.0
 
-  ioredis@5.3.2:
+  ioredis@5.11.1:
     dependencies:
-      '@ioredis/commands': 1.2.0
-      cluster-key-slot: 1.1.0
-      debug: 4.3.4
+      '@ioredis/commands': 1.10.0
+      cluster-key-slot: 1.1.1
+      debug: 4.4.3(supports-color@10.2.2)
       denque: 2.1.0
-      lodash.defaults: 4.2.0
-      lodash.isarguments: 3.1.0
       redis-errors: 1.2.0
       redis-parser: 3.0.0
       standard-as-callback: 2.1.0
@@ -24585,10 +24577,6 @@ snapshots:
   lodash.camelcase@4.3.0: {}
 
   lodash.debounce@4.0.8: {}
-
-  lodash.defaults@4.2.0: {}
-
-  lodash.isarguments@3.1.0: {}
 
   lodash.isfinite@3.3.2: {}
 
@@ -27853,16 +27841,16 @@ snapshots:
 
   standard-as-callback@2.1.0: {}
 
-  starlight-fullview-mode@0.2.6(@astrojs/starlight@0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3)):
+  starlight-fullview-mode@0.2.6(@astrojs/starlight@0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3)):
     dependencies:
-      '@astrojs/starlight': 0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3)
+      '@astrojs/starlight': 0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3)
       '@iconify-json/mdi': 1.2.3
 
-  starlight-links-validator@0.27.0(@astrojs/starlight@0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3))(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3)):
+  starlight-links-validator@0.27.0(@astrojs/starlight@0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3))(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3)):
     dependencies:
       '@astrojs/markdown-satteri': 0.4.0
-      '@astrojs/starlight': 0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3)
-      astro: 7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3)
+      '@astrojs/starlight': 0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3)
+      astro: 7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3)
       github-slugger: 2.0.0
       hast-util-from-html: 2.0.3
       is-absolute-url: 5.0.0
@@ -27876,13 +27864,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  starlight-llms-txt@0.12.0(@astrojs/markdown-remark@7.3.10)(@astrojs/markdown-satteri@0.4.10)(@astrojs/starlight@0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3))(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3)):
+  starlight-llms-txt@0.12.0(@astrojs/markdown-remark@7.3.10)(@astrojs/markdown-satteri@0.4.10)(@astrojs/starlight@0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3))(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3)):
     dependencies:
-      '@astrojs/mdx': 8.1.6(@astrojs/markdown-remark@7.3.10)(@astrojs/markdown-satteri@0.4.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))
-      '@astrojs/starlight': 0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3)
+      '@astrojs/mdx': 8.1.6(@astrojs/markdown-remark@7.3.10)(@astrojs/markdown-satteri@0.4.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))
+      '@astrojs/starlight': 0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3)
       '@types/hast': 3.0.5
       '@types/micromatch': 4.0.10
-      astro: 7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3)
+      astro: 7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3)
       github-slugger: 2.0.0
       hast-util-select: 6.0.4
       micromatch: 4.0.8
@@ -27897,9 +27885,9 @@ snapshots:
       - '@astrojs/markdown-satteri'
       - supports-color
 
-  starlight-versions@0.10.2(@astrojs/starlight@0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3)):
+  starlight-versions@0.10.2(@astrojs/starlight@0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3)):
     dependencies:
-      '@astrojs/starlight': 0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3)
+      '@astrojs/starlight': 0.43.1(@astrojs/markdown-remark@7.3.10)(astro@7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@24.11.0)(esbuild@0.28.1)(ioredis@5.11.1)(jiti@2.4.2)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3))(typescript@5.9.3)
       '@pagefind/default-ui': 1.3.0
       github-slugger: 2.0.0
       hast-util-from-html: 2.0.3
@@ -28817,7 +28805,7 @@ snapshots:
 
   unpipe@1.0.0: {}
 
-  unstorage@1.17.6:
+  unstorage@1.17.6(ioredis@5.11.1):
     dependencies:
       anymatch: 3.1.3
       chokidar: 5.0.0
@@ -28827,6 +28815,8 @@ snapshots:
       node-fetch-native: 1.6.7
       ofetch: 1.5.1
       ufo: 1.6.4
+    optionalDependencies:
+      ioredis: 5.11.1
 
   update-browserslist-db@1.3.3(browserslist@4.29.0):
     dependencies:
