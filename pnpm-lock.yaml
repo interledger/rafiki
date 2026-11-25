@@ -52,7 +52,7 @@ overrides:
   shell-quote: ^1.9.0
   svgo: ^4.0.2
   tar: '>=7.5.21'
-  tar-fs@>=2.0.0 <3.0.0: ^2.1.4
+  tar-fs@>=2.0.0 <3.0.0: ^2.1.6
   tmp: ^0.2.7
   turbo-stream: ^3.0.0
   undici@>=5.0.0: ^8.3.0
@@ -12728,8 +12728,8 @@ packages:
     resolution: {integrity: sha512-uxc/zpqFg6x7C8vOE7lh6Lbda8eEL9zmVm/PLeTPBRhh1xCgdWaQ+J1CUieGpIfm2HdtsUpRv+HshiasBMcc6A==}
     engines: {node: '>=6'}
 
-  tar-fs@2.1.4:
-    resolution: {integrity: sha512-mDAjwmZdh7LTT6pNleZ05Yt65HC3E+NiQzl672vQG38jIrehtJk/J3mNwIg+vShQPcLF/LV7CMnDW6vjj6sfYQ==}
+  tar-fs@2.1.6:
+    resolution: {integrity: sha512-vsdruOmnweDIXJXWpfc5aszWMVOj6qFI+dXxNuprh6Kt+WrGJh1MQL/2xYUEzI3EX86o9b2Rop8ziIF5Ol/UoQ==}
 
   tar-fs@3.1.1:
     resolution: {integrity: sha512-LZA0oaPOc2fVo82Txf3gw+AkEd38szODlptMYejQUhndHMLQ9M059uXR+AfS7DNo0NpINvSqDsvyaCrBVkptWg==}
@@ -18367,7 +18367,7 @@ snapshots:
       remark-mdx-frontmatter: 1.1.1
       semver: 7.7.3
       set-cookie-parser: 2.7.1
-      tar-fs: 2.1.4
+      tar-fs: 2.1.6
       tsconfig-paths: 4.1.0
       valibot: 1.4.2(typescript@5.9.3)
       vite-node: 3.2.4(@types/node@24.11.0)(jiti@2.4.2)(lightningcss@1.33.0)(sass@1.89.2)(terser@5.51.2)(yaml@2.8.3)
@@ -21441,7 +21441,7 @@ snapshots:
     dependencies:
       '@balena/dockerignore': 1.0.2
       docker-modem: 3.0.6
-      tar-fs: 2.1.4
+      tar-fs: 2.1.6
     transitivePeerDependencies:
       - supports-color
 
@@ -28203,7 +28203,7 @@ snapshots:
 
   tapable@2.3.3: {}
 
-  tar-fs@2.1.4:
+  tar-fs@2.1.6:
     dependencies:
       chownr: 1.1.4
       mkdirp-classic: 0.5.3
