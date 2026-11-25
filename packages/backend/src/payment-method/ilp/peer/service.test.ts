@@ -794,6 +794,55 @@ describe('Peer Service', (): void => {
     })
   })
 
+  describe('Get All Peers For Routing', (): void => {
+    test('returns an empty array when there are no peers', async (): Promise<void> => {
+      await expect(peerService.getAllForRouting()).resolves.toEqual([])
+    })
+
+    test('returns routing info for every peer across tenants', async (): Promise<void> => {
+      const tenant = await createTenant(deps)
+      const tenantAsset = await createAsset(deps, { tenantId: tenant.id })
+      const peers = [
+        await createPeer(deps, {
+          assetId: asset.id,
+          routes: ['test.route1', 'test.route2']
+        }),
+        await createPeer(deps, { assetId: asset.id }),
+        await createPeer(deps, {
+          assetId: tenantAsset.id,
+          tenantId: tenant.id
+        })
+      ]
+
+      const routingInfo = await peerService.getAllForRouting()
+
+      expect(routingInfo).toHaveLength(peers.length)
+      expect(routingInfo).toEqual(
+        expect.arrayContaining(
+          peers.map((peer) => ({
+            id: peer.id,
+            tenantId: peer.tenantId,
+            assetId: peer.assetId,
+            staticIlpAddress: peer.staticIlpAddress,
+            routes: peer.routes
+          }))
+        )
+      )
+    })
+
+    test('does not load fields that are not needed for routing', async (): Promise<void> => {
+      await createPeer(deps, { assetId: asset.id })
+
+      const [routingInfo] = await peerService.getAllForRouting()
+
+      expect(routingInfo).toMatchObject({
+        http: undefined,
+        createdAt: undefined,
+        updatedAt: undefined
+      })
+    })
+  })
+
   describe('Delete Peer', (): void => {
     test('Can delete peer', async (): Promise<void> => {
       const peer = await createPeer(deps)
