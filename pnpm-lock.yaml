@@ -105,8 +105,8 @@ importers:
         specifier: ^6.2.6
         version: 6.2.6
       prettier:
-        specifier: ^3.2.5
-        version: 3.2.5
+        specifier: ^3.10.1
+        version: 3.10.1
       typescript:
         specifier: ^5.4.3
         version: 5.4.3
@@ -11533,11 +11533,6 @@ packages:
 
   prettier@3.10.1:
     resolution: {integrity: sha512-70vp3ZUYoPlFbF9uiTdXHUUCGEIp7d4+6p+8DYbkm2jP7x/3i/paXVF6dopSI3zd/CEitrZN1rc4i85xWmmXlg==}
-    engines: {node: '>=14'}
-    hasBin: true
-
-  prettier@3.2.5:
-    resolution: {integrity: sha512-3/GWa9aOC0YeD7LUfvOG2NiDyhOWRvt1k+rcKhOuYnMY24iiCphgneUfJDyFXd6rZCAnuLBv6UeAULtrhT/F4A==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -26520,8 +26515,6 @@ snapshots:
   prettier@2.8.8: {}
 
   prettier@3.10.1: {}
-
-  prettier@3.2.5: {}
 
   pretty-bytes@5.6.0: {}
 
