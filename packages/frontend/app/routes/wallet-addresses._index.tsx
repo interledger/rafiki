@@ -16,6 +16,7 @@ import {
 import { listWalletAddresses } from '~/lib/api/wallet-address.server'
 import { paginationSchema } from '~/lib/validate.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
+import { formatWalletAddressForDisplay } from '~/shared/utils'
 
 export const meta: MetaFunction = () => [
   { title: 'Wallet Addresses - Rafiki Admin' }
@@ -103,7 +104,7 @@ export default function WalletAddressesPage() {
                             className='group-hover:underline'
                             onClick={(e) => e.stopPropagation()}
                           >
-                            {wa.node.address}
+                            {formatWalletAddressForDisplay(wa.node.address)}
                           </Link>
                         </Text>
                       </Table.Cell>
