@@ -51,7 +51,7 @@ overrides:
   sharp: ^0.35.0
   shell-quote: ^1.9.0
   svgo: ^4.0.2
-  tar: '>=7.5.21'
+  tar: '>=7.5.24'
   tar-fs@>=2.0.0 <3.0.0: ^2.1.4
   tmp: ^0.2.7
   turbo-stream: ^3.0.0
@@ -12741,8 +12741,8 @@ packages:
   tar-stream@3.1.6:
     resolution: {integrity: sha512-B/UyjYwPpMBv+PaFSWAmtYjwdrlEaZQEhMIBFNC5oEG8lpiW8XjcSdmEaClj28ArfKScKHs2nshz3k2le6crsg==}
 
-  tar@7.5.22:
-    resolution: {integrity: sha512-MFO/QzvtAOmJbkhOaCTvbGcFN9L9b+JunIsDwaKljSOdcLMea3NJ1k9Usz/rjdfSXTq4dfzfeS7W4p4YOAAHeA==}
+  tar@7.5.24:
+    resolution: {integrity: sha512-to/OxuCk5DeVONcjjODT7aeoRq5NIPPlfPc0tNML+wLlnf6u5BcJz97Uukv3pT3jzorkFhUevylkAiBr+ZmV2w==}
     engines: {node: '>=18'}
 
   tarn@3.0.2:
@@ -20545,7 +20545,7 @@ snapshots:
       minipass-pipeline: 1.2.4
       p-map: 4.0.0
       ssri: 10.0.5
-      tar: 7.5.22
+      tar: 7.5.24
       unique-filename: 3.0.0
 
   cache-content-type@1.0.1:
@@ -28237,7 +28237,7 @@ snapshots:
     transitivePeerDependencies:
       - bare-abort-controller
 
-  tar@7.5.22:
+  tar@7.5.24:
     dependencies:
       '@isaacs/fs-minipass': 4.0.1
       chownr: 3.0.0
