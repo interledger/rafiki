@@ -129,8 +129,8 @@ importers:
         specifier: ^1.7.19
         version: 1.7.19(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@interledger/http-signature-utils':
-        specifier: 2.0.2
-        version: 2.0.2
+        specifier: 2.0.4
+        version: 2.0.4
       '@remix-run/node':
         specifier: ^2.17.5
         version: 2.17.5(typescript@5.9.3)
@@ -223,8 +223,8 @@ importers:
         specifier: ^11.0.7
         version: 11.0.7(graphql@16.11.0)
       '@interledger/http-signature-utils':
-        specifier: 2.0.2
-        version: 2.0.2
+        specifier: 2.0.4
+        version: 2.0.4
       '@interledger/open-payments':
         specifier: 7.4.0
         version: 7.4.0
@@ -374,8 +374,8 @@ importers:
         specifier: ^11.0.7
         version: 11.0.7(graphql@16.11.0)
       '@interledger/http-signature-utils':
-        specifier: 2.0.2
-        version: 2.0.2
+        specifier: 2.0.4
+        version: 2.0.4
       '@interledger/open-payments':
         specifier: 7.4.0
         version: 7.4.0
@@ -861,8 +861,8 @@ importers:
         specifier: ^3.14.1
         version: 3.14.1(@types/react@18.2.73)(graphql-ws@5.14.0(graphql@16.11.0))(graphql@16.11.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@interledger/http-signature-utils':
-        specifier: 2.0.2
-        version: 2.0.2
+        specifier: 2.0.4
+        version: 2.0.4
       graphql:
         specifier: ^16.11.0
         version: 16.11.0
@@ -1079,8 +1079,8 @@ importers:
         specifier: ^3.14.1
         version: 3.14.1(@types/react@18.2.73)(graphql-ws@5.14.0(graphql@16.11.0))(graphql@16.11.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@interledger/http-signature-utils':
-        specifier: 2.0.2
-        version: 2.0.2
+        specifier: 2.0.4
+        version: 2.0.4
       '@interledger/open-payments':
         specifier: 7.4.0
         version: 7.4.0
@@ -3491,11 +3491,11 @@ packages:
     resolution: {integrity: sha512-Mp6wXq76yuP4rNYE2Ow59KsmPd9R76NU11NOTaE09L2/xwc/6vy87QHMRIcf963W8vaNryDIt7omeV8KR+sLkA==}
     engines: {node: '>=22.12.0'}
 
-  '@interledger/http-signature-utils@2.0.2':
-    resolution: {integrity: sha512-gTAPFMt7xwG1zv1rbrltcZTAqOw/ZJwkVdnNjQzu5G9JTfvJQzS6pcpiVUej1cblpewotbOzosgdX00f93q9zA==}
-
   '@interledger/http-signature-utils@2.0.3':
     resolution: {integrity: sha512-/vn6+FxZ3g1A5ZC3vOVivjFns5A6F4lhEmdAGg3W9mD2uADXI575rIBcMdqI3wTOJo7qOXRutPXOG/jXONFs/Q==}
+
+  '@interledger/http-signature-utils@2.0.4':
+    resolution: {integrity: sha512-NzCMIWxF1Tio7JXp1v8uIeSvKN/9p7fNBQ4VGCdbXXIloV3qSeyu3XujyYm0YsDSL8EOBN47+w6Ra5nhFoYr6Q==}
 
   '@interledger/open-payments@7.4.0':
     resolution: {integrity: sha512-VLnHdvQ0J76/72yzJQwvNno9EJG42iAvkHQZmgunIW35DxZrB6QVgShV9fz4k5DH68Mg8KYQR6+60mwmnG/gJg==}
@@ -9156,6 +9156,9 @@ packages:
   http-message-signatures@1.0.4:
     resolution: {integrity: sha512-gavCQWnxHFg0BVlKs6CmYK7hNSH1o0x0mHTC68yBAHYOYuTVXPv52mEE7QuT5TenfiagTdOa/zPJzen4lEX7Rg==}
 
+  http-message-signatures@1.1.1:
+    resolution: {integrity: sha512-Z6rkW7lPCu2u12UEvK25Mlb7xqgxSLGLHoVVNP7cL8okSr6FXL0nL5zGG26E6hHkEsOM3MENQQ61fwoPodNmpg==}
+
   http-parser-js@0.5.10:
     resolution: {integrity: sha512-Pysuw9XpUq5dVc/2SMHpuTY01RFl8fttgcyunjL7eEMhGM3cI4eOmiCycJDVCo/7O7ClfQD3SaI6ftDzqOXYMA==}
 
@@ -12635,6 +12638,10 @@ packages:
   structured-headers@1.0.1:
     resolution: {integrity: sha512-QYBxdBtA4Tl5rFPuqmbmdrS9kbtren74RTJTcs0VSQNVV5iRhJD4QlYTLD0+81SBwUQctjEQzjTRI3WG4DzICA==}
     engines: {node: '>= 14', npm: '>=6'}
+
+  structured-headers@2.1.1:
+    resolution: {integrity: sha512-Ub9mpW7mtzUC7yM7Vrl+CwvHvXa4WhKWROUM9YKmkOsI55dMSg2rhiA7Q5vwRixQk1ndQ2m8YiM6YhO+GJn9LQ==}
+    engines: {node: '>=18', npm: '>=6'}
 
   style-to-object@0.3.0:
     resolution: {integrity: sha512-CzFnRRXhzWIdItT3OmF8SQfWyahHhjq3HwcMNCNLn+N7klOOqPjMeG/4JSu77D7ypZdGvSzvkrbyeTMizz2VrA==}
@@ -16385,19 +16392,17 @@ snapshots:
     dependencies:
       mermaid: 12.3.0
 
-  '@interledger/http-signature-utils@2.0.2':
-    dependencies:
-      http-message-signatures: 1.0.4
-      httpbis-digest-headers: 1.0.0
-      jose: 5.4.0
-      uuid: 9.0.1
-
   '@interledger/http-signature-utils@2.0.3':
     dependencies:
       http-message-signatures: 1.0.4
       httpbis-digest-headers: 1.0.0
       jose: 5.4.0
       uuid: 9.0.1
+
+  '@interledger/http-signature-utils@2.0.4':
+    dependencies:
+      http-message-signatures: 1.1.1
+      httpbis-digest-headers: 1.0.0
 
   '@interledger/open-payments@7.4.0':
     dependencies:
@@ -23416,6 +23421,10 @@ snapshots:
     dependencies:
       structured-headers: 1.0.1
 
+  http-message-signatures@1.1.1:
+    dependencies:
+      structured-headers: 2.1.1
+
   http-parser-js@0.5.10: {}
 
   http-proxy-agent@7.0.0:
@@ -28081,6 +28090,8 @@ snapshots:
   structured-headers@0.5.0: {}
 
   structured-headers@1.0.1: {}
+
+  structured-headers@2.1.1: {}
 
   style-to-object@0.3.0:
     dependencies:
