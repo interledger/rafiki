@@ -31,7 +31,7 @@
     "@typescript-eslint/parser": "^8.74.0",
     "astro-eslint-parser": "^3.2.0",
     "eslint": "^10.15.0",
-    "eslint-config-prettier": "^10.1.8",
+    "eslint-config-prettier": "^10.1.9",
     "eslint-plugin-astro": "^3.2.1",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "globals": "^17.14.0",
